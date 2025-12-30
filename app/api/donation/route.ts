@@ -7,7 +7,7 @@ if (!apiKey) {
 }
 
 const stripe = new Stripe(apiKey || '', {
-  apiVersion: '2025-12-15.clover',
+  apiVersion: '2025-12-15.clover' as any,
 });
 
 export async function POST(req: Request) {
