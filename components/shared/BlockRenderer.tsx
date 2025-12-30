@@ -777,12 +777,11 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
             )}
             <ul className={`${block.data.isFullWidth ? 'grid md:grid-cols-2 gap-4' : 'space-y-4'}`}>
               {block.data.items.map((item, i) => {
-                // itemがオブジェクトか文字列かを判定
-                const isObject = typeof item === 'object' && item !== null;
-                const itemId = isObject ? (item as { id?: string }).id : i;
-                const itemTitle = isObject ? (item as { title?: string }).title : item;
-                const itemDescription = isObject ? (item as { description?: string }).description : null;
-                const itemIcon = isObject ? (item as { icon?: string }).icon : null;
+                // itemはChecklistItem型のオブジェクト
+                const itemId = item.id;
+                const itemTitle = item.title;
+                const itemDescription = item.description;
+                const itemIcon = item.icon;
                 
                 return (
                   <li 

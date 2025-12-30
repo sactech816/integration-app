@@ -93,6 +93,7 @@ export type TextCardBlockData = {
 
 export type ImageBlockData = {
   url: string;
+  alt?: string;
   caption?: string;
 };
 
@@ -210,9 +211,14 @@ export type TwoColumnBlockData = {
 
 export type GoogleMapBlockData = {
   address?: string;
-  embedUrl: string;
+  embedUrl?: string;
   title?: string;
+  description?: string;
   height?: string;
+  showDirections?: boolean;
+  zoom?: number;
+  lat?: number;
+  lng?: number;
 };
 
 // --- ビジネスLP追加ブロック型定義 ---
@@ -222,6 +228,7 @@ export type HeroFullwidthBlockData = {
   subheadline?: string;
   backgroundImage?: string;
   backgroundColor?: string;
+  imageUrl?: string;
   ctaText?: string;
   ctaUrl?: string;
   overlay?: boolean;
@@ -233,19 +240,32 @@ export type ProblemCardItem = {
   icon?: string;
   title: string;
   description: string;
+  borderColor?: string;
 };
 
 export type ProblemCardsBlockData = {
   sectionTitle?: string;
+  title?: string;
+  subtitle?: string;
   items: ProblemCardItem[];
   isFullWidth?: boolean;
 };
 
-export type DarkSectionBlockData = {
+export type DarkSectionItem = {
+  id: string;
+  icon?: string;
   title: string;
   description: string;
+};
+
+export type DarkSectionBlockData = {
+  title: string;
+  subtitle?: string;
+  description?: string;
   bulletPoints?: string[];
+  items?: DarkSectionItem[];
   backgroundColor?: string;
+  accentColor?: string;
   isFullWidth?: boolean;
 };
 
@@ -253,6 +273,8 @@ export type CaseStudyItem = {
   id: string;
   imageUrl?: string;
   title: string;
+  category?: string;
+  categoryColor?: string;
   beforeText?: string;
   afterText?: string;
   description: string;
@@ -260,7 +282,9 @@ export type CaseStudyItem = {
 
 export type CaseStudyCardsBlockData = {
   sectionTitle?: string;
+  title?: string;
   items: CaseStudyItem[];
+  isFullWidth?: boolean;
 };
 
 export type BonusItem = {
@@ -273,14 +297,28 @@ export type BonusItem = {
 
 export type BonusSectionBlockData = {
   sectionTitle?: string;
+  title?: string;
+  subtitle?: string;
   items: BonusItem[];
   totalValue?: string;
+  backgroundGradient?: string;
+  ctaText?: string;
+  ctaUrl?: string;
   isFullWidth?: boolean;
+};
+
+export type ChecklistItem = {
+  id: string;
+  icon?: string;
+  title: string;
+  description?: string;
 };
 
 export type ChecklistSectionBlockData = {
   sectionTitle?: string;
-  items: string[];
+  title?: string;
+  items: ChecklistItem[];
+  columns?: number;
   style?: 'simple' | 'card' | 'highlight';
   isFullWidth?: boolean;
 };
@@ -350,6 +388,7 @@ export type ProfileSettings = {
   theme?: {
     gradient?: string;
     backgroundImage?: string;
+    animated?: boolean;
   };
   tracking?: TrackingSettings;
 };

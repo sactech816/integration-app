@@ -182,6 +182,17 @@ export async function getAnalytics(
 /**
  * クイズ用：閲覧数・完了数を増加（RPC関数がある場合）
  */
+/**
+ * ビジネスLP用のアナリティクスを保存（エイリアス関数）
+ */
+export async function saveBusinessAnalytics(
+  slug: string,
+  eventType: EventType,
+  eventData?: EventData
+): Promise<{ success: boolean; error?: string }> {
+  return saveAnalytics(slug, 'business', eventType, eventData);
+}
+
 export async function incrementQuizCounter(
   quizId: number,
   counterType: 'views' | 'completions' | 'clicks' | 'likes'

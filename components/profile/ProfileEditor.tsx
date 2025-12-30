@@ -838,7 +838,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
     setProfile(prev => ({
       ...prev,
       content: prev.content?.map(b =>
-        b.id === id ? { ...b, data: { ...b.data, ...data } } : b
+        b.id === id ? { ...b, data: { ...b.data, ...data } } as typeof b : b
       ),
     }));
     resetPreview();

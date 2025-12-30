@@ -676,7 +676,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
     setLp(prev => ({
       ...prev,
       content: prev.content?.map(b =>
-        b.id === id ? { ...b, data: { ...b.data, ...data } } : b
+        b.id === id ? { ...b, data: { ...b.data, ...data } } as typeof b : b
       ),
     }));
     // プレビューはpostMessageで自動更新されるため、resetPreviewは不要

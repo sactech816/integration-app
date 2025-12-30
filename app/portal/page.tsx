@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { supabase, TABLES } from '@/lib/supabase';
 import { ServiceType, SERVICE_LABELS } from '@/lib/types';
 import { getRelativeTime } from '@/lib/utils';
@@ -84,7 +84,7 @@ const getServiceIcon = (type: ServiceType) => {
   return icons[type];
 };
 
-export default function PortalPage() {
+function PortalPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get('tab') as ServiceType | 'all') || 'all';
@@ -600,6 +600,18 @@ export default function PortalPage() {
 
       <Footer setPage={navigateTo} />
     </div>
+  );
+}
+
+export default function PortalPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      </div>
+    }>
+      <PortalPageContent />
+    </Suspense>
   );
 }
 

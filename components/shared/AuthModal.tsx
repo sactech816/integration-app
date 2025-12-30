@@ -2,7 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowPasswordReset, onNavigate }) => {
+const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowPasswordReset = null, onNavigate }: {
+    isOpen: boolean;
+    onClose: () => void;
+    setUser: (user: any) => void;
+    isPasswordReset?: boolean;
+    setShowPasswordReset?: ((show: boolean) => void) | null;
+    onNavigate?: (page: string) => void;
+}) => {
     const [isLogin, setIsLogin] = useState(true);
     const [isResetMode, setIsResetMode] = useState(false);
     const [isChangePasswordMode, setIsChangePasswordMode] = useState(isPasswordReset);
