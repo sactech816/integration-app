@@ -1692,7 +1692,10 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                   className="w-8 h-8 rounded-lg flex-shrink-0"
                   style={{ background: template.theme.gradient }}
                 />
-                <span className="text-sm font-medium text-gray-900 truncate">{template.name}</span>
+                <div className="flex flex-col items-start flex-1 min-w-0 text-left">
+                  <span className="text-sm font-medium text-gray-900 truncate w-full text-left">{template.name}</span>
+                  <span className="text-xs text-emerald-600 font-semibold">{template.blocks.length}ブロック</span>
+                </div>
               </button>
             ))}
           </div>
@@ -1996,6 +1999,34 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         onToggle={() => toggleSection('advanced')}
       >
         <div className="space-y-4">
+          {/* ポータル掲載 */}
+          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h4 className="font-bold text-emerald-900 flex items-center gap-2 mb-1">
+                  <Star size={18} className="text-emerald-600"/> ポータルに掲載する
+                </h4>
+                <p className="text-xs text-emerald-700">
+                  ポータルに掲載することで、サービスの紹介およびSEO対策、AI対策として効果的となります。より多くの方にあなたのプロフィールを見てもらえます。
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer ml-4 flex-shrink-0">
+                <input 
+                  type="checkbox" 
+                  className="sr-only peer" 
+                  checked={profile.settings?.showInPortal === undefined ? true : profile.settings?.showInPortal} 
+                  onChange={e => setProfile(prev => ({
+                    ...prev,
+                    settings: { ...prev.settings, showInPortal: e.target.checked }
+                  }))} 
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+              </label>
+            </div>
+          </div>
+
+          <hr className="border-gray-200" />
+
           {/* カスタムURL（ニックネーム） */}
           <div>
             <label className="text-sm font-bold text-gray-900 block mb-2">

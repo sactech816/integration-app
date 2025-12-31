@@ -1698,6 +1698,7 @@ export default function DashboardPage() {
                         key={type}
                         onClick={() => {
                           setFeaturedService(type);
+                          setSelectedService(type); // 上部のタブも連動
                           setSelectedForFeatured(new Set());
                         }}
                         className={`flex-1 p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
@@ -1707,7 +1708,7 @@ export default function DashboardPage() {
                         }`}
                       >
                         <Icon size={16} className={colors.text} />
-                        <span className="font-bold text-sm">{SERVICE_LABELS[type]}</span>
+                        <span className="font-bold text-sm text-gray-900">{SERVICE_LABELS[type]}</span>
                       </button>
                     );
                   })}
@@ -1742,31 +1743,35 @@ export default function DashboardPage() {
                       return (
                         <div
                           key={item.id}
-                          className={`flex items-center gap-3 p-3 border-b border-gray-100 hover:bg-gray-50 ${
-                            isFeatured ? 'opacity-50' : ''
+                          className={`flex items-center gap-3 p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
+                            isFeatured ? 'opacity-50 bg-gray-50' : ''
                           }`}
+                          onClick={() => !isFeatured && toggleFeaturedSelection(item.id)}
                         >
                           <button
-                            onClick={() => !isFeatured && toggleFeaturedSelection(item.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              !isFeatured && toggleFeaturedSelection(item.id);
+                            }}
                             disabled={isFeatured}
                             className="flex-shrink-0"
                           >
                             {isSelected ? (
                               <CheckSquare size={20} className="text-orange-600" />
                             ) : (
-                              <Square size={20} className={isFeatured ? 'text-gray-300' : 'text-gray-400'} />
+                              <Square size={20} className={isFeatured ? 'text-gray-300' : 'text-gray-600'} />
                             )}
                           </button>
                           <div className="flex-1 min-w-0">
-                            <div className="font-bold text-sm text-gray-900 line-clamp-1">
+                            <div className="font-bold text-base text-gray-900 line-clamp-1 mb-1">
                               {item.title}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-600 font-medium">
                               ID: {item.id}
                             </div>
                           </div>
                           {isFeatured && (
-                            <span className="flex-shrink-0 text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded font-bold">
+                            <span className="flex-shrink-0 text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded font-bold">
                               登録済み
                             </span>
                           )}

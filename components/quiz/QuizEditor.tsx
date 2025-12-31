@@ -216,6 +216,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
         image_url: "", 
         mode: "diagnosis",
         collect_email: false,
+        show_in_portal: true,
         theme: "standard" as const,
         questions: Array(5).fill(null).map((_,i)=>({text:`質問${i+1}を入力してください`, options: Array(4).fill(null).map((_,j)=>({label:`選択肢${j+1}`, score:{A:j===0?3:0, B:j===1?3:0, C:j===2?3:0}}))})),
         results: [ 
@@ -457,6 +458,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                 mode: form.mode || 'diagnosis',
                 collect_email: form.collect_email || false,
                 theme: form.theme || 'standard',
+                show_in_portal: form.show_in_portal === undefined ? true : form.show_in_portal,
                 user_id: user?.id || null
             };
 
@@ -1082,6 +1084,27 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                             isOpen={openSections.advanced} 
                             onToggle={() => toggleSection('advanced')}
                         >
+                            {/* ポータル掲載 */}
+                            <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-xl flex items-start justify-between mb-4">
+                                <div className="flex-1">
+                                    <h4 className="font-bold text-indigo-900 flex items-center gap-2 mb-1">
+                                        <Star size={18} className="text-indigo-600"/> ポータルに掲載する
+                                    </h4>
+                                    <p className="text-xs text-indigo-700">
+                                        ポータルに掲載することで、サービスの紹介およびSEO対策、AI対策として効果的となります。より多くの方にあなたの診断クイズを体験してもらえます。
+                                    </p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer ml-4 flex-shrink-0">
+                                    <input 
+                                        type="checkbox" 
+                                        className="sr-only peer" 
+                                        checked={form.show_in_portal === undefined ? true : form.show_in_portal} 
+                                        onChange={e => setForm({...form, show_in_portal: e.target.checked})} 
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                </label>
+                            </div>
+
                             {/* カスタムURL */}
                             <div className="mb-4">
                                 <label className="text-sm font-bold text-gray-900 block mb-2">

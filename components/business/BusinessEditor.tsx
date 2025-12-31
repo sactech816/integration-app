@@ -1500,7 +1500,10 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                 />
                 <div className="text-left flex-1 min-w-0">
                   <span className="text-sm font-medium text-gray-900 block truncate">{template.name}</span>
-                  {template.recommended && <span className="text-xs text-amber-600">おすすめ</span>}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-amber-600 font-semibold">{template.blocks.length}ブロック</span>
+                    {template.recommended && <span className="text-xs text-amber-600">おすすめ</span>}
+                  </div>
         </div>
               </button>
             ))}
@@ -1690,6 +1693,34 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
         onToggle={() => toggleSection('advanced')}
       >
         <div className="space-y-4">
+          {/* ポータル掲載 */}
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h4 className="font-bold text-amber-900 flex items-center gap-2 mb-1">
+                  <Star size={18} className="text-amber-600"/> ポータルに掲載する
+                </h4>
+                <p className="text-xs text-amber-700">
+                  ポータルに掲載することで、サービスの紹介およびSEO対策、AI対策として効果的となります。より多くの方にあなたのビジネスLPを見てもらえます。
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer ml-4 flex-shrink-0">
+                <input 
+                  type="checkbox" 
+                  className="sr-only peer" 
+                  checked={lp.settings?.showInPortal === undefined ? true : lp.settings?.showInPortal} 
+                  onChange={e => setLp(prev => ({
+                    ...prev,
+                    settings: { ...prev.settings, showInPortal: e.target.checked }
+                  }))} 
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+              </label>
+            </div>
+          </div>
+
+          <hr className="border-gray-200" />
+
           {/* カスタムURL */}
           <div>
             <Input 
@@ -1707,7 +1738,8 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
               </p>
             )}
           </div>
-          
+
+          <hr className="border-gray-200" />
           <Input 
             label="Google Tag Manager ID" 
             val={lp.settings?.gtmId || ''} 
