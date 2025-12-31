@@ -70,13 +70,16 @@ export async function POST(request) {
       content_type: contentType || '',
     };
 
+    // サイトURLを取得（環境変数がない場合はリクエストから取得）
+    const origin = request.headers.get('origin') || request.headers.get('referer')?.replace(/\/[^/]*$/, '') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
     // Stripeセッション作成
     const session = await stripe.checkout.sessions.create({
       mode: mode,
       payment_method_types: ['card'],
       line_items,
-      success_url: successUrl || `${process.env.NEXT_PUBLIC_SITE_URL || ''}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_SITE_URL || ''}/dashboard?payment=cancel`,
+      success_url: successUrl || `${origin}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancelUrl || `${origin}/dashboard?payment=cancel`,
       metadata: sessionMetadata,
       // 日本語対応
       locale: 'ja',

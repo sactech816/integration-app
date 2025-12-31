@@ -24,6 +24,6 @@ export const isSupabaseConfigured = (): boolean => {
 export const TABLES = {
   QUIZZES: 'quizzes',
   PROFILES: 'profiles',
-  BUSINESS_LPS: 'business_lps',
+  BUSINESS_LPS: 'business_projects',
   ANNOUNCEMENTS: 'announcements',
 } as const;

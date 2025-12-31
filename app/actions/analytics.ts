@@ -180,8 +180,122 @@ export async function getAnalytics(
 }
 
 /**
- * クイズ用：閲覧数・完了数を増加（RPC関数がある場合）
+ * 複数コンテンツのアナリティクスを一括取得
  */
+export async function getMultipleAnalytics(
+  contentIds: string[],
+  contentType: ContentType
+): Promise<Array<{
+  contentId: string;
+  analytics: {
+    views: number;
+    clicks: number;
+    completions: number;
+    avgScrollDepth: number;
+    avgTimeSpent: number;
+    readRate: number;
+    clickRate: number;
+  };
+}>> {
+  const defaultResult = {
+    views: 0,
+    clicks: 0,
+    completions: 0,
+    avgScrollDepth: 0,
+    avgTimeSpent: 0,
+    readRate: 0,
+    clickRate: 0
+  };
+
+  if (!contentIds || contentIds.length === 0) {
+    return [];
+  }
+
+  try {
+    const supabase = getSupabaseServer();
+    if (!supabase) {
+      return contentIds.map(id => ({ contentId: id, analytics: defaultResult }));
+    }
+
+    // 全コンテンツのイベントを一括取得
+    const { data: allEvents, error } = await supabase
+      .from('analytics')
+      .select('*')
+      .in('content_id', contentIds)
+      .eq('content_type', contentType);
+
+    if (error) {
+      console.error('[Analytics] Batch fetch error:', error);
+      return contentIds.map(id => ({ contentId: id, analytics: defaultResult }));
+    }
+
+    // コンテンツIDごとにグループ化して集計
+    const results = contentIds.map(contentId => {
+      const contentEvents = allEvents?.filter(e => e.content_id === contentId) || [];
+      
+      if (contentEvents.length === 0) {
+        return { contentId, analytics: defaultResult };
+      }
+
+      // イベントタイプ別に分類
+      const views = contentEvents.filter(e => e.event_type === 'view');
+      const clicks = contentEvents.filter(e => e.event_type === 'click');
+      const completions = contentEvents.filter(e => e.event_type === 'completion');
+      const scrolls = contentEvents.filter(e => e.event_type === 'scroll');
+      const times = contentEvents.filter(e => e.event_type === 'time');
+      const reads = contentEvents.filter(e => e.event_type === 'read');
+
+      // 平均スクロール深度
+      const scrollDepths = scrolls
+        .map(e => e.event_data?.scrollDepth || 0)
+        .filter((d: number) => d > 0);
+      const avgScrollDepth = scrollDepths.length > 0
+        ? Math.round(scrollDepths.reduce((a: number, b: number) => a + b, 0) / scrollDepths.length)
+        : 0;
+
+      // 平均滞在時間（秒）
+      const timeSpents = times
+        .map(e => e.event_data?.timeSpent || 0)
+        .filter((t: number) => t > 0);
+      const avgTimeSpent = timeSpents.length > 0
+        ? Math.round(timeSpents.reduce((a: number, b: number) => a + b, 0) / timeSpents.length)
+        : 0;
+
+      // 精読率（50%以上スクロールした割合）
+      const readPercentages = reads
+        .map(e => e.event_data?.readPercentage || 0)
+        .filter((r: number) => r > 0);
+      const readCount = readPercentages.filter((r: number) => r >= 50).length;
+      const readRate = views.length > 0 
+        ? Math.round((readCount / views.length) * 100) 
+        : 0;
+
+      // クリック率
+      const clickRate = views.length > 0 
+        ? Math.round((clicks.length / views.length) * 100) 
+        : 0;
+
+      return {
+        contentId,
+        analytics: {
+          views: views.length,
+          clicks: clicks.length,
+          completions: completions.length,
+          avgScrollDepth,
+          avgTimeSpent,
+          readRate,
+          clickRate
+        }
+      };
+    });
+
+    return results;
+  } catch (error) {
+    console.error('[Analytics] Unexpected error:', error);
+    return contentIds.map(id => ({ contentId: id, analytics: defaultResult }));
+  }
+}
+
 /**
  * ビジネスLP用のアナリティクスを保存（エイリアス関数）
  */

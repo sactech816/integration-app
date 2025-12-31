@@ -161,7 +161,7 @@ export async function getAllLeadsByUser(
     
     if (!contentType || contentType === 'business') {
       const { data: businessLps } = await supabase
-        .from('business_lps')
+        .from('business_projects')
         .select('slug')
         .eq('user_id', userId);
       contentIds = [...contentIds, ...(businessLps?.map(b => b.slug) || [])];
@@ -239,6 +239,9 @@ export async function exportLeadsAsCsv(
     count: leads.length 
   };
 }
+
+
+
 
 
 

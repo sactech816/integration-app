@@ -35,7 +35,7 @@ function BusinessEditorContent() {
 
         if (editId) {
           const { data } = await supabase
-            .from('business_lps')
+            .from('business_projects')
             .select('*')
             .eq('slug', editId)
             .single();
