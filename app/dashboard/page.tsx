@@ -325,7 +325,7 @@ export default function DashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [user, selectedService, isAdmin, fetchProAccessForContents]);
+  }, [user, selectedService, isAdmin]);
 
   // 購入履歴を取得
   const fetchPurchases = useCallback(async () => {
