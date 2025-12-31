@@ -61,7 +61,7 @@ export async function saveAnalytics(
     const { error } = await supabase
       .from('analytics')
       .insert([{
-        content_id: contentId,
+        profile_id: contentId,  // DBカラム名はprofile_id（プロフィール/ビジネス共通）
         content_type: contentType,
         event_type: eventType,
         event_data: eventData || {},
@@ -114,7 +114,7 @@ export async function getAnalytics(
     const { data: allEvents, error } = await supabase
       .from('analytics')
       .select('*')
-      .eq('content_id', contentId)
+      .eq('profile_id', contentId)  // DBカラム名はprofile_id
       .eq('content_type', contentType);
 
     if (error) {
@@ -218,20 +218,27 @@ export async function getMultipleAnalytics(
     }
 
     // 全コンテンツのイベントを一括取得
+    console.log('[Analytics] Batch fetching for:', { contentIds, contentType });
+    
     const { data: allEvents, error } = await supabase
       .from('analytics')
       .select('*')
-      .in('content_id', contentIds)
+      .in('profile_id', contentIds)  // DBカラム名はprofile_id
       .eq('content_type', contentType);
 
     if (error) {
       console.error('[Analytics] Batch fetch error:', error);
       return contentIds.map(id => ({ contentId: id, analytics: defaultResult }));
     }
+    
+    console.log('[Analytics] Batch fetch result:', { 
+      eventCount: allEvents?.length || 0, 
+      sampleEvents: allEvents?.slice(0, 3) 
+    });
 
     // コンテンツIDごとにグループ化して集計
     const results = contentIds.map(contentId => {
-      const contentEvents = allEvents?.filter(e => e.content_id === contentId) || [];
+      const contentEvents = allEvents?.filter(e => e.profile_id === contentId) || [];
       
       if (contentEvents.length === 0) {
         return { contentId, analytics: defaultResult };

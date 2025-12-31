@@ -80,6 +80,10 @@ type ContentItem = {
       backgroundImage?: string;
     };
   };
+  // アナリティクス追加項目
+  readRate?: number;
+  avgTimeSpent?: number;
+  clickRate?: number;
 };
 
 // アナリティクスデータ型
@@ -193,28 +197,37 @@ export default function DashboardPage() {
         const { data: profiles } = await query;
         if (profiles) {
           // アナリティクスを取得（ViewTrackerはidでイベントを保存しているためidで取得）
-          const analyticsResults = await getMultipleAnalytics(
-            profiles.map((p: Profile) => p.id),
-            'profile'
-          );
+          const profileIds = profiles.map((p: Profile) => p.id);
+          console.log('[Dashboard] Fetching analytics for profile IDs:', profileIds);
+          
+          const analyticsResults = await getMultipleAnalytics(profileIds, 'profile');
+          console.log('[Dashboard] Analytics results:', analyticsResults);
+          
           const analyticsMapObj: Record<string, AnalyticsData> = {};
           analyticsResults.forEach((result) => {
             analyticsMapObj[result.contentId] = result.analytics;
           });
+          console.log('[Dashboard] Analytics map:', analyticsMapObj);
           setAnalyticsMap(prev => ({ ...prev, ...analyticsMapObj }));
 
-          allContents.push(...profiles.map((p: Profile) => ({
-            id: p.id,
-            slug: p.slug,
-            title: getProfileName(p),
-            created_at: p.created_at,
-            updated_at: p.updated_at,
-            type: 'profile' as ServiceType,
-            content: p.content,
-            settings: p.settings,
-            views_count: analyticsMapObj[p.id]?.views || 0,
-            clicks_count: analyticsMapObj[p.id]?.clicks || 0,
-          })));
+          allContents.push(...profiles.map((p: Profile) => {
+            const analytics = analyticsMapObj[p.id];
+            return {
+              id: p.id,
+              slug: p.slug,
+              title: getProfileName(p),
+              created_at: p.created_at,
+              updated_at: p.updated_at,
+              type: 'profile' as ServiceType,
+              content: p.content,
+              settings: p.settings,
+              views_count: analytics?.views || 0,
+              clicks_count: analytics?.clicks || 0,
+              readRate: analytics?.readRate || 0,
+              avgTimeSpent: analytics?.avgTimeSpent || 0,
+              clickRate: analytics?.clickRate || 0,
+            };
+          }));
         }
       }
 
@@ -226,30 +239,39 @@ export default function DashboardPage() {
 
         const { data: businessLps } = await query;
         if (businessLps) {
-          // アナリティクスを取得（ViewTrackerはidでイベントを保存しているためidで取得）
-          const analyticsResults = await getMultipleAnalytics(
-            businessLps.map((b: BusinessLP) => b.id),
-            'business'
-          );
+          // アナリティクスを取得（ViewTrackerはslugでイベントを保存しているためslugで取得）
+          const businessSlugs = businessLps.map((b: BusinessLP) => b.slug);
+          console.log('[Dashboard] Fetching analytics for business slugs:', businessSlugs);
+          
+          const analyticsResults = await getMultipleAnalytics(businessSlugs, 'business');
+          console.log('[Dashboard] Business analytics results:', analyticsResults);
+          
           const analyticsMapObj: Record<string, AnalyticsData> = {};
           analyticsResults.forEach((result) => {
             analyticsMapObj[result.contentId] = result.analytics;
           });
+          console.log('[Dashboard] Business analytics map:', analyticsMapObj);
           setAnalyticsMap(prev => ({ ...prev, ...analyticsMapObj }));
 
-          allContents.push(...businessLps.map((b: BusinessLP) => ({
-            id: b.id,
-            slug: b.slug,
-            title: getProfileName(b),
-            description: b.description,
-            created_at: b.created_at,
-            updated_at: b.updated_at,
-            type: 'business' as ServiceType,
-            content: b.content,
-            settings: b.settings,
-            views_count: analyticsMapObj[b.id]?.views || 0,
-            clicks_count: analyticsMapObj[b.id]?.clicks || 0,
-          })));
+          allContents.push(...businessLps.map((b: BusinessLP) => {
+            const analytics = analyticsMapObj[b.slug];
+            return {
+              id: b.id,
+              slug: b.slug,
+              title: getProfileName(b),
+              description: b.description,
+              created_at: b.created_at,
+              updated_at: b.updated_at,
+              type: 'business' as ServiceType,
+              content: b.content,
+              settings: b.settings,
+              views_count: analytics?.views || 0,
+              clicks_count: analytics?.clicks || 0,
+              readRate: analytics?.readRate || 0,
+              avgTimeSpent: analytics?.avgTimeSpent || 0,
+              clickRate: analytics?.clickRate || 0,
+            };
+          }));
         }
       }
 
@@ -1090,22 +1112,26 @@ export default function DashboardPage() {
                   <table className="w-full text-sm text-left text-gray-500">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
                       <tr>
-                        <th className="px-4 py-3 bg-gray-50">タイトル</th>
-                        <th className="px-4 py-3 text-right bg-gray-50">閲覧数</th>
+                        <th className="px-4 py-3 bg-gray-50">{selectedService === 'quiz' ? 'タイトル' : 'プロフィール名'}</th>
+                        {selectedService !== 'quiz' && (
+                          <th className="px-4 py-3 bg-gray-50">SLUG</th>
+                        )}
+                        <th className="px-4 py-3 text-right bg-gray-50">アクセス数</th>
+                        <th className="px-4 py-3 text-right bg-gray-50">クリック数</th>
+                        <th className="px-4 py-3 text-right bg-gray-50">クリック率</th>
                         {selectedService === 'quiz' && (
                           <>
                             <th className="px-4 py-3 text-right bg-gray-50">完了数</th>
                             <th className="px-4 py-3 text-right bg-gray-50">完了率</th>
-                            <th className="px-4 py-3 text-right bg-gray-50">クリック</th>
-                            <th className="px-4 py-3 text-right bg-gray-50">CTR</th>
                           </>
                         )}
                         {selectedService !== 'quiz' && (
                           <>
-                            <th className="px-4 py-3 text-right bg-gray-50">クリック</th>
-                            <th className="px-4 py-3 text-right bg-gray-50">クリック率</th>
+                            <th className="px-4 py-3 text-right bg-gray-50">精読率</th>
+                            <th className="px-4 py-3 text-right bg-gray-50">滞在時間</th>
                           </>
                         )}
+                        <th className="px-4 py-3 text-right bg-gray-50">作成日</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1114,28 +1140,33 @@ export default function DashboardPage() {
                         const completions = item.completions_count || 0;
                         const clicks = item.clicks_count || 0;
                         const rate = views > 0 ? Math.round((completions / views) * 100) : 0;
-                        const ctr = selectedService === 'quiz'
-                          ? (completions > 0 ? Math.round((clicks / completions) * 100) : 0)
-                          : (views > 0 ? Math.round((clicks / views) * 100) : 0);
+                        const ctr = views > 0 ? Math.round((clicks / views) * 100) : 0;
+                        const readRate = item.readRate || 0;
+                        const avgTime = item.avgTimeSpent || 0;
+                        const createdAt = item.created_at ? new Date(item.created_at).toLocaleDateString('ja-JP') : '-';
 
                         return (
                           <tr key={item.id} className="border-b hover:bg-gray-50">
                             <td className="px-4 py-3 font-medium text-gray-900 truncate max-w-[150px]">{item.title}</td>
-                            <td className="px-4 py-3 text-right">{views}</td>
+                            {selectedService !== 'quiz' && (
+                              <td className="px-4 py-3 text-gray-600 font-mono text-xs">{item.slug}</td>
+                            )}
+                            <td className="px-4 py-3 text-right font-bold text-blue-600">{views}</td>
+                            <td className="px-4 py-3 text-right">{clicks}</td>
+                            <td className="px-4 py-3 text-right text-green-600 font-bold">{ctr}%</td>
                             {selectedService === 'quiz' && (
                               <>
                                 <td className="px-4 py-3 text-right">{completions}</td>
                                 <td className="px-4 py-3 text-right text-orange-600 font-bold">{rate}%</td>
-                                <td className="px-4 py-3 text-right">{clicks}</td>
-                                <td className="px-4 py-3 text-right text-green-600 font-bold">{ctr}%</td>
                               </>
                             )}
                             {selectedService !== 'quiz' && (
                               <>
-                                <td className="px-4 py-3 text-right">{clicks}</td>
-                                <td className="px-4 py-3 text-right text-green-600 font-bold">{ctr}%</td>
+                                <td className="px-4 py-3 text-right text-orange-600 font-bold">{readRate}%</td>
+                                <td className="px-4 py-3 text-right text-purple-600 font-bold">{avgTime > 0 ? `${avgTime}秒` : '-'}</td>
                               </>
                             )}
+                            <td className="px-4 py-3 text-right text-gray-500 text-xs">{createdAt}</td>
                           </tr>
                         );
                       })}

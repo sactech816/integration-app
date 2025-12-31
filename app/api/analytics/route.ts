@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     const { error } = await supabase
       .from('analytics')
       .insert([{
-        content_id: contentId,
+        profile_id: contentId,  // DBカラム名はprofile_id（プロフィール/ビジネス共通）
         content_type: cType,
         event_type: eventType,
         event_data: eventData || {},
@@ -94,6 +94,19 @@ export async function OPTIONS() {
     },
   });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
