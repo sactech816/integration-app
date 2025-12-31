@@ -64,6 +64,10 @@ export interface Quiz {
   mode?: 'diagnosis' | 'test' | 'fortune';
   collect_email?: boolean;
   theme?: 'standard' | 'cyberpunk' | 'japanese' | 'pastel' | 'monochrome';
+  // アナリティクス関連（データベースから取得時に含まれる可能性あり）
+  views_count?: number;
+  completions_count?: number;
+  clicks_count?: number;
 }
 
 // -------------------------------------------
