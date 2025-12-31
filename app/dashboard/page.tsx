@@ -9,7 +9,8 @@ import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
 import { getAnalytics, getMultipleAnalytics } from '@/app/actions/analytics';
-import { getUserPurchases, hasProAccess } from '@/app/actions/purchases';
+import { getUserPurchases, hasProAccess, getAllUsersWithRoles, setPartnerStatus, checkIsPartner } from '@/app/actions/purchases';
+import { getFeaturedContents, addFeaturedContent, removeFeaturedContent, FeaturedContent } from '@/app/actions/featured';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import {
   Sparkles,
@@ -48,7 +49,10 @@ import {
   Bell,
   X,
   FileSpreadsheet,
-  Upload
+  Upload,
+  Star,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 
 // ページネーション設定
@@ -64,6 +68,7 @@ type ContentItem = {
   created_at?: string;
   updated_at?: string;
   type: ServiceType;
+  user_id?: string | null;
   // 診断クイズ固有
   views_count?: number;
   completions_count?: number;
@@ -112,6 +117,7 @@ export default function DashboardPage() {
   const [purchases, setPurchases] = useState<string[]>([]);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [analyticsMap, setAnalyticsMap] = useState<Record<string, AnalyticsData>>({});
+  const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
 
   // お知らせ管理用のステート（管理者のみ）
   const [announcements, setAnnouncements] = useState<Array<{
@@ -141,6 +147,30 @@ export default function DashboardPage() {
   // ユーザーエクスポート用のステート（管理者のみ）
   const [exportingCsv, setExportingCsv] = useState(false);
   const [exportingSheets, setExportingSheets] = useState(false);
+
+  // ピックアップコンテンツ管理用のステート（管理者のみ）
+  const [featuredContents, setFeaturedContents] = useState<FeaturedContent[]>([]);
+  const [showFeaturedManager, setShowFeaturedManager] = useState(false);
+  const [featuredService, setFeaturedService] = useState<ServiceType>('quiz');
+  const [featuredSearch, setFeaturedSearch] = useState('');
+  const [selectedForFeatured, setSelectedForFeatured] = useState<Set<string>>(new Set());
+  const [loadingFeatured, setLoadingFeatured] = useState(false);
+
+  // ユーザー管理用のステート（管理者のみ）
+  const [allUsers, setAllUsers] = useState<Array<{
+    user_id: string;
+    email: string;
+    is_partner: boolean;
+    partner_since: string | null;
+    partner_note: string | null;
+    user_created_at: string;
+    total_purchases: number;
+    total_donated: number;
+  }>>([]);
+  const [showUserManagement, setShowUserManagement] = useState(false);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [partnerNote, setPartnerNote] = useState('');
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   // 管理者かどうかを判定
   const adminEmails = getAdminEmails();
@@ -181,6 +211,7 @@ export default function DashboardPage() {
             id: String(q.id),
             title: q.title,
             type: 'quiz' as ServiceType,
+            user_id: q.user_id,
             views_count: q.views_count || 0,
             completions_count: q.completions_count || 0,
             clicks_count: q.clicks_count || 0,
@@ -219,6 +250,7 @@ export default function DashboardPage() {
               created_at: p.created_at,
               updated_at: p.updated_at,
               type: 'profile' as ServiceType,
+              user_id: p.user_id,
               content: p.content,
               settings: p.settings,
               views_count: analytics?.views || 0,
@@ -263,6 +295,7 @@ export default function DashboardPage() {
               created_at: b.created_at,
               updated_at: b.updated_at,
               type: 'business' as ServiceType,
+              user_id: b.user_id,
               content: b.content,
               settings: b.settings,
               views_count: analytics?.views || 0,
@@ -284,12 +317,15 @@ export default function DashboardPage() {
 
       setContents(allContents);
       setCurrentPage(1);
+      
+      // アクセス権を確認
+      await fetchProAccessForContents(allContents);
     } catch (error) {
       console.error('Contents fetch error:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [user, selectedService, isAdmin]);
+  }, [user, selectedService, isAdmin, fetchProAccessForContents]);
 
   // 購入履歴を取得
   const fetchPurchases = useCallback(async () => {
@@ -300,6 +336,31 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('Purchases fetch error:', error);
     }
+  }, [user]);
+
+  // Pro機能のアクセス権を確認
+  const fetchProAccessForContents = useCallback(async (contentItems: ContentItem[]) => {
+    if (!user) return;
+    
+    const accessMap: Record<string, { hasAccess: boolean; reason?: string }> = {};
+    
+    for (const item of contentItems) {
+      try {
+        const result = await hasProAccess(
+          user.id,
+          user.email,
+          item.id,
+          item.type,
+          item.user_id || undefined
+        );
+        accessMap[item.id] = result;
+      } catch (error) {
+        console.error(`[Dashboard] Check access for ${item.id}:`, error);
+        accessMap[item.id] = { hasAccess: false };
+      }
+    }
+    
+    setProAccessMap(accessMap);
   }, [user]);
 
   // お知らせを取得（管理者のみ）
@@ -352,8 +413,85 @@ export default function DashboardPage() {
   useEffect(() => {
     if (isAdmin) {
       fetchAnnouncements();
+      fetchFeaturedContents();
     }
   }, [isAdmin, fetchAnnouncements]);
+
+  // ピックアップコンテンツを取得
+  const fetchFeaturedContents = async () => {
+    if (!isAdmin) return;
+    try {
+      const result = await getFeaturedContents();
+      if (result.success && result.data) {
+        setFeaturedContents(result.data);
+      }
+    } catch (error) {
+      console.error('Featured contents fetch error:', error);
+    }
+  };
+
+  // ピックアップに追加
+  const handleAddFeatured = async () => {
+    if (!isAdmin || selectedForFeatured.size === 0) return;
+    
+    setLoadingFeatured(true);
+    try {
+      const promises = Array.from(selectedForFeatured).map(contentId => 
+        addFeaturedContent(contentId, featuredService)
+      );
+      
+      const results = await Promise.all(promises);
+      const successCount = results.filter(r => r.success).length;
+      const failedCount = results.length - successCount;
+      
+      if (successCount > 0) {
+        alert(`${successCount}件をピックアップに追加しました${failedCount > 0 ? `（${failedCount}件は追加できませんでした）` : ''}`);
+        await fetchFeaturedContents();
+        setSelectedForFeatured(new Set());
+      } else {
+        alert('ピックアップの追加に失敗しました');
+      }
+    } catch (error) {
+      console.error('Add featured error:', error);
+      alert('エラーが発生しました');
+    } finally {
+      setLoadingFeatured(false);
+    }
+  };
+
+  // ピックアップから削除
+  const handleRemoveFeatured = async (id: string) => {
+    if (!isAdmin) return;
+    if (!confirm('ピックアップから削除しますか？')) return;
+    
+    try {
+      const result = await removeFeaturedContent(id);
+      if (result.success) {
+        alert('ピックアップから削除しました');
+        await fetchFeaturedContents();
+      } else {
+        alert('削除に失敗しました: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Remove featured error:', error);
+      alert('エラーが発生しました');
+    }
+  };
+
+  // チェックボックストグル
+  const toggleFeaturedSelection = (contentId: string) => {
+    const newSet = new Set(selectedForFeatured);
+    if (newSet.has(contentId)) {
+      newSet.delete(contentId);
+    } else {
+      if (featuredContents.length + newSet.size >= 10) {
+        alert('ピックアップは最大10件までです');
+        return;
+      }
+      newSet.add(contentId);
+    }
+    setSelectedForFeatured(newSet);
+  };
 
   const handleLogout = async () => {
     if (supabase) {
@@ -445,6 +583,53 @@ export default function DashboardPage() {
       alert('Googleスプレッドシートエクスポートエラー: ' + (error instanceof Error ? error.message : '不明なエラー'));
     } finally {
       setExportingSheets(false);
+    }
+  };
+
+  // ユーザー一覧を取得（管理者のみ）
+  const fetchAllUsers = async () => {
+    if (!isAdmin) return;
+    setLoadingUsers(true);
+    try {
+      const result = await getAllUsersWithRoles();
+      if (result.error) {
+        console.error('[Dashboard] Fetch users error:', result.error);
+        alert('ユーザー一覧の取得に失敗しました: ' + result.error);
+      } else {
+        setAllUsers(result.users);
+      }
+    } catch (error) {
+      console.error('[Dashboard] Fetch users error:', error);
+      alert('ユーザー一覧の取得に失敗しました');
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // パートナーステータスを切り替え（管理者のみ）
+  const handleTogglePartner = async (userId: string, currentStatus: boolean, note: string = '') => {
+    if (!isAdmin) return;
+    
+    const newStatus = !currentStatus;
+    const confirmMessage = newStatus 
+      ? 'このユーザーを応援パートナーに設定しますか？\n設定すると、このユーザーが作成した全コンテンツでPro機能が利用可能になります。'
+      : 'このユーザーの応援パートナー設定を解除しますか？';
+    
+    if (!confirm(confirmMessage)) return;
+
+    try {
+      const result = await setPartnerStatus(userId, newStatus, note || undefined);
+      if (result.success) {
+        alert(newStatus ? 'パートナーに設定しました' : 'パートナー設定を解除しました');
+        await fetchAllUsers(); // 再読み込み
+        setEditingUserId(null);
+        setPartnerNote('');
+      } else {
+        alert('エラー: ' + (result.error || '不明なエラー'));
+      }
+    } catch (error) {
+      console.error('[Dashboard] Toggle partner error:', error);
+      alert('パートナー設定の変更に失敗しました');
     }
   };
 
@@ -1029,6 +1214,27 @@ export default function DashboardPage() {
               </div>
             )}
 
+            {/* みんなの作品を見るボタン */}
+            <button
+              onClick={() => {
+                const demoUrls = {
+                  quiz: '/quiz/demo',
+                  profile: '/profile/demo',
+                  business: '/business/demo'
+                };
+                window.open(demoUrls[selectedService], '_blank');
+              }}
+              className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center gap-3"
+            >
+              <div className="bg-white/20 p-2 rounded-full">
+                <Users size={20} />
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-sm">みんなの作品を見る</p>
+                <p className="text-xs text-white/80">{SERVICE_LABELS[selectedService]}のデモ一覧</p>
+              </div>
+            </button>
+
             {/* 寄付・サポートへのリンク */}
             <button
               onClick={() => navigateTo('donation')}
@@ -1408,6 +1614,352 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* 管理者向けピックアップコンテンツ管理セクション */}
+        {isAdmin && (
+          <div className="mt-12">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-black border-l-4 border-orange-600 pl-4 flex items-center gap-2">
+                <Star size={20} className="text-orange-600" /> ピックアップコンテンツ管理
+                <span className="text-xs bg-red-500 text-white px-2 py-1 rounded-full">ADMIN</span>
+              </h2>
+              <button
+                onClick={() => setShowFeaturedManager(!showFeaturedManager)}
+                className="bg-orange-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-orange-700 flex items-center gap-2"
+              >
+                {showFeaturedManager ? <X size={16} /> : <Plus size={16} />}
+                {showFeaturedManager ? '閉じる' : 'コンテンツを追加'}
+              </button>
+            </div>
+
+            {/* 現在のピックアップ一覧 */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-gray-900">
+                  現在のピックアップ（{featuredContents.length}/10件）
+                </h3>
+              </div>
+              
+              {featuredContents.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  まだピックアップされたコンテンツがありません
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {featuredContents.map((featured) => {
+                    const Icon = getServiceIcon(featured.content_type);
+                    const colors = getServiceColor(featured.content_type);
+                    
+                    return (
+                      <div key={featured.id} className="bg-gray-50 p-4 rounded-xl border border-gray-200 relative">
+                        <div className="flex items-start gap-3">
+                          <div className={`flex-shrink-0 w-12 h-12 rounded-lg ${colors.bg} flex items-center justify-center`}>
+                            <Icon size={20} className={colors.text} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className={`text-xs ${colors.text} font-bold mb-1`}>
+                              {SERVICE_LABELS[featured.content_type]}
+                            </div>
+                            <div className="text-sm font-bold text-gray-900 line-clamp-2 mb-2">
+                              ID: {featured.content_id}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {new Date(featured.created_at).toLocaleDateString('ja-JP')}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveFeatured(featured.id)}
+                            className="flex-shrink-0 text-red-600 hover:text-red-700 p-1"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* コンテンツ追加UI */}
+            {showFeaturedManager && (
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                <h3 className="font-bold text-gray-900 mb-4">
+                  ピックアップするコンテンツを選択
+                </h3>
+
+                {/* サービスタブ */}
+                <div className="flex gap-2 mb-4">
+                  {(['quiz', 'profile', 'business'] as ServiceType[]).map((type) => {
+                    const Icon = getServiceIcon(type);
+                    const colors = getServiceColor(type);
+                    
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => {
+                          setFeaturedService(type);
+                          setSelectedForFeatured(new Set());
+                        }}
+                        className={`flex-1 p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
+                          featuredService === type
+                            ? `${colors.bg} ${colors.border}`
+                            : 'bg-white border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <Icon size={16} className={colors.text} />
+                        <span className="font-bold text-sm">{SERVICE_LABELS[type]}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* 検索 */}
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <input
+                    type="text"
+                    placeholder="タイトルで検索..."
+                    value={featuredSearch}
+                    onChange={(e) => setFeaturedSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                  />
+                </div>
+
+                {/* コンテンツリスト */}
+                <div className="max-h-96 overflow-y-auto mb-4 border border-gray-200 rounded-lg">
+                  {contents
+                    .filter(item => item.type === featuredService)
+                    .filter(item => 
+                      featuredSearch === '' || 
+                      item.title.toLowerCase().includes(featuredSearch.toLowerCase())
+                    )
+                    .map((item) => {
+                      const isSelected = selectedForFeatured.has(item.id);
+                      const isFeatured = featuredContents.some(
+                        f => f.content_id === item.id && f.content_type === item.type
+                      );
+                      
+                      return (
+                        <div
+                          key={item.id}
+                          className={`flex items-center gap-3 p-3 border-b border-gray-100 hover:bg-gray-50 ${
+                            isFeatured ? 'opacity-50' : ''
+                          }`}
+                        >
+                          <button
+                            onClick={() => !isFeatured && toggleFeaturedSelection(item.id)}
+                            disabled={isFeatured}
+                            className="flex-shrink-0"
+                          >
+                            {isSelected ? (
+                              <CheckSquare size={20} className="text-orange-600" />
+                            ) : (
+                              <Square size={20} className={isFeatured ? 'text-gray-300' : 'text-gray-400'} />
+                            )}
+                          </button>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold text-sm text-gray-900 line-clamp-1">
+                              {item.title}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              ID: {item.id}
+                            </div>
+                          </div>
+                          {isFeatured && (
+                            <span className="flex-shrink-0 text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded font-bold">
+                              登録済み
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+
+                {/* 追加ボタン */}
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    {selectedForFeatured.size > 0 && (
+                      <span className="font-bold text-orange-600">
+                        {selectedForFeatured.size}件選択中
+                      </span>
+                    )}
+                    {featuredContents.length + selectedForFeatured.size > 10 && (
+                      <span className="text-red-600 ml-2">
+                        （最大10件まで）
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleAddFeatured}
+                    disabled={selectedForFeatured.size === 0 || loadingFeatured || featuredContents.length + selectedForFeatured.size > 10}
+                    className="bg-orange-600 text-white px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {loadingFeatured ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        追加中...
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={16} />
+                        ピックアップに追加
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 管理者向けユーザー管理セクション */}
+        {isAdmin && (
+          <div className="mt-12">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-black border-l-4 border-purple-600 pl-4 flex items-center gap-2">
+                <Users size={20} className="text-purple-600" /> ユーザー管理
+                <span className="text-xs bg-purple-500 text-white px-2 py-1 rounded-full">ADMIN</span>
+              </h2>
+              <button
+                onClick={() => {
+                  setShowUserManagement(!showUserManagement);
+                  if (!showUserManagement && allUsers.length === 0) {
+                    fetchAllUsers();
+                  }
+                }}
+                className="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-purple-700 flex items-center gap-2"
+              >
+                {showUserManagement ? (
+                  <>
+                    <X size={16} /> 閉じる
+                  </>
+                ) : (
+                  <>
+                    <Users size={16} /> ユーザー一覧を表示
+                  </>
+                )}
+              </button>
+            </div>
+
+            {showUserManagement && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                {loadingUsers ? (
+                  <div className="p-8 text-center">
+                    <Loader2 size={32} className="animate-spin mx-auto text-purple-600 mb-3" />
+                    <p className="text-gray-500">ユーザー情報を読み込み中...</p>
+                  </div>
+                ) : allUsers.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500">
+                    <Users size={48} className="mx-auto mb-3 text-gray-300" />
+                    <p>ユーザーが見つかりません</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">メールアドレス</th>
+                          <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">パートナー</th>
+                          <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">総寄付額</th>
+                          <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">購入数</th>
+                          <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">登録日</th>
+                          <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {allUsers.map((usr) => {
+                          const isEditing = editingUserId === usr.user_id;
+                          return (
+                            <tr key={usr.user_id} className="border-b border-gray-100 hover:bg-gray-50">
+                              <td className="px-4 py-3 text-gray-900 font-medium">
+                                {usr.email}
+                                {usr.partner_note && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    💬 {usr.partner_note}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                {usr.is_partner ? (
+                                  <div className="flex flex-col items-center gap-1">
+                                    <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                                      ✨ パートナー
+                                    </span>
+                                    {usr.partner_since && (
+                                      <span className="text-[10px] text-gray-500">
+                                        {new Date(usr.partner_since).toLocaleDateString('ja-JP')}〜
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400 text-xs">一般</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-right font-bold text-purple-600">
+                                ¥{usr.total_donated.toLocaleString()}
+                              </td>
+                              <td className="px-4 py-3 text-right text-gray-600">
+                                {usr.total_purchases}件
+                              </td>
+                              <td className="px-4 py-3 text-gray-500 text-xs">
+                                {new Date(usr.user_created_at).toLocaleDateString('ja-JP')}
+                              </td>
+                              <td className="px-4 py-3">
+                                {isEditing ? (
+                                  <div className="space-y-2">
+                                    <input
+                                      type="text"
+                                      placeholder="メモ（任意）"
+                                      value={partnerNote}
+                                      onChange={(e) => setPartnerNote(e.target.value)}
+                                      className="w-full text-xs border border-gray-300 p-2 rounded bg-gray-50 text-gray-900"
+                                    />
+                                    <div className="flex gap-1">
+                                      <button
+                                        onClick={() => handleTogglePartner(usr.user_id, usr.is_partner, partnerNote)}
+                                        className="flex-1 bg-purple-600 text-white px-2 py-1 rounded text-xs font-bold hover:bg-purple-700"
+                                      >
+                                        {usr.is_partner ? '解除' : '設定'}
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          setEditingUserId(null);
+                                          setPartnerNote('');
+                                        }}
+                                        className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300"
+                                      >
+                                        <X size={12} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      setEditingUserId(usr.user_id);
+                                      setPartnerNote(usr.partner_note || '');
+                                    }}
+                                    className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
+                                      usr.is_partner
+                                        ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                                        : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                                    }`}
+                                  >
+                                    {usr.is_partner ? '解除' : 'パートナーに設定'}
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* コンテンツ一覧 */}
         <div className="mt-12">
           <div className="flex justify-between items-center mb-4">
@@ -1450,7 +2002,8 @@ export default function DashboardPage() {
               <>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {paginatedContents.map(item => {
-                    const isUnlocked = purchases.includes(item.id) || isAdmin;
+                    const accessInfo = proAccessMap[item.id] || { hasAccess: false };
+                    const isUnlocked = accessInfo.hasAccess || isAdmin;
                     const colors = getServiceColor(item.type);
                     const Icon = getServiceIcon(item.type);
 
@@ -1545,6 +2098,25 @@ export default function DashboardPage() {
                           <button onClick={() => handleView(item)} className="w-full bg-green-500 text-white py-2.5 rounded-lg font-bold text-xs hover:bg-green-600 flex items-center justify-center gap-1 transition-colors">
                             <ExternalLink size={14} /> プレビュー
                           </button>
+
+                          {/* Pro機能ステータス表示 */}
+                          {isUnlocked && !isAdmin && (
+                            <div className="mt-2 p-2 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
+                              <div className="flex items-center gap-1.5 justify-center">
+                                {accessInfo.reason === 'partner' ? (
+                                  <>
+                                    <span className="text-amber-600 text-xs">✨</span>
+                                    <span className="text-xs font-bold text-amber-700">応援パートナー特典</span>
+                                  </>
+                                ) : accessInfo.reason === 'purchased' ? (
+                                  <>
+                                    <CheckCircle size={12} className="text-green-600" />
+                                    <span className="text-xs font-bold text-green-700">Pro機能利用可能</span>
+                                  </>
+                                ) : null}
+                              </div>
+                            </div>
+                          )}
 
                           {/* 管理者：HTMLダウンロード */}
                           {isAdmin && (

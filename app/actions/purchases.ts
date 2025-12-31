@@ -106,23 +106,33 @@ export async function hasPurchase(
 
 /**
  * Pro機能が利用可能か確認
+ * - 管理者メールに含まれればtrue（全コンテンツ）
+ * - パートナーで自分が作成したコンテンツであればtrue
  * - 該当コンテンツへの購入があればtrue
- * - 管理者メールに含まれればtrue
  */
 export async function hasProAccess(
   userId: string,
   userEmail: string | undefined,
   contentId: string,
-  contentType: ContentType
+  contentType: ContentType,
+  contentOwnerId?: string
 ): Promise<{ hasAccess: boolean; reason?: string }> {
   try {
-    // 管理者チェック
+    // 1. 管理者チェック
     const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(',') || [];
     if (userEmail && adminEmails.includes(userEmail)) {
       return { hasAccess: true, reason: 'admin' };
     }
 
-    // 購入履歴チェック
+    // 2. パートナーチェック（自分が作成したコンテンツのみ）
+    if (contentOwnerId && userId === contentOwnerId) {
+      const isPartner = await checkIsPartner(userId);
+      if (isPartner) {
+        return { hasAccess: true, reason: 'partner' };
+      }
+    }
+
+    // 3. 購入履歴チェック
     const purchased = await hasPurchase(userId, contentId, contentType);
     if (purchased) {
       return { hasAccess: true, reason: 'purchased' };
@@ -203,6 +213,111 @@ export async function getPurchaseStats(
     };
   }
 }
+
+/**
+ * パートナーステータスを確認
+ */
+export async function checkIsPartner(userId: string): Promise<boolean> {
+  try {
+    const supabase = getSupabaseServer();
+    if (!supabase) {
+      return false;
+    }
+
+    // user_rolesテーブルからパートナーステータスを取得
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('is_partner')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      // レコードが存在しない場合はfalse
+      if (error.code === 'PGRST116') {
+        return false;
+      }
+      console.error('[Partner] Check error:', error);
+      return false;
+    }
+
+    return data?.is_partner || false;
+  } catch (error) {
+    console.error('[Partner] Unexpected error:', error);
+    return false;
+  }
+}
+
+/**
+ * パートナーステータスを設定（管理者のみ）
+ */
+export async function setPartnerStatus(
+  userId: string,
+  isPartner: boolean,
+  note?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = getSupabaseServer();
+    if (!supabase) {
+      return { success: false, error: 'Supabase not configured' };
+    }
+
+    // RPC関数を呼び出してパートナーステータスを設定
+    const { data, error } = await supabase.rpc('set_partner_status', {
+      target_user_id: userId,
+      partner_status: isPartner,
+      note: note || null
+    });
+
+    if (error) {
+      console.error('[Partner] Set status error:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: data || false };
+  } catch (error) {
+    console.error('[Partner] Unexpected error:', error);
+    return { success: false, error: String(error) };
+  }
+}
+
+/**
+ * 全ユーザーとそのロール情報を取得（管理者用）
+ */
+export async function getAllUsersWithRoles(): Promise<{
+  users: Array<{
+    user_id: string;
+    email: string;
+    is_partner: boolean;
+    partner_since: string | null;
+    partner_note: string | null;
+    user_created_at: string;
+    total_purchases: number;
+    total_donated: number;
+  }>;
+  error?: string;
+}> {
+  try {
+    const supabase = getSupabaseServer();
+    if (!supabase) {
+      return { users: [], error: 'Supabase not configured' };
+    }
+
+    // RPC関数を呼び出して全ユーザー情報を取得
+    const { data, error } = await supabase.rpc('get_all_users_with_roles');
+
+    if (error) {
+      console.error('[Partner] Get users error:', error);
+      return { users: [], error: error.message };
+    }
+
+    return { users: data || [] };
+  } catch (error) {
+    console.error('[Partner] Unexpected error:', error);
+    return { users: [], error: String(error) };
+  }
+}
+
+
 
 
 

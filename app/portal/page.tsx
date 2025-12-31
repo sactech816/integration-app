@@ -18,10 +18,15 @@ import {
   Search,
   LayoutGrid,
   TrendingUp,
-  Users
+  Users,
+  Star,
+  Award,
+  MousePointerClick
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { getRandomFeaturedContents, FeaturedContentWithDetails } from '@/app/actions/featured';
+import { getPopularContents, PopularContent } from '@/app/actions/ranking';
 
 // 1ページあたりの表示数
 const ITEMS_PER_PAGE = 12;
@@ -105,6 +110,10 @@ function PortalPageContent() {
     profile: 0,
     business: 0
   });
+  const [featuredContents, setFeaturedContents] = useState<FeaturedContentWithDetails[]>([]);
+  const [popularContents, setPopularContents] = useState<PopularContent[]>([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
+  const [loadingPopular, setLoadingPopular] = useState(true);
 
   // 認証初期化
   useEffect(() => {
@@ -300,7 +309,43 @@ function PortalPageContent() {
   // 初回読み込み
   useEffect(() => {
     fetchTotalCounts();
+    loadFeaturedContents();
   }, [fetchTotalCounts]);
+
+  // ピックアップコンテンツを取得
+  const loadFeaturedContents = async () => {
+    setLoadingFeatured(true);
+    try {
+      const result = await getRandomFeaturedContents(3);
+      if (result.success && result.data) {
+        setFeaturedContents(result.data);
+      }
+    } catch (error) {
+      console.error('Featured contents fetch error:', error);
+    } finally {
+      setLoadingFeatured(false);
+    }
+  };
+
+  // 人気ランキングを取得（タブ変更時）
+  const loadPopularContents = async (type: ServiceType) => {
+    setLoadingPopular(true);
+    try {
+      const result = await getPopularContents(type, 3, 30);
+      if (result.success && result.data) {
+        setPopularContents(result.data);
+      }
+    } catch (error) {
+      console.error('Popular contents fetch error:', error);
+    } finally {
+      setLoadingPopular(false);
+    }
+  };
+
+  // タブ変更時に人気ランキングを更新
+  useEffect(() => {
+    loadPopularContents(selectedTab === 'all' ? 'quiz' : selectedTab);
+  }, [selectedTab]);
 
   const handleLogout = async () => {
     if (supabase) {
@@ -404,6 +449,201 @@ function PortalPageContent() {
               fill="#f9fafb"
             />
           </svg>
+        </div>
+      </section>
+
+      {/* 今月のトピックセクション */}
+      {featuredContents.length > 0 && (
+        <section className="bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-4 py-2 rounded-full mb-4">
+                <Star size={20} className="text-yellow-300" />
+                <span className="font-bold">今月のトピック</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
+                注目のコンテンツ
+              </h2>
+              <p className="text-gray-600">
+                おすすめのコンテンツをピックアップしました
+              </p>
+            </div>
+
+            {loadingFeatured ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="animate-spin text-purple-600" size={32} />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredContents.map((item) => {
+                  const Icon = getServiceIcon(item.content_type);
+                  const colors = getServiceColor(item.content_type);
+
+                  return (
+                    <Link
+                      key={item.id}
+                      href={`/${item.content_type}/${item.slug}`}
+                      className="group bg-white rounded-2xl border-2 border-purple-200 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative"
+                    >
+                      {/* ピックアップバッジ */}
+                      <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5 shadow-lg">
+                        <Sparkles size={12} />
+                        PICK UP
+                      </div>
+
+                      {/* サムネイル */}
+                      <div className={`aspect-[16/10] bg-gradient-to-br ${colors.gradient} relative overflow-hidden`}>
+                        {item.imageUrl ? (
+                          <>
+                            <img
+                              src={item.imageUrl}
+                              alt={item.title}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                          </>
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                              <Icon size={32} className="text-white" />
+                            </div>
+                          </div>
+                        )}
+                        {/* タイプバッジ */}
+                        <div className={`absolute bottom-3 right-3 ${colors.bg} ${colors.text} px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm`}>
+                          <Icon size={12} />
+                          {SERVICE_LABELS[item.content_type]}
+                        </div>
+                      </div>
+
+                      {/* コンテンツ */}
+                      <div className="p-5">
+                        <h3 className={`font-bold text-xl mb-2 line-clamp-2 text-gray-900 ${colors.hoverText} transition-colors`}>
+                          {item.title}
+                        </h3>
+                        {item.description && (
+                          <p className="text-sm text-gray-600 line-clamp-2 mb-4 leading-relaxed">
+                            {item.description}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100">
+                          {item.views_count !== undefined && item.views_count > 0 && (
+                            <span className="flex items-center gap-1.5 font-bold">
+                              <Eye size={12} />
+                              {item.views_count.toLocaleString()} 回表示
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* 人気ランキングセクション */}
+      <section className="bg-white py-12 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full mb-4">
+              <Award size={20} className="text-yellow-300" />
+              <span className="font-bold">人気ランキング</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
+              {SERVICE_LABELS[selectedTab === 'all' ? 'quiz' : selectedTab]} TOP3
+            </h2>
+            <p className="text-gray-600">
+              過去30日間で最も人気のあるコンテンツ
+            </p>
+          </div>
+
+          {loadingPopular ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="animate-spin text-orange-600" size={32} />
+            </div>
+          ) : popularContents.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              まだランキングデータがありません
+            </div>
+          ) : (
+            <div className="space-y-4 max-w-3xl mx-auto">
+              {popularContents.map((item, index) => {
+                const Icon = getServiceIcon(item.type);
+                const colors = getServiceColor(item.type);
+                const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+                const rankColor = index === 0 ? 'from-yellow-400 to-yellow-600' : index === 1 ? 'from-gray-300 to-gray-500' : 'from-orange-400 to-orange-600';
+
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/${item.type}/${item.slug}`}
+                    className="group flex items-center gap-4 bg-gradient-to-r from-gray-50 to-white p-5 rounded-2xl border-2 border-gray-200 hover:border-orange-300 hover:shadow-lg transition-all"
+                  >
+                    {/* ランキングバッジ */}
+                    <div className={`flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br ${rankColor} flex items-center justify-center text-white font-black text-2xl shadow-lg`}>
+                      {rankEmoji}
+                    </div>
+
+                    {/* サムネイル */}
+                    <div className="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-gray-100">
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className={`w-full h-full bg-gradient-to-br ${colors.gradient} flex items-center justify-center`}>
+                          <Icon size={24} className="text-white" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* コンテンツ情報 */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className={`font-bold text-lg mb-1 line-clamp-1 text-gray-900 group-hover:${colors.text} transition-colors`}>
+                        {item.title}
+                      </h3>
+                      {item.description && (
+                        <p className="text-sm text-gray-600 line-clamp-1 mb-2">
+                          {item.description}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <span className="flex items-center gap-1 font-bold">
+                          <Eye size={12} />
+                          {item.views_count.toLocaleString()}
+                        </span>
+                        <span className="flex items-center gap-1 font-bold">
+                          <MousePointerClick size={12} />
+                          {item.clicks_count.toLocaleString()}
+                        </span>
+                        {item.completions_count !== undefined && item.completions_count > 0 && (
+                          <span className="flex items-center gap-1 font-bold text-green-600">
+                            <TrendingUp size={12} />
+                            {item.completions_count.toLocaleString()} 完了
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* スコア表示 */}
+                    <div className="flex-shrink-0 text-right">
+                      <div className="text-2xl font-black text-orange-600">
+                        {item.popularityScore.toLocaleString()}
+                      </div>
+                      <div className="text-xs text-gray-500 font-bold">
+                        スコア
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
