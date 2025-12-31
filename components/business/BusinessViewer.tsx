@@ -11,10 +11,10 @@ interface BusinessViewerProps {
 }
 
 const BusinessViewer: React.FC<BusinessViewerProps> = ({ lp }) => {
-  // リンククリックハンドラー
+  // リンククリックハンドラー（idを使用してアナリティクスと統一）
   const handleLinkClick = (url: string) => {
-    if (lp.slug) {
-      trackClick(lp.slug, 'business', url);
+    if (lp.id) {
+      trackClick(lp.id, 'business', url);
     }
   };
 
@@ -42,10 +42,10 @@ const BusinessViewer: React.FC<BusinessViewerProps> = ({ lp }) => {
 
   return (
     <>
-      {/* アナリティクストラッカー */}
-      {lp.slug && (
+      {/* アナリティクストラッカー（idを使用）*/}
+      {lp.id && (
         <ViewTracker 
-          contentId={lp.slug} 
+          contentId={lp.id} 
           contentType="business"
           trackScroll={true}
           trackTime={true}

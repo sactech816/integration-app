@@ -192,9 +192,9 @@ export default function DashboardPage() {
 
         const { data: profiles } = await query;
         if (profiles) {
-          // アナリティクスを取得（ViewTrackerはslugでイベントを保存しているためslugで取得）
+          // アナリティクスを取得（ViewTrackerはidでイベントを保存しているためidで取得）
           const analyticsResults = await getMultipleAnalytics(
-            profiles.map((p: Profile) => p.slug),
+            profiles.map((p: Profile) => p.id),
             'profile'
           );
           const analyticsMapObj: Record<string, AnalyticsData> = {};
@@ -212,8 +212,8 @@ export default function DashboardPage() {
             type: 'profile' as ServiceType,
             content: p.content,
             settings: p.settings,
-            views_count: analyticsMapObj[p.slug]?.views || 0,
-            clicks_count: analyticsMapObj[p.slug]?.clicks || 0,
+            views_count: analyticsMapObj[p.id]?.views || 0,
+            clicks_count: analyticsMapObj[p.id]?.clicks || 0,
           })));
         }
       }
@@ -226,9 +226,9 @@ export default function DashboardPage() {
 
         const { data: businessLps } = await query;
         if (businessLps) {
-          // アナリティクスを取得
+          // アナリティクスを取得（ViewTrackerはidでイベントを保存しているためidで取得）
           const analyticsResults = await getMultipleAnalytics(
-            businessLps.map((b: BusinessLP) => b.slug),
+            businessLps.map((b: BusinessLP) => b.id),
             'business'
           );
           const analyticsMapObj: Record<string, AnalyticsData> = {};
@@ -247,8 +247,8 @@ export default function DashboardPage() {
             type: 'business' as ServiceType,
             content: b.content,
             settings: b.settings,
-            views_count: analyticsMapObj[b.slug]?.views || 0,
-            clicks_count: analyticsMapObj[b.slug]?.clicks || 0,
+            views_count: analyticsMapObj[b.id]?.views || 0,
+            clicks_count: analyticsMapObj[b.id]?.clicks || 0,
           })));
         }
       }

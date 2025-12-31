@@ -29,19 +29,19 @@ const ProfileViewer: React.FC<ProfileViewerProps> = ({ profile }) => {
         backgroundSize: isAnimated ? '400% 400%' : 'auto',
       };
 
-  // リンククリックハンドラー
+  // リンククリックハンドラー（idを使用してアナリティクスと統一）
   const handleLinkClick = (url: string) => {
-    if (profile.slug) {
-      trackClick(profile.slug, 'profile', url);
+    if (profile.id) {
+      trackClick(profile.id, 'profile', url);
     }
   };
 
   return (
     <>
-      {/* アナリティクストラッカー */}
-      {profile.slug && (
+      {/* アナリティクストラッカー（idを使用）*/}
+      {profile.id && (
         <ViewTracker 
-          contentId={profile.slug} 
+          contentId={profile.id} 
           contentType="profile"
           trackScroll={true}
           trackTime={true}
