@@ -131,13 +131,13 @@ function PortalPageContent() {
     init();
   }, []);
 
-  // 各サービスの総数を取得
+  // 各サービスの総数を取得（※プロフィール・ビジネスはフィルタ後の数と異なる可能性あり）
   const fetchTotalCounts = useCallback(async () => {
     if (!supabase) return;
 
     try {
       const [quizCount, profileCount, businessCount] = await Promise.all([
-        supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }),
+        supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).eq('show_in_portal', true),
         supabase.from(TABLES.PROFILES).select('id', { count: 'exact', head: true }).eq('featured_on_top', true),
         supabase.from('business_projects').select('id', { count: 'exact', head: true })
       ]);
@@ -173,11 +173,12 @@ function PortalPageContent() {
       const allItems: PortalItem[] = [];
       const offset = currentPage * ITEMS_PER_PAGE;
 
-      // クイズ取得
+      // クイズ取得（show_in_portalがtrueのもののみ）
       if (selectedTab === 'all' || selectedTab === 'quiz') {
         const { data: quizzes } = await supabase
           .from(TABLES.QUIZZES)
           .select('id, slug, title, description, image_url, created_at, views_count')
+          .eq('show_in_portal', true)
           .order('created_at', { ascending: false })
           .range(offset, offset + ITEMS_PER_PAGE - 1);
 
@@ -195,17 +196,20 @@ function PortalPageContent() {
         }
       }
 
-      // プロフィールLP取得
+      // プロフィールLP取得（settings.showInPortalがfalseでないもの）
       if (selectedTab === 'all' || selectedTab === 'profile') {
         const { data: profiles } = await supabase
           .from(TABLES.PROFILES)
-          .select('id, slug, nickname, content, created_at')
+          .select('id, slug, nickname, content, settings, created_at')
           .eq('featured_on_top', true)
           .order('created_at', { ascending: false })
           .range(offset, offset + ITEMS_PER_PAGE - 1);
 
         if (profiles) {
-          allItems.push(...profiles.map((p) => {
+          // settings.showInPortalがfalseでないものだけをフィルタリング
+          const filteredProfiles = profiles.filter(p => p.settings?.showInPortal !== false);
+          
+          allItems.push(...filteredProfiles.map((p) => {
             const headerBlock = p.content?.find((b: { type: string }) => b.type === 'header');
             return {
               id: p.id,
@@ -220,7 +224,7 @@ function PortalPageContent() {
         }
       }
 
-      // ビジネスLP取得（テーブル名は business_projects）
+      // ビジネスLP取得（settings.showInPortalがfalseでないもの）
       if (selectedTab === 'all' || selectedTab === 'business') {
         const { data: businessLps } = await supabase
           .from('business_projects')
@@ -229,7 +233,10 @@ function PortalPageContent() {
           .range(offset, offset + ITEMS_PER_PAGE - 1);
 
         if (businessLps) {
-          allItems.push(...businessLps.map((b) => {
+          // settings.showInPortalがfalseでないものだけをフィルタリング
+          const filteredBusinessLps = businessLps.filter(b => b.settings?.showInPortal !== false);
+          
+          allItems.push(...filteredBusinessLps.map((b) => {
             // ヘッダーブロックを探す（名前・タイトル情報）
             const headerBlock = b.content?.find((block: { type: string }) => block.type === 'header');
             // ヒーローブロックを探す（背景画像・ヘッドライン）

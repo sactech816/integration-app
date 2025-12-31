@@ -25,6 +25,17 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* リンクとボタンにポインターカーソルを適用 */
+a,
+button {
+  cursor: pointer;
+}
+
+/* 無効化されたボタンには not-allowed カーソルを適用 */
+button:disabled {
+  cursor: not-allowed;
+}
+
 /* 紫基調のグラデーション背景（薄くなったり濃くなったり） */
 @keyframes gradient-pulse {
   0% {

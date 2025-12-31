@@ -74,43 +74,189 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'ユーザー情報の取得に失敗しました' }, { status: 500 });
     }
 
-    // 各ユーザーのコンテンツ数を取得
-    const userStats: Record<string, { quizzes: number; profiles: number; business: number }> = {};
-    
-    // クイズ数を取得
-    const { data: quizCounts } = await supabaseAdmin
-      .from('quizzes')
-      .select('user_id');
-    
-    // プロフィール数を取得
-    const { data: profileCounts } = await supabaseAdmin
-      .from('profiles')
-      .select('user_id');
-    
-    // ビジネスLP数を取得
-    const { data: businessCounts } = await supabaseAdmin
-      .from('business_projects')
-      .select('user_id');
+    // 各ユーザーのコンテンツ数を取得（最適化：並列取得）
+    const [quizCountsResult, profileCountsResult, businessCountsResult] = await Promise.all([
+      supabaseAdmin.from('quizzes').select('user_id'),
+      supabaseAdmin.from('profiles').select('user_id'),
+      supabaseAdmin.from('business_projects').select('user_id')
+    ]);
+
+    const quizCounts = quizCountsResult.data || [];
+    const profileCounts = profileCountsResult.data || [];
+    const businessCounts = businessCountsResult.data || [];
 
     // カウントを集計
-    quizCounts?.forEach(q => {
+    const userStats: Record<string, { quizzes: number; profiles: number; business: number }> = {};
+    
+    quizCounts.forEach(q => {
       if (q.user_id) {
         if (!userStats[q.user_id]) userStats[q.user_id] = { quizzes: 0, profiles: 0, business: 0 };
         userStats[q.user_id].quizzes++;
       }
     });
     
-    profileCounts?.forEach(p => {
+    profileCounts.forEach(p => {
       if (p.user_id) {
         if (!userStats[p.user_id]) userStats[p.user_id] = { quizzes: 0, profiles: 0, business: 0 };
         userStats[p.user_id].profiles++;
       }
     });
     
-    businessCounts?.forEach(b => {
+    businessCounts.forEach(b => {
       if (b.user_id) {
         if (!userStats[b.user_id]) userStats[b.user_id] = { quizzes: 0, profiles: 0, business: 0 };
         userStats[b.user_id].business++;
+      }
+    });
+
+    // パートナーステータスを取得
+    const { data: userRoles } = await supabaseAdmin
+      .from('user_roles')
+      .select('user_id, is_partner, partner_since');
+    
+    const partnerMap: Record<string, { is_partner: boolean; partner_since: string | null }> = {};
+    userRoles?.forEach(ur => {
+      partnerMap[ur.user_id] = {
+        is_partner: ur.is_partner || false,
+        partner_since: ur.partner_since || null
+      };
+    });
+
+    // 購入情報を取得（集計済み）
+    const { data: purchaseStats } = await supabaseAdmin
+      .from('purchases')
+      .select('user_id, amount');
+    
+    const purchaseMap: Record<string, { count: number; total: number }> = {};
+    purchaseStats?.forEach(p => {
+      if (p.user_id) {
+        if (!purchaseMap[p.user_id]) {
+          purchaseMap[p.user_id] = { count: 0, total: 0 };
+        }
+        purchaseMap[p.user_id].count++;
+        purchaseMap[p.user_id].total += p.amount || 0;
+      }
+    });
+
+    // ユーザーIDリスト
+    const userIds = users.map(u => u.id);
+
+    // アナリティクスデータを取得（効率的な方法：コンテンツ→analyticsのマッピング）
+    // まず、各ユーザーのコンテンツslugを取得
+    const [quizDetails, profileDetails, businessDetails] = await Promise.all([
+      supabaseAdmin.from('quizzes').select('slug, user_id').not('user_id', 'is', null),
+      supabaseAdmin.from('profiles').select('slug, user_id').not('user_id', 'is', null),
+      supabaseAdmin.from('business_projects').select('slug, user_id').not('user_id', 'is', null)
+    ]);
+
+    // コンテンツslug→user_idマップを作成
+    const contentUserMap: Record<string, string> = {};
+    quizDetails.data?.forEach(q => {
+      if (q.user_id && q.slug) {
+        contentUserMap[`quiz_${q.slug}`] = q.user_id;
+      }
+    });
+    profileDetails.data?.forEach(p => {
+      if (p.user_id && p.slug) {
+        contentUserMap[`profile_${p.slug}`] = p.user_id;
+      }
+    });
+    businessDetails.data?.forEach(b => {
+      if (b.user_id && b.slug) {
+        contentUserMap[`business_${b.slug}`] = b.user_id;
+      }
+    });
+
+    const allContentKeys = Object.keys(contentUserMap);
+    
+    // アナリティクスを取得（content_idとcontent_typeでフィルタリング）
+    const analyticsMap: Record<string, { views: number; clicks: number }> = {};
+    userIds.forEach(userId => {
+      analyticsMap[userId] = { views: 0, clicks: 0 };
+    });
+
+    if (allContentKeys.length > 0) {
+      // アナリティクスを効率的に取得（最新30日分のみに制限して負荷を軽減）
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      // content_typeごとに分けて取得（より効率的）
+      // 注意: 大量データの場合はパフォーマンス影響があるため、期間制限を推奨
+      // 注: analyticsテーブルのカラム名を確認（content_id または profile_id）
+      const analyticsPromises = [
+        supabaseAdmin
+          .from('analytics')
+          .select('content_id, profile_id, content_type, event_type')
+          .eq('content_type', 'quiz')
+          .in('event_type', ['view', 'click'])
+          .gte('created_at', thirtyDaysAgo.toISOString()),
+        supabaseAdmin
+          .from('analytics')
+          .select('content_id, profile_id, content_type, event_type')
+          .eq('content_type', 'profile')
+          .in('event_type', ['view', 'click'])
+          .gte('created_at', thirtyDaysAgo.toISOString()),
+        supabaseAdmin
+          .from('analytics')
+          .select('content_id, profile_id, content_type, event_type')
+          .eq('content_type', 'business')
+          .in('event_type', ['view', 'click'])
+          .gte('created_at', thirtyDaysAgo.toISOString())
+      ];
+
+      const [quizAnalytics, profileAnalytics, businessAnalytics] = await Promise.all(analyticsPromises);
+      
+      // 各コンテンツタイプのアナリティクスを集計
+      const processAnalytics = (data: any[], contentType: string) => {
+        data?.forEach(a => {
+          // content_id または profile_id のどちらかを使用（DBスキーマに応じて）
+          const contentId = a.content_id || a.profile_id;
+          if (!contentId) return;
+          
+          const contentKey = `${contentType}_${contentId}`;
+          const userId = contentUserMap[contentKey];
+          if (userId && analyticsMap[userId]) {
+            if (a.event_type === 'view') {
+              analyticsMap[userId].views++;
+            } else if (a.event_type === 'click') {
+              analyticsMap[userId].clicks++;
+            }
+          }
+        });
+      };
+
+      processAnalytics(quizAnalytics.data || [], 'quiz');
+      processAnalytics(profileAnalytics.data || [], 'profile');
+      processAnalytics(businessAnalytics.data || [], 'business');
+    }
+
+    // AI使用数を取得（analyticsテーブルから event_type = 'ai_generate'）
+    const aiUsageMap: Record<string, { quiz: number; profile: number; business: number }> = {};
+    userIds.forEach(userId => {
+      aiUsageMap[userId] = { quiz: 0, profile: 0, business: 0 };
+    });
+
+    // AI生成イベントを取得（event_typeが'ai_generate'の場合、またはevent_dataにai_usageフラグがある場合）
+    const { data: aiUsageData } = await supabaseAdmin
+      .from('analytics')
+      .select('content_id, profile_id, content_type, event_type')
+      .eq('event_type', 'ai_generate')
+      .limit(5000); // パフォーマンス考慮
+    
+    aiUsageData?.forEach(ai => {
+      const contentId = ai.content_id || ai.profile_id;
+      if (!contentId) return;
+      
+      const contentKey = `${ai.content_type}_${contentId}`;
+      const userId = contentUserMap[contentKey];
+      if (userId && aiUsageMap[userId]) {
+        if (ai.content_type === 'quiz') {
+          aiUsageMap[userId].quiz++;
+        } else if (ai.content_type === 'profile') {
+          aiUsageMap[userId].profile++;
+        } else if (ai.content_type === 'business') {
+          aiUsageMap[userId].business++;
+        }
       }
     });
 
@@ -124,12 +270,26 @@ export async function GET(request: NextRequest) {
       '診断クイズ数',
       'プロフィールLP数',
       'ビジネスLP数',
-      '確認済み'
+      '確認済み',
+      'パートナーステータス',
+      'パートナー登録日',
+      '購入回数',
+      '購入総額',
+      '総閲覧数',
+      '総クリック数',
+      'AI使用数（クイズ）',
+      'AI使用数（プロフィール）',
+      'AI使用数（ビジネス）'
     ];
 
     // CSVボディ
     const rows = users.map(u => {
       const stats = userStats[u.id] || { quizzes: 0, profiles: 0, business: 0 };
+      const partner = partnerMap[u.id] || { is_partner: false, partner_since: null };
+      const purchases = purchaseMap[u.id] || { count: 0, total: 0 };
+      const analytics = analyticsMap[u.id] || { views: 0, clicks: 0 };
+      const aiUsage = aiUsageMap[u.id] || { quiz: 0, profile: 0, business: 0 };
+      
       return [
         u.id,
         u.email || '',
@@ -139,7 +299,16 @@ export async function GET(request: NextRequest) {
         stats.quizzes.toString(),
         stats.profiles.toString(),
         stats.business.toString(),
-        u.email_confirmed_at ? 'はい' : 'いいえ'
+        u.email_confirmed_at ? 'はい' : 'いいえ',
+        partner.is_partner ? 'はい' : 'いいえ',
+        partner.partner_since ? new Date(partner.partner_since).toLocaleString('ja-JP') : '',
+        purchases.count.toString(),
+        purchases.total.toString(),
+        analytics.views.toString(),
+        analytics.clicks.toString(),
+        aiUsage.quiz.toString(),
+        aiUsage.profile.toString(),
+        aiUsage.business.toString()
       ];
     });
 

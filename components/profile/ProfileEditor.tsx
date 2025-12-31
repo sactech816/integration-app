@@ -816,10 +816,32 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
   const addBlock = (type: string) => {
     const newBlock = createDefaultBlock(type);
-    setProfile(prev => ({
-      ...prev,
-      content: [...(prev.content || []), newBlock],
-    }));
+    setProfile(prev => {
+      const content = prev.content || [];
+      // headerブロックのインデックスを検索
+      const headerIndex = content.findIndex(b => b.type === 'header');
+      
+      let newContent;
+      if (headerIndex === -1) {
+        // headerブロックが存在しない場合は最後に追加
+        newContent = [...content, newBlock];
+      } else if (headerIndex === content.length - 1) {
+        // headerブロックが最後の要素の場合のみ、headerブロックの直後に挿入
+        newContent = [
+          ...content.slice(0, headerIndex + 1),
+          newBlock,
+          ...content.slice(headerIndex + 1)
+        ];
+      } else {
+        // それ以外は最後に追加
+        newContent = [...content, newBlock];
+      }
+      
+      return {
+        ...prev,
+        content: newContent,
+      };
+    });
     setExpandedBlock(newBlock.id);
     setShowBlockSelector(false);
     resetPreview();

@@ -554,7 +554,11 @@ export default function DashboardPage() {
     setExportingSheets(true);
 
     try {
-      if (!supabase) throw new Error('Supabaseが設定されていません');
+      console.log('[Dashboard] Starting Google Sheets export...');
+      
+      if (!supabase) {
+        throw new Error('Supabaseが設定されていません');
+      }
 
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
@@ -562,6 +566,8 @@ export default function DashboardPage() {
       if (!token) {
         throw new Error('認証トークンが取得できません');
       }
+
+      console.log('[Dashboard] Calling /api/export-users-sheets...');
 
       const response = await fetch('/api/export-users-sheets', {
         method: 'POST',
@@ -571,16 +577,21 @@ export default function DashboardPage() {
         }
       });
 
+      console.log('[Dashboard] Response status:', response.status);
+
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Googleスプレッドシートへの送信に失敗しました');
+        console.error('[Dashboard] API error:', error);
+        throw new Error(error.error || error.details || 'Googleスプレッドシートへの送信に失敗しました');
       }
 
       const result = await response.json();
+      console.log('[Dashboard] Export success:', result);
       alert(`Googleスプレッドシートに${result.users_count}件のユーザー情報を送信しました！`);
     } catch (error) {
-      console.error('Google Sheets export error:', error);
-      alert('Googleスプレッドシートエクスポートエラー: ' + (error instanceof Error ? error.message : '不明なエラー'));
+      console.error('[Dashboard] Google Sheets export error:', error);
+      const errorMessage = error instanceof Error ? error.message : '不明なエラー';
+      alert('Googleスプレッドシートエクスポートエラー: ' + errorMessage);
     } finally {
       setExportingSheets(false);
     }

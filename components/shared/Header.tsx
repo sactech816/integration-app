@@ -21,7 +21,6 @@ import {
   UserCircle,
   ChevronDown,
   Home,
-  Settings,
   Magnet,
   TrendingUp,
   Lightbulb,
@@ -210,14 +209,6 @@ const Header: React.FC<HeaderProps> = ({
                       >
                         <LayoutDashboard size={18} className="text-gray-500" />
                         <span className="font-medium text-gray-700">マイページ</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleNav('settings')}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <Settings size={18} className="text-gray-500" />
-                        <span className="font-medium text-gray-700">設定</span>
                       </button>
 
                       <div className="border-t border-gray-100 mt-2 pt-2">

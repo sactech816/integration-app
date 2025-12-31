@@ -389,6 +389,7 @@ export type ProfileSettings = {
   gtmId?: string;
   fbPixelId?: string;
   lineTagId?: string;
+  showInPortal?: boolean;
   theme?: {
     gradient?: string;
     backgroundImage?: string;

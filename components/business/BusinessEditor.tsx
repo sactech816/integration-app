@@ -654,10 +654,32 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
 
   const addBlock = (type: string) => {
     const newBlock = createDefaultBlock(type);
-    setLp(prev => ({
-      ...prev,
-      content: [...(prev.content || []), newBlock],
-    }));
+    setLp(prev => {
+      const content = prev.content || [];
+      // heroまたはhero_fullwidthブロックのインデックスを検索
+      const heroIndex = content.findIndex(b => b.type === 'hero' || b.type === 'hero_fullwidth');
+      
+      let newContent;
+      if (heroIndex === -1) {
+        // タイトルブロックが存在しない場合は最後に追加
+        newContent = [...content, newBlock];
+      } else if (heroIndex === content.length - 1) {
+        // タイトルブロックが最後の要素の場合のみ、タイトルブロックの直後に挿入
+        newContent = [
+          ...content.slice(0, heroIndex + 1),
+          newBlock,
+          ...content.slice(heroIndex + 1)
+        ];
+      } else {
+        // それ以外は最後に追加
+        newContent = [...content, newBlock];
+      }
+      
+      return {
+        ...prev,
+        content: newContent,
+      };
+    });
     setExpandedBlock(newBlock.id);
     setShowBlockSelector(false);
     // プレビューはpostMessageで自動更新されるため、resetPreviewは不要
