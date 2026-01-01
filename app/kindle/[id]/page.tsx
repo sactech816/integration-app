@@ -28,6 +28,13 @@ interface Book {
   subtitle: string | null;
 }
 
+interface TargetProfile {
+  profile?: string;
+  merits?: string[];
+  benefits?: string[];
+  usp?: string;
+}
+
 type LoadingState = 'loading' | 'loaded' | 'error' | 'not-found';
 
 export default function KindleEditorPage() {
@@ -39,6 +46,7 @@ export default function KindleEditorPage() {
   const [error, setError] = useState<string>('');
   const [book, setBook] = useState<Book | null>(null);
   const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [targetProfile, setTargetProfile] = useState<TargetProfile | undefined>(undefined);
 
   // データ取得
   const fetchBookData = useCallback(async () => {
@@ -89,8 +97,17 @@ export default function KindleEditorPage() {
         },
       ];
 
+      // デモ用ターゲットプロファイル
+      const demoTarget: TargetProfile = {
+        profile: 'Kindle出版を始めたい初心者〜中級者',
+        merits: ['効率的な執筆方法が学べる', 'AIを活用した執筆ができる'],
+        benefits: ['本の執筆時間を大幅に短縮できる', '出版の夢を実現できる'],
+        usp: 'AI支援による革新的な執筆体験',
+      };
+
       setBook(demoBook);
       setChapters(demoChapters);
+      setTargetProfile(demoTarget);
       setLoadingState('loaded');
       return;
     }
@@ -105,12 +122,31 @@ export default function KindleEditorPage() {
       setLoadingState('loading');
       setError('');
 
-      // 1. 本の情報を取得
-      const { data: bookData, error: bookError } = await supabase
+      // 1. 本の情報を取得（target_infoがない場合も考慮）
+      let bookData: any;
+      let bookError: any;
+
+      // まずtarget_info付きで試行
+      const result1 = await supabase
         .from('kdl_books')
-        .select('id, title, subtitle')
+        .select('id, title, subtitle, target_info')
         .eq('id', bookId)
         .single();
+
+      if (result1.error && result1.error.message.includes('target_info')) {
+        // target_infoカラムがない場合、それを除外してリトライ
+        const result2 = await supabase
+          .from('kdl_books')
+          .select('id, title, subtitle')
+          .eq('id', bookId)
+          .single();
+        
+        bookData = result2.data;
+        bookError = result2.error;
+      } else {
+        bookData = result1.data;
+        bookError = result1.error;
+      }
 
       if (bookError) {
         if (bookError.code === 'PGRST116') {
@@ -170,8 +206,21 @@ export default function KindleEditorPage() {
           })),
       }));
 
+      // ターゲットプロファイルを構築（target_infoがJSONで保存されている場合）
+      let fetchedTarget: TargetProfile | undefined;
+      if (bookData.target_info) {
+        const targetInfo = bookData.target_info as any;
+        fetchedTarget = {
+          profile: targetInfo.profile || undefined,
+          merits: targetInfo.merits || undefined,
+          benefits: targetInfo.benefits || undefined,
+          usp: targetInfo.usp || undefined,
+        };
+      }
+
       setBook(bookData);
       setChapters(chaptersWithSections);
+      setTargetProfile(fetchedTarget);
       setLoadingState('loaded');
 
     } catch (err: any) {
@@ -302,8 +351,10 @@ export default function KindleEditorPage() {
     <EditorLayout
       book={book}
       chapters={chapters}
+      targetProfile={targetProfile}
       onUpdateSectionContent={handleUpdateSectionContent}
     />
   );
 }
+
 

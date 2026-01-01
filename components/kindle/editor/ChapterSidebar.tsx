@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, BookOpen, FileText } from 'lucide-react';
+import { ChevronDown, ChevronRight, BookOpen, FileText, Zap, Loader2 } from 'lucide-react';
 
 interface Section {
   id: string;
@@ -18,12 +18,22 @@ interface Chapter {
   sections: Section[];
 }
 
+interface BatchWriteProgress {
+  isRunning: boolean;
+  chapterId: string | null;
+  currentIndex: number;
+  totalCount: number;
+  currentSectionTitle: string;
+}
+
 interface ChapterSidebarProps {
   chapters: Chapter[];
   activeSectionId: string;
   onSectionClick: (sectionId: string) => void;
   bookTitle: string;
   bookSubtitle?: string | null;
+  onBatchWrite?: (chapterId: string) => void;
+  batchProgress?: BatchWriteProgress;
 }
 
 export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
@@ -32,6 +42,8 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
   onSectionClick,
   bookTitle,
   bookSubtitle,
+  onBatchWrite,
+  batchProgress,
 }) => {
   // 初期状態: アクティブな節を含む章を展開
   const getInitialExpandedChapters = () => {
@@ -80,6 +92,16 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
     return chapter.sections.some(s => s.id === activeSectionId);
   };
 
+  // 章の未執筆節の数を取得
+  const getUnwrittenCount = (chapter: Chapter) => {
+    return chapter.sections.filter(s => !s.content || s.content.trim() === '').length;
+  };
+
+  // 章が一括執筆中かどうか
+  const isChapterWriting = (chapterId: string) => {
+    return batchProgress?.isRunning && batchProgress?.chapterId === chapterId;
+  };
+
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-amber-50 to-orange-50">
       {/* ヘッダー: 本のタイトル */}
@@ -113,33 +135,71 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
         {chapters.map((chapter, chapterIndex) => {
           const isExpanded = expandedChapters.has(chapter.id);
           const isActiveChapter = chapterHasActiveSection(chapter);
+          const unwrittenCount = getUnwrittenCount(chapter);
+          const isWriting = isChapterWriting(chapter.id);
 
           return (
             <div key={chapter.id} className="mb-1">
               {/* 章ヘッダー */}
-              <button
-                onClick={() => toggleChapter(chapter.id)}
-                className={`w-full flex items-center gap-2 px-4 py-3 text-left transition-all ${
+              <div
+                className={`flex items-center gap-2 px-4 py-3 transition-all ${
                   isActiveChapter
                     ? 'bg-amber-100/80 border-l-4 border-amber-500'
                     : 'hover:bg-amber-50/80 border-l-4 border-transparent'
                 }`}
               >
-                <span className={`transition-transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`}>
-                  <ChevronDown size={14} className="text-amber-600" />
-                </span>
-                <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-md shadow-sm">
-                  {chapterIndex + 1}
-                </span>
-                <span className={`flex-1 text-sm font-medium truncate ${
-                  isActiveChapter ? 'text-amber-900' : 'text-gray-700'
-                }`}>
-                  {chapter.title.replace(/^第\d+章[　\s]+/, '')}
-                </span>
+                <button
+                  onClick={() => toggleChapter(chapter.id)}
+                  className="flex items-center gap-2 flex-1 text-left"
+                >
+                  <span className={`transition-transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`}>
+                    <ChevronDown size={14} className="text-amber-600" />
+                  </span>
+                  <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-md shadow-sm">
+                    {chapterIndex + 1}
+                  </span>
+                  <span className={`flex-1 text-sm font-medium truncate ${
+                    isActiveChapter ? 'text-amber-900' : 'text-gray-700'
+                  }`}>
+                    {chapter.title.replace(/^第\d+章[　\s]+/, '')}
+                  </span>
+                </button>
+                
+                {/* 一括執筆ボタン */}
+                {onBatchWrite && unwrittenCount > 0 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onBatchWrite(chapter.id);
+                    }}
+                    disabled={batchProgress?.isRunning}
+                    title={`この章の未執筆節(${unwrittenCount}件)をAIで一括執筆`}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                      isWriting
+                        ? 'bg-purple-500 text-white animate-pulse'
+                        : batchProgress?.isRunning
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                    }`}
+                  >
+                    {isWriting ? (
+                      <>
+                        <Loader2 size={12} className="animate-spin" />
+                        <span>{batchProgress?.currentIndex}/{batchProgress?.totalCount}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Zap size={12} />
+                        <span>{unwrittenCount}</span>
+                      </>
+                    )}
+                  </button>
+                )}
+                
                 <span className="text-xs text-gray-400 bg-white/60 px-1.5 py-0.5 rounded">
                   {chapter.sections.length}
                 </span>
-              </button>
+              </div>
 
               {/* 節リスト */}
               {isExpanded && (
@@ -147,6 +207,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                   {chapter.sections.map((section, sectionIndex) => {
                     const isActive = section.id === activeSectionId;
                     const hasContent = section.content && section.content.trim() !== '';
+                    const isSectionWriting = isWriting && batchProgress?.currentSectionTitle === section.title;
 
                     return (
                       <button
@@ -155,20 +216,31 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                         className={`w-full flex items-center gap-2 px-3 py-2.5 text-left transition-all group ${
                           isActive
                             ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow-md'
+                            : isSectionWriting
+                            ? 'bg-purple-100 text-purple-700'
                             : 'hover:bg-amber-50 text-gray-600 hover:text-gray-900'
                         }`}
                       >
-                        <FileText 
-                          size={14} 
-                          className={isActive ? 'text-white' : 'text-gray-400 group-hover:text-amber-500'} 
-                        />
+                        {isSectionWriting ? (
+                          <Loader2 size={14} className="text-purple-600 animate-spin" />
+                        ) : (
+                          <FileText 
+                            size={14} 
+                            className={isActive ? 'text-white' : 'text-gray-400 group-hover:text-amber-500'} 
+                          />
+                        )}
                         <span className={`text-xs font-medium ${isActive ? 'text-white/80' : 'text-gray-400'}`}>
                           {sectionIndex + 1}.
                         </span>
                         <span className={`flex-1 text-sm truncate ${isActive ? 'font-medium' : ''}`}>
                           {section.title || `節 ${sectionIndex + 1}`}
                         </span>
-                        {hasContent && !isActive && (
+                        {isSectionWriting && (
+                          <span className="text-xs bg-purple-200 text-purple-700 px-2 py-0.5 rounded-full animate-pulse">
+                            生成中
+                          </span>
+                        )}
+                        {hasContent && !isActive && !isSectionWriting && (
                           <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" title="執筆済み" />
                         )}
                         {isActive && (
@@ -214,4 +286,6 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
 };
 
 export default ChapterSidebar;
+
+
 

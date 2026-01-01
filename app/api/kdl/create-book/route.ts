@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
 
 // サーバーサイド用のSupabaseクライアント
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // 型定義
 interface Section {
@@ -63,26 +65,86 @@ export async function POST(request: Request) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // 認証済みユーザーのIDを取得
+    let authenticatedUserId: string | null = null;
+    
+    // リクエストからユーザーIDが渡されている場合はそれを使用
+    if (userId) {
+      authenticatedUserId = userId;
+    } else {
+      // Cookieからセッショントークンを取得してユーザーを認証
+      try {
+        const cookieStore = await cookies();
+        const accessToken = cookieStore.get('sb-access-token')?.value;
+        const refreshToken = cookieStore.get('sb-refresh-token')?.value;
+        
+        if (accessToken && supabaseAnonKey) {
+          const authClient = createClient(supabaseUrl, supabaseAnonKey);
+          
+          if (refreshToken) {
+            await authClient.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+          }
+          
+          const { data: { user } } = await authClient.auth.getUser(accessToken);
+          if (user) {
+            authenticatedUserId = user.id;
+          }
+        }
+      } catch (authError) {
+        console.log('Auth error (non-critical):', authError);
+      }
+    }
+
+    if (!authenticatedUserId) {
+      return NextResponse.json(
+        { error: 'ログインが必要です。ログインしてから再度お試しください。' },
+        { status: 401 }
+      );
+    }
+
     // 1. kdl_books テーブルに本を保存
-    const bookData = {
+    let bookData: Record<string, any> = {
       title,
       subtitle: subtitle || null,
-      target_profile: target?.profile || null,
-      target_merits: target?.merits || [],
-      target_benefits: target?.benefits || [],
-      target_differentiation: target?.differentiation || [],
-      target_usp: target?.usp || null,
-      user_id: userId || null,
       status: 'draft',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      user_id: authenticatedUserId,
     };
+    
+    // ターゲット情報をJSON形式で保存（target_infoカラムがある場合）
+    if (target) {
+      bookData.target_info = target;
+    }
 
-    const { data: book, error: bookError } = await supabase
+    let book: any;
+    let bookError: any;
+
+    // まずtarget_info付きで試行
+    const result1 = await supabase
       .from('kdl_books')
       .insert(bookData)
       .select()
       .single();
+
+    if (result1.error && result1.error.message.includes('target_info')) {
+      // target_infoカラムがない場合、それを除外してリトライ
+      console.log('target_info column not found, retrying without it');
+      delete bookData.target_info;
+      
+      const result2 = await supabase
+        .from('kdl_books')
+        .insert(bookData)
+        .select()
+        .single();
+      
+      book = result2.data;
+      bookError = result2.error;
+    } else {
+      book = result1.data;
+      bookError = result1.error;
+    }
 
     if (bookError) {
       console.error('Book insert error:', bookError);
@@ -97,8 +159,6 @@ export async function POST(request: Request) {
       title: chapter.title,
       summary: chapter.summary || null,
       order_index: index,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     }));
 
     const { data: insertedChapters, error: chaptersError } = await supabase
@@ -115,12 +175,11 @@ export async function POST(request: Request) {
 
     // 3. kdl_sections テーブルに節を保存
     const sectionInserts: {
+      book_id: string;
       chapter_id: string;
       title: string;
       content: string;
       order_index: number;
-      created_at: string;
-      updated_at: string;
     }[] = [];
 
     chapters.forEach((chapter, chapterIndex) => {
@@ -131,12 +190,11 @@ export async function POST(request: Request) {
       if (insertedChapter && chapter.sections) {
         chapter.sections.forEach((section, sectionIndex) => {
           sectionInserts.push({
+            book_id: bookId,
             chapter_id: insertedChapter.id,
             title: section.title,
             content: '', // 初期は空
             order_index: sectionIndex,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
           });
         });
       }

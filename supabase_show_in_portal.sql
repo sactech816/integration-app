@@ -24,3 +24,9 @@ UPDATE quizzes SET show_in_portal = true WHERE show_in_portal IS NULL;
 
 
 
+
+
+
+
+
+

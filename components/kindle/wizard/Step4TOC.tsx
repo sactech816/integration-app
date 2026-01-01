@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   List, Sparkles, Loader2, AlertCircle, Copy, Trash2, 
-  ArrowLeftRight, Maximize2, ArrowRight, ArrowLeft, Rocket, MessageSquare
+  ArrowLeftRight, Maximize2, ArrowRight, ArrowLeft, Rocket, MessageSquare, LogIn
 } from 'lucide-react';
 import { 
   WizardState, Chapter, TOCSlot, RecommendedPattern, 
@@ -17,9 +17,10 @@ interface Step4TOCProps {
   onSave: () => Promise<void>;
   isSaving: boolean;
   saveError: string;
+  onLoginRequired?: () => void;
 }
 
-export const Step4TOC: React.FC<Step4TOCProps> = ({ state, setState, onSave, isSaving, saveError }) => {
+export const Step4TOC: React.FC<Step4TOCProps> = ({ state, setState, onSave, isSaving, saveError, onLoginRequired }) => {
   const [error, setError] = useState('');
   const [selectedPatternId, setSelectedPatternId] = useState<string>('basic');
   const [recommendations, setRecommendations] = useState<RecommendedPattern[]>([]);
@@ -426,7 +427,18 @@ export const Step4TOC: React.FC<Step4TOCProps> = ({ state, setState, onSave, isS
       {saveError && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
           <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
-          <p className="text-red-700 text-sm">{saveError}</p>
+          <div className="flex-1">
+            <p className="text-red-700 text-sm">{saveError}</p>
+            {saveError.includes('ログイン') && onLoginRequired && (
+              <button 
+                onClick={() => onLoginRequired()}
+                className="inline-flex items-center gap-2 mt-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-4 py-2 rounded-lg transition-all shadow-md text-sm"
+              >
+                <LogIn size={16} />
+                ログインする
+              </button>
+            )}
+          </div>
         </div>
       )}
 

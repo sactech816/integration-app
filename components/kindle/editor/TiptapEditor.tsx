@@ -1,31 +1,57 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { 
   Bold, Italic, Strikethrough, Heading1, Heading2, Heading3,
   List, ListOrdered, Quote, Minus, Undo, Redo,
-  Check, Loader2
+  Check, Loader2, Bot, AlertCircle
 } from 'lucide-react';
+
+interface BookInfo {
+  id: string;
+  title: string;
+  subtitle: string | null;
+}
+
+interface TargetProfile {
+  profile?: string;
+  merits?: string[];
+  benefits?: string[];
+  usp?: string;
+}
 
 interface TiptapEditorProps {
   initialContent: string;
   sectionId: string;
   sectionTitle: string;
+  chapterTitle: string;
+  bookInfo: BookInfo;
+  targetProfile?: TargetProfile;
   onSave: (sectionId: string, content: string) => Promise<void>;
+}
+
+// 外部から呼び出せる関数のインターフェース
+export interface TiptapEditorRef {
+  forceSave: () => Promise<void>;
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-export const TiptapEditor: React.FC<TiptapEditorProps> = ({
+export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
   initialContent,
   sectionId,
   sectionTitle,
+  chapterTitle,
+  bookInfo,
+  targetProfile,
   onSave,
-}) => {
+}, ref) => {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedContentRef = useRef<string>(initialContent);
   const currentSectionIdRef = useRef<string>(sectionId);
@@ -43,6 +69,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
       }),
     ],
     content: initialContent || '',
+    immediatelyRender: false, // SSR対応: ハイドレーションミスマッチを防ぐ
     editorProps: {
       attributes: {
         class: 'prose prose-lg max-w-none focus:outline-none min-h-[calc(100vh-300px)] px-8 py-6',
@@ -105,6 +132,84 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
       }
     };
   }, []);
+
+  // 外部から呼び出せる強制保存関数
+  useImperativeHandle(ref, () => ({
+    forceSave: async () => {
+      if (!editor) return;
+      
+      // デバウンスタイマーをキャンセル
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+      
+      const content = editor.getHTML();
+      
+      // 変更がない場合はスキップ
+      if (content === lastSavedContentRef.current) {
+        return;
+      }
+      
+      setSaveStatus('saving');
+      try {
+        await onSave(currentSectionIdRef.current, content);
+        lastSavedContentRef.current = content;
+        setSaveStatus('saved');
+      } catch (error) {
+        console.error('Force save error:', error);
+        setSaveStatus('error');
+        throw error;
+      }
+    },
+  }), [editor, onSave]);
+
+  // AI自動執筆機能
+  const handleAIGenerate = async () => {
+    if (!editor || isGenerating) return;
+
+    setIsGenerating(true);
+    setGenerateError(null);
+
+    try {
+      const response = await fetch('/api/kdl/generate-section', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          book_id: bookInfo.id,
+          book_title: bookInfo.title,
+          book_subtitle: bookInfo.subtitle,
+          chapter_title: chapterTitle,
+          section_title: sectionTitle,
+          target_profile: targetProfile,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '生成に失敗しました');
+      }
+
+      const data = await response.json();
+      
+      if (data.content) {
+        // 現在のカーソル位置に挿入（または末尾に追加）
+        editor.chain().focus().insertContent(data.content).run();
+      }
+    } catch (error: any) {
+      console.error('AI生成エラー:', error);
+      setGenerateError(error.message || '本文の生成に失敗しました');
+      
+      // 5秒後にエラーをクリア
+      setTimeout(() => {
+        setGenerateError(null);
+      }, 5000);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   if (!editor) {
     return (
@@ -250,7 +355,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
           </ToolButton>
         </div>
 
-        <div className="flex items-center gap-1 px-3">
+        <div className="flex items-center gap-1 px-3 border-r border-gray-200">
           <ToolButton
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
             isActive={editor.isActive('blockquote')}
@@ -264,6 +369,40 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
           >
             <Minus size={18} />
           </ToolButton>
+        </div>
+
+        {/* AI執筆ボタン */}
+        <div className="flex items-center gap-2 px-3">
+          <button
+            type="button"
+            onClick={handleAIGenerate}
+            disabled={isGenerating}
+            title="AIにこの節を書いてもらう"
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+              isGenerating
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 shadow-md hover:shadow-lg'
+            }`}
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="animate-spin" size={16} />
+                <span>執筆中...</span>
+              </>
+            ) : (
+              <>
+                <Bot size={16} />
+                <span>AI執筆</span>
+              </>
+            )}
+          </button>
+          
+          {generateError && (
+            <div className="flex items-center gap-1.5 text-red-500 text-sm animate-pulse">
+              <AlertCircle size={14} />
+              <span>{generateError}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -360,7 +499,9 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
       `}</style>
     </div>
   );
-};
+});
+
+TiptapEditor.displayName = 'TiptapEditor';
 
 export default TiptapEditor;
 

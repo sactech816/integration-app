@@ -1,8 +1,27 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle, Info } from 'lucide-react';
+import Link from 'next/link';
 import { ChapterSidebar } from './ChapterSidebar';
-import { TiptapEditor } from './TiptapEditor';
+import { TiptapEditor, TiptapEditorRef } from './TiptapEditor';
+
+// トースト通知の型
+interface Toast {
+  id: string;
+  type: 'success' | 'error' | 'info';
+  message: string;
+}
+
+// 確認ダイアログの型
+interface ConfirmDialog {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
 
 interface Section {
   id: string;
@@ -25,15 +44,32 @@ interface Book {
   subtitle: string | null;
 }
 
+interface TargetProfile {
+  profile?: string;
+  merits?: string[];
+  benefits?: string[];
+  usp?: string;
+}
+
+interface BatchWriteProgress {
+  isRunning: boolean;
+  chapterId: string | null;
+  currentIndex: number;
+  totalCount: number;
+  currentSectionTitle: string;
+}
+
 interface EditorLayoutProps {
   book: Book;
   chapters: Chapter[];
+  targetProfile?: TargetProfile;
   onUpdateSectionContent: (sectionId: string, content: string) => Promise<void>;
 }
 
 export const EditorLayout: React.FC<EditorLayoutProps> = ({
   book,
   chapters,
+  targetProfile,
   onUpdateSectionContent,
 }) => {
   // 初期値: 最初の章の最初の節
@@ -44,21 +80,35 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     return '';
   };
 
+  const router = useRouter();
+  const editorRef = useRef<TiptapEditorRef>(null);
+  
   const [activeSectionId, setActiveSectionId] = useState<string>(getInitialSectionId);
   const [chaptersData, setChaptersData] = useState<Chapter[]>(chapters);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isSavingAndBack, setIsSavingAndBack] = useState(false);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog | null>(null);
+  const [batchProgress, setBatchProgress] = useState<BatchWriteProgress>({
+    isRunning: false,
+    chapterId: null,
+    currentIndex: 0,
+    totalCount: 0,
+    currentSectionTitle: '',
+  });
 
-  // 現在選択中の節を取得
-  const getActiveSection = useCallback(() => {
+  // 現在選択中の節とその章を取得
+  const getActiveInfo = useCallback(() => {
     for (const chapter of chaptersData) {
       const section = chapter.sections.find(s => s.id === activeSectionId);
       if (section) {
-        return section;
+        return { section, chapter };
       }
     }
-    return null;
+    return { section: null, chapter: null };
   }, [chaptersData, activeSectionId]);
 
-  const activeSection = getActiveSection();
+  const { section: activeSection, chapter: activeChapter } = getActiveInfo();
 
   // 節の内容を保存
   const handleSave = useCallback(async (sectionId: string, content: string) => {
@@ -80,6 +130,196 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     setActiveSectionId(sectionId);
   }, []);
 
+  // トースト表示ヘルパー
+  const showToast = useCallback((type: Toast['type'], message: string) => {
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { id, type, message }]);
+    
+    // 3秒後に自動で消す
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3000);
+  }, []);
+
+  // トースト削除
+  const dismissToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  // 確認ダイアログ表示
+  const showConfirm = useCallback((title: string, message: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      setConfirmDialog({
+        isOpen: true,
+        title,
+        message,
+        onConfirm: () => {
+          setConfirmDialog(null);
+          resolve(true);
+        },
+        onCancel: () => {
+          setConfirmDialog(null);
+          resolve(false);
+        },
+      });
+    });
+  }, []);
+
+  // Word出力
+  const handleDownloadDocx = async () => {
+    if (isDownloading) return;
+    
+    setIsDownloading(true);
+    try {
+      const response = await fetch(`/api/kdl/download-docx?book_id=${book.id}`);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'ダウンロードに失敗しました');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${book.title}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      console.error('Download error:', error);
+      showToast('error', 'ダウンロードに失敗しました: ' + error.message);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  // 章の一括執筆
+  const handleBatchWrite = async (chapterId: string) => {
+    if (batchProgress.isRunning) return;
+
+    const chapter = chaptersData.find(c => c.id === chapterId);
+    if (!chapter) return;
+
+    // 未執筆の節のみをフィルタリング
+    const sectionsToWrite = chapter.sections.filter(s => !s.content || s.content.trim() === '');
+    
+    if (sectionsToWrite.length === 0) {
+      showToast('info', 'この章のすべての節は既に執筆済みです。');
+      return;
+    }
+
+    const confirmed = await showConfirm(
+      '章の一括執筆',
+      `「${chapter.title}」の未執筆の節（${sectionsToWrite.length}件）をAIで執筆しますか？\n\n` +
+      '※ この処理には数分かかる場合があります。\n' +
+      '※ 処理中はブラウザを閉じないでください。'
+    );
+
+    if (!confirmed) return;
+
+    setBatchProgress({
+      isRunning: true,
+      chapterId,
+      currentIndex: 0,
+      totalCount: sectionsToWrite.length,
+      currentSectionTitle: sectionsToWrite[0]?.title || '',
+    });
+
+    for (let i = 0; i < sectionsToWrite.length; i++) {
+      const section = sectionsToWrite[i];
+      
+      setBatchProgress(prev => ({
+        ...prev,
+        currentIndex: i + 1,
+        currentSectionTitle: section.title,
+      }));
+
+      try {
+        const response = await fetch('/api/kdl/generate-section', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            book_id: book.id,
+            book_title: book.title,
+            book_subtitle: book.subtitle,
+            chapter_title: chapter.title,
+            section_title: section.title,
+            target_profile: targetProfile,
+          }),
+        });
+
+        if (!response.ok) {
+          console.error(`節「${section.title}」の生成に失敗しました`);
+          continue; // エラーでもスキップして次へ
+        }
+
+        const data = await response.json();
+        
+        if (data.content) {
+          // DBに保存
+          await onUpdateSectionContent(section.id, data.content);
+          
+          // ローカルの状態も更新
+          setChaptersData(prev => prev.map(ch => ({
+            ...ch,
+            sections: ch.sections.map(sec =>
+              sec.id === section.id
+                ? { ...sec, content: data.content }
+                : sec
+            ),
+          })));
+        }
+
+        // 次のリクエストまで少し待つ（レート制限対策）
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+      } catch (error) {
+        console.error(`節「${section.title}」の生成でエラー:`, error);
+        // エラーでもスキップして次へ
+      }
+    }
+
+    setBatchProgress({
+      isRunning: false,
+      chapterId: null,
+      currentIndex: 0,
+      totalCount: 0,
+      currentSectionTitle: '',
+    });
+
+    showToast('success', '一括執筆が完了しました！');
+  };
+
+  // 保存して戻る
+  const handleSaveAndBack = async () => {
+    if (isSavingAndBack) return;
+    
+    setIsSavingAndBack(true);
+    try {
+      // エディタの現在の内容を即座に保存
+      if (editorRef.current) {
+        await editorRef.current.forceSave();
+      }
+      
+      // トースト表示
+      showToast('success', '保存しました！');
+      
+      // 少し待ってから遷移（トーストを見せるため）
+      setTimeout(() => {
+        router.push('/kindle');
+      }, 800);
+      
+    } catch (error: any) {
+      console.error('Save and back error:', error);
+      showToast('error', '保存に失敗しました: ' + error.message);
+      setIsSavingAndBack(false);
+    }
+  };
+
   if (!activeSection) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-50">
@@ -92,31 +332,189 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   }
 
   return (
-    <div className="h-screen flex overflow-hidden bg-white">
-      {/* 左サイドバー: 目次 */}
-      <div className="w-80 flex-shrink-0 border-r border-gray-200 overflow-hidden">
-        <ChapterSidebar
-          chapters={chaptersData}
-          activeSectionId={activeSectionId}
-          onSectionClick={handleSectionClick}
-          bookTitle={book.title}
-          bookSubtitle={book.subtitle}
-        />
+    <div className="h-screen flex flex-col overflow-hidden bg-white">
+      {/* ヘッダー */}
+      <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/kindle"
+            className="flex items-center gap-1 text-white/90 hover:text-white text-sm transition-colors"
+          >
+            <ArrowLeft size={16} />
+            <span>一覧に戻る</span>
+          </Link>
+          <div className="text-white/30">|</div>
+          <h1 className="font-bold text-sm truncate max-w-xs">{book.title}</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDownloadDocx}
+            disabled={isDownloading}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+              isDownloading
+                ? 'bg-white/20 cursor-not-allowed'
+                : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
+            }`}
+          >
+            {isDownloading ? (
+              <>
+                <Loader2 className="animate-spin" size={16} />
+                <span>生成中...</span>
+              </>
+            ) : (
+              <>
+                <FileDown size={16} />
+                <span>📥 Word出力</span>
+              </>
+            )}
+          </button>
+          
+          <button
+            onClick={handleSaveAndBack}
+            disabled={isSavingAndBack}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+              isSavingAndBack
+                ? 'bg-green-400 cursor-not-allowed'
+                : 'bg-white text-amber-600 hover:bg-amber-50 active:bg-amber-100'
+            }`}
+          >
+            {isSavingAndBack ? (
+              <>
+                <Check size={16} className="text-white" />
+                <span className="text-white">保存しました</span>
+              </>
+            ) : (
+              <>
+                <Save size={16} />
+                <span>💾 保存して戻る</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* 右メイン: エディタ */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <TiptapEditor
-          key={activeSectionId}
-          initialContent={activeSection.content}
-          sectionId={activeSectionId}
-          sectionTitle={activeSection.title || '無題の節'}
-          onSave={handleSave}
-        />
+      {/* メインコンテンツ */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* 左サイドバー: 目次 */}
+        <div className="w-80 flex-shrink-0 border-r border-gray-200 overflow-hidden">
+          <ChapterSidebar
+            chapters={chaptersData}
+            activeSectionId={activeSectionId}
+            onSectionClick={handleSectionClick}
+            bookTitle={book.title}
+            bookSubtitle={book.subtitle}
+            onBatchWrite={handleBatchWrite}
+            batchProgress={batchProgress}
+          />
+        </div>
+
+        {/* 右メイン: エディタ */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <TiptapEditor
+            ref={editorRef}
+            key={activeSectionId}
+            initialContent={activeSection.content}
+            sectionId={activeSectionId}
+            sectionTitle={activeSection.title || '無題の節'}
+            chapterTitle={activeChapter?.title || '無題の章'}
+            bookInfo={book}
+            targetProfile={targetProfile}
+            onSave={handleSave}
+          />
+        </div>
       </div>
+
+      {/* トースト通知 */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
+        {toasts.map((toast) => (
+          <div 
+            key={toast.id}
+            className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg animate-fade-in ${
+              toast.type === 'success' ? 'bg-green-500 text-white' :
+              toast.type === 'error' ? 'bg-red-500 text-white' :
+              'bg-blue-500 text-white'
+            }`}
+          >
+            {toast.type === 'success' && <CheckCircle size={20} />}
+            {toast.type === 'error' && <AlertCircle size={20} />}
+            {toast.type === 'info' && <Info size={20} />}
+            <span className="font-medium">{toast.message}</span>
+            <button 
+              onClick={() => dismissToast(toast.id)}
+              className="ml-2 hover:opacity-70 transition-opacity"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* 確認ダイアログ */}
+      {confirmDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-4 animate-fade-in">
+            <h3 className="text-lg font-bold text-gray-900 mb-3">
+              {confirmDialog.title}
+            </h3>
+            <p className="text-gray-600 mb-6 whitespace-pre-line">
+              {confirmDialog.message}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={confirmDialog.onCancel}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={confirmDialog.onConfirm}
+                className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-600 transition-colors"
+              >
+                実行する
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 一括執筆中のオーバーレイ */}
+      {batchProgress.isRunning && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center">
+            <div className="relative w-20 h-20 mx-auto mb-4">
+              <div className="absolute inset-0 border-4 border-amber-200 rounded-full"></div>
+              <div 
+                className="absolute inset-0 border-4 border-amber-500 rounded-full animate-spin"
+                style={{ borderRightColor: 'transparent', borderTopColor: 'transparent' }}
+              ></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-lg font-bold text-amber-600">
+                  {batchProgress.currentIndex}/{batchProgress.totalCount}
+                </span>
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              AIが執筆中です...
+            </h3>
+            <p className="text-gray-600 mb-4">
+              「{batchProgress.currentSectionTitle}」を執筆しています
+            </p>
+            <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+              <div 
+                className="bg-gradient-to-r from-amber-400 to-orange-500 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${(batchProgress.currentIndex / batchProgress.totalCount) * 100}%` }}
+              ></div>
+            </div>
+            <p className="text-xs text-gray-400">
+              ⚠️ ブラウザを閉じないでください
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default EditorLayout;
+
 

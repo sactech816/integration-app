@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
-  BookOpen, ArrowLeft, ArrowRight, Lightbulb, Check, Target, List, ChevronRight
+  BookOpen, ArrowLeft, ArrowRight, Lightbulb, Check, Target, List, ChevronRight, FileText, Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -21,9 +21,26 @@ import { Step1Theme } from '@/components/kindle/wizard/Step1Theme';
 import { Step2Subtitle } from '@/components/kindle/wizard/Step2Subtitle';
 import { Step3Target } from '@/components/kindle/wizard/Step3Target';
 import { Step4TOC } from '@/components/kindle/wizard/Step4TOC';
+import AuthModal from '@/components/shared/AuthModal';
+import { supabase } from '@/lib/supabase';
+
+// localStorageのキー
+const STORAGE_KEY = 'kindle-wizard-draft';
+
+// 保存するデータの型
+interface SavedDraft {
+  currentStep: number;
+  state: WizardState;
+  titleSuggestions: TitleSuggestion[];
+  subtitleSuggestions: SubtitleSuggestion[];
+  relatedKeywords: { set1: string[]; set2: string[] };
+  targetSuggestions: TargetSuggestion[];
+  savedAt: string;
+}
 
 export default function KindleNewPage() {
   const router = useRouter();
+  const [isInitialized, setIsInitialized] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [state, setState] = useState<WizardState>({
     theme: '',
@@ -52,6 +69,112 @@ export default function KindleNewPage() {
   // Step4用の状態（保存）
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  
+  // 認証モーダル用の状態
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  
+  // 下書き復元の確認モーダル
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const [pendingDraft, setPendingDraft] = useState<SavedDraft | null>(null);
+
+  // localStorageから下書きを復元（初回のみ）
+  useEffect(() => {
+    if (isInitialized) return;
+    
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const draft: SavedDraft = JSON.parse(saved);
+        // 24時間以内の下書きのみ復元対象
+        const savedTime = new Date(draft.savedAt).getTime();
+        const now = Date.now();
+        const hoursDiff = (now - savedTime) / (1000 * 60 * 60);
+        
+        if (hoursDiff < 24 && draft.state.theme) {
+          setPendingDraft(draft);
+          setShowRestoreModal(true);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load draft:', e);
+    }
+    
+    setIsInitialized(true);
+  }, [isInitialized]);
+
+  // 状態が変わるたびにlocalStorageに保存
+  useEffect(() => {
+    if (!isInitialized) return;
+    
+    // 何も入力されていない場合は保存しない
+    if (!state.theme && !state.selectedTitle) return;
+    
+    const draft: SavedDraft = {
+      currentStep,
+      state,
+      titleSuggestions,
+      subtitleSuggestions,
+      relatedKeywords,
+      targetSuggestions,
+      savedAt: new Date().toISOString(),
+    };
+    
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+    } catch (e) {
+      console.error('Failed to save draft:', e);
+    }
+  }, [isInitialized, currentStep, state, titleSuggestions, subtitleSuggestions, relatedKeywords, targetSuggestions]);
+
+  // 下書きを復元する
+  const restoreDraft = () => {
+    if (!pendingDraft) return;
+    
+    setCurrentStep(pendingDraft.currentStep);
+    setState(pendingDraft.state);
+    setTitleSuggestions(pendingDraft.titleSuggestions);
+    setSubtitleSuggestions(pendingDraft.subtitleSuggestions);
+    setRelatedKeywords(pendingDraft.relatedKeywords);
+    setTargetSuggestions(pendingDraft.targetSuggestions);
+    
+    setShowRestoreModal(false);
+    setPendingDraft(null);
+  };
+
+  // 下書きを破棄して新規作成
+  const discardDraft = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setShowRestoreModal(false);
+    setPendingDraft(null);
+  };
+
+  // localStorageをクリア（保存成功時に呼ぶ）
+  const clearDraft = () => {
+    localStorage.removeItem(STORAGE_KEY);
+  };
+  
+  // ユーザーの認証状態を監視
+  useEffect(() => {
+    if (!supabase) return;
+    
+    // 現在のセッションを取得
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // 認証状態の変化を監視
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      // ログイン成功時にモーダルを閉じて保存を再試行
+      if (session?.user && showAuthModal) {
+        setShowAuthModal(false);
+        setSaveError(''); // エラーをクリア
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [showAuthModal]);
 
   const steps = [
     { number: 1, title: 'テーマ・タイトル', icon: Lightbulb },
@@ -89,6 +212,12 @@ export default function KindleNewPage() {
 
   // 本を保存して執筆画面へ遷移
   const handleSaveAndNavigate = async () => {
+    // ログインチェック
+    if (!user) {
+      setSaveError('ログインが必要です。ログインしてから再度お試しください。');
+      return;
+    }
+    
     setIsSaving(true);
     setSaveError('');
     
@@ -101,6 +230,7 @@ export default function KindleNewPage() {
           subtitle: state.subtitle,
           target: cleanTarget(state.selectedTarget),
           chapters: cleanChapters(state.chapters),
+          userId: user.id, // ユーザーIDをクライアントから渡す
         }),
       });
       
@@ -110,6 +240,10 @@ export default function KindleNewPage() {
       }
       
       const data = await response.json();
+      
+      // 保存成功時にlocalStorageをクリア
+      clearDraft();
+      
       router.push(`/kindle/${data.bookId}`);
     } catch (err: any) {
       setSaveError(err.message || '保存中にエラーが発生しました');
@@ -169,6 +303,7 @@ export default function KindleNewPage() {
             onSave={handleSaveAndNavigate}
             isSaving={isSaving}
             saveError={saveError}
+            onLoginRequired={() => setShowAuthModal(true)}
           />
         );
       default:
@@ -176,8 +311,73 @@ export default function KindleNewPage() {
     }
   };
 
+  // 下書きの保存時刻をフォーマット
+  const formatSavedTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('ja-JP', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
+      {/* 下書き復元確認モーダル */}
+      {showRestoreModal && pendingDraft && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl animate-fade-in">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-amber-100 p-2 rounded-lg">
+                <FileText className="text-amber-600" size={24} />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">下書きが見つかりました</h2>
+            </div>
+            
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+              <p className="font-bold text-gray-900 mb-1">
+                {pendingDraft.state.selectedTitle || pendingDraft.state.theme || '無題'}
+              </p>
+              <p className="text-sm text-gray-600">
+                ステップ {pendingDraft.currentStep} / 4 まで進んでいます
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                保存日時: {formatSavedTime(pendingDraft.savedAt)}
+              </p>
+            </div>
+            
+            <p className="text-sm text-gray-600 mb-6">
+              前回の作業を続けますか？
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={discardDraft}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
+              >
+                <Trash2 size={18} />
+                新規作成
+              </button>
+              <button
+                onClick={restoreDraft}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg"
+              >
+                <FileText size={18} />
+                続きから
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 認証モーダル */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        setUser={setUser}
+      />
+      
       {/* ヘッダー */}
       <header className="bg-white/80 backdrop-blur-md border-b border-amber-100 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
