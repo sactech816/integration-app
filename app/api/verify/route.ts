@@ -27,6 +27,7 @@ function getSupabaseServer() {
 
 /**
  * POST: 決済セッションを検証し、購入を記録
+ * 元の診断クイズプロジェクト（quizId形式）と統合プロジェクト（contentId形式）の両方に対応
  */
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +35,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 });
     }
 
-    const { sessionId, userId } = await request.json();
+    // 両方の形式に対応: 元のquizId形式と新しいcontentId形式
+    const { sessionId, userId, quizId, contentId, contentType } = await request.json();
+    
+    console.log('[Verify] Request:', { sessionId, userId, quizId, contentId, contentType });
 
     if (!sessionId) {
       return NextResponse.json({ error: 'sessionId is required' }, { status: 400 });
@@ -42,6 +46,7 @@ export async function POST(request: NextRequest) {
 
     // Stripeセッションを取得
     const session = await stripe.checkout.sessions.retrieve(sessionId);
+    console.log('[Verify] Stripe session status:', session.payment_status);
 
     // 決済が完了しているか確認
     if (session.payment_status !== 'paid') {
@@ -62,7 +67,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (existing) {
-        // 既に記録済み
+        console.log('[Verify] Already recorded:', sessionId);
         return NextResponse.json({ 
           success: true, 
           already_processed: true,
@@ -70,28 +75,40 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // 購入を記録
-      const contentId = session.metadata?.content_id || '';
-      const contentType = session.metadata?.content_type || '';
+      // content_id と content_type を決定
+      // 優先順位: リクエストボディ > Stripeメタデータ > 旧形式(quizId)
+      const finalContentId = contentId || session.metadata?.content_id || quizId?.toString() || '';
+      const finalContentType = contentType || session.metadata?.content_type || 'quiz';
       const amount = session.amount_total || 0;
 
-      if (userId && contentId) {
+      console.log('[Verify] Final values:', { finalContentId, finalContentType, amount, userId });
+
+      if (userId && finalContentId) {
+        // 購入データを構築
+        const purchaseData: Record<string, unknown> = {
+          user_id: userId,
+          content_id: finalContentId,
+          content_type: finalContentType,
+          stripe_session_id: sessionId,
+          amount: amount,
+          created_at: new Date().toISOString()
+        };
+
+        // quiz_idカラムにも保存（元のプロジェクトとの互換性のため）
+        if (finalContentType === 'quiz' && !isNaN(parseInt(finalContentId))) {
+          purchaseData.quiz_id = parseInt(finalContentId);
+        }
+
+        console.log('[Verify] Inserting purchase:', purchaseData);
+
         const { data: purchase, error } = await supabase
           .from('purchases')
-          .insert([{
-            user_id: userId,
-            content_id: contentId,
-            content_type: contentType,
-            stripe_session_id: sessionId,
-            amount: amount,
-            created_at: new Date().toISOString()
-          }])
+          .insert([purchaseData])
           .select()
           .single();
 
         if (error) {
           console.error('[Verify] Insert error:', error);
-          // エラーでも決済自体は成功
           return NextResponse.json({ 
             success: true, 
             recorded: false,
@@ -99,12 +116,14 @@ export async function POST(request: NextRequest) {
           });
         }
 
+        console.log('[Verify] Purchase recorded:', purchase);
+
         return NextResponse.json({ 
           success: true, 
           recorded: true,
           purchase_id: purchase.id,
-          content_id: contentId,
-          content_type: contentType,
+          content_id: finalContentId,
+          content_type: finalContentType,
           amount: amount
         });
       }

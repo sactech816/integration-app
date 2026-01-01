@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { supabase, TABLES } from '@/lib/supabase';
 import { getAdminEmails } from '@/lib/constants';
 import { ServiceType, SERVICE_LABELS, Quiz, Profile, BusinessLP, Block } from '@/lib/types';
@@ -378,6 +379,10 @@ export default function DashboardPage() {
     }
   }, [isAdmin]);
 
+  // 決済成功後のverify処理
+  const searchParams = useSearchParams();
+  const [paymentVerified, setPaymentVerified] = useState(false);
+
   // 初期化
   useEffect(() => {
     const init = async () => {
@@ -400,6 +405,57 @@ export default function DashboardPage() {
 
     init();
   }, []);
+
+  // 決済成功時のverify処理
+  useEffect(() => {
+    const verifyPayment = async () => {
+      const paymentStatus = searchParams.get('payment');
+      const sessionId = searchParams.get('session_id');
+      
+      if (paymentStatus === 'success' && sessionId && user && !paymentVerified) {
+        console.log('[Dashboard] Verifying payment session:', sessionId);
+        
+        try {
+          const response = await fetch('/api/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId: sessionId,
+              userId: user.id
+            })
+          });
+          
+          const result = await response.json();
+          console.log('[Dashboard] Payment verification result:', result);
+          
+          if (result.success) {
+            setPaymentVerified(true);
+            
+            // URLからpaymentパラメータを削除
+            const url = new URL(window.location.href);
+            url.searchParams.delete('payment');
+            url.searchParams.delete('session_id');
+            window.history.replaceState({}, '', url.toString());
+            
+            if (result.recorded || result.already_processed) {
+              alert('決済が完了しました！Pro機能が開放されました。');
+              // コンテンツと購入情報を再取得
+              await fetchContents();
+              await fetchPurchases();
+            }
+          } else {
+            console.error('[Dashboard] Payment verification failed:', result.error);
+          }
+        } catch (error) {
+          console.error('[Dashboard] Payment verification error:', error);
+        }
+      }
+    };
+
+    if (user) {
+      verifyPayment();
+    }
+  }, [user, searchParams, paymentVerified, fetchContents, fetchPurchases]);
 
   // ユーザーまたはフィルター変更時にコンテンツ取得
   useEffect(() => {

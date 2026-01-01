@@ -72,6 +72,7 @@ export async function getUserPurchases(
 
 /**
  * 特定のコンテンツに対する購入があるか確認
+ * content_idカラムとquiz_idカラムの両方をチェック（互換性のため）
  */
 export async function hasPurchase(
   userId: string,
@@ -84,20 +85,33 @@ export async function hasPurchase(
       return false;
     }
 
-    const { data, error } = await supabase
+    // まずcontent_idで検索
+    const { data: contentData, error: contentError } = await supabase
       .from('purchases')
       .select('id')
       .eq('user_id', userId)
       .eq('content_id', contentId)
-      .eq('content_type', contentType)
       .limit(1);
 
-    if (error) {
-      console.error('[Purchases] Check error:', error);
-      return false;
+    if (!contentError && contentData && contentData.length > 0) {
+      return true;
     }
 
-    return (data && data.length > 0) || false;
+    // quiz_idでも検索（元の診断クイズプロジェクトとの互換性）
+    if (contentType === 'quiz' && !isNaN(parseInt(contentId))) {
+      const { data: quizData, error: quizError } = await supabase
+        .from('purchases')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('quiz_id', parseInt(contentId))
+        .limit(1);
+
+      if (!quizError && quizData && quizData.length > 0) {
+        return true;
+      }
+    }
+
+    return false;
   } catch (error) {
     console.error('[Purchases] Unexpected error:', error);
     return false;
