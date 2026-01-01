@@ -15,7 +15,7 @@ interface DonationButtonProps {
 const DONATION_AMOUNTS = [100, 300, 500, 1000, 3000, 5000];
 
 /**
- * 寄付ボタンコンポーネント
+ * 開発支援ボタンコンポーネント
  */
 export function DonationButton({
   contentId,
@@ -77,7 +77,7 @@ export function DonationButton({
 
   return (
     <>
-      {/* 寄付ボタン */}
+      {/* 開発支援ボタン */}
       <button
         onClick={() => setIsModalOpen(true)}
         className={`${buttonStyles[variant]} ${className}`}

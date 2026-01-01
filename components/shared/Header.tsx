@@ -190,7 +190,7 @@ const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-1.5 text-sm font-semibold text-rose-600 hover:text-rose-700 transition-colors"
             >
               <Heart size={16} />
-              <span>❤️ 寄付</span>
+              <span>❤️ 開発支援</span>
             </button>
           </nav>
 
@@ -380,7 +380,7 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
 
-            {/* 寄付・サポート */}
+            {/* 開発支援・サポート */}
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">応援・サポート</p>
               <div className="space-y-1">
@@ -390,7 +390,7 @@ const Header: React.FC<HeaderProps> = ({
                 >
                   <Heart size={20} className="text-rose-500" />
                   <div className="text-left">
-                    <span className="font-medium text-rose-700">❤️ 寄付・サポート</span>
+                    <span className="font-medium text-rose-700">❤️ 開発支援・サポート</span>
                     <p className="text-xs text-gray-500">サービスの運営を応援する</p>
                   </div>
                 </button>

@@ -40,7 +40,7 @@ export async function POST(request) {
         },
       ];
     } else if (amount) {
-      // 寄付モード: 動的な金額を使用
+      // 開発支援モード: 動的な金額を使用
       const amountInYen = parseInt(amount, 10);
       if (isNaN(amountInYen) || amountInYen < 100) {
         return NextResponse.json({ error: '金額は100円以上で指定してください' }, { status: 400 });
@@ -51,7 +51,7 @@ export async function POST(request) {
           price_data: {
             currency: 'jpy',
             product_data: {
-              name: '応援・寄付',
+              name: 'Support',
               description: contentType 
                 ? `${contentType === 'quiz' ? '診断クイズ' : contentType === 'profile' ? 'プロフィールLP' : 'ビジネスLP'}への応援`
                 : '作成者への応援',

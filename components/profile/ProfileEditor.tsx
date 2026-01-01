@@ -2244,7 +2244,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 </button>
               </div>
 
-              {/* 寄付エリア */}
+              {/* 開発支援エリア */}
               <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-xl p-5">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="bg-orange-500 p-2 rounded-full">
@@ -2252,7 +2252,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                   </div>
                   <div className="flex-1">
                     <h4 className="font-bold text-base text-gray-900 mb-1 flex items-center gap-2">
-                      応援・寄付でPro機能を開放
+                      応援・開発支援でPro機能を開放
                       <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">オプション</span>
                     </h4>
                     <p className="text-sm text-gray-600">
@@ -2303,10 +2303,10 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                   }}
                   className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 text-white font-bold py-3 rounded-xl hover:from-orange-600 hover:to-yellow-600 transition-all shadow-lg flex items-center justify-center gap-2"
                 >
-                  <Layout size={18} /> マイページで寄付・機能開放する
+                  <Layout size={18} /> マイページで開発支援・機能開放する
                 </button>
                 <p className="text-xs text-center text-gray-500 mt-2">
-                  ※寄付は任意です。無料でもLPの公開・シェアは可能です
+                  ※開発支援は任意です。無料でもLPの公開・シェアは可能です
                 </p>
               </div>
 

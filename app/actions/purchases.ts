@@ -146,7 +146,7 @@ export async function hasProAccess(
 }
 
 /**
- * コンテンツへの総寄付額を取得
+ * コンテンツへの総支援額を取得
  */
 export async function getTotalDonations(
   contentId: string,

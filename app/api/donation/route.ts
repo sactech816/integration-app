@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     }
 
-    console.log(`🎁 Starting Donation Checkout: ${finalAmount}JPY / User:${userId || 'anonymous'}`);
+    console.log(`🎁 Starting Support Checkout: ${finalAmount}JPY / User:${userId || 'anonymous'}`);
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ['card'],
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
           price_data: {
             currency: 'jpy',
             product_data: {
-              name: '集客メーカーへの寄付',
+              name: 'Support',
               description: 'サービスの運営・開発へのご支援ありがとうございます',
             },
             unit_amount: finalAmount,
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: session.url });
 
   } catch (err: any) {
-    console.error("🔥 Stripe Donation Checkout Error:", err);
+    console.error("🔥 Stripe Support Checkout Error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

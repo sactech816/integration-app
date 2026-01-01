@@ -102,7 +102,7 @@ const DonationPageContent: React.FC<DonationPageProps> = ({ user }) => {
     if (paypalUrl) {
       window.open(paypalUrl, '_blank');
     } else {
-      alert('PayPalでの寄付リンクは現在準備中です。');
+      alert('PayPalでの開発支援リンクは現在準備中です。');
     }
   };
 
@@ -117,7 +117,7 @@ const DonationPageContent: React.FC<DonationPageProps> = ({ user }) => {
                 <CheckCircle className="text-green-600" size={28} />
               </div>
               <div>
-                <h3 className="font-bold text-green-800 text-lg">ご寄付ありがとうございます！</h3>
+                <h3 className="font-bold text-green-800 text-lg">ご支援ありがとうございます！</h3>
                 <p className="text-green-700 text-sm">皆さまからのご支援が、サービスの改善と発展を支えています。</p>
               </div>
               <button 
@@ -138,7 +138,7 @@ const DonationPageContent: React.FC<DonationPageProps> = ({ user }) => {
               </div>
               <div>
                 <h3 className="font-bold text-amber-800 text-lg">決済がキャンセルされました</h3>
-                <p className="text-amber-700 text-sm">別の方法でのご寄付も可能です。ご検討いただけると嬉しいです。</p>
+                <p className="text-amber-700 text-sm">別の方法でのご支援も可能です。ご検討いただけると嬉しいです。</p>
               </div>
               <button 
                 onClick={() => setDonationStatus(null)}
@@ -168,20 +168,20 @@ const DonationPageContent: React.FC<DonationPageProps> = ({ user }) => {
             <p className="text-base sm:text-lg text-white/95 mb-8 leading-relaxed drop-shadow-md max-w-2xl mx-auto">
               皆さまからの温かいご支援が、<br className="sm:hidden" />
               より良いサービスの開発・運営につながります。<br />
-              <span className="font-bold">ログイン不要</span>でどなたでもご寄付いただけます。
+              <span className="font-bold">ログイン不要</span>でどなたでもご支援いただけます。
             </p>
           </div>
         </div>
 
-        {/* 寄付セクション */}
+        {/* 開発支援セクション */}
         <div className="max-w-3xl mx-auto px-4 py-12">
-          {/* なぜ寄付が必要か */}
+          {/* なぜ開発支援が必要か */}
           <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-8 border border-rose-100">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
               <span className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center">
                 <Heart className="text-rose-500" size={20} />
               </span>
-              ご寄付のお願い
+              ご支援のお願い
             </h2>
             
             <div className="space-y-4 text-gray-700 leading-relaxed">
@@ -192,7 +192,7 @@ const DonationPageContent: React.FC<DonationPageProps> = ({ user }) => {
                 サーバー費用、AI API利用料、機能開発など、サービスの維持・改善には費用がかかります。
               </p>
               <p>
-                皆さまからのご寄付が、サービスの継続と新機能の開発を支えています。
+                皆さまからのご支援が、サービスの継続と新機能の開発を支えています。
                 <span className="font-bold">少額でも大変ありがたく思います。</span>
               </p>
             </div>
@@ -201,7 +201,7 @@ const DonationPageContent: React.FC<DonationPageProps> = ({ user }) => {
               <div className="flex items-start gap-3">
                 <Gift className="text-amber-600 flex-shrink-0 mt-1" size={20} />
                 <div>
-                  <p className="font-bold text-amber-800 mb-1">ご寄付の使い道</p>
+                  <p className="font-bold text-amber-800 mb-1">ご支援の使い道</p>
                   <ul className="text-sm text-amber-700 space-y-1">
                     <li>• サーバー・インフラ費用</li>
                     <li>• AI機能のAPI利用料</li>
@@ -219,7 +219,7 @@ const DonationPageContent: React.FC<DonationPageProps> = ({ user }) => {
               <span className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
                 <CreditCard className="text-indigo-600" size={20} />
               </span>
-              クレジットカードで寄付
+              クレジットカードで開発支援
             </h2>
 
             <p className="text-gray-600 mb-6 text-sm">
@@ -303,7 +303,7 @@ const DonationPageContent: React.FC<DonationPageProps> = ({ user }) => {
                 <>
                   <CreditCard size={20} />
                   {getDonationAmount() 
-                    ? `¥${getDonationAmount()?.toLocaleString()} を寄付する`
+                    ? `¥${getDonationAmount()?.toLocaleString()} で開発支援する`
                     : '金額を選択してください'
                   }
                   {getDonationAmount() && <ArrowRight size={18} />}
@@ -322,11 +322,11 @@ const DonationPageContent: React.FC<DonationPageProps> = ({ user }) => {
               <span className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                 <span className="text-blue-600 font-bold text-sm">PP</span>
               </span>
-              PayPalで寄付
+              PayPalで開発支援
             </h2>
 
             <p className="text-gray-600 mb-6 text-sm">
-              PayPalアカウントをお持ちの方は、任意の金額をご寄付いただけます。<br />
+              PayPalアカウントをお持ちの方は、任意の金額をご支援いただけます。<br />
               リンク先で金額を入力し、送金してください。
             </p>
 
@@ -335,7 +335,7 @@ const DonationPageContent: React.FC<DonationPageProps> = ({ user }) => {
               className="w-full py-4 px-6 rounded-xl font-bold text-lg bg-[#0070BA] text-white hover:bg-[#005ea6] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
             >
               <span className="font-bold">PayPal</span>
-              で寄付する
+              で開発支援する
               <ExternalLink size={18} />
             </button>
 

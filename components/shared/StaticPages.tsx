@@ -461,9 +461,9 @@ export const HowToPage = ({
                     <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-100 relative overflow-hidden">
                         <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg">PRO</div>
                         <div className="flex items-center gap-2 mb-4 text-orange-900 font-bold text-xl">
-                            <Lock size={24} className="text-orange-500"/> Pro機能 (寄付で開放)
+                            <Lock size={24} className="text-orange-500"/> Pro機能 (開発支援で開放)
                         </div>
-                        <p className="text-xs text-orange-700 mb-4">※コンテンツごとに任意の金額(500円〜)を寄付いただくと開放されます。</p>
+                        <p className="text-xs text-orange-700 mb-4">※コンテンツごとに任意の金額(500円〜)を開発支援いただくと開放されます。</p>
                         <ul className="space-y-4 text-sm text-gray-800">
                             <li className="flex gap-3"><span className="bg-orange-100 text-orange-600 p-1 rounded"><Download size={16}/></span><span><strong>HTML書き出し:</strong> 自社サーバーに設置可能</span></li>
                             <li className="flex gap-3"><span className="bg-orange-100 text-orange-600 p-1 rounded"><Code size={16}/></span><span><strong>埋め込みタグ:</strong> ブログやHPに埋め込み</span></li>
@@ -482,7 +482,7 @@ export const HowToPage = ({
                             <li><strong>サービスの利用:</strong> 本サービスは無料でコンテンツを作成・公開できるプラットフォームです。</li>
                             <li><strong>コンテンツの権利:</strong> 作成したコンテンツの著作権は作成者に帰属します。個人・商用問わず利用可能です。</li>
                             <li><strong>禁止事項:</strong> 公序良俗違反・権利侵害・違法な内容の掲載は禁止します。</li>
-                            <li><strong>Pro機能:</strong> 500円〜の任意の寄付でPro機能が開放されます。寄付後の返金はできません。</li>
+                            <li><strong>Pro機能:</strong> 500円〜の任意の開発支援でPro機能が開放されます。開発支援後の返金はできません。</li>
                             <li><strong>免責:</strong> サービスは現状有姿で提供され、損害について運営者は責任を負いません。</li>
                             <li><strong>準拠法:</strong> 本規約は日本法に準拠し、紛争は運営者所在地の裁判所を管轄とします。</li>
                         </ol>
@@ -525,7 +525,7 @@ export const FaqPage = ({
         { category: "機能", q: "AI自動生成の精度は？", a: "テーマを入力するだけで、質問・結果パターン・キャッチコピーなどを自動生成します。生成後に自由に編集できるため、たたき台として非常に便利です。" },
         { category: "機能", q: "プレビュー機能はありますか？", a: "はい、作成中のコンテンツをリアルタイムで確認できます。保存前に見た目をチェックできるので安心です。" },
         { category: "機能", q: "スマホでも使えますか？", a: "はい、完全レスポンシブ対応です。作成も閲覧もスマホで快適に行えます。" },
-        { category: "Pro機能", q: "Pro機能（寄付）とは？", a: "コンテンツごとに任意の金額（500円〜）を寄付いただくことで、「HTMLダウンロード」「埋め込みコード発行」「収集したメールアドレスのCSVダウンロード」機能が開放されます。" },
+        { category: "Pro機能", q: "Pro機能（開発支援）とは？", a: "コンテンツごとに任意の金額（500円〜）を開発支援いただくことで、「HTMLダウンロード」「埋め込みコード発行」「収集したメールアドレスのCSVダウンロード」機能が開放されます。" },
         { category: "技術", q: "SEO対策はされていますか？", a: "はい、構造化データ、メタタグ、適切なタイトル設定など、基本的なSEO対策は実装済みです。AI検索（ChatGPT等）からの流入も考慮した設計になっています。" },
         { category: "技術", q: "HTMLダウンロードとは？", a: "Pro機能を開放すると、作成したコンテンツをHTMLファイルとしてダウンロードできます。自社サーバーに設置することで、完全に自分の管理下で運用できます。" },
     ];
@@ -668,7 +668,7 @@ export const LegalPage = ({
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4">
                         <div className="font-bold text-gray-500">販売価格</div>
-                        <div className="md:col-span-2 text-gray-900">各決済画面に表示された金額（寄付形式のため任意設定可能）</div>
+                        <div className="md:col-span-2 text-gray-900">各決済画面に表示された金額（開発支援形式のため任意設定可能）</div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4">
                         <div className="font-bold text-gray-500">商品代金以外の必要料金</div>

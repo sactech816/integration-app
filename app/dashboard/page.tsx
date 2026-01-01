@@ -783,16 +783,16 @@ export default function DashboardPage() {
 
   // 埋め込みコード生成
   const handleEmbed = (item: ContentItem, isUnlocked: boolean) => {
-    if (!isUnlocked) return alert("この機能を利用するには、寄付（購入）によるロック解除が必要です。");
+    if (!isUnlocked) return alert("この機能を利用するには、開発支援（購入）によるロック解除が必要です。");
     const url = `${window.location.origin}/${item.type}/${item.slug}`;
     const code = `<iframe src="${url}" width="100%" height="600" style="border:none; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);"></iframe>`;
     navigator.clipboard.writeText(code);
     alert('埋め込みコードをコピーしました！\n\nWordPressなどの「カスタムHTML」ブロックに貼り付けてください。');
   };
 
-  // 機能開放/寄付
+  // 機能開放/開発支援
   const handlePurchase = async (item: ContentItem) => {
-    const inputPrice = window.prompt(`「${item.title}」のPro機能を開放します。\n\n応援・寄付金額を入力してください（100円〜100,000円）。`, "1000");
+    const inputPrice = window.prompt(`「${item.title}」のPro機能を開放します。\n\n応援・開発支援金額を入力してください（100円〜100,000円）。`, "1000");
     if (inputPrice === null) return;
     const price = parseInt(inputPrice, 10);
     if (isNaN(price) || price < 100 || price > 100000) {
@@ -1147,7 +1147,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6 mb-6">
-          {/* 左カラム：ログイン情報 + 寄付 */}
+          {/* 左カラム：ログイン情報 + 開発支援 */}
           <div className="lg:col-span-1 space-y-4">
             {/* ユーザー情報 */}
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
@@ -1246,7 +1246,7 @@ export default function DashboardPage() {
               </div>
             </button>
 
-            {/* 寄付・サポートへのリンク */}
+            {/* 開発支援・サポートへのリンク */}
             <button
               onClick={() => navigateTo('donation')}
               className="w-full bg-gradient-to-r from-rose-500 to-pink-500 text-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center gap-3"
@@ -1256,7 +1256,7 @@ export default function DashboardPage() {
               </div>
               <div className="text-left">
                 <p className="font-bold text-sm">サービスを応援する</p>
-                <p className="text-xs text-white/80">寄付・サポートはこちら</p>
+                <p className="text-xs text-white/80">開発支援・サポートはこちら</p>
               </div>
             </button>
           </div>
@@ -1876,7 +1876,7 @@ export default function DashboardPage() {
                         <tr className="border-b border-gray-200">
                           <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">メールアドレス</th>
                           <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">パートナー</th>
-                          <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">総寄付額</th>
+                          <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">総支援額</th>
                           <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">購入数</th>
                           <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">登録日</th>
                           <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">操作</th>
@@ -2141,12 +2141,12 @@ export default function DashboardPage() {
                             </button>
                           )}
 
-                          {/* 未購入時：寄付ボタン */}
+                          {/* 未購入時：開発支援ボタン */}
                           {!isUnlocked && !isAdmin && (
                             <div className="mt-3 pt-3 border-t border-gray-100">
                               <button onClick={() => handlePurchase(item)} disabled={processingId === item.id} className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-2.5 rounded-lg font-bold text-xs hover:from-orange-600 hover:to-amber-600 flex items-center justify-center gap-1 transition-all shadow-sm">
                                 {processingId === item.id ? <Loader2 className="animate-spin" size={14} /> : <Heart size={14} />}
-                                Pro機能を開放（寄付）
+                                Pro機能を開放（開発支援）
                               </button>
                               <p className="text-[10px] text-gray-400 text-center mt-1.5">埋め込み機能などが利用可能に</p>
                             </div>

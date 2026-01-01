@@ -1913,7 +1913,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                 </div>
               </div>
 
-              {/* 5. 寄付エリア */}
+              {/* 5. 開発支援エリア */}
               <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
                 <p className="text-sm font-bold text-amber-700 mb-2 text-center">💝 開発を応援する</p>
                 <p className="text-xs text-gray-600 text-center mb-3">

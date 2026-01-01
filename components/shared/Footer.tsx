@@ -118,7 +118,7 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
               <li>
                 <Link href="/donation" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Heart size={14} className="text-rose-500 opacity-80 group-hover:opacity-100" />
-                  ❤️ 寄付・サポート
+                  ❤️ 開発支援・サポート
                 </Link>
               </li>
               <li>
