@@ -83,8 +83,11 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
 }) => {
   // 初期値: 最初の章の最初の節
   const getInitialSectionId = () => {
-    if (chapters.length > 0 && chapters[0].sections.length > 0) {
-      return chapters[0].sections[0].id;
+    for (const chapter of chapters) {
+      const sections = chapter.sections || [];
+      if (sections.length > 0) {
+        return sections[0].id;
+      }
     }
     return '';
   };
@@ -113,7 +116,8 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   // 現在選択中の節とその章を取得
   const getActiveInfo = useCallback(() => {
     for (const chapter of chaptersData) {
-      const section = chapter.sections.find(s => s.id === activeSectionId);
+      const sections = chapter.sections || [];
+      const section = sections.find(s => s.id === activeSectionId);
       if (section) {
         return { section, chapter };
       }

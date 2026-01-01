@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 
 // サーバーサイド用のSupabaseクライアント
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // 型定義
@@ -63,6 +63,7 @@ export async function POST(request: Request) {
       });
     }
 
+    // Service Role Keyを使用（RLSをバイパス）
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // 認証済みユーザーのIDを取得

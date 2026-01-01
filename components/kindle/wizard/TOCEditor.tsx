@@ -53,20 +53,20 @@ export const TOCEditor: React.FC<TOCEditorProps> = ({
   const updateSectionTitle = (chapterIndex: number, sectionIndex: number, title: string) => {
     onUpdate(chapters.map((ch, i) => 
       i === chapterIndex 
-        ? { ...ch, sections: ch.sections.map((sec, j) => j === sectionIndex ? { ...sec, title } : sec) } 
+        ? { ...ch, sections: (ch.sections || []).map((sec, j) => j === sectionIndex ? { ...sec, title } : sec) } 
         : ch
     ));
   };
 
   const addSection = (chapterIndex: number) => {
     onUpdate(chapters.map((ch, i) => 
-      i === chapterIndex ? { ...ch, sections: [...ch.sections, { title: '' }] } : ch
+      i === chapterIndex ? { ...ch, sections: [...(ch.sections || []), { title: '' }] } : ch
     ));
   };
 
   const removeSection = (chapterIndex: number, sectionIndex: number) => {
     onUpdate(chapters.map((ch, i) => 
-      i === chapterIndex ? { ...ch, sections: ch.sections.filter((_, j) => j !== sectionIndex) } : ch
+      i === chapterIndex ? { ...ch, sections: (ch.sections || []).filter((_, j) => j !== sectionIndex) } : ch
     ));
   };
 
@@ -74,7 +74,7 @@ export const TOCEditor: React.FC<TOCEditorProps> = ({
     if (sectionIndex === 0) return;
     onUpdate(chapters.map((ch, i) => {
       if (i !== chapterIndex) return ch;
-      const newSections = [...ch.sections];
+      const newSections = [...(ch.sections || [])];
       [newSections[sectionIndex - 1], newSections[sectionIndex]] = [newSections[sectionIndex], newSections[sectionIndex - 1]];
       return { ...ch, sections: newSections };
     }));
@@ -82,10 +82,11 @@ export const TOCEditor: React.FC<TOCEditorProps> = ({
 
   const moveSectionDown = (chapterIndex: number, sectionIndex: number) => {
     const chapter = chapters[chapterIndex];
-    if (sectionIndex >= chapter.sections.length - 1) return;
+    const sections = chapter.sections || [];
+    if (sectionIndex >= sections.length - 1) return;
     onUpdate(chapters.map((ch, i) => {
       if (i !== chapterIndex) return ch;
-      const newSections = [...ch.sections];
+      const newSections = [...(ch.sections || [])];
       [newSections[sectionIndex], newSections[sectionIndex + 1]] = [newSections[sectionIndex + 1], newSections[sectionIndex]];
       return { ...ch, sections: newSections };
     }));
@@ -215,7 +216,7 @@ export const TOCEditor: React.FC<TOCEditorProps> = ({
               
               {/* 節数 */}
               <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
-                {chapter.sections.length}節
+                {(chapter.sections || []).length}節
               </span>
               
               {/* 他方へコピー */}
@@ -259,7 +260,7 @@ export const TOCEditor: React.FC<TOCEditorProps> = ({
                 {/* 節リスト */}
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-gray-500">節（見出し）</label>
-                  {chapter.sections.map((section, sectionIndex) => (
+                  {(chapter.sections || []).map((section, sectionIndex) => (
                     <div key={sectionIndex} className="flex items-center gap-2 pl-2 group">
                       {/* 節の並び替えボタン */}
                       <div className="flex flex-col gap-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -272,7 +273,7 @@ export const TOCEditor: React.FC<TOCEditorProps> = ({
                         </button>
                         <button 
                           onClick={() => moveSectionDown(chapterIndex, sectionIndex)}
-                          disabled={sectionIndex >= chapter.sections.length - 1}
+                          disabled={sectionIndex >= (chapter.sections || []).length - 1}
                           className="text-gray-300 hover:text-amber-500 disabled:opacity-30 p-0"
                         >
                           <MoveDown size={10} />
@@ -288,7 +289,7 @@ export const TOCEditor: React.FC<TOCEditorProps> = ({
                         placeholder={`節${sectionIndex + 1}のタイトル`}
                         className="flex-1 text-sm border border-gray-200 rounded-lg p-2 text-gray-700 placeholder-gray-400 focus:border-amber-400 focus:ring-1 focus:ring-amber-100 outline-none bg-white"
                       />
-                      {chapter.sections.length > 1 && (
+                      {(chapter.sections || []).length > 1 && (
                         <button
                           onClick={() => removeSection(chapterIndex, sectionIndex)}
                           className="text-gray-300 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
