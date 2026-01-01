@@ -104,7 +104,7 @@ export default function HomePage() {
       />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-pink-200 via-purple-300 to-blue-300 animate-gradient-colors text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600 animate-gradient-colors text-white">
         {/* 背景装飾 */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
@@ -433,7 +433,7 @@ export default function HomePage() {
       </section>
 
       {/* CTAセクション */}
-      <section className="py-20 bg-gradient-to-br from-pink-200 via-purple-300 to-blue-300 animate-gradient-colors text-white">
+      <section className="py-20 bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600 animate-gradient-colors text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
             <Magnet size={20} className="text-yellow-300" />

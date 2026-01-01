@@ -70,19 +70,19 @@ button:disabled {
   animation: gradient-xy 15s ease infinite;
 }
 
-/* 薄いピンクから様々な色に変わるグラデーション */
+/* 鮮やかな色に変わるグラデーション */
 @keyframes gradient-colors {
   0% {
     background-position: 0% 50%;
   }
   25% {
-    background-position: 50% 50%;
-  }
-  50% {
     background-position: 100% 50%;
   }
+  50% {
+    background-position: 50% 100%;
+  }
   75% {
-    background-position: 50% 50%;
+    background-position: 0% 50%;
   }
   100% {
     background-position: 0% 50%;
@@ -90,8 +90,8 @@ button:disabled {
 }
 
 .animate-gradient-colors {
-  background-size: 300% 300%;
-  animation: gradient-colors 20s ease-in-out infinite;
+  background-size: 400% 400%;
+  animation: gradient-colors 15s ease-in-out infinite;
 }
 
 /* Glass（すりガラス）エフェクト */
