@@ -184,7 +184,6 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
     const [isGenerating, setIsGenerating] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [regenerateSlug, setRegenerateSlug] = useState(false);
-    const [hideLoginBanner, setHideLoginBanner] = useState(false);
     const [showDonationModal, setShowDonationModal] = useState(false);
     const [justSavedQuizId, setJustSavedQuizId] = useState<string | null>(null);
     const [customSlug, setCustomSlug] = useState('');
@@ -752,46 +751,6 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                 </div>
             </div>
 
-            {/* 未ログインユーザー向けバナー */}
-            {!user && !hideLoginBanner && (
-                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-200 px-6 py-4">
-                    <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                        <div className="flex-1">
-                            <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                <Sparkles className="text-indigo-600" size={20}/> ログインすると便利な機能が使えます！
-                            </h3>
-                            <ul className="text-sm text-gray-700 space-y-1 ml-7">
-                                <li className="flex items-center gap-2">
-                                    <CheckCircle size={14} className="text-green-600 flex-shrink-0"/> 
-                                    作成した診断の編集・削除が可能
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <CheckCircle size={14} className="text-green-600 flex-shrink-0"/> 
-                                    マイページでアクセス解析を確認
-                                </li>
-                                <li className="flex items-center gap-2">
-                                    <CheckCircle size={14} className="text-green-600 flex-shrink-0"/> 
-                                    HTMLダウンロード・埋め込みコードなどの追加オプションが利用可能
-                                </li>
-                            </ul>
-                        </div>
-                        <div className="flex gap-2">
-                            <button 
-                                onClick={() => setShowAuth && setShowAuth(true)} 
-                                className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all whitespace-nowrap shadow-md"
-                            >
-                                ログイン / 新規登録
-                            </button>
-                            <button 
-                                onClick={() => setHideLoginBanner(true)}
-                                className="text-gray-500 hover:text-gray-700 px-4 py-2 text-sm font-bold"
-                            >
-                                閉じる
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* モバイル用タブバー - 共通ヘッダー(64px) + エディターヘッダー(57px) = 121pxの下に配置 */}
             <div className="lg:hidden bg-white border-b border-gray-200 sticky top-[121px] z-40">

@@ -23,3 +23,4 @@ COMMENT ON COLUMN quizzes.show_in_portal IS 'ポータルページに掲載す�
 UPDATE quizzes SET show_in_portal = true WHERE show_in_portal IS NULL;
 
 
+

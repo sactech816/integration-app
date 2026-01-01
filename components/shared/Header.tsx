@@ -102,7 +102,7 @@ const Header: React.FC<HeaderProps> = ({
           <div className="w-8 h-8 bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg">
             <Magnet className="text-white" size={18} />
           </div>
-          <span className="hidden sm:block bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent group-hover:from-red-600 group-hover:to-pink-600 transition-all font-black">
+          <span className="bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent group-hover:from-red-600 group-hover:to-pink-600 transition-all font-black text-base sm:text-xl">
             集客メーカー
           </span>
         </div>
@@ -147,6 +147,23 @@ const Header: React.FC<HeaderProps> = ({
                         </div>
                       </button>
                     ))}
+                    {!user && (
+                      <div className="px-4 py-3 border-t border-gray-100 mt-1">
+                        <p className="text-xs text-gray-600 mb-2 flex items-center gap-1 text-left">
+                          <Sparkles size={12} className="text-orange-500" />
+                          ログインすると便利な機能が使えます
+                        </p>
+                        <button
+                          onClick={() => {
+                            setShowAuth(true);
+                            setIsServiceMenuOpen(false);
+                          }}
+                          className="w-full bg-gray-900 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-800 transition-colors text-sm"
+                        >
+                          ログイン / 新規登録
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -269,6 +286,23 @@ const Header: React.FC<HeaderProps> = ({
                   </button>
                 ))}
               </div>
+              {!user && (
+                <div className="mt-3 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <p className="text-xs text-gray-600 mb-3 flex items-center gap-1 text-left">
+                    <Sparkles size={12} className="text-orange-500" />
+                    ログインすると便利な機能が使えます
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowAuth(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full bg-gray-900 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-800 transition-colors text-sm"
+                  >
+                    ログイン / 新規登録
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* ナビゲーション */}

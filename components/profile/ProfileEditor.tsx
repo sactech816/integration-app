@@ -43,7 +43,8 @@ import {
   Shuffle,
   Brain,
   Timer,
-  Images
+  Images,
+  CheckCircle
 } from 'lucide-react';
 
 interface ProfileEditorProps {

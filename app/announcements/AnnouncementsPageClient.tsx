@@ -424,35 +424,41 @@ export default function AnnouncementsPageClient() {
                       </button>
                     </div>
                   )}
-                  <div className="flex items-start justify-between mb-3 pr-20">
-                    <h2 className="text-xl font-bold text-gray-900">{announcement.title}</h2>
-                    <div className="flex items-center gap-2">
-                      {isAdmin && !announcement.is_active && (
-                        <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">
-                          非表示
+                  <div className="mb-3 pr-20">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                      <h2 className="text-xl font-bold text-gray-900 flex-1">{announcement.title}</h2>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-xs text-gray-500 flex items-center gap-1 whitespace-nowrap">
+                          <Calendar size={14} />
+                          {announcement.announcement_date 
+                            ? formatDate(announcement.announcement_date)
+                            : formatDate(announcement.created_at)
+                          }
                         </span>
-                      )}
-                      {isAdmin && announcement.service_type && (
-                        <span className={`px-2 py-1 rounded text-xs font-bold ${
-                          announcement.service_type === 'all' ? 'bg-blue-100 text-blue-700' :
-                          announcement.service_type === 'quiz' ? 'bg-purple-100 text-purple-700' :
-                          announcement.service_type === 'profile' ? 'bg-green-100 text-green-700' :
-                          'bg-amber-100 text-amber-700'
-                        }`}>
-                          {announcement.service_type === 'all' ? '全サービス' :
-                           announcement.service_type === 'quiz' ? '診断クイズ' :
-                           announcement.service_type === 'profile' ? 'プロフィールLP' :
-                           'ビジネスLP'}
-                        </span>
-                      )}
-                      <span className="text-xs text-gray-500 flex items-center gap-1 whitespace-nowrap ml-4">
-                        <Calendar size={14} />
-                        {announcement.announcement_date 
-                          ? formatDate(announcement.announcement_date)
-                          : formatDate(announcement.created_at)
-                        }
-                      </span>
+                      </div>
                     </div>
+                    {(isAdmin && (!announcement.is_active || announcement.service_type)) && (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {isAdmin && !announcement.is_active && (
+                          <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">
+                            非表示
+                          </span>
+                        )}
+                        {isAdmin && announcement.service_type && (
+                          <span className={`px-2 py-1 rounded text-xs font-bold ${
+                            announcement.service_type === 'all' ? 'bg-blue-100 text-blue-700' :
+                            announcement.service_type === 'quiz' ? 'bg-purple-100 text-purple-700' :
+                            announcement.service_type === 'profile' ? 'bg-green-100 text-green-700' :
+                            'bg-amber-100 text-amber-700'
+                          }`}>
+                            {announcement.service_type === 'all' ? '全サービス' :
+                             announcement.service_type === 'quiz' ? '診断クイズ' :
+                             announcement.service_type === 'profile' ? 'プロフィールLP' :
+                             'ビジネスLP'}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="text-gray-700 leading-relaxed mb-4 whitespace-pre-wrap">

@@ -215,6 +215,44 @@ export default function HomePage() {
             variant="cards"
             showDescription={true}
           />
+          
+          {/* ログイン案内 */}
+          {!user && (
+            <div className="mt-12 max-w-2xl mx-auto">
+              <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6">
+                <div className="flex items-start gap-4">
+                  <div className="bg-orange-500 p-2 rounded-lg flex-shrink-0">
+                    <Sparkles size={20} className="text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+                      ログインすると便利な機能が使えます！
+                    </h3>
+                    <ul className="text-sm text-gray-700 space-y-1 mb-4">
+                      <li className="flex items-center gap-2">
+                        <Check size={14} className="text-green-600 flex-shrink-0" />
+                        作成したコンテンツの編集・削除が可能
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check size={14} className="text-green-600 flex-shrink-0" />
+                        マイページでアクセス解析を確認
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check size={14} className="text-green-600 flex-shrink-0" />
+                        HTMLダウンロード・埋め込みコードなどの追加オプションが利用可能
+                      </li>
+                    </ul>
+                    <button
+                      onClick={() => setShowAuth(true)}
+                      className="bg-orange-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-orange-700 transition-colors text-sm"
+                    >
+                      ログイン / 新規登録
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

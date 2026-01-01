@@ -52,7 +52,8 @@ import {
   Smartphone,
   Brain,
   Timer,
-  Images
+  Images,
+  CheckCircle
 } from 'lucide-react';
 import { BlockRenderer } from '@/components/shared/BlockRenderer';
 
