@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle, Info, Sparkles, Copy, Tag, FileText, FolderTree, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
 import { ChapterSidebar } from './ChapterSidebar';
 import { TiptapEditor, TiptapEditorRef } from './TiptapEditor';
@@ -59,6 +59,13 @@ interface BatchWriteProgress {
   currentSectionTitle: string;
 }
 
+interface KdpInfo {
+  keywords: string[];
+  description: string;
+  categories: string[];
+  catch_copy: string;
+}
+
 interface EditorLayoutProps {
   book: Book;
   chapters: Chapter[];
@@ -98,6 +105,10 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     totalCount: 0,
     currentSectionTitle: '',
   });
+  const [isKdpModalOpen, setIsKdpModalOpen] = useState(false);
+  const [isGeneratingKdp, setIsGeneratingKdp] = useState(false);
+  const [kdpInfo, setKdpInfo] = useState<KdpInfo | null>(null);
+  const [kdpError, setKdpError] = useState<string>('');
 
   // 現在選択中の節とその章を取得
   const getActiveInfo = useCallback(() => {
@@ -698,6 +709,46 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     }
   }, [chaptersData, showToast]);
 
+  // KDP情報生成
+  const handleGenerateKdpInfo = useCallback(async () => {
+    if (isGeneratingKdp) return;
+    
+    setIsGeneratingKdp(true);
+    setKdpError('');
+    setKdpInfo(null);
+    setIsKdpModalOpen(true);
+
+    try {
+      const response = await fetch('/api/kdl/generate-kdp-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ book_id: book.id }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'KDP情報の生成に失敗しました');
+      }
+
+      const data: KdpInfo = await response.json();
+      setKdpInfo(data);
+    } catch (error: any) {
+      console.error('Generate KDP info error:', error);
+      setKdpError(error.message || 'KDP情報の生成に失敗しました');
+    } finally {
+      setIsGeneratingKdp(false);
+    }
+  }, [book.id, isGeneratingKdp]);
+
+  // テキストをクリップボードにコピー
+  const handleCopyToClipboard = useCallback((text: string, label: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('success', `${label}をコピーしました`);
+    }).catch(() => {
+      showToast('error', 'コピーに失敗しました');
+    });
+  }, [showToast]);
+
   // 構成変更ハンドラーをまとめたオブジェクト
   const structureHandlers = {
     onAddChapter: handleAddChapter,
@@ -737,6 +788,28 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
           <h1 className="font-bold text-sm truncate max-w-xs">{book.title}</h1>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleGenerateKdpInfo}
+            disabled={isGeneratingKdp}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+              isGeneratingKdp
+                ? 'bg-white/20 cursor-not-allowed'
+                : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
+            }`}
+          >
+            {isGeneratingKdp ? (
+              <>
+                <Loader2 className="animate-spin" size={16} />
+                <span>生成中...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles size={16} />
+                <span>✨ KDP情報生成</span>
+              </>
+            )}
+          </button>
+          
           <button
             onClick={handleDownloadDocx}
             disabled={isDownloading}
@@ -864,6 +937,178 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 実行する
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* KDP情報モーダル */}
+      {isKdpModalOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden animate-fade-in">
+            {/* モーダルヘッダー */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-amber-50 to-orange-50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                  <Sparkles className="text-white" size={20} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">KDP登録情報</h2>
+                  <p className="text-sm text-gray-500">Amazon Kindle Direct Publishing用</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsKdpModalOpen(false)}
+                className="w-8 h-8 rounded-lg hover:bg-gray-200 flex items-center justify-center transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+
+            {/* モーダルコンテンツ */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              {isGeneratingKdp ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="relative w-16 h-16 mb-4">
+                    <div className="absolute inset-0 border-4 border-amber-200 rounded-full"></div>
+                    <div 
+                      className="absolute inset-0 border-4 border-amber-500 rounded-full animate-spin"
+                      style={{ borderRightColor: 'transparent', borderTopColor: 'transparent' }}
+                    ></div>
+                  </div>
+                  <p className="text-gray-600 font-medium">AIがKDP情報を生成中...</p>
+                  <p className="text-sm text-gray-400 mt-2">本の内容を分析しています</p>
+                </div>
+              ) : kdpError ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <AlertCircle className="text-red-400 mb-4" size={48} />
+                  <p className="text-red-600 font-medium mb-4">{kdpError}</p>
+                  <button
+                    onClick={handleGenerateKdpInfo}
+                    className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-medium"
+                  >
+                    再試行
+                  </button>
+                </div>
+              ) : kdpInfo ? (
+                <div className="space-y-6">
+                  {/* キャッチコピー */}
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Lightbulb className="text-amber-500" size={18} />
+                        <h3 className="font-bold text-gray-900">キャッチコピー</h3>
+                      </div>
+                      <button
+                        onClick={() => handleCopyToClipboard(kdpInfo.catch_copy, 'キャッチコピー')}
+                        className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 transition-colors"
+                      >
+                        <Copy size={14} />
+                        コピー
+                      </button>
+                    </div>
+                    <p className="text-lg font-medium text-gray-800">{kdpInfo.catch_copy}</p>
+                  </div>
+
+                  {/* キーワード */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Tag className="text-amber-500" size={18} />
+                        <h3 className="font-bold text-gray-900">キーワード（7個）</h3>
+                      </div>
+                      <button
+                        onClick={() => handleCopyToClipboard(kdpInfo.keywords.join(', '), 'キーワード')}
+                        className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 transition-colors"
+                      >
+                        <Copy size={14} />
+                        すべてコピー
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {kdpInfo.keywords.map((keyword, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleCopyToClipboard(keyword, `キーワード${index + 1}`)}
+                          className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-gray-700 transition-colors border border-gray-200"
+                        >
+                          {keyword}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* カテゴリー */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <FolderTree className="text-amber-500" size={18} />
+                        <h3 className="font-bold text-gray-900">推奨カテゴリー</h3>
+                      </div>
+                      <button
+                        onClick={() => handleCopyToClipboard(kdpInfo.categories.join('\n'), 'カテゴリー')}
+                        className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 transition-colors"
+                      >
+                        <Copy size={14} />
+                        コピー
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {kdpInfo.categories.map((category, index) => (
+                        <div
+                          key={index}
+                          className="px-4 py-2 bg-gray-50 rounded-lg text-sm text-gray-700 border border-gray-200"
+                        >
+                          {category}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 紹介文 */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <FileText className="text-amber-500" size={18} />
+                        <h3 className="font-bold text-gray-900">商品紹介文</h3>
+                      </div>
+                      <button
+                        onClick={() => handleCopyToClipboard(kdpInfo.description, '紹介文')}
+                        className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 transition-colors"
+                      >
+                        <Copy size={14} />
+                        コピー
+                      </button>
+                    </div>
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                      <div 
+                        className="prose prose-sm max-w-none text-gray-700"
+                        dangerouslySetInnerHTML={{ __html: kdpInfo.description }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">
+                      ※ HTMLタグ付きでコピーされます。KDPの紹介文欄に直接貼り付けてください。
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {/* モーダルフッター */}
+            {kdpInfo && (
+              <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-500">
+                    💡 各項目をクリックしてコピーできます
+                  </p>
+                  <button
+                    onClick={() => setIsKdpModalOpen(false)}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                  >
+                    閉じる
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

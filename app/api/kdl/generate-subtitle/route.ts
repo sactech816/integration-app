@@ -118,7 +118,7 @@ Kindle出版を成功させたい著者（タイトルは決まっているがSE
 - reason: 100文字以内で簡潔に${instructionAddition}`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-2024-08-06',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `以下のタイトルに対して、SEOを最大化するサブタイトル案を10個提案してください：\n\n${title}` },

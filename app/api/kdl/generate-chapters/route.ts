@@ -212,7 +212,7 @@ ${target ? `ターゲット読者: ${target.profile}` : ''}
 }`;
 
       const response = await openai.chat.completions.create({
-        model: 'gpt-4o-2024-08-06',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: 'あなたは出版マーケティングの専門家です。本の内容に最適な章立てパターンを分析してください。結果は必ずJSON形式で出力してください。' },
           { role: 'user', content: recommendPrompt },
@@ -304,7 +304,7 @@ ${subtitle ? `サブタイトル：${subtitle}` : ''}
 ${targetInfo}`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-2024-08-06',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },

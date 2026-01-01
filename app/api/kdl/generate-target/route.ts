@@ -164,7 +164,7 @@ Kindle出版を考えている著者、ビジネス書や実用書を作成し�
 ${subtitle ? `サブタイトル：${subtitle}` : ''}`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-2024-08-06',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
