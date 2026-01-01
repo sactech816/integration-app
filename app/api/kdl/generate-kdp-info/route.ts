@@ -103,14 +103,48 @@ export async function POST(request: Request) {
 
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
-    // 1. 本の情報を取得
-    const { data: bookData, error: bookError } = await supabase
+    // 1. 本の情報を取得（target_infoカラムがない場合も考慮）
+    let bookData: any;
+    let bookError: any;
+
+    // まずtarget_info付きで試行
+    const result1 = await supabase
       .from('kdl_books')
       .select('id, title, subtitle, target_info')
       .eq('id', book_id)
       .single();
 
-    if (bookError || !bookData) {
+    if (result1.error && result1.error.message.includes('target_info')) {
+      // target_infoカラムがない場合、それを除外してリトライ
+      console.log('target_info column not found, retrying without it');
+      const result2 = await supabase
+        .from('kdl_books')
+        .select('id, title, subtitle')
+        .eq('id', book_id)
+        .single();
+      
+      bookData = result2.data;
+      bookError = result2.error;
+    } else {
+      bookData = result1.data;
+      bookError = result1.error;
+    }
+
+    if (bookError) {
+      console.error('Book fetch error:', bookError);
+      if (bookError.code === 'PGRST116') {
+        return NextResponse.json(
+          { error: '本が見つかりません' },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json(
+        { error: '本の取得に失敗しました: ' + bookError.message },
+        { status: 500 }
+      );
+    }
+
+    if (!bookData) {
       return NextResponse.json(
         { error: '本が見つかりません' },
         { status: 404 }
@@ -275,4 +309,8 @@ ${sampleContent ? `\n【本文サンプル（抜粋）】\n${sampleContent}` : '
     );
   }
 }
+
+
+
+
 

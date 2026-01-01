@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { getProviderForPhase } from '@/lib/ai-provider';
 
 // レスポンスの型定義
 interface TitleSuggestion {
@@ -27,8 +23,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // デモモード: OPENAI_API_KEYがない、または環境変数でデモモードが有効な場合
-    const useMockData = !process.env.OPENAI_API_KEY || process.env.USE_MOCK_DATA === 'true';
+    // デモモード: APIキーがない、または環境変数でデモモードが有効な場合
+    const useMockData = (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) || process.env.USE_MOCK_DATA === 'true';
     
     if (useMockData) {
       // モックデータを返す（デモ・開発用）
@@ -48,9 +44,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ titles: mockTitles });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) {
       return NextResponse.json(
-        { error: 'OpenAI APIキーが設定されていません' },
+        { error: 'AI APIキーが設定されていません（OPENAI_API_KEY または GEMINI_API_KEY が必要です）' },
         { status: 500 }
       );
     }
@@ -112,17 +108,19 @@ Amazon SEOとKindleマーケティングに精通した出版プロデューサ�
 -scoreは1〜100の整数で設定すること
 -descriptionは100文字以内で簡潔に${instructionAddition}`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    // AIプロバイダーを取得（思考・構成フェーズなので planning）
+    const provider = getProviderForPhase('planning');
+
+    const response = await provider.generate({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `以下のテーマで売れる書籍タイトルを10個提案してください：\n\n${theme}` },
       ],
-      response_format: { type: 'json_object' },
+      responseFormat: 'json',
       temperature: 0.8,
     });
 
-    const content = response.choices[0]?.message?.content;
+    const content = response.content;
     if (!content) {
       throw new Error('AIからの応答が空です');
     }

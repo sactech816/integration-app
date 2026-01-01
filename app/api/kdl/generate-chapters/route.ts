@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { getProviderForPhase } from '@/lib/ai-provider';
 
 // パターン定義
 export const CHAPTER_PATTERNS = {
@@ -174,7 +170,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'タイトルを入力してください' }, { status: 400 });
       }
 
-      const useMockData = !process.env.OPENAI_API_KEY || process.env.USE_MOCK_DATA === 'true';
+      const useMockData = (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) || process.env.USE_MOCK_DATA === 'true';
       
       if (useMockData) {
         // モックのおすすめパターン
@@ -211,17 +207,19 @@ ${target ? `ターゲット読者: ${target.profile}` : ''}
   ]
 }`;
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+      // AIプロバイダーを取得（思考・構成フェーズなので planning）
+      const provider = getProviderForPhase('planning');
+      
+      const response = await provider.generate({
         messages: [
           { role: 'system', content: 'あなたは出版マーケティングの専門家です。本の内容に最適な章立てパターンを分析してください。結果は必ずJSON形式で出力してください。' },
           { role: 'user', content: recommendPrompt },
         ],
-        response_format: { type: 'json_object' },
+        responseFormat: 'json',
         temperature: 0.7,
       });
 
-      const content = response.choices[0]?.message?.content;
+      const content = response.content;
       if (!content) throw new Error('AIからの応答が空です');
       
       return NextResponse.json(JSON.parse(content));
@@ -233,14 +231,14 @@ ${target ? `ターゲット読者: ${target.profile}` : ''}
     }
 
     const selectedPattern = patternId || 'basic';
-    const useMockData = !process.env.OPENAI_API_KEY || process.env.USE_MOCK_DATA === 'true';
+    const useMockData = (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) || process.env.USE_MOCK_DATA === 'true';
     
     if (useMockData) {
       return NextResponse.json(getMockChapters(selectedPattern, title));
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json({ error: 'OpenAI APIキーが設定されていません' }, { status: 500 });
+    if (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) {
+      return NextResponse.json({ error: 'AI APIキーが設定されていません（OPENAI_API_KEY または GEMINI_API_KEY が必要です）' }, { status: 500 });
     }
 
     const patternDescriptions: Record<string, string> = {
@@ -303,17 +301,19 @@ ${instruction}
 ${subtitle ? `サブタイトル：${subtitle}` : ''}
 ${targetInfo}`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    // AIプロバイダーを取得（思考・構成フェーズなので planning）
+    const provider = getProviderForPhase('planning');
+
+    const response = await provider.generate({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      response_format: { type: 'json_object' },
+      responseFormat: 'json',
       temperature: 0.8,
     });
 
-    const content = response.choices[0]?.message?.content;
+    const content = response.content;
     if (!content) throw new Error('AIからの応答が空です');
 
     const result: GeneratedChapters = JSON.parse(content);

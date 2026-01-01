@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { getProviderForPhase } from '@/lib/ai-provider';
 
 const SYSTEM_PROMPT = `＃目的：
 「タイトル」「サブタイトル」「ターゲットユーザ情報」「目次」に基づき、指定された1つの節（セクション）の本文を執筆してください。
@@ -66,7 +62,7 @@ export async function POST(request: Request) {
     }
 
     // APIキーチェック
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) {
       // デモモード: モックレスポンスを返す
       const mockContent = generateMockContent(section_title);
       return NextResponse.json({ content: mockContent });
@@ -99,17 +95,19 @@ ${targetInfo}
 章: ${chapter_title}
 節: ${section_title}`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-2024-08-06',
+    // AIプロバイダーを取得（本文執筆なので writing フェーズ）
+    const provider = getProviderForPhase('writing');
+
+    const response = await provider.generate({
       messages: [
         { role: 'system', content: SYSTEM_PROMPT + sectionInstruction },
         { role: 'user', content: userMessage },
       ],
       temperature: 0.8,
-      max_tokens: 4000,
+      maxTokens: 4000,
     });
 
-    const content = response.choices[0]?.message?.content;
+    const content = response.content;
     if (!content) {
       throw new Error('AIからの応答が空です');
     }
@@ -156,6 +154,7 @@ function generateMockContent(sectionTitle: string): string {
 
 <p>本節で学んだことを、ぜひ今日から実践してみてください。知識は行動に移してこそ、初めて価値を生み出します。次の節では、さらに具体的なテクニックをお伝えしますので、楽しみにしていてください。</p>`;
 }
+
 
 
 
