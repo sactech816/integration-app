@@ -66,24 +66,33 @@ export default function AnnouncementsPageClient() {
     const init = async () => {
       if (supabase) {
         const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user || null);
+        const currentUser = session?.user || null;
+        setUser(currentUser);
         
-        await fetchAnnouncements();
+        // 管理者判定をここで行う
+        const currentIsAdmin = currentUser?.email && adminEmails.some(email => 
+          currentUser.email?.toLowerCase() === email.toLowerCase()
+        );
+        
+        await fetchAnnouncements(currentIsAdmin);
       }
       setIsLoading(false);
     };
     init();
   }, []);
 
-  const fetchAnnouncements = async () => {
+  const fetchAnnouncements = async (checkIsAdmin?: boolean) => {
     if (!supabase) return;
+    
+    // 引数が渡されていれば使用、なければstateから判定
+    const adminCheck = checkIsAdmin !== undefined ? checkIsAdmin : isAdmin;
     
     try {
       // すべてのサービスのお知らせを取得（フィルタリングなし）
       let query = supabase.from('announcements').select('*');
       
       // 管理者以外は表示中のみ
-      if (!isAdmin) {
+      if (!adminCheck) {
         query = query.eq('is_active', true);
       }
       
