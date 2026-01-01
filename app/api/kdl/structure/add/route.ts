@@ -59,12 +59,15 @@ export async function POST(request: Request) {
         newOrderIndex = (existingChapters?.[0]?.order_index ?? -1) + 1;
       } else {
         // 挿入位置以降の章のorder_indexをインクリメント
-        await supabase.rpc('increment_chapter_order', {
-          p_book_id: bookId,
-          p_from_index: newOrderIndex,
-        }).catch(() => {
+        // RPCが存在しない可能性があるため、エラーは無視して手動更新にフォールバック
+        try {
+          await supabase.rpc('increment_chapter_order', {
+            p_book_id: bookId,
+            p_from_index: newOrderIndex,
+          });
+        } catch {
           // RPCがない場合は手動で更新
-        });
+        }
         
         // 手動でインクリメント
         const { data: chaptersToUpdate } = await supabase
