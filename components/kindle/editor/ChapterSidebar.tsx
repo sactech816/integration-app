@@ -132,6 +132,7 @@ interface InlineEditProps {
 const InlineEdit: React.FC<InlineEditProps> = ({ value, onSave, onCancel, className }) => {
   const [editValue, setEditValue] = useState(value);
   const [isSaving, setIsSaving] = useState(false);
+  const hasSavedRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -140,17 +141,22 @@ const InlineEdit: React.FC<InlineEditProps> = ({ value, onSave, onCancel, classN
   }, []);
 
   const handleSave = async () => {
-    if (isSaving) return;
-    if (editValue.trim() && editValue.trim() !== value) {
+    if (isSaving || hasSavedRef.current) return;
+    
+    const trimmedValue = editValue.trim();
+    if (trimmedValue && trimmedValue !== value) {
+      hasSavedRef.current = true;
       setIsSaving(true);
       try {
-        await onSave(editValue.trim());
+        await onSave(trimmedValue);
       } catch (error) {
         console.error('Save error:', error);
+        // エラーでも編集モードを終了
       } finally {
         setIsSaving(false);
       }
     } else {
+      hasSavedRef.current = true;
       onCancel();
     }
   };
@@ -160,8 +166,19 @@ const InlineEdit: React.FC<InlineEditProps> = ({ value, onSave, onCancel, classN
       e.preventDefault();
       handleSave();
     } else if (e.key === 'Escape') {
+      e.preventDefault();
+      hasSavedRef.current = true;
       onCancel();
     }
+  };
+
+  const handleBlur = () => {
+    // 少し遅延させて、クリック等のイベントが先に処理されるようにする
+    setTimeout(() => {
+      if (!hasSavedRef.current) {
+        handleSave();
+      }
+    }, 100);
   };
 
   return (
@@ -171,7 +188,7 @@ const InlineEdit: React.FC<InlineEditProps> = ({ value, onSave, onCancel, classN
       value={editValue}
       onChange={(e) => setEditValue(e.target.value)}
       onKeyDown={handleKeyDown}
-      onBlur={handleSave}
+      onBlur={handleBlur}
       disabled={isSaving}
       className={`bg-white border-2 border-amber-400 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 ${isSaving ? 'opacity-50' : ''} ${className}`}
       onClick={(e) => e.stopPropagation()}

@@ -162,7 +162,10 @@ export async function GET(request: NextRequest) {
         pageNumber: true,
       });
 
-      return new NextResponse(docxBuffer as Buffer, {
+      // BufferをUint8Arrayに変換（Next.js互換性のため）
+      const uint8Array = new Uint8Array(docxBuffer as Buffer);
+
+      return new NextResponse(uint8Array, {
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           'Content-Disposition': 'attachment; filename="demo-sample-book.docx"',
@@ -234,10 +237,13 @@ export async function GET(request: NextRequest) {
       pageNumber: true,
     });
 
+    // BufferをUint8Arrayに変換（Next.js互換性のため）
+    const uint8Array = new Uint8Array(docxBuffer as Buffer);
+
     // ファイル名をサニタイズ（日本語対応）
     const safeFileName = encodeURIComponent(bookData.title.replace(/[<>:"/\\|?*]/g, '_')) + '.docx';
 
-    return new NextResponse(docxBuffer as Buffer, {
+    return new NextResponse(uint8Array, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': `attachment; filename*=UTF-8''${safeFileName}`,
