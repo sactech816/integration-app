@@ -1,7 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, BookOpen, FileText, Zap, Loader2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  ChevronDown, 
+  BookOpen, 
+  FileText, 
+  Zap, 
+  Loader2,
+  MoreVertical,
+  Pencil,
+  Plus,
+  ArrowUp,
+  ArrowDown,
+  Trash2,
+} from 'lucide-react';
 
 interface Section {
   id: string;
@@ -26,6 +38,18 @@ interface BatchWriteProgress {
   currentSectionTitle: string;
 }
 
+// 構成変更用のハンドラー型
+interface StructureHandlers {
+  onAddChapter: (title: string) => Promise<void>;
+  onAddSection: (chapterId: string, title: string) => Promise<void>;
+  onRenameChapter: (chapterId: string, newTitle: string) => Promise<void>;
+  onRenameSection: (sectionId: string, newTitle: string) => Promise<void>;
+  onDeleteChapter: (chapterId: string) => Promise<void>;
+  onDeleteSection: (sectionId: string, chapterId: string) => Promise<void>;
+  onMoveChapter: (chapterId: string, direction: 'up' | 'down') => Promise<void>;
+  onMoveSection: (sectionId: string, chapterId: string, direction: 'up' | 'down') => Promise<void>;
+}
+
 interface ChapterSidebarProps {
   chapters: Chapter[];
   activeSectionId: string;
@@ -34,7 +58,126 @@ interface ChapterSidebarProps {
   bookSubtitle?: string | null;
   onBatchWrite?: (chapterId: string) => void;
   batchProgress?: BatchWriteProgress;
+  structureHandlers?: StructureHandlers;
 }
+
+// ドロップダウンメニューコンポーネント
+interface DropdownMenuProps {
+  isOpen: boolean;
+  onClose: () => void;
+  items: { label: string; icon: React.ReactNode; onClick: () => void; danger?: boolean }[];
+  position: { x: number; y: number };
+}
+
+const DropdownMenu: React.FC<DropdownMenuProps> = ({ isOpen, onClose, items, position }) => {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  // 画面外にはみ出さないように位置調整
+  const adjustedX = Math.min(position.x, window.innerWidth - 180);
+  const adjustedY = Math.min(position.y, window.innerHeight - 200);
+
+  return (
+    <div
+      ref={menuRef}
+      className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200 py-1 min-w-[160px] animate-fade-in"
+      style={{ 
+        top: adjustedY,
+        left: adjustedX,
+      }}
+    >
+      {items.map((item, index) => (
+        <button
+          key={index}
+          onClick={() => {
+            item.onClick();
+            onClose();
+          }}
+          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
+            item.danger 
+              ? 'text-red-600 hover:bg-red-50' 
+              : 'text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          {item.icon}
+          {item.label}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// インライン編集用コンポーネント
+interface InlineEditProps {
+  value: string;
+  onSave: (value: string) => Promise<void> | void;
+  onCancel: () => void;
+  className?: string;
+}
+
+const InlineEdit: React.FC<InlineEditProps> = ({ value, onSave, onCancel, className }) => {
+  const [editValue, setEditValue] = useState(value);
+  const [isSaving, setIsSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
+
+  const handleSave = async () => {
+    if (isSaving) return;
+    if (editValue.trim() && editValue.trim() !== value) {
+      setIsSaving(true);
+      try {
+        await onSave(editValue.trim());
+      } catch (error) {
+        console.error('Save error:', error);
+      } finally {
+        setIsSaving(false);
+      }
+    } else {
+      onCancel();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSave();
+    } else if (e.key === 'Escape') {
+      onCancel();
+    }
+  };
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      value={editValue}
+      onChange={(e) => setEditValue(e.target.value)}
+      onKeyDown={handleKeyDown}
+      onBlur={handleSave}
+      disabled={isSaving}
+      className={`bg-white border-2 border-amber-400 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 ${isSaving ? 'opacity-50' : ''} ${className}`}
+      onClick={(e) => e.stopPropagation()}
+    />
+  );
+};
 
 export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
   chapters,
@@ -44,6 +187,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
   bookSubtitle,
   onBatchWrite,
   batchProgress,
+  structureHandlers,
 }) => {
   // 初期状態: アクティブな節を含む章を展開
   const getInitialExpandedChapters = () => {
@@ -62,6 +206,39 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
   };
 
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(getInitialExpandedChapters);
+  const [dropdownState, setDropdownState] = useState<{
+    type: 'chapter' | 'section' | null;
+    id: string | null;
+    chapterId?: string;
+    position: { x: number; y: number };
+  }>({ type: null, id: null, position: { x: 0, y: 0 } });
+  
+  const [editState, setEditState] = useState<{
+    type: 'chapter' | 'section' | null;
+    id: string | null;
+    chapterId?: string;
+  }>({ type: null, id: null });
+
+  const [isAddingChapter, setIsAddingChapter] = useState(false);
+  const [newChapterTitle, setNewChapterTitle] = useState('');
+  const [addingSectionChapterId, setAddingSectionChapterId] = useState<string | null>(null);
+  const [newSectionTitle, setNewSectionTitle] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const addChapterInputRef = useRef<HTMLInputElement>(null);
+  const addSectionInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isAddingChapter) {
+      addChapterInputRef.current?.focus();
+    }
+  }, [isAddingChapter]);
+
+  useEffect(() => {
+    if (addingSectionChapterId) {
+      addSectionInputRef.current?.focus();
+    }
+  }, [addingSectionChapterId]);
 
   const toggleChapter = (chapterId: string) => {
     setExpandedChapters(prev => {
@@ -74,18 +251,6 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
       return newSet;
     });
   };
-
-  // アクティブな節がある章を見つける
-  const findActiveChapterId = () => {
-    for (const chapter of chapters) {
-      if (chapter.sections.some(s => s.id === activeSectionId)) {
-        return chapter.id;
-      }
-    }
-    return null;
-  };
-
-  const activeChapterId = findActiveChapterId();
 
   // 章がアクティブな節を含むかチェック
   const chapterHasActiveSection = (chapter: Chapter) => {
@@ -100,6 +265,176 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
   // 章が一括執筆中かどうか
   const isChapterWriting = (chapterId: string) => {
     return batchProgress?.isRunning && batchProgress?.chapterId === chapterId;
+  };
+
+  // メニューを開く
+  const openChapterMenu = (e: React.MouseEvent, chapter: Chapter) => {
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setDropdownState({
+      type: 'chapter',
+      id: chapter.id,
+      position: { x: rect.right + 4, y: rect.top },
+    });
+  };
+
+  const openSectionMenu = (e: React.MouseEvent, section: Section, chapterId: string) => {
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setDropdownState({
+      type: 'section',
+      id: section.id,
+      chapterId,
+      position: { x: rect.right + 4, y: rect.top },
+    });
+  };
+
+  // 章メニューの項目
+  const getChapterMenuItems = (chapter: Chapter, chapterIndex: number) => {
+    if (!structureHandlers) return [];
+    
+    const items = [
+      {
+        label: 'タイトル変更',
+        icon: <Pencil size={14} />,
+        onClick: () => setEditState({ type: 'chapter', id: chapter.id }),
+      },
+      {
+        label: '節を追加',
+        icon: <Plus size={14} />,
+        onClick: () => {
+          setAddingSectionChapterId(chapter.id);
+          setExpandedChapters(prev => new Set(prev).add(chapter.id));
+        },
+      },
+    ];
+
+    // 上へ移動（最初の章でなければ）
+    if (chapterIndex > 0) {
+      items.push({
+        label: '上へ移動',
+        icon: <ArrowUp size={14} />,
+        onClick: () => structureHandlers.onMoveChapter(chapter.id, 'up'),
+      });
+    }
+
+    // 下へ移動（最後の章でなければ）
+    if (chapterIndex < chapters.length - 1) {
+      items.push({
+        label: '下へ移動',
+        icon: <ArrowDown size={14} />,
+        onClick: () => structureHandlers.onMoveChapter(chapter.id, 'down'),
+      });
+    }
+
+    items.push({
+      label: '削除',
+      icon: <Trash2 size={14} />,
+      onClick: () => {
+        if (confirm('この章と含まれる全ての節を削除しますか？\nこの操作は取り消せません。')) {
+          structureHandlers.onDeleteChapter(chapter.id);
+        }
+      },
+      danger: true,
+    });
+
+    return items;
+  };
+
+  // 節メニューの項目
+  const getSectionMenuItems = (section: Section, sectionIndex: number, chapter: Chapter) => {
+    if (!structureHandlers) return [];
+    
+    const items = [
+      {
+        label: 'タイトル変更',
+        icon: <Pencil size={14} />,
+        onClick: () => setEditState({ type: 'section', id: section.id, chapterId: chapter.id }),
+      },
+    ];
+
+    // 上へ移動（最初の節でなければ）
+    if (sectionIndex > 0) {
+      items.push({
+        label: '上へ移動',
+        icon: <ArrowUp size={14} />,
+        onClick: () => structureHandlers.onMoveSection(section.id, chapter.id, 'up'),
+      });
+    }
+
+    // 下へ移動（最後の節でなければ）
+    if (sectionIndex < chapter.sections.length - 1) {
+      items.push({
+        label: '下へ移動',
+        icon: <ArrowDown size={14} />,
+        onClick: () => structureHandlers.onMoveSection(section.id, chapter.id, 'down'),
+      });
+    }
+
+    items.push({
+      label: '削除',
+      icon: <Trash2 size={14} />,
+      onClick: () => {
+        if (confirm('この節を削除しますか？\n執筆済みの内容も全て削除されます。')) {
+          structureHandlers.onDeleteSection(section.id, chapter.id);
+        }
+      },
+      danger: true,
+    });
+
+    return items;
+  };
+
+  // 新しい章を追加
+  const handleAddChapter = async () => {
+    if (!newChapterTitle.trim() || !structureHandlers || isSubmitting) return;
+    
+    setIsSubmitting(true);
+    try {
+      await structureHandlers.onAddChapter(newChapterTitle.trim());
+      setNewChapterTitle('');
+      setIsAddingChapter(false);
+    } catch (error) {
+      console.error('章の追加に失敗:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // 新しい節を追加
+  const handleAddSection = async () => {
+    if (!newSectionTitle.trim() || !addingSectionChapterId || !structureHandlers || isSubmitting) return;
+    
+    setIsSubmitting(true);
+    try {
+      await structureHandlers.onAddSection(addingSectionChapterId, newSectionTitle.trim());
+      setNewSectionTitle('');
+      setAddingSectionChapterId(null);
+    } catch (error) {
+      console.error('節の追加に失敗:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // 章のリネーム
+  const handleRenameChapter = async (chapterId: string, newTitle: string) => {
+    if (!structureHandlers) return;
+    try {
+      await structureHandlers.onRenameChapter(chapterId, newTitle);
+    } finally {
+      setEditState({ type: null, id: null });
+    }
+  };
+
+  // 節のリネーム
+  const handleRenameSection = async (sectionId: string, newTitle: string) => {
+    if (!structureHandlers) return;
+    try {
+      await structureHandlers.onRenameSection(sectionId, newTitle);
+    } finally {
+      setEditState({ type: null, id: null });
+    }
   };
 
   return (
@@ -137,36 +472,47 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
           const isActiveChapter = chapterHasActiveSection(chapter);
           const unwrittenCount = getUnwrittenCount(chapter);
           const isWriting = isChapterWriting(chapter.id);
+          const isEditing = editState.type === 'chapter' && editState.id === chapter.id;
 
           return (
             <div key={chapter.id} className="mb-1">
               {/* 章ヘッダー */}
               <div
-                className={`flex items-center gap-2 px-4 py-3 transition-all ${
+                className={`group flex items-center gap-2 px-4 py-3 transition-all ${
                   isActiveChapter
                     ? 'bg-amber-100/80 border-l-4 border-amber-500'
                     : 'hover:bg-amber-50/80 border-l-4 border-transparent'
                 }`}
               >
                 <button
-                  onClick={() => toggleChapter(chapter.id)}
-                  className="flex items-center gap-2 flex-1 text-left"
+                  onClick={() => !isEditing && toggleChapter(chapter.id)}
+                  className="flex items-center gap-2 flex-1 text-left min-w-0"
                 >
-                  <span className={`transition-transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`}>
+                  <span className={`transition-transform flex-shrink-0 ${isExpanded ? 'rotate-0' : '-rotate-90'}`}>
                     <ChevronDown size={14} className="text-amber-600" />
                   </span>
-                  <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-md shadow-sm">
+                  <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-md shadow-sm flex-shrink-0">
                     {chapterIndex + 1}
                   </span>
-                  <span className={`flex-1 text-sm font-medium truncate ${
-                    isActiveChapter ? 'text-amber-900' : 'text-gray-700'
-                  }`}>
-                    {chapter.title.replace(/^第\d+章[　\s]+/, '')}
-                  </span>
+                  
+                  {isEditing ? (
+                    <InlineEdit
+                      value={chapter.title.replace(/^第\d+章[　\s]+/, '')}
+                      onSave={(value) => handleRenameChapter(chapter.id, value)}
+                      onCancel={() => setEditState({ type: null, id: null })}
+                      className="flex-1 min-w-0"
+                    />
+                  ) : (
+                    <span className={`flex-1 text-sm font-medium truncate ${
+                      isActiveChapter ? 'text-amber-900' : 'text-gray-700'
+                    }`}>
+                      {chapter.title.replace(/^第\d+章[　\s]+/, '')}
+                    </span>
+                  )}
                 </button>
                 
                 {/* 一括執筆ボタン */}
-                {onBatchWrite && unwrittenCount > 0 && (
+                {onBatchWrite && unwrittenCount > 0 && !isEditing && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -174,7 +520,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                     }}
                     disabled={batchProgress?.isRunning}
                     title={`この章の未執筆節(${unwrittenCount}件)をAIで一括執筆`}
-                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all flex-shrink-0 ${
                       isWriting
                         ? 'bg-purple-500 text-white animate-pulse'
                         : batchProgress?.isRunning
@@ -195,8 +541,19 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                     )}
                   </button>
                 )}
+
+                {/* メニューボタン */}
+                {structureHandlers && !isEditing && (
+                  <button
+                    onClick={(e) => openChapterMenu(e, chapter)}
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-amber-200/50 transition-all flex-shrink-0 text-gray-500 hover:text-gray-700"
+                    title="章のオプション"
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+                )}
                 
-                <span className="text-xs text-gray-400 bg-white/60 px-1.5 py-0.5 rounded">
+                <span className="text-xs text-gray-500 bg-white/60 px-1.5 py-0.5 rounded flex-shrink-0">
                   {chapter.sections.length}
                 </span>
               </div>
@@ -208,59 +565,162 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                     const isActive = section.id === activeSectionId;
                     const hasContent = section.content && section.content.trim() !== '';
                     const isSectionWriting = isWriting && batchProgress?.currentSectionTitle === section.title;
+                    const isSectionEditing = editState.type === 'section' && editState.id === section.id;
 
                     return (
-                      <button
+                      <div
                         key={section.id}
-                        onClick={() => onSectionClick(section.id)}
-                        className={`w-full flex items-center gap-2 px-3 py-2.5 text-left transition-all group ${
+                        className={`group flex items-center gap-2 px-3 py-2.5 transition-all cursor-pointer ${
                           isActive
                             ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow-md'
                             : isSectionWriting
                             ? 'bg-purple-100 text-purple-700'
-                            : 'hover:bg-amber-50 text-gray-600 hover:text-gray-900'
+                            : 'hover:bg-amber-50 text-gray-700 hover:text-gray-900'
                         }`}
+                        onClick={() => !isSectionEditing && onSectionClick(section.id)}
                       >
-                        {isSectionWriting ? (
-                          <Loader2 size={14} className="text-purple-600 animate-spin" />
-                        ) : (
-                          <FileText 
-                            size={14} 
-                            className={isActive ? 'text-white' : 'text-gray-400 group-hover:text-amber-500'} 
-                          />
-                        )}
-                        <span className={`text-xs font-medium ${isActive ? 'text-white/80' : 'text-gray-400'}`}>
-                          {sectionIndex + 1}.
-                        </span>
-                        <span className={`flex-1 text-sm truncate ${isActive ? 'font-medium' : ''}`}>
-                          {section.title || `節 ${sectionIndex + 1}`}
-                        </span>
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          {isSectionWriting ? (
+                            <Loader2 size={14} className="text-purple-600 animate-spin flex-shrink-0" />
+                          ) : (
+                            <FileText 
+                              size={14} 
+                              className={`flex-shrink-0 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-amber-500'}`} 
+                            />
+                          )}
+                          <span className={`text-xs font-medium flex-shrink-0 ${isActive ? 'text-white/80' : 'text-gray-500'}`}>
+                            {sectionIndex + 1}.
+                          </span>
+                          
+                          {isSectionEditing ? (
+                            <InlineEdit
+                              value={section.title}
+                              onSave={(value) => handleRenameSection(section.id, value)}
+                              onCancel={() => setEditState({ type: null, id: null })}
+                              className="flex-1 min-w-0"
+                            />
+                          ) : (
+                            <span className={`flex-1 text-sm truncate ${isActive ? 'font-medium text-white' : ''}`}>
+                              {section.title || `節 ${sectionIndex + 1}`}
+                            </span>
+                          )}
+                        </div>
+
                         {isSectionWriting && (
-                          <span className="text-xs bg-purple-200 text-purple-700 px-2 py-0.5 rounded-full animate-pulse">
+                          <span className="text-xs bg-purple-200 text-purple-700 px-2 py-0.5 rounded-full animate-pulse flex-shrink-0">
                             生成中
                           </span>
                         )}
-                        {hasContent && !isActive && !isSectionWriting && (
+                        {hasContent && !isActive && !isSectionWriting && !isSectionEditing && (
                           <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" title="執筆済み" />
                         )}
-                        {isActive && (
-                          <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                        {isActive && !isSectionEditing && (
+                          <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full flex-shrink-0">
                             執筆中
                           </span>
                         )}
-                      </button>
+
+                        {/* 節のメニューボタン */}
+                        {structureHandlers && !isSectionEditing && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openSectionMenu(e, section, chapter.id);
+                            }}
+                            className={`opacity-0 group-hover:opacity-100 p-1 rounded transition-all flex-shrink-0 ${
+                              isActive 
+                                ? 'hover:bg-white/20 text-white/70 hover:text-white' 
+                                : 'hover:bg-amber-200/50 text-gray-500 hover:text-gray-700'
+                            }`}
+                            title="節のオプション"
+                          >
+                            <MoreVertical size={14} />
+                          </button>
+                        )}
+                      </div>
                     );
                   })}
+
+                  {/* 節を追加中 */}
+                  {addingSectionChapterId === chapter.id && (
+                    <div className="flex items-center gap-2 px-3 py-2.5 bg-amber-50 border-t border-amber-100">
+                      <Plus size={14} className="text-amber-500 flex-shrink-0" />
+                      <input
+                        ref={addSectionInputRef}
+                        type="text"
+                        value={newSectionTitle}
+                        onChange={(e) => setNewSectionTitle(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddSection();
+                          } else if (e.key === 'Escape') {
+                            setAddingSectionChapterId(null);
+                            setNewSectionTitle('');
+                          }
+                        }}
+                        onBlur={() => {
+                          if (!newSectionTitle.trim()) {
+                            setAddingSectionChapterId(null);
+                          }
+                        }}
+                        disabled={isSubmitting}
+                        placeholder="新しい節のタイトル..."
+                        className="flex-1 bg-white border-2 border-amber-300 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-50"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           );
         })}
+
+        {/* 新しい章を追加 */}
+        {structureHandlers && (
+          <div className="px-4 py-3 border-t border-amber-100/50 mt-2">
+            {isAddingChapter ? (
+              <div className="flex items-center gap-2">
+                <input
+                  ref={addChapterInputRef}
+                  type="text"
+                  value={newChapterTitle}
+                  onChange={(e) => setNewChapterTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddChapter();
+                    } else if (e.key === 'Escape') {
+                      setIsAddingChapter(false);
+                      setNewChapterTitle('');
+                    }
+                  }}
+                  onBlur={() => {
+                    if (!newChapterTitle.trim()) {
+                      setIsAddingChapter(false);
+                    }
+                  }}
+                  disabled={isSubmitting}
+                  placeholder="新しい章のタイトル..."
+                  className="flex-1 bg-white border-2 border-amber-300 rounded px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-50"
+                />
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsAddingChapter(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-amber-100/80 hover:bg-amber-200/80 text-amber-700 font-medium text-sm transition-all"
+              >
+                <Plus size={16} />
+                <span>新しい章を追加</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* フッター: 進捗 */}
       <div className="p-4 border-t border-amber-100 bg-white/60 backdrop-blur-sm">
-        <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+        <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
           <span>執筆進捗</span>
           <span>
             {chapters.reduce((acc, ch) => 
@@ -281,11 +741,38 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
           />
         </div>
       </div>
+
+      {/* ドロップダウンメニュー */}
+      {dropdownState.type === 'chapter' && dropdownState.id && (
+        <DropdownMenu
+          isOpen={true}
+          onClose={() => setDropdownState({ type: null, id: null, position: { x: 0, y: 0 } })}
+          items={getChapterMenuItems(
+            chapters.find(c => c.id === dropdownState.id)!,
+            chapters.findIndex(c => c.id === dropdownState.id)
+          )}
+          position={dropdownState.position}
+        />
+      )}
+      
+      {dropdownState.type === 'section' && dropdownState.id && dropdownState.chapterId && (
+        <DropdownMenu
+          isOpen={true}
+          onClose={() => setDropdownState({ type: null, id: null, position: { x: 0, y: 0 } })}
+          items={getSectionMenuItems(
+            chapters
+              .find(c => c.id === dropdownState.chapterId)!
+              .sections.find(s => s.id === dropdownState.id)!,
+            chapters
+              .find(c => c.id === dropdownState.chapterId)!
+              .sections.findIndex(s => s.id === dropdownState.id),
+            chapters.find(c => c.id === dropdownState.chapterId)!
+          )}
+          position={dropdownState.position}
+        />
+      )}
     </div>
   );
 };
 
 export default ChapterSidebar;
-
-
-

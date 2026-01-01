@@ -64,6 +64,7 @@ interface EditorLayoutProps {
   chapters: Chapter[];
   targetProfile?: TargetProfile;
   onUpdateSectionContent: (sectionId: string, content: string) => Promise<void>;
+  onStructureChange?: () => Promise<void>;
 }
 
 export const EditorLayout: React.FC<EditorLayoutProps> = ({
@@ -71,6 +72,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   chapters,
   targetProfile,
   onUpdateSectionContent,
+  onStructureChange,
 }) => {
   // 初期値: 最初の章の最初の節
   const getInitialSectionId = () => {
@@ -320,6 +322,394 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     }
   };
 
+  // === 構成変更ハンドラー ===
+
+  // 章を追加
+  const handleAddChapter = useCallback(async (title: string) => {
+    try {
+      const response = await fetch('/api/kdl/structure/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'chapter',
+          bookId: book.id,
+          title,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '章の追加に失敗しました');
+      }
+
+      const data = await response.json();
+      
+      // ローカルの状態を更新
+      setChaptersData(prev => [
+        ...prev,
+        {
+          id: data.chapter?.id || data.id,
+          title,
+          summary: null,
+          order_index: prev.length,
+          sections: [],
+        },
+      ]);
+
+      showToast('success', '章を追加しました');
+      
+      // 親コンポーネントに通知（必要であればデータを再取得）
+      if (onStructureChange) {
+        await onStructureChange();
+      }
+    } catch (error: any) {
+      console.error('Add chapter error:', error);
+      showToast('error', error.message);
+    }
+  }, [book.id, showToast, onStructureChange]);
+
+  // 節を追加
+  const handleAddSection = useCallback(async (chapterId: string, title: string) => {
+    try {
+      const response = await fetch('/api/kdl/structure/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'section',
+          bookId: book.id,
+          chapterId,
+          title,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '節の追加に失敗しました');
+      }
+
+      const data = await response.json();
+      const newSectionId = data.section?.id || data.id;
+      
+      // ローカルの状態を更新
+      setChaptersData(prev => prev.map(ch => {
+        if (ch.id === chapterId) {
+          return {
+            ...ch,
+            sections: [
+              ...ch.sections,
+              {
+                id: newSectionId,
+                title,
+                order_index: ch.sections.length,
+                content: '',
+              },
+            ],
+          };
+        }
+        return ch;
+      }));
+
+      // 新しく追加した節を自動的に選択
+      if (newSectionId) {
+        setActiveSectionId(newSectionId);
+      }
+
+      showToast('success', '節を追加しました');
+      
+      if (onStructureChange) {
+        await onStructureChange();
+      }
+    } catch (error: any) {
+      console.error('Add section error:', error);
+      showToast('error', error.message);
+    }
+  }, [book.id, showToast, onStructureChange]);
+
+  // 章のタイトルを変更
+  const handleRenameChapter = useCallback(async (chapterId: string, newTitle: string) => {
+    try {
+      const response = await fetch('/api/kdl/structure/update', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'chapter',
+          chapterId,
+          title: newTitle,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '章のタイトル変更に失敗しました');
+      }
+
+      // ローカルの状態を更新
+      setChaptersData(prev => prev.map(ch =>
+        ch.id === chapterId ? { ...ch, title: newTitle } : ch
+      ));
+
+      showToast('success', 'タイトルを変更しました');
+    } catch (error: any) {
+      console.error('Rename chapter error:', error);
+      showToast('error', error.message);
+    }
+  }, [showToast]);
+
+  // 節のタイトルを変更
+  const handleRenameSection = useCallback(async (sectionId: string, newTitle: string) => {
+    try {
+      const response = await fetch('/api/kdl/structure/update', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'section',
+          sectionId,
+          title: newTitle,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '節のタイトル変更に失敗しました');
+      }
+
+      // ローカルの状態を更新
+      setChaptersData(prev => prev.map(ch => ({
+        ...ch,
+        sections: ch.sections.map(sec =>
+          sec.id === sectionId ? { ...sec, title: newTitle } : sec
+        ),
+      })));
+
+      showToast('success', 'タイトルを変更しました');
+    } catch (error: any) {
+      console.error('Rename section error:', error);
+      showToast('error', error.message);
+    }
+  }, [showToast]);
+
+  // 章を削除
+  const handleDeleteChapter = useCallback(async (chapterId: string) => {
+    try {
+      const response = await fetch('/api/kdl/structure/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'chapter',
+          chapterId,
+          bookId: book.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '章の削除に失敗しました');
+      }
+
+      // ローカルの状態を更新
+      setChaptersData(prev => {
+        const filtered = prev.filter(ch => ch.id !== chapterId);
+        // order_indexを振り直す
+        return filtered.map((ch, idx) => ({ ...ch, order_index: idx }));
+      });
+
+      // 削除した章にアクティブな節があった場合、最初の節に移動
+      const deletedChapter = chaptersData.find(ch => ch.id === chapterId);
+      if (deletedChapter?.sections.some(s => s.id === activeSectionId)) {
+        const remainingChapters = chaptersData.filter(ch => ch.id !== chapterId);
+        if (remainingChapters.length > 0 && remainingChapters[0].sections.length > 0) {
+          setActiveSectionId(remainingChapters[0].sections[0].id);
+        }
+      }
+
+      showToast('success', '章を削除しました');
+      
+      if (onStructureChange) {
+        await onStructureChange();
+      }
+    } catch (error: any) {
+      console.error('Delete chapter error:', error);
+      showToast('error', error.message);
+    }
+  }, [book.id, chaptersData, activeSectionId, showToast, onStructureChange]);
+
+  // 節を削除
+  const handleDeleteSection = useCallback(async (sectionId: string, chapterId: string) => {
+    try {
+      const response = await fetch('/api/kdl/structure/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'section',
+          sectionId,
+          chapterId,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '節の削除に失敗しました');
+      }
+
+      // ローカルの状態を更新
+      setChaptersData(prev => prev.map(ch => {
+        if (ch.id === chapterId) {
+          const filteredSections = ch.sections.filter(sec => sec.id !== sectionId);
+          return {
+            ...ch,
+            sections: filteredSections.map((sec, idx) => ({ ...sec, order_index: idx })),
+          };
+        }
+        return ch;
+      }));
+
+      // 削除した節がアクティブだった場合、別の節に移動
+      if (sectionId === activeSectionId) {
+        const chapter = chaptersData.find(ch => ch.id === chapterId);
+        if (chapter) {
+          const remainingSections = chapter.sections.filter(s => s.id !== sectionId);
+          if (remainingSections.length > 0) {
+            setActiveSectionId(remainingSections[0].id);
+          } else {
+            // 他の章の最初の節に移動
+            for (const ch of chaptersData) {
+              if (ch.id !== chapterId && ch.sections.length > 0) {
+                setActiveSectionId(ch.sections[0].id);
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      showToast('success', '節を削除しました');
+      
+      if (onStructureChange) {
+        await onStructureChange();
+      }
+    } catch (error: any) {
+      console.error('Delete section error:', error);
+      showToast('error', error.message);
+    }
+  }, [chaptersData, activeSectionId, showToast, onStructureChange]);
+
+  // 章を移動
+  const handleMoveChapter = useCallback(async (chapterId: string, direction: 'up' | 'down') => {
+    const chapterIndex = chaptersData.findIndex(ch => ch.id === chapterId);
+    if (chapterIndex === -1) return;
+    
+    if (direction === 'up' && chapterIndex === 0) {
+      showToast('info', 'これ以上上に移動できません');
+      return;
+    }
+    if (direction === 'down' && chapterIndex === chaptersData.length - 1) {
+      showToast('info', 'これ以上下に移動できません');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/kdl/structure/move', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'chapter',
+          chapterId,
+          bookId: book.id,
+          direction,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '章の移動に失敗しました');
+      }
+
+      // ローカルの状態を更新（入れ替え）
+      setChaptersData(prev => {
+        const newChapters = [...prev];
+        const targetIndex = direction === 'up' ? chapterIndex - 1 : chapterIndex + 1;
+        [newChapters[chapterIndex], newChapters[targetIndex]] = 
+          [newChapters[targetIndex], newChapters[chapterIndex]];
+        // order_indexを更新
+        return newChapters.map((ch, idx) => ({ ...ch, order_index: idx }));
+      });
+
+      showToast('success', '章を移動しました');
+    } catch (error: any) {
+      console.error('Move chapter error:', error);
+      showToast('error', error.message);
+    }
+  }, [book.id, chaptersData, showToast]);
+
+  // 節を移動
+  const handleMoveSection = useCallback(async (sectionId: string, chapterId: string, direction: 'up' | 'down') => {
+    const chapter = chaptersData.find(ch => ch.id === chapterId);
+    if (!chapter) return;
+    
+    const sectionIndex = chapter.sections.findIndex(sec => sec.id === sectionId);
+    if (sectionIndex === -1) return;
+    
+    if (direction === 'up' && sectionIndex === 0) {
+      showToast('info', 'これ以上上に移動できません');
+      return;
+    }
+    if (direction === 'down' && sectionIndex === chapter.sections.length - 1) {
+      showToast('info', 'これ以上下に移動できません');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/kdl/structure/move', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'section',
+          sectionId,
+          chapterId,
+          direction,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '節の移動に失敗しました');
+      }
+
+      // ローカルの状態を更新（入れ替え）
+      setChaptersData(prev => prev.map(ch => {
+        if (ch.id === chapterId) {
+          const newSections = [...ch.sections];
+          const targetIndex = direction === 'up' ? sectionIndex - 1 : sectionIndex + 1;
+          [newSections[sectionIndex], newSections[targetIndex]] = 
+            [newSections[targetIndex], newSections[sectionIndex]];
+          // order_indexを更新
+          return {
+            ...ch,
+            sections: newSections.map((sec, idx) => ({ ...sec, order_index: idx })),
+          };
+        }
+        return ch;
+      }));
+
+      showToast('success', '節を移動しました');
+    } catch (error: any) {
+      console.error('Move section error:', error);
+      showToast('error', error.message);
+    }
+  }, [chaptersData, showToast]);
+
+  // 構成変更ハンドラーをまとめたオブジェクト
+  const structureHandlers = {
+    onAddChapter: handleAddChapter,
+    onAddSection: handleAddSection,
+    onRenameChapter: handleRenameChapter,
+    onRenameSection: handleRenameSection,
+    onDeleteChapter: handleDeleteChapter,
+    onDeleteSection: handleDeleteSection,
+    onMoveChapter: handleMoveChapter,
+    onMoveSection: handleMoveSection,
+  };
+
   if (!activeSection) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-50">
@@ -405,6 +795,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             bookSubtitle={book.subtitle}
             onBatchWrite={handleBatchWrite}
             batchProgress={batchProgress}
+            structureHandlers={structureHandlers}
           />
         </div>
 
@@ -516,5 +907,3 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
 };
 
 export default EditorLayout;
-
-

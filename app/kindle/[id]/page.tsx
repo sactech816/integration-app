@@ -256,6 +256,11 @@ export default function KindleEditorPage() {
     }
   }, [bookId]);
 
+  // 構成変更後の再取得（コールバック用）
+  const handleStructureChange = useCallback(async () => {
+    await fetchBookData();
+  }, [fetchBookData]);
+
   // ローディング画面
   if (loadingState === 'loading') {
     return (
@@ -353,6 +358,7 @@ export default function KindleEditorPage() {
       chapters={chapters}
       targetProfile={targetProfile}
       onUpdateSectionContent={handleUpdateSectionContent}
+      onStructureChange={handleStructureChange}
     />
   );
 }
