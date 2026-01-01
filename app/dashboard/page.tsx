@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase, TABLES } from '@/lib/supabase';
 import { getAdminEmails } from '@/lib/constants';
@@ -103,7 +103,7 @@ type AnalyticsData = {
   clickRate: number;
 };
 
-export default function DashboardPage() {
+function DashboardContent() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -2230,5 +2230,18 @@ export default function DashboardPage() {
 
       <Footer setPage={navigateTo} />
     </div>
+  );
+}
+
+// Suspenseでラップしてエクスポート（useSearchParamsのプリレンダリング対応）
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="animate-spin text-indigo-600" size={48} />
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }
