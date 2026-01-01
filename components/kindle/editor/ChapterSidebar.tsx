@@ -307,10 +307,10 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
   };
 
   // 章メニューの項目
-  const getChapterMenuItems = (chapter: Chapter, chapterIndex: number) => {
+  const getChapterMenuItems = (chapter: Chapter, chapterIndex: number): { label: string; icon: React.ReactNode; onClick: () => void; danger?: boolean }[] => {
     if (!structureHandlers) return [];
     
-    const items = [
+    const items: { label: string; icon: React.ReactNode; onClick: () => void; danger?: boolean }[] = [
       {
         label: 'タイトル変更',
         icon: <Pencil size={14} />,
@@ -359,10 +359,10 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
   };
 
   // 節メニューの項目
-  const getSectionMenuItems = (section: Section, sectionIndex: number, chapter: Chapter) => {
+  const getSectionMenuItems = (section: Section, sectionIndex: number, chapter: Chapter): { label: string; icon: React.ReactNode; onClick: () => void; danger?: boolean }[] => {
     if (!structureHandlers) return [];
     
-    const items = [
+    const items: { label: string; icon: React.ReactNode; onClick: () => void; danger?: boolean }[] = [
       {
         label: 'タイトル変更',
         icon: <Pencil size={14} />,
