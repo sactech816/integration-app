@@ -387,7 +387,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
-                    theme: aiTheme,
+                    prompt: aiTheme,
                     mode: form.mode,
                     resultTypes: existingResultTypes
                 })

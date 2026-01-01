@@ -71,7 +71,7 @@ export async function POST(request) {
 
     const quiz = JSON.parse(content);
 
-    return NextResponse.json(quiz);
+    return NextResponse.json({ data: quiz });
   } catch (error) {
     console.error('Generate quiz error:', error);
     return NextResponse.json(
