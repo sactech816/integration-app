@@ -2171,34 +2171,15 @@ export default function DashboardPage() {
                             <ExternalLink size={14} /> プレビュー
                           </button>
 
-                          {/* Pro機能ステータス表示 */}
-                          {isUnlocked && !isAdmin && (
-                            <div className="mt-2 p-2 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
-                              <div className="flex items-center gap-1.5 justify-center">
-                                {accessInfo.reason === 'partner' ? (
-                                  <>
-                                    <span className="text-amber-600 text-xs">✨</span>
-                                    <span className="text-xs font-bold text-amber-700">応援パートナー特典</span>
-                                  </>
-                                ) : accessInfo.reason === 'purchased' ? (
-                                  <>
-                                    <CheckCircle size={12} className="text-green-600" />
-                                    <span className="text-xs font-bold text-green-700">Pro機能利用可能</span>
-                                  </>
-                                ) : null}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* 管理者：HTMLダウンロード */}
-                          {isAdmin && (
-                            <button onClick={() => handleDownloadHtml(item)} className="w-full mt-2 bg-indigo-500 text-white py-2.5 rounded-lg font-bold text-xs hover:bg-indigo-600 flex items-center justify-center gap-1 transition-colors">
+                          {/* Pro機能アンロック済み：HTMLダウンロードボタン */}
+                          {isUnlocked && (
+                            <button onClick={() => handleDownloadHtml(item)} className="w-full mt-3 bg-indigo-500 text-white py-2.5 rounded-lg font-bold text-xs hover:bg-indigo-600 flex items-center justify-center gap-1 transition-colors">
                               <Download size={14} /> HTMLダウンロード
                             </button>
                           )}
 
                           {/* 未購入時：開発支援ボタン */}
-                          {!isUnlocked && !isAdmin && (
+                          {!isUnlocked && (
                             <div className="mt-3 pt-3 border-t border-gray-100">
                               <button onClick={() => handlePurchase(item)} disabled={processingId === item.id} className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-2.5 rounded-lg font-bold text-xs hover:from-orange-600 hover:to-amber-600 flex items-center justify-center gap-1 transition-all shadow-sm">
                                 {processingId === item.id ? <Loader2 className="animate-spin" size={14} /> : <Heart size={14} />}
