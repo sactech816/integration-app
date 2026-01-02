@@ -135,7 +135,11 @@ export const Step4TOC: React.FC<Step4TOCProps> = ({ state, setState, onSave, isS
 
   const confirmSlot = (slotNumber: 1 | 2) => {
     const slot = slotNumber === 1 ? slot1 : slot2;
-    setState(prev => ({ ...prev, chapters: cleanChapters(slot.chapters) }));
+    setState(prev => ({ 
+      ...prev, 
+      chapters: cleanChapters(slot.chapters),
+      tocPatternId: slot.patternId || selectedPatternId, // パターンIDも保存
+    }));
     setActiveSlot(slotNumber);
   };
 

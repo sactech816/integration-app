@@ -70,6 +70,7 @@ interface EditorLayoutProps {
   book: Book;
   chapters: Chapter[];
   targetProfile?: TargetProfile;
+  tocPatternId?: string; // 目次で選択したパターンID（執筆スタイルのデフォルト決定用）
   onUpdateSectionContent: (sectionId: string, content: string) => Promise<void>;
   onStructureChange?: () => Promise<void>;
 }
@@ -78,6 +79,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   book,
   chapters,
   targetProfile,
+  tocPatternId,
   onUpdateSectionContent,
   onStructureChange,
 }) => {
@@ -887,6 +889,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             chapterTitle={activeChapter?.title || '無題の章'}
             bookInfo={book}
             targetProfile={targetProfile}
+            tocPatternId={tocPatternId}
             onSave={handleSave}
           />
         </div>

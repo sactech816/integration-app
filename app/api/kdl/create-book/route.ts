@@ -31,13 +31,14 @@ interface CreateBookRequest {
   subtitle?: string;
   target?: TargetInfo;
   chapters: Chapter[];
+  tocPatternId?: string; // 目次パターンID（執筆スタイルのデフォルト決定用）
   userId?: string;
 }
 
 export async function POST(request: Request) {
   try {
     const body: CreateBookRequest = await request.json();
-    const { title, subtitle, target, chapters, userId } = body;
+    const { title, subtitle, target, chapters, tocPatternId, userId } = body;
 
     if (!title) {
       return NextResponse.json(
@@ -118,6 +119,11 @@ export async function POST(request: Request) {
     if (target) {
       bookData.target_info = target;
     }
+    
+    // 目次パターンIDを保存（toc_pattern_idカラムがある場合）
+    if (tocPatternId) {
+      bookData.toc_pattern_id = tocPatternId;
+    }
 
     let book: any;
     let bookError: any;
@@ -129,19 +135,35 @@ export async function POST(request: Request) {
       .select()
       .single();
 
-    if (result1.error && result1.error.message.includes('target_info')) {
-      // target_infoカラムがない場合、それを除外してリトライ
-      console.log('target_info column not found, retrying without it');
-      delete bookData.target_info;
+    if (result1.error) {
+      // カラムがない場合、それを除外してリトライ
+      let needsRetry = false;
       
-      const result2 = await supabase
-        .from('kdl_books')
-        .insert(bookData)
-        .select()
-        .single();
+      if (result1.error.message.includes('target_info')) {
+        console.log('target_info column not found, retrying without it');
+        delete bookData.target_info;
+        needsRetry = true;
+      }
       
-      book = result2.data;
-      bookError = result2.error;
+      if (result1.error.message.includes('toc_pattern_id')) {
+        console.log('toc_pattern_id column not found, retrying without it');
+        delete bookData.toc_pattern_id;
+        needsRetry = true;
+      }
+      
+      if (needsRetry) {
+        const result2 = await supabase
+          .from('kdl_books')
+          .insert(bookData)
+          .select()
+          .single();
+        
+        book = result2.data;
+        bookError = result2.error;
+      } else {
+        book = result1.data;
+        bookError = result1.error;
+      }
     } else {
       book = result1.data;
       bookError = result1.error;

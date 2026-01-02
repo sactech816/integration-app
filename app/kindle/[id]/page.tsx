@@ -47,6 +47,7 @@ export default function KindleEditorPage() {
   const [book, setBook] = useState<Book | null>(null);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [targetProfile, setTargetProfile] = useState<TargetProfile | undefined>(undefined);
+  const [tocPatternId, setTocPatternId] = useState<string | undefined>(undefined);
 
   // データ取得
   const fetchBookData = useCallback(async () => {
@@ -108,6 +109,7 @@ export default function KindleEditorPage() {
       setBook(demoBook);
       setChapters(demoChapters);
       setTargetProfile(demoTarget);
+      setTocPatternId('basic'); // デモ用デフォルトパターン
       setLoadingState('loaded');
       return;
     }
@@ -142,21 +144,25 @@ export default function KindleEditorPage() {
         return;
       }
       
-      // target_infoを別途取得を試みる（カラムがない場合はスキップ）
+      // target_infoとtoc_pattern_idを別途取得を試みる（カラムがない場合はスキップ）
       let targetInfoData: any = null;
+      let patternIdData: string | null = null;
       try {
-        const { data: targetData } = await supabase
+        const { data: extraData } = await supabase
           .from('kdl_books')
-          .select('target_info')
+          .select('target_info, toc_pattern_id')
           .eq('id', bookId)
           .single();
         
-        if (targetData?.target_info) {
-          targetInfoData = targetData.target_info;
+        if (extraData?.target_info) {
+          targetInfoData = extraData.target_info;
+        }
+        if (extraData?.toc_pattern_id) {
+          patternIdData = extraData.toc_pattern_id;
         }
       } catch {
-        // target_infoカラムがない場合は無視
-        console.log('target_info column not available, skipping');
+        // カラムがない場合は無視
+        console.log('target_info/toc_pattern_id columns not available, skipping');
       }
 
       // 2. 章を取得
@@ -218,6 +224,7 @@ export default function KindleEditorPage() {
       setBook(bookData);
       setChapters(chaptersWithSections);
       setTargetProfile(fetchedTarget);
+      setTocPatternId(patternIdData || undefined);
       setLoadingState('loaded');
 
     } catch (err: any) {
@@ -354,6 +361,7 @@ export default function KindleEditorPage() {
       book={book}
       chapters={chapters}
       targetProfile={targetProfile}
+      tocPatternId={tocPatternId}
       onUpdateSectionContent={handleUpdateSectionContent}
       onStructureChange={handleStructureChange}
     />

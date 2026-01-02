@@ -230,6 +230,7 @@ export default function KindleNewPage() {
           subtitle: state.subtitle,
           target: cleanTarget(state.selectedTarget),
           chapters: cleanChapters(state.chapters),
+          tocPatternId: state.tocPatternId, // 目次パターンIDを送信
           userId: user.id, // ユーザーIDをクライアントから渡す
         }),
       });

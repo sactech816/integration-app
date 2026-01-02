@@ -39,6 +39,7 @@ export interface WizardState {
   subtitle: string;
   selectedTarget: TargetSuggestion | null;
   chapters: Chapter[];
+  tocPatternId?: string; // 目次で選択したパターンID（執筆スタイルのデフォルト決定用）
 }
 
 // 目次スロットの型定義

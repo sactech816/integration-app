@@ -7,8 +7,54 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { 
   Bold, Italic, Strikethrough, Heading1, Heading2, Heading3,
   List, ListOrdered, Quote, Minus, Undo, Redo,
-  Check, Loader2, Bot, AlertCircle
+  Check, Loader2, Bot, AlertCircle, X, Sparkles, RefreshCw
 } from 'lucide-react';
+
+// 執筆スタイルの定義（APIと同期）
+const WRITING_STYLES = {
+  descriptive: {
+    id: 'descriptive',
+    name: '説明文',
+    description: 'PREP法を基本とした解説形式',
+    icon: '📝',
+  },
+  narrative: {
+    id: 'narrative',
+    name: '物語',
+    description: 'ストーリーテリング形式',
+    icon: '📖',
+  },
+  dialogue: {
+    id: 'dialogue',
+    name: '対話形式',
+    description: '登場人物の会話で進行',
+    icon: '💬',
+  },
+  qa: {
+    id: 'qa',
+    name: 'Q&A',
+    description: '質問と回答の形式',
+    icon: '❓',
+  },
+  workbook: {
+    id: 'workbook',
+    name: 'ワークブック',
+    description: '解説+実践ワーク形式',
+    icon: '✏️',
+  },
+} as const;
+
+type WritingStyleId = keyof typeof WRITING_STYLES;
+
+// 目次パターンから執筆スタイルへのマッピング
+const PATTERN_TO_STYLE_MAP: Record<string, WritingStyleId> = {
+  basic: 'descriptive',
+  problem: 'descriptive',
+  story: 'narrative',
+  qa: 'qa',
+  workbook: 'workbook',
+  original: 'descriptive',
+};
 
 interface BookInfo {
   id: string;
@@ -30,6 +76,7 @@ interface TiptapEditorProps {
   chapterTitle: string;
   bookInfo: BookInfo;
   targetProfile?: TargetProfile;
+  tocPatternId?: string; // 目次で選択したパターンID（デフォルトスタイル決定用）
   onSave: (sectionId: string, content: string) => Promise<void>;
 }
 
@@ -47,11 +94,25 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
   chapterTitle,
   bookInfo,
   targetProfile,
+  tocPatternId,
   onSave,
 }, ref) => {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
+  const [isStyleModalOpen, setIsStyleModalOpen] = useState(false);
+  const [isRewriteModalOpen, setIsRewriteModalOpen] = useState(false);
+  const [isRewriting, setIsRewriting] = useState(false);
+  const [rewriteError, setRewriteError] = useState<string | null>(null);
+  const [selectedText, setSelectedText] = useState<string>('');
+  const [selectedStyle, setSelectedStyle] = useState<WritingStyleId>(() => {
+    // 目次パターンからデフォルトスタイルを決定
+    if (tocPatternId && PATTERN_TO_STYLE_MAP[tocPatternId]) {
+      return PATTERN_TO_STYLE_MAP[tocPatternId];
+    }
+    return 'descriptive';
+  });
+  const [rewriteStyle, setRewriteStyle] = useState<WritingStyleId>('descriptive');
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedContentRef = useRef<string>(initialContent);
   const currentSectionIdRef = useRef<string>(sectionId);
@@ -164,10 +225,17 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
     },
   }), [editor, onSave]);
 
-  // AI自動執筆機能
-  const handleAIGenerate = async () => {
+  // AI執筆ボタンクリック時：モーダルを開く
+  const handleAIButtonClick = () => {
+    if (isGenerating) return;
+    setIsStyleModalOpen(true);
+  };
+
+  // モーダルでスタイルを選択して執筆開始
+  const handleStartGeneration = async (styleId: WritingStyleId) => {
     if (!editor || isGenerating) return;
 
+    setIsStyleModalOpen(false);
     setIsGenerating(true);
     setGenerateError(null);
 
@@ -184,6 +252,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
           chapter_title: chapterTitle,
           section_title: sectionTitle,
           target_profile: targetProfile,
+          writing_style: styleId,
         }),
       });
 
@@ -208,6 +277,68 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
       }, 5000);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  // 選択テキスト書き換えボタンクリック時
+  const handleRewriteButtonClick = () => {
+    if (!editor || isRewriting) return;
+    
+    // 選択されたテキストを取得
+    const { from, to } = editor.state.selection;
+    const text = editor.state.doc.textBetween(from, to, ' ');
+    
+    if (!text || text.trim() === '') {
+      setRewriteError('テキストを選択してください');
+      setTimeout(() => setRewriteError(null), 3000);
+      return;
+    }
+    
+    setSelectedText(text);
+    setIsRewriteModalOpen(true);
+  };
+
+  // 選択テキストを書き換え
+  const handleRewriteText = async (styleId: WritingStyleId) => {
+    if (!editor || isRewriting || !selectedText) return;
+
+    setIsRewriteModalOpen(false);
+    setIsRewriting(true);
+    setRewriteError(null);
+
+    try {
+      const response = await fetch('/api/kdl/rewrite-text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: selectedText,
+          writing_style: styleId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '書き換えに失敗しました');
+      }
+
+      const data = await response.json();
+      
+      if (data.content) {
+        // 選択されたテキストを書き換えた内容で置換
+        editor.chain().focus().deleteSelection().insertContent(data.content).run();
+      }
+    } catch (error: any) {
+      console.error('書き換えエラー:', error);
+      setRewriteError(error.message || 'テキストの書き換えに失敗しました');
+      
+      setTimeout(() => {
+        setRewriteError(null);
+      }, 5000);
+    } finally {
+      setIsRewriting(false);
+      setSelectedText('');
     }
   };
 
@@ -375,7 +506,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
         <div className="flex items-center gap-2 px-3">
           <button
             type="button"
-            onClick={handleAIGenerate}
+            onClick={handleAIButtonClick}
             disabled={isGenerating}
             title="AIにこの節を書いてもらう"
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
@@ -396,6 +527,31 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
               </>
             )}
           </button>
+
+          {/* 選択テキスト書き換えボタン */}
+          <button
+            type="button"
+            onClick={handleRewriteButtonClick}
+            disabled={isRewriting}
+            title="選択したテキストを別のスタイルで書き換える"
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
+              isRewriting
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white hover:from-teal-600 hover:to-cyan-600 shadow-md hover:shadow-lg'
+            }`}
+          >
+            {isRewriting ? (
+              <>
+                <Loader2 className="animate-spin" size={16} />
+                <span>書換中...</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw size={16} />
+                <span>書き換え</span>
+              </>
+            )}
+          </button>
           
           {generateError && (
             <div className="flex items-center gap-1.5 text-red-500 text-sm animate-pulse">
@@ -403,8 +559,181 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
               <span>{generateError}</span>
             </div>
           )}
+          
+          {rewriteError && (
+            <div className="flex items-center gap-1.5 text-red-500 text-sm animate-pulse">
+              <AlertCircle size={14} />
+              <span>{rewriteError}</span>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* スタイル選択モーダル */}
+      {isStyleModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div 
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* モーダルヘッダー */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
+                  <Sparkles className="text-white" size={16} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">AI執筆スタイル</h3>
+                  <p className="text-xs text-gray-500">この節の執筆スタイルを選択</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsStyleModalOpen(false)}
+                className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
+              >
+                <X size={18} className="text-gray-400" />
+              </button>
+            </div>
+
+            {/* スタイル選択 */}
+            <div className="p-4 space-y-2">
+              {Object.values(WRITING_STYLES).map((style) => {
+                const isSelected = selectedStyle === style.id;
+                const isDefault = tocPatternId && PATTERN_TO_STYLE_MAP[tocPatternId] === style.id;
+                
+                return (
+                  <button
+                    key={style.id}
+                    onClick={() => setSelectedStyle(style.id as WritingStyleId)}
+                    className={`w-full p-3 rounded-xl border-2 text-left transition-all flex items-center gap-3 ${
+                      isSelected
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
+                    }`}
+                  >
+                    <span className="text-2xl">{style.icon}</span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-gray-900">{style.name}</span>
+                        {isDefault && (
+                          <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">
+                            目次スタイル
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500">{style.description}</p>
+                    </div>
+                    {isSelected && (
+                      <div className="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
+                        <Check size={12} className="text-white" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* アクションボタン */}
+            <div className="px-5 py-4 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => setIsStyleModalOpen(false)}
+                className="flex-1 py-2.5 px-4 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={() => handleStartGeneration(selectedStyle)}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-medium hover:from-purple-600 hover:to-indigo-600 transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <Sparkles size={16} />
+                執筆開始
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 書き換えスタイル選択モーダル */}
+      {isRewriteModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div 
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* モーダルヘッダー */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+                  <RefreshCw className="text-white" size={16} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">テキスト書き換え</h3>
+                  <p className="text-xs text-gray-500">選択部分を別スタイルに変換</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsRewriteModalOpen(false)}
+                className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors"
+              >
+                <X size={18} className="text-gray-400" />
+              </button>
+            </div>
+
+            {/* 選択テキストプレビュー */}
+            <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+              <p className="text-xs text-gray-500 mb-1">選択中のテキスト:</p>
+              <p className="text-sm text-gray-700 line-clamp-3">{selectedText}</p>
+            </div>
+
+            {/* スタイル選択 */}
+            <div className="p-4 space-y-2">
+              {Object.values(WRITING_STYLES).map((style) => {
+                const isSelected = rewriteStyle === style.id;
+                
+                return (
+                  <button
+                    key={style.id}
+                    onClick={() => setRewriteStyle(style.id as WritingStyleId)}
+                    className={`w-full p-3 rounded-xl border-2 text-left transition-all flex items-center gap-3 ${
+                      isSelected
+                        ? 'border-teal-500 bg-teal-50'
+                        : 'border-gray-200 bg-white hover:border-teal-300 hover:bg-teal-50/50'
+                    }`}
+                  >
+                    <span className="text-2xl">{style.icon}</span>
+                    <div className="flex-1">
+                      <span className="font-bold text-gray-900">{style.name}</span>
+                      <p className="text-xs text-gray-500">{style.description}</p>
+                    </div>
+                    {isSelected && (
+                      <div className="w-5 h-5 rounded-full bg-teal-500 flex items-center justify-center">
+                        <Check size={12} className="text-white" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* アクションボタン */}
+            <div className="px-5 py-4 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => setIsRewriteModalOpen(false)}
+                className="flex-1 py-2.5 px-4 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={() => handleRewriteText(rewriteStyle)}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-medium hover:from-teal-600 hover:to-cyan-600 transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <RefreshCw size={16} />
+                書き換え実行
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* エディタ本体 */}
       <div className="flex-1 overflow-y-auto">
