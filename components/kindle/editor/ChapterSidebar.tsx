@@ -244,16 +244,20 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
 
   const addChapterInputRef = useRef<HTMLInputElement>(null);
   const addSectionInputRef = useRef<HTMLInputElement>(null);
+  const hasAddedChapterRef = useRef(false);
+  const hasAddedSectionRef = useRef(false);
 
   useEffect(() => {
     if (isAddingChapter) {
       addChapterInputRef.current?.focus();
+      hasAddedChapterRef.current = false; // 新しく章追加モードに入った時にリセット
     }
   }, [isAddingChapter]);
 
   useEffect(() => {
     if (addingSectionChapterId) {
       addSectionInputRef.current?.focus();
+      hasAddedSectionRef.current = false; // 新しく節追加モードに入った時にリセット
     }
   }, [addingSectionChapterId]);
 
@@ -404,8 +408,15 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
 
   // 新しい章を追加
   const handleAddChapter = async () => {
-    if (!newChapterTitle.trim() || !structureHandlers || isSubmitting) return;
+    // 二重呼び出し防止
+    if (hasAddedChapterRef.current || isSubmitting) return;
+    if (!newChapterTitle.trim() || !structureHandlers) {
+      setIsAddingChapter(false);
+      setNewChapterTitle('');
+      return;
+    }
     
+    hasAddedChapterRef.current = true;
     setIsSubmitting(true);
     try {
       await structureHandlers.onAddChapter(newChapterTitle.trim());
@@ -413,6 +424,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
       setIsAddingChapter(false);
     } catch (error) {
       console.error('章の追加に失敗:', error);
+      hasAddedChapterRef.current = false; // エラー時は再試行可能にする
     } finally {
       setIsSubmitting(false);
     }
@@ -420,8 +432,15 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
 
   // 新しい節を追加
   const handleAddSection = async () => {
-    if (!newSectionTitle.trim() || !addingSectionChapterId || !structureHandlers || isSubmitting) return;
+    // 二重呼び出し防止
+    if (hasAddedSectionRef.current || isSubmitting) return;
+    if (!newSectionTitle.trim() || !addingSectionChapterId || !structureHandlers) {
+      setAddingSectionChapterId(null);
+      setNewSectionTitle('');
+      return;
+    }
     
+    hasAddedSectionRef.current = true;
     setIsSubmitting(true);
     try {
       await structureHandlers.onAddSection(addingSectionChapterId, newSectionTitle.trim());
@@ -429,6 +448,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
       setAddingSectionChapterId(null);
     } catch (error) {
       console.error('節の追加に失敗:', error);
+      hasAddedSectionRef.current = false; // エラー時は再試行可能にする
     } finally {
       setIsSubmitting(false);
     }
@@ -677,9 +697,14 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                           }
                         }}
                         onBlur={() => {
-                          if (!newSectionTitle.trim()) {
-                            setAddingSectionChapterId(null);
-                          }
+                          // 少し遅延させて、クリック等のイベントが先に処理されるようにする
+                          setTimeout(() => {
+                            if (newSectionTitle.trim()) {
+                              handleAddSection();
+                            } else {
+                              setAddingSectionChapterId(null);
+                            }
+                          }, 100);
                         }}
                         disabled={isSubmitting}
                         placeholder="新しい節のタイトル..."
@@ -713,9 +738,14 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                     }
                   }}
                   onBlur={() => {
-                    if (!newChapterTitle.trim()) {
-                      setIsAddingChapter(false);
-                    }
+                    // 少し遅延させて、クリック等のイベントが先に処理されるようにする
+                    setTimeout(() => {
+                      if (newChapterTitle.trim()) {
+                        handleAddChapter();
+                      } else {
+                        setIsAddingChapter(false);
+                      }
+                    }, 100);
                   }}
                   disabled={isSubmitting}
                   placeholder="新しい章のタイトル..."
