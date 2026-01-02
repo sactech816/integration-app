@@ -126,6 +126,7 @@ interface RequestBody {
   chapter_title: string;
   section_title: string;
   writing_style?: WritingStyleId;
+  instruction?: string; // ユーザーからの追加要望
   target_profile?: {
     profile?: string;
     merits?: string[];
@@ -151,7 +152,7 @@ function cleanAIResponse(content: string): string {
 export async function POST(request: Request) {
   try {
     const body: RequestBody = await request.json();
-    const { book_title, book_subtitle, chapter_title, section_title, writing_style, target_profile } = body;
+    const { book_title, book_subtitle, chapter_title, section_title, writing_style, instruction, target_profile } = body;
 
     // バリデーション
     if (!book_title) {
@@ -188,6 +189,14 @@ export async function POST(request: Request) {
 - USP: ${target_profile.usp || '未設定'}`;
     }
 
+    // ユーザーからの追加要望
+    const userInstruction = instruction ? `
+
+＃ユーザーからの追加要望：
+${instruction}
+
+上記の要望を反映して執筆してください。` : '';
+
     // セクション指定の追加指示（スタイル別プロンプトを含む）
     const sectionInstruction = `
 ${stylePrompt}
@@ -195,7 +204,7 @@ ${stylePrompt}
 今回は、この本の「${chapter_title}」に含まれる「${section_title}」という節のみを執筆してください。
 文字数は1500〜2500字程度で、上記の執筆スタイルを守り、読者の行動を促す内容にしてください。
 出力はHTMLタグ（<p>、<h3>、<ul>、<li>、<strong>など）を使って構造化してください。
-※重要：出力はHTMLのみにしてください。\`\`\`html のようなコードブロック記法は絶対に使用しないでください。`;
+※重要：出力はHTMLのみにしてください。\`\`\`html のようなコードブロック記法は絶対に使用しないでください。${userInstruction}`;
 
     const userMessage = `以下の本の指定された節を執筆してください。
 

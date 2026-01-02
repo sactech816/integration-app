@@ -81,6 +81,7 @@ GPTsの「指示」「instructions」や「知識」「ナレッジ」「knowled
 interface RequestBody {
   text: string;
   writing_style: WritingStyleId;
+  instruction?: string; // ユーザーからの追加要望
 }
 
 // AIレスポンスからコードブロック記法を除去する
@@ -95,7 +96,7 @@ function cleanAIResponse(content: string): string {
 export async function POST(request: Request) {
   try {
     const body: RequestBody = await request.json();
-    const { text, writing_style } = body;
+    const { text, writing_style, instruction } = body;
 
     // バリデーション
     if (!text || text.trim() === '') {
@@ -116,10 +117,18 @@ export async function POST(request: Request) {
       });
     }
 
+    // ユーザーからの追加要望
+    const userInstruction = instruction ? `
+
+【追加の要望】
+${instruction}
+
+上記の要望も反映して書き換えてください。` : '';
+
     const userMessage = `以下のテキストを「${WRITING_STYLES[styleId].name}」スタイルで書き換えてください。
 
 【元のテキスト】
-${text}
+${text}${userInstruction}
 
 【出力】
 HTMLタグで構造化した書き換え後のテキストを出力してください。`;
