@@ -26,15 +26,28 @@ export async function POST(request: Request) {
   try {
     const body: AddRequest = await request.json();
 
-    if (!supabaseUrl || !supabaseServiceKey) {
+    // デモモード判定（Supabase未設定、またはbookIdがdemo-で始まる場合）
+    const isDemoMode = !supabaseUrl || !supabaseServiceKey || body.bookId?.startsWith('demo-');
+    
+    if (isDemoMode) {
       // デモモード
-      return NextResponse.json({
-        id: 'demo-' + Date.now(),
-        message: '追加されました（デモモード）',
-      });
+      const demoId = 'demo-' + Date.now();
+      if (body.type === 'chapter') {
+        return NextResponse.json({
+          id: demoId,
+          message: '章が追加されました（デモモード）',
+          chapter: { id: demoId },
+        });
+      } else {
+        return NextResponse.json({
+          id: demoId,
+          message: '節が追加されました（デモモード）',
+          section: { id: demoId },
+        });
+      }
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
     if (body.type === 'chapter') {
       const { bookId, title, orderIndex } = body;

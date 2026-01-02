@@ -406,11 +406,14 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
     return items;
   };
 
-  // 新しい章を追加
-  const handleAddChapter = async () => {
+  // 新しい章を追加（引数でタイトルを受け取れるように）
+  const handleAddChapter = async (titleOverride?: string) => {
     // 二重呼び出し防止
     if (hasAddedChapterRef.current || isSubmitting) return;
-    if (!newChapterTitle.trim() || !structureHandlers) {
+    
+    const titleToUse = titleOverride ?? newChapterTitle;
+    
+    if (!titleToUse.trim() || !structureHandlers) {
       setIsAddingChapter(false);
       setNewChapterTitle('');
       return;
@@ -419,7 +422,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
     hasAddedChapterRef.current = true;
     setIsSubmitting(true);
     try {
-      await structureHandlers.onAddChapter(newChapterTitle.trim());
+      await structureHandlers.onAddChapter(titleToUse.trim());
       setNewChapterTitle('');
       setIsAddingChapter(false);
     } catch (error) {
@@ -430,11 +433,15 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
     }
   };
 
-  // 新しい節を追加
-  const handleAddSection = async () => {
+  // 新しい節を追加（引数でタイトルとchapterIdを受け取れるように）
+  const handleAddSection = async (titleOverride?: string, chapterIdOverride?: string) => {
     // 二重呼び出し防止
     if (hasAddedSectionRef.current || isSubmitting) return;
-    if (!newSectionTitle.trim() || !addingSectionChapterId || !structureHandlers) {
+    
+    const titleToUse = titleOverride ?? newSectionTitle;
+    const chapterIdToUse = chapterIdOverride ?? addingSectionChapterId;
+    
+    if (!titleToUse.trim() || !chapterIdToUse || !structureHandlers) {
       setAddingSectionChapterId(null);
       setNewSectionTitle('');
       return;
@@ -443,7 +450,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
     hasAddedSectionRef.current = true;
     setIsSubmitting(true);
     try {
-      await structureHandlers.onAddSection(addingSectionChapterId, newSectionTitle.trim());
+      await structureHandlers.onAddSection(chapterIdToUse, titleToUse.trim());
       setNewSectionTitle('');
       setAddingSectionChapterId(null);
     } catch (error) {
@@ -690,17 +697,21 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
-                            handleAddSection();
+                            const inputValue = (e.target as HTMLInputElement).value;
+                            handleAddSection(inputValue, chapter.id);
                           } else if (e.key === 'Escape') {
                             setAddingSectionChapterId(null);
                             setNewSectionTitle('');
                           }
                         }}
-                        onBlur={() => {
+                        onBlur={(e) => {
+                          // イベント発生時点の値とchapterIdをキャプチャ
+                          const capturedValue = e.target.value;
+                          const capturedChapterId = chapter.id;
                           // 少し遅延させて、クリック等のイベントが先に処理されるようにする
                           setTimeout(() => {
-                            if (newSectionTitle.trim()) {
-                              handleAddSection();
+                            if (capturedValue.trim()) {
+                              handleAddSection(capturedValue, capturedChapterId);
                             } else {
                               setAddingSectionChapterId(null);
                             }
@@ -731,17 +742,20 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      handleAddChapter();
+                      const inputValue = (e.target as HTMLInputElement).value;
+                      handleAddChapter(inputValue);
                     } else if (e.key === 'Escape') {
                       setIsAddingChapter(false);
                       setNewChapterTitle('');
                     }
                   }}
-                  onBlur={() => {
+                  onBlur={(e) => {
+                    // イベント発生時点の値をキャプチャ
+                    const capturedValue = e.target.value;
                     // 少し遅延させて、クリック等のイベントが先に処理されるようにする
                     setTimeout(() => {
-                      if (newChapterTitle.trim()) {
-                        handleAddChapter();
+                      if (capturedValue.trim()) {
+                        handleAddChapter(capturedValue);
                       } else {
                         setIsAddingChapter(false);
                       }
