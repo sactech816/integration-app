@@ -172,6 +172,8 @@ function DashboardContent() {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [partnerNote, setPartnerNote] = useState('');
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [userPage, setUserPage] = useState(1);
+  const USERS_PER_PAGE = 10;
 
   // 管理者かどうかを判定
   const adminEmails = getAdminEmails();
@@ -664,6 +666,7 @@ function DashboardContent() {
         alert('ユーザー一覧の取得に失敗しました: ' + result.error);
       } else {
         setAllUsers(result.users);
+        setUserPage(1); // ページをリセット
       }
     } catch (error) {
       console.error('[Dashboard] Fetch users error:', error);
@@ -672,6 +675,13 @@ function DashboardContent() {
       setLoadingUsers(false);
     }
   };
+
+  // ページネーション計算
+  const totalUserPages = Math.ceil(allUsers.length / USERS_PER_PAGE);
+  const paginatedUsers = allUsers.slice(
+    (userPage - 1) * USERS_PER_PAGE,
+    userPage * USERS_PER_PAGE
+  );
 
   // パートナーステータスを切り替え（管理者のみ）
   const handleTogglePartner = async (userId: string, currentStatus: boolean, note: string = '') => {
@@ -1939,7 +1949,7 @@ function DashboardContent() {
                         </tr>
                       </thead>
                       <tbody>
-                        {allUsers.map((usr) => {
+                        {paginatedUsers.map((usr) => {
                           const isEditing = editingUserId === usr.user_id;
                           return (
                             <tr key={usr.user_id} className="border-b border-gray-100 hover:bg-gray-50">
@@ -2025,6 +2035,37 @@ function DashboardContent() {
                         })}
                       </tbody>
                     </table>
+                    {/* ページネーションUI */}
+                    {totalUserPages > 1 && (
+                      <div className="flex items-center justify-center gap-4 py-4 border-t border-gray-200 bg-gray-50">
+                        <button
+                          onClick={() => setUserPage(prev => Math.max(1, prev - 1))}
+                          disabled={userPage === 1}
+                          className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 transition-colors ${
+                            userPage === 1
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : 'bg-purple-600 text-white hover:bg-purple-700'
+                          }`}
+                        >
+                          ← 前へ
+                        </button>
+                        <span className="text-gray-700 text-sm">
+                          <span className="font-bold text-purple-600">{userPage}</span> / {totalUserPages} ページ
+                          <span className="text-gray-500 ml-2">(全{allUsers.length}件)</span>
+                        </span>
+                        <button
+                          onClick={() => setUserPage(prev => Math.min(totalUserPages, prev + 1))}
+                          disabled={userPage === totalUserPages}
+                          className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 transition-colors ${
+                            userPage === totalUserPages
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : 'bg-purple-600 text-white hover:bg-purple-700'
+                          }`}
+                        >
+                          次へ →
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
