@@ -53,8 +53,8 @@ const WRITING_STYLES = {
 type WritingStyleId = keyof typeof WRITING_STYLES;
 type ActualWritingStyleId = Exclude<WritingStyleId, 'toc_default'>;
 
-// 目次パターンから執筆スタイルへのマッピング
-const PATTERN_TO_STYLE_MAP: Record<string, WritingStyleId> = {
+// 目次パターンから執筆スタイルへのマッピング（toc_defaultは含まない）
+const PATTERN_TO_STYLE_MAP: Record<string, ActualWritingStyleId> = {
   basic: 'descriptive',
   problem: 'descriptive',
   story: 'narrative',
