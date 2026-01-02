@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle, Info, Sparkles, Copy, Tag, FileText, FolderTree, Lightbulb } from 'lucide-react';
+import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle, Info, Sparkles, Copy, Tag, FileText, FolderTree, Lightbulb, BookOpen, Rocket } from 'lucide-react';
 import Link from 'next/link';
 import { ChapterSidebar } from './ChapterSidebar';
 import { TiptapEditor, TiptapEditorRef } from './TiptapEditor';
@@ -794,6 +794,26 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
           <h1 className="font-bold text-sm truncate max-w-xs">{book.title}</h1>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href="/kindle/guide"
+            target="_blank"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all bg-white/20 hover:bg-white/30 active:bg-white/40"
+          >
+            <BookOpen size={16} />
+            <span className="hidden lg:inline">📖 まずお読みください</span>
+            <span className="lg:hidden">📖</span>
+          </Link>
+          
+          <Link
+            href="/kindle/publish-guide"
+            target="_blank"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all bg-white/20 hover:bg-white/30 active:bg-white/40"
+          >
+            <Rocket size={16} />
+            <span className="hidden lg:inline">🚀 出版準備ガイド</span>
+            <span className="lg:hidden">🚀</span>
+          </Link>
+          
           <button
             onClick={handleGenerateKdpInfo}
             disabled={isGeneratingKdp}

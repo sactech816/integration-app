@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { 
-  BookOpen, Plus, Loader2, Edit3, Trash2, Calendar, FileText 
+  BookOpen, Plus, Loader2, Edit3, Trash2, Calendar, FileText, HelpCircle, Rocket 
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
@@ -110,13 +110,32 @@ export default function KindleListPage() {
             <BookOpen className="text-amber-600" size={28} />
             <span className="font-bold text-xl text-gray-900">Kindle執筆システム</span>
           </div>
-          <Link
-            href="/kindle/new"
-            className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-5 py-2.5 rounded-xl transition-all shadow-lg"
-          >
-            <Plus size={20} />
-            新しい本を作成
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/kindle/guide"
+              className="flex items-center gap-1.5 text-amber-600 hover:text-amber-700 transition-colors bg-amber-50 hover:bg-amber-100 px-3 py-2 rounded-lg text-sm font-medium"
+            >
+              <HelpCircle size={16} />
+              <span className="hidden sm:inline">📖 まずお読みください</span>
+              <span className="sm:hidden">📖</span>
+            </Link>
+            <Link
+              href="/kindle/publish-guide"
+              className="flex items-center gap-1.5 text-orange-600 hover:text-orange-700 transition-colors bg-orange-50 hover:bg-orange-100 px-3 py-2 rounded-lg text-sm font-medium"
+            >
+              <Rocket size={16} />
+              <span className="hidden sm:inline">🚀 出版準備ガイド</span>
+              <span className="sm:hidden">🚀</span>
+            </Link>
+            <Link
+              href="/kindle/new"
+              className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-5 py-2.5 rounded-xl transition-all shadow-lg"
+            >
+              <Plus size={20} />
+              <span className="hidden sm:inline">新しい本を作成</span>
+              <span className="sm:hidden">新規</span>
+            </Link>
+          </div>
         </div>
       </header>
 

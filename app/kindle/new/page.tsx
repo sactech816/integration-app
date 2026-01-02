@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
-  BookOpen, ArrowLeft, ArrowRight, Lightbulb, Check, Target, List, ChevronRight, FileText, Trash2
+  BookOpen, ArrowLeft, ArrowRight, Lightbulb, Check, Target, List, ChevronRight, FileText, Trash2, HelpCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -390,7 +390,14 @@ export default function KindleNewPage() {
             <BookOpen className="text-amber-600" size={24} />
             <span className="font-bold text-gray-900">Kindle執筆システム</span>
           </div>
-          <div className="w-20" />
+          <Link 
+            href="/kindle/guide" 
+            target="_blank"
+            className="flex items-center gap-1.5 text-amber-600 hover:text-amber-700 transition-colors bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg text-sm font-medium"
+          >
+            <HelpCircle size={16} />
+            <span>📖 まずお読みください</span>
+          </Link>
         </div>
       </header>
 
