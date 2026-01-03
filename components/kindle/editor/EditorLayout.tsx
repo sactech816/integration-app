@@ -99,6 +99,11 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   
   const [activeSectionId, setActiveSectionId] = useState<string>(getInitialSectionId);
   const [chaptersData, setChaptersData] = useState<Chapter[]>(chapters);
+
+  // propsのchaptersが更新されたらローカル状態も同期する
+  React.useEffect(() => {
+    setChaptersData(chapters);
+  }, [chapters]);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSavingAndBack, setIsSavingAndBack] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);

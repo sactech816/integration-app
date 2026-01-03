@@ -147,23 +147,23 @@ export default function KindleEditorPage() {
       // target_infoとtoc_pattern_idを別途取得を試みる（カラムがない場合はスキップ）
       let targetInfoData: any = null;
       let patternIdData: string | null = null;
-      try {
-        const { data: extraData } = await supabase
-          .from('kdl_books')
-          .select('target_info, toc_pattern_id')
-          .eq('id', bookId)
-          .single();
-        
-        if (extraData?.target_info) {
+      
+      // エラーが発生してもスキップする（カラムが存在しない場合がある）
+      const { data: extraData, error: extraError } = await supabase
+        .from('kdl_books')
+        .select('target_info, toc_pattern_id')
+        .eq('id', bookId)
+        .single();
+      
+      if (!extraError && extraData) {
+        if (extraData.target_info) {
           targetInfoData = extraData.target_info;
         }
-        if (extraData?.toc_pattern_id) {
+        if (extraData.toc_pattern_id) {
           patternIdData = extraData.toc_pattern_id;
         }
-      } catch {
-        // カラムがない場合は無視
-        console.log('target_info/toc_pattern_id columns not available, skipping');
       }
+      // extraErrorがあってもログのみで処理を続行
 
       // 2. 章を取得
       const { data: chaptersData, error: chaptersError } = await supabase
