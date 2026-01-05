@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getProviderForPhase } from '@/lib/ai-provider';
+import { checkAIUsageLimit, logAIUsage } from '@/lib/ai-usage';
 
 // 執筆スタイルの定義
 export const WRITING_STYLES = {
@@ -133,6 +134,7 @@ interface RequestBody {
     benefits?: string[];
     usp?: string;
   };
+  user_id?: string; // 使用量チェック用
 }
 
 // AIレスポンスからコードブロック記法を除去する
@@ -152,7 +154,7 @@ function cleanAIResponse(content: string): string {
 export async function POST(request: Request) {
   try {
     const body: RequestBody = await request.json();
-    const { book_title, book_subtitle, chapter_title, section_title, writing_style, instruction, target_profile } = body;
+    const { book_id, book_title, book_subtitle, chapter_title, section_title, writing_style, instruction, target_profile, user_id } = body;
 
     // バリデーション
     if (!book_title) {
@@ -163,6 +165,17 @@ export async function POST(request: Request) {
     }
     if (!section_title) {
       return NextResponse.json({ error: '節タイトルが必要です' }, { status: 400 });
+    }
+
+    // AI使用量チェック（user_idがある場合のみ）
+    if (user_id) {
+      const usageCheck = await checkAIUsageLimit(user_id);
+      if (!usageCheck.isWithinLimit) {
+        const message = usageCheck.remainingDaily === 0
+          ? '本日のAI使用上限に達しました。明日またお試しください。'
+          : '今月のAI使用上限に達しました。';
+        return NextResponse.json({ error: message, usageLimit: true }, { status: 429 });
+      }
     }
 
     // 執筆スタイルを決定（デフォルトは説明文）
@@ -238,6 +251,17 @@ ${WRITING_STYLES[styleId].name}（${WRITING_STYLES[styleId].description}）`;
 
     // コードブロック記法を除去
     content = cleanAIResponse(content);
+
+    // AI使用量を記録（非同期、エラーは無視）
+    if (user_id) {
+      logAIUsage({
+        userId: user_id,
+        actionType: 'generate_section',
+        service: 'kdl',
+        modelUsed: response.model,
+        metadata: { book_id, section_title },
+      }).catch(console.error);
+    }
 
     return NextResponse.json({ content });
   } catch (error: any) {

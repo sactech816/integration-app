@@ -25,7 +25,8 @@ import {
   TrendingUp,
   Lightbulb,
   Heart,
-  LayoutGrid
+  LayoutGrid,
+  BookOpen
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -178,6 +179,14 @@ const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button 
+              onClick={() => handleNav('kindle/lp')} 
+              className="flex items-center gap-1.5 text-sm font-semibold text-amber-600 hover:text-amber-700 transition-colors"
+            >
+              <BookOpen size={16} />
+              <span>📚 Kindle出版</span>
+            </button>
+
+            <button 
               onClick={() => handleNav('announcements')} 
               className="flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-orange-600 transition-colors"
             >
@@ -324,6 +333,16 @@ const Header: React.FC<HeaderProps> = ({
                   <div className="text-left">
                     <span className="font-medium text-purple-700">ポータル</span>
                     <p className="text-xs text-gray-500">みんなの作品を見る</p>
+                  </div>
+                </button>
+                <button 
+                  onClick={() => handleNav('kindle/lp')} 
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 transition-colors"
+                >
+                  <BookOpen size={20} className="text-amber-600" />
+                  <div className="text-left">
+                    <span className="font-medium text-amber-700">📚 Kindle出版</span>
+                    <p className="text-xs text-gray-500">AIでKindle本を執筆</p>
                   </div>
                 </button>
                 <button 

@@ -36,7 +36,10 @@ export default function KindleGuidePage() {
             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
               <Sparkles size={24} />
             </div>
-            <h1 className="text-2xl font-bold">AIと一緒に、あなたらしい本を書こう</h1>
+            <div>
+              <h1 className="text-2xl font-bold">AIと一緒に、あなたらしい本を書こう</h1>
+              <p className="text-sm opacity-80">キンドルダイレクトライト（KDL）</p>
+            </div>
           </div>
           <p className="text-white/90 text-lg leading-relaxed">
             このシステムはAIがあなたの執筆をサポートします。<br />

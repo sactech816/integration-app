@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getProviderForPhase } from '@/lib/ai-provider';
+import { checkAIUsageLimit, logAIUsage } from '@/lib/ai-usage';
 
 // パターン定義
 export const CHAPTER_PATTERNS = {
@@ -162,7 +163,19 @@ const getMockChapters = (patternId: string, title: string): GeneratedChapters =>
 
 export async function POST(request: Request) {
   try {
-    const { title, subtitle, target, patternId, action, instruction } = await request.json();
+    const { title, subtitle, target, patternId, action, instruction, user_id } = await request.json();
+
+    // AI使用量チェック（user_idがある場合のみ、デモモードはスキップ）
+    const useMockDataCheck = (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) || process.env.USE_MOCK_DATA === 'true';
+    if (user_id && !useMockDataCheck) {
+      const usageCheck = await checkAIUsageLimit(user_id);
+      if (!usageCheck.isWithinLimit) {
+        const message = usageCheck.remainingDaily === 0
+          ? '本日のAI使用上限に達しました。明日またお試しください。'
+          : '今月のAI使用上限に達しました。';
+        return NextResponse.json({ error: message, usageLimit: true }, { status: 429 });
+      }
+    }
 
     // おすすめパターンを取得するアクション
     if (action === 'recommend') {
@@ -319,6 +332,17 @@ ${targetInfo}`;
     const result: GeneratedChapters = JSON.parse(content);
     if (!result.chapters || !Array.isArray(result.chapters)) {
       throw new Error('不正な応答形式です');
+    }
+
+    // AI使用量を記録（非同期、エラーは無視）
+    if (user_id) {
+      logAIUsage({
+        userId: user_id,
+        actionType: action === 'recommend' ? 'recommend_pattern' : 'generate_chapters',
+        service: 'kdl',
+        modelUsed: response.model,
+        metadata: { title, patternId: selectedPattern },
+      }).catch(console.error);
     }
 
     return NextResponse.json(result);

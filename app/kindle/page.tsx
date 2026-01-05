@@ -108,7 +108,10 @@ export default function KindleListPage() {
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <BookOpen className="text-amber-600" size={28} />
-            <span className="font-bold text-xl text-gray-900">Kindle執筆システム</span>
+            <div>
+              <span className="font-bold text-xl text-gray-900">キンドルダイレクトライト</span>
+              <span className="text-xs text-gray-500 ml-2">KDL</span>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <Link

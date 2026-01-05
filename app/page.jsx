@@ -21,7 +21,8 @@ import {
   Magnet,
   Target,
   Share2,
-  LayoutGrid
+  LayoutGrid,
+  BookOpen
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -192,6 +193,34 @@ export default function HomePage() {
             >
               <LayoutGrid size={18} />
               ポータルを見る
+              <ArrowRight size={16} />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Kindle出版サービスの誘導 */}
+      <section className="py-12 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                <BookOpen size={24} className="text-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-gray-900 text-lg">📚 キンドルダイレクトライト</h3>
+                  <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">NEW</span>
+                </div>
+                <p className="text-gray-600 text-sm">AIがあなたのKindle出版をフルサポート。目次作成から執筆まで。</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigateTo('kindle/lp')}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold px-6 py-3 rounded-xl hover:from-amber-600 hover:to-orange-600 transition-colors shadow-lg"
+            >
+              <BookOpen size={18} />
+              詳しく見る
               <ArrowRight size={16} />
             </button>
           </div>

@@ -179,3 +179,4 @@ CREATE TRIGGER trigger_subscription_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_subscription_updated_at();
 
+

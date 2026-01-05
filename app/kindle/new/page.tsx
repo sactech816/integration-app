@@ -388,7 +388,10 @@ export default function KindleNewPage() {
           </Link>
           <div className="flex items-center gap-2">
             <BookOpen className="text-amber-600" size={24} />
-            <span className="font-bold text-gray-900">Kindle執筆システム</span>
+            <div>
+              <span className="font-bold text-gray-900">キンドルダイレクトライト</span>
+              <span className="text-xs text-gray-500 ml-1">KDL</span>
+            </div>
           </div>
           <Link 
             href="/kindle/guide" 
