@@ -142,10 +142,10 @@ async function handleSubscriptionCreated(data: WebhookPayload['data']) {
   // メールアドレスからユーザーIDを検索
   let resolvedUserId = userId !== 'anonymous' ? userId : null;
   
-  if (!resolvedUserId && email) {
+  if (!resolvedUserId && email && supabase) {
     // auth.usersからメールアドレスでユーザーを検索
     const { data: userData } = await supabase.auth.admin.listUsers();
-    const matchedUser = userData?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
+    const matchedUser = userData?.users?.find((u: { email?: string; id: string }) => u.email?.toLowerCase() === email.toLowerCase());
     if (matchedUser) {
       resolvedUserId = matchedUser.id;
       console.log(`✅ Found user by email: ${email} -> ${resolvedUserId}`);
