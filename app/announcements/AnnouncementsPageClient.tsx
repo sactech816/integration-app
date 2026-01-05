@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Bell, Calendar, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Bell, Calendar, ExternalLink, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
@@ -12,34 +12,9 @@ interface Announcement {
   id: string;
   title: string;
   content: string;
-  date: string;
-  category: 'update' | 'feature' | 'maintenance' | 'info';
+  created_at: string;
+  type: 'update' | 'feature' | 'maintenance' | 'info';
 }
-
-// サンプルのお知らせデータ
-const sampleAnnouncements: Announcement[] = [
-  {
-    id: '1',
-    title: 'Kindle執筆システムに執筆スタイル選択機能を追加',
-    content: 'AI執筆時に「説明文」「物語」「対話形式」「Q&A」「ワークブック」の5種類のスタイルから選択できるようになりました。目次で選んだスタイルがデフォルトで適用されます。',
-    date: '2026-01-02',
-    category: 'feature',
-  },
-  {
-    id: '2',
-    title: 'システムメンテナンスのお知らせ',
-    content: '定期メンテナンスを実施いたします。ご不便をおかけしますが、ご理解のほどよろしくお願いいたします。',
-    date: '2025-12-28',
-    category: 'maintenance',
-  },
-  {
-    id: '3',
-    title: '集客メーカーをリリースしました',
-    content: '診断クイズ・プロフィールLP・ビジネスLPが簡単に作成できる「集客メーカー」をリリースしました。ぜひご利用ください。',
-    date: '2025-12-01',
-    category: 'info',
-  },
-];
 
 const categoryLabels = {
   update: { label: 'アップデート', color: 'bg-blue-100 text-blue-700' },
@@ -51,14 +26,27 @@ const categoryLabels = {
 export default function AnnouncementsPageClient() {
   const router = useRouter();
   const [user, setUser] = useState<{ email?: string } | null>(null);
-  const [announcements] = useState<Announcement[]>(sampleAnnouncements);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const init = async () => {
       if (supabase) {
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user || null);
+        
+        // お知らせを取得
+        const { data, error } = await supabase
+          .from('announcements')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+        
+        if (!error && data) {
+          setAnnouncements(data);
+        }
       }
+      setLoading(false);
     };
     init();
   }, []);
@@ -107,32 +95,49 @@ export default function AnnouncementsPageClient() {
 
         {/* お知らせ一覧 */}
         <div className="space-y-4">
-          {announcements.map((announcement) => (
-            <article
-              key={announcement.id}
-              className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow"
-            >
-              <div className="flex items-start justify-between gap-4 mb-3">
-                <div className="flex items-center gap-3">
-                  <span className={`text-xs font-bold px-3 py-1 rounded-full ${categoryLabels[announcement.category].color}`}>
-                    {categoryLabels[announcement.category].label}
-                  </span>
-                  <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                    <Calendar size={14} />
-                    <time>{announcement.date}</time>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="animate-spin text-purple-500" size={32} />
+            </div>
+          ) : announcements.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              現在お知らせはありません
+            </div>
+          ) : (
+            announcements.map((announcement) => {
+              const category = categoryLabels[announcement.type] || categoryLabels.info;
+              const date = announcement.created_at 
+                ? new Date(announcement.created_at).toLocaleDateString('ja-JP')
+                : '';
+              
+              return (
+                <article
+                  key={announcement.id}
+                  className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow"
+                >
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="flex items-center gap-3">
+                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${category.color}`}>
+                        {category.label}
+                      </span>
+                      <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                        <Calendar size={14} />
+                        <time>{date}</time>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-              
-              <h2 className="text-lg font-bold text-gray-900 mb-2">
-                {announcement.title}
-              </h2>
-              
-              <p className="text-gray-600 leading-relaxed">
-                {announcement.content}
-              </p>
-            </article>
-          ))}
+                  
+                  <h2 className="text-lg font-bold text-gray-900 mb-2">
+                    {announcement.title}
+                  </h2>
+                  
+                  <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+                    {announcement.content}
+                  </p>
+                </article>
+              );
+            })
+          )}
         </div>
 
         {/* 問い合わせリンク */}
