@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Heart, Coffee, Gift, Sparkles, CreditCard, CheckCircle, ArrowRight, ExternalLink, Loader2, XCircle } from 'lucide-react';
+import { Heart, Coffee, Gift, Sparkles, CreditCard, CheckCircle, ArrowRight, ExternalLink, Loader2, XCircle, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface DonationAmount {
@@ -9,6 +9,15 @@ interface DonationAmount {
   label: string;
   description: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
+}
+
+interface SubscriptionPlan {
+  id: string;
+  amount: number;
+  label: string;
+  description: string;
+  icon: string;
+  checkoutUrl: string;
 }
 
 interface DonationPageProps {
@@ -24,6 +33,25 @@ const DONATION_AMOUNTS: DonationAmount[] = [
   { value: 'custom', label: 'カスタム', description: '金額を入力', icon: CreditCard },
 ];
 
+// 月額サブスクリプションプラン（UnivaPay決済リンク付き）
+const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
+  { id: 'monthly_1000', amount: 1000, label: '¥1,000', description: 'ライトサポート', icon: 'coffee', checkoutUrl: 'https://univa.cc/39CiE_' },
+  { id: 'monthly_3000', amount: 3000, label: '¥3,000', description: 'スタンダードサポート', icon: 'heart', checkoutUrl: 'https://univa.cc/CPLMx4' },
+  { id: 'monthly_5000', amount: 5000, label: '¥5,000', description: 'プレミアムサポート', icon: 'gift', checkoutUrl: 'https://univa.cc/bMhHYz' },
+  { id: 'monthly_10000', amount: 10000, label: '¥10,000', description: 'スペシャルサポート', icon: 'sparkles', checkoutUrl: 'https://univa.cc/QTHj58' },
+];
+
+// アイコンマッピング
+const getSubscriptionIcon = (iconName: string) => {
+  switch (iconName) {
+    case 'coffee': return Coffee;
+    case 'heart': return Heart;
+    case 'gift': return Gift;
+    case 'sparkles': return Sparkles;
+    default: return Heart;
+  }
+};
+
 const DonationPageContent: React.FC<DonationPageProps> = ({ user }) => {
   const router = useRouter();
   const [selectedAmount, setSelectedAmount] = useState<number | 'custom' | null>(null);
@@ -31,6 +59,9 @@ const DonationPageContent: React.FC<DonationPageProps> = ({ user }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paypalUrl] = useState('https://paypal.me/keishoinc');
   const [donationStatus, setDonationStatus] = useState<'success' | 'cancel' | null>(null);
+  
+  // 定期サポート用state
+  const [selectedSubscription, setSelectedSubscription] = useState<string | null>(null);
 
   // ページタイトル設定とURLパラメータから決済結果を確認
   useEffect(() => {
@@ -104,6 +135,28 @@ const DonationPageContent: React.FC<DonationPageProps> = ({ user }) => {
     } else {
       alert('PayPalでの開発支援リンクは現在準備中です。');
     }
+  };
+
+  // 定期サポートプラン選択
+  const handleSubscriptionSelect = (planId: string) => {
+    setSelectedSubscription(planId);
+  };
+
+  // 選択中のサブスクリプションプランを取得
+  const getSelectedSubscriptionPlan = () => {
+    return SUBSCRIPTION_PLANS.find(p => p.id === selectedSubscription);
+  };
+
+  // 定期サポート申し込み処理（UnivaPay決済リンクへ遷移）
+  const handleSubscriptionSubmit = () => {
+    const plan = getSelectedSubscriptionPlan();
+    if (!plan) {
+      alert('プランを選択してください');
+      return;
+    }
+
+    // UnivaPay決済ページへ遷移
+    window.open(plan.checkoutUrl, '_blank');
   };
 
   return (
@@ -213,13 +266,88 @@ const DonationPageContent: React.FC<DonationPageProps> = ({ user }) => {
             </div>
           </div>
 
-          {/* Stripe決済セクション */}
+          {/* 定期サポートセクション（UnivaPay） */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-8 border border-emerald-100">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+              <span className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                <RefreshCw className="text-emerald-600" size={20} />
+              </span>
+              定期的サポート（月額）
+            </h2>
+
+            <p className="text-gray-600 mb-6 text-sm">
+              毎月自動で応援できます。いつでも解約可能です。
+            </p>
+
+            {/* プラン選択グリッド */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+              {SUBSCRIPTION_PLANS.map((plan) => {
+                const IconComponent = getSubscriptionIcon(plan.icon);
+                const isSelected = selectedSubscription === plan.id;
+                
+                return (
+                  <button
+                    key={plan.id}
+                    onClick={() => handleSubscriptionSelect(plan.id)}
+                    className={`relative p-4 rounded-xl border-2 transition-all text-left ${
+                      isSelected
+                        ? 'border-emerald-500 bg-emerald-50 shadow-md'
+                        : 'border-gray-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <IconComponent 
+                        size={18} 
+                        className={isSelected ? 'text-emerald-600' : 'text-gray-400'} 
+                      />
+                      <span className={`font-bold text-lg ${isSelected ? 'text-emerald-600' : 'text-gray-900'}`}>
+                        {plan.label}
+                      </span>
+                    </div>
+                    <p className={`text-xs ${isSelected ? 'text-emerald-500' : 'text-gray-500'}`}>
+                      {plan.description}
+                    </p>
+                    <p className={`text-xs mt-1 ${isSelected ? 'text-emerald-400' : 'text-gray-400'}`}>
+                      /月
+                    </p>
+                    {isSelected && (
+                      <CheckCircle className="absolute top-2 right-2 text-emerald-500" size={16} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 定期サポート申し込みボタン */}
+            <button
+              onClick={handleSubscriptionSubmit}
+              disabled={!selectedSubscription}
+              className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 ${
+                !selectedSubscription
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg hover:shadow-xl'
+              }`}
+            >
+              <RefreshCw size={20} />
+              {getSelectedSubscriptionPlan() 
+                ? `月額${getSelectedSubscriptionPlan()?.label}で定期サポートを始める`
+                : 'プランを選択してください'
+              }
+              {getSelectedSubscriptionPlan() && <ExternalLink size={18} />}
+            </button>
+
+            <p className="text-xs text-gray-500 text-center mt-4">
+              UnivaPayによる安全な決済処理。いつでも解約可能です。
+            </p>
+          </div>
+
+          {/* Stripe決済セクション（1回払い） */}
           <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-8 border border-indigo-100">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
               <span className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
                 <CreditCard className="text-indigo-600" size={20} />
               </span>
-              クレジットカードで開発支援
+              クレジットカードで開発支援（1回払い）
             </h2>
 
             <p className="text-gray-600 mb-6 text-sm">

@@ -101,7 +101,6 @@ export async function POST(request: Request) {
       }
 
       // 章を挿入
-      console.log('[KDL Structure Add] Inserting chapter:', { bookId, title, newOrderIndex });
       const { data: chapter, error } = await supabase
         .from('kdl_chapters')
         .insert({
@@ -114,11 +113,9 @@ export async function POST(request: Request) {
         .single();
 
       if (error) {
-        console.error('[KDL Structure Add] Insert chapter error:', error);
         throw new Error('章の追加に失敗しました: ' + error.message);
       }
 
-      console.log('[KDL Structure Add] Chapter inserted successfully:', chapter);
       return NextResponse.json({
         id: chapter.id,
         message: '章が追加されました',
