@@ -3,9 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { 
-  BookOpen, Plus, Loader2, Edit3, Trash2, Calendar, FileText, HelpCircle, Rocket 
+  BookOpen, Plus, Loader2, Edit3, Trash2, Calendar, FileText, HelpCircle, Rocket,
+  Crown, Sparkles, Zap, ArrowRight, X
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import AIUsageDisplay from '@/components/kindle/AIUsageDisplay';
 
 interface Book {
   id: string;
@@ -22,6 +24,45 @@ export default function KindleListPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [user, setUser] = useState<any>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<{
+    hasActiveSubscription: boolean;
+    planType: 'monthly' | 'yearly' | 'none';
+  } | null>(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
+  const [showBanner, setShowBanner] = useState(true);
+
+  // ユーザーとサブスク状態を取得
+  useEffect(() => {
+    const fetchUserAndSubscription = async () => {
+      if (!isSupabaseConfigured() || !supabase) {
+        setLoadingSubscription(false);
+        return;
+      }
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user || null);
+
+        if (session?.user) {
+          const response = await fetch(`/api/subscription/status?userId=${session.user.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            setSubscriptionStatus({
+              hasActiveSubscription: data.hasActiveSubscription,
+              planType: data.planType,
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Subscription fetch error:', err);
+      } finally {
+        setLoadingSubscription(false);
+      }
+    };
+
+    fetchUserAndSubscription();
+  }, []);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -142,8 +183,83 @@ export default function KindleListPage() {
         </div>
       </header>
 
+      {/* 未加入者向けサブスク促進バナー */}
+      {showBanner && !loadingSubscription && !subscriptionStatus?.hasActiveSubscription && (
+        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white">
+          <div className="max-w-4xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="hidden sm:flex bg-white/20 p-2.5 rounded-xl">
+                  <Crown size={24} />
+                </div>
+                <div>
+                  <p className="font-bold text-sm sm:text-base">
+                    🚀 KDLプランに加入してフル機能を解放！
+                  </p>
+                  <p className="text-white/80 text-xs sm:text-sm mt-0.5">
+                    AI使用量無制限・Word出版エクスポート・優先サポート
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/kindle/lp"
+                  className="bg-white text-orange-600 font-bold px-4 py-2 rounded-lg text-sm hover:bg-orange-50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  <Sparkles size={16} />
+                  <span className="hidden sm:inline">プランを見る</span>
+                  <ArrowRight size={16} className="sm:hidden" />
+                </Link>
+                <button
+                  onClick={() => setShowBanner(false)}
+                  className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                  aria-label="閉じる"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 加入者向けステータス表示 */}
+      {!loadingSubscription && subscriptionStatus?.hasActiveSubscription && (
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+          <div className="max-w-4xl mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-green-100 p-1.5 rounded-lg">
+                  <Crown size={18} className="text-green-600" />
+                </div>
+                <span className="text-green-700 font-bold text-sm">
+                  {subscriptionStatus.planType === 'yearly' ? '年間プラン' : '月額プラン'}
+                </span>
+                <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold">
+                  有効
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-green-600 text-xs">
+                <Zap size={14} />
+                <span>AI機能フル解放中</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* メインコンテンツ */}
       <main className="max-w-4xl mx-auto px-4 py-8">
+        {/* AI使用量表示（ログインユーザー向け） */}
+        {user && subscriptionStatus && (
+          <div className="mb-6">
+            <AIUsageDisplay 
+              userId={user.id} 
+              planType={subscriptionStatus.planType} 
+            />
+          </div>
+        )}
+
         <h1 className="text-2xl font-bold text-gray-900 mb-6">あなたの書籍</h1>
 
         {isLoading ? (

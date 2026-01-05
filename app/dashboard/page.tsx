@@ -53,7 +53,10 @@ import {
   Upload,
   Star,
   CheckSquare,
-  Square
+  Square,
+  BookOpen,
+  Crown,
+  Zap
 } from 'lucide-react';
 
 // ページネーション設定
@@ -174,6 +177,15 @@ function DashboardContent() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [userPage, setUserPage] = useState(1);
   const USERS_PER_PAGE = 10;
+
+  // KDLサブスクリプション状態
+  const [kdlSubscription, setKdlSubscription] = useState<{
+    hasActiveSubscription: boolean;
+    planType: 'monthly' | 'yearly' | 'none';
+    nextPaymentDate: string | null;
+    amount: number | null;
+  } | null>(null);
+  const [loadingKdlSubscription, setLoadingKdlSubscription] = useState(true);
 
   // 管理者かどうかを判定
   const adminEmails = getAdminEmails();
@@ -474,6 +486,36 @@ function DashboardContent() {
       fetchFeaturedContents();
     }
   }, [isAdmin, fetchAnnouncements]);
+
+  // KDLサブスク状態を取得
+  useEffect(() => {
+    const fetchKdlSubscription = async () => {
+      if (!user) {
+        setLoadingKdlSubscription(false);
+        return;
+      }
+      try {
+        const response = await fetch(`/api/subscription/status?userId=${user.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setKdlSubscription({
+            hasActiveSubscription: data.hasActiveSubscription,
+            planType: data.planType,
+            nextPaymentDate: data.subscription?.nextPaymentDate || null,
+            amount: data.subscription?.amount || null,
+          });
+        }
+      } catch (error) {
+        console.error('KDL subscription fetch error:', error);
+      } finally {
+        setLoadingKdlSubscription(false);
+      }
+    };
+
+    if (user) {
+      fetchKdlSubscription();
+    }
+  }, [user]);
 
   // ピックアップコンテンツを取得
   const fetchFeaturedContents = async () => {
@@ -1186,7 +1228,7 @@ function DashboardContent() {
             <BarChart3 /> マイページ
           </h1>
           <div className="flex items-center gap-4">
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => navigateTo('quiz/editor')}
                 className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 flex items-center gap-2 transition-colors text-sm"
@@ -1204,6 +1246,12 @@ function DashboardContent() {
                 className="bg-amber-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-amber-700 flex items-center gap-2 transition-colors text-sm"
               >
                 <Building2 size={16} /> ビジネスLP
+              </button>
+              <button
+                onClick={() => navigateTo('kindle')}
+                className="bg-orange-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-orange-700 flex items-center gap-2 transition-colors text-sm"
+              >
+                <BookOpen size={16} /> Kindle執筆
               </button>
             </div>
             <button onClick={handleLogout} className="text-gray-500 hover:text-red-500 font-bold flex items-center gap-1 text-sm">
@@ -1325,6 +1373,66 @@ function DashboardContent() {
                 <p className="text-xs text-white/80">開発支援・サポートはこちら</p>
               </div>
             </button>
+
+            {/* KDL（Kindle執筆サービス）サブスクリプション状態 */}
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-5 rounded-2xl shadow-sm border border-amber-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-amber-100 p-2.5 rounded-full">
+                  <BookOpen size={20} className="text-amber-600" />
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 text-sm">Kindle執筆サービス (KDL)</p>
+                  <p className="text-xs text-gray-500">AI powered 書籍執筆</p>
+                </div>
+              </div>
+
+              {loadingKdlSubscription ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="animate-spin text-amber-500" size={20} />
+                </div>
+              ) : kdlSubscription?.hasActiveSubscription ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Crown size={16} className="text-amber-500" />
+                    <span className="font-bold text-amber-700">
+                      {kdlSubscription.planType === 'yearly' ? '年間プラン' : '月額プラン'}
+                    </span>
+                    <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold">
+                      有効
+                    </span>
+                  </div>
+                  {kdlSubscription.nextPaymentDate && (
+                    <p className="text-xs text-gray-500">
+                      次回更新: {new Date(kdlSubscription.nextPaymentDate).toLocaleDateString('ja-JP')}
+                    </p>
+                  )}
+                  <button
+                    onClick={() => navigateTo('kindle')}
+                    className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <BookOpen size={16} />
+                    書籍を管理する
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Zap size={16} />
+                    <span className="text-sm">未加入</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    AIでKindle本を簡単執筆。目次・章・節の自動生成から本文執筆まで。
+                  </p>
+                  <button
+                    onClick={() => navigateTo('kindle/lp')}
+                    className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-2.5 rounded-lg text-sm flex items-center justify-center gap-2 transition-all shadow-md"
+                  >
+                    <Sparkles size={16} />
+                    詳細を見る
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 右カラム：サービス選択 + アクセス解析 */}
