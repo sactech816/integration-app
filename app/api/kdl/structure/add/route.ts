@@ -26,20 +26,10 @@ export async function POST(request: Request) {
   try {
     const body: AddRequest = await request.json();
 
-    // 環境変数のデバッグログ
-    console.log('[KDL Structure Add] Environment check:', {
-      hasSupabaseUrl: !!supabaseUrl,
-      hasServiceKey: !!supabaseServiceKey,
-      serviceKeyLength: supabaseServiceKey?.length || 0,
-      bookId: body.bookId,
-      type: body.type,
-    });
-
     // デモモード判定（Supabase未設定、またはbookIdがdemo-で始まる場合）
     const isDemoMode = !supabaseUrl || !supabaseServiceKey || body.bookId?.startsWith('demo-');
     
     if (isDemoMode) {
-      console.log('[KDL Structure Add] Demo mode activated');
       // デモモード
       const demoId = 'demo-' + Date.now();
       if (body.type === 'chapter') {
@@ -57,7 +47,6 @@ export async function POST(request: Request) {
       }
     }
 
-    console.log('[KDL Structure Add] Creating Supabase client with service role');
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
     if (body.type === 'chapter') {
