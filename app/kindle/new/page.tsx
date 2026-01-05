@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   BookOpen, ArrowLeft, ArrowRight, Lightbulb, Check, Target, List, ChevronRight, FileText, Trash2, HelpCircle, PlayCircle
@@ -38,7 +38,27 @@ interface SavedDraft {
   savedAt: string;
 }
 
+// ローディングフォールバック
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
+      <div className="text-center">
+        <BookOpen className="text-amber-600 mx-auto mb-4 animate-pulse" size={48} />
+        <p className="text-gray-600">読み込み中...</p>
+      </div>
+    </div>
+  );
+}
+
 export default function KindleNewPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <KindleNewPageContent />
+    </Suspense>
+  );
+}
+
+function KindleNewPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
