@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { 
-  Lightbulb, Sparkles, Loader2, Check, AlertCircle, RefreshCw, MessageSquare
+  Lightbulb, Sparkles, Loader2, Check, AlertCircle, RefreshCw, MessageSquare, PlayCircle
 } from 'lucide-react';
-import { WizardState, TitleSuggestion } from './types';
+import { WizardState, TitleSuggestion, MOCK_TITLES, demoDelay } from './types';
 
 interface Step1ThemeProps {
   state: WizardState;
@@ -15,6 +15,7 @@ interface Step1ThemeProps {
   setIsGenerating: React.Dispatch<React.SetStateAction<boolean>>;
   error: string;
   setError: React.Dispatch<React.SetStateAction<string>>;
+  isDemo?: boolean; // デモモードフラグ
 }
 
 export const Step1Theme: React.FC<Step1ThemeProps> = ({ 
@@ -25,7 +26,8 @@ export const Step1Theme: React.FC<Step1ThemeProps> = ({
   isGenerating, 
   setIsGenerating, 
   error, 
-  setError 
+  setError,
+  isDemo = false
 }) => {
   const [retakeInstruction, setRetakeInstruction] = useState('');
   
@@ -39,6 +41,19 @@ export const Step1Theme: React.FC<Step1ThemeProps> = ({
     setError('');
     
     try {
+      // デモモードの場合はモックデータを返す
+      if (isDemo) {
+        await demoDelay(1000); // 1秒待機でローディング演出
+        // テーマに基づいてモックタイトルをカスタマイズ
+        const customizedTitles = MOCK_TITLES.map(t => ({
+          ...t,
+          title: t.title.replace(/副業/g, state.theme.trim().slice(0, 10) || '副業')
+        }));
+        setTitleSuggestions(customizedTitles);
+        if (instruction) setRetakeInstruction('');
+        return;
+      }
+
       const response = await fetch('/api/kdl/generate-title', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -62,13 +77,24 @@ export const Step1Theme: React.FC<Step1ThemeProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* デモモードバナー */}
+      {isDemo && (
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-3 rounded-xl flex items-center gap-3">
+          <PlayCircle size={20} />
+          <div>
+            <span className="font-bold">デモモード</span>
+            <span className="text-sm opacity-90 ml-2">AIを使わずにサンプルデータで体験できます</span>
+          </div>
+        </div>
+      )}
+
       <div>
         <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
           <Lightbulb className="text-amber-500" size={24} />
           書きたい本のテーマを教えてください
         </h2>
         <p className="text-gray-600 text-sm">
-          テーマやキーワードを入力すると、AIがAmazon SEOに最適化されたタイトル案を提案します。
+          テーマやキーワードを入力すると、{isDemo ? 'サンプルの' : 'AIがAmazon SEOに最適化された'}タイトル案を提案します。
         </p>
       </div>
 

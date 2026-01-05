@@ -124,36 +124,77 @@ export async function POST(req: Request) {
  */
 async function handleSubscriptionCreated(data: WebhookPayload['data']) {
   console.log('✅ Subscription created:', data.id);
+  console.log('📦 Webhook data:', JSON.stringify(data, null, 2));
   
   if (!supabase) {
     console.warn('⚠️ Supabase not configured, skipping DB update');
     return;
   }
 
+  // metadataまたはトップレベルからデータを取得
+  const email = data.metadata?.email || (data as any).email || (data as any).buyer_email;
   const userId = data.metadata?.userId;
+  const amount = data.amount || (data as any).requested_amount;
+  const period = data.period || data.metadata?.period || determinePeriodFromAmount(amount);
+  const planName = data.metadata?.planName || determinePlanName(amount, period);
+  const service = data.metadata?.service || 'kdl'; // デフォルトはKDL
+  
+  // メールアドレスからユーザーIDを検索
+  let resolvedUserId = userId !== 'anonymous' ? userId : null;
+  
+  if (!resolvedUserId && email) {
+    // auth.usersからメールアドレスでユーザーを検索
+    const { data: userData } = await supabase.auth.admin.listUsers();
+    const matchedUser = userData?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
+    if (matchedUser) {
+      resolvedUserId = matchedUser.id;
+      console.log(`✅ Found user by email: ${email} -> ${resolvedUserId}`);
+    }
+  }
   
   // subscriptionsテーブルに保存
   const { error } = await supabase
     .from('subscriptions')
     .upsert({
       id: data.id,
-      user_id: userId !== 'anonymous' ? userId : null,
+      user_id: resolvedUserId,
       provider: 'univapay',
       status: 'active',
-      amount: data.amount,
+      amount: amount,
       currency: data.currency || 'jpy',
-      period: data.period || 'monthly',
-      plan_name: data.metadata?.planName,
-      email: data.metadata?.email,
+      period: period,
+      plan_name: planName,
+      email: email,
       next_payment_date: data.nextPaymentDate,
-      metadata: data.metadata,
+      metadata: { ...data.metadata, service },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }, { onConflict: 'id' });
 
   if (error) {
     console.error('❌ Failed to save subscription:', error);
+  } else {
+    console.log(`✅ Subscription saved: ${data.id} for user ${resolvedUserId || email}`);
   }
+}
+
+/**
+ * 金額からプラン期間を推定
+ */
+function determinePeriodFromAmount(amount?: number): 'monthly' | 'yearly' {
+  if (!amount) return 'monthly';
+  // 年間プランは月額の10倍以上と仮定
+  return amount >= 30000 ? 'yearly' : 'monthly';
+}
+
+/**
+ * 金額と期間からプラン名を推定
+ */
+function determinePlanName(amount?: number, period?: string): string {
+  if (period === 'yearly') {
+    return 'KDL 年間プラン';
+  }
+  return 'KDL 月額プラン';
 }
 
 /**

@@ -228,38 +228,72 @@ export function isUnivaPayConfigured(): boolean {
   return getUnivaPayClient().isConfigured();
 }
 
-// 月額サポートプラン定義
+// 月額サポートプラン定義（ドネーション用）
 export const SUBSCRIPTION_PLANS = [
   { 
     id: 'monthly_1000', 
     amount: 1000, 
     label: '¥1,000', 
     description: 'ライトサポート',
-    icon: 'coffee'
+    icon: 'coffee',
+    period: 'monthly' as const,
+    service: 'donation',
   },
   { 
     id: 'monthly_3000', 
     amount: 3000, 
     label: '¥3,000', 
     description: 'スタンダードサポート',
-    icon: 'heart'
+    icon: 'heart',
+    period: 'monthly' as const,
+    service: 'donation',
   },
   { 
     id: 'monthly_5000', 
     amount: 5000, 
     label: '¥5,000', 
     description: 'プレミアムサポート',
-    icon: 'gift'
+    icon: 'gift',
+    period: 'monthly' as const,
+    service: 'donation',
   },
   { 
     id: 'monthly_10000', 
     amount: 10000, 
     label: '¥10,000', 
     description: 'スペシャルサポート',
-    icon: 'sparkles'
+    icon: 'sparkles',
+    period: 'monthly' as const,
+    service: 'donation',
   },
 ] as const;
 
+// KDL（Kindle執筆サービス）プラン定義
+// 注意: amount は管理画面から動的に設定されるため、ここではデフォルト値
+export const KDL_PLANS = [
+  {
+    id: 'kdl_monthly',
+    amount: 4980,  // デフォルト値。実際は管理画面の設定値を使用
+    label: '月額プラン',
+    description: 'KDL 月額プラン',
+    period: 'monthly' as const,
+    service: 'kdl',
+  },
+  {
+    id: 'kdl_yearly',
+    amount: 39800,  // デフォルト値。実際は管理画面の設定値を使用
+    label: '年間プラン',
+    description: 'KDL 年間プラン',
+    period: 'yearly' as const,
+    service: 'kdl',
+  },
+] as const;
+
+// 全プラン（統合）
+export const ALL_PLANS = [...SUBSCRIPTION_PLANS, ...KDL_PLANS] as const;
+
 export type SubscriptionPlanId = typeof SUBSCRIPTION_PLANS[number]['id'];
+export type KDLPlanId = typeof KDL_PLANS[number]['id'];
+export type AllPlanId = typeof ALL_PLANS[number]['id'];
 
 

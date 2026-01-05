@@ -28,7 +28,9 @@ import {
   Edit3,
   Layout,
   Wand2,
-  MessageSquare
+  MessageSquare,
+  PlayCircle,
+  Handshake
 } from 'lucide-react';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
@@ -270,11 +272,11 @@ export default function KindleLPClient() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
-                href="/kindle"
+                href="/kindle/new?mode=demo"
                 className="inline-flex items-center gap-2 bg-white text-orange-600 font-bold px-8 py-4 rounded-full text-lg hover:bg-orange-50 transition-all shadow-xl hover:shadow-2xl hover:scale-105"
               >
-                <Rocket size={22} />
-                今すぐ始める
+                <PlayCircle size={22} />
+                まずは無料で試す
               </Link>
               <a
                 href="#pricing"
@@ -562,6 +564,34 @@ export default function KindleLPClient() {
         </div>
       </section>
 
+      {/* 代理店募集セクション */}
+      <section className="py-12 bg-gradient-to-r from-slate-800 to-slate-900">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white/10 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-white/20">
+            <div className="flex items-center gap-4">
+              <div className="bg-amber-500 p-3 rounded-xl">
+                <Handshake size={32} className="text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white mb-1">
+                  代理店パートナー募集中
+                </h3>
+                <p className="text-gray-300 text-sm">
+                  KDLを活用したビジネスパートナーを募集しています
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/kindle/agency"
+              className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-lg whitespace-nowrap"
+            >
+              詳しく見る
+              <ArrowRight size={18} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-20 bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -582,16 +612,23 @@ export default function KindleLPClient() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/kindle"
+              href="/kindle/new?mode=demo"
               className="inline-flex items-center justify-center gap-2 bg-white text-orange-600 font-bold px-10 py-5 rounded-full text-xl hover:bg-orange-50 transition-all shadow-xl hover:shadow-2xl hover:scale-105"
             >
+              <PlayCircle size={24} />
+              まずは無料で試す
+            </Link>
+            <Link
+              href="/kindle"
+              className="inline-flex items-center justify-center gap-2 bg-white/20 text-white font-bold px-10 py-5 rounded-full text-xl hover:bg-white/30 transition-all border border-white/30"
+            >
               <Rocket size={24} />
-              今すぐ始める
+              ログインして始める
             </Link>
           </div>
 
           <p className="mt-8 text-sm opacity-70">
-            ※ 登録は無料。クレジットカード不要で体験できます。
+            ※ デモは登録不要。製品版も登録無料でお試しいただけます。
           </p>
         </div>
       </section>

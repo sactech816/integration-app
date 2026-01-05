@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { 
-  Target, Sparkles, Loader2, Check, AlertCircle, RefreshCw, Star, MessageSquare
+  Target, Sparkles, Loader2, Check, AlertCircle, RefreshCw, Star, MessageSquare, PlayCircle
 } from 'lucide-react';
-import { WizardState, TargetSuggestion } from './types';
+import { WizardState, TargetSuggestion, MOCK_TARGETS, demoDelay } from './types';
 
 interface Step3TargetProps {
   state: WizardState;
@@ -15,6 +15,7 @@ interface Step3TargetProps {
   setIsGeneratingTarget: React.Dispatch<React.SetStateAction<boolean>>;
   targetError: string;
   setTargetError: React.Dispatch<React.SetStateAction<string>>;
+  isDemo?: boolean; // デモモードフラグ
 }
 
 export const Step3Target: React.FC<Step3TargetProps> = ({ 
@@ -25,7 +26,8 @@ export const Step3Target: React.FC<Step3TargetProps> = ({
   isGeneratingTarget,
   setIsGeneratingTarget,
   targetError,
-  setTargetError
+  setTargetError,
+  isDemo = false
 }) => {
   const [mode, setMode] = useState<'select' | 'edit' | 'manual'>('select');
   const [retakeInstruction, setRetakeInstruction] = useState('');
@@ -48,6 +50,15 @@ export const Step3Target: React.FC<Step3TargetProps> = ({
     setTargetError('');
     
     try {
+      // デモモードの場合はモックデータを返す
+      if (isDemo) {
+        await demoDelay(1000);
+        setTargetSuggestions(MOCK_TARGETS);
+        setMode('select');
+        if (instruction) setRetakeInstruction('');
+        return;
+      }
+
       const response = await fetch('/api/kdl/generate-target', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -310,13 +321,24 @@ export const Step3Target: React.FC<Step3TargetProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* デモモードバナー */}
+      {isDemo && (
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-3 rounded-xl flex items-center gap-3">
+          <PlayCircle size={20} />
+          <div>
+            <span className="font-bold">デモモード</span>
+            <span className="text-sm opacity-90 ml-2">AIを使わずにサンプルデータで体験できます</span>
+          </div>
+        </div>
+      )}
+
       <div>
         <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
           <Target className="text-amber-500" size={24} />
           ターゲット読者を設定しましょう
         </h2>
         <p className="text-gray-600 text-sm">
-          AIに提案してもらうか、手動で入力できます。選択後に編集も可能です。
+          {isDemo ? 'サンプルから選択するか' : 'AIに提案してもらうか'}、手動で入力できます。選択後に編集も可能です。
         </p>
       </div>
 

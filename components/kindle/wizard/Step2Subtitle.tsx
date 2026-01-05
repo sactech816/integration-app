@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { 
-  BookOpen, Sparkles, Loader2, Check, AlertCircle, RefreshCw, Star, MessageSquare
+  BookOpen, Sparkles, Loader2, Check, AlertCircle, RefreshCw, Star, MessageSquare, PlayCircle
 } from 'lucide-react';
-import { WizardState, SubtitleSuggestion } from './types';
+import { WizardState, SubtitleSuggestion, MOCK_SUBTITLES, demoDelay } from './types';
 
 interface Step2SubtitleProps {
   state: WizardState;
@@ -17,6 +17,7 @@ interface Step2SubtitleProps {
   setIsGeneratingSubtitle: React.Dispatch<React.SetStateAction<boolean>>;
   subtitleError: string;
   setSubtitleError: React.Dispatch<React.SetStateAction<string>>;
+  isDemo?: boolean; // デモモードフラグ
 }
 
 export const Step2Subtitle: React.FC<Step2SubtitleProps> = ({ 
@@ -29,7 +30,8 @@ export const Step2Subtitle: React.FC<Step2SubtitleProps> = ({
   isGeneratingSubtitle, 
   setIsGeneratingSubtitle, 
   subtitleError, 
-  setSubtitleError 
+  setSubtitleError,
+  isDemo = false
 }) => {
   const [retakeInstruction, setRetakeInstruction] = useState('');
   
@@ -43,6 +45,18 @@ export const Step2Subtitle: React.FC<Step2SubtitleProps> = ({
     setSubtitleError('');
     
     try {
+      // デモモードの場合はモックデータを返す
+      if (isDemo) {
+        await demoDelay(1000);
+        setSubtitleSuggestions(MOCK_SUBTITLES);
+        setRelatedKeywords({
+          set1: ['初心者', '入門', '基礎', '実践'],
+          set2: ['時短', '効率化', '成功法則', 'ノウハウ'],
+        });
+        if (instruction) setRetakeInstruction('');
+        return;
+      }
+
       const response = await fetch('/api/kdl/generate-subtitle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -70,13 +84,24 @@ export const Step2Subtitle: React.FC<Step2SubtitleProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* デモモードバナー */}
+      {isDemo && (
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-3 rounded-xl flex items-center gap-3">
+          <PlayCircle size={20} />
+          <div>
+            <span className="font-bold">デモモード</span>
+            <span className="text-sm opacity-90 ml-2">AIを使わずにサンプルデータで体験できます</span>
+          </div>
+        </div>
+      )}
+
       <div>
         <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
           <BookOpen className="text-amber-500" size={24} />
           サブタイトルを設定しましょう
         </h2>
         <p className="text-gray-600 text-sm">
-          サブタイトルは本の内容をより具体的に伝え、読者の興味を引きます。AIがSEOに最適化された案を提案します。
+          サブタイトルは本の内容をより具体的に伝え、読者の興味を引きます。{isDemo ? 'サンプルの案' : 'AIがSEOに最適化された案'}を提案します。
         </p>
       </div>
 

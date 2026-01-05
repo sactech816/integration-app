@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
-  BookOpen, ArrowLeft, ArrowRight, Lightbulb, Check, Target, List, ChevronRight, FileText, Trash2, HelpCircle
+  BookOpen, ArrowLeft, ArrowRight, Lightbulb, Check, Target, List, ChevronRight, FileText, Trash2, HelpCircle, PlayCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -40,6 +40,11 @@ interface SavedDraft {
 
 export default function KindleNewPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // デモモード判定
+  const isDemo = searchParams.get('mode') === 'demo';
+  
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [state, setState] = useState<WizardState>({
@@ -266,6 +271,7 @@ export default function KindleNewPage() {
             setIsGenerating={setIsGenerating}
             error={error}
             setError={setError}
+            isDemo={isDemo}
           />
         );
       case 2:
@@ -281,6 +287,7 @@ export default function KindleNewPage() {
             setIsGeneratingSubtitle={setIsGeneratingSubtitle}
             subtitleError={subtitleError}
             setSubtitleError={setSubtitleError}
+            isDemo={isDemo}
           />
         );
       case 3:
@@ -294,6 +301,7 @@ export default function KindleNewPage() {
             setIsGeneratingTarget={setIsGeneratingTarget}
             targetError={targetError}
             setTargetError={setTargetError}
+            isDemo={isDemo}
           />
         );
       case 4:
@@ -305,6 +313,7 @@ export default function KindleNewPage() {
             isSaving={isSaving}
             saveError={saveError}
             onLoginRequired={() => setShowAuthModal(true)}
+            isDemo={isDemo}
           />
         );
       default:
@@ -382,9 +391,12 @@ export default function KindleNewPage() {
       {/* ヘッダー */}
       <header className="bg-white/80 backdrop-blur-md border-b border-amber-100 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/kindle" className="flex items-center gap-2 text-gray-700 hover:text-amber-600 transition-colors">
+          <Link 
+            href={isDemo ? "/kindle/lp" : "/kindle"} 
+            className="flex items-center gap-2 text-gray-700 hover:text-amber-600 transition-colors"
+          >
             <ArrowLeft size={20} />
-            <span className="font-medium">戻る</span>
+            <span className="font-medium">{isDemo ? 'LPに戻る' : '戻る'}</span>
           </Link>
           <div className="flex items-center gap-2">
             <BookOpen className="text-amber-600" size={24} />
@@ -392,6 +404,12 @@ export default function KindleNewPage() {
               <span className="font-bold text-gray-900">キンドルダイレクトライト</span>
               <span className="text-xs text-gray-500 ml-1">KDL</span>
             </div>
+            {isDemo && (
+              <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-bold flex items-center gap-1">
+                <PlayCircle size={12} />
+                デモ
+              </span>
+            )}
           </div>
           <Link 
             href="/kindle/guide" 

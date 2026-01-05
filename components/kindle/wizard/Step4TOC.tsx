@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   List, Sparkles, Loader2, AlertCircle, Copy, Trash2, 
-  ArrowLeftRight, Maximize2, ArrowRight, ArrowLeft, Rocket, MessageSquare, LogIn
+  ArrowLeftRight, Maximize2, ArrowRight, ArrowLeft, Rocket, MessageSquare, LogIn, PlayCircle, Crown
 } from 'lucide-react';
 import { 
   WizardState, Chapter, TOCSlot, RecommendedPattern, 
-  CHAPTER_PATTERNS, cleanTarget, cleanChapters 
+  CHAPTER_PATTERNS, cleanTarget, cleanChapters, MOCK_CHAPTERS, demoDelay
 } from './types';
 import { TOCEditor } from './TOCEditor';
 
@@ -18,9 +19,10 @@ interface Step4TOCProps {
   isSaving: boolean;
   saveError: string;
   onLoginRequired?: () => void;
+  isDemo?: boolean; // デモモードフラグ
 }
 
-export const Step4TOC: React.FC<Step4TOCProps> = ({ state, setState, onSave, isSaving, saveError, onLoginRequired }) => {
+export const Step4TOC: React.FC<Step4TOCProps> = ({ state, setState, onSave, isSaving, saveError, onLoginRequired, isDemo = false }) => {
   const [error, setError] = useState('');
   const [selectedPatternId, setSelectedPatternId] = useState<string>('basic');
   const [recommendations, setRecommendations] = useState<RecommendedPattern[]>([]);
@@ -38,6 +40,19 @@ export const Step4TOC: React.FC<Step4TOCProps> = ({ state, setState, onSave, isS
 
   useEffect(() => {
     const fetchRecommendations = async () => {
+      // デモモードの場合はモックのおすすめを使用
+      if (isDemo) {
+        await demoDelay(500);
+        setRecommendations([
+          { patternId: 'basic', reason: '体系的に学べる構成で、幅広い読者に適しています', score: 90 },
+          { patternId: 'problem', reason: '読者の課題解決にフォーカスした構成で訴求力が高いです', score: 85 },
+          { patternId: 'workbook', reason: '実践的なワークを含むことで読者の行動を促せます', score: 75 },
+        ]);
+        setSelectedPatternId('basic');
+        setIsLoadingRecommendations(false);
+        return;
+      }
+
       setIsLoadingRecommendations(true);
       try {
         const response = await fetch('/api/kdl/generate-chapters', {
@@ -64,7 +79,7 @@ export const Step4TOC: React.FC<Step4TOCProps> = ({ state, setState, onSave, isS
       }
     };
     fetchRecommendations();
-  }, [state.selectedTitle, state.subtitle, state.selectedTarget]);
+  }, [state.selectedTitle, state.subtitle, state.selectedTarget, isDemo]);
 
   const handleGenerateTOC = async (slotNumber: 1 | 2, instruction?: string) => {
     const setIsGenerating = slotNumber === 1 ? setIsGeneratingSlot1 : setIsGeneratingSlot2;
@@ -74,6 +89,20 @@ export const Step4TOC: React.FC<Step4TOCProps> = ({ state, setState, onSave, isS
     setError('');
     
     try {
+      // デモモードの場合はモックデータを返す
+      if (isDemo) {
+        await demoDelay(1000);
+        const pattern = CHAPTER_PATTERNS[selectedPatternId as keyof typeof CHAPTER_PATTERNS];
+        setSlot({
+          chapters: MOCK_CHAPTERS,
+          patternId: selectedPatternId,
+          patternName: pattern?.name || '基礎→応用→実践型',
+          estimatedWords: '約4万文字',
+        });
+        if (instruction) setRetakeInstruction('');
+        return;
+      }
+
       const response = await fetch('/api/kdl/generate-chapters', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -238,13 +267,24 @@ export const Step4TOC: React.FC<Step4TOCProps> = ({ state, setState, onSave, isS
 
   return (
     <div className="space-y-6">
+      {/* デモモードバナー */}
+      {isDemo && (
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-3 rounded-xl flex items-center gap-3">
+          <PlayCircle size={20} />
+          <div>
+            <span className="font-bold">デモモード</span>
+            <span className="text-sm opacity-90 ml-2">AIを使わずにサンプルデータで体験できます</span>
+          </div>
+        </div>
+      )}
+
       <div>
         <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
           <List className="text-amber-500" size={24} />
           目次を作成しましょう
         </h2>
         <p className="text-gray-600 text-sm">
-          パターンを選んでAIに目次を作成してもらい、比較・編集できます。章の並び替えや他方へのコピーも可能です。
+          パターンを選んで{isDemo ? 'サンプル' : 'AI'}に目次を作成してもらい、比較・編集できます。章の並び替えや他方へのコピーも可能です。
         </p>
       </div>
 
@@ -447,23 +487,54 @@ export const Step4TOC: React.FC<Step4TOCProps> = ({ state, setState, onSave, isS
       )}
 
       {state.chapters.length > 0 && (
-        <button
-          onClick={onSave}
-          disabled={isSaving}
-          className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg disabled:shadow-none text-lg"
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="animate-spin" size={24} />
-              保存中...
-            </>
-          ) : (
-            <>
-              <Rocket size={24} />
-              この構成で執筆を始める
-            </>
-          )}
-        </button>
+        isDemo ? (
+          /* デモモード: 製品版への誘導 */
+          <div className="space-y-4">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-6 text-center">
+              <Crown className="text-amber-500 mx-auto mb-3" size={40} />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                デモ体験ありがとうございます！
+              </h3>
+              <p className="text-gray-600 mb-4">
+                ここから先は製品版でお楽しみいただけます。<br />
+                AIによる本格的な執筆サポートで、あなたの本を完成させましょう！
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link
+                  href="/kindle/lp#pricing"
+                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg text-lg"
+                >
+                  <Rocket size={24} />
+                  製品版で続きを執筆する
+                </Link>
+                <Link
+                  href="/kindle/lp"
+                  className="inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-300 hover:border-amber-400 text-gray-700 font-bold py-4 px-8 rounded-xl transition-all text-lg"
+                >
+                  詳しく見る
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={onSave}
+            disabled={isSaving}
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg disabled:shadow-none text-lg"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="animate-spin" size={24} />
+                保存中...
+              </>
+            ) : (
+              <>
+                <Rocket size={24} />
+                この構成で執筆を始める
+              </>
+            )}
+          </button>
+        )
       )}
     </div>
   );

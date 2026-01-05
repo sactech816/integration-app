@@ -108,6 +108,12 @@ export default function SubscriptionPlans({
   const prices = customPrices || DEFAULT_PRICES;
   const PLANS = buildPlans(prices);
 
+  // UnivaPay リンクフォームURL
+  const UNIVAPAY_LINKS = {
+    monthly: process.env.NEXT_PUBLIC_UNIVAPAY_MONTHLY_URL || 'https://univa.cc/M6-JZs',
+    yearly: process.env.NEXT_PUBLIC_UNIVAPAY_YEARLY_URL || 'https://univa.cc/NAXogx',
+  };
+
   const handleSubscribe = async () => {
     if (!selectedPlan) {
       setError('プランを選択してください');
@@ -121,43 +127,25 @@ export default function SubscriptionPlans({
     setError('');
     setIsProcessing(true);
 
-    try {
-      if (onSubscribe) {
+    if (onSubscribe) {
+      try {
         await onSubscribe(selectedPlan, email);
-      } else {
-        // デフォルト: UnivaPayチェックアウトにリダイレクト
-        const plan = PLANS.find(p => p.id === selectedPlan);
-        if (!plan) throw new Error('プランが見つかりません');
-
-        const response = await fetch('/api/univapay/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: plan.price,
-            email,
-            planId: selectedPlan,
-            planName: plan.name,
-            isSubscription: true,
-            period: selectedPlan === 'yearly' ? 'year' : 'month',
-          }),
-        });
-
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || '決済の準備に失敗しました');
-        }
-
-        const data = await response.json();
-        if (data.checkoutUrl) {
-          window.location.href = data.checkoutUrl;
-        } else {
-          throw new Error('決済URLを取得できませんでした');
-        }
+      } catch (err: any) {
+        setError(err.message || '処理中にエラーが発生しました');
+        setIsProcessing(false);
       }
-    } catch (err: any) {
-      setError(err.message || '処理中にエラーが発生しました');
-    } finally {
-      setIsProcessing(false);
+    } else {
+      // UnivaPayリンクフォームにリダイレクト
+      const baseUrl = UNIVAPAY_LINKS[selectedPlan];
+      
+      // メールアドレスをクエリパラメータとして追加（UnivaPayが対応している場合）
+      const params = new URLSearchParams({
+        email: email,
+        // 成功時のリダイレクト先を指定（UnivaPayの設定で対応している場合）
+      });
+      
+      // リンクフォームに遷移
+      window.location.href = `${baseUrl}?${params.toString()}`;
     }
   };
 

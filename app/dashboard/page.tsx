@@ -187,6 +187,35 @@ function DashboardContent() {
   } | null>(null);
   const [loadingKdlSubscription, setLoadingKdlSubscription] = useState(true);
 
+  // KDL管理（管理者用）
+  const [showKdlManagement, setShowKdlManagement] = useState(false);
+  const [kdlSettings, setKdlSettings] = useState<{
+    kdl_prices?: { value: { monthly: number; yearly: number } };
+    ai_daily_limit?: { value: { default: number; monthly_plan: number; yearly_plan: number } };
+    ai_monthly_limit?: { value: { default: number; monthly_plan: number; yearly_plan: number } };
+  } | null>(null);
+  const [kdlSubscribers, setKdlSubscribers] = useState<any[]>([]);
+  const [kdlStats, setKdlStats] = useState<{
+    totalSubscribers: number;
+    monthlyPlanCount: number;
+    yearlyPlanCount: number;
+    totalMonthlyAIUsage: number;
+    totalMonthlyCost: number;
+  } | null>(null);
+  const [loadingKdlManagement, setLoadingKdlManagement] = useState(false);
+  const [editingKdlSettings, setEditingKdlSettings] = useState(false);
+  const [kdlSettingsForm, setKdlSettingsForm] = useState({
+    monthlyPrice: 4980,
+    yearlyPrice: 39800,
+    dailyLimitDefault: 3,
+    dailyLimitMonthly: 50,
+    dailyLimitYearly: 100,
+    monthlyLimitDefault: 10,
+    monthlyLimitMonthly: 500,
+    monthlyLimitYearly: -1,
+  });
+  const [savingKdlSettings, setSavingKdlSettings] = useState(false);
+
   // 管理者かどうかを判定
   const adminEmails = getAdminEmails();
   const isAdmin = user?.email && adminEmails.some(email =>
@@ -694,6 +723,135 @@ function DashboardContent() {
       alert('Googleスプレッドシートエクスポートエラー: ' + errorMessage);
     } finally {
       setExportingSheets(false);
+    }
+  };
+
+  // KDL管理データを取得（管理者のみ）
+  const fetchKdlManagementData = async () => {
+    if (!isAdmin || !supabase) return;
+    setLoadingKdlManagement(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) throw new Error('認証トークンがありません');
+
+      // 設定を取得
+      const settingsResponse = await fetch('/api/admin/kdl-settings');
+      if (settingsResponse.ok) {
+        const settingsData = await settingsResponse.json();
+        setKdlSettings(settingsData);
+        
+        // フォームに反映
+        if (settingsData.kdl_prices?.value) {
+          setKdlSettingsForm(prev => ({
+            ...prev,
+            monthlyPrice: settingsData.kdl_prices.value.monthly || 4980,
+            yearlyPrice: settingsData.kdl_prices.value.yearly || 39800,
+          }));
+        }
+        if (settingsData.ai_daily_limit?.value) {
+          setKdlSettingsForm(prev => ({
+            ...prev,
+            dailyLimitDefault: settingsData.ai_daily_limit.value.default || 3,
+            dailyLimitMonthly: settingsData.ai_daily_limit.value.monthly_plan || 50,
+            dailyLimitYearly: settingsData.ai_daily_limit.value.yearly_plan || 100,
+          }));
+        }
+        if (settingsData.ai_monthly_limit?.value) {
+          setKdlSettingsForm(prev => ({
+            ...prev,
+            monthlyLimitDefault: settingsData.ai_monthly_limit.value.default || 10,
+            monthlyLimitMonthly: settingsData.ai_monthly_limit.value.monthly_plan || 500,
+            monthlyLimitYearly: settingsData.ai_monthly_limit.value.yearly_plan || -1,
+          }));
+        }
+      }
+
+      // サブスクライバー情報を取得
+      const subscribersResponse = await fetch('/api/admin/kdl-subscribers', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (subscribersResponse.ok) {
+        const subscribersData = await subscribersResponse.json();
+        setKdlSubscribers(subscribersData.subscribers || []);
+        setKdlStats(subscribersData.stats);
+      }
+    } catch (error) {
+      console.error('KDL management data fetch error:', error);
+    } finally {
+      setLoadingKdlManagement(false);
+    }
+  };
+
+  // KDL設定を保存
+  const handleSaveKdlSettings = async () => {
+    if (!supabase) return;
+    setSavingKdlSettings(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) throw new Error('認証トークンがありません');
+
+      // 料金設定を保存
+      await fetch('/api/admin/kdl-settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          key: 'kdl_prices',
+          value: {
+            monthly: kdlSettingsForm.monthlyPrice,
+            yearly: kdlSettingsForm.yearlyPrice,
+          },
+        }),
+      });
+
+      // 日次制限を保存
+      await fetch('/api/admin/kdl-settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          key: 'ai_daily_limit',
+          value: {
+            default: kdlSettingsForm.dailyLimitDefault,
+            monthly_plan: kdlSettingsForm.dailyLimitMonthly,
+            yearly_plan: kdlSettingsForm.dailyLimitYearly,
+          },
+        }),
+      });
+
+      // 月次制限を保存
+      await fetch('/api/admin/kdl-settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          key: 'ai_monthly_limit',
+          value: {
+            default: kdlSettingsForm.monthlyLimitDefault,
+            monthly_plan: kdlSettingsForm.monthlyLimitMonthly,
+            yearly_plan: kdlSettingsForm.monthlyLimitYearly,
+          },
+        }),
+      });
+
+      alert('設定を保存しました');
+      setEditingKdlSettings(false);
+      await fetchKdlManagementData();
+    } catch (error) {
+      console.error('KDL settings save error:', error);
+      alert('設定の保存に失敗しました');
+    } finally {
+      setSavingKdlSettings(false);
     }
   };
 
@@ -2175,6 +2333,330 @@ function DashboardContent() {
                       </div>
                     )}
                   </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 管理者向けKDL管理セクション */}
+        {isAdmin && (
+          <div className="mt-12">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-black border-l-4 border-amber-600 pl-4 flex items-center gap-2">
+                <BookOpen size={20} className="text-amber-600" /> KDL（Kindle執筆）管理
+                <span className="text-xs bg-amber-500 text-white px-2 py-1 rounded-full">ADMIN</span>
+              </h2>
+              <button
+                onClick={() => {
+                  setShowKdlManagement(!showKdlManagement);
+                  if (!showKdlManagement && !kdlSettings) {
+                    fetchKdlManagementData();
+                  }
+                }}
+                className="bg-amber-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-amber-700 flex items-center gap-2"
+              >
+                {showKdlManagement ? (
+                  <>
+                    <X size={16} /> 閉じる
+                  </>
+                ) : (
+                  <>
+                    <BookOpen size={16} /> KDL管理を開く
+                  </>
+                )}
+              </button>
+            </div>
+
+            {showKdlManagement && (
+              <div className="space-y-6">
+                {loadingKdlManagement ? (
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
+                    <Loader2 size={32} className="animate-spin mx-auto text-amber-600 mb-3" />
+                    <p className="text-gray-500">KDL管理データを読み込み中...</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* 統計サマリー */}
+                    {kdlStats && (
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                          <div className="text-2xl font-black text-amber-600">{kdlStats.totalSubscribers}</div>
+                          <div className="text-xs text-gray-500 font-bold">総加入者数</div>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                          <div className="text-2xl font-black text-blue-600">{kdlStats.monthlyPlanCount}</div>
+                          <div className="text-xs text-gray-500 font-bold">月額プラン</div>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                          <div className="text-2xl font-black text-purple-600">{kdlStats.yearlyPlanCount}</div>
+                          <div className="text-xs text-gray-500 font-bold">年間プラン</div>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                          <div className="text-2xl font-black text-green-600">{kdlStats.totalMonthlyAIUsage}</div>
+                          <div className="text-xs text-gray-500 font-bold">今月AI使用回数</div>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                          <div className="text-2xl font-black text-red-600">¥{kdlStats.totalMonthlyCost.toLocaleString()}</div>
+                          <div className="text-xs text-gray-500 font-bold">今月推定コスト</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 料金・制限設定 */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                          <Zap size={18} className="text-amber-600" />
+                          料金・AI使用量制限設定
+                        </h3>
+                        {!editingKdlSettings ? (
+                          <button
+                            onClick={() => setEditingKdlSettings(true)}
+                            className="text-amber-600 hover:text-amber-700 text-sm font-bold"
+                          >
+                            編集
+                          </button>
+                        ) : (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleSaveKdlSettings}
+                              disabled={savingKdlSettings}
+                              className="bg-amber-600 text-white px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-amber-700 disabled:opacity-50 flex items-center gap-1"
+                            >
+                              {savingKdlSettings ? <Loader2 size={14} className="animate-spin" /> : null}
+                              保存
+                            </button>
+                            <button
+                              onClick={() => setEditingKdlSettings(false)}
+                              className="bg-gray-100 text-gray-700 px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-gray-200"
+                            >
+                              キャンセル
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {editingKdlSettings ? (
+                        <div className="space-y-6">
+                          {/* 料金設定 */}
+                          <div>
+                            <h4 className="font-bold text-gray-700 text-sm mb-3">💰 料金設定（円）</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">月額プラン</label>
+                                <input
+                                  type="number"
+                                  value={kdlSettingsForm.monthlyPrice}
+                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, monthlyPrice: parseInt(e.target.value) || 0 }))}
+                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">年間プラン</label>
+                                <input
+                                  type="number"
+                                  value={kdlSettingsForm.yearlyPrice}
+                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, yearlyPrice: parseInt(e.target.value) || 0 }))}
+                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* 日次制限 */}
+                          <div>
+                            <h4 className="font-bold text-gray-700 text-sm mb-3">📅 1日あたりAI使用上限（回）</h4>
+                            <div className="grid grid-cols-3 gap-4">
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">無料ユーザー</label>
+                                <input
+                                  type="number"
+                                  value={kdlSettingsForm.dailyLimitDefault}
+                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, dailyLimitDefault: parseInt(e.target.value) || 0 }))}
+                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">月額プラン</label>
+                                <input
+                                  type="number"
+                                  value={kdlSettingsForm.dailyLimitMonthly}
+                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, dailyLimitMonthly: parseInt(e.target.value) || 0 }))}
+                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">年間プラン</label>
+                                <input
+                                  type="number"
+                                  value={kdlSettingsForm.dailyLimitYearly}
+                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, dailyLimitYearly: parseInt(e.target.value) || 0 }))}
+                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* 月次制限 */}
+                          <div>
+                            <h4 className="font-bold text-gray-700 text-sm mb-3">📆 月間AI使用上限（回、-1=無制限）</h4>
+                            <div className="grid grid-cols-3 gap-4">
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">無料ユーザー</label>
+                                <input
+                                  type="number"
+                                  value={kdlSettingsForm.monthlyLimitDefault}
+                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, monthlyLimitDefault: parseInt(e.target.value) || 0 }))}
+                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">月額プラン</label>
+                                <input
+                                  type="number"
+                                  value={kdlSettingsForm.monthlyLimitMonthly}
+                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, monthlyLimitMonthly: parseInt(e.target.value) || 0 }))}
+                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">年間プラン</label>
+                                <input
+                                  type="number"
+                                  value={kdlSettingsForm.monthlyLimitYearly}
+                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, monthlyLimitYearly: parseInt(e.target.value) || 0 }))}
+                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          {/* 料金表示 */}
+                          <div className="bg-amber-50 rounded-xl p-4">
+                            <h4 className="font-bold text-amber-700 text-sm mb-2">💰 料金</h4>
+                            <div className="space-y-1 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">月額</span>
+                                <span className="font-bold text-gray-900">¥{kdlSettingsForm.monthlyPrice.toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">年間</span>
+                                <span className="font-bold text-gray-900">¥{kdlSettingsForm.yearlyPrice.toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* 日次制限表示 */}
+                          <div className="bg-blue-50 rounded-xl p-4">
+                            <h4 className="font-bold text-blue-700 text-sm mb-2">📅 日次上限</h4>
+                            <div className="space-y-1 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">無料</span>
+                                <span className="font-bold text-gray-900">{kdlSettingsForm.dailyLimitDefault}回</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">月額</span>
+                                <span className="font-bold text-gray-900">{kdlSettingsForm.dailyLimitMonthly}回</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">年間</span>
+                                <span className="font-bold text-gray-900">{kdlSettingsForm.dailyLimitYearly}回</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* 月次制限表示 */}
+                          <div className="bg-purple-50 rounded-xl p-4">
+                            <h4 className="font-bold text-purple-700 text-sm mb-2">📆 月間上限</h4>
+                            <div className="space-y-1 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">無料</span>
+                                <span className="font-bold text-gray-900">{kdlSettingsForm.monthlyLimitDefault}回</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">月額</span>
+                                <span className="font-bold text-gray-900">{kdlSettingsForm.monthlyLimitMonthly}回</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">年間</span>
+                                <span className="font-bold text-gray-900">{kdlSettingsForm.monthlyLimitYearly === -1 ? '無制限' : `${kdlSettingsForm.monthlyLimitYearly}回`}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 加入者一覧 */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                          <Users size={18} className="text-amber-600" />
+                          KDL加入者一覧
+                          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold ml-2">
+                            {kdlSubscribers.length}名
+                          </span>
+                        </h3>
+                      </div>
+                      {kdlSubscribers.length === 0 ? (
+                        <div className="p-8 text-center text-gray-500">
+                          まだKDL加入者がいません
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-gray-200">
+                                <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">メール</th>
+                                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">プラン</th>
+                                <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">金額</th>
+                                <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">今日AI</th>
+                                <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">今月AI</th>
+                                <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">推定コスト</th>
+                                <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">次回更新</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {kdlSubscribers.map((sub) => (
+                                <tr key={sub.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                  <td className="px-4 py-3 text-gray-900 font-medium">{sub.email}</td>
+                                  <td className="px-4 py-3 text-center">
+                                    <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                      sub.period === 'yearly'
+                                        ? 'bg-purple-100 text-purple-700'
+                                        : 'bg-blue-100 text-blue-700'
+                                    }`}>
+                                      {sub.period === 'yearly' ? '年間' : '月額'}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3 text-right font-bold text-gray-900">
+                                    ¥{(sub.amount || 0).toLocaleString()}
+                                  </td>
+                                  <td className="px-4 py-3 text-right text-amber-600 font-bold">
+                                    {sub.usage?.dailyUsage || 0}
+                                  </td>
+                                  <td className="px-4 py-3 text-right text-green-600 font-bold">
+                                    {sub.usage?.monthlyUsage || 0}
+                                  </td>
+                                  <td className="px-4 py-3 text-right text-red-600 font-bold">
+                                    ¥{(sub.usage?.totalCost || 0).toFixed(2)}
+                                  </td>
+                                  <td className="px-4 py-3 text-gray-500 text-xs">
+                                    {sub.next_payment_date
+                                      ? new Date(sub.next_payment_date).toLocaleDateString('ja-JP')
+                                      : '-'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             )}
