@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Survey } from "@/lib/types";
 import SurveyEditor from "@/components/survey/SurveyEditor";
+import Header from "@/components/shared/Header";
+import AuthModal from "@/components/shared/AuthModal";
+import { Loader2 } from "lucide-react";
 
 function EditorContent() {
   const router = useRouter();
@@ -15,6 +18,7 @@ function EditorContent() {
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -51,36 +55,79 @@ function EditorContent() {
     loadData();
   }, [surveyId]);
 
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+      setUser(null);
+    }
+  };
+
+  const navigateTo = (page: string) => {
+    router.push(page.startsWith('/') ? page : `/${page}`);
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      <div className="min-h-screen bg-gray-100">
+        <Header
+          setPage={navigateTo}
+          user={user}
+          onLogout={handleLogout}
+          setShowAuth={setShowAuth}
+        />
+        <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 64px)' }}>
+          <Loader2 className="animate-spin text-teal-600" size={48} />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={() => router.push("/survey")}
-            className="bg-teal-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-teal-700"
-          >
-            一覧に戻る
-          </button>
+      <div className="min-h-screen bg-gray-100">
+        <Header
+          setPage={navigateTo}
+          user={user}
+          onLogout={handleLogout}
+          setShowAuth={setShowAuth}
+        />
+        <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 64px)' }}>
+          <div className="text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <button
+              onClick={() => router.push("/survey")}
+              className="bg-teal-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-teal-700"
+            >
+              一覧に戻る
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <SurveyEditor
-      onBack={() => router.push("/survey")}
-      initialData={survey || undefined}
-      user={user}
-    />
+    <div className="min-h-screen bg-gray-100">
+      <Header
+        setPage={navigateTo}
+        user={user}
+        onLogout={handleLogout}
+        setShowAuth={setShowAuth}
+      />
+
+      <AuthModal
+        isOpen={showAuth}
+        onClose={() => setShowAuth(false)}
+        setUser={setUser}
+        onNavigate={navigateTo}
+      />
+
+      <SurveyEditor
+        onBack={() => router.push("/survey")}
+        initialData={survey || undefined}
+        user={user}
+      />
+    </div>
   );
 }
 
@@ -89,7 +136,7 @@ export default function SurveyEditorPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+          <Loader2 className="animate-spin text-teal-600" size={48} />
         </div>
       }
     >

@@ -466,7 +466,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId }: 
   } as Survey;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col font-sans text-gray-900">
+    <div className="bg-gray-100 flex flex-col font-sans text-gray-900" style={{ minHeight: 'calc(100vh - 64px)' }}>
       {/* 成功モーダル */}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
@@ -789,28 +789,35 @@ export default function SurveyEditor({ onBack, initialData, user, templateId }: 
                 ))}
 
                 {/* 質問追加ボタン */}
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={() => addQuestion("choice")}
-                    className="py-3 bg-white border-2 border-dashed border-gray-300 text-gray-500 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-400 flex flex-col items-center gap-1 text-sm"
-                  >
-                    <ListChecks size={20} />
-                    選択式
-                  </button>
-                  <button
-                    onClick={() => addQuestion("rating")}
-                    className="py-3 bg-white border-2 border-dashed border-gray-300 text-gray-500 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-400 flex flex-col items-center gap-1 text-sm"
-                  >
-                    <Star size={20} />
-                    評価式
-                  </button>
-                  <button
-                    onClick={() => addQuestion("text")}
-                    className="py-3 bg-white border-2 border-dashed border-gray-300 text-gray-500 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-400 flex flex-col items-center gap-1 text-sm"
-                  >
-                    <Type size={20} />
-                    自由記述
-                  </button>
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Plus size={16} className="text-teal-600" />
+                    <span className="text-sm font-bold text-gray-700">質問を追加する</span>
+                    <span className="text-xs text-gray-400">（タイプを選んでクリック）</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      onClick={() => addQuestion("choice")}
+                      className="py-3 bg-white border-2 border-dashed border-gray-300 text-gray-500 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-400 hover:border-teal-400 hover:text-teal-600 flex flex-col items-center gap-1 text-sm transition-colors"
+                    >
+                      <ListChecks size={20} />
+                      選択式
+                    </button>
+                    <button
+                      onClick={() => addQuestion("rating")}
+                      className="py-3 bg-white border-2 border-dashed border-gray-300 text-gray-500 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-400 hover:border-teal-400 hover:text-teal-600 flex flex-col items-center gap-1 text-sm transition-colors"
+                    >
+                      <Star size={20} />
+                      評価式
+                    </button>
+                    <button
+                      onClick={() => addQuestion("text")}
+                      className="py-3 bg-white border-2 border-dashed border-gray-300 text-gray-500 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-400 hover:border-teal-400 hover:text-teal-600 flex flex-col items-center gap-1 text-sm transition-colors"
+                    >
+                      <Type size={20} />
+                      自由記述
+                    </button>
+                  </div>
                 </div>
               </div>
             </Section>
