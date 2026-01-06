@@ -194,7 +194,7 @@ export default function GamificationNewPage() {
       </main>
 
       <Footer />
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
     </div>
   );
 }

@@ -104,7 +104,11 @@ function EditorContent() {
       />
 
       {showAuth && (
-        <AuthModal onClose={() => setShowAuth(false)} />
+        <AuthModal 
+          isOpen={showAuth} 
+          onClose={() => setShowAuth(false)} 
+          setUser={setUser}
+        />
       )}
 
       {renderEditor()}
