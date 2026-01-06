@@ -11,7 +11,7 @@ import { Loader2 } from "lucide-react";
 function NewSurveyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const templateId = searchParams.get("template") as keyof typeof import("@/components/survey/SurveyEditor").SURVEY_TEMPLATES | null;
+  const templateId = searchParams.get("template");
 
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -80,7 +80,7 @@ function NewSurveyContent() {
       <SurveyEditor
         onBack={() => router.push("/survey")}
         user={user}
-        templateId={templateId || undefined}
+        templateId={templateId as any}
       />
     </div>
   );
