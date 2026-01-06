@@ -1,11 +1,20 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { createClient } from '@supabase/supabase-js';
 import { SurveyQuestion } from '@/lib/types';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // 送信元メールアドレス（Resendで認証済みのドメインを使用）
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+
+// サーバーサイドSupabaseクライアント
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
 
 export async function POST(request: Request) {
   try {
@@ -26,6 +35,22 @@ export async function POST(request: Request) {
         { error: 'メールアドレスが必要です' },
         { status: 400 }
       );
+    }
+
+    // 回答をDBに保存（投票機能用）
+    const supabase = getSupabase();
+    if (supabase && survey_id) {
+      try {
+        await supabase.from('survey_responses').insert({
+          survey_id: survey_id,
+          answers: answers,
+          respondent_email: respondent_email,
+          respondent_name: respondent_name,
+        });
+      } catch (dbError) {
+        console.error('回答保存エラー:', dbError);
+        // DBエラーでもメール送信は続行
+      }
     }
 
     // 回答を見やすくフォーマット

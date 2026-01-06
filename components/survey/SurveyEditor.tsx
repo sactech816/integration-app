@@ -404,6 +404,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId }: 
         thank_you_message: form.thank_you_message,
         settings: form.settings,
         show_in_portal: form.settings?.showInPortal || false,
+        show_results_after_submission: form.show_results_after_submission || false,
         user_id: user?.id || null,
       };
 
@@ -839,6 +840,31 @@ export default function SurveyEditor({ onBack, initialData, user, templateId }: 
                 placeholder="回答完了後に表示されるメッセージ"
               />
 
+              {/* 投票モード設定 */}
+              <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h4 className="font-bold text-purple-900 flex items-center gap-2 mb-1">
+                    📊 回答後に結果を全員に公開する（投票モード）
+                  </h4>
+                  <p className="text-xs text-purple-700">
+                    ONにすると、回答完了後に選択式・評価式の集計結果がグラフで表示されます。
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer ml-4 flex-shrink-0">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={form.show_results_after_submission || false}
+                    onChange={(e) => {
+                      setForm({ ...form, show_results_after_submission: e.target.checked });
+                      resetPreview();
+                    }}
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
+              </div>
+
+              {/* ポータル掲載設定 */}
               <div className="p-4 bg-teal-50 border border-teal-200 rounded-xl flex items-start justify-between">
                 <div className="flex-1">
                   <h4 className="font-bold text-teal-900 flex items-center gap-2 mb-1">

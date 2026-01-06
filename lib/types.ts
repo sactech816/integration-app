@@ -556,8 +556,20 @@ export interface Survey {
   user_id?: string | null;
   settings?: SurveySettings;
   show_in_portal?: boolean;
+  show_results_after_submission?: boolean; // 投票モード: trueの場合、回答後に結果を表示
   created_at?: string;
   updated_at?: string;
+}
+
+// 投票結果の集計データ
+export interface SurveyResultData {
+  question_id: string;
+  question_text: string;
+  question_type: SurveyQuestionType;
+  options?: string[];
+  counts: Record<string, number>; // 選択肢/評価値 => 票数
+  total: number;
+  average?: number; // rating タイプの場合のみ
 }
 
 // アンケート回答データ（API送信用）

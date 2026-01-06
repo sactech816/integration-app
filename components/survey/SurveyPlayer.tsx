@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Survey, SurveyQuestion } from "@/lib/types";
 import { CheckCircle, Send, Loader2 } from "lucide-react";
+import SurveyResults from "./SurveyResults";
 
 interface SurveyPlayerProps {
   survey: Survey;
@@ -76,6 +77,19 @@ export default function SurveyPlayer({ survey, isPreview = false }: SurveyPlayer
 
   // 送信完了画面
   if (status === "success") {
+    // 投票モードがONの場合は結果を表示
+    if (survey.show_results_after_submission) {
+      return (
+        <div className="bg-white shadow-lg rounded-xl overflow-hidden">
+          <SurveyResults
+            surveyId={survey.id}
+            thankYouMessage={survey.thank_you_message}
+          />
+        </div>
+      );
+    }
+
+    // 通常モード: ありがとう画面
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center p-8 text-center">
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
