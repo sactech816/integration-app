@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import { User } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { 
   getCampaign, 
   getGachaPrizes, 
@@ -18,6 +20,7 @@ import {
 } from '@/lib/types';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
+import AuthModal from '@/components/shared/AuthModal';
 import CapsuleAnimation from '@/components/gamification/gacha/CapsuleAnimation';
 import RouletteAnimation from '@/components/gamification/gacha/RouletteAnimation';
 import OmikujiAnimation from '@/components/gamification/gacha/OmikujiAnimation';
@@ -35,6 +38,8 @@ export default function GachaPage() {
   const params = useParams();
   const campaignId = params.campaign_id as string;
 
+  const [user, setUser] = useState<User | null>(null);
+  const [showAuth, setShowAuth] = useState(false);
   const [campaign, setCampaign] = useState<GamificationCampaign | null>(null);
   const [prizes, setPrizes] = useState<GachaPrize[]>([]);
   const [userPrizes, setUserPrizes] = useState<UserPrize[]>([]);
@@ -45,6 +50,27 @@ export default function GachaPage() {
   const [showResult, setShowResult] = useState(false);
   const [showPrizeList, setShowPrizeList] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // 認証状態の監視
+  useEffect(() => {
+    if (!supabase) return;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    setUser(null);
+  };
 
   // データ読み込み
   useEffect(() => {
@@ -128,11 +154,12 @@ export default function GachaPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
-        <Header />
+        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
         <main className="container mx-auto px-4 py-20 flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-white" />
         </main>
         <Footer />
+        {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
       </div>
     );
   }
@@ -140,7 +167,7 @@ export default function GachaPage() {
   if (!campaign) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
-        <Header />
+        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
         <main className="container mx-auto px-4 py-20">
           <div className="max-w-md mx-auto text-center">
             <AlertCircle className="w-16 h-16 mx-auto text-gray-400 mb-4" />
@@ -149,6 +176,7 @@ export default function GachaPage() {
           </div>
         </main>
         <Footer />
+        {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
       </div>
     );
   }
@@ -160,7 +188,7 @@ export default function GachaPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
-      <Header />
+      <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* ヘッダー */}
@@ -317,6 +345,7 @@ export default function GachaPage() {
         </div>
       </main>
       <Footer />
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
     </div>
   );
 }
