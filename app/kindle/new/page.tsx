@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
-  BookOpen, ArrowLeft, ArrowRight, Lightbulb, Check, Target, List, ChevronRight, FileText, Trash2, HelpCircle, PlayCircle
+  BookOpen, ArrowLeft, ArrowRight, Lightbulb, Check, Target, List, ChevronRight, FileText, Trash2, HelpCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -38,33 +38,8 @@ interface SavedDraft {
   savedAt: string;
 }
 
-// ローディングフォールバック
-function LoadingFallback() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
-      <div className="text-center">
-        <BookOpen className="text-amber-600 mx-auto mb-4 animate-pulse" size={48} />
-        <p className="text-gray-600">読み込み中...</p>
-      </div>
-    </div>
-  );
-}
-
 export default function KindleNewPage() {
-  return (
-    <Suspense fallback={<LoadingFallback />}>
-      <KindleNewPageContent />
-    </Suspense>
-  );
-}
-
-function KindleNewPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  
-  // デモモード判定
-  const isDemo = searchParams.get('mode') === 'demo';
-  
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [state, setState] = useState<WizardState>({
@@ -291,7 +266,6 @@ function KindleNewPageContent() {
             setIsGenerating={setIsGenerating}
             error={error}
             setError={setError}
-            isDemo={isDemo}
           />
         );
       case 2:
@@ -307,7 +281,6 @@ function KindleNewPageContent() {
             setIsGeneratingSubtitle={setIsGeneratingSubtitle}
             subtitleError={subtitleError}
             setSubtitleError={setSubtitleError}
-            isDemo={isDemo}
           />
         );
       case 3:
@@ -321,7 +294,6 @@ function KindleNewPageContent() {
             setIsGeneratingTarget={setIsGeneratingTarget}
             targetError={targetError}
             setTargetError={setTargetError}
-            isDemo={isDemo}
           />
         );
       case 4:
@@ -333,7 +305,6 @@ function KindleNewPageContent() {
             isSaving={isSaving}
             saveError={saveError}
             onLoginRequired={() => setShowAuthModal(true)}
-            isDemo={isDemo}
           />
         );
       default:
@@ -411,12 +382,9 @@ function KindleNewPageContent() {
       {/* ヘッダー */}
       <header className="bg-white/80 backdrop-blur-md border-b border-amber-100 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link 
-            href={isDemo ? "/kindle/lp" : "/kindle"} 
-            className="flex items-center gap-2 text-gray-700 hover:text-amber-600 transition-colors"
-          >
+          <Link href="/kindle" className="flex items-center gap-2 text-gray-700 hover:text-amber-600 transition-colors">
             <ArrowLeft size={20} />
-            <span className="font-medium">{isDemo ? 'LPに戻る' : '戻る'}</span>
+            <span className="font-medium">戻る</span>
           </Link>
           <div className="flex items-center gap-2">
             <BookOpen className="text-amber-600" size={24} />
@@ -424,12 +392,6 @@ function KindleNewPageContent() {
               <span className="font-bold text-gray-900">キンドルダイレクトライト</span>
               <span className="text-xs text-gray-500 ml-1">KDL</span>
             </div>
-            {isDemo && (
-              <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-bold flex items-center gap-1">
-                <PlayCircle size={12} />
-                デモ
-              </span>
-            )}
           </div>
           <Link 
             href="/kindle/guide" 

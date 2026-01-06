@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     description: siteDescription,
     images: [
       {
-        url: `${siteUrl}/og-image.png`,
+        url: `${siteUrl}/api/og?title=${encodeURIComponent('集客メーカー')}&description=${encodeURIComponent('診断クイズ・プロフィールLP・ビジネスLPを簡単作成')}`,
         width: 1200,
         height: 630,
         alt: siteTitle,
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: siteTitle,
     description: siteDescription,
-    images: [`${siteUrl}/og-image.png`],
+    images: [`${siteUrl}/api/og?title=${encodeURIComponent('集客メーカー')}&description=${encodeURIComponent('診断クイズ・プロフィールLP・ビジネスLPを簡単作成')}`],
     creator: '@syukaku_maker',
   },
   robots: {
@@ -91,8 +91,8 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-icon.png',
+    icon: '/favicon.svg',
+    apple: '/apple-icon.svg',
   },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,

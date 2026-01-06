@@ -8,6 +8,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.makers.tokyo';
 
   if (!supabase) {
     return { title: 'プロフィール' };
@@ -26,6 +27,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const headerBlock = profile.content?.find((b: { type: string }) => b.type === 'header');
   const name = headerBlock?.data?.name || profile.nickname || 'プロフィール';
   const title = headerBlock?.data?.title || '';
+  const avatar = headerBlock?.data?.avatar || null;
+
+  // OGP画像: アバター画像があればそれを使用、なければ動的生成
+  const ogImage = avatar || 
+    `${siteUrl}/api/og?title=${encodeURIComponent(name)}&description=${encodeURIComponent(title)}&type=profile`;
 
   return {
     title: name,
@@ -33,6 +39,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: name,
       description: title,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: name,
+      description: title,
+      images: [ogImage],
     },
   };
 }

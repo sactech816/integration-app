@@ -32,6 +32,9 @@ export const generateQuizHTML = (quiz: Quiz): string => {
     .result-description { color: #4b5563; line-height: 1.8; }
     .hidden { display: none; }
     .btn { display: inline-block; padding: 14px 28px; background: ${color}; color: white; font-weight: bold; border-radius: 30px; text-decoration: none; margin-top: 20px; }
+    .footer { text-align: center; padding: 32px 0; }
+    .footer a { color: #9ca3af; font-size: 12px; text-decoration: none; }
+    .footer a:hover { color: #6b7280; }
   </style>
 </head>
 <body>
@@ -55,6 +58,10 @@ export const generateQuizHTML = (quiz: Quiz): string => {
         <p class="result-description" id="result-description"></p>
         <button class="btn" onclick="location.reload()">もう一度診断する</button>
       </div>
+    </div>
+    
+    <div class="footer">
+      <a href="https://www.makers.tokyo/" target="_blank" rel="noopener noreferrer">&copy; 2025 診断クイズメーカー</a>
     </div>
   </div>
   

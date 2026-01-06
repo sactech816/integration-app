@@ -9,6 +9,7 @@ interface Props {
 // メタデータ生成
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.makers.tokyo';
   
   if (!supabase) {
     return {
@@ -18,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { data: quiz } = await supabase
     .from('quizzes')
-    .select('title, description')
+    .select('title, description, image_url')
     .eq('slug', slug)
     .single();
 
@@ -28,12 +29,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
+  // OGP画像: コンテンツの画像があればそれを使用、なければ動的生成
+  const ogImage = quiz.image_url || 
+    `${siteUrl}/api/og?title=${encodeURIComponent(quiz.title)}&type=quiz`;
+
   return {
     title: quiz.title,
     description: quiz.description,
     openGraph: {
       title: quiz.title,
       description: quiz.description,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: quiz.title,
+      description: quiz.description,
+      images: [ogImage],
     },
   };
 }

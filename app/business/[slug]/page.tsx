@@ -8,6 +8,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.makers.tokyo';
 
   if (!supabase) {
     return { title: 'ビジネスLP' };
@@ -15,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { data: lp } = await supabase
     .from('business_projects')
-    .select('settings')
+    .select('settings, content')
     .eq('slug', slug)
     .single();
 
@@ -25,6 +26,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = lp.settings?.title || 'ビジネスLP';
   const description = lp.settings?.description || '';
+  
+  // heroブロックから背景画像を取得
+  const heroBlock = lp.content?.find((b: { type: string }) => b.type === 'hero');
+  const heroImage = heroBlock?.data?.backgroundImage || null;
+
+  // OGP画像: hero画像があればそれを使用、なければ動的生成
+  const ogImage = heroImage || 
+    `${siteUrl}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&type=business`;
 
   return {
     title,
@@ -32,6 +41,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title,
       description,
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage],
     },
   };
 }

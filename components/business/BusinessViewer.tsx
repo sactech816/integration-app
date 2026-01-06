@@ -71,10 +71,12 @@ const BusinessViewer: React.FC<BusinessViewerProps> = ({ lp }) => {
         {/* フッター */}
         <footer className="py-8 bg-gray-900 text-center">
           <a 
-            href="/" 
+            href="https://www.makers.tokyo/" 
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-gray-500 text-xs hover:text-gray-400 transition-colors"
           >
-            Powered by コンテンツメーカー
+            &copy; 2025 ビジネスLPメーカー
           </a>
         </footer>
       </div>

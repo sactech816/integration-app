@@ -105,7 +105,7 @@ export const generateBusinessHTML = (lp: BusinessLP): string => {
 <body>
   ${blocksHTML}
   <footer class="footer">
-    <a href="/">Powered by コンテンツメーカー</a>
+    <a href="https://www.makers.tokyo/" target="_blank" rel="noopener noreferrer">&copy; 2025 ビジネスLPメーカー</a>
   </footer>
 </body>
 </html>`;
