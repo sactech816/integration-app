@@ -8,7 +8,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.makers.tokyo';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
   if (!supabase) {
     return { title: 'ビジネスLP' };
@@ -103,6 +103,7 @@ export default async function BusinessPage({ params }: Props) {
   };
 
   // 構造化データ - WebPage + Service
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
   const lpTitle = lp.settings?.title || 'ビジネスLP';
   const lpDescription = lp.settings?.description || '';
   

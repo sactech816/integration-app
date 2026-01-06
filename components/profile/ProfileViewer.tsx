@@ -68,7 +68,7 @@ const ProfileViewer: React.FC<ProfileViewerProps> = ({ profile }) => {
           {/* フッター */}
           <div className="text-center py-8">
             <a 
-              href="https://www.makers.tokyo/" 
+              href="https://makers.tokyo/" 
               target="_blank"
               rel="noopener noreferrer"
               className="text-white/60 text-xs hover:text-white/80 transition-colors"

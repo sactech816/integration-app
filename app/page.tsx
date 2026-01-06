@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import HomePageClient from './HomePageClient';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.makers.tokyo';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
 export const metadata: Metadata = {
   title: '集客メーカー｜診断クイズ・プロフィールLP・ビジネスLPが簡単作成。SNS拡散・SEO対策で集客を加速',

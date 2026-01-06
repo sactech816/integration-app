@@ -174,7 +174,7 @@ export const generateProfileHTML = (profile: Profile): string => {
   <div class="container">
     ${blocksHTML}
     <div class="footer">
-      <a href="https://www.makers.tokyo/" target="_blank" rel="noopener noreferrer">&copy; 2025 プロフィールメーカー</a>
+      <a href="https://makers.tokyo/" target="_blank" rel="noopener noreferrer">&copy; 2025 プロフィールメーカー</a>
     </div>
   </div>
 </body>

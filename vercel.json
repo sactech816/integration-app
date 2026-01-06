@@ -1,0 +1,16 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.makers.tokyo"
+        }
+      ],
+      "destination": "https://makers.tokyo/:path*",
+      "permanent": true
+    }
+  ]
+}
+

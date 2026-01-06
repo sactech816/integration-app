@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { supabase } from '@/lib/supabase';
 
 // サイトのベースURL（環境変数で設定するか、本番環境のURLを設定）
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.makers.tokyo';
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 静的ページ

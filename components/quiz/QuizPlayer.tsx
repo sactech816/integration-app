@@ -173,7 +173,7 @@ const ResultView = ({ quiz, result, onRetry, onBack, playableQuestions, answers,
             </div>
         </div>
         <div className="bg-gray-50 p-6 text-center border-t">
-            <a href="https://www.makers.tokyo/" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-indigo-600 font-bold">
+            <a href="https://makers.tokyo/" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-indigo-600 font-bold">
                 &copy; 2025 診断クイズメーカー
             </a>
         </div>
