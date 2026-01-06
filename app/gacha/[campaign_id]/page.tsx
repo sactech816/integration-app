@@ -31,8 +31,12 @@ import {
   AlertCircle, 
   Sparkles, 
   Trophy,
-  ChevronDown
+  ChevronDown,
+  Shield,
+  Zap
 } from 'lucide-react';
+import { getAdminEmails } from '@/lib/constants';
+import { mockGachaDraw } from '@/lib/gamification/mockGacha';
 
 export default function GachaPage() {
   const params = useParams();
@@ -50,6 +54,14 @@ export default function GachaPage() {
   const [showResult, setShowResult] = useState(false);
   const [showPrizeList, setShowPrizeList] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isAdminMode, setIsAdminMode] = useState(false);
+
+  // 管理者チェック
+  const adminEmails = getAdminEmails();
+  const isAdmin = user?.email && adminEmails.some(email =>
+    user.email?.toLowerCase() === email.toLowerCase()
+  );
+  const isOwner = user?.id && campaign?.owner_id === user.id;
 
   // 認証状態の監視
   useEffect(() => {
@@ -97,7 +109,7 @@ export default function GachaPage() {
     loadData();
   }, [campaignId]);
 
-  // ガチャを回す
+  // ガチャを回す（通常モード）
   const handlePlay = useCallback(async () => {
     if (!campaign || playing) return;
 
@@ -144,6 +156,26 @@ export default function GachaPage() {
       setPlaying(false);
     }
   }, [campaign, campaignId, currentPoints, playing]);
+
+  // 管理者用フリースロット（ポイント消費なし、DB保存なし）
+  const handleAdminFreePlay = useCallback(() => {
+    if (!campaign || playing || !prizes.length) return;
+
+    setPlaying(true);
+    setResult(null);
+    setShowResult(false);
+
+    // アニメーション時間分待機
+    const animationDuration = campaign.animation_type === 'roulette' ? 4000 : 3000;
+
+    setTimeout(() => {
+      // フロントエンドのみで抽選（DB保存なし）
+      const mockResult = mockGachaDraw(prizes);
+      setResult(mockResult);
+      setShowResult(true);
+      setPlaying(false);
+    }, animationDuration);
+  }, [campaign, playing, prizes]);
 
   // リセット
   const handleReset = () => {
@@ -203,14 +235,39 @@ export default function GachaPage() {
             )}
           </div>
 
-          {/* ポイント表示 */}
-          <div className="flex justify-center mb-8">
-            <PointDisplay 
-              refreshTrigger={refreshTrigger} 
-              size="lg" 
-              showTotal 
-            />
-          </div>
+          {/* 管理者モード切替 */}
+          {(isAdmin || isOwner) && (
+            <div className="mb-6">
+              <button
+                onClick={() => setIsAdminMode(!isAdminMode)}
+                className={`
+                  w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all
+                  ${isAdminMode 
+                    ? 'bg-yellow-500 text-yellow-900' 
+                    : 'bg-white/10 text-white/70 hover:bg-white/20'}
+                `}
+              >
+                <Shield className="w-5 h-5" />
+                {isAdminMode ? '管理者モード ON（フリースロット）' : '管理者モードに切替'}
+              </button>
+              {isAdminMode && (
+                <p className="text-center text-yellow-300 text-sm mt-2">
+                  ポイント消費なし・DB保存なしでテストプレイできます
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* ポイント表示（管理者モード時は非表示） */}
+          {!isAdminMode && (
+            <div className="flex justify-center mb-8">
+              <PointDisplay 
+                refreshTrigger={refreshTrigger} 
+                size="lg" 
+                showTotal 
+              />
+            </div>
+          )}
 
           {/* ガチャアニメーションエリア */}
           <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 mb-8">
@@ -219,10 +276,10 @@ export default function GachaPage() {
                 playing={playing}
                 result={result}
                 showResult={showResult}
-                onPlay={handlePlay}
+                onPlay={isAdminMode ? handleAdminFreePlay : handlePlay}
                 onReset={handleReset}
-                cost={cost}
-                canPlay={canPlay}
+                cost={isAdminMode ? 0 : cost}
+                canPlay={isAdminMode ? true : canPlay}
               />
             )}
             {animationType === 'roulette' && (
@@ -231,10 +288,10 @@ export default function GachaPage() {
                 playing={playing}
                 result={result}
                 showResult={showResult}
-                onPlay={handlePlay}
+                onPlay={isAdminMode ? handleAdminFreePlay : handlePlay}
                 onReset={handleReset}
-                cost={cost}
-                canPlay={canPlay}
+                cost={isAdminMode ? 0 : cost}
+                canPlay={isAdminMode ? true : canPlay}
               />
             )}
             {animationType === 'omikuji' && (
@@ -242,10 +299,10 @@ export default function GachaPage() {
                 playing={playing}
                 result={result}
                 showResult={showResult}
-                onPlay={handlePlay}
+                onPlay={isAdminMode ? handleAdminFreePlay : handlePlay}
                 onReset={handleReset}
-                cost={cost}
-                canPlay={canPlay}
+                cost={isAdminMode ? 0 : cost}
+                canPlay={isAdminMode ? true : canPlay}
               />
             )}
           </div>
