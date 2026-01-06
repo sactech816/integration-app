@@ -90,8 +90,8 @@ export default function SurveyListPage() {
               <ClipboardList className="w-8 h-8 text-teal-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">アンケート管理</h1>
-              <p className="text-sm text-gray-500">アンケートの作成・編集・管理</p>
+              <h1 className="text-2xl font-bold text-gray-900">アンケート（投票）管理</h1>
+              <p className="text-sm text-gray-500">アンケート・投票の作成・編集・管理</p>
             </div>
           </div>
           <button
@@ -111,7 +111,7 @@ export default function SurveyListPage() {
               ログインが必要です
             </h2>
             <p className="text-gray-500 mb-6">
-              アンケートを作成・管理するにはログインしてください。
+              アンケート（投票）を作成・管理するにはログインしてください。
             </p>
             <button
               onClick={() => router.push("/survey/new")}
@@ -127,16 +127,16 @@ export default function SurveyListPage() {
           <div className="bg-white rounded-xl shadow-sm p-8 text-center">
             <ClipboardList className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-gray-700 mb-2">
-              アンケートがありません
+              アンケート（投票）がありません
             </h2>
             <p className="text-gray-500 mb-6">
-              「新規作成」ボタンから最初のアンケートを作成しましょう。
+              「新規作成」ボタンから最初のアンケート（投票）を作成しましょう。
             </p>
             <button
               onClick={() => router.push("/survey/new")}
               className="bg-teal-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-teal-700 transition-colors"
             >
-              アンケートを作成
+              アンケート（投票）を作成
             </button>
           </div>
         )}

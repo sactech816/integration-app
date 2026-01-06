@@ -93,7 +93,7 @@ const Header: React.FC<HeaderProps> = ({
   ];
 
   // アンケート専用（ServiceTypeに含まれない）
-  const surveyService = { id: 'survey', label: 'アンケート', icon: ClipboardList, color: 'text-teal-600', bg: 'bg-teal-50' };
+  const surveyService = { id: 'survey', label: 'アンケート（投票）', icon: ClipboardList, color: 'text-teal-600', bg: 'bg-teal-50' };
 
   return (
     <>
@@ -259,7 +259,7 @@ const Header: React.FC<HeaderProps> = ({
                         className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
                       >
                         <ClipboardList size={18} className="text-teal-500" />
-                        <span className="font-medium text-gray-700">アンケート管理</span>
+                        <span className="font-medium text-gray-700">アンケート（投票）管理</span>
                       </button>
 
                       <div className="border-t border-gray-100 mt-2 pt-2">
@@ -501,7 +501,7 @@ const Header: React.FC<HeaderProps> = ({
                     className="w-full flex items-center justify-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 py-3 rounded-xl font-bold hover:bg-teal-100 transition-colors"
                   >
                     <ClipboardList size={20} />
-                    アンケート管理
+                    アンケート（投票）管理
                   </button>
                   <button 
                     onClick={handleLogout} 
