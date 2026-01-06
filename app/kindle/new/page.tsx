@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
-  BookOpen, ArrowLeft, ArrowRight, Lightbulb, Check, Target, List, ChevronRight, FileText, Trash2, HelpCircle, PlayCircle
+  BookOpen, ArrowLeft, ArrowRight, Lightbulb, Check, Target, List, ChevronRight, FileText, Trash2, HelpCircle, PlayCircle, Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -38,7 +38,28 @@ interface SavedDraft {
   savedAt: string;
 }
 
+// ローディングフォールバックコンポーネント
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="animate-spin text-amber-600" size={40} />
+        <p className="text-gray-600 font-medium">読み込み中...</p>
+      </div>
+    </div>
+  );
+}
+
+// メインページコンポーネントのラッパー（Suspenseでラップ）
 export default function KindleNewPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <KindleNewPageContent />
+    </Suspense>
+  );
+}
+
+function KindleNewPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isDemo = searchParams.get('mode') === 'demo';
