@@ -27,7 +27,8 @@ import {
   Heart,
   LayoutGrid,
   BookOpen,
-  ClipboardList
+  ClipboardList,
+  Gamepad2
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -94,6 +95,9 @@ const Header: React.FC<HeaderProps> = ({
 
   // アンケート専用（ServiceTypeに含まれない）
   const surveyService = { id: 'survey', label: 'アンケート（投票）', icon: ClipboardList, color: 'text-teal-600', bg: 'bg-teal-50' };
+
+  // ゲーミフィケーション
+  const gamificationService = { id: 'gamification', label: 'ゲーミフィケーション', icon: Gamepad2, color: 'text-purple-600', bg: 'bg-purple-50' };
 
   return (
     <>
@@ -163,6 +167,19 @@ const Header: React.FC<HeaderProps> = ({
                       <div>
                         <div className="font-semibold text-gray-900">{surveyService.label}</div>
                         <div className="text-xs text-gray-500">新規作成</div>
+                      </div>
+                    </button>
+                    {/* ゲーミフィケーション */}
+                    <button
+                      onClick={() => { setIsServiceMenuOpen(false); router.push('/gamification/new'); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                    >
+                      <div className={`p-2 rounded-lg ${gamificationService.bg}`}>
+                        <gamificationService.icon size={18} className={gamificationService.color} />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">{gamificationService.label}</div>
+                        <div className="text-xs text-gray-500">ガチャ・スタンプラリー等</div>
                       </div>
                     </button>
                     {!user && (
@@ -328,6 +345,17 @@ const Header: React.FC<HeaderProps> = ({
                   <div className="text-left">
                     <div className={`font-bold ${surveyService.color}`}>{surveyService.label}</div>
                     <div className="text-xs text-gray-500">新規作成</div>
+                  </div>
+                </button>
+                {/* ゲーミフィケーション */}
+                <button
+                  onClick={() => { setIsMenuOpen(false); router.push('/gamification/new'); }}
+                  className={`flex items-center gap-3 p-4 rounded-xl ${gamificationService.bg} transition-all hover:scale-[1.02]`}
+                >
+                  <gamificationService.icon size={24} className={gamificationService.color} />
+                  <div className="text-left">
+                    <div className={`font-bold ${gamificationService.color}`}>{gamificationService.label}</div>
+                    <div className="text-xs text-gray-500">ガチャ・スタンプラリー等</div>
                   </div>
                 </button>
               </div>
