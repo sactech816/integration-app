@@ -159,7 +159,7 @@ export default function GachaPage() {
           <Loader2 className="w-8 h-8 animate-spin text-white" />
         </main>
         <Footer />
-        {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+        {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
       </div>
     );
   }
@@ -176,7 +176,7 @@ export default function GachaPage() {
           </div>
         </main>
         <Footer />
-        {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+        {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
       </div>
     );
   }
@@ -345,7 +345,7 @@ export default function GachaPage() {
         </div>
       </main>
       <Footer />
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
     </div>
   );
 }
