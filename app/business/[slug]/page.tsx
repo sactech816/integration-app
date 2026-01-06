@@ -102,5 +102,34 @@ export default async function BusinessPage({ params }: Props) {
     updated_at: lp.updated_at,
   };
 
-  return <BusinessViewer lp={businessLP} />;
+  // 構造化データ - WebPage + Service
+  const lpTitle = lp.settings?.title || 'ビジネスLP';
+  const lpDescription = lp.settings?.description || '';
+  
+  const webPageSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: lpTitle,
+    description: lpDescription,
+    url: `${siteUrl}/business/${slug}`,
+    mainEntity: {
+      '@type': 'Service',
+      name: lpTitle,
+      description: lpDescription,
+      provider: {
+        '@type': 'Organization',
+        name: lpTitle,
+      },
+    },
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageSchema) }}
+      />
+      <BusinessViewer lp={businessLP} />
+    </>
+  );
 }

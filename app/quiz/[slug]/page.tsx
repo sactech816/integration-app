@@ -52,6 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function QuizPage({ params }: Props) {
   const { slug } = await params;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.makers.tokyo';
 
   if (!supabase) {
     return (
@@ -81,5 +82,30 @@ export default async function QuizPage({ params }: Props) {
     );
   }
 
-  return <QuizPlayerWrapper quiz={quiz} />;
+  // 構造化データ - Quiz
+  const questions = typeof quiz.questions === 'string' ? JSON.parse(quiz.questions) : quiz.questions;
+  const quizSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Quiz',
+    name: quiz.title,
+    description: quiz.description,
+    url: `${siteUrl}/quiz/${slug}`,
+    educationalLevel: 'beginner',
+    numberOfQuestions: questions?.length || 0,
+    creator: {
+      '@type': 'Organization',
+      name: '集客メーカー',
+      url: siteUrl,
+    },
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(quizSchema) }}
+      />
+      <QuizPlayerWrapper quiz={quiz} />
+    </>
+  );
 }

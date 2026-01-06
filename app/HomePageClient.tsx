@@ -15,8 +15,6 @@ import {
   ArrowRight, 
   Check, 
   Zap,
-  Users,
-  TrendingUp,
   Loader2,
   Magnet,
   Target,
@@ -25,19 +23,19 @@ import {
   BookOpen
 } from 'lucide-react';
 
-export default function HomePage() {
-  const [user, setUser] = useState(null);
+export default function HomePageClient() {
+  const [user, setUser] = useState<{ email?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // 管理者かどうかを判定
   const adminEmails = getAdminEmails();
   const isAdmin = user?.email && adminEmails.some(email => 
-    user.email.toLowerCase() === email.toLowerCase()
+    user.email?.toLowerCase() === email.toLowerCase()
   );
 
   useEffect(() => {
-      const init = async () => {
+    const init = async () => {
       if (supabase) {
         // 認証状態の変更を監視
         supabase.auth.onAuthStateChange((event, session) => {
@@ -46,12 +44,12 @@ export default function HomePage() {
 
         // 初期セッション取得
         const { data: { session } } = await supabase.auth.getSession();
-                setUser(session?.user || null);
+        setUser(session?.user || null);
       }
       setIsLoading(false);
     };
 
-      init();
+    init();
   }, []);
 
   const handleLogout = async () => {
@@ -61,7 +59,7 @@ export default function HomePage() {
     }
   };
 
-  const navigateTo = (page) => {
+  const navigateTo = (page: string) => {
     if (page === '/' || page === '') {
       window.location.href = '/';
     } else if (page === 'create') {
@@ -73,17 +71,17 @@ export default function HomePage() {
     }
   };
 
-  const handleServiceSelect = (service) => {
+  const handleServiceSelect = (service: string) => {
     navigateTo(`${service}/editor`);
   };
 
   if (isLoading) {
-      return (
+    return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
         <Loader2 className="animate-spin text-indigo-600 mb-4" size={48} />
         <p className="font-bold text-gray-600">読み込み中...</p>
-          </div>
-      );
+      </div>
+    );
   }
 
   return (
@@ -97,10 +95,10 @@ export default function HomePage() {
         setShowAuth={setShowAuth}
       />
         
-        <AuthModal 
-            isOpen={showAuth} 
+      <AuthModal 
+        isOpen={showAuth} 
         onClose={() => setShowAuth(false)} 
-            setUser={setUser} 
+        setUser={setUser} 
         onNavigate={navigateTo}
       />
 
@@ -487,9 +485,10 @@ export default function HomePage() {
       <Footer 
         setPage={navigateTo}
         onCreate={(service) => service && navigateTo(`${service}/editor`)}
-                user={user} 
-                setShowAuth={setShowAuth}
-            />
+        user={user} 
+        setShowAuth={setShowAuth}
+      />
     </div>
   );
 }
+

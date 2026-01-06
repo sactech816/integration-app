@@ -1,24 +1,46 @@
 import { Metadata } from 'next';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.makers.tokyo';
 
 export const metadata: Metadata = {
-  title: 'ビジネスLPエディタ',
-  description: '商品・サービスの魅力を効果的にアピールするビジネスLP作成エディタ。CV最適化されたテンプレート、料金表、FAQ、お問い合わせフォーム機能を搭載。',
-  keywords: ['ビジネスLP作成', 'ランディングページエディタ', 'LP作成ツール', 'セールスページ作成', 'CV最適化'],
-  robots: {
-    index: true,
-    follow: true,
-  },
-  alternates: {
-    canonical: `${siteUrl}/business/editor`,
-  },
+  title: 'ビジネスLPメーカー | ランディングページを簡単作成',
+  description: '商品・サービスのランディングページを無料で作成。CV最適化されたテンプレートでプロ品質のLPが簡単に完成。AI Flyer機能搭載。',
+  keywords: ['ビジネスLP', 'ランディングページ作成', 'LP作成ツール', 'LP作成無料', 'セールスページ', 'コンバージョン最適化'],
   openGraph: {
-    title: 'ビジネスLPエディタ | 集客メーカー',
-    description: 'CV最適化されたビジネスLPを簡単作成',
-    type: 'website',
+    title: 'ビジネスLPメーカー | ランディングページを簡単作成',
+    description: '商品・サービスのランディングページを無料で作成。CV最適化されたテンプレートですぐに始められます。',
     url: `${siteUrl}/business/editor`,
+    type: 'website',
   },
+};
+
+// 構造化データ - SoftwareApplication
+const softwareAppSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'ビジネスLPメーカー',
+  description: '商品・サービスのランディングページを無料で作成できるツール。CV最適化されたテンプレートでプロ品質のLPが簡単に完成。',
+  url: `${siteUrl}/business/editor`,
+  applicationCategory: 'WebApplication',
+  operatingSystem: 'Web Browser',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'JPY',
+  },
+  creator: {
+    '@type': 'Organization',
+    name: '集客メーカー',
+    url: siteUrl,
+  },
+  featureList: [
+    'AI Flyer機能',
+    'CV最適化テンプレート',
+    '料金表作成',
+    'FAQ作成',
+    'お問い合わせフォーム',
+    'レスポンシブデザイン',
+  ],
 };
 
 export default function BusinessEditorLayout({
@@ -26,37 +48,13 @@ export default function BusinessEditorLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema) }}
+      />
+      {children}
+    </>
+  );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

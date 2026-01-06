@@ -1,7 +1,8 @@
 import { MetadataRoute } from 'next';
+import { supabase } from '@/lib/supabase';
 
 // サイトのベースURL（環境変数で設定するか、本番環境のURLを設定）
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://shukaku-maker.com';
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.makers.tokyo';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 静的ページ
@@ -112,16 +113,60 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // 将来的にはSupabaseから公開コンテンツを取得してサイトマップに追加
-  // const { data: quizzes } = await supabase.from('quizzes').select('slug, updated_at').eq('is_public', true);
-  // const quizPages = quizzes?.map(quiz => ({
-  //   url: `${BASE_URL}/quiz/${quiz.slug}`,
-  //   lastModified: new Date(quiz.updated_at),
-  //   changeFrequency: 'weekly' as const,
-  //   priority: 0.6,
-  // })) || [];
+  // 動的コンテンツをSupabaseから取得
+  let quizPages: MetadataRoute.Sitemap = [];
+  let profilePages: MetadataRoute.Sitemap = [];
+  let businessPages: MetadataRoute.Sitemap = [];
 
-  return [...staticPages];
+  if (supabase) {
+    try {
+      // 公開されている診断クイズを取得
+      const { data: quizzes } = await supabase
+        .from('quizzes')
+        .select('slug, updated_at')
+        .eq('show_in_portal', true)
+        .not('slug', 'is', null);
+
+      quizPages = quizzes?.map(quiz => ({
+        url: `${BASE_URL}/quiz/${quiz.slug}`,
+        lastModified: new Date(quiz.updated_at),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })) || [];
+
+      // 公開されているプロフィールLPを取得
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('slug, updated_at')
+        .eq('show_in_portal', true)
+        .not('slug', 'is', null);
+
+      profilePages = profiles?.map(profile => ({
+        url: `${BASE_URL}/profile/${profile.slug}`,
+        lastModified: new Date(profile.updated_at),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })) || [];
+
+      // 公開されているビジネスLPを取得
+      const { data: businessLPs } = await supabase
+        .from('business_projects')
+        .select('slug, updated_at')
+        .eq('show_in_portal', true)
+        .not('slug', 'is', null);
+
+      businessPages = businessLPs?.map(lp => ({
+        url: `${BASE_URL}/business/${lp.slug}`,
+        lastModified: new Date(lp.updated_at),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })) || [];
+    } catch (error) {
+      console.error('Sitemap: Failed to fetch dynamic content', error);
+    }
+  }
+
+  return [...staticPages, ...quizPages, ...profilePages, ...businessPages];
 }
 
 

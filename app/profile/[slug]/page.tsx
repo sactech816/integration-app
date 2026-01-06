@@ -52,6 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProfilePage({ params }: Props) {
   const { slug } = await params;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.makers.tokyo';
 
   if (!supabase) {
     return (
@@ -81,5 +82,33 @@ export default async function ProfilePage({ params }: Props) {
     );
   }
 
-  return <ProfileViewer profile={profile} />;
+  // 構造化データ - ProfilePage
+  const headerBlock = profile.content?.find((b: { type: string }) => b.type === 'header');
+  const name = headerBlock?.data?.name || profile.nickname || 'プロフィール';
+  const title = headerBlock?.data?.title || '';
+  const avatar = headerBlock?.data?.avatar || null;
+
+  const profileSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    name: name,
+    description: title,
+    url: `${siteUrl}/profile/${slug}`,
+    mainEntity: {
+      '@type': 'Person',
+      name: name,
+      description: title,
+      ...(avatar && { image: avatar }),
+    },
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(profileSchema) }}
+      />
+      <ProfileViewer profile={profile} />
+    </>
+  );
 }
