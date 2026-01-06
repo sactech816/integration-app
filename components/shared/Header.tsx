@@ -26,7 +26,8 @@ import {
   Lightbulb,
   Heart,
   LayoutGrid,
-  BookOpen
+  BookOpen,
+  ClipboardList
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -91,6 +92,9 @@ const Header: React.FC<HeaderProps> = ({
     { id: 'business' as ServiceType, label: 'ビジネスLP', icon: Building2, color: 'text-amber-600', bg: 'bg-amber-50' },
   ];
 
+  // アンケート専用（ServiceTypeに含まれない）
+  const surveyService = { id: 'survey', label: 'アンケート', icon: ClipboardList, color: 'text-teal-600', bg: 'bg-teal-50' };
+
   return (
     <>
     <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-[100]">
@@ -148,6 +152,19 @@ const Header: React.FC<HeaderProps> = ({
                         </div>
                       </button>
                     ))}
+                    {/* アンケート */}
+                    <button
+                      onClick={() => { setIsServiceMenuOpen(false); router.push('/survey/new'); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors border-t border-gray-100"
+                    >
+                      <div className={`p-2 rounded-lg ${surveyService.bg}`}>
+                        <surveyService.icon size={18} className={surveyService.color} />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">{surveyService.label}</div>
+                        <div className="text-xs text-gray-500">新規作成</div>
+                      </div>
+                    </button>
                     {!user && (
                       <div className="px-4 py-3 border-t border-gray-100 mt-1">
                         <p className="text-xs text-gray-600 mb-2 flex items-center gap-1 text-left">
@@ -237,6 +254,14 @@ const Header: React.FC<HeaderProps> = ({
                         <span className="font-medium text-gray-700">マイページ</span>
                       </button>
 
+                      <button
+                        onClick={() => { setIsUserMenuOpen(false); router.push('/survey'); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                      >
+                        <ClipboardList size={18} className="text-teal-500" />
+                        <span className="font-medium text-gray-700">アンケート管理</span>
+                      </button>
+
                       <div className="border-t border-gray-100 mt-2 pt-2">
                         <button
                           onClick={handleLogout}
@@ -294,6 +319,17 @@ const Header: React.FC<HeaderProps> = ({
                     </div>
                   </button>
                 ))}
+                {/* アンケート */}
+                <button
+                  onClick={() => { setIsMenuOpen(false); router.push('/survey/new'); }}
+                  className={`flex items-center gap-3 p-4 rounded-xl ${surveyService.bg} transition-all hover:scale-[1.02]`}
+                >
+                  <surveyService.icon size={24} className={surveyService.color} />
+                  <div className="text-left">
+                    <div className={`font-bold ${surveyService.color}`}>{surveyService.label}</div>
+                    <div className="text-xs text-gray-500">新規作成</div>
+                  </div>
+                </button>
               </div>
               {!user && (
                 <div className="mt-3 p-4 bg-orange-50 border border-orange-200 rounded-lg">
@@ -459,6 +495,13 @@ const Header: React.FC<HeaderProps> = ({
                 >
                     <LayoutDashboard size={20} />
                     マイページ
+                  </button>
+                  <button 
+                    onClick={() => { setIsMenuOpen(false); router.push('/survey'); }}
+                    className="w-full flex items-center justify-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 py-3 rounded-xl font-bold hover:bg-teal-100 transition-colors"
+                  >
+                    <ClipboardList size={20} />
+                    アンケート管理
                   </button>
                   <button 
                     onClick={handleLogout} 

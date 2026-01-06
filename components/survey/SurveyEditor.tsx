@@ -24,6 +24,12 @@ import {
   ListChecks,
   Star,
   Type,
+  Sparkles,
+  Users,
+  ShoppingCart,
+  GraduationCap,
+  Heart,
+  Calendar,
 } from "lucide-react";
 import { Survey, SurveyQuestion, generateSurveyQuestionId } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
@@ -130,13 +136,101 @@ const Textarea = ({
   </div>
 );
 
+// アンケートテンプレート定義
+const SURVEY_TEMPLATES = {
+  customer_satisfaction: {
+    title: "顧客満足度調査",
+    description: "サービスや商品への満足度をお聞かせください。",
+    icon: Heart,
+    color: "text-rose-600",
+    bg: "bg-rose-50",
+    questions: [
+      { id: "cs_1", text: "全体的な満足度を教えてください", type: "rating" as const, required: true, maxRating: 5 },
+      { id: "cs_2", text: "サービスの品質はいかがでしたか？", type: "choice" as const, required: true, options: ["とても良い", "良い", "普通", "やや不満", "不満"] },
+      { id: "cs_3", text: "スタッフの対応はいかがでしたか？", type: "rating" as const, required: true, maxRating: 5 },
+      { id: "cs_4", text: "また利用したいと思いますか？", type: "choice" as const, required: true, options: ["ぜひ利用したい", "機会があれば", "どちらとも言えない", "あまり思わない"] },
+      { id: "cs_5", text: "改善点やご要望があればお聞かせください", type: "text" as const, required: false },
+    ],
+  },
+  event_feedback: {
+    title: "イベント・セミナーアンケート",
+    description: "本日のイベントについてご意見をお聞かせください。",
+    icon: Calendar,
+    color: "text-purple-600",
+    bg: "bg-purple-50",
+    questions: [
+      { id: "ef_1", text: "イベント全体の満足度を教えてください", type: "rating" as const, required: true, maxRating: 5 },
+      { id: "ef_2", text: "内容は分かりやすかったですか？", type: "choice" as const, required: true, options: ["とても分かりやすい", "分かりやすい", "普通", "やや難しい", "難しい"] },
+      { id: "ef_3", text: "このイベントを知ったきっかけは？", type: "choice" as const, required: true, options: ["SNS", "メルマガ", "友人・知人の紹介", "検索", "その他"] },
+      { id: "ef_4", text: "今後参加したいテーマがあれば教えてください", type: "text" as const, required: false },
+      { id: "ef_5", text: "その他ご意見・ご感想", type: "text" as const, required: false },
+    ],
+  },
+  nps_survey: {
+    title: "NPS（推奨度）調査",
+    description: "サービスを友人や知人に薦める可能性をお聞かせください。",
+    icon: Users,
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    questions: [
+      { id: "nps_1", text: "このサービスを友人や同僚に薦める可能性は？（0: 全く薦めない〜10: 強く薦める）", type: "rating" as const, required: true, maxRating: 10 },
+      { id: "nps_2", text: "その評価の理由を教えてください", type: "text" as const, required: true },
+      { id: "nps_3", text: "特に良かった点は何ですか？", type: "text" as const, required: false },
+      { id: "nps_4", text: "改善してほしい点はありますか？", type: "text" as const, required: false },
+    ],
+  },
+  product_feedback: {
+    title: "商品・サービス改善アンケート",
+    description: "商品やサービスの改善にご協力ください。",
+    icon: ShoppingCart,
+    color: "text-amber-600",
+    bg: "bg-amber-50",
+    questions: [
+      { id: "pf_1", text: "この商品/サービスを使い始めたきっかけは？", type: "choice" as const, required: true, options: ["広告を見て", "口コミ", "検索", "店頭で見て", "友人の紹介", "その他"] },
+      { id: "pf_2", text: "使用頻度を教えてください", type: "choice" as const, required: true, options: ["毎日", "週に数回", "月に数回", "年に数回", "初めて"] },
+      { id: "pf_3", text: "価格についてどう思いますか？", type: "choice" as const, required: true, options: ["とても安い", "適正価格", "やや高い", "高い"] },
+      { id: "pf_4", text: "追加してほしい機能やサービスはありますか？", type: "text" as const, required: false },
+      { id: "pf_5", text: "総合的な満足度を教えてください", type: "rating" as const, required: true, maxRating: 5 },
+    ],
+  },
+  training_evaluation: {
+    title: "研修・講座評価アンケート",
+    description: "研修や講座の内容についてフィードバックをお願いします。",
+    icon: GraduationCap,
+    color: "text-green-600",
+    bg: "bg-green-50",
+    questions: [
+      { id: "te_1", text: "研修内容の理解度はいかがでしたか？", type: "rating" as const, required: true, maxRating: 5 },
+      { id: "te_2", text: "講師の説明は分かりやすかったですか？", type: "rating" as const, required: true, maxRating: 5 },
+      { id: "te_3", text: "研修時間は適切でしたか？", type: "choice" as const, required: true, options: ["長すぎる", "やや長い", "ちょうど良い", "やや短い", "短すぎる"] },
+      { id: "te_4", text: "今後の業務に活かせそうですか？", type: "choice" as const, required: true, options: ["とても活かせる", "ある程度活かせる", "どちらとも言えない", "あまり活かせない"] },
+      { id: "te_5", text: "今後取り上げてほしいテーマがあれば教えてください", type: "text" as const, required: false },
+    ],
+  },
+  employee_engagement: {
+    title: "従業員エンゲージメント調査",
+    description: "職場環境や働きがいについてお聞かせください（匿名）",
+    icon: Sparkles,
+    color: "text-indigo-600",
+    bg: "bg-indigo-50",
+    questions: [
+      { id: "ee_1", text: "現在の仕事にやりがいを感じていますか？", type: "rating" as const, required: true, maxRating: 5 },
+      { id: "ee_2", text: "職場の人間関係は良好ですか？", type: "rating" as const, required: true, maxRating: 5 },
+      { id: "ee_3", text: "業務量は適切だと思いますか？", type: "choice" as const, required: true, options: ["多すぎる", "やや多い", "適切", "やや少ない", "少ない"] },
+      { id: "ee_4", text: "会社の将来に期待していますか？", type: "rating" as const, required: true, maxRating: 5 },
+      { id: "ee_5", text: "改善してほしい点があれば教えてください", type: "text" as const, required: false },
+    ],
+  },
+};
+
 interface SurveyEditorProps {
   onBack?: () => void;
   initialData?: Partial<Survey>;
   user?: { id: string; email?: string } | null;
+  templateId?: keyof typeof SURVEY_TEMPLATES;
 }
 
-export default function SurveyEditor({ onBack, initialData, user }: SurveyEditorProps) {
+export default function SurveyEditor({ onBack, initialData, user, templateId }: SurveyEditorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState<number | null>(initialData?.id || null);
   const [savedSlug, setSavedSlug] = useState<string | null>(initialData?.slug || null);
@@ -145,8 +239,9 @@ export default function SurveyEditor({ onBack, initialData, user }: SurveyEditor
   const [mobileTab, setMobileTab] = useState<"editor" | "preview">("editor");
 
   const [openSections, setOpenSections] = useState({
-    basic: true,
-    questions: true,
+    template: !initialData && !templateId, // 新規作成時はテンプレート選択を開く
+    basic: !!initialData || !!templateId,
+    questions: !!initialData || !!templateId,
     settings: false,
   });
 
@@ -173,6 +268,16 @@ export default function SurveyEditor({ onBack, initialData, user }: SurveyEditor
   };
 
   const [form, setForm] = useState(() => {
+    // テンプレートIDが指定されている場合
+    if (templateId && SURVEY_TEMPLATES[templateId]) {
+      const template = SURVEY_TEMPLATES[templateId];
+      return {
+        ...defaultForm,
+        title: template.title,
+        description: template.description,
+        questions: template.questions,
+      };
+    }
     if (!initialData) return defaultForm;
     return { ...defaultForm, ...initialData };
   });
@@ -181,6 +286,20 @@ export default function SurveyEditor({ onBack, initialData, user }: SurveyEditor
     document.title = "アンケート作成・編集";
     window.scrollTo(0, 0);
   }, []);
+
+  // テンプレート適用
+  const applyTemplate = (key: keyof typeof SURVEY_TEMPLATES) => {
+    if (!confirm("テンプレートを適用しますか？\n現在の入力内容は上書きされます。")) return;
+    const template = SURVEY_TEMPLATES[key];
+    setForm({
+      ...defaultForm,
+      title: template.title,
+      description: template.description,
+      questions: template.questions.map((q) => ({ ...q, id: generateSurveyQuestionId() })),
+    });
+    setOpenSections({ template: false, basic: true, questions: true, settings: false });
+    resetPreview();
+  };
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
@@ -474,6 +593,39 @@ export default function SurveyEditor({ onBack, initialData, user }: SurveyEditor
           }`}
         >
           <div className="max-w-2xl mx-auto space-y-4">
+            {/* テンプレート選択 */}
+            <Section
+              title="テンプレートから作成"
+              icon={Sparkles}
+              isOpen={openSections.template}
+              onToggle={() => toggleSection("template")}
+            >
+              <p className="text-sm text-gray-600 mb-4">
+                よく使われるアンケートのテンプレートから始めることができます。
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {(Object.entries(SURVEY_TEMPLATES) as [keyof typeof SURVEY_TEMPLATES, typeof SURVEY_TEMPLATES[keyof typeof SURVEY_TEMPLATES]][]).map(([key, template]) => {
+                  const Icon = template.icon;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => applyTemplate(key)}
+                      className={`flex items-start gap-3 p-4 rounded-xl border-2 border-gray-200 ${template.bg} hover:border-gray-300 transition-all text-left`}
+                    >
+                      <div className={`p-2 rounded-lg bg-white shadow-sm`}>
+                        <Icon size={20} className={template.color} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className={`font-bold text-sm ${template.color}`}>{template.title}</div>
+                        <div className="text-xs text-gray-500 mt-1 line-clamp-2">{template.description}</div>
+                        <div className="text-xs text-gray-400 mt-1">{template.questions.length}問</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </Section>
+
             {/* 基本設定 */}
             <Section
               title="基本設定"
