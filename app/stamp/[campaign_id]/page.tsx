@@ -2,10 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
+import { User } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { getCampaign, getUserStamps, acquireStamp, getPointBalance } from '@/app/actions/gamification';
 import { GamificationCampaign, UserStamp, StampRallySettings } from '@/lib/types';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
+import AuthModal from '@/components/shared/AuthModal';
 import StampCard from '@/components/gamification/StampCard';
 import { Loader2, Gift, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -15,6 +18,8 @@ export default function StampPage() {
   const campaignId = params.campaign_id as string;
   const stampId = searchParams.get('stamp_id');
 
+  const [user, setUser] = useState<User | null>(null);
+  const [showAuth, setShowAuth] = useState(false);
   const [campaign, setCampaign] = useState<GamificationCampaign | null>(null);
   const [stamps, setStamps] = useState<UserStamp[]>([]);
   const [currentPoints, setCurrentPoints] = useState(0);
@@ -22,6 +27,27 @@ export default function StampPage() {
   const [acquiring, setAcquiring] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [justAcquired, setJustAcquired] = useState<string | null>(null);
+
+  // 認証状態の監視
+  useEffect(() => {
+    if (!supabase) return;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    setUser(null);
+  };
 
   // キャンペーンとスタンプ情報を取得
   useEffect(() => {
@@ -118,11 +144,12 @@ export default function StampPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
-        <Header />
+        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
         <main className="container mx-auto px-4 py-20 flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
         </main>
         <Footer />
+        {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
       </div>
     );
   }
@@ -130,7 +157,7 @@ export default function StampPage() {
   if (!campaign) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
-        <Header />
+        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
         <main className="container mx-auto px-4 py-20">
           <div className="max-w-md mx-auto text-center">
             <AlertCircle className="w-16 h-16 mx-auto text-gray-400 mb-4" />
@@ -139,6 +166,7 @@ export default function StampPage() {
           </div>
         </main>
         <Footer />
+        {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
       </div>
     );
   }
@@ -150,7 +178,7 @@ export default function StampPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
-      <Header />
+      <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* ヘッダー */}
@@ -231,6 +259,7 @@ export default function StampPage() {
         </div>
       </main>
       <Footer />
+      {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
     </div>
   );
 }
