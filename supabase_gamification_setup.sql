@@ -4,6 +4,20 @@
 -- =============================================
 
 -- =============================================
+-- ヘルパー関数（インデックス用IMMUTABLE関数）
+-- =============================================
+
+-- タイムスタンプを日付に変換するIMMUTABLE関数
+-- ※ タイムゾーンを考慮せず純粋な日付変換のため IMMUTABLE として安全
+CREATE OR REPLACE FUNCTION date_from_timestamptz(ts TIMESTAMPTZ)
+RETURNS DATE
+LANGUAGE SQL
+IMMUTABLE
+AS $$
+  SELECT ts::date;
+$$;
+
+-- =============================================
 -- 1. gamification_campaigns (キャンペーン管理)
 -- =============================================
 
@@ -112,8 +126,8 @@ CREATE INDEX IF NOT EXISTS idx_point_logs_created_at ON point_logs(created_at DE
 -- 重複チェック用複合インデックス
 CREATE INDEX IF NOT EXISTS idx_point_logs_stamp_check ON point_logs(campaign_id, user_id, event_type, (event_data->>'stamp_id'));
 CREATE INDEX IF NOT EXISTS idx_point_logs_stamp_check_session ON point_logs(campaign_id, session_id, event_type, (event_data->>'stamp_id'));
--- ログインボーナス日付チェック用
-CREATE INDEX IF NOT EXISTS idx_point_logs_login_bonus_date ON point_logs(campaign_id, user_id, event_type, (created_at::date));
+-- ログインボーナス日付チェック用（IMMUTABLE関数を使用）
+CREATE INDEX IF NOT EXISTS idx_point_logs_login_bonus_date ON point_logs(campaign_id, user_id, event_type, (date_from_timestamptz(created_at)));
 
 -- RLSを有効化
 ALTER TABLE point_logs ENABLE ROW LEVEL SECURITY;
