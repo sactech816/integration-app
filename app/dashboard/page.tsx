@@ -11,6 +11,30 @@ import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
 import { getAnalytics, getMultipleAnalytics } from '@/app/actions/analytics';
 import { getUserPurchases, hasProAccess, getAllUsersWithRoles, setPartnerStatus, checkIsPartner } from '@/app/actions/purchases';
+import { 
+  getCampaigns, 
+  createCampaign, 
+  updateCampaign, 
+  deleteCampaign, 
+  getCampaignStats,
+  getGachaPrizes,
+  addGachaPrize,
+  updateGachaPrize,
+  deleteGachaPrize
+} from '@/app/actions/gamification';
+import { 
+  GamificationCampaign, 
+  CampaignType, 
+  GachaAnimationType,
+  GachaPrize,
+  CampaignStats,
+  CAMPAIGN_TYPE_LABELS,
+  ANIMATION_TYPE_LABELS,
+  StampRallySettings,
+  LoginBonusSettings,
+  GachaSettings,
+  generateStampId
+} from '@/lib/types';
 import { getFeaturedContents, addFeaturedContent, removeFeaturedContent, FeaturedContent } from '@/app/actions/featured';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import {
@@ -57,7 +81,12 @@ import {
   BookOpen,
   Crown,
   Zap,
-  ClipboardList
+  ClipboardList,
+  Gamepad2,
+  Gift,
+  Stamp,
+  Target,
+  Dice6
 } from 'lucide-react';
 
 // ページネーション設定
@@ -178,6 +207,37 @@ function DashboardContent() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [userPage, setUserPage] = useState(1);
   const USERS_PER_PAGE = 10;
+
+  // ゲーミフィケーション管理用のステート（管理者のみ）
+  const [gamificationCampaigns, setGamificationCampaigns] = useState<GamificationCampaign[]>([]);
+  const [showGamificationManager, setShowGamificationManager] = useState(false);
+  const [loadingGamification, setLoadingGamification] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<GamificationCampaign | null>(null);
+  const [showCampaignForm, setShowCampaignForm] = useState(false);
+  const [campaignStats, setCampaignStats] = useState<Record<string, CampaignStats>>({});
+  const [campaignForm, setCampaignForm] = useState<{
+    title: string;
+    description: string;
+    campaign_type: CampaignType;
+    animation_type: GachaAnimationType;
+    total_stamps: number;
+    points_per_stamp: number;
+    completion_bonus: number;
+    points_per_day: number;
+    cost_per_play: number;
+  }>({
+    title: '',
+    description: '',
+    campaign_type: 'stamp_rally',
+    animation_type: 'capsule',
+    total_stamps: 10,
+    points_per_stamp: 1,
+    completion_bonus: 10,
+    points_per_day: 1,
+    cost_per_play: 10,
+  });
+  const [editingPrizes, setEditingPrizes] = useState<GachaPrize[]>([]);
+  const [showPrizeEditor, setShowPrizeEditor] = useState<string | null>(null);
 
   // KDLサブスクリプション状態
   const [kdlSubscription, setKdlSubscription] = useState<{
@@ -516,6 +576,37 @@ function DashboardContent() {
       fetchFeaturedContents();
     }
   }, [isAdmin, fetchAnnouncements]);
+
+  // 管理者の場合、ゲーミフィケーションキャンペーンを取得
+  useEffect(() => {
+    const fetchGamificationData = async () => {
+      if (!user || !isAdmin) return;
+      
+      setLoadingGamification(true);
+      try {
+        const campaigns = await getCampaigns(user.id);
+        setGamificationCampaigns(campaigns);
+        
+        // 各キャンペーンの統計を取得
+        const statsMap: Record<string, CampaignStats> = {};
+        for (const campaign of campaigns) {
+          const stats = await getCampaignStats(campaign.id);
+          if (stats) {
+            statsMap[campaign.id] = stats;
+          }
+        }
+        setCampaignStats(statsMap);
+      } catch (error) {
+        console.error('Error fetching gamification data:', error);
+      } finally {
+        setLoadingGamification(false);
+      }
+    };
+
+    if (isAdmin && showGamificationManager) {
+      fetchGamificationData();
+    }
+  }, [user, isAdmin, showGamificationManager]);
 
   // KDLサブスク状態を取得
   useEffect(() => {
@@ -1733,6 +1824,566 @@ function DashboardContent() {
             </div>
           </div>
         </div>
+
+        {/* 管理者向けゲーミフィケーション管理セクション */}
+        {isAdmin && (
+          <div className="mt-12">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-black border-l-4 border-green-600 pl-4 flex items-center gap-2">
+                <Gamepad2 size={20} className="text-green-600" /> ゲーミフィケーション管理
+                <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">ADMIN</span>
+              </h2>
+              <button
+                onClick={() => setShowGamificationManager(!showGamificationManager)}
+                className="text-sm text-green-600 hover:text-green-700"
+              >
+                {showGamificationManager ? '閉じる' : '開く'}
+              </button>
+            </div>
+
+            {showGamificationManager && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                {/* キャンペーン作成ボタン */}
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center gap-4">
+                    <span className="text-gray-600">
+                      キャンペーン数: <span className="font-bold">{gamificationCampaigns.length}</span>
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setEditingCampaign(null);
+                      setCampaignForm({
+                        title: '',
+                        description: '',
+                        campaign_type: 'stamp_rally',
+                        animation_type: 'capsule',
+                        total_stamps: 10,
+                        points_per_stamp: 1,
+                        completion_bonus: 10,
+                        points_per_day: 1,
+                        cost_per_play: 10,
+                      });
+                      setShowCampaignForm(true);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <Plus size={16} />
+                    新規キャンペーン作成
+                  </button>
+                </div>
+
+                {/* キャンペーン作成/編集フォーム */}
+                {showCampaignForm && (
+                  <div className="mb-6 p-6 bg-gray-50 rounded-xl border border-gray-200">
+                    <h3 className="font-bold text-lg mb-4">
+                      {editingCampaign ? 'キャンペーン編集' : '新規キャンペーン作成'}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">タイトル *</label>
+                        <input
+                          type="text"
+                          value={campaignForm.title}
+                          onChange={(e) => setCampaignForm({ ...campaignForm, title: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          placeholder="キャンペーン名"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">タイプ *</label>
+                        <select
+                          value={campaignForm.campaign_type}
+                          onChange={(e) => setCampaignForm({ ...campaignForm, campaign_type: e.target.value as CampaignType })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        >
+                          <option value="stamp_rally">スタンプラリー</option>
+                          <option value="login_bonus">ログインボーナス</option>
+                          <option value="gacha">ガチャ/抽選</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">説明</label>
+                        <textarea
+                          value={campaignForm.description}
+                          onChange={(e) => setCampaignForm({ ...campaignForm, description: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          rows={2}
+                          placeholder="キャンペーンの説明"
+                        />
+                      </div>
+
+                      {/* スタンプラリー設定 */}
+                      {campaignForm.campaign_type === 'stamp_rally' && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">スタンプ数</label>
+                            <input
+                              type="number"
+                              value={campaignForm.total_stamps}
+                              onChange={(e) => setCampaignForm({ ...campaignForm, total_stamps: parseInt(e.target.value) || 10 })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                              min={1}
+                              max={20}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">1スタンプあたりのポイント</label>
+                            <input
+                              type="number"
+                              value={campaignForm.points_per_stamp}
+                              onChange={(e) => setCampaignForm({ ...campaignForm, points_per_stamp: parseInt(e.target.value) || 1 })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                              min={1}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">コンプリートボーナス</label>
+                            <input
+                              type="number"
+                              value={campaignForm.completion_bonus}
+                              onChange={(e) => setCampaignForm({ ...campaignForm, completion_bonus: parseInt(e.target.value) || 0 })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                              min={0}
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      {/* ログインボーナス設定 */}
+                      {campaignForm.campaign_type === 'login_bonus' && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">1日あたりのポイント</label>
+                          <input
+                            type="number"
+                            value={campaignForm.points_per_day}
+                            onChange={(e) => setCampaignForm({ ...campaignForm, points_per_day: parseInt(e.target.value) || 1 })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                            min={1}
+                          />
+                        </div>
+                      )}
+
+                      {/* ガチャ設定 */}
+                      {campaignForm.campaign_type === 'gacha' && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">演出タイプ</label>
+                            <select
+                              value={campaignForm.animation_type}
+                              onChange={(e) => setCampaignForm({ ...campaignForm, animation_type: e.target.value as GachaAnimationType })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                            >
+                              <option value="capsule">カプセルトイ</option>
+                              <option value="roulette">ルーレット</option>
+                              <option value="omikuji">おみくじ</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">1回あたりの消費ポイント</label>
+                            <input
+                              type="number"
+                              value={campaignForm.cost_per_play}
+                              onChange={(e) => setCampaignForm({ ...campaignForm, cost_per_play: parseInt(e.target.value) || 10 })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                              min={1}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="flex justify-end gap-3 mt-6">
+                      <button
+                        onClick={() => {
+                          setShowCampaignForm(false);
+                          setEditingCampaign(null);
+                        }}
+                        className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                      >
+                        キャンセル
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (!campaignForm.title || !user) return;
+                          
+                          setLoadingGamification(true);
+                          try {
+                            let settings: StampRallySettings | LoginBonusSettings | GachaSettings;
+                            
+                            if (campaignForm.campaign_type === 'stamp_rally') {
+                              const stampIds = Array.from({ length: campaignForm.total_stamps }, () => generateStampId());
+                              settings = {
+                                total_stamps: campaignForm.total_stamps,
+                                points_per_stamp: campaignForm.points_per_stamp,
+                                completion_bonus: campaignForm.completion_bonus,
+                                stamp_ids: stampIds,
+                              };
+                            } else if (campaignForm.campaign_type === 'login_bonus') {
+                              settings = {
+                                points_per_day: campaignForm.points_per_day,
+                              };
+                            } else {
+                              settings = {
+                                cost_per_play: campaignForm.cost_per_play,
+                              };
+                            }
+
+                            if (editingCampaign) {
+                              await updateCampaign(editingCampaign.id, {
+                                title: campaignForm.title,
+                                description: campaignForm.description,
+                                animation_type: campaignForm.campaign_type === 'gacha' ? campaignForm.animation_type : undefined,
+                                settings,
+                              });
+                            } else {
+                              await createCampaign(
+                                user.id,
+                                campaignForm.title,
+                                campaignForm.campaign_type,
+                                settings,
+                                {
+                                  description: campaignForm.description,
+                                  animationType: campaignForm.campaign_type === 'gacha' ? campaignForm.animation_type : undefined,
+                                }
+                              );
+                            }
+
+                            // リロード
+                            const campaigns = await getCampaigns(user.id);
+                            setGamificationCampaigns(campaigns);
+                            setShowCampaignForm(false);
+                            setEditingCampaign(null);
+                          } catch (error) {
+                            console.error('Error saving campaign:', error);
+                          } finally {
+                            setLoadingGamification(false);
+                          }
+                        }}
+                        disabled={!campaignForm.title || loadingGamification}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {loadingGamification && <Loader2 size={16} className="animate-spin" />}
+                        {editingCampaign ? '更新' : '作成'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* キャンペーン一覧 */}
+                {loadingGamification ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+                  </div>
+                ) : gamificationCampaigns.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <Gamepad2 size={48} className="mx-auto mb-4 text-gray-300" />
+                    <p>キャンペーンがありません</p>
+                    <p className="text-sm">「新規キャンペーン作成」から作成してください</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {gamificationCampaigns.map((campaign) => {
+                      const stats = campaignStats[campaign.id];
+                      const typeIcon = campaign.campaign_type === 'stamp_rally' ? Stamp :
+                                       campaign.campaign_type === 'login_bonus' ? Gift : Dice6;
+                      const TypeIcon = typeIcon;
+
+                      return (
+                        <div
+                          key={campaign.id}
+                          className="p-4 border border-gray-200 rounded-xl hover:border-green-300 transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-start gap-4">
+                              <div className={`p-3 rounded-xl ${
+                                campaign.campaign_type === 'stamp_rally' ? 'bg-amber-100' :
+                                campaign.campaign_type === 'login_bonus' ? 'bg-blue-100' : 'bg-purple-100'
+                              }`}>
+                                <TypeIcon size={24} className={
+                                  campaign.campaign_type === 'stamp_rally' ? 'text-amber-600' :
+                                  campaign.campaign_type === 'login_bonus' ? 'text-blue-600' : 'text-purple-600'
+                                } />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-bold text-gray-900">{campaign.title}</h4>
+                                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                    campaign.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                                  }`}>
+                                    {campaign.status === 'active' ? '有効' : '無効'}
+                                  </span>
+                                  <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+                                    {CAMPAIGN_TYPE_LABELS[campaign.campaign_type]}
+                                  </span>
+                                  {campaign.animation_type && (
+                                    <span className="text-xs px-2 py-0.5 bg-purple-100 text-purple-600 rounded-full">
+                                      {ANIMATION_TYPE_LABELS[campaign.animation_type]}
+                                    </span>
+                                  )}
+                                </div>
+                                {campaign.description && (
+                                  <p className="text-sm text-gray-500 mb-2">{campaign.description}</p>
+                                )}
+                                {stats && (
+                                  <div className="flex items-center gap-4 text-sm">
+                                    <span className="text-gray-500">
+                                      参加者: <span className="font-bold text-gray-700">{stats.total_participants}</span>
+                                    </span>
+                                    <span className="text-gray-500">
+                                      配布ポイント: <span className="font-bold text-green-600">{stats.total_points_distributed}</span>
+                                    </span>
+                                    {campaign.campaign_type === 'gacha' && (
+                                      <>
+                                        <span className="text-gray-500">
+                                          抽選回数: <span className="font-bold text-purple-600">{stats.total_gacha_plays}</span>
+                                        </span>
+                                        <span className="text-gray-500">
+                                          当選数: <span className="font-bold text-amber-600">{stats.total_prizes_won}</span>
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {/* リンクコピー */}
+                              <button
+                                onClick={() => {
+                                  const baseUrl = window.location.origin;
+                                  const path = campaign.campaign_type === 'gacha' 
+                                    ? `/gacha/${campaign.id}` 
+                                    : `/stamp/${campaign.id}`;
+                                  navigator.clipboard.writeText(`${baseUrl}${path}`);
+                                  setCopiedId(campaign.id);
+                                  setTimeout(() => setCopiedId(null), 2000);
+                                }}
+                                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                                title="URLをコピー"
+                              >
+                                {copiedId === campaign.id ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
+                              </button>
+
+                              {/* 景品設定（ガチャのみ） */}
+                              {campaign.campaign_type === 'gacha' && (
+                                <button
+                                  onClick={async () => {
+                                    const prizes = await getGachaPrizes(campaign.id);
+                                    setEditingPrizes(prizes);
+                                    setShowPrizeEditor(campaign.id);
+                                  }}
+                                  className="p-2 text-gray-400 hover:text-purple-600 transition-colors"
+                                  title="景品設定"
+                                >
+                                  <Gift size={16} />
+                                </button>
+                              )}
+
+                              {/* 編集 */}
+                              <button
+                                onClick={() => {
+                                  setEditingCampaign(campaign);
+                                  const settings = campaign.settings as StampRallySettings & LoginBonusSettings & GachaSettings;
+                                  setCampaignForm({
+                                    title: campaign.title,
+                                    description: campaign.description || '',
+                                    campaign_type: campaign.campaign_type,
+                                    animation_type: campaign.animation_type || 'capsule',
+                                    total_stamps: settings.total_stamps || 10,
+                                    points_per_stamp: settings.points_per_stamp || 1,
+                                    completion_bonus: settings.completion_bonus || 0,
+                                    points_per_day: settings.points_per_day || 1,
+                                    cost_per_play: settings.cost_per_play || 10,
+                                  });
+                                  setShowCampaignForm(true);
+                                }}
+                                className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                                title="編集"
+                              >
+                                <Edit size={16} />
+                              </button>
+
+                              {/* ステータス切替 */}
+                              <button
+                                onClick={async () => {
+                                  await updateCampaign(campaign.id, {
+                                    status: campaign.status === 'active' ? 'inactive' : 'active',
+                                  });
+                                  if (user) {
+                                    const campaigns = await getCampaigns(user.id);
+                                    setGamificationCampaigns(campaigns);
+                                  }
+                                }}
+                                className={`p-2 transition-colors ${
+                                  campaign.status === 'active' 
+                                    ? 'text-green-500 hover:text-red-500' 
+                                    : 'text-gray-400 hover:text-green-500'
+                                }`}
+                                title={campaign.status === 'active' ? '無効にする' : '有効にする'}
+                              >
+                                {campaign.status === 'active' ? <CheckCircle size={16} /> : <Target size={16} />}
+                              </button>
+
+                              {/* 削除 */}
+                              <button
+                                onClick={async () => {
+                                  if (confirm('このキャンペーンを削除しますか？')) {
+                                    await deleteCampaign(campaign.id);
+                                    if (user) {
+                                      const campaigns = await getCampaigns(user.id);
+                                      setGamificationCampaigns(campaigns);
+                                    }
+                                  }
+                                }}
+                                className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                                title="削除"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+
+                              {/* プレビュー */}
+                              <button
+                                onClick={() => {
+                                  const path = campaign.campaign_type === 'gacha' 
+                                    ? `/gacha/${campaign.id}` 
+                                    : `/stamp/${campaign.id}`;
+                                  window.open(path, '_blank');
+                                }}
+                                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                                title="プレビュー"
+                              >
+                                <ExternalLink size={16} />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* 景品編集モーダル */}
+                          {showPrizeEditor === campaign.id && (
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                              <div className="flex justify-between items-center mb-4">
+                                <h5 className="font-bold text-gray-800">景品設定</h5>
+                                <button
+                                  onClick={() => setShowPrizeEditor(null)}
+                                  className="text-gray-400 hover:text-gray-600"
+                                >
+                                  <X size={20} />
+                                </button>
+                              </div>
+                              
+                              <div className="space-y-3 mb-4">
+                                {editingPrizes.map((prize, index) => (
+                                  <div key={prize.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                    <span className="text-gray-500 text-sm w-6">{index + 1}.</span>
+                                    <input
+                                      type="text"
+                                      value={prize.name}
+                                      onChange={(e) => {
+                                        const updated = [...editingPrizes];
+                                        updated[index] = { ...prize, name: e.target.value };
+                                        setEditingPrizes(updated);
+                                      }}
+                                      className="flex-1 px-2 py-1 border border-gray-200 rounded"
+                                      placeholder="景品名"
+                                    />
+                                    <input
+                                      type="number"
+                                      value={prize.probability}
+                                      onChange={(e) => {
+                                        const updated = [...editingPrizes];
+                                        updated[index] = { ...prize, probability: parseFloat(e.target.value) || 0 };
+                                        setEditingPrizes(updated);
+                                      }}
+                                      className="w-20 px-2 py-1 border border-gray-200 rounded text-right"
+                                      placeholder="確率%"
+                                      min={0}
+                                      max={100}
+                                      step={0.1}
+                                    />
+                                    <span className="text-gray-500 text-sm">%</span>
+                                    <label className="flex items-center gap-1 text-sm">
+                                      <input
+                                        type="checkbox"
+                                        checked={prize.is_winning}
+                                        onChange={(e) => {
+                                          const updated = [...editingPrizes];
+                                          updated[index] = { ...prize, is_winning: e.target.checked };
+                                          setEditingPrizes(updated);
+                                        }}
+                                        className="rounded border-gray-300"
+                                      />
+                                      当たり
+                                    </label>
+                                    <button
+                                      onClick={() => {
+                                        setEditingPrizes(editingPrizes.filter((_, i) => i !== index));
+                                      }}
+                                      className="text-red-400 hover:text-red-600"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+
+                              <div className="flex justify-between">
+                                <button
+                                  onClick={() => {
+                                    setEditingPrizes([
+                                      ...editingPrizes,
+                                      {
+                                        id: `temp_${Date.now()}`,
+                                        campaign_id: campaign.id,
+                                        name: '',
+                                        probability: 0,
+                                        is_winning: false,
+                                        won_count: 0,
+                                        display_order: editingPrizes.length,
+                                      },
+                                    ]);
+                                  }}
+                                  className="text-sm text-green-600 hover:text-green-700 flex items-center gap-1"
+                                >
+                                  <Plus size={14} /> 景品を追加
+                                </button>
+                                <button
+                                  onClick={async () => {
+                                    // 既存景品を削除して新規追加
+                                    const existingPrizes = await getGachaPrizes(campaign.id);
+                                    for (const p of existingPrizes) {
+                                      await deleteGachaPrize(p.id);
+                                    }
+                                    for (let i = 0; i < editingPrizes.length; i++) {
+                                      const p = editingPrizes[i];
+                                      if (p.name) {
+                                        await addGachaPrize(
+                                          campaign.id,
+                                          p.name,
+                                          p.probability,
+                                          p.is_winning,
+                                          { displayOrder: i }
+                                        );
+                                      }
+                                    }
+                                    setShowPrizeEditor(null);
+                                  }}
+                                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                                >
+                                  保存
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 管理者向けお知らせ管理セクション */}
         {isAdmin && (

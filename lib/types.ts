@@ -587,3 +587,156 @@ export interface SurveyResponse {
 export function generateSurveyQuestionId(): string {
   return `sq_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
+
+// -------------------------------------------
+// ゲーミフィケーション関連の型定義
+// -------------------------------------------
+
+// キャンペーンタイプ
+export type CampaignType = 'stamp_rally' | 'login_bonus' | 'gacha';
+
+// キャンペーンステータス
+export type CampaignStatus = 'active' | 'inactive';
+
+// ガチャアニメーションタイプ
+export type GachaAnimationType = 'capsule' | 'roulette' | 'omikuji';
+
+// ポイントイベントタイプ
+export type PointEventType = 'stamp_get' | 'login_bonus' | 'gacha_play' | 'gacha_win' | 'manual_adjust' | 'stamp_completion';
+
+// キャンペーン設定（JSONB）
+export interface StampRallySettings {
+  total_stamps: number;
+  points_per_stamp: number;
+  completion_bonus?: number;
+  stamp_ids?: string[]; // スタンプID一覧
+}
+
+export interface LoginBonusSettings {
+  points_per_day: number;
+}
+
+export interface GachaSettings {
+  cost_per_play: number;
+}
+
+export type CampaignSettings = StampRallySettings | LoginBonusSettings | GachaSettings;
+
+// ゲーミフィケーションキャンペーン
+export interface GamificationCampaign {
+  id: string;
+  owner_id: string | null;
+  title: string;
+  description?: string;
+  campaign_type: CampaignType;
+  status: CampaignStatus;
+  animation_type?: GachaAnimationType;
+  settings: CampaignSettings;
+  start_date?: string;
+  end_date?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// ユーザーポイント残高
+export interface UserPointBalance {
+  id: string;
+  user_id?: string | null;
+  session_id?: string | null;
+  current_points: number;
+  total_accumulated_points: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// ポイントログ
+export interface PointLog {
+  id: string;
+  user_id?: string | null;
+  session_id?: string | null;
+  campaign_id?: string | null;
+  change_amount: number;
+  event_type: PointEventType;
+  event_data?: Record<string, unknown>;
+  created_at?: string;
+}
+
+// ガチャ景品
+export interface GachaPrize {
+  id: string;
+  campaign_id: string;
+  name: string;
+  description?: string;
+  image_url?: string;
+  probability: number;
+  is_winning: boolean;
+  stock?: number | null;
+  won_count: number;
+  display_order: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// ユーザー獲得景品
+export interface UserPrize {
+  id: string;
+  user_id?: string | null;
+  session_id?: string | null;
+  prize_id: string;
+  campaign_id: string;
+  claimed: boolean;
+  claimed_at?: string;
+  created_at?: string;
+  // 結合時に含まれる景品情報
+  prize?: GachaPrize;
+}
+
+// スタンプ取得状況
+export interface UserStamp {
+  stamp_id: string;
+  stamp_index: number;
+  acquired_at: string;
+}
+
+// ガチャ抽選結果
+export interface GachaResult {
+  success: boolean;
+  error_code?: 'campaign_not_found' | 'insufficient_points' | 'no_prizes_available';
+  prize_id?: string;
+  prize_name?: string;
+  prize_image_url?: string;
+  is_winning?: boolean;
+  new_balance?: number;
+}
+
+// キャンペーン統計
+export interface CampaignStats {
+  total_participants: number;
+  total_points_distributed: number;
+  total_gacha_plays: number;
+  total_prizes_won: number;
+}
+
+// キャンペーンラベル
+export const CAMPAIGN_TYPE_LABELS: Record<CampaignType, string> = {
+  stamp_rally: 'スタンプラリー',
+  login_bonus: 'ログインボーナス',
+  gacha: 'ガチャ/抽選'
+};
+
+// アニメーションタイプラベル
+export const ANIMATION_TYPE_LABELS: Record<GachaAnimationType, string> = {
+  capsule: 'カプセルトイ',
+  roulette: 'ルーレット',
+  omikuji: 'おみくじ'
+};
+
+// 一意のキャンペーンIDを生成
+export function generateCampaignId(): string {
+  return `camp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// 一意のスタンプIDを生成
+export function generateStampId(): string {
+  return `stamp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
