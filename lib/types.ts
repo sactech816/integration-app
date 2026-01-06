@@ -517,3 +517,61 @@ export interface User {
   email?: string;
   user_metadata?: Record<string, unknown>;
 }
+
+// -------------------------------------------
+// アンケート関連の型定義
+// -------------------------------------------
+
+// 質問タイプ
+export type SurveyQuestionType = 'choice' | 'rating' | 'text';
+
+// アンケートの質問
+export interface SurveyQuestion {
+  id: string;
+  text: string;
+  type: SurveyQuestionType;
+  required?: boolean;
+  options?: string[]; // choice タイプの場合のみ
+  maxRating?: number; // rating タイプの場合のみ（デフォルト: 5）
+  placeholder?: string; // text タイプの場合のみ
+}
+
+// アンケート設定
+export interface SurveySettings {
+  showInPortal?: boolean;
+  theme?: 'light' | 'dark' | 'colorful';
+  primaryColor?: string;
+}
+
+// アンケートデータ
+export interface Survey {
+  id: number;
+  slug: string;
+  title: string;
+  description?: string;
+  questions: SurveyQuestion[];
+  creator_email: string;
+  creator_name?: string;
+  thank_you_message?: string;
+  user_id?: string | null;
+  settings?: SurveySettings;
+  show_in_portal?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// アンケート回答データ（API送信用）
+export interface SurveyResponse {
+  survey_id: number;
+  survey_title: string;
+  creator_email: string;
+  respondent_name: string;
+  respondent_email: string;
+  answers: Record<string, string | number>;
+  questions: SurveyQuestion[];
+}
+
+// 一意のアンケート質問IDを生成
+export function generateSurveyQuestionId(): string {
+  return `sq_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}

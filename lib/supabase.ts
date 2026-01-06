@@ -26,4 +26,5 @@ export const TABLES = {
   PROFILES: 'profiles',
   BUSINESS_LPS: 'business_projects',
   ANNOUNCEMENTS: 'announcements',
+  SURVEYS: 'surveys',
 } as const;
