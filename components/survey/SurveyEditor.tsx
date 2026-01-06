@@ -604,8 +604,11 @@ export default function SurveyEditor({ onBack, initialData, user, templateId }: 
               isOpen={openSections.template}
               onToggle={() => toggleSection("template")}
             >
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-600 mb-2">
                 よく使われるアンケートのテンプレートから始めることができます。
+              </p>
+              <p className="text-xs text-purple-600 bg-purple-50 px-3 py-2 rounded-lg mb-4 flex items-center gap-2">
+                📊 <span>投票モード（回答後に結果グラフを表示）は「詳細設定」で選択できます。</span>
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {(Object.entries(SURVEY_TEMPLATES) as [keyof typeof SURVEY_TEMPLATES, typeof SURVEY_TEMPLATES[keyof typeof SURVEY_TEMPLATES]][]).map(([key, template]) => {
