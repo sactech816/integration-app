@@ -344,31 +344,34 @@ export default function SurveyEditor({ onBack, initialData, user, templateId }: 
 
   const addOption = (qIndex: number) => {
     const newQuestions = [...form.questions];
-    const options = newQuestions[qIndex].options || [];
+    const question = newQuestions[qIndex];
+    const options = (question as { options?: string[] }).options || [];
     if (options.length >= 10) {
       alert("選択肢は最大10個までです");
       return;
     }
-    newQuestions[qIndex].options = [...options, `選択肢${options.length + 1}`];
+    (newQuestions[qIndex] as { options?: string[] }).options = [...options, `選択肢${options.length + 1}`];
     setForm({ ...form, questions: newQuestions });
   };
 
   const removeOption = (qIndex: number, optIndex: number) => {
     const newQuestions = [...form.questions];
-    const options = newQuestions[qIndex].options || [];
+    const question = newQuestions[qIndex];
+    const options = (question as { options?: string[] }).options || [];
     if (options.length <= 2) {
       alert("選択肢は最低2つ必要です");
       return;
     }
-    newQuestions[qIndex].options = options.filter((_, i) => i !== optIndex);
+    (newQuestions[qIndex] as { options?: string[] }).options = options.filter((_, i) => i !== optIndex);
     setForm({ ...form, questions: newQuestions });
   };
 
   const updateOption = (qIndex: number, optIndex: number, value: string) => {
     const newQuestions = [...form.questions];
-    const options = [...(newQuestions[qIndex].options || [])];
+    const question = newQuestions[qIndex];
+    const options = [...((question as { options?: string[] }).options || [])];
     options[optIndex] = value;
-    newQuestions[qIndex].options = options;
+    (newQuestions[qIndex] as { options?: string[] }).options = options;
     setForm({ ...form, questions: newQuestions });
   };
 
