@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
-  BookOpen, ArrowLeft, ArrowRight, Lightbulb, Check, Target, List, ChevronRight, FileText, Trash2, HelpCircle
+  BookOpen, ArrowLeft, ArrowRight, Lightbulb, Check, Target, List, ChevronRight, FileText, Trash2, HelpCircle, PlayCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -40,6 +40,8 @@ interface SavedDraft {
 
 export default function KindleNewPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isDemo = searchParams.get('mode') === 'demo';
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [state, setState] = useState<WizardState>({
@@ -266,6 +268,7 @@ export default function KindleNewPage() {
             setIsGenerating={setIsGenerating}
             error={error}
             setError={setError}
+            isDemo={isDemo}
           />
         );
       case 2:
@@ -281,6 +284,7 @@ export default function KindleNewPage() {
             setIsGeneratingSubtitle={setIsGeneratingSubtitle}
             subtitleError={subtitleError}
             setSubtitleError={setSubtitleError}
+            isDemo={isDemo}
           />
         );
       case 3:
@@ -294,6 +298,7 @@ export default function KindleNewPage() {
             setIsGeneratingTarget={setIsGeneratingTarget}
             targetError={targetError}
             setTargetError={setTargetError}
+            isDemo={isDemo}
           />
         );
       case 4:
@@ -305,6 +310,7 @@ export default function KindleNewPage() {
             isSaving={isSaving}
             saveError={saveError}
             onLoginRequired={() => setShowAuthModal(true)}
+            isDemo={isDemo}
           />
         );
       default:
@@ -392,6 +398,12 @@ export default function KindleNewPage() {
               <span className="font-bold text-gray-900">キンドルダイレクトライト</span>
               <span className="text-xs text-gray-500 ml-1">KDL</span>
             </div>
+            {isDemo && (
+              <div className="flex items-center gap-1 bg-blue-500 text-white px-2 py-0.5 rounded-full text-xs font-bold ml-2">
+                <PlayCircle size={12} />
+                <span>体験版</span>
+              </div>
+            )}
           </div>
           <Link 
             href="/kindle/guide" 

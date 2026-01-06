@@ -56,7 +56,8 @@ import {
   Square,
   BookOpen,
   Crown,
-  Zap
+  Zap,
+  ClipboardList
 } from 'lucide-react';
 
 // ページネーション設定
@@ -1411,6 +1412,12 @@ function DashboardContent() {
               >
                 <BookOpen size={16} /> Kindle執筆
               </button>
+              <button
+                onClick={() => navigateTo('survey/new')}
+                className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-teal-700 flex items-center gap-2 transition-colors text-sm"
+              >
+                <ClipboardList size={16} /> アンケート
+              </button>
             </div>
             <button onClick={handleLogout} className="text-gray-500 hover:text-red-500 font-bold flex items-center gap-1 text-sm">
               <LogOut size={16} /> ログアウト
@@ -1548,18 +1555,18 @@ function DashboardContent() {
                 <div className="flex items-center justify-center py-4">
                   <Loader2 className="animate-spin text-amber-500" size={20} />
                 </div>
-              ) : kdlSubscription?.hasActiveSubscription ? (
+              ) : (kdlSubscription?.hasActiveSubscription || isAdmin) ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Crown size={16} className="text-amber-500" />
                     <span className="font-bold text-amber-700">
-                      {kdlSubscription.planType === 'yearly' ? '年間プラン' : '月額プラン'}
+                      {isAdmin && !kdlSubscription?.hasActiveSubscription ? '管理者特典' : kdlSubscription?.planType === 'yearly' ? '年間プラン' : '月額プラン'}
                     </span>
                     <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold">
                       有効
                     </span>
                   </div>
-                  {kdlSubscription.nextPaymentDate && (
+                  {kdlSubscription?.nextPaymentDate && !isAdmin && (
                     <p className="text-xs text-gray-500">
                       次回更新: {new Date(kdlSubscription.nextPaymentDate).toLocaleDateString('ja-JP')}
                     </p>
