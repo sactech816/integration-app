@@ -85,3 +85,4 @@ export function autoAdjustProbabilities(prizes: GachaPrize[]): GachaPrize[] {
   return adjustedPrizes;
 }
 
+

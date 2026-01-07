@@ -98,3 +98,4 @@ export function setClientSessionId(sessionId: string): void {
   document.cookie = `${SESSION_COOKIE_NAME}=${sessionId}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
 }
 
+

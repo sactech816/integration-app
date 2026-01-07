@@ -407,7 +407,7 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
                           type="email" 
                           required
                           placeholder="your@email.com" 
-                          className="w-full border-2 border-gray-200 p-4 rounded-xl text-lg font-bold outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all text-center"
+                          className="w-full border-2 border-gray-200 p-4 rounded-xl text-lg font-bold outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all text-center text-gray-900 bg-white"
                           value={email}
                           onChange={e=>setEmail(e.target.value)}
                       />

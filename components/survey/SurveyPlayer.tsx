@@ -128,7 +128,7 @@ export default function SurveyPlayer({ survey, isPreview = false }: SurveyPlayer
                 type="text"
                 value={respondentName}
                 onChange={(e) => setRespondentName(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition placeholder:text-gray-400"
+                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition placeholder:text-gray-400 text-gray-900 bg-white"
                 placeholder="山田 太郎"
               />
             </div>
@@ -140,7 +140,7 @@ export default function SurveyPlayer({ survey, isPreview = false }: SurveyPlayer
                 type="email"
                 value={respondentEmail}
                 onChange={(e) => setRespondentEmail(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition placeholder:text-gray-400"
+                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition placeholder:text-gray-400 text-gray-900 bg-white"
                 placeholder="example@email.com"
               />
             </div>
@@ -226,7 +226,7 @@ function QuestionBlock({
         <textarea
           value={(value as string) || ""}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg p-4 h-32 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition resize-none bg-gray-50 focus:bg-white placeholder:text-gray-400"
+          className="w-full border border-gray-300 rounded-lg p-4 h-32 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition resize-none bg-gray-50 focus:bg-white placeholder:text-gray-400 text-gray-900"
           placeholder={question.placeholder || "ここに回答を入力してください..."}
         />
       )}

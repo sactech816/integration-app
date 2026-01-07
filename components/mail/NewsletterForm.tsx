@@ -49,7 +49,7 @@ export default function NewsletterForm() {
           placeholder="メールアドレス"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="p-2 border rounded focus:ring-2 focus:ring-black outline-none"
+          className="p-2 border rounded focus:ring-2 focus:ring-black outline-none text-gray-900 bg-white"
         />
         <button
           type="submit"
