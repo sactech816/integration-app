@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   List, Sparkles, Loader2, AlertCircle, Copy, Trash2, 
-  ArrowLeftRight, Maximize2, ArrowRight, ArrowLeft, Rocket, MessageSquare, LogIn, PlayCircle, Crown
+  ArrowLeftRight, Maximize2, ArrowRight, ArrowLeft, Rocket, MessageSquare, LogIn, PlayCircle, Crown, BookOpen
 } from 'lucide-react';
 import { 
   WizardState, Chapter, TOCSlot, RecommendedPattern, 
@@ -499,13 +499,20 @@ export const Step4TOC: React.FC<Step4TOCProps> = ({ state, setState, onSave, isS
                 ここから先は製品版でお楽しみいただけます。<br />
                 AIによる本格的な執筆サポートで、あなたの本を完成させましょう！
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center flex-wrap">
                 <Link
                   href="/kindle/lp#pricing"
                   className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg text-lg"
                 >
                   <Rocket size={24} />
                   製品版で続きを執筆する
+                </Link>
+                <Link
+                  href="/kindle/demo"
+                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg text-lg"
+                >
+                  <BookOpen size={24} />
+                  執筆デモ画面を見る
                 </Link>
                 <Link
                   href="/kindle/lp"
