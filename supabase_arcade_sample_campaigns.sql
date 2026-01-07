@@ -269,7 +269,21 @@ VALUES (
 );
 
 -- ============================================
--- 4. 完了メッセージ
+-- 4. ウェルカムボーナス設定を追加
+-- ============================================
+-- 初回ログイン時に100ptを付与する設定
+INSERT INTO admin_gamification_settings (setting_key, setting_value, updated_by)
+VALUES (
+  'welcome_bonus',
+  '{"enabled": true, "points": 100, "message": "ようこそゲームセンターへ！100ptをプレゼント！"}'::jsonb,
+  NULL
+)
+ON CONFLICT (setting_key) DO UPDATE SET
+  setting_value = EXCLUDED.setting_value,
+  updated_at = NOW();
+
+-- ============================================
+-- 5. 完了メッセージ
 -- ============================================
 DO $$
 BEGIN

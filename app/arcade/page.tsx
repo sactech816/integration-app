@@ -8,6 +8,7 @@ import { getPointBalance } from '@/app/actions/gamification';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
+import WelcomeBonus from '@/components/gamification/WelcomeBonus';
 import { 
   Gamepad2,
   Coins,
@@ -400,6 +401,14 @@ export default function ArcadePage() {
 
       <Footer />
       {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
+      
+      {/* ウェルカムボーナス（ログイン時に表示） */}
+      {user && (
+        <WelcomeBonus 
+          userId={user.id} 
+          onPointsEarned={(points) => setCurrentPoints(prev => prev + points)}
+        />
+      )}
     </div>
   );
 }
