@@ -19,15 +19,31 @@ BEGIN
 END $$;
 
 -- ============================================
+-- campaign_typeの制約を更新（scratch, fukubiki, slot を追加）
+-- ============================================
+DO $$
+BEGIN
+  -- 既存の制約を削除
+  ALTER TABLE gamification_campaigns DROP CONSTRAINT IF EXISTS gamification_campaigns_campaign_type_check;
+  
+  -- 新しい制約を追加
+  ALTER TABLE gamification_campaigns ADD CONSTRAINT gamification_campaigns_campaign_type_check
+    CHECK (campaign_type IN ('stamp_rally', 'login_bonus', 'gacha', 'scratch', 'fukubiki', 'slot'));
+EXCEPTION
+  WHEN others THEN
+    RAISE NOTICE 'campaign_type constraint update skipped: %', SQLERRM;
+END $$;
+
+-- ============================================
 -- 固定UUID（再現性のため）
 -- ============================================
 -- 以下のUUIDは固定値として使用します
--- arcade-sample-slot:        11111111-1111-1111-1111-111111111111
--- arcade-sample-scratch:     22222222-2222-2222-2222-222222222222
--- arcade-sample-fukubiki:    33333333-3333-3333-3333-333333333333
--- arcade-sample-gacha:       44444444-4444-4444-4444-444444444444
--- arcade-sample-login-bonus: 55555555-5555-5555-5555-555555555555
--- arcade-sample-stamp-rally: 66666666-6666-6666-6666-666666666666
+-- スロット:        11111111-1111-1111-1111-111111111111
+-- スクラッチ:      22222222-2222-2222-2222-222222222222
+-- 福引:            33333333-3333-3333-3333-333333333333
+-- ガチャ:          44444444-4444-4444-4444-444444444444
+-- ログインボーナス: 55555555-5555-5555-5555-555555555555
+-- スタンプラリー:  66666666-6666-6666-6666-666666666666
 
 -- ============================================
 -- 2. 既存のサンプルキャンペーンを削除（再実行時のため）
@@ -53,7 +69,7 @@ DELETE FROM gamification_campaigns WHERE id IN (
 -- ============================================
 -- 2.1 スロットマシン（10pt消費 → 最大200pt獲得）
 -- ============================================
-INSERT INTO gamification_campaigns (id, owner_id, title, description, campaign_type, status, animation_type, settings, is_active)
+INSERT INTO gamification_campaigns (id, owner_id, title, description, campaign_type, status, animation_type, settings)
 VALUES (
   '11111111-1111-1111-1111-111111111111',
   NULL, -- システム所有
@@ -62,8 +78,7 @@ VALUES (
   'slot',
   'active',
   'capsule',
-  '{"cost_per_play": 10}',
-  true
+  '{"cost_per_play": 10}'
 );
 
 INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, points_reward) VALUES
@@ -76,7 +91,7 @@ INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winnin
 -- ============================================
 -- 2.2 スクラッチ（10pt消費 → 最大100pt獲得）
 -- ============================================
-INSERT INTO gamification_campaigns (id, owner_id, title, description, campaign_type, status, animation_type, settings, is_active)
+INSERT INTO gamification_campaigns (id, owner_id, title, description, campaign_type, status, animation_type, settings)
 VALUES (
   '22222222-2222-2222-2222-222222222222',
   NULL,
@@ -85,8 +100,7 @@ VALUES (
   'scratch',
   'active',
   'capsule',
-  '{"cost_per_play": 10}',
-  true
+  '{"cost_per_play": 10}'
 );
 
 INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, points_reward) VALUES
@@ -99,7 +113,7 @@ INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winnin
 -- ============================================
 -- 2.3 福引（10pt消費 → 最大150pt獲得）
 -- ============================================
-INSERT INTO gamification_campaigns (id, owner_id, title, description, campaign_type, status, animation_type, settings, is_active)
+INSERT INTO gamification_campaigns (id, owner_id, title, description, campaign_type, status, animation_type, settings)
 VALUES (
   '33333333-3333-3333-3333-333333333333',
   NULL,
@@ -108,8 +122,7 @@ VALUES (
   'fukubiki',
   'active',
   'capsule',
-  '{"cost_per_play": 10}',
-  true
+  '{"cost_per_play": 10}'
 );
 
 INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, points_reward) VALUES
@@ -122,7 +135,7 @@ INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winnin
 -- ============================================
 -- 2.4 ガチャ（10pt消費 → 最大500pt獲得）
 -- ============================================
-INSERT INTO gamification_campaigns (id, owner_id, title, description, campaign_type, status, animation_type, settings, is_active)
+INSERT INTO gamification_campaigns (id, owner_id, title, description, campaign_type, status, animation_type, settings)
 VALUES (
   '44444444-4444-4444-4444-444444444444',
   NULL,
@@ -131,8 +144,7 @@ VALUES (
   'gacha',
   'active',
   'capsule',
-  '{"cost_per_play": 10}',
-  true
+  '{"cost_per_play": 10}'
 );
 
 INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, points_reward) VALUES
@@ -145,7 +157,7 @@ INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winnin
 -- ============================================
 -- 2.5 ログインボーナス（無料 → 毎日10pt）
 -- ============================================
-INSERT INTO gamification_campaigns (id, owner_id, title, description, campaign_type, status, settings, is_active)
+INSERT INTO gamification_campaigns (id, owner_id, title, description, campaign_type, status, settings)
 VALUES (
   '55555555-5555-5555-5555-555555555555',
   NULL,
@@ -153,23 +165,21 @@ VALUES (
   '毎日ログインで無料10ptゲット！毎日ログインしよう！',
   'login_bonus',
   'active',
-  '{"points_per_day": 10}',
-  true
+  '{"points_per_day": 10}'
 );
 
 -- ============================================
 -- 2.6 スタンプラリー（準備中）
 -- ============================================
-INSERT INTO gamification_campaigns (id, owner_id, title, description, campaign_type, status, settings, is_active)
+INSERT INTO gamification_campaigns (id, owner_id, title, description, campaign_type, status, settings)
 VALUES (
   '66666666-6666-6666-6666-666666666666',
   NULL,
   '🏃 スタンプラリー',
   'スタンプを集めてボーナスGET！',
   'stamp_rally',
-  'active',
-  '{"total_stamps": 10, "points_per_stamp": 5, "completion_bonus": 100}',
-  false -- 準備中のため無効
+  'inactive', -- 準備中のため無効
+  '{"total_stamps": 10, "points_per_stamp": 5, "completion_bonus": 100}'
 );
 
 -- ============================================
