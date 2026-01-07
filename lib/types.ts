@@ -726,7 +726,10 @@ export interface CampaignStats {
 export const CAMPAIGN_TYPE_LABELS: Record<CampaignType, string> = {
   stamp_rally: 'スタンプラリー',
   login_bonus: 'ログインボーナス',
-  gacha: 'ガチャ/抽選'
+  gacha: 'ガチャ/抽選',
+  scratch: 'スクラッチ',
+  fukubiki: '福引き',
+  slot: 'スロット'
 };
 
 // アニメーションタイプラベル
