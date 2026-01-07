@@ -140,6 +140,7 @@ export default function GamePreview({
       onReset: handleReset,
       cost: costPerPlay,
       canPlay,
+      prizes,
     };
 
     switch (gameType) {
