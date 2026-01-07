@@ -1125,7 +1125,7 @@ function LeadFormBlockRenderer({ block, variant }: { block: Extract<Block, { typ
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="お名前"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+              className="w-full px-4 py-3 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white shadow-sm placeholder:text-gray-500"
             />
           )}
           <input
@@ -1134,7 +1134,7 @@ function LeadFormBlockRenderer({ block, variant }: { block: Extract<Block, { typ
             onChange={(e) => setEmail(e.target.value)}
             required
             placeholder="メールアドレス"
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+            className="w-full px-4 py-3 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white shadow-sm placeholder:text-gray-500"
           />
           {block.data.showMessage && (
             <textarea
@@ -1142,7 +1142,7 @@ function LeadFormBlockRenderer({ block, variant }: { block: Extract<Block, { typ
               onChange={(e) => setMessage(e.target.value)}
               placeholder="メッセージ（任意）"
               rows={3}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none"
+              className="w-full px-4 py-3 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white shadow-sm resize-none placeholder:text-gray-500"
             />
           )}
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
@@ -1170,7 +1170,7 @@ function LeadFormBlockRenderer({ block, variant }: { block: Extract<Block, { typ
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="お名前"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+              className="w-full px-4 py-3 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white shadow-sm placeholder:text-gray-500"
             />
           )}
           <input
@@ -1179,7 +1179,7 @@ function LeadFormBlockRenderer({ block, variant }: { block: Extract<Block, { typ
             onChange={(e) => setEmail(e.target.value)}
             required
             placeholder="メールアドレス"
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+            className="w-full px-4 py-3 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white shadow-sm placeholder:text-gray-500"
           />
           {block.data.showMessage && (
             <textarea
@@ -1187,7 +1187,7 @@ function LeadFormBlockRenderer({ block, variant }: { block: Extract<Block, { typ
               onChange={(e) => setMessage(e.target.value)}
               placeholder="メッセージ（任意）"
               rows={3}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none"
+              className="w-full px-4 py-3 border-2 border-gray-400 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white shadow-sm resize-none placeholder:text-gray-500"
             />
           )}
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}

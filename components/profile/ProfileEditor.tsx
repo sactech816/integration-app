@@ -548,10 +548,25 @@ const ProfileBlockRenderer = ({ block }: { block: Block }) => {
 
     case 'lead_form':
       return (
-        <div className="rounded-2xl p-6 mb-4 text-center" style={{ background: 'rgba(255,255,255,0.9)' }}>
-          <h4 className="font-bold text-lg text-gray-900 mb-4">{block.data.title || 'お問い合わせ'}</h4>
-          <div className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl">
-            {block.data.buttonText || '送信する'}
+        <div className="rounded-2xl p-6 mb-4" style={{ background: 'rgba(255,255,255,0.9)' }}>
+          <h4 className="font-bold text-lg text-gray-900 mb-4 text-center">{block.data.title || 'お問い合わせ'}</h4>
+          <div className="space-y-3">
+            {block.data.showName && (
+              <div className="w-full px-4 py-3 border-2 border-gray-400 rounded-xl bg-white shadow-sm text-gray-500 text-left">
+                お名前
+              </div>
+            )}
+            <div className="w-full px-4 py-3 border-2 border-gray-400 rounded-xl bg-white shadow-sm text-gray-500 text-left">
+              メールアドレス
+            </div>
+            {block.data.showMessage && (
+              <div className="w-full px-4 py-3 border-2 border-gray-400 rounded-xl bg-white shadow-sm text-gray-500 text-left h-20">
+                メッセージ（任意）
+              </div>
+            )}
+            <div className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-center">
+              {block.data.buttonText || '送信する'}
+            </div>
           </div>
         </div>
       );
@@ -570,6 +585,7 @@ const ProfileBlockRenderer = ({ block }: { block: Block }) => {
 
     case 'quiz': {
       const quizData = block.data as { quizId?: string; quizSlug?: string; title?: string };
+      const hasQuizSet = quizData.quizId || quizData.quizSlug;
       return (
         <div className="glass rounded-2xl p-4 mb-4 overflow-hidden">
           {quizData.title && (
@@ -577,11 +593,20 @@ const ProfileBlockRenderer = ({ block }: { block: Block }) => {
               {quizData.title}
             </h3>
           )}
-          <div className="text-center py-8 text-gray-600">
-            <Brain size={48} className="mx-auto mb-2 opacity-50" />
-            <p>診断クイズ</p>
-            {quizData.quizId && <p className="text-sm mt-1">ID: {quizData.quizId}</p>}
-            {quizData.quizSlug && <p className="text-sm mt-1">Slug: {quizData.quizSlug}</p>}
+          <div className="text-center py-6 text-gray-600">
+            <div className="w-16 h-16 mx-auto mb-3 bg-indigo-100 rounded-full flex items-center justify-center">
+              <Brain size={32} className="text-indigo-600" />
+            </div>
+            <p className="font-bold text-gray-900 mb-1">診断クイズ</p>
+            {hasQuizSet ? (
+              <div className="text-sm text-gray-500 space-y-1">
+                {quizData.quizId && <p>ID: {quizData.quizId}</p>}
+                {quizData.quizSlug && <p>Slug: {quizData.quizSlug}</p>}
+                <p className="text-xs text-green-600 mt-2">✓ 公開時に表示されます</p>
+              </div>
+            ) : (
+              <p className="text-sm text-orange-500">クイズIDまたはSlugを設定してください</p>
+            )}
           </div>
         </div>
       );
