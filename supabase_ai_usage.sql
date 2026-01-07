@@ -71,38 +71,6 @@ CREATE POLICY "Service role can update settings" ON system_settings
   WITH CHECK (true);
 
 -- =============================================
--- 便利なビュー: 本日の使用量（ユーザー別）
--- =============================================
-
-CREATE OR REPLACE VIEW user_daily_ai_usage AS
-SELECT 
-  user_id,
-  COUNT(*) as usage_count,
-  SUM(input_tokens) as total_input_tokens,
-  SUM(output_tokens) as total_output_tokens,
-  SUM(estimated_cost_jpy) as total_cost_jpy,
-  DATE(created_at AT TIME ZONE 'Asia/Tokyo') as usage_date
-FROM ai_usage_logs
-WHERE created_at >= (CURRENT_DATE AT TIME ZONE 'Asia/Tokyo')
-GROUP BY user_id, DATE(created_at AT TIME ZONE 'Asia/Tokyo');
-
--- =============================================
--- 便利なビュー: 今月の使用量（ユーザー別）
--- =============================================
-
-CREATE OR REPLACE VIEW user_monthly_ai_usage AS
-SELECT 
-  user_id,
-  COUNT(*) as usage_count,
-  SUM(input_tokens) as total_input_tokens,
-  SUM(output_tokens) as total_output_tokens,
-  SUM(estimated_cost_jpy) as total_cost_jpy,
-  DATE_TRUNC('month', created_at AT TIME ZONE 'Asia/Tokyo') as usage_month
-FROM ai_usage_logs
-WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE AT TIME ZONE 'Asia/Tokyo')
-GROUP BY user_id, DATE_TRUNC('month', created_at AT TIME ZONE 'Asia/Tokyo');
-
--- =============================================
 -- RPC関数: ユーザーの使用量チェック
 -- =============================================
 

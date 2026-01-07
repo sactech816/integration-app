@@ -82,27 +82,6 @@ CREATE POLICY "Service role can manage payments" ON subscription_payments
   WITH CHECK (true);
 
 -- =============================================
--- 便利なビュー: アクティブサブスクリプション
--- =============================================
-
-CREATE OR REPLACE VIEW active_subscriptions AS
-SELECT 
-  s.id,
-  s.user_id,
-  s.provider,
-  s.status,
-  s.amount,
-  s.period,
-  s.plan_name,
-  s.email,
-  s.next_payment_date,
-  s.created_at,
-  au.email as user_email
-FROM subscriptions s
-LEFT JOIN auth.users au ON s.user_id = au.id
-WHERE s.status = 'active';
-
--- =============================================
 -- RPC関数: ユーザーのサブスクリプション取得
 -- =============================================
 

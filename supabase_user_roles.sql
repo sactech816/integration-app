@@ -29,23 +29,6 @@ CREATE POLICY "Service role can manage roles" ON user_roles
   WITH CHECK (true);
 
 -- =============================================
--- 便利なビュー: パートナー一覧
--- =============================================
-
-CREATE OR REPLACE VIEW partner_users AS
-SELECT 
-  ur.user_id,
-  ur.is_partner,
-  ur.partner_since,
-  ur.partner_note,
-  ur.updated_at,
-  au.email,
-  au.created_at as user_created_at
-FROM user_roles ur
-JOIN auth.users au ON ur.user_id = au.id
-WHERE ur.is_partner = true;
-
--- =============================================
 -- RPC関数: パートナーステータス確認
 -- =============================================
 
