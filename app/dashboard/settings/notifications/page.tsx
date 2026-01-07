@@ -155,6 +155,14 @@ export default function NotificationSettingsPage() {
     }));
   };
 
+  // ログアウトハンドラー
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+      setUser(null);
+    }
+  };
+
   // ローディング表示
   if (loading) {
     return (
@@ -168,7 +176,7 @@ export default function NotificationSettingsPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header user={user} onAuthClick={() => setShowAuth(true)} />
+        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
         <main className="max-w-2xl mx-auto px-4 py-12">
           <div className="text-center">
             <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -183,14 +191,14 @@ export default function NotificationSettingsPage() {
           </div>
         </main>
         <Footer />
-        <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
+        <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={user} onAuthClick={() => setShowAuth(true)} />
+      <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
       
       <main className="max-w-2xl mx-auto px-4 py-8">
         {/* ヘッダー */}
@@ -319,7 +327,7 @@ export default function NotificationSettingsPage() {
       </main>
 
       <Footer />
-      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
     </div>
   );
 }

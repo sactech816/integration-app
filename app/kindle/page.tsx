@@ -2,12 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   BookOpen, Plus, Loader2, Edit3, Trash2, Calendar, FileText, HelpCircle, Rocket,
   Crown, Sparkles, Zap, ArrowRight, X
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import AIUsageDisplay from '@/components/kindle/AIUsageDisplay';
+import { getAdminEmails } from '@/lib/constants';
 
 interface Book {
   id: string;
@@ -21,6 +23,7 @@ interface Book {
 }
 
 export default function KindleListPage() {
+  const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -31,6 +34,12 @@ export default function KindleListPage() {
   } | null>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
   const [showBanner, setShowBanner] = useState(true);
+
+  // 管理者かどうかを判定
+  const adminEmails = getAdminEmails();
+  const isAdmin = user?.email && adminEmails.some((email: string) =>
+    user.email?.toLowerCase() === email.toLowerCase()
+  );
 
   // ユーザーとサブスク状態を取得
   useEffect(() => {
@@ -63,6 +72,20 @@ export default function KindleListPage() {
 
     fetchUserAndSubscription();
   }, []);
+
+  // 未課金ユーザー（管理者以外）はLPにリダイレクト
+  useEffect(() => {
+    if (loadingSubscription) return; // まだ読み込み中
+    
+    // 管理者は常にアクセス可能
+    if (isAdmin) return;
+    
+    // 課金者はアクセス可能
+    if (subscriptionStatus?.hasActiveSubscription) return;
+    
+    // 未課金ユーザーはLPの料金セクションにリダイレクト
+    router.replace('/kindle/lp#pricing');
+  }, [loadingSubscription, isAdmin, subscriptionStatus, router]);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -141,6 +164,18 @@ export default function KindleListPage() {
       day: 'numeric',
     });
   };
+
+  // アクセス権チェック中、または未課金ユーザーがリダイレクト中はローディング表示
+  if (loadingSubscription || (!isAdmin && !subscriptionStatus?.hasActiveSubscription)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="animate-spin text-amber-600" size={40} />
+          <p className="text-gray-600 font-medium">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">

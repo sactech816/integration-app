@@ -49,7 +49,7 @@ const gameTypes = [
 export default function EmbedInfoPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={null} onAuthClick={() => {}} />
+      <Header user={null} onLogout={() => {}} setShowAuth={() => {}} />
       
       <main className="max-w-4xl mx-auto px-4 py-12">
         {/* ヘッダー */}
