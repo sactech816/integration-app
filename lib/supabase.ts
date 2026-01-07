@@ -27,4 +27,5 @@ export const TABLES = {
   BUSINESS_LPS: 'business_projects',
   ANNOUNCEMENTS: 'announcements',
   SURVEYS: 'surveys',
+  GAMIFICATION_CAMPAIGNS: 'gamification_campaigns',
 } as const;
