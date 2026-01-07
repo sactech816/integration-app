@@ -676,3 +676,4 @@ ALTER TABLE gamification_campaigns ADD CONSTRAINT gamification_campaigns_animati
     'fukubiki'    -- 福引き
   ));
 
+

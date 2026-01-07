@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/shared/Header';
@@ -15,7 +16,11 @@ import {
   Sparkles,
   Trophy,
   Star,
-  Zap
+  Zap,
+  CreditCard,
+  HelpCircle,
+  Play,
+  Gamepad2
 } from 'lucide-react';
 
 const CAMPAIGN_TYPES = [
@@ -50,7 +55,51 @@ const CAMPAIGN_TYPES = [
     bgColor: 'bg-purple-50',
     borderColor: 'border-purple-200',
     textColor: 'text-purple-700',
-    features: ['3種のアニメーション', '景品設定', '確率カスタマイズ'],
+    features: ['カプセルアニメーション', '景品設定', '確率カスタマイズ'],
+  },
+  {
+    id: 'scratch',
+    title: 'スクラッチ',
+    description: '銀色の部分を削って当たりを狙う！削る楽しさでワクワク体験。',
+    icon: CreditCard,
+    color: 'from-amber-600 to-yellow-500',
+    bgColor: 'bg-yellow-50',
+    borderColor: 'border-yellow-200',
+    textColor: 'text-yellow-700',
+    features: ['削るアニメーション', '当たり演出', 'ポイント消費'],
+  },
+  {
+    id: 'fukubiki',
+    title: '福引',
+    description: 'ガラガラ回して玉が出る！お祭り気分で盛り上がる抽選体験。',
+    icon: Sparkles,
+    color: 'from-red-500 to-pink-600',
+    bgColor: 'bg-red-50',
+    borderColor: 'border-red-200',
+    textColor: 'text-red-700',
+    features: ['ガラガラ演出', '玉の色で当たり判定', 'お祭り感'],
+  },
+  {
+    id: 'slot',
+    title: 'スロット',
+    description: '絵柄を揃えて大当たり！カジノ気分でドキドキ体験。',
+    icon: Zap,
+    color: 'from-gray-700 to-red-600',
+    bgColor: 'bg-gray-100',
+    borderColor: 'border-gray-300',
+    textColor: 'text-gray-700',
+    features: ['リール回転', '揃え演出', 'ジャックポット'],
+  },
+  {
+    id: 'point_quiz',
+    title: 'ポイントクイズ',
+    description: 'クイズに答えてポイントGET！楽しく学んでポイントも貯まる。',
+    icon: HelpCircle,
+    color: 'from-indigo-500 to-purple-600',
+    bgColor: 'bg-indigo-50',
+    borderColor: 'border-indigo-200',
+    textColor: 'text-indigo-700',
+    features: ['正解でポイント', '診断連携', '知識テスト'],
   },
 ];
 
@@ -98,23 +147,32 @@ export default function GamificationNewPage() {
           <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
             作成するタイプを選択
           </h1>
-          <p className="text-lg text-purple-200 max-w-2xl mx-auto">
-            お客様のエンゲージメントを高める3つの機能から選べます。
+          <p className="text-lg text-purple-200 max-w-2xl mx-auto mb-6">
+            お客様のエンゲージメントを高める7つの機能から選べます。
             <br className="hidden md:block" />
             すべてリアルタイムプレビューで簡単に作成できます。
           </p>
+          
+          {/* 試してみるボタン */}
+          <Link
+            href="/arcade"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 px-6 py-3 rounded-full font-bold hover:from-yellow-300 hover:to-orange-400 transition-all shadow-lg hover:shadow-xl hover:scale-105"
+          >
+            <Gamepad2 className="w-5 h-5" />
+            ゲームを試してみる
+            <Play className="w-4 h-4" />
+          </Link>
         </div>
 
         {/* タイプ選択カード */}
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {CAMPAIGN_TYPES.map((type) => {
             const Icon = type.icon;
             const isHovered = hoveredType === type.id;
 
             return (
-              <button
+              <div
                 key={type.id}
-                onClick={() => handleSelectType(type.id)}
                 onMouseEnter={() => setHoveredType(type.id)}
                 onMouseLeave={() => setHoveredType(null)}
                 className={`
@@ -126,29 +184,29 @@ export default function GamificationNewPage() {
               >
                 {/* アイコン */}
                 <div className={`
-                  w-16 h-16 rounded-2xl bg-gradient-to-br ${type.color}
+                  w-14 h-14 rounded-2xl bg-gradient-to-br ${type.color}
                   flex items-center justify-center mb-4 shadow-lg
                   group-hover:scale-110 transition-transform
                 `}>
-                  <Icon className="w-8 h-8 text-white" />
+                  <Icon className="w-7 h-7 text-white" />
                 </div>
 
                 {/* タイトル */}
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
                   {type.title}
                 </h3>
 
                 {/* 説明 */}
-                <p className="text-gray-600 text-sm mb-4">
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                   {type.description}
                 </p>
 
                 {/* 機能タグ */}
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-1.5 mb-4">
                   {type.features.map((feature, i) => (
                     <span
                       key={i}
-                      className={`text-xs px-2 py-1 rounded-full ${type.bgColor} ${type.textColor} font-medium`}
+                      className={`text-xs px-2 py-0.5 rounded-full ${type.bgColor} ${type.textColor} font-medium`}
                     >
                       {feature}
                     </span>
@@ -156,27 +214,31 @@ export default function GamificationNewPage() {
                 </div>
 
                 {/* 作成ボタン */}
-                <div className={`
-                  flex items-center gap-2 font-bold
-                  bg-gradient-to-r ${type.color} bg-clip-text text-transparent
-                `}>
+                <button
+                  onClick={() => handleSelectType(type.id)}
+                  className={`
+                    w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold
+                    bg-gradient-to-r ${type.color} text-white
+                    hover:opacity-90 transition-opacity
+                  `}
+                >
                   <span>作成する</span>
-                  <ArrowRight className={`w-4 h-4 ${type.textColor} group-hover:translate-x-1 transition-transform`} />
-                </div>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
 
                 {/* ホバー時の装飾 */}
                 <div className={`
                   absolute inset-0 rounded-2xl bg-gradient-to-br ${type.color} opacity-0
                   group-hover:opacity-5 transition-opacity pointer-events-none
                 `} />
-              </button>
+              </div>
             );
           })}
         </div>
 
         {/* 補足情報 */}
         <div className="mt-16 text-center">
-          <div className="inline-flex items-center gap-6 text-white/60 text-sm">
+          <div className="inline-flex flex-wrap items-center justify-center gap-6 text-white/60 text-sm">
             <div className="flex items-center gap-2">
               <Trophy className="w-4 h-4" />
               <span>ポイント連携可能</span>
@@ -189,6 +251,10 @@ export default function GamificationNewPage() {
               <Zap className="w-4 h-4" />
               <span>すぐに公開可能</span>
             </div>
+            <div className="flex items-center gap-2">
+              <Gamepad2 className="w-4 h-4" />
+              <span>7種類のゲーム</span>
+            </div>
           </div>
         </div>
       </main>
@@ -198,4 +264,3 @@ export default function GamificationNewPage() {
     </div>
   );
 }
-
