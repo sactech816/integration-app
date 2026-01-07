@@ -59,6 +59,7 @@ interface ChapterSidebarProps {
   onBatchWrite?: (chapterId: string) => void;
   batchProgress?: BatchWriteProgress;
   structureHandlers?: StructureHandlers;
+  readOnly?: boolean; // 閲覧専用モード（デモ用）
 }
 
 // ドロップダウンメニューコンポーネント
@@ -205,6 +206,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
   onBatchWrite,
   batchProgress,
   structureHandlers,
+  readOnly = false,
 }) => {
   // 初期状態: アクティブな節を含む章を展開
   const getInitialExpandedChapters = () => {

@@ -14,6 +14,7 @@ const PUBLIC_PATHS = [
   '/kindle/agency',
   '/kindle/guide',
   '/kindle/publish-guide',
+  '/kindle/demo', // デモページ（閲覧専用）
 ];
 
 // デモモード用のパス（クエリパラメータ付き）

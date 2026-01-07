@@ -787,18 +787,44 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-white">
+      {/* デモモードバナー */}
+      {readOnly && (
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <PlayCircle size={20} />
+            <div>
+              <span className="font-bold">デモモード（閲覧専用）</span>
+              <span className="text-sm opacity-90 ml-2">製品版では編集・AI執筆・Word出力などが可能です</span>
+            </div>
+          </div>
+          <Link
+            href="/kindle/lp#pricing"
+            className="flex items-center gap-2 bg-white text-indigo-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-50 transition-colors"
+          >
+            <Crown size={16} />
+            <span>製品版を使う</span>
+          </Link>
+        </div>
+      )}
+
       {/* ヘッダー */}
       <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md">
         <div className="flex items-center gap-4">
           <Link
-            href="/kindle"
+            href={readOnly ? "/kindle/lp" : "/kindle"}
             className="flex items-center gap-1 text-white/90 hover:text-white text-sm transition-colors"
           >
             <ArrowLeft size={16} />
-            <span>一覧に戻る</span>
+            <span>{readOnly ? "LPに戻る" : "一覧に戻る"}</span>
           </Link>
           <div className="text-white/30">|</div>
           <h1 className="font-bold text-sm truncate max-w-xs">{book.title}</h1>
+          {readOnly && (
+            <div className="flex items-center gap-1 bg-blue-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+              <PlayCircle size={12} />
+              <span>デモ</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Link
@@ -821,71 +847,75 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             <span className="lg:hidden">🚀</span>
           </Link>
           
-          <button
-            onClick={handleGenerateKdpInfo}
-            disabled={isGeneratingKdp}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-              isGeneratingKdp
-                ? 'bg-white/20 cursor-not-allowed'
-                : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
-            }`}
-          >
-            {isGeneratingKdp ? (
-              <>
-                <Loader2 className="animate-spin" size={16} />
-                <span>生成中...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles size={16} />
-                <span>✨ KDP情報生成</span>
-              </>
-            )}
-          </button>
-          
-          <button
-            onClick={handleDownloadDocx}
-            disabled={isDownloading}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-              isDownloading
-                ? 'bg-white/20 cursor-not-allowed'
-                : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
-            }`}
-          >
-            {isDownloading ? (
-              <>
-                <Loader2 className="animate-spin" size={16} />
-                <span>生成中...</span>
-              </>
-            ) : (
-              <>
-                <FileDown size={16} />
-                <span>📥 Word出力</span>
-              </>
-            )}
-          </button>
-          
-          <button
-            onClick={handleSaveAndBack}
-            disabled={isSavingAndBack}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-              isSavingAndBack
-                ? 'bg-green-400 cursor-not-allowed'
-                : 'bg-white text-amber-600 hover:bg-amber-50 active:bg-amber-100'
-            }`}
-          >
-            {isSavingAndBack ? (
-              <>
-                <Check size={16} className="text-white" />
-                <span className="text-white">保存しました</span>
-              </>
-            ) : (
-              <>
-                <Save size={16} />
-                <span>💾 保存して戻る</span>
-              </>
-            )}
-          </button>
+          {!readOnly && (
+            <>
+              <button
+                onClick={handleGenerateKdpInfo}
+                disabled={isGeneratingKdp}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                  isGeneratingKdp
+                    ? 'bg-white/20 cursor-not-allowed'
+                    : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
+                }`}
+              >
+                {isGeneratingKdp ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                    <span>生成中...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={16} />
+                    <span>✨ KDP情報生成</span>
+                  </>
+                )}
+              </button>
+              
+              <button
+                onClick={handleDownloadDocx}
+                disabled={isDownloading}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                  isDownloading
+                    ? 'bg-white/20 cursor-not-allowed'
+                    : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
+                }`}
+              >
+                {isDownloading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                    <span>生成中...</span>
+                  </>
+                ) : (
+                  <>
+                    <FileDown size={16} />
+                    <span>📥 Word出力</span>
+                  </>
+                )}
+              </button>
+              
+              <button
+                onClick={handleSaveAndBack}
+                disabled={isSavingAndBack}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                  isSavingAndBack
+                    ? 'bg-green-400 cursor-not-allowed'
+                    : 'bg-white text-amber-600 hover:bg-amber-50 active:bg-amber-100'
+                }`}
+              >
+                {isSavingAndBack ? (
+                  <>
+                    <Check size={16} className="text-white" />
+                    <span className="text-white">保存しました</span>
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} />
+                    <span>💾 保存して戻る</span>
+                  </>
+                )}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -899,9 +929,10 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             onSectionClick={handleSectionClick}
             bookTitle={book.title}
             bookSubtitle={book.subtitle}
-            onBatchWrite={handleBatchWrite}
+            onBatchWrite={readOnly ? undefined : handleBatchWrite}
             batchProgress={batchProgress}
-            structureHandlers={structureHandlers}
+            structureHandlers={readOnly ? undefined : structureHandlers}
+            readOnly={readOnly}
           />
         </div>
 
@@ -918,6 +949,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             targetProfile={targetProfile}
             tocPatternId={tocPatternId}
             onSave={handleSave}
+            readOnly={readOnly}
           />
         </div>
       </div>

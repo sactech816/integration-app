@@ -155,6 +155,15 @@ export default function GamificationSettingsPage() {
     }));
   };
 
+  // ログアウトハンドラー
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+      setUser(null);
+      setIsAdmin(false);
+    }
+  };
+
   // ローディング表示
   if (loading) {
     return (
@@ -168,7 +177,7 @@ export default function GamificationSettingsPage() {
   if (!user || !isAdmin) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header user={user} onAuthClick={() => setShowAuth(true)} />
+        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
         <main className="max-w-4xl mx-auto px-4 py-12">
           <div className="text-center">
             <ShieldCheck className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -184,14 +193,14 @@ export default function GamificationSettingsPage() {
           </div>
         </main>
         <Footer />
-        <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
+        <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={user} onAuthClick={() => setShowAuth(true)} />
+      <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
       
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* ヘッダー */}
@@ -382,7 +391,7 @@ export default function GamificationSettingsPage() {
       </main>
 
       <Footer />
-      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
     </div>
   );
 }
