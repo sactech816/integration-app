@@ -123,13 +123,15 @@ const linkStyleOptions = [
   { value: 'line', label: 'LINE緑' },
 ];
 
-// ランダム画像URL生成
+// ランダム画像URL生成（Unsplash）
 const getRandomImageUrl = (category: string = 'business') => {
   const categories: Record<string, string[]> = {
     portrait: [
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=faces',
-      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=faces',
       'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop&crop=faces',
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=faces',
+      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=faces',
+      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=faces',
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=faces',
     ],
     business: [
       'https://images.unsplash.com/photo-1664575602276-acd073f104c1?auto=format&fit=crop&w=800&q=80',
@@ -137,8 +139,33 @@ const getRandomImageUrl = (category: string = 'business') => {
       'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1606857521015-7f9fcf423740?auto=format&fit=crop&w=800&q=80',
     ],
+    general: [
+      'https://images.unsplash.com/photo-1664575602276-acd073f104c1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1606857521015-7f9fcf423740?auto=format&fit=crop&w=800&q=80',
+    ],
+    book: [
+      'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=600&fit=crop',
+    ],
+    gallery: [
+      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1433086966358-54859d0ed716?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1426604966848-d7adac402bff?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=800&q=80',
+    ],
   };
-  const urls = categories[category] || categories.business;
+  const urls = categories[category] || categories.general;
   return urls[Math.floor(Math.random() * urls.length)];
 };
 
@@ -146,8 +173,10 @@ const getRandomImageUrl = (category: string = 'business') => {
 const testimonialPresetImages = [
   { label: '男性A', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces' },
   { label: '男性B', url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces' },
+  { label: '男性C', url: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&crop=faces' },
   { label: '女性A', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces' },
   { label: '女性B', url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=faces' },
+  { label: '女性C', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces' },
 ];
 
 // アイコンプリセット（カテゴリ別）
@@ -751,7 +780,21 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   // ランダム画像設定
   const handleRandomImage = (blockId: string, field: string, category: string = 'business') => {
     const randomUrl = getRandomImageUrl(category);
-    updateBlock(blockId, { [field]: randomUrl });
+    
+    // testimonialの場合は特別処理（field形式: testimonial-0, testimonial-1...）
+    if (field.startsWith('testimonial-')) {
+      const index = parseInt(field.split('-')[1]);
+      const block = lp.content?.find(b => b.id === blockId);
+      if (block && block.type === 'testimonial') {
+        const newItems = [...(block.data.items || [])];
+        if (newItems[index]) {
+          newItems[index] = { ...newItems[index], imageUrl: randomUrl };
+          updateBlock(blockId, { items: newItems });
+        }
+      }
+    } else {
+      updateBlock(blockId, { [field]: randomUrl });
+    }
   };
 
   const createDefaultBlock = (type: string): Block => {
@@ -935,7 +978,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   const renderBlockEditor = (block: Block) => {
     switch (block.type) {
       case 'header':
-    return (
+        return (
           <div className="space-y-4">
             <div>
               <label className="text-sm font-bold text-gray-900 block mb-2">プロフィール画像</label>
@@ -949,15 +992,23 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                 />
                 <label className="px-3 py-2 bg-amber-50 text-amber-700 rounded-lg font-bold hover:bg-amber-100 cursor-pointer flex items-center gap-1 text-sm">
                   {isUploading ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
+                  <span className="hidden sm:inline">UP</span>
                   <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, block.id, 'avatar')} disabled={isUploading} />
                 </label>
-                <button onClick={() => handleRandomImage(block.id, 'avatar', 'portrait')} className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">
+                <button
+                  onClick={() => handleRandomImage(block.id, 'avatar', 'portrait')}
+                  className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200 flex items-center gap-1 text-sm"
+                >
                   <Shuffle size={14} />
+                  <span className="hidden sm:inline">自動</span>
                 </button>
-          </div>
+              </div>
+              {block.data.avatar && (
+                <img src={block.data.avatar} alt="Preview" className="w-16 h-16 rounded-full object-cover mt-2" />
+              )}
             </div>
             <Input label="名前" val={block.data.name || ''} onChange={(v) => updateBlock(block.id, { name: v })} ph="山田 太郎" />
-            <Input label="肩書き" val={block.data.title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="代表取締役 / コンサルタント" />
+            <Input label="肩書き・キャッチコピー" val={block.data.title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="代表取締役 / コンサルタント" />
           </div>
         );
 
@@ -974,8 +1025,22 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
               <label className="text-sm font-bold text-gray-900 block mb-2">背景画像（任意）</label>
               <div className="flex gap-2">
                 <input type="text" value={block.data.backgroundImage || ''} onChange={(e) => updateBlock(block.id, { backgroundImage: e.target.value })} placeholder="画像URL" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400" />
-                <button onClick={() => handleRandomImage(block.id, 'backgroundImage', 'business')} className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"><Shuffle size={14} /></button>
+                <label className="px-3 py-2 bg-amber-50 text-amber-700 rounded-lg font-bold hover:bg-amber-100 cursor-pointer flex items-center gap-1 text-sm">
+                  {isUploading ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
+                  <span className="hidden sm:inline">UP</span>
+                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, block.id, 'backgroundImage')} disabled={isUploading} />
+                </label>
+                <button
+                  onClick={() => handleRandomImage(block.id, 'backgroundImage', 'business')}
+                  className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200 flex items-center gap-1 text-sm"
+                >
+                  <Shuffle size={14} />
+                  <span className="hidden sm:inline">自動</span>
+                </button>
               </div>
+              {block.data.backgroundImage && (
+                <img src={block.data.backgroundImage} alt="Preview" className="w-full h-24 object-cover rounded-lg mt-2" />
+              )}
             </div>
             <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
               <input type="checkbox" id={`fullwidth-${block.id}`} checked={block.data.isFullWidth || false} onChange={(e) => updateBlock(block.id, { isFullWidth: e.target.checked })} className="w-4 h-4 text-amber-600" />
@@ -997,8 +1062,22 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
               <label className="text-sm font-bold text-gray-900 block mb-2">背景画像（任意）</label>
               <div className="flex gap-2">
                 <input type="text" value={block.data.backgroundImage || ''} onChange={(e) => updateBlock(block.id, { backgroundImage: e.target.value })} placeholder="画像URL" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400" />
-                <button onClick={() => handleRandomImage(block.id, 'backgroundImage', 'business')} className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"><Shuffle size={14} /></button>
+                <label className="px-3 py-2 bg-amber-50 text-amber-700 rounded-lg font-bold hover:bg-amber-100 cursor-pointer flex items-center gap-1 text-sm">
+                  {isUploading ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
+                  <span className="hidden sm:inline">UP</span>
+                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, block.id, 'backgroundImage')} disabled={isUploading} />
+                </label>
+                <button
+                  onClick={() => handleRandomImage(block.id, 'backgroundImage', 'business')}
+                  className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200 flex items-center gap-1 text-sm"
+                >
+                  <Shuffle size={14} />
+                  <span className="hidden sm:inline">自動</span>
+                </button>
               </div>
+              {block.data.backgroundImage && (
+                <img src={block.data.backgroundImage} alt="Preview" className="w-full h-24 object-cover rounded-lg mt-2" />
+              )}
             </div>
             <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">※ このブロックは常に全幅で表示されます</p>
           </div>
@@ -1095,8 +1174,22 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
               <label className="text-sm font-bold text-gray-900 block mb-2">画像</label>
               <div className="flex gap-2">
                 <input type="text" value={block.data.imageUrl || ''} onChange={(e) => updateBlock(block.id, { imageUrl: e.target.value })} placeholder="画像URL" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400" />
-                <button onClick={() => handleRandomImage(block.id, 'imageUrl', 'business')} className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"><Shuffle size={14} /></button>
+                <label className="px-3 py-2 bg-amber-50 text-amber-700 rounded-lg font-bold hover:bg-amber-100 cursor-pointer flex items-center gap-1 text-sm">
+                  {isUploading ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
+                  <span className="hidden sm:inline">UP</span>
+                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, block.id, 'imageUrl')} disabled={isUploading} />
+                </label>
+                <button
+                  onClick={() => handleRandomImage(block.id, 'imageUrl', 'business')}
+                  className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200 flex items-center gap-1 text-sm"
+                >
+                  <Shuffle size={14} />
+                  <span className="hidden sm:inline">自動</span>
+                </button>
               </div>
+              {block.data.imageUrl && (
+                <img src={block.data.imageUrl} alt="Preview" className="w-full h-32 object-cover rounded-lg mt-2" />
+              )}
             </div>
             <Input label="タイトル" val={block.data.title || ''} onChange={(v) => updateBlock(block.id, { title: v })} />
             <Textarea label="テキスト" val={block.data.text || ''} onChange={(v) => updateBlock(block.id, { text: v })} rows={3} />
@@ -1124,15 +1217,31 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             <div>
               <label className="text-sm font-bold text-gray-900 block mb-2">画像</label>
               <div className="flex gap-2">
-                <input type="text" value={block.data.url || ''} onChange={(e) => updateBlock(block.id, { url: e.target.value })} placeholder="画像URL" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400" />
-                <label className="px-3 py-2 bg-amber-50 text-amber-700 rounded-lg font-bold hover:bg-amber-100 cursor-pointer flex items-center">
-                  <UploadCloud size={14} />
-                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, block.id, 'url')} />
+                <input
+                  type="text"
+                  value={block.data.url || ''}
+                  onChange={(e) => updateBlock(block.id, { url: e.target.value })}
+                  placeholder="画像URL"
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400"
+                />
+                <label className="px-3 py-2 bg-amber-50 text-amber-700 rounded-lg font-bold hover:bg-amber-100 cursor-pointer flex items-center gap-1 text-sm">
+                  {isUploading ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
+                  <span className="hidden sm:inline">UP</span>
+                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, block.id, 'url')} disabled={isUploading} />
                 </label>
-                <button onClick={() => handleRandomImage(block.id, 'url', 'business')} className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"><Shuffle size={14} /></button>
+                <button
+                  onClick={() => handleRandomImage(block.id, 'url', 'general')}
+                  className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200 flex items-center gap-1 text-sm"
+                >
+                  <Shuffle size={14} />
+                  <span className="hidden sm:inline">自動</span>
+                </button>
               </div>
+              {block.data.url && (
+                <img src={block.data.url} alt="Preview" className="w-full h-32 object-cover rounded-lg mt-2" />
+              )}
             </div>
-            <Input label="キャプション（任意）" val={block.data.caption || ''} onChange={(v) => updateBlock(block.id, { caption: v })} />
+            <Input label="キャプション（任意）" val={block.data.caption || ''} onChange={(v) => updateBlock(block.id, { caption: v })} ph="写真の説明" />
           </div>
         );
 
@@ -1144,20 +1253,67 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
           <div className="space-y-4">
             {block.data.links?.map((link: { label: string; url: string; style?: string }, i: number) => (
               <div key={i} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newLinks = block.data.links.filter((_: unknown, idx: number) => idx !== i); updateBlock(block.id, { links: newLinks }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
-                <Input label="ラベル" val={link.label} onChange={(v) => { const newLinks = [...block.data.links]; newLinks[i].label = v; updateBlock(block.id, { links: newLinks }); }} ph="ホームページ" />
-                <Input label="URL" val={link.url} onChange={(v) => { const newLinks = [...block.data.links]; newLinks[i].url = v; updateBlock(block.id, { links: newLinks }); }} ph="https://..." />
-                <div className="mt-2">
+                <button
+                  onClick={() => {
+                    const newLinks = block.data.links.filter((_: unknown, idx: number) => idx !== i);
+                    updateBlock(block.id, { links: newLinks });
+                  }}
+                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                >
+                  <Trash2 size={16} />
+                </button>
+                <Input label="ラベル" val={link.label} onChange={(v) => {
+                  const newLinks = [...block.data.links];
+                  newLinks[i].label = v;
+                  updateBlock(block.id, { links: newLinks });
+                }} ph="ホームページ" />
+                <Input label="URL" val={link.url} onChange={(v) => {
+                  const newLinks = [...block.data.links];
+                  newLinks[i].url = v;
+                  updateBlock(block.id, { links: newLinks });
+                }} ph="https://..." />
+                
+                {/* スタイル選択 */}
+                <div className="mt-3">
                   <label className="text-xs font-bold text-gray-600 block mb-2">ボタンスタイル</label>
                   <div className="flex flex-wrap gap-2">
-                    {linkStyleOptions.map((opt) => (
-                      <button key={opt.value} onClick={() => { const newLinks = [...block.data.links]; newLinks[i].style = opt.value; updateBlock(block.id, { links: newLinks }); }} className={`px-3 py-1.5 rounded-lg text-xs font-medium border-2 ${(link.style || '') === opt.value ? 'ring-2 ring-amber-400 border-amber-500' : 'border-gray-200'}`}>{opt.label}</button>
-            ))}
-          </div>
+                    {linkStyleOptions.map((option) => {
+                      const isSelected = (link.style || '') === option.value;
+                      const stylePreview: Record<string, string> = {
+                        '': 'bg-white border-gray-200',
+                        'orange': 'bg-orange-500 text-white',
+                        'blue': 'bg-blue-500 text-white',
+                        'green': 'bg-green-500 text-white',
+                        'purple': 'bg-purple-500 text-white',
+                        'line': 'bg-[#06C755] text-white',
+                      };
+                      return (
+                        <button
+                          key={option.value}
+                          onClick={() => {
+                            const newLinks = [...block.data.links];
+                            newLinks[i].style = option.value;
+                            updateBlock(block.id, { links: newLinks });
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium border-2 transition-all ${stylePreview[option.value]} ${isSelected ? 'ring-2 ring-amber-400 border-amber-500' : 'border-transparent'}`}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             ))}
-            <button onClick={() => updateBlock(block.id, { links: [...(block.data.links || []), { label: '', url: '', style: '' }] })} className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-amber-500 hover:text-amber-600 font-medium">+ リンクを追加</button>
+            <button
+              onClick={() => {
+                const newLinks = [...(block.data.links || []), { label: '', url: '', style: '' }];
+                updateBlock(block.id, { links: newLinks });
+              }}
+              className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-amber-500 hover:text-amber-600 font-medium"
+            >
+              + リンクを追加
+            </button>
           </div>
         );
 
@@ -1170,23 +1326,119 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
             {block.data.items?.map((item: { id: string; name: string; role: string; comment: string; imageUrl?: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
+                <button
+                  onClick={() => {
+                    if ((block.data.items?.length || 0) <= 1) return alert('最低1つのお客様の声が必要です');
+                    const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id);
+                    updateBlock(block.id, { items: newItems });
+                  }}
+                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                >
+                  <Trash2 size={16} />
+                </button>
+                <div className="font-bold text-amber-600 mb-2 text-sm">お客様 {i + 1}</div>
+                
+                {/* 画像プレビュー */}
+                {item.imageUrl && (
+                  <div className="mb-3 flex justify-center">
+                    <img src={item.imageUrl} alt="" className="w-16 h-16 rounded-full object-cover border-2 border-gray-200" />
+                  </div>
+                )}
+                
+                {/* プリセット画像選択 */}
                 <div className="mb-3">
                   <label className="text-xs font-bold text-gray-600 block mb-2">プロフィール画像</label>
-                  <div className="flex gap-2 flex-wrap items-center">
+                  <div className="flex gap-2 flex-wrap items-center mb-2">
                     {testimonialPresetImages.map((preset) => (
-                      <button key={preset.label} onClick={() => { const newItems = [...block.data.items]; newItems[i].imageUrl = preset.url; updateBlock(block.id, { items: newItems }); }} className={`p-0.5 rounded-full border-2 ${item.imageUrl === preset.url ? 'border-amber-500' : 'border-gray-200'}`}>
+                      <button
+                        key={preset.label}
+                        onClick={() => {
+                          const newItems = [...block.data.items];
+                          newItems[i].imageUrl = preset.url;
+                          updateBlock(block.id, { items: newItems });
+                        }}
+                        className={`p-0.5 rounded-full border-2 transition-all ${item.imageUrl === preset.url ? 'border-amber-500' : 'border-gray-200 hover:border-amber-300'}`}
+                        title={preset.label}
+                      >
                         <img src={preset.url} alt={preset.label} className="w-8 h-8 rounded-full object-cover" />
                       </button>
                     ))}
+                    <button
+                      onClick={() => handleRandomImage(block.id, `testimonial-${i}`, 'portrait')}
+                      className="w-9 h-9 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-amber-400 transition-colors"
+                      title="ランダム"
+                    >
+                      <Shuffle size={14} className="text-gray-400" />
+                    </button>
                   </div>
+                  {/* アップロードボタン */}
+                  <label className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded-lg cursor-pointer transition-colors">
+                    <UploadCloud size={14} />
+                    <span>アップロード</span>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > MAX_IMAGE_SIZE) {
+                          alert(`画像サイズが大きすぎます。最大2MBまで対応しています。`);
+                          return;
+                        }
+                        // ファイルをアップロード
+                        const uploadTestimonialImage = async () => {
+                          if (!supabase) return;
+                          setIsUploading(true);
+                          try {
+                            const fileExt = file.name.split('.').pop();
+                            const fileName = `testimonial_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                            const filePath = `${user?.id || 'anonymous'}/${fileName}`;
+                            const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
+                            if (uploadError) throw uploadError;
+                            const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
+                            const newItems = [...block.data.items];
+                            newItems[i].imageUrl = data.publicUrl;
+                            updateBlock(block.id, { items: newItems });
+                          } catch (err) {
+                            alert('アップロードに失敗しました');
+                          } finally {
+                            setIsUploading(false);
+                          }
+                        };
+                        uploadTestimonialImage();
+                      }}
+                    />
+                  </label>
+                </div>
+                
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={item.imageUrl || ''}
+                    onChange={(e) => {
+                      const newItems = [...block.data.items];
+                      newItems[i].imageUrl = e.target.value;
+                      updateBlock(block.id, { items: newItems });
+                    }}
+                    placeholder="または画像URLを入力"
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 text-sm"
+                  />
                 </div>
                 <Input label="お名前" val={item.name} onChange={(v) => { const newItems = [...block.data.items]; newItems[i].name = v; updateBlock(block.id, { items: newItems }); }} ph="田中 花子" />
                 <Input label="肩書き" val={item.role} onChange={(v) => { const newItems = [...block.data.items]; newItems[i].role = v; updateBlock(block.id, { items: newItems }); }} ph="30代・会社員" />
                 <Textarea label="コメント" val={item.comment} onChange={(v) => { const newItems = [...block.data.items]; newItems[i].comment = v; updateBlock(block.id, { items: newItems }); }} />
               </div>
             ))}
-            <button onClick={() => updateBlock(block.id, { items: [...(block.data.items || []), { id: generateBlockId(), name: '', role: '', comment: '', imageUrl: '' }] })} className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-amber-500 hover:text-amber-600 font-medium">+ お客様の声を追加</button>
+            <button
+              onClick={() => {
+                const newItems = [...(block.data.items || []), { id: generateBlockId(), name: '', role: '', comment: '', imageUrl: '' }];
+                updateBlock(block.id, { items: newItems });
+              }}
+              className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-amber-500 hover:text-amber-600 font-medium"
+            >
+              + お客様の声を追加
+            </button>
           </div>
         );
 
@@ -1232,6 +1484,51 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
           <div className="space-y-4">
             <Input label="タイトル" val={block.data.title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="無料相談・お問い合わせ" />
             <Input label="ボタンテキスト" val={block.data.buttonText || ''} onChange={(v) => updateBlock(block.id, { buttonText: v })} ph="送信する" />
+            
+            {/* メール送信設定 */}
+            <div className="border-t border-gray-200 pt-4 mt-4">
+              <div className="flex items-center gap-2 mb-4">
+                <input
+                  type="checkbox"
+                  checked={block.data.sendEmail || false}
+                  onChange={(e) => updateBlock(block.id, { sendEmail: e.target.checked })}
+                  className="w-4 h-4"
+                />
+                <label className="text-sm font-bold text-gray-700">メール送信を有効化</label>
+              </div>
+              
+              {block.data.sendEmail && (
+                <div className="space-y-4 pl-6 border-l-2 border-amber-200">
+                  <Input 
+                    label="管理者通知先メール" 
+                    val={block.data.adminEmail || ''} 
+                    onChange={(v) => updateBlock(block.id, { adminEmail: v })} 
+                    ph="admin@example.com（空欄で環境変数を使用）" 
+                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={block.data.showName || false}
+                      onChange={(e) => updateBlock(block.id, { showName: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label className="text-xs text-gray-600">名前入力欄を表示</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={block.data.showMessage || false}
+                      onChange={(e) => updateBlock(block.id, { showMessage: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label className="text-xs text-gray-600">メッセージ入力欄を表示</label>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    ✉️ 登録時にユーザーへ自動返信メール、管理者へ通知メールが送信されます
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         );
 
@@ -1242,6 +1539,42 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             <Textarea label="説明" val={block.data.description || ''} onChange={(v) => updateBlock(block.id, { description: v })} />
             <Input label="LINE URL" val={block.data.url || ''} onChange={(v) => updateBlock(block.id, { url: v })} ph="https://lin.ee/..." />
             <Input label="ボタンテキスト" val={block.data.buttonText || ''} onChange={(v) => updateBlock(block.id, { buttonText: v })} ph="LINEで登録する" />
+          </div>
+        );
+
+      case 'kindle':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">書籍画像</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={block.data.imageUrl || ''}
+                  onChange={(e) => updateBlock(block.id, { imageUrl: e.target.value })}
+                  placeholder="画像URL"
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400"
+                />
+                <label className="px-3 py-2 bg-amber-50 text-amber-700 rounded-lg font-bold hover:bg-amber-100 cursor-pointer flex items-center gap-1 text-sm">
+                  {isUploading ? <Loader2 size={14} className="animate-spin" /> : <UploadCloud size={14} />}
+                  <span className="hidden sm:inline">UP</span>
+                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, block.id, 'imageUrl')} disabled={isUploading} />
+                </label>
+                <button
+                  onClick={() => handleRandomImage(block.id, 'imageUrl', 'book')}
+                  className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200 flex items-center gap-1 text-sm"
+                >
+                  <Shuffle size={14} />
+                  <span className="hidden sm:inline">自動</span>
+                </button>
+              </div>
+              {block.data.imageUrl && (
+                <img src={block.data.imageUrl} alt="Preview" className="w-24 h-36 object-cover rounded-lg mt-2" />
+              )}
+            </div>
+            <Input label="書籍タイトル" val={block.data.title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="書籍タイトル" />
+            <Textarea label="説明" val={block.data.description || ''} onChange={(v) => updateBlock(block.id, { description: v })} />
+            <Input label="ASIN（Amazon商品コード）" val={block.data.asin || ''} onChange={(v) => updateBlock(block.id, { asin: v })} ph="B08XXXXXXX" />
           </div>
         );
 
@@ -1400,14 +1733,15 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                   <label className="text-sm font-bold text-gray-900 block mb-2">事例画像</label>
                   <div className="flex gap-2">
                     <input type="text" value={item.imageUrl || ''} onChange={(e) => { const newItems = [...block.data.items]; newItems[i].imageUrl = e.target.value; updateBlock(block.id, { items: newItems }); }} placeholder="画像URL" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400" />
-                    <label className="px-3 py-2 bg-amber-50 text-amber-700 rounded-lg font-bold hover:bg-amber-100 cursor-pointer flex items-center">
+                    <label className="px-3 py-2 bg-amber-50 text-amber-700 rounded-lg font-bold hover:bg-amber-100 cursor-pointer flex items-center gap-1 text-sm">
                       <UploadCloud size={14} />
+                      <span className="hidden sm:inline">UP</span>
                       <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file || !supabase) return;
                         if (file.size > MAX_IMAGE_SIZE) { alert('画像サイズが大きすぎます。最大2MBまで対応しています。'); return; }
                         const fileExt = file.name.split('.').pop();
-                        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                        const fileName = `casestudy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
                         const filePath = `${user?.id || 'anonymous'}/${fileName}`;
                         const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
                         if (uploadError) { alert('アップロードエラー: ' + uploadError.message); return; }
@@ -1415,7 +1749,13 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                         const newItems = [...block.data.items]; newItems[i].imageUrl = data.publicUrl; updateBlock(block.id, { items: newItems });
                       }} />
                     </label>
-                    <button onClick={() => { const newItems = [...block.data.items]; newItems[i].imageUrl = getRandomImageUrl('business'); updateBlock(block.id, { items: newItems }); }} className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"><Shuffle size={14} /></button>
+                    <button
+                      onClick={() => { const newItems = [...block.data.items]; newItems[i].imageUrl = getRandomImageUrl('business'); updateBlock(block.id, { items: newItems }); }}
+                      className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200 flex items-center gap-1 text-sm"
+                    >
+                      <Shuffle size={14} />
+                      <span className="hidden sm:inline">自動</span>
+                    </button>
                   </div>
                   {item.imageUrl && <img src={item.imageUrl} alt="" className="w-full h-32 rounded-lg object-cover mt-2" />}
                 </div>
@@ -1468,14 +1808,15 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                 </div>
                 <div className="flex gap-2">
                   <input type="text" value={item.imageUrl || ''} onChange={(e) => { const newItems = [...block.data.items]; newItems[i].imageUrl = e.target.value; updateBlock(block.id, { items: newItems }); }} placeholder="画像URL" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400" />
-                  <label className="px-3 py-2 bg-amber-50 text-amber-700 rounded-lg font-bold hover:bg-amber-100 cursor-pointer flex items-center">
+                  <label className="px-3 py-2 bg-amber-50 text-amber-700 rounded-lg font-bold hover:bg-amber-100 cursor-pointer flex items-center gap-1 text-sm">
                     <UploadCloud size={14} />
+                    <span className="hidden sm:inline">UP</span>
                     <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file || !supabase) return;
                       if (file.size > MAX_IMAGE_SIZE) { alert('画像サイズが大きすぎます。最大2MBまで対応しています。'); return; }
                       const fileExt = file.name.split('.').pop();
-                      const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                      const fileName = `gallery_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
                       const filePath = `${user?.id || 'anonymous'}/${fileName}`;
                       const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
                       if (uploadError) { alert('アップロードエラー: ' + uploadError.message); return; }
@@ -1483,7 +1824,13 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                       const newItems = [...block.data.items]; newItems[i].imageUrl = data.publicUrl; updateBlock(block.id, { items: newItems });
                     }} />
                   </label>
-                  <button onClick={() => { const newItems = [...block.data.items]; newItems[i].imageUrl = getRandomImageUrl('business'); updateBlock(block.id, { items: newItems }); }} className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"><Shuffle size={14} /></button>
+                  <button
+                    onClick={() => { const newItems = [...block.data.items]; newItems[i].imageUrl = getRandomImageUrl('gallery'); updateBlock(block.id, { items: newItems }); }}
+                    className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200 flex items-center gap-1 text-sm"
+                  >
+                    <Shuffle size={14} />
+                    <span className="hidden sm:inline">自動</span>
+                  </button>
                 </div>
                 <Input label="キャプション（任意）" val={item.caption || ''} onChange={(v) => { const newItems = [...block.data.items]; newItems[i].caption = v; updateBlock(block.id, { items: newItems }); }} />
               </div>
