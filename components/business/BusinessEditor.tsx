@@ -219,20 +219,20 @@ const IconPicker = ({
   return (
     <div className="relative">
       <label className="text-sm font-bold text-gray-900 block mb-2">アイコン</label>
-      <div className="flex gap-2">
+      <div className="flex gap-1">
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="w-14 h-10 text-xl border border-gray-300 rounded-lg bg-white hover:border-amber-500 flex items-center justify-center transition-colors"
+          className="w-10 h-10 text-xl border border-gray-300 rounded-lg bg-white hover:border-amber-500 flex items-center justify-center transition-colors flex-shrink-0"
         >
-          {value || '選択'}
+          {value || '?'}
         </button>
         <input
           type="text"
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="絵文字を入力"
-          className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 text-sm"
+          placeholder="絵文字"
+          className="w-16 min-w-0 px-2 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 text-sm"
         />
       </div>
       
