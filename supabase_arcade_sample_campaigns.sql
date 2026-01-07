@@ -188,67 +188,84 @@ VALUES (
 -- 既存のサンプルクイズを削除
 DELETE FROM quizzes WHERE slug = 'arcade-sample-quiz';
 
--- サンプルクイズを作成
-INSERT INTO quizzes (slug, title, description, mode, questions, creator_email, show_in_portal)
+-- サンプルクイズを作成（quizzesテーブルの実際のカラムに合わせる）
+INSERT INTO quizzes (slug, title, description, category, color, mode, questions, results)
 VALUES (
   'arcade-sample-quiz',
   '🧠 ポイントGETクイズ',
   '問題に正解してポイントを稼ごう！全問正解で50pt獲得！',
+  'ゲーム',
+  '#8B5CF6',
   'test',
   '[
     {
       "id": "q1",
       "text": "日本で一番高い山は？",
       "options": [
-        {"id": "a1", "text": "富士山", "score": 10},
-        {"id": "a2", "text": "北岳", "score": 0},
-        {"id": "a3", "text": "奥穂高岳", "score": 0},
-        {"id": "a4", "text": "槍ヶ岳", "score": 0}
+        {"text": "富士山", "score": {"correct": 10}},
+        {"text": "北岳", "score": {"correct": 0}},
+        {"text": "奥穂高岳", "score": {"correct": 0}},
+        {"text": "槍ヶ岳", "score": {"correct": 0}}
       ]
     },
     {
       "id": "q2",
       "text": "1+1は？",
       "options": [
-        {"id": "a1", "text": "2", "score": 10},
-        {"id": "a2", "text": "11", "score": 0},
-        {"id": "a3", "text": "3", "score": 0},
-        {"id": "a4", "text": "1", "score": 0}
+        {"text": "2", "score": {"correct": 10}},
+        {"text": "11", "score": {"correct": 0}},
+        {"text": "3", "score": {"correct": 0}},
+        {"text": "1", "score": {"correct": 0}}
       ]
     },
     {
       "id": "q3",
       "text": "地球の衛星は？",
       "options": [
-        {"id": "a1", "text": "月", "score": 10},
-        {"id": "a2", "text": "太陽", "score": 0},
-        {"id": "a3", "text": "火星", "score": 0},
-        {"id": "a4", "text": "木星", "score": 0}
+        {"text": "月", "score": {"correct": 10}},
+        {"text": "太陽", "score": {"correct": 0}},
+        {"text": "火星", "score": {"correct": 0}},
+        {"text": "木星", "score": {"correct": 0}}
       ]
     },
     {
       "id": "q4",
       "text": "虹は何色？",
       "options": [
-        {"id": "a1", "text": "7色", "score": 10},
-        {"id": "a2", "text": "5色", "score": 0},
-        {"id": "a3", "text": "3色", "score": 0},
-        {"id": "a4", "text": "10色", "score": 0}
+        {"text": "7色", "score": {"correct": 10}},
+        {"text": "5色", "score": {"correct": 0}},
+        {"text": "3色", "score": {"correct": 0}},
+        {"text": "10色", "score": {"correct": 0}}
       ]
     },
     {
       "id": "q5",
       "text": "水の化学式は？",
       "options": [
-        {"id": "a1", "text": "H2O", "score": 10},
-        {"id": "a2", "text": "CO2", "score": 0},
-        {"id": "a3", "text": "O2", "score": 0},
-        {"id": "a4", "text": "NaCl", "score": 0}
+        {"text": "H2O", "score": {"correct": 10}},
+        {"text": "CO2", "score": {"correct": 0}},
+        {"text": "O2", "score": {"correct": 0}},
+        {"text": "NaCl", "score": {"correct": 0}}
       ]
     }
   ]'::jsonb,
-  'system@arcade.local',
-  true
+  '[
+    {
+      "type": "perfect",
+      "title": "全問正解！",
+      "description": "素晴らしい！50ptゲット！"
+    },
+    {
+      "type": "good",
+      "title": "よくできました！",
+      "description": "いい成績です！"
+    },
+    {
+      "type": "normal",
+      "title": "まあまあ",
+      "description": "もう一度挑戦しよう！"
+    }
+  ]'::jsonb
 );
 
 -- ============================================
