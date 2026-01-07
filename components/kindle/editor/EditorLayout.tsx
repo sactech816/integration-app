@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle, Info, Sparkles, Copy, Tag, FileText, FolderTree, Lightbulb, BookOpen, Rocket } from 'lucide-react';
+import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle, Info, Sparkles, Copy, Tag, FileText, FolderTree, Lightbulb, BookOpen, Rocket, PlayCircle, Crown } from 'lucide-react';
 import Link from 'next/link';
 import { ChapterSidebar } from './ChapterSidebar';
 import { TiptapEditor, TiptapEditorRef } from './TiptapEditor';
@@ -73,6 +73,7 @@ interface EditorLayoutProps {
   tocPatternId?: string; // 目次で選択したパターンID（執筆スタイルのデフォルト決定用）
   onUpdateSectionContent: (sectionId: string, content: string) => Promise<void>;
   onStructureChange?: () => Promise<void>;
+  readOnly?: boolean; // 閲覧専用モード（デモ用）
 }
 
 export const EditorLayout: React.FC<EditorLayoutProps> = ({
@@ -82,6 +83,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   tocPatternId,
   onUpdateSectionContent,
   onStructureChange,
+  readOnly = false,
 }) => {
   // 初期値: 最初の章の最初の節
   const getInitialSectionId = () => {

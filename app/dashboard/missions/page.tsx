@@ -108,7 +108,7 @@ export default function MissionsPage() {
           </div>
         </main>
         <Footer />
-        <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
+        <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
       </div>
     );
   }
@@ -214,7 +214,7 @@ export default function MissionsPage() {
       </main>
 
       <Footer />
-      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
     </div>
   );
 }
