@@ -15,6 +15,14 @@ import {
   CampaignSettings,
   GachaAnimationType,
   StampRallySettings,
+  UserGamificationSettings,
+  WelcomeBonusResult,
+  MissionProgressWithDetails,
+  MissionUpdateResult,
+  MissionRewardResult,
+  AllMissionsBonusCheck,
+  DailyMission,
+  MissionType,
 } from '@/lib/types';
 
 // サーバーサイド用Supabaseクライアント
@@ -733,6 +741,320 @@ export async function getActiveLoginBonusCampaign(): Promise<GamificationCampaig
   }
   
   return data;
+}
+
+// =============================================
+// ゲーミフィケーション v2 機能
+// =============================================
+
+/**
+ * ウェルカムボーナスを取得（既存ユーザーも対象）
+ */
+export async function claimWelcomeBonus(userId: string): Promise<WelcomeBonusResult> {
+  const supabase = getSupabaseServer();
+  if (!supabase) {
+    return { success: false, points_granted: 0, already_claimed: false, message: 'Database not configured' };
+  }
+  
+  const { data, error } = await supabase.rpc('claim_welcome_bonus', {
+    p_user_id: userId,
+  });
+  
+  if (error) {
+    console.error('[Gamification] Claim welcome bonus error:', error);
+    return { success: false, points_granted: 0, already_claimed: false, message: error.message };
+  }
+  
+  if (data && data.length > 0) {
+    return {
+      success: data[0].success,
+      points_granted: data[0].points_granted,
+      already_claimed: data[0].already_claimed,
+      message: data[0].message,
+    };
+  }
+  
+  return { success: false, points_granted: 0, already_claimed: false, message: 'Unknown error' };
+}
+
+/**
+ * ユーザーのゲーミフィケーション設定を取得
+ */
+export async function getUserGamificationSettings(userId: string): Promise<UserGamificationSettings | null> {
+  const supabase = getSupabaseServer();
+  if (!supabase) return null;
+  
+  const { data, error } = await supabase.rpc('get_or_create_user_gamification_settings', {
+    p_user_id: userId,
+  });
+  
+  if (error) {
+    console.error('[Gamification] Get user settings error:', error);
+    return null;
+  }
+  
+  return data;
+}
+
+/**
+ * ユーザーの通知設定を更新
+ */
+export async function updateUserNotificationSettings(
+  userId: string,
+  settings: Partial<Pick<UserGamificationSettings, 
+    'hide_login_bonus_toast' | 
+    'hide_welcome_toast' | 
+    'hide_stamp_notifications' | 
+    'hide_mission_notifications' | 
+    'hide_point_notifications'
+  >>
+): Promise<UserGamificationSettings | null> {
+  const supabase = getSupabaseServer();
+  if (!supabase) return null;
+  
+  const { data, error } = await supabase.rpc('update_user_notification_settings', {
+    p_user_id: userId,
+    p_hide_login_bonus_toast: settings.hide_login_bonus_toast,
+    p_hide_welcome_toast: settings.hide_welcome_toast,
+    p_hide_stamp_notifications: settings.hide_stamp_notifications,
+    p_hide_mission_notifications: settings.hide_mission_notifications,
+    p_hide_point_notifications: settings.hide_point_notifications,
+  });
+  
+  if (error) {
+    console.error('[Gamification] Update notification settings error:', error);
+    return null;
+  }
+  
+  return data;
+}
+
+/**
+ * 管理者設定を取得
+ */
+export async function getAdminGamificationSetting(settingKey: string): Promise<Record<string, unknown>> {
+  const supabase = getSupabaseServer();
+  if (!supabase) return {};
+  
+  const { data, error } = await supabase.rpc('get_admin_gamification_setting', {
+    p_setting_key: settingKey,
+  });
+  
+  if (error) {
+    console.error('[Gamification] Get admin setting error:', error);
+    return {};
+  }
+  
+  return data || {};
+}
+
+/**
+ * 管理者設定を更新
+ */
+export async function updateAdminGamificationSetting(
+  settingKey: string,
+  settingValue: Record<string, unknown>,
+  updatedBy: string
+): Promise<boolean> {
+  const supabase = getSupabaseServer();
+  if (!supabase) return false;
+  
+  const { error } = await supabase.rpc('update_admin_gamification_setting', {
+    p_setting_key: settingKey,
+    p_setting_value: settingValue,
+    p_updated_by: updatedBy,
+  });
+  
+  if (error) {
+    console.error('[Gamification] Update admin setting error:', error);
+    return false;
+  }
+  
+  return true;
+}
+
+/**
+ * 全ての管理者設定を取得
+ */
+export async function getAllAdminGamificationSettings(): Promise<Record<string, Record<string, unknown>>> {
+  const supabase = getSupabaseServer();
+  if (!supabase) return {};
+  
+  const { data, error } = await supabase
+    .from('admin_gamification_settings')
+    .select('*');
+  
+  if (error) {
+    console.error('[Gamification] Get all admin settings error:', error);
+    return {};
+  }
+  
+  const settings: Record<string, Record<string, unknown>> = {};
+  for (const item of data || []) {
+    settings[item.setting_key] = item.setting_value;
+  }
+  
+  return settings;
+}
+
+// =============================================
+// デイリーミッション
+// =============================================
+
+/**
+ * 今日のミッション進捗を取得
+ */
+export async function getTodayMissionsProgress(userId: string): Promise<MissionProgressWithDetails[]> {
+  const supabase = getSupabaseServer();
+  if (!supabase) return [];
+  
+  const { data, error } = await supabase.rpc('get_today_missions_progress', {
+    p_user_id: userId,
+  });
+  
+  if (error) {
+    console.error('[Gamification] Get today missions error:', error);
+    return [];
+  }
+  
+  return data || [];
+}
+
+/**
+ * ミッション進捗を更新
+ */
+export async function updateMissionProgress(
+  userId: string,
+  missionType: MissionType,
+  increment: number = 1
+): Promise<MissionUpdateResult[]> {
+  const supabase = getSupabaseServer();
+  if (!supabase) return [];
+  
+  const { data, error } = await supabase.rpc('update_mission_progress', {
+    p_user_id: userId,
+    p_mission_type: missionType,
+    p_increment: increment,
+  });
+  
+  if (error) {
+    console.error('[Gamification] Update mission progress error:', error);
+    return [];
+  }
+  
+  return data || [];
+}
+
+/**
+ * ミッション報酬を受け取る
+ */
+export async function claimMissionReward(
+  userId: string,
+  missionId: string
+): Promise<MissionRewardResult> {
+  const supabase = getSupabaseServer();
+  if (!supabase) {
+    return { success: false, points_granted: 0, error_message: 'Database not configured' };
+  }
+  
+  const { data, error } = await supabase.rpc('claim_mission_reward', {
+    p_user_id: userId,
+    p_mission_id: missionId,
+  });
+  
+  if (error) {
+    console.error('[Gamification] Claim mission reward error:', error);
+    return { success: false, points_granted: 0, error_message: error.message };
+  }
+  
+  if (data && data.length > 0) {
+    return {
+      success: data[0].success,
+      points_granted: data[0].points_granted,
+      error_message: data[0].error_message,
+    };
+  }
+  
+  return { success: false, points_granted: 0, error_message: 'Unknown error' };
+}
+
+/**
+ * 全ミッション達成ボーナスをチェック
+ */
+export async function checkAllMissionsBonus(userId: string): Promise<AllMissionsBonusCheck> {
+  const supabase = getSupabaseServer();
+  if (!supabase) {
+    return { all_completed: false, bonus_available: false, bonus_points: 0 };
+  }
+  
+  const { data, error } = await supabase.rpc('check_all_missions_bonus', {
+    p_user_id: userId,
+  });
+  
+  if (error) {
+    console.error('[Gamification] Check all missions bonus error:', error);
+    return { all_completed: false, bonus_available: false, bonus_points: 0 };
+  }
+  
+  if (data && data.length > 0) {
+    return {
+      all_completed: data[0].all_completed,
+      bonus_available: data[0].bonus_available,
+      bonus_points: data[0].bonus_points,
+    };
+  }
+  
+  return { all_completed: false, bonus_available: false, bonus_points: 0 };
+}
+
+/**
+ * 全ミッション達成ボーナスを受け取る
+ */
+export async function claimAllMissionsBonus(userId: string): Promise<MissionRewardResult> {
+  const supabase = getSupabaseServer();
+  if (!supabase) {
+    return { success: false, points_granted: 0, error_message: 'Database not configured' };
+  }
+  
+  const { data, error } = await supabase.rpc('claim_all_missions_bonus', {
+    p_user_id: userId,
+  });
+  
+  if (error) {
+    console.error('[Gamification] Claim all missions bonus error:', error);
+    return { success: false, points_granted: 0, error_message: error.message };
+  }
+  
+  if (data && data.length > 0) {
+    return {
+      success: data[0].success,
+      points_granted: data[0].points_granted,
+      error_message: data[0].error_message,
+    };
+  }
+  
+  return { success: false, points_granted: 0, error_message: 'Unknown error' };
+}
+
+/**
+ * デイリーミッション一覧を取得
+ */
+export async function getDailyMissions(): Promise<DailyMission[]> {
+  const supabase = getSupabaseServer();
+  if (!supabase) return [];
+  
+  const { data, error } = await supabase
+    .from('daily_missions')
+    .select('*')
+    .eq('is_active', true)
+    .order('display_order', { ascending: true });
+  
+  if (error) {
+    console.error('[Gamification] Get daily missions error:', error);
+    return [];
+  }
+  
+  return data || [];
 }
 
 

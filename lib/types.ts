@@ -740,3 +740,152 @@ export function generateCampaignId(): string {
 export function generateStampId(): string {
   return `stamp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
+
+// -------------------------------------------
+// ゲーミフィケーション v2 拡張型定義
+// -------------------------------------------
+
+// ユーザーゲーミフィケーション設定
+export interface UserGamificationSettings {
+  id: string;
+  user_id: string;
+  welcome_bonus_claimed: boolean;
+  welcome_bonus_claimed_at?: string;
+  hide_login_bonus_toast: boolean;
+  hide_welcome_toast: boolean;
+  hide_stamp_notifications: boolean;
+  hide_mission_notifications: boolean;
+  hide_point_notifications: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// 管理者ゲーミフィケーション設定
+export interface AdminGamificationSetting {
+  id: string;
+  setting_key: string;
+  setting_value: Record<string, unknown>;
+  updated_by?: string;
+  updated_at?: string;
+}
+
+// ウェルカムボーナス設定
+export interface WelcomeBonusSettings {
+  enabled: boolean;
+  points: number;
+  message: string;
+}
+
+// デイリーログインボーナス設定
+export interface DailyLoginBonusSettings {
+  enabled: boolean;
+  points: number;
+}
+
+// デイリーミッション
+export interface DailyMission {
+  id: string;
+  title: string;
+  description?: string;
+  mission_type: MissionType;
+  target_count: number;
+  reward_points: number;
+  is_active: boolean;
+  display_order: number;
+  created_at?: string;
+}
+
+// ミッションタイプ
+export type MissionType = 
+  | 'login'
+  | 'quiz_play'
+  | 'quiz_create'
+  | 'profile_view'
+  | 'profile_create'
+  | 'gacha_play'
+  | 'share'
+  | 'stamp_get'
+  | 'survey_answer';
+
+// ユーザーデイリーミッション進捗
+export interface UserDailyMissionProgress {
+  id: string;
+  user_id: string;
+  mission_id: string;
+  progress_date: string;
+  current_count: number;
+  completed: boolean;
+  completed_at?: string;
+  reward_claimed: boolean;
+  reward_claimed_at?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// ミッション進捗（結合データ）
+export interface MissionProgressWithDetails {
+  mission_id: string;
+  title: string;
+  description?: string;
+  mission_type: MissionType;
+  target_count: number;
+  reward_points: number;
+  current_count: number;
+  completed: boolean;
+  reward_claimed: boolean;
+}
+
+// ウェルカムボーナス結果
+export interface WelcomeBonusResult {
+  success: boolean;
+  points_granted: number;
+  already_claimed: boolean;
+  message: string;
+}
+
+// ミッション更新結果
+export interface MissionUpdateResult {
+  mission_id: string;
+  newly_completed: boolean;
+  reward_points: number;
+}
+
+// ミッション報酬結果
+export interface MissionRewardResult {
+  success: boolean;
+  points_granted: number;
+  error_message?: string;
+}
+
+// 全ミッションボーナスチェック結果
+export interface AllMissionsBonusCheck {
+  all_completed: boolean;
+  bonus_available: boolean;
+  bonus_points: number;
+}
+
+// 拡張アニメーションタイプ（v2）
+export type GachaAnimationTypeV2 = 'capsule' | 'roulette' | 'omikuji' | 'slot' | 'scratch' | 'fukubiki';
+
+// アニメーションタイプラベル（v2）
+export const ANIMATION_TYPE_LABELS_V2: Record<GachaAnimationTypeV2, string> = {
+  capsule: 'カプセルトイ',
+  roulette: 'ルーレット',
+  omikuji: 'おみくじ',
+  slot: 'スロットマシン',
+  scratch: 'スクラッチ',
+  fukubiki: '福引き'
+};
+
+// ミッションタイプラベル
+export const MISSION_TYPE_LABELS: Record<MissionType, string> = {
+  login: 'ログイン',
+  quiz_play: 'クイズプレイ',
+  quiz_create: 'クイズ作成',
+  profile_view: 'プロフィール閲覧',
+  profile_create: 'プロフィール作成',
+  gacha_play: 'ガチャプレイ',
+  share: 'SNSシェア',
+  stamp_get: 'スタンプ獲得',
+  survey_answer: 'アンケート回答'
+};

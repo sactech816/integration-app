@@ -1,8 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getActiveLoginBonusCampaign, claimLoginBonus, checkLoginBonusClaimed } from '@/app/actions/gamification';
-import { Gift, X, Sparkles } from 'lucide-react';
+import { 
+  getActiveLoginBonusCampaign, 
+  claimLoginBonus, 
+  checkLoginBonusClaimed,
+  getUserGamificationSettings,
+  updateUserNotificationSettings 
+} from '@/app/actions/gamification';
+import { Gift, X, Sparkles, Settings } from 'lucide-react';
+import Link from 'next/link';
 
 interface LoginBonusToastProps {
   userId?: string;
@@ -14,6 +21,7 @@ export default function LoginBonusToast({ userId, onPointsEarned }: LoginBonusTo
   const [points, setPoints] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [hideForever, setHideForever] = useState(false);
 
   useEffect(() => {
     // セッションストレージで今日のチェック済みフラグを確認
@@ -26,6 +34,22 @@ export default function LoginBonusToast({ userId, onPointsEarned }: LoginBonusTo
 
     async function checkAndClaimBonus() {
       try {
+        // ユーザー設定を確認して非表示設定されているかチェック
+        if (userId) {
+          const settings = await getUserGamificationSettings(userId);
+          if (settings?.hide_login_bonus_toast) {
+            // 非表示設定されているのでスキップ（ポイントは付与する）
+            const campaign = await getActiveLoginBonusCampaign();
+            if (campaign) {
+              await claimLoginBonus(campaign.id, userId);
+            }
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem(checkedKey, 'true');
+            }
+            return;
+          }
+        }
+
         // アクティブなログインボーナスキャンペーンを取得
         const campaign = await getActiveLoginBonusCampaign();
         if (!campaign) return;
@@ -61,12 +85,12 @@ export default function LoginBonusToast({ userId, onPointsEarned }: LoginBonusTo
           // アニメーション終了
           setTimeout(() => setAnimating(false), 1000);
 
-          // 自動非表示（5秒後）
+          // 自動非表示（8秒後）
           setTimeout(() => {
             if (!dismissed) {
               setVisible(false);
             }
-          }, 5000);
+          }, 8000);
         } else {
           // 取得済みの場合もフラグを立てる
           if (typeof window !== 'undefined') {
@@ -83,7 +107,14 @@ export default function LoginBonusToast({ userId, onPointsEarned }: LoginBonusTo
     return () => clearTimeout(timer);
   }, [userId, onPointsEarned, dismissed]);
 
-  const handleDismiss = () => {
+  const handleDismiss = async () => {
+    // 「今後表示しない」がチェックされている場合
+    if (hideForever && userId) {
+      await updateUserNotificationSettings(userId, {
+        hide_login_bonus_toast: true,
+      });
+    }
+    
     setDismissed(true);
     setVisible(false);
   };
@@ -96,7 +127,7 @@ export default function LoginBonusToast({ userId, onPointsEarned }: LoginBonusTo
         fixed bottom-4 right-4 z-50
         bg-gradient-to-r from-amber-500 to-orange-500
         text-white rounded-2xl shadow-2xl
-        p-4 pr-10 min-w-[280px]
+        p-4 min-w-[300px]
         transform transition-all duration-500 ease-out
         ${animating ? 'animate-bounce-in scale-110' : 'scale-100'}
       `}
@@ -110,7 +141,7 @@ export default function LoginBonusToast({ userId, onPointsEarned }: LoginBonusTo
         <X className="w-4 h-4" />
       </button>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 mb-3">
         {/* アイコン */}
         <div className="relative">
           <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
@@ -133,6 +164,28 @@ export default function LoginBonusToast({ userId, onPointsEarned }: LoginBonusTo
           <p className="text-xs opacity-75 mt-0.5">毎日ログインでポイントGET!</p>
         </div>
       </div>
+
+      {/* 今後表示しないチェックボックス */}
+      {userId && (
+        <div className="flex items-center justify-between pt-3 border-t border-white/20">
+          <label className="flex items-center gap-2 cursor-pointer text-xs opacity-80 hover:opacity-100 transition-opacity">
+            <input
+              type="checkbox"
+              checked={hideForever}
+              onChange={(e) => setHideForever(e.target.checked)}
+              className="w-3.5 h-3.5 rounded border-white/50 bg-white/20 text-amber-600"
+            />
+            <span>今後表示しない</span>
+          </label>
+          <Link
+            href="/dashboard/settings/notifications"
+            className="flex items-center gap-1 text-xs opacity-70 hover:opacity-100 transition-opacity"
+          >
+            <Settings className="w-3 h-3" />
+            設定
+          </Link>
+        </div>
+      )}
 
       {/* 装飾的なキラキラ */}
       <div className="absolute top-2 left-4 w-2 h-2 bg-yellow-200 rounded-full animate-pulse" />

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { generateSlug } from '@/lib/utils';
 import { Profile, Block, generateBlockId } from '@/lib/types';
 import { profileTemplates } from '@/constants/templates';
+import { triggerGamificationEvent } from '@/lib/gamification/events';
 import {
   Save,
   Eye,
@@ -803,6 +804,14 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         setSavedSlug(result.data.slug);
         if (!initialData) {
           setShowSuccessModal(true);
+          
+          // ゲーミフィケーションイベント発火（プロフィール作成）
+          if (user?.id) {
+            triggerGamificationEvent(user.id, 'profile_create', {
+              contentId: result.data.slug,
+              contentTitle: result.data.nickname || 'プロフィール',
+            });
+          }
         } else {
           alert('保存しました！');
         }

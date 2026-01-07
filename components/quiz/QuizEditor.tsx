@@ -10,6 +10,7 @@ import { generateSlug } from '../../lib/utils';
 import { supabase } from '../../lib/supabase';
 import { QUIZ_THEMES, QUIZ_THEME_IDS, getQuizTheme } from '../../constants/quizThemes';
 import QuizPlayer from './QuizPlayer';
+import { triggerGamificationEvent } from '@/lib/gamification/events';
 
 // --- 用途別テンプレート（プリセットデータ）---
 const USE_CASE_PRESETS = {
@@ -505,6 +506,14 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                 if (isNewCreation && !savedId) {
                     setJustSavedQuizId(result.slug);
                     setShowDonationModal(true);
+                    
+                    // ゲーミフィケーションイベント発火（クイズ作成）
+                    if (user?.id) {
+                        triggerGamificationEvent(user.id, 'quiz_create', {
+                            contentId: result.slug,
+                            contentTitle: result.title,
+                        });
+                    }
                 } else {
                     alert('保存しました！');
                 }

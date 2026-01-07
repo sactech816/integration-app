@@ -37,6 +37,8 @@ import {
 } from '@/lib/types';
 import { getFeaturedContents, addFeaturedContent, removeFeaturedContent, FeaturedContent } from '@/app/actions/featured';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import WelcomeBonus from '@/components/gamification/WelcomeBonus';
+import LoginBonusToast from '@/components/gamification/LoginBonusToast';
 import {
   Sparkles,
   UserCircle,
@@ -3518,6 +3520,14 @@ function DashboardContent() {
       </div>
 
       <Footer setPage={navigateTo} />
+      
+      {/* ゲーミフィケーション通知 */}
+      {user?.id && (
+        <>
+          <WelcomeBonus userId={user.id} />
+          <LoginBonusToast userId={user.id} />
+        </>
+      )}
     </div>
   );
 }
