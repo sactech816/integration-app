@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { GamificationCampaign, GachaPrize, GachaSettings } from '@/lib/types';
+import { GamificationCampaign, GachaPrize, GachaSettings, CampaignType } from '@/lib/types';
 import { validatePrizeProbabilities, autoAdjustProbabilities } from '@/lib/gamification/mockGacha';
 import EditorLayout from '../shared/EditorLayout';
 import PhoneMockup from '../shared/PhoneMockup';
@@ -24,13 +24,69 @@ import {
   Share2,
   Copy,
   X,
+  CreditCard,
+  Zap,
 } from 'lucide-react';
+
+// ゲームタイプ設定
+type GameType = 'gacha' | 'scratch' | 'fukubiki' | 'slot';
+
+interface GameTypeConfig {
+  title: string;
+  defaultTitle: string;
+  defaultDescription: string;
+  urlPath: string;
+  color: string;
+  icon: React.ElementType;
+  animationOptions?: { id: string; label: string; emoji: string }[];
+}
+
+const GAME_TYPE_CONFIGS: Record<GameType, GameTypeConfig> = {
+  gacha: {
+    title: 'ガチャ',
+    defaultTitle: '新しいガチャ',
+    defaultDescription: 'ポイントを使ってガチャを回そう！',
+    urlPath: 'gacha',
+    color: 'purple',
+    icon: Gift,
+    animationOptions: [
+      { id: 'capsule', label: 'カプセル', emoji: '🎰' },
+      { id: 'roulette', label: 'ルーレット', emoji: '🎡' },
+      { id: 'omikuji', label: 'おみくじ', emoji: '🎋' },
+    ],
+  },
+  scratch: {
+    title: 'スクラッチ',
+    defaultTitle: '新しいスクラッチ',
+    defaultDescription: '削って当たりを狙おう！',
+    urlPath: 'scratch',
+    color: 'amber',
+    icon: CreditCard,
+  },
+  fukubiki: {
+    title: '福引',
+    defaultTitle: '新しい福引',
+    defaultDescription: 'ガラガラ回して当てよう！',
+    urlPath: 'fukubiki',
+    color: 'pink',
+    icon: Sparkles,
+  },
+  slot: {
+    title: 'スロット',
+    defaultTitle: '新しいスロット',
+    defaultDescription: '揃えて大当たり！',
+    urlPath: 'slot',
+    color: 'red',
+    icon: Zap,
+  },
+};
 
 interface GachaEditorProps {
   user: User | null;
   initialData?: GamificationCampaign | null;
   onBack: () => void;
   setShowAuth: (show: boolean) => void;
+  gameType?: GameType;
 }
 
 interface GachaPrizeForm {
@@ -42,6 +98,7 @@ interface GachaPrizeForm {
   is_winning: boolean;
   stock: number | null;
   display_order: number;
+  points_reward?: number; // ポイント報酬
 }
 
 interface GachaFormData {
@@ -61,6 +118,7 @@ const Section = ({
   onToggle,
   children,
   badge,
+  colorClass = 'bg-purple-100 text-purple-600',
 }: {
   title: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
@@ -68,6 +126,7 @@ const Section = ({
   onToggle: () => void;
   children: React.ReactNode;
   badge?: string;
+  colorClass?: string;
 }) => (
   <div className="border border-gray-200 rounded-xl overflow-hidden mb-4 bg-white">
     <button
@@ -75,12 +134,12 @@ const Section = ({
       className="w-full px-5 py-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
     >
       <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg ${isOpen ? 'bg-purple-100 text-purple-600' : 'bg-gray-200 text-gray-500'}`}>
+        <div className={`p-2 rounded-lg ${isOpen ? colorClass : 'bg-gray-200 text-gray-500'}`}>
           <Icon size={18} />
         </div>
         <span className="font-bold text-gray-900">{title}</span>
         {badge && (
-          <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{badge}</span>
+          <span className={`text-xs px-2 py-0.5 rounded-full ${colorClass}`}>{badge}</span>
         )}
       </div>
       {isOpen ? <ChevronUp size={20} className="text-gray-500" /> : <ChevronDown size={20} className="text-gray-500" />}
@@ -89,12 +148,54 @@ const Section = ({
   </div>
 );
 
-export default function GachaEditor({ user, initialData, onBack, setShowAuth }: GachaEditorProps) {
+// デフォルトの景品（ポイント報酬付き）
+const getDefaultPrizes = (gameType: GameType): GachaPrizeForm[] => {
+  switch (gameType) {
+    case 'slot':
+      return [
+        { id: '1', name: 'ジャックポット', description: '200pt獲得！', image_url: '', probability: 2, is_winning: true, stock: null, display_order: 0, points_reward: 200 },
+        { id: '2', name: '大当たり', description: '100pt獲得！', image_url: '', probability: 5, is_winning: true, stock: null, display_order: 1, points_reward: 100 },
+        { id: '3', name: '中当たり', description: '50pt獲得！', image_url: '', probability: 10, is_winning: true, stock: null, display_order: 2, points_reward: 50 },
+        { id: '4', name: '小当たり', description: '20pt獲得！', image_url: '', probability: 20, is_winning: true, stock: null, display_order: 3, points_reward: 20 },
+        { id: '5', name: 'ハズレ', description: 'また挑戦してね！', image_url: '', probability: 63, is_winning: false, stock: null, display_order: 4, points_reward: 0 },
+      ];
+    case 'scratch':
+      return [
+        { id: '1', name: '大当たり', description: '100pt獲得！', image_url: '', probability: 3, is_winning: true, stock: null, display_order: 0, points_reward: 100 },
+        { id: '2', name: '中当たり', description: '50pt獲得！', image_url: '', probability: 10, is_winning: true, stock: null, display_order: 1, points_reward: 50 },
+        { id: '3', name: '小当たり', description: '30pt獲得！', image_url: '', probability: 20, is_winning: true, stock: null, display_order: 2, points_reward: 30 },
+        { id: '4', name: 'ハズレ', description: 'また挑戦してね！', image_url: '', probability: 67, is_winning: false, stock: null, display_order: 3, points_reward: 0 },
+      ];
+    case 'fukubiki':
+      return [
+        { id: '1', name: '特賞（金玉）', description: '150pt獲得！', image_url: '', probability: 2, is_winning: true, stock: null, display_order: 0, points_reward: 150 },
+        { id: '2', name: '1等（赤玉）', description: '80pt獲得！', image_url: '', probability: 8, is_winning: true, stock: null, display_order: 1, points_reward: 80 },
+        { id: '3', name: '2等（青玉）', description: '40pt獲得！', image_url: '', probability: 15, is_winning: true, stock: null, display_order: 2, points_reward: 40 },
+        { id: '4', name: '3等（緑玉）', description: '20pt獲得！', image_url: '', probability: 25, is_winning: true, stock: null, display_order: 3, points_reward: 20 },
+        { id: '5', name: 'ハズレ（白玉）', description: 'また挑戦してね！', image_url: '', probability: 50, is_winning: false, stock: null, display_order: 4, points_reward: 0 },
+      ];
+    case 'gacha':
+    default:
+      return [
+        { id: '1', name: 'SSR（超レア）', description: '500pt獲得！', image_url: '', probability: 1, is_winning: true, stock: null, display_order: 0, points_reward: 500 },
+        { id: '2', name: 'SR（激レア）', description: '100pt獲得！', image_url: '', probability: 5, is_winning: true, stock: null, display_order: 1, points_reward: 100 },
+        { id: '3', name: 'R（レア）', description: '30pt獲得！', image_url: '', probability: 15, is_winning: true, stock: null, display_order: 2, points_reward: 30 },
+        { id: '4', name: 'N（ノーマル）', description: '10pt獲得！', image_url: '', probability: 30, is_winning: false, stock: null, display_order: 3, points_reward: 10 },
+        { id: '5', name: 'ハズレ', description: 'また挑戦してね！', image_url: '', probability: 49, is_winning: false, stock: null, display_order: 4, points_reward: 0 },
+      ];
+  }
+};
+
+export default function GachaEditor({ user, initialData, onBack, setShowAuth, gameType = 'gacha' }: GachaEditorProps) {
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(initialData?.id || null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
+
+  const config = GAME_TYPE_CONFIGS[gameType];
+  const colorClass = `bg-${config.color}-100 text-${config.color}-600`;
+  const gradientClass = `from-${config.color}-600 to-${config.color}-700`;
 
   // セクション開閉状態
   const [openSections, setOpenSections] = useState({
@@ -118,16 +219,11 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
       };
     }
     return {
-      title: '新しいガチャ',
-      description: 'ポイントを使ってガチャを回そう！',
+      title: config.defaultTitle,
+      description: config.defaultDescription,
       animation_type: 'capsule',
       cost_per_play: 10,
-      prizes: [
-        { id: '1', name: '特賞', description: '豪華景品！', image_url: '', probability: 5, is_winning: true, stock: null, display_order: 0 },
-        { id: '2', name: '1等', description: '素敵な景品', image_url: '', probability: 15, is_winning: true, stock: null, display_order: 1 },
-        { id: '3', name: '2等', description: '参加賞', image_url: '', probability: 30, is_winning: false, stock: null, display_order: 2 },
-        { id: '4', name: 'ハズレ', description: 'また挑戦してね！', image_url: '', probability: 50, is_winning: false, stock: null, display_order: 3 },
-      ],
+      prizes: getDefaultPrizes(gameType),
       theme_color: '#8B5CF6',
     };
   });
@@ -154,6 +250,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
               is_winning: p.is_winning,
               stock: p.stock,
               display_order: p.display_order,
+              points_reward: p.points_reward || 0,
             })),
           }));
         }
@@ -186,6 +283,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
           is_winning: false,
           stock: null,
           display_order: prev.prizes.length,
+          points_reward: 0,
         },
       ],
     }));
@@ -239,7 +337,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
         owner_id: user.id,
         title: form.title,
         description: form.description,
-        campaign_type: 'gacha',
+        campaign_type: gameType as CampaignType,
         status: 'active',
         animation_type: form.animation_type,
         settings: {
@@ -284,6 +382,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
         is_winning: prize.is_winning,
         stock: prize.stock,
         display_order: index,
+        points_reward: prize.points_reward || 0,
       }));
 
       await supabase.from('gacha_prizes').insert(prizesData);
@@ -323,6 +422,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
         icon={Settings}
         isOpen={openSections.basic}
         onToggle={() => toggleSection('basic')}
+        colorClass={`bg-${config.color}-100 text-${config.color}-600`}
       >
         <div className="space-y-4">
           <div>
@@ -332,7 +432,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
               value={form.title}
               onChange={e => setForm(prev => ({ ...prev, title: e.target.value }))}
               className="w-full border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-purple-500 outline-none"
-              placeholder="ガチャのタイトル"
+              placeholder={`${config.title}のタイトル`}
             />
           </div>
           <div>
@@ -342,7 +442,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
               onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
               className="w-full border border-gray-300 p-3 rounded-lg text-black focus:ring-2 focus:ring-purple-500 outline-none"
               rows={3}
-              placeholder="ガチャの説明"
+              placeholder={`${config.title}の説明`}
             />
           </div>
           <div>
@@ -358,48 +458,48 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
         </div>
       </Section>
 
-      {/* アニメーション設定 */}
-      <Section
-        title="アニメーション"
-        icon={Sparkles}
-        isOpen={openSections.animation}
-        onToggle={() => toggleSection('animation')}
-      >
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { id: 'capsule', label: 'カプセル', emoji: '🎰' },
-            { id: 'roulette', label: 'ルーレット', emoji: '🎡' },
-            { id: 'omikuji', label: 'おみくじ', emoji: '🎋' },
-          ].map(type => (
-            <button
-              key={type.id}
-              onClick={() => {
-                setForm(prev => ({ ...prev, animation_type: type.id as GachaFormData['animation_type'] }));
-                resetPreview();
-              }}
-              className={`
-                p-4 rounded-xl border-2 text-center transition-all
-                ${form.animation_type === type.id
-                  ? 'border-purple-500 bg-purple-50'
-                  : 'border-gray-200 hover:border-purple-300'}
-              `}
-            >
-              <div className="text-3xl mb-2">{type.emoji}</div>
-              <div className={`text-sm font-bold ${form.animation_type === type.id ? 'text-purple-700' : 'text-gray-600'}`}>
-                {type.label}
-              </div>
-            </button>
-          ))}
-        </div>
-      </Section>
+      {/* アニメーション設定（ガチャのみ） */}
+      {config.animationOptions && (
+        <Section
+          title="アニメーション"
+          icon={Sparkles}
+          isOpen={openSections.animation}
+          onToggle={() => toggleSection('animation')}
+          colorClass={`bg-${config.color}-100 text-${config.color}-600`}
+        >
+          <div className="grid grid-cols-3 gap-3">
+            {config.animationOptions.map(type => (
+              <button
+                key={type.id}
+                onClick={() => {
+                  setForm(prev => ({ ...prev, animation_type: type.id as GachaFormData['animation_type'] }));
+                  resetPreview();
+                }}
+                className={`
+                  p-4 rounded-xl border-2 text-center transition-all
+                  ${form.animation_type === type.id
+                    ? 'border-purple-500 bg-purple-50'
+                    : 'border-gray-200 hover:border-purple-300'}
+                `}
+              >
+                <div className="text-3xl mb-2">{type.emoji}</div>
+                <div className={`text-sm font-bold ${form.animation_type === type.id ? 'text-purple-700' : 'text-gray-600'}`}>
+                  {type.label}
+                </div>
+              </button>
+            ))}
+          </div>
+        </Section>
+      )}
 
       {/* 景品設定 */}
       <Section
-        title="景品設定"
+        title="景品設定（ポイント報酬）"
         icon={Gift}
         isOpen={openSections.prizes}
         onToggle={() => toggleSection('prizes')}
         badge={`${form.prizes.length}件`}
+        colorClass={`bg-${config.color}-100 text-${config.color}-600`}
       >
         {/* 確率バリデーション */}
         <div className={`mb-4 p-3 rounded-lg flex items-center justify-between ${
@@ -462,8 +562,8 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
                     </button>
                   </div>
 
-                  {/* 確率・当たりフラグ */}
-                  <div className="flex items-center gap-3">
+                  {/* 確率・当たりフラグ・ポイント報酬 */}
+                  <div className="flex items-center gap-3 flex-wrap">
                     <div className="flex items-center gap-2">
                       <label className="text-xs text-gray-500">確率</label>
                       <input
@@ -476,6 +576,17 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
                         step={0.1}
                       />
                       <span className="text-xs text-gray-500">%</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-gray-500">報酬</label>
+                      <input
+                        type="number"
+                        value={prize.points_reward || 0}
+                        onChange={e => updatePrize(prize.id, { points_reward: parseInt(e.target.value) || 0 })}
+                        className="w-20 border border-gray-300 px-2 py-1 rounded text-sm text-center"
+                        min={0}
+                      />
+                      <span className="text-xs text-gray-500">pt</span>
                     </div>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -517,7 +628,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
         <button
           onClick={handleSave}
           disabled={isSaving || !probabilityValidation.isValid}
-          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:from-purple-700 hover:to-pink-700 transition-all shadow-md text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`w-full bg-gradient-to-r from-${config.color}-600 to-${config.color}-700 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-md text-lg disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           {savedId ? '更新して保存' : '保存して公開'}
         </button>
@@ -527,7 +638,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
 
   // 右パネル（プレビュー）
   const rightPanel = (
-    <PhoneMockup title="ガチャプレビュー" onReset={resetPreview}>
+    <PhoneMockup title={`${config.title}プレビュー`} onReset={resetPreview}>
       <GachaPreview
         key={previewKey}
         title={form.title}
@@ -543,7 +654,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
   return (
     <>
       <EditorLayout
-        title={savedId ? 'ガチャを編集' : 'ガチャを作成'}
+        title={savedId ? `${config.title}を編集` : `${config.title}を作成`}
         subtitle="リアルタイムプレビュー"
         onBack={onBack}
         onSave={handleSave}
@@ -557,10 +668,10 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
       {showSuccessModal && savedId && (
         <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full animate-fade-in">
-            <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-6 flex justify-between items-center rounded-t-2xl">
+            <div className={`bg-gradient-to-r from-${config.color}-600 to-${config.color}-700 text-white px-6 py-6 flex justify-between items-center rounded-t-2xl`}>
               <div>
                 <h3 className="font-bold text-xl flex items-center gap-2">
-                  <Trophy size={24} /> ガチャを{savedId ? '更新' : '作成'}しました！
+                  <Trophy size={24} /> {config.title}を{savedId ? '更新' : '作成'}しました！
                 </h3>
               </div>
               <button onClick={() => setShowSuccessModal(false)} className="text-white hover:bg-white/20 p-2 rounded-full">
@@ -568,31 +679,31 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+              <div className={`bg-${config.color}-50 border border-${config.color}-200 rounded-xl p-4`}>
                 <p className="text-sm font-bold text-gray-700 mb-2">公開URL</p>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/gacha/${savedId}`}
+                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/${config.urlPath}/${savedId}`}
                     readOnly
-                    className="flex-1 text-xs bg-white border border-purple-300 p-2 rounded-lg text-gray-900 font-bold"
+                    className={`flex-1 text-xs bg-white border border-${config.color}-300 p-2 rounded-lg text-gray-900 font-bold`}
                   />
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/gacha/${savedId}`);
+                      navigator.clipboard.writeText(`${window.location.origin}/${config.urlPath}/${savedId}`);
                       alert('URLをコピーしました！');
                     }}
-                    className="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-purple-700"
+                    className={`bg-${config.color}-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-${config.color}-700`}
                   >
                     <Copy size={16} />
                   </button>
                 </div>
               </div>
               <button
-                onClick={() => window.open(`/gacha/${savedId}`, '_blank')}
-                className="w-full bg-purple-600 text-white font-bold py-3 rounded-xl hover:bg-purple-700 flex items-center justify-center gap-2"
+                onClick={() => window.open(`/${config.urlPath}/${savedId}`, '_blank')}
+                className={`w-full bg-${config.color}-600 text-white font-bold py-3 rounded-xl hover:bg-${config.color}-700 flex items-center justify-center gap-2`}
               >
-                <Share2 size={18} /> ガチャページを開く
+                <Share2 size={18} /> {config.title}ページを開く
               </button>
               <button
                 onClick={() => setShowSuccessModal(false)}
@@ -607,6 +718,3 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth }: 
     </>
   );
 }
-
-
-

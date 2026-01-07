@@ -11,6 +11,9 @@ import StampRallyEditor from '@/components/gamification/editors/StampRallyEditor
 import LoginBonusEditor from '@/components/gamification/editors/LoginBonusEditor';
 import { Loader2 } from 'lucide-react';
 
+// ガチャ系のゲームタイプ（同じエディタを使用）
+const GACHA_LIKE_TYPES = ['gacha', 'scratch', 'fukubiki', 'slot'];
+
 function EditorContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -84,14 +87,27 @@ function EditorContent() {
       setShowAuth,
     };
 
+    // ガチャ系のタイプ（gacha, scratch, fukubiki, slot）は同じエディタを使用
+    if (GACHA_LIKE_TYPES.includes(campaignType)) {
+      return (
+        <GachaEditor 
+          {...commonProps} 
+          gameType={campaignType as 'gacha' | 'scratch' | 'fukubiki' | 'slot'} 
+        />
+      );
+    }
+
     switch (campaignType) {
       case 'stamp_rally':
         return <StampRallyEditor {...commonProps} />;
       case 'login_bonus':
         return <LoginBonusEditor {...commonProps} />;
-      case 'gacha':
+      case 'point_quiz':
+        // ポイントクイズは既存のクイズエディタを使用（別途実装が必要）
+        // 暫定的にガチャエディタを表示
+        return <GachaEditor {...commonProps} gameType="gacha" />;
       default:
-        return <GachaEditor {...commonProps} />;
+        return <GachaEditor {...commonProps} gameType="gacha" />;
     }
   };
 
@@ -129,4 +145,3 @@ export default function GamificationEditorPage() {
     </Suspense>
   );
 }
-

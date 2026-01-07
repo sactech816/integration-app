@@ -598,7 +598,7 @@ export function generateSurveyQuestionId(): string {
 // -------------------------------------------
 
 // キャンペーンタイプ
-export type CampaignType = 'stamp_rally' | 'login_bonus' | 'gacha';
+export type CampaignType = 'stamp_rally' | 'login_bonus' | 'gacha' | 'scratch' | 'fukubiki' | 'slot';
 
 // キャンペーンステータス
 export type CampaignStatus = 'active' | 'inactive';
@@ -607,7 +607,7 @@ export type CampaignStatus = 'active' | 'inactive';
 export type GachaAnimationType = 'capsule' | 'roulette' | 'omikuji';
 
 // ポイントイベントタイプ
-export type PointEventType = 'stamp_get' | 'login_bonus' | 'gacha_play' | 'gacha_win' | 'manual_adjust' | 'stamp_completion';
+export type PointEventType = 'stamp_get' | 'login_bonus' | 'gacha_play' | 'gacha_win' | 'manual_adjust' | 'stamp_completion' | 'scratch_play' | 'scratch_win' | 'fukubiki_play' | 'fukubiki_win' | 'slot_play' | 'slot_win' | 'quiz_correct';
 
 // キャンペーン設定（JSONB）
 export interface StampRallySettings {
