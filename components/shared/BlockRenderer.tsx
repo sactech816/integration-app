@@ -424,14 +424,7 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
       );
 
     case 'lead_form':
-      return (
-        <div className="glass rounded-2xl p-6 mb-4 text-center">
-          <h4 className="font-bold text-lg text-gray-900 mb-4">{block.data.title}</h4>
-          <button className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition-colors">
-            {block.data.buttonText}
-          </button>
-        </div>
-      );
+      return <LeadFormBlockRenderer block={block} variant={variant} />;
 
     case 'quiz':
       return <QuizBlockRenderer block={block} />;
@@ -1064,6 +1057,150 @@ function QuizBlockRenderer({ block }: { block: Extract<Block, { type: 'quiz' }> 
         <QuizPlayer quiz={quiz} onBack={handleBack} />
       </div>
     </div>
+  );
+}
+
+// Lead Form Block Renderer Component
+function LeadFormBlockRenderer({ block, variant }: { block: Extract<Block, { type: 'lead_form' }>; variant?: 'profile' | 'business' }) {
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      // メール送信が有効な場合はAPIを呼び出す
+      if (block.data.sendEmail) {
+        const response = await fetch('/api/lead-form', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            name: block.data.showName ? name : undefined,
+            message: block.data.showMessage ? message : undefined,
+            content_title: block.data.title,
+            admin_email: block.data.adminEmail,
+          }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || '送信に失敗しました');
+        }
+      }
+
+      setIsSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'エラーが発生しました');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // 送信完了後の表示
+  if (isSubmitted) {
+    return (
+      <div className={variant === 'profile' ? 'glass rounded-2xl p-6 mb-4 text-center' : 'bg-white rounded-2xl shadow-lg p-8 text-center'}>
+        <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+        <h3 className="text-xl font-bold text-gray-900 mb-2">登録完了！</h3>
+        <p className="text-gray-600">ご登録ありがとうございます。</p>
+      </div>
+    );
+  }
+
+  if (variant === 'profile') {
+    return (
+      <div className="glass rounded-2xl p-6 mb-4">
+        <h4 className="font-bold text-lg text-gray-900 mb-4 text-center">{block.data.title}</h4>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {block.data.showName && (
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="お名前"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+            />
+          )}
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="メールアドレス"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+          />
+          {block.data.showMessage && (
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="メッセージ（任意）"
+              rows={3}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none"
+            />
+          )}
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          <button
+            type="submit"
+            disabled={isSubmitting || !email}
+            className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isSubmitting ? '送信中...' : block.data.buttonText}
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  // business variant
+  return (
+    <section className="py-12 px-6">
+      <div className="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-8">
+        <h4 className="font-bold text-xl text-gray-900 mb-6 text-center">{block.data.title}</h4>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {block.data.showName && (
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="お名前"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+            />
+          )}
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="メールアドレス"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+          />
+          {block.data.showMessage && (
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="メッセージ（任意）"
+              rows={3}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none resize-none"
+            />
+          )}
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          <button
+            type="submit"
+            disabled={isSubmitting || !email}
+            className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isSubmitting ? '送信中...' : block.data.buttonText}
+          </button>
+        </form>
+      </div>
+    </section>
   );
 }
 

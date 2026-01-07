@@ -138,6 +138,18 @@ const getRandomImageUrl = (category: string = 'portrait') => {
       'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop',
       'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=600&fit=crop',
     ],
+    gallery: [
+      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1433086966358-54859d0ed716?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1426604966848-d7adac402bff?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=800&q=80',
+    ],
   };
   const urls = categories[category] || categories.general;
   return urls[Math.floor(Math.random() * urls.length)];
@@ -914,11 +926,11 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       case 'testimonial':
         return { id, type: 'testimonial', data: { items: [{ id: generateBlockId(), name: '', role: '', comment: '', imageUrl: '' }] } };
       case 'lead_form':
-        return { id, type: 'lead_form', data: { title: '無料相談はこちら', buttonText: '送信する' } };
+        return { id, type: 'lead_form', data: { title: '無料相談はこちら', buttonText: '送信する', sendEmail: false, showName: false, showMessage: false } };
       case 'google_map':
         return { id, type: 'google_map', data: { embedUrl: '', address: '', title: '所在地', height: '300px' } };
       case 'quiz':
-        return { id, type: 'quiz', data: { quizId: '', quizSlug: '', title: '' } };
+        return { id, type: 'quiz', data: { quizId: '', quizSlug: 'demo001', title: '' } };
       case 'countdown':
         const targetDate = new Date();
         targetDate.setDate(targetDate.getDate() + 7); // デフォルトで7日後
@@ -1521,6 +1533,51 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
           <div className="space-y-4">
             <Input label="タイトル" val={block.data.title} onChange={(v) => updateBlock(block.id, { title: v })} ph="無料相談はこちら" />
             <Input label="ボタンテキスト" val={block.data.buttonText} onChange={(v) => updateBlock(block.id, { buttonText: v })} ph="送信する" />
+            
+            {/* メール送信設定 */}
+            <div className="border-t border-gray-200 pt-4 mt-4">
+              <div className="flex items-center gap-2 mb-4">
+                <input
+                  type="checkbox"
+                  checked={block.data.sendEmail || false}
+                  onChange={(e) => updateBlock(block.id, { sendEmail: e.target.checked })}
+                  className="w-4 h-4"
+                />
+                <label className="text-sm font-bold text-gray-700">メール送信を有効化</label>
+              </div>
+              
+              {block.data.sendEmail && (
+                <div className="space-y-4 pl-6 border-l-2 border-emerald-200">
+                  <Input 
+                    label="管理者通知先メール" 
+                    val={block.data.adminEmail || ''} 
+                    onChange={(v) => updateBlock(block.id, { adminEmail: v })} 
+                    ph="admin@example.com（空欄で環境変数を使用）" 
+                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={block.data.showName || false}
+                      onChange={(e) => updateBlock(block.id, { showName: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label className="text-xs text-gray-600">名前入力欄を表示</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={block.data.showMessage || false}
+                      onChange={(e) => updateBlock(block.id, { showMessage: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <label className="text-xs text-gray-600">メッセージ入力欄を表示</label>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    ✉️ 登録時にユーザーへ自動返信メール、管理者へ通知メールが送信されます
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         );
 
@@ -1643,43 +1700,56 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                       <Trash2 size={16} />
                     </button>
                   </div>
-                  <label className="inline-flex items-center gap-2 px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded cursor-pointer transition-colors">
-                    <UploadCloud size={12} />
-                    <span>アップロード</span>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        if (file.size > MAX_IMAGE_SIZE) {
-                          alert(`画像サイズが大きすぎます。最大2MBまで対応しています。`);
-                          return;
-                        }
-                        const uploadGalleryImage = async () => {
-                          if (!supabase) return;
-                          setIsUploading(true);
-                          try {
-                            const fileExt = file.name.split('.').pop();
-                            const fileName = `gallery_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-                            const filePath = `${user?.id || 'anonymous'}/${fileName}`;
-                            const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
-                            if (uploadError) throw uploadError;
-                            const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
-                            const newItems = [...block.data.items];
-                            newItems[i].imageUrl = data.publicUrl;
-                            updateBlock(block.id, { items: newItems });
-                          } catch (err) {
-                            alert('アップロードに失敗しました');
-                          } finally {
-                            setIsUploading(false);
+                  <div className="flex gap-2">
+                    <label className="inline-flex items-center gap-2 px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded cursor-pointer transition-colors">
+                      <UploadCloud size={12} />
+                      <span>UP</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > MAX_IMAGE_SIZE) {
+                            alert(`画像サイズが大きすぎます。最大2MBまで対応しています。`);
+                            return;
                           }
-                        };
-                        uploadGalleryImage();
+                          const uploadGalleryImage = async () => {
+                            if (!supabase) return;
+                            setIsUploading(true);
+                            try {
+                              const fileExt = file.name.split('.').pop();
+                              const fileName = `gallery_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                              const filePath = `${user?.id || 'anonymous'}/${fileName}`;
+                              const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
+                              if (uploadError) throw uploadError;
+                              const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
+                              const newItems = [...block.data.items];
+                              newItems[i].imageUrl = data.publicUrl;
+                              updateBlock(block.id, { items: newItems });
+                            } catch (err) {
+                              alert('アップロードに失敗しました');
+                            } finally {
+                              setIsUploading(false);
+                            }
+                          };
+                          uploadGalleryImage();
+                        }}
+                      />
+                    </label>
+                    <button
+                      onClick={() => {
+                        const newItems = [...block.data.items];
+                        newItems[i].imageUrl = getRandomImageUrl('gallery');
+                        updateBlock(block.id, { items: newItems });
                       }}
-                    />
-                  </label>
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded transition-colors"
+                    >
+                      <Shuffle size={12} />
+                      <span>自動</span>
+                    </button>
+                  </div>
                 </div>
               ))}
               <button

@@ -119,6 +119,11 @@ export type KindleBlockData = {
 export type LeadFormBlockData = {
   title: string;
   buttonText: string;
+  // メール送信設定
+  sendEmail?: boolean;           // メール送信有効化
+  adminEmail?: string;           // 管理者通知先メール
+  showName?: boolean;            // 名前入力欄表示
+  showMessage?: boolean;         // メッセージ入力欄表示
 };
 
 export type LineCardBlockData = {
