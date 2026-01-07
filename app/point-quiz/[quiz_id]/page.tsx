@@ -141,13 +141,14 @@ export default function PointQuizPage() {
       // ポイント付与
       await updatePoints(
         pointsPerCorrect,
-        null,
         'quiz_correct',
         {
-          quiz_id: quizId,
-          question_index: currentQuestionIndex,
-        },
-        user.id
+          userId: user.id,
+          eventData: {
+            quiz_id: quizId,
+            question_index: currentQuestionIndex,
+          },
+        }
       );
 
       setCurrentPoints(prev => prev + pointsPerCorrect);
