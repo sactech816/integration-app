@@ -8,7 +8,7 @@ import { GamificationCampaign, GachaPrize, GachaSettings, CampaignType } from '@
 import { validatePrizeProbabilities, autoAdjustProbabilities } from '@/lib/gamification/mockGacha';
 import EditorLayout from '../shared/EditorLayout';
 import PhoneMockup from '../shared/PhoneMockup';
-import GachaPreview from '../previews/GachaPreview';
+import GamePreview from '../previews/GamePreview';
 import {
   Gift,
   Plus,
@@ -639,8 +639,9 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth, ga
   // 右パネル（プレビュー）
   const rightPanel = (
     <PhoneMockup title={`${config.title}プレビュー`} onReset={resetPreview}>
-      <GachaPreview
+      <GamePreview
         key={previewKey}
+        gameType={gameType}
         title={form.title}
         description={form.description}
         animationType={form.animation_type}
