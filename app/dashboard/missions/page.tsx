@@ -67,6 +67,15 @@ export default function MissionsPage() {
     setRefreshTrigger(prev => prev + 1);
   };
 
+  // ログアウトハンドラー
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+      setUser(null);
+      setTotalPoints(0);
+    }
+  };
+
   // ローディング表示
   if (loading) {
     return (
@@ -80,7 +89,7 @@ export default function MissionsPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-50 to-emerald-50">
-        <Header user={user} onAuthClick={() => setShowAuth(true)} />
+        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
         <main className="max-w-2xl mx-auto px-4 py-12">
           <div className="text-center">
             <Target className="w-20 h-20 text-teal-300 mx-auto mb-4" />
@@ -106,7 +115,7 @@ export default function MissionsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 to-emerald-50">
-      <Header user={user} onAuthClick={() => setShowAuth(true)} />
+      <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
       
       <main className="max-w-2xl mx-auto px-4 py-8">
         {/* ヘッダー */}
