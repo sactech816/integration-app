@@ -153,7 +153,8 @@ export default function ScratchAnimation({
   
   // playingが変化したらカードを準備
   useEffect(() => {
-    if (playing && result) {
+    if (!playing && result && !cardReady) {
+      // ガチャを回した後（playing=false, result=あり）にカードを準備
       setCardReady(true);
       setRevealed(false);
       setScratchProgress(0);
@@ -163,8 +164,11 @@ export default function ScratchAnimation({
       setTimeout(() => {
         initScratchCard();
       }, 100);
+    } else if (playing) {
+      // プレイ中はカードを準備していない状態にする
+      setCardReady(false);
     }
-  }, [playing, result, initScratchCard]);
+  }, [playing, result, cardReady, initScratchCard]);
   
   // リセット時
   const handleReset = () => {
@@ -341,5 +345,6 @@ export default function ScratchAnimation({
     </div>
   );
 }
+
 
 

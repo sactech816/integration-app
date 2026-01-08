@@ -202,7 +202,7 @@ export default function StampRallyEditor({ user, initialData, onBack, setShowAut
               type="text"
               value={form.title}
               onChange={e => setForm(prev => ({ ...prev, title: e.target.value }))}
-              className="w-full border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-amber-500 outline-none"
+              className="w-full border border-gray-300 p-3 rounded-lg text-gray-900 bg-white font-bold focus:ring-2 focus:ring-amber-500 outline-none"
               placeholder="スタンプラリーのタイトル"
             />
           </div>
@@ -211,7 +211,7 @@ export default function StampRallyEditor({ user, initialData, onBack, setShowAut
             <textarea
               value={form.description}
               onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full border border-gray-300 p-3 rounded-lg text-black focus:ring-2 focus:ring-amber-500 outline-none"
+              className="w-full border border-gray-300 p-3 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-amber-500 outline-none"
               rows={3}
               placeholder="スタンプラリーの説明"
             />
@@ -252,7 +252,7 @@ export default function StampRallyEditor({ user, initialData, onBack, setShowAut
               type="number"
               value={form.points_per_stamp}
               onChange={e => setForm(prev => ({ ...prev, points_per_stamp: parseInt(e.target.value) || 0 }))}
-              className="w-full border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-amber-500 outline-none"
+              className="w-full border border-gray-300 p-3 rounded-lg text-gray-900 bg-white font-bold focus:ring-2 focus:ring-amber-500 outline-none"
               min={0}
             />
           </div>
@@ -288,7 +288,7 @@ export default function StampRallyEditor({ user, initialData, onBack, setShowAut
               type="number"
               value={form.completion_bonus}
               onChange={e => setForm(prev => ({ ...prev, completion_bonus: parseInt(e.target.value) || 0 }))}
-              className="w-full border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-amber-500 outline-none"
+              className="w-full border border-gray-300 p-3 rounded-lg text-gray-900 bg-white font-bold focus:ring-2 focus:ring-amber-500 outline-none"
               min={0}
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -417,6 +417,7 @@ export default function StampRallyEditor({ user, initialData, onBack, setShowAut
     </>
   );
 }
+
 
 
 

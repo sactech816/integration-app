@@ -37,9 +37,19 @@ export default function KindleListPage() {
 
   // 管理者かどうかを判定
   const adminEmails = getAdminEmails();
-  const isAdmin = user?.email && adminEmails.some((email: string) =>
-    user.email?.toLowerCase() === email.toLowerCase()
-  );
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // ユーザーが読み込まれたら管理者判定
+  useEffect(() => {
+    if (user?.email) {
+      const adminStatus = adminEmails.some((email: string) =>
+        user.email?.toLowerCase() === email.toLowerCase()
+      );
+      setIsAdmin(adminStatus);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user]);
 
   // ユーザーとサブスク状態を取得
   useEffect(() => {
@@ -75,17 +85,24 @@ export default function KindleListPage() {
 
   // 未課金ユーザー（管理者以外）はLPにリダイレクト
   useEffect(() => {
-    if (loadingSubscription) return; // まだ読み込み中
+    // まだ読み込み中は何もしない
+    if (loadingSubscription) return;
+    
+    // ユーザー情報が読み込まれていない場合は何もしない
+    if (!user) return;
     
     // 管理者は常にアクセス可能
     if (isAdmin) return;
     
+    // サブスクリプション情報が読み込まれていない場合は何もしない
+    if (!subscriptionStatus) return;
+    
     // 課金者はアクセス可能
-    if (subscriptionStatus?.hasActiveSubscription) return;
+    if (subscriptionStatus.hasActiveSubscription) return;
     
     // 未課金ユーザーはLPの料金セクションにリダイレクト
     router.replace('/kindle/lp#pricing');
-  }, [loadingSubscription, isAdmin, subscriptionStatus, router]);
+  }, [loadingSubscription, user, isAdmin, subscriptionStatus, router]);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -166,7 +183,20 @@ export default function KindleListPage() {
   };
 
   // アクセス権チェック中、または未課金ユーザーがリダイレクト中はローディング表示
-  if (loadingSubscription || (!isAdmin && !subscriptionStatus?.hasActiveSubscription)) {
+  // ただし、管理者の場合はローディングを早く終了させる
+  if (loadingSubscription) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="animate-spin text-amber-600" size={40} />
+          <p className="text-gray-600 font-medium">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // 管理者でない、かつサブスクリプションがない場合はローディング（リダイレクト中）
+  if (!isAdmin && !subscriptionStatus?.hasActiveSubscription && user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">

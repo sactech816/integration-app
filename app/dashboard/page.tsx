@@ -202,6 +202,8 @@ function DashboardContent() {
     user_created_at: string;
     total_purchases: number;
     total_donated: number;
+    current_points?: number;
+    total_accumulated_points?: number;
   }>>([]);
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -209,6 +211,9 @@ function DashboardContent() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [userPage, setUserPage] = useState(1);
   const USERS_PER_PAGE = 10;
+  const [awardingPoints, setAwardingPoints] = useState<string | null>(null);
+  const [pointsToAward, setPointsToAward] = useState<number>(0);
+  const [pointsReason, setPointsReason] = useState<string>('');
 
   // ゲーミフィケーション管理用のステート（管理者のみ）
   const [gamificationCampaigns, setGamificationCampaigns] = useState<GamificationCampaign[]>([]);
@@ -959,7 +964,33 @@ function DashboardContent() {
         console.error('[Dashboard] Fetch users error:', result.error);
         alert('ユーザー一覧の取得に失敗しました: ' + result.error);
       } else {
-        setAllUsers(result.users);
+        // ユーザーごとのポイント残高を取得
+        const usersWithPoints = await Promise.all(
+          result.users.map(async (user) => {
+            try {
+              const { data: pointData } = await supabase!
+                .rpc('get_user_point_balance', {
+                  p_user_id: user.user_id,
+                  p_session_id: null
+                });
+              
+              return {
+                ...user,
+                current_points: pointData?.[0]?.current_points || 0,
+                total_accumulated_points: pointData?.[0]?.total_accumulated_points || 0,
+              };
+            } catch (error) {
+              console.error('Point balance fetch error for user:', user.user_id, error);
+              return {
+                ...user,
+                current_points: 0,
+                total_accumulated_points: 0,
+              };
+            }
+          })
+        );
+        
+        setAllUsers(usersWithPoints);
         setUserPage(1); // ページをリセット
       }
     } catch (error) {
@@ -976,6 +1007,58 @@ function DashboardContent() {
     (userPage - 1) * USERS_PER_PAGE,
     userPage * USERS_PER_PAGE
   );
+
+  // ポイント付与処理
+  const handleAwardPoints = async (userId: string) => {
+    if (!supabase || pointsToAward === 0) {
+      alert('付与するポイント数を入力してください');
+      return;
+    }
+
+    if (!confirm(`${pointsToAward}ポイントを付与しますか？`)) return;
+
+    setAwardingPoints(userId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) throw new Error('認証トークンがありません');
+
+      const response = await fetch('/api/admin/award-points', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId,
+          points: pointsToAward,
+          reason: pointsReason || '開発支援への感謝',
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'ポイント付与に失敗しました');
+      }
+
+      const result = await response.json();
+      alert(result.message || 'ポイントを付与しました');
+      
+      // ユーザー一覧を再読み込み
+      await fetchAllUsers();
+      
+      // フォームをリセット
+      setAwardingPoints(null);
+      setPointsToAward(0);
+      setPointsReason('');
+    } catch (error) {
+      console.error('Award points error:', error);
+      alert('ポイント付与エラー: ' + (error instanceof Error ? error.message : '不明なエラー'));
+    } finally {
+      setAwardingPoints(null);
+    }
+  };
 
   // パートナーステータスを切り替え（管理者のみ）
   const handleTogglePartner = async (userId: string, currentStatus: boolean, note: string = '') => {
@@ -1888,7 +1971,7 @@ function DashboardContent() {
                           type="text"
                           value={campaignForm.title}
                           onChange={(e) => setCampaignForm({ ...campaignForm, title: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-white"
                           placeholder="キャンペーン名"
                         />
                       </div>
@@ -1897,7 +1980,7 @@ function DashboardContent() {
                         <select
                           value={campaignForm.campaign_type}
                           onChange={(e) => setCampaignForm({ ...campaignForm, campaign_type: e.target.value as CampaignType })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-white"
                         >
                           <option value="stamp_rally">スタンプラリー</option>
                           <option value="login_bonus">ログインボーナス</option>
@@ -1909,7 +1992,7 @@ function DashboardContent() {
                         <textarea
                           value={campaignForm.description}
                           onChange={(e) => setCampaignForm({ ...campaignForm, description: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-white"
                           rows={2}
                           placeholder="キャンペーンの説明"
                         />
@@ -1924,7 +2007,7 @@ function DashboardContent() {
                               type="number"
                               value={campaignForm.total_stamps}
                               onChange={(e) => setCampaignForm({ ...campaignForm, total_stamps: parseInt(e.target.value) || 10 })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
                               min={1}
                               max={20}
                             />
@@ -1935,7 +2018,7 @@ function DashboardContent() {
                               type="number"
                               value={campaignForm.points_per_stamp}
                               onChange={(e) => setCampaignForm({ ...campaignForm, points_per_stamp: parseInt(e.target.value) || 1 })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
                               min={1}
                             />
                           </div>
@@ -1945,7 +2028,7 @@ function DashboardContent() {
                               type="number"
                               value={campaignForm.completion_bonus}
                               onChange={(e) => setCampaignForm({ ...campaignForm, completion_bonus: parseInt(e.target.value) || 0 })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
                               min={0}
                             />
                           </div>
@@ -1960,7 +2043,7 @@ function DashboardContent() {
                             type="number"
                             value={campaignForm.points_per_day}
                             onChange={(e) => setCampaignForm({ ...campaignForm, points_per_day: parseInt(e.target.value) || 1 })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
                             min={1}
                           />
                         </div>
@@ -1974,7 +2057,7 @@ function DashboardContent() {
                             <select
                               value={campaignForm.animation_type}
                               onChange={(e) => setCampaignForm({ ...campaignForm, animation_type: e.target.value as GachaAnimationType })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
                             >
                               <option value="capsule">カプセルトイ</option>
                               <option value="roulette">ルーレット</option>
@@ -1987,7 +2070,7 @@ function DashboardContent() {
                               type="number"
                               value={campaignForm.cost_per_play}
                               onChange={(e) => setCampaignForm({ ...campaignForm, cost_per_play: parseInt(e.target.value) || 10 })}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white"
                               min={1}
                             />
                           </div>
@@ -2286,7 +2369,7 @@ function DashboardContent() {
                                         updated[index] = { ...prize, name: e.target.value };
                                         setEditingPrizes(updated);
                                       }}
-                                      className="flex-1 px-2 py-1 border border-gray-200 rounded"
+                                      className="flex-1 px-2 py-1 border border-gray-200 rounded text-gray-900 bg-white"
                                       placeholder="景品名"
                                     />
                                     <input
@@ -2297,7 +2380,7 @@ function DashboardContent() {
                                         updated[index] = { ...prize, probability: parseFloat(e.target.value) || 0 };
                                         setEditingPrizes(updated);
                                       }}
-                                      className="w-20 px-2 py-1 border border-gray-200 rounded text-right"
+                                      className="w-20 px-2 py-1 border border-gray-200 rounded text-right text-gray-900 bg-white"
                                       placeholder="確率%"
                                       min={0}
                                       max={100}
@@ -2725,7 +2808,7 @@ function DashboardContent() {
                     placeholder="タイトルで検索..."
                     value={featuredSearch}
                     onChange={(e) => setFeaturedSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm text-gray-900"
                   />
                 </div>
 
@@ -2868,6 +2951,7 @@ function DashboardContent() {
                         <tr className="border-b border-gray-200">
                           <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">メールアドレス</th>
                           <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">パートナー</th>
+                          <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">ポイント</th>
                           <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">総支援額</th>
                           <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">購入数</th>
                           <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">登録日</th>
@@ -2877,6 +2961,7 @@ function DashboardContent() {
                       <tbody>
                         {paginatedUsers.map((usr) => {
                           const isEditing = editingUserId === usr.user_id;
+                          const isAwardingPointsToUser = awardingPoints === usr.user_id;
                           return (
                             <tr key={usr.user_id} className="border-b border-gray-100 hover:bg-gray-50">
                               <td className="px-4 py-3 text-gray-900 font-medium">
@@ -2903,7 +2988,17 @@ function DashboardContent() {
                                   <span className="text-gray-400 text-xs">一般</span>
                                 )}
                               </td>
-                              <td className="px-4 py-3 text-right font-bold text-purple-600">
+                              <td className="px-4 py-3 text-right">
+                                <div className="flex flex-col items-end gap-1">
+                                  <span className="font-bold text-purple-600 text-base">
+                                    {usr.current_points?.toLocaleString() || 0}pt
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    累計: {usr.total_accumulated_points?.toLocaleString() || 0}pt
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-right font-bold text-green-600">
                                 ¥{usr.total_donated.toLocaleString()}
                               </td>
                               <td className="px-4 py-3 text-right text-gray-600">
@@ -2940,20 +3035,68 @@ function DashboardContent() {
                                       </button>
                                     </div>
                                   </div>
+                                ) : isAwardingPointsToUser ? (
+                                  <div className="space-y-2 min-w-[200px]">
+                                    <input
+                                      type="number"
+                                      placeholder="ポイント数"
+                                      value={pointsToAward || ''}
+                                      onChange={(e) => setPointsToAward(Number(e.target.value))}
+                                      className="w-full text-xs border border-purple-300 p-2 rounded bg-white text-gray-900"
+                                    />
+                                    <input
+                                      type="text"
+                                      placeholder="理由（任意）"
+                                      value={pointsReason}
+                                      onChange={(e) => setPointsReason(e.target.value)}
+                                      className="w-full text-xs border border-purple-300 p-2 rounded bg-white text-gray-900"
+                                    />
+                                    <div className="flex gap-1">
+                                      <button
+                                        onClick={() => handleAwardPoints(usr.user_id)}
+                                        disabled={pointsToAward === 0}
+                                        className="flex-1 bg-purple-600 text-white px-2 py-1 rounded text-xs font-bold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                      >
+                                        付与
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          setAwardingPoints(null);
+                                          setPointsToAward(0);
+                                          setPointsReason('');
+                                        }}
+                                        className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300"
+                                      >
+                                        <X size={12} />
+                                      </button>
+                                    </div>
+                                  </div>
                                 ) : (
-                                  <button
-                                    onClick={() => {
-                                      setEditingUserId(usr.user_id);
-                                      setPartnerNote(usr.partner_note || '');
-                                    }}
-                                    className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
-                                      usr.is_partner
-                                        ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                                        : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                                    }`}
-                                  >
-                                    {usr.is_partner ? '解除' : 'パートナーに設定'}
-                                  </button>
+                                  <div className="flex gap-1 justify-center">
+                                    <button
+                                      onClick={() => {
+                                        setEditingUserId(usr.user_id);
+                                        setPartnerNote(usr.partner_note || '');
+                                      }}
+                                      className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
+                                        usr.is_partner
+                                          ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                                          : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                                      }`}
+                                    >
+                                      {usr.is_partner ? '解除' : 'パートナー'}
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setAwardingPoints(usr.user_id);
+                                        setPointsToAward(0);
+                                        setPointsReason('開発支援への感謝');
+                                      }}
+                                      className="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1 rounded text-xs font-bold transition-colors"
+                                    >
+                                      Pt付与
+                                    </button>
+                                  </div>
                                 )}
                               </td>
                             </tr>
@@ -3346,7 +3489,7 @@ function DashboardContent() {
                 placeholder="タイトルで検索..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-900"
               />
             </div>
           </div>

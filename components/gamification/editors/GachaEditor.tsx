@@ -431,7 +431,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth, ga
               type="text"
               value={form.title}
               onChange={e => setForm(prev => ({ ...prev, title: e.target.value }))}
-              className="w-full border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-purple-500 outline-none"
+              className="w-full border border-gray-300 p-3 rounded-lg text-gray-900 bg-white font-bold focus:ring-2 focus:ring-purple-500 outline-none"
               placeholder={`${config.title}のタイトル`}
             />
           </div>
@@ -440,7 +440,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth, ga
             <textarea
               value={form.description}
               onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full border border-gray-300 p-3 rounded-lg text-black focus:ring-2 focus:ring-purple-500 outline-none"
+              className="w-full border border-gray-300 p-3 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-purple-500 outline-none"
               rows={3}
               placeholder={`${config.title}の説明`}
             />
@@ -451,7 +451,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth, ga
               type="number"
               value={form.cost_per_play}
               onChange={e => setForm(prev => ({ ...prev, cost_per_play: parseInt(e.target.value) || 0 }))}
-              className="w-full border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-purple-500 outline-none"
+              className="w-full border border-gray-300 p-3 rounded-lg text-gray-900 bg-white font-bold focus:ring-2 focus:ring-purple-500 outline-none"
               min={0}
             />
           </div>

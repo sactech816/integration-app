@@ -32,9 +32,11 @@ const SAMPLE_CAMPAIGN_IDS = {
   slot: '11111111-1111-1111-1111-111111111111',
   scratch: '22222222-2222-2222-2222-222222222222',
   fukubiki: '33333333-3333-3333-3333-333333333333',
-  gacha: '44444444-4444-4444-4444-444444444444',
+  gacha_capsule: '44444444-4444-4444-4444-444444444444',
   login_bonus: '55555555-5555-5555-5555-555555555555',
   stamp_rally: '66666666-6666-6666-6666-666666666666',
+  gacha_roulette: '77777777-7777-7777-7777-777777777777',
+  gacha_omikuji: '88888888-8888-8888-8888-888888888888',
 };
 
 // サンプルクイズのslug
@@ -66,15 +68,37 @@ const GAME_TYPES: GameType[] = [
     maxReward: 200,
   },
   {
-    id: 'scratch',
-    title: 'スクラッチ',
-    description: '削って当たりを狙おう！最大100pt獲得！',
-    icon: CreditCard,
-    bgGradient: 'from-amber-600 via-orange-600 to-yellow-500',
-    path: '/scratch',
-    sampleId: SAMPLE_CAMPAIGN_IDS.scratch,
+    id: 'gacha_capsule',
+    title: 'カプセルガチャ',
+    description: 'SSR出現で500pt！夢の大当たりを狙え！',
+    icon: Gift,
+    bgGradient: 'from-purple-600 via-pink-600 to-rose-600',
+    path: '/gacha',
+    sampleId: SAMPLE_CAMPAIGN_IDS.gacha_capsule,
     cost: 10,
-    maxReward: 100,
+    maxReward: 500,
+  },
+  {
+    id: 'gacha_roulette',
+    title: 'ルーレットガチャ',
+    description: '回して止めて！最大300pt獲得のチャンス！',
+    icon: Sparkles,
+    bgGradient: 'from-indigo-600 via-blue-600 to-cyan-600',
+    path: '/gacha',
+    sampleId: SAMPLE_CAMPAIGN_IDS.gacha_roulette,
+    cost: 10,
+    maxReward: 300,
+  },
+  {
+    id: 'gacha_omikuji',
+    title: 'おみくじガチャ',
+    description: '運試し！最大200pt獲得！',
+    icon: Gift,
+    bgGradient: 'from-pink-600 via-purple-600 to-indigo-600',
+    path: '/gacha',
+    sampleId: SAMPLE_CAMPAIGN_IDS.gacha_omikuji,
+    cost: 10,
+    maxReward: 200,
   },
   {
     id: 'fukubiki',
@@ -86,17 +110,6 @@ const GAME_TYPES: GameType[] = [
     sampleId: SAMPLE_CAMPAIGN_IDS.fukubiki,
     cost: 10,
     maxReward: 150,
-  },
-  {
-    id: 'gacha',
-    title: 'ガチャ',
-    description: 'SSR出現で500pt！夢の大当たりを狙え！',
-    icon: Gift,
-    bgGradient: 'from-purple-600 via-pink-600 to-rose-600',
-    path: '/gacha',
-    sampleId: SAMPLE_CAMPAIGN_IDS.gacha,
-    cost: 10,
-    maxReward: 500,
   },
   {
     id: 'login_bonus',
@@ -349,8 +362,8 @@ export default function ArcadePage() {
                     </div>
                   )}
 
-                  {/* 人気バッジ（ガチャ） */}
-                  {game.id === 'gacha' && (
+                  {/* 人気バッジ（カプセルガチャ） */}
+                  {game.id === 'gacha_capsule' && (
                     <div className="absolute top-4 right-4 px-3 py-1 bg-pink-500 text-white text-xs font-bold rounded-full animate-pulse">
                       人気
                     </div>
@@ -360,6 +373,13 @@ export default function ArcadePage() {
                   {game.id === 'slot' && (
                     <div className="absolute top-4 right-4 px-3 py-1 bg-orange-500 text-white text-xs font-bold rounded-full">
                       おすすめ
+                    </div>
+                  )}
+
+                  {/* NEWバッジ（ルーレット・おみくじ） */}
+                  {(game.id === 'gacha_roulette' || game.id === 'gacha_omikuji') && (
+                    <div className="absolute top-4 right-4 px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">
+                      NEW
                     </div>
                   )}
                 </div>
