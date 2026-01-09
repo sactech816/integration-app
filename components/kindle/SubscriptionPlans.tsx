@@ -39,8 +39,8 @@ interface SubscriptionPlansProps {
   currentPlan?: PlanTier | null;
   currentPeriod?: BillingPeriod | null;
   className?: string;
-  /** 外部から価格を渡す場合（管理画面から取得した値など） */
-  customPrices?: Record<PlanTier, { monthly: number; yearly: number }>;
+  /** 外部から価格を渡す場合（レガシー互換: スタンダードプランの価格のみ） */
+  customPrices?: { monthly: number; yearly: number };
 }
 
 // プラン情報
@@ -159,10 +159,11 @@ export default function SubscriptionPlans({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
 
-  // カスタム価格があれば適用
+  // カスタム価格があれば適用（レガシー互換: スタンダードプランのみ）
   const getPrice = (plan: PlanDisplay, period: BillingPeriod): number => {
-    if (customPrices && customPrices[plan.id]) {
-      return period === 'yearly' ? customPrices[plan.id].yearly : customPrices[plan.id].monthly;
+    // レガシー互換: customPricesはスタンダードプランの価格として扱う
+    if (customPrices && plan.id === 'standard') {
+      return period === 'yearly' ? customPrices.yearly : customPrices.monthly;
     }
     return period === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice;
   };
