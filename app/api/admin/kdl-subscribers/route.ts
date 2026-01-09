@@ -13,6 +13,16 @@ const getServiceClient = () => {
   return createClient(supabaseUrl, serviceKey);
 };
 
+// プランTierの表示名
+const PLAN_TIER_LABELS: Record<string, string> = {
+  none: '無料',
+  lite: 'ライト',
+  standard: 'スタンダード',
+  pro: 'プロ',
+  business: 'ビジネス',
+  enterprise: 'エンタープライズ',
+};
+
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
@@ -47,24 +57,46 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    // アクティブなサブスクリプション一覧を取得
-    const { data: subscriptions, error: subError } = await supabase
-      .from('subscriptions')
-      .select('id, user_id, status, period, amount, plan_name, next_payment_date, created_at')
+    // まずkdl_subscriptionsテーブルを試す（新テーブル）
+    let subscriptions: any[] = [];
+    let useNewTable = true;
+
+    const { data: kdlSubs, error: kdlError } = await supabase
+      .from('kdl_subscriptions')
+      .select('id, user_id, status, period, amount, plan_tier, plan_name, email, current_period_end, next_payment_date, created_at')
       .eq('status', 'active')
       .order('created_at', { ascending: false });
 
-    if (subError) {
-      throw subError;
+    if (kdlError) {
+      // kdl_subscriptionsテーブルがない場合、旧subscriptionsテーブルにフォールバック
+      console.log('kdl_subscriptions not found, falling back to subscriptions table');
+      useNewTable = false;
+      
+      const { data: oldSubs, error: oldError } = await supabase
+        .from('subscriptions')
+        .select('id, user_id, status, period, amount, plan_name, next_payment_date, created_at')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (oldError) {
+        throw oldError;
+      }
+
+      // 旧テーブルのデータにplan_tierを推定して追加
+      subscriptions = (oldSubs || []).map((sub) => ({
+        ...sub,
+        plan_tier: inferPlanTier(sub.amount, sub.period),
+      }));
+    } else {
+      subscriptions = kdlSubs || [];
     }
 
     // ユーザーIDを抽出
-    const userIds = subscriptions?.map((s) => s.user_id).filter(Boolean) || [];
+    const userIds = subscriptions.map((s) => s.user_id).filter(Boolean);
 
     // ユーザー情報を取得（auth.usersから）
     let usersMap: Record<string, string> = {};
     if (userIds.length > 0) {
-      // Supabase Admin APIでユーザーメールを取得
       for (const userId of userIds) {
         try {
           const { data: userData } = await supabase.auth.admin.getUserById(userId);
@@ -120,29 +152,62 @@ export async function GET(request: NextRequest) {
     });
 
     // サブスクリプションデータにユーザー情報と使用量を追加
-    const enrichedSubscriptions = subscriptions?.map((sub) => ({
+    const enrichedSubscriptions = subscriptions.map((sub) => ({
       ...sub,
-      email: usersMap[sub.user_id] || 'Unknown',
+      email: sub.email || usersMap[sub.user_id] || 'Unknown',
+      plan_tier_label: PLAN_TIER_LABELS[sub.plan_tier] || sub.plan_tier,
       usage: usageMap[sub.user_id] || { dailyUsage: 0, monthlyUsage: 0, totalCost: 0 },
-    })) || [];
+    }));
 
-    // 全体統計も取得
+    // 統計を取得（新テーブル or 旧テーブル）
+    const tableName = useNewTable ? 'kdl_subscriptions' : 'subscriptions';
+
+    // 総加入者数
     const { count: totalSubscribers } = await supabase
-      .from('subscriptions')
+      .from(tableName)
       .select('id', { count: 'exact', head: true })
       .eq('status', 'active');
 
+    // 月額/年間プラン数
     const { count: monthlyPlanCount } = await supabase
-      .from('subscriptions')
+      .from(tableName)
       .select('id', { count: 'exact', head: true })
       .eq('status', 'active')
       .eq('period', 'monthly');
 
     const { count: yearlyPlanCount } = await supabase
-      .from('subscriptions')
+      .from(tableName)
       .select('id', { count: 'exact', head: true })
       .eq('status', 'active')
       .eq('period', 'yearly');
+
+    // プランTier別の統計（新テーブルのみ）
+    let tierStats: Record<string, number> = {
+      lite: 0,
+      standard: 0,
+      pro: 0,
+      business: 0,
+      enterprise: 0,
+    };
+
+    if (useNewTable) {
+      for (const tier of Object.keys(tierStats)) {
+        const { count } = await supabase
+          .from('kdl_subscriptions')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'active')
+          .eq('plan_tier', tier);
+        tierStats[tier] = count || 0;
+      }
+    } else {
+      // 旧テーブルの場合は金額から推定
+      subscriptions.forEach((sub) => {
+        const tier = sub.plan_tier;
+        if (tier && tierStats[tier] !== undefined) {
+          tierStats[tier]++;
+        }
+      });
+    }
 
     // 今月の総AI使用量
     const { count: totalMonthlyAIUsage } = await supabase
@@ -158,15 +223,28 @@ export async function GET(request: NextRequest) {
 
     const totalMonthlyCost = allCostData?.reduce((sum, item) => sum + (item.estimated_cost_jpy || 0), 0) || 0;
 
+    // 月間収益予測（アクティブなサブスクリプションの月額換算合計）
+    let monthlyRevenue = 0;
+    subscriptions.forEach((sub) => {
+      if (sub.period === 'yearly') {
+        monthlyRevenue += (sub.amount || 0) / 12;
+      } else {
+        monthlyRevenue += sub.amount || 0;
+      }
+    });
+
     return NextResponse.json({
       subscribers: enrichedSubscriptions,
       stats: {
         totalSubscribers: totalSubscribers || 0,
         monthlyPlanCount: monthlyPlanCount || 0,
         yearlyPlanCount: yearlyPlanCount || 0,
+        tierStats,
         totalMonthlyAIUsage: totalMonthlyAIUsage || 0,
         totalMonthlyCost: Math.round(totalMonthlyCost * 100) / 100,
+        monthlyRevenue: Math.round(monthlyRevenue),
       },
+      useNewTable,
     });
   } catch (error: any) {
     console.error('Get KDL subscribers error:', error);
@@ -177,8 +255,17 @@ export async function GET(request: NextRequest) {
   }
 }
 
-
-
-
-
-
+// 金額からプランTierを推定（旧テーブル用）
+function inferPlanTier(amount: number, period: string): string {
+  if (period === 'yearly') {
+    if (amount <= 29800) return 'lite';
+    if (amount <= 49800) return 'standard';
+    if (amount <= 98000) return 'pro';
+    return 'business';
+  } else {
+    if (amount <= 2980) return 'lite';
+    if (amount <= 4980) return 'standard';
+    if (amount <= 9800) return 'pro';
+    return 'business';
+  }
+}

@@ -89,7 +89,9 @@ import {
   Gift,
   Stamp,
   Target,
-  Dice6
+  Dice6,
+  Share2,
+  TrendingUp
 } from 'lucide-react';
 
 // ページネーション設定
@@ -259,31 +261,56 @@ function DashboardContent() {
   // KDL管理（管理者用）
   const [showKdlManagement, setShowKdlManagement] = useState(false);
   const [kdlSettings, setKdlSettings] = useState<{
-    kdl_prices?: { value: { monthly: number; yearly: number } };
-    ai_daily_limit?: { value: { default: number; monthly_plan: number; yearly_plan: number } };
-    ai_monthly_limit?: { value: { default: number; monthly_plan: number; yearly_plan: number } };
+    settings?: Record<string, any>;
+    planDefinitions?: Record<string, any>;
+    hasPlanDefinitionsTable?: boolean;
   } | null>(null);
   const [kdlSubscribers, setKdlSubscribers] = useState<any[]>([]);
   const [kdlStats, setKdlStats] = useState<{
     totalSubscribers: number;
     monthlyPlanCount: number;
     yearlyPlanCount: number;
+    tierStats: Record<string, number>;
     totalMonthlyAIUsage: number;
     totalMonthlyCost: number;
+    monthlyRevenue: number;
   } | null>(null);
   const [loadingKdlManagement, setLoadingKdlManagement] = useState(false);
   const [editingKdlSettings, setEditingKdlSettings] = useState(false);
-  const [kdlSettingsForm, setKdlSettingsForm] = useState({
-    monthlyPrice: 4980,
-    yearlyPrice: 39800,
-    dailyLimitDefault: 3,
-    dailyLimitMonthly: 50,
-    dailyLimitYearly: 100,
-    monthlyLimitDefault: 10,
-    monthlyLimitMonthly: 500,
-    monthlyLimitYearly: -1,
+  const [kdlPlanSettings, setKdlPlanSettings] = useState<Record<string, {
+    monthly_price: number;
+    yearly_price: number;
+    daily_ai_limit: number;
+    monthly_ai_limit: number;
+  }>>({
+    lite: { monthly_price: 2980, yearly_price: 29800, daily_ai_limit: 20, monthly_ai_limit: 300 },
+    standard: { monthly_price: 4980, yearly_price: 49800, daily_ai_limit: 50, monthly_ai_limit: 500 },
+    pro: { monthly_price: 9800, yearly_price: 98000, daily_ai_limit: 100, monthly_ai_limit: 1000 },
+    business: { monthly_price: 29800, yearly_price: 298000, daily_ai_limit: -1, monthly_ai_limit: -1 },
   });
   const [savingKdlSettings, setSavingKdlSettings] = useState(false);
+  const [kdlTierFilter, setKdlTierFilter] = useState<string>('all');
+
+  // アフィリエイト管理（管理者用）
+  const [showAffiliateManagement, setShowAffiliateManagement] = useState(false);
+  const [affiliateData, setAffiliateData] = useState<{
+    affiliates: any[];
+    conversions: any[];
+    stats: {
+      totalAffiliates: number;
+      activeAffiliates: number;
+      thisMonthClicks: number;
+      thisMonthConversions: number;
+      thisMonthEarnings: number;
+      pendingPayouts: number;
+    };
+    tableExists: boolean;
+  } | null>(null);
+  const [loadingAffiliateManagement, setLoadingAffiliateManagement] = useState(false);
+  const [affiliateStatusFilter, setAffiliateStatusFilter] = useState<string>('all');
+  const [conversionStatusFilter, setConversionStatusFilter] = useState<string>('all');
+  const [updatingAffiliateId, setUpdatingAffiliateId] = useState<string | null>(null);
+  const [copiedAffiliateCode, setCopiedAffiliateCode] = useState<string | null>(null);
 
   // 管理者かどうかを判定
   const adminEmails = getAdminEmails();
@@ -842,29 +869,23 @@ function DashboardContent() {
         const settingsData = await settingsResponse.json();
         setKdlSettings(settingsData);
         
-        // フォームに反映
-        if (settingsData.kdl_prices?.value) {
-          setKdlSettingsForm(prev => ({
-            ...prev,
-            monthlyPrice: settingsData.kdl_prices.value.monthly || 4980,
-            yearlyPrice: settingsData.kdl_prices.value.yearly || 39800,
-          }));
-        }
-        if (settingsData.ai_daily_limit?.value) {
-          setKdlSettingsForm(prev => ({
-            ...prev,
-            dailyLimitDefault: settingsData.ai_daily_limit.value.default || 3,
-            dailyLimitMonthly: settingsData.ai_daily_limit.value.monthly_plan || 50,
-            dailyLimitYearly: settingsData.ai_daily_limit.value.yearly_plan || 100,
-          }));
-        }
-        if (settingsData.ai_monthly_limit?.value) {
-          setKdlSettingsForm(prev => ({
-            ...prev,
-            monthlyLimitDefault: settingsData.ai_monthly_limit.value.default || 10,
-            monthlyLimitMonthly: settingsData.ai_monthly_limit.value.monthly_plan || 500,
-            monthlyLimitYearly: settingsData.ai_monthly_limit.value.yearly_plan || -1,
-          }));
+        // プラン定義をフォームに反映
+        if (settingsData.planDefinitions) {
+          const newPlanSettings: Record<string, any> = {};
+          ['lite', 'standard', 'pro', 'business'].forEach(tier => {
+            const plan = settingsData.planDefinitions[tier];
+            if (plan) {
+              newPlanSettings[tier] = {
+                monthly_price: plan.monthly_price || 0,
+                yearly_price: plan.yearly_price || 0,
+                daily_ai_limit: plan.daily_ai_limit || 0,
+                monthly_ai_limit: plan.monthly_ai_limit || 0,
+              };
+            }
+          });
+          if (Object.keys(newPlanSettings).length > 0) {
+            setKdlPlanSettings(prev => ({ ...prev, ...newPlanSettings }));
+          }
         }
       }
 
@@ -894,55 +915,21 @@ function DashboardContent() {
 
       if (!token) throw new Error('認証トークンがありません');
 
-      // 料金設定を保存
-      await fetch('/api/admin/kdl-settings', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          key: 'kdl_prices',
-          value: {
-            monthly: kdlSettingsForm.monthlyPrice,
-            yearly: kdlSettingsForm.yearlyPrice,
+      // 各プランの設定を保存
+      for (const [planId, planData] of Object.entries(kdlPlanSettings)) {
+        await fetch('/api/admin/kdl-settings', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
-        }),
-      });
-
-      // 日次制限を保存
-      await fetch('/api/admin/kdl-settings', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          key: 'ai_daily_limit',
-          value: {
-            default: kdlSettingsForm.dailyLimitDefault,
-            monthly_plan: kdlSettingsForm.dailyLimitMonthly,
-            yearly_plan: kdlSettingsForm.dailyLimitYearly,
-          },
-        }),
-      });
-
-      // 月次制限を保存
-      await fetch('/api/admin/kdl-settings', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          key: 'ai_monthly_limit',
-          value: {
-            default: kdlSettingsForm.monthlyLimitDefault,
-            monthly_plan: kdlSettingsForm.monthlyLimitMonthly,
-            yearly_plan: kdlSettingsForm.monthlyLimitYearly,
-          },
-        }),
-      });
+          body: JSON.stringify({
+            type: 'plan_definition',
+            planId,
+            planData,
+          }),
+        });
+      }
 
       alert('設定を保存しました');
       setEditingKdlSettings(false);
@@ -952,6 +939,99 @@ function DashboardContent() {
       alert('設定の保存に失敗しました');
     } finally {
       setSavingKdlSettings(false);
+    }
+  };
+
+  // アフィリエイト管理データを取得（管理者のみ）
+  const fetchAffiliateManagementData = async () => {
+    if (!isAdmin || !supabase) return;
+    setLoadingAffiliateManagement(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) throw new Error('認証トークンがありません');
+
+      const response = await fetch('/api/admin/affiliates', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAffiliateData(data);
+      }
+    } catch (error) {
+      console.error('Affiliate management data fetch error:', error);
+    } finally {
+      setLoadingAffiliateManagement(false);
+    }
+  };
+
+  // アフィリエイト報酬率を更新
+  const handleUpdateCommissionRate = async (affiliateId: string, newRate: number) => {
+    if (!supabase) return;
+    setUpdatingAffiliateId(affiliateId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) throw new Error('認証トークンがありません');
+
+      const response = await fetch('/api/admin/affiliates', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action: 'update_commission_rate',
+          affiliateId,
+          commissionRate: newRate,
+        }),
+      });
+
+      if (response.ok) {
+        await fetchAffiliateManagementData();
+      } else {
+        alert('報酬率の更新に失敗しました');
+      }
+    } catch (error) {
+      console.error('Update commission rate error:', error);
+      alert('報酬率の更新に失敗しました');
+    } finally {
+      setUpdatingAffiliateId(null);
+    }
+  };
+
+  // 成果ステータスを更新
+  const handleUpdateConversionStatus = async (conversionId: string, action: 'confirm_conversion' | 'mark_paid' | 'cancel_conversion') => {
+    if (!supabase) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) throw new Error('認証トークンがありません');
+
+      const response = await fetch('/api/admin/affiliates', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          action,
+          conversionId,
+        }),
+      });
+
+      if (response.ok) {
+        await fetchAffiliateManagementData();
+      } else {
+        alert('ステータスの更新に失敗しました');
+      }
+    } catch (error) {
+      console.error('Update conversion status error:', error);
+      alert('ステータスの更新に失敗しました');
     }
   };
 
@@ -1777,15 +1857,15 @@ function DashboardContent() {
                 </div>
               )}
             </div>
-          </div>
 
-          {/* アフィリエイトセクション */}
-          {user && (
-            <AffiliateDashboard 
-              userId={user.id} 
-              userEmail={user.email}
-            />
-          )}
+            {/* アフィリエイトセクション */}
+            {user && (
+              <AffiliateDashboard 
+                userId={user.id} 
+                userEmail={user.email}
+              />
+            )}
+          </div>
 
           {/* 右カラム：サービス選択 + アクセス解析 */}
           <div className="lg:col-span-2 space-y-4">
@@ -3193,36 +3273,66 @@ function DashboardContent() {
                   <>
                     {/* 統計サマリー */}
                     {kdlStats && (
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-                          <div className="text-2xl font-black text-amber-600">{kdlStats.totalSubscribers}</div>
-                          <div className="text-xs text-gray-500 font-bold">総加入者数</div>
+                      <div className="space-y-4">
+                        {/* 基本統計 */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                            <div className="text-2xl font-black text-amber-600">{kdlStats.totalSubscribers}</div>
+                            <div className="text-xs text-gray-500 font-bold">総加入者数</div>
+                          </div>
+                          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                            <div className="text-2xl font-black text-emerald-600">¥{(kdlStats.monthlyRevenue || 0).toLocaleString()}</div>
+                            <div className="text-xs text-gray-500 font-bold">月間収益予測</div>
+                          </div>
+                          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                            <div className="text-2xl font-black text-green-600">{kdlStats.totalMonthlyAIUsage}</div>
+                            <div className="text-xs text-gray-500 font-bold">今月AI使用回数</div>
+                          </div>
+                          <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                            <div className="text-2xl font-black text-red-600">¥{kdlStats.totalMonthlyCost.toLocaleString()}</div>
+                            <div className="text-xs text-gray-500 font-bold">今月推定コスト</div>
+                          </div>
                         </div>
+
+                        {/* プランTier別統計 */}
                         <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-                          <div className="text-2xl font-black text-blue-600">{kdlStats.monthlyPlanCount}</div>
-                          <div className="text-xs text-gray-500 font-bold">月額プラン</div>
-                        </div>
-                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-                          <div className="text-2xl font-black text-purple-600">{kdlStats.yearlyPlanCount}</div>
-                          <div className="text-xs text-gray-500 font-bold">年間プラン</div>
-                        </div>
-                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-                          <div className="text-2xl font-black text-green-600">{kdlStats.totalMonthlyAIUsage}</div>
-                          <div className="text-xs text-gray-500 font-bold">今月AI使用回数</div>
-                        </div>
-                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-                          <div className="text-2xl font-black text-red-600">¥{kdlStats.totalMonthlyCost.toLocaleString()}</div>
-                          <div className="text-xs text-gray-500 font-bold">今月推定コスト</div>
+                          <h4 className="font-bold text-gray-700 text-sm mb-3">プランTier別加入者数</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                            <div className="bg-gray-50 rounded-lg p-3 text-center">
+                              <div className="text-lg font-black text-gray-600">{kdlStats.tierStats?.lite || 0}</div>
+                              <div className="text-xs text-gray-500 font-bold">ライト</div>
+                            </div>
+                            <div className="bg-blue-50 rounded-lg p-3 text-center">
+                              <div className="text-lg font-black text-blue-600">{kdlStats.tierStats?.standard || 0}</div>
+                              <div className="text-xs text-gray-500 font-bold">スタンダード</div>
+                            </div>
+                            <div className="bg-purple-50 rounded-lg p-3 text-center">
+                              <div className="text-lg font-black text-purple-600">{kdlStats.tierStats?.pro || 0}</div>
+                              <div className="text-xs text-gray-500 font-bold">プロ</div>
+                            </div>
+                            <div className="bg-amber-50 rounded-lg p-3 text-center">
+                              <div className="text-lg font-black text-amber-600">{kdlStats.tierStats?.business || 0}</div>
+                              <div className="text-xs text-gray-500 font-bold">ビジネス</div>
+                            </div>
+                            <div className="bg-green-50 rounded-lg p-3 text-center">
+                              <div className="text-lg font-black text-green-600">{kdlStats.monthlyPlanCount}</div>
+                              <div className="text-xs text-gray-500 font-bold">月額計</div>
+                            </div>
+                            <div className="bg-indigo-50 rounded-lg p-3 text-center">
+                              <div className="text-lg font-black text-indigo-600">{kdlStats.yearlyPlanCount}</div>
+                              <div className="text-xs text-gray-500 font-bold">年間計</div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
 
-                    {/* 料金・制限設定 */}
+                    {/* 料金・制限設定（4段階プラン対応） */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="font-bold text-gray-900 flex items-center gap-2">
                           <Zap size={18} className="text-amber-600" />
-                          料金・AI使用量制限設定
+                          プラン別料金・AI制限設定
                         </h3>
                         {!editingKdlSettings ? (
                           <button
@@ -3252,161 +3362,121 @@ function DashboardContent() {
                       </div>
 
                       {editingKdlSettings ? (
-                        <div className="space-y-6">
-                          {/* 料金設定 */}
-                          <div>
-                            <h4 className="font-bold text-gray-700 text-sm mb-3">💰 料金設定（円）</h4>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-xs text-gray-500 mb-1">月額プラン</label>
-                                <input
-                                  type="number"
-                                  value={kdlSettingsForm.monthlyPrice}
-                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, monthlyPrice: parseInt(e.target.value) || 0 }))}
-                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
-                                />
+                        <div className="space-y-4">
+                          {/* プラン別設定（編集モード） */}
+                          {(['lite', 'standard', 'pro', 'business'] as const).map((tier) => {
+                            const tierLabels: Record<string, { name: string; color: string }> = {
+                              lite: { name: 'ライト', color: 'bg-gray-100 text-gray-700' },
+                              standard: { name: 'スタンダード', color: 'bg-blue-100 text-blue-700' },
+                              pro: { name: 'プロ', color: 'bg-purple-100 text-purple-700' },
+                              business: { name: 'ビジネス', color: 'bg-amber-100 text-amber-700' },
+                            };
+                            const label = tierLabels[tier];
+                            const plan = kdlPlanSettings[tier];
+                            return (
+                              <div key={tier} className="border border-gray-200 rounded-xl p-4">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <span className={`px-2 py-1 rounded text-xs font-bold ${label.color}`}>
+                                    {label.name}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                  <div>
+                                    <label className="block text-xs text-gray-500 mb-1">月額料金（円）</label>
+                                    <input
+                                      type="number"
+                                      value={plan.monthly_price}
+                                      onChange={(e) => setKdlPlanSettings(prev => ({
+                                        ...prev,
+                                        [tier]: { ...prev[tier], monthly_price: parseInt(e.target.value) || 0 }
+                                      }))}
+                                      className="w-full border border-gray-300 p-2 rounded-lg bg-white text-gray-900 text-sm"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs text-gray-500 mb-1">年間料金（円）</label>
+                                    <input
+                                      type="number"
+                                      value={plan.yearly_price}
+                                      onChange={(e) => setKdlPlanSettings(prev => ({
+                                        ...prev,
+                                        [tier]: { ...prev[tier], yearly_price: parseInt(e.target.value) || 0 }
+                                      }))}
+                                      className="w-full border border-gray-300 p-2 rounded-lg bg-white text-gray-900 text-sm"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs text-gray-500 mb-1">日次AI上限（-1=無制限）</label>
+                                    <input
+                                      type="number"
+                                      value={plan.daily_ai_limit}
+                                      onChange={(e) => setKdlPlanSettings(prev => ({
+                                        ...prev,
+                                        [tier]: { ...prev[tier], daily_ai_limit: parseInt(e.target.value) || 0 }
+                                      }))}
+                                      className="w-full border border-gray-300 p-2 rounded-lg bg-white text-gray-900 text-sm"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs text-gray-500 mb-1">月間AI上限（-1=無制限）</label>
+                                    <input
+                                      type="number"
+                                      value={plan.monthly_ai_limit}
+                                      onChange={(e) => setKdlPlanSettings(prev => ({
+                                        ...prev,
+                                        [tier]: { ...prev[tier], monthly_ai_limit: parseInt(e.target.value) || 0 }
+                                      }))}
+                                      className="w-full border border-gray-300 p-2 rounded-lg bg-white text-gray-900 text-sm"
+                                    />
+                                  </div>
+                                </div>
                               </div>
-                              <div>
-                                <label className="block text-xs text-gray-500 mb-1">年間プラン</label>
-                                <input
-                                  type="number"
-                                  value={kdlSettingsForm.yearlyPrice}
-                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, yearlyPrice: parseInt(e.target.value) || 0 }))}
-                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
-                                />
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* 日次制限 */}
-                          <div>
-                            <h4 className="font-bold text-gray-700 text-sm mb-3">📅 1日あたりAI使用上限（回）</h4>
-                            <div className="grid grid-cols-3 gap-4">
-                              <div>
-                                <label className="block text-xs text-gray-500 mb-1">無料ユーザー</label>
-                                <input
-                                  type="number"
-                                  value={kdlSettingsForm.dailyLimitDefault}
-                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, dailyLimitDefault: parseInt(e.target.value) || 0 }))}
-                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs text-gray-500 mb-1">月額プラン</label>
-                                <input
-                                  type="number"
-                                  value={kdlSettingsForm.dailyLimitMonthly}
-                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, dailyLimitMonthly: parseInt(e.target.value) || 0 }))}
-                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs text-gray-500 mb-1">年間プラン</label>
-                                <input
-                                  type="number"
-                                  value={kdlSettingsForm.dailyLimitYearly}
-                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, dailyLimitYearly: parseInt(e.target.value) || 0 }))}
-                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
-                                />
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* 月次制限 */}
-                          <div>
-                            <h4 className="font-bold text-gray-700 text-sm mb-3">📆 月間AI使用上限（回、-1=無制限）</h4>
-                            <div className="grid grid-cols-3 gap-4">
-                              <div>
-                                <label className="block text-xs text-gray-500 mb-1">無料ユーザー</label>
-                                <input
-                                  type="number"
-                                  value={kdlSettingsForm.monthlyLimitDefault}
-                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, monthlyLimitDefault: parseInt(e.target.value) || 0 }))}
-                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs text-gray-500 mb-1">月額プラン</label>
-                                <input
-                                  type="number"
-                                  value={kdlSettingsForm.monthlyLimitMonthly}
-                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, monthlyLimitMonthly: parseInt(e.target.value) || 0 }))}
-                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs text-gray-500 mb-1">年間プラン</label>
-                                <input
-                                  type="number"
-                                  value={kdlSettingsForm.monthlyLimitYearly}
-                                  onChange={(e) => setKdlSettingsForm(prev => ({ ...prev, monthlyLimitYearly: parseInt(e.target.value) || 0 }))}
-                                  className="w-full border border-gray-300 p-2 rounded-lg bg-gray-50 text-gray-900"
-                                />
-                              </div>
-                            </div>
-                          </div>
+                            );
+                          })}
                         </div>
                       ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          {/* 料金表示 */}
-                          <div className="bg-amber-50 rounded-xl p-4">
-                            <h4 className="font-bold text-amber-700 text-sm mb-2">💰 料金</h4>
-                            <div className="space-y-1 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">月額</span>
-                                <span className="font-bold text-gray-900">¥{kdlSettingsForm.monthlyPrice.toLocaleString()}</span>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                          {/* プラン別設定（表示モード） */}
+                          {(['lite', 'standard', 'pro', 'business'] as const).map((tier) => {
+                            const tierLabels: Record<string, { name: string; bgColor: string; textColor: string }> = {
+                              lite: { name: 'ライト', bgColor: 'bg-gray-50', textColor: 'text-gray-700' },
+                              standard: { name: 'スタンダード', bgColor: 'bg-blue-50', textColor: 'text-blue-700' },
+                              pro: { name: 'プロ', bgColor: 'bg-purple-50', textColor: 'text-purple-700' },
+                              business: { name: 'ビジネス', bgColor: 'bg-amber-50', textColor: 'text-amber-700' },
+                            };
+                            const label = tierLabels[tier];
+                            const plan = kdlPlanSettings[tier];
+                            return (
+                              <div key={tier} className={`${label.bgColor} rounded-xl p-4`}>
+                                <h4 className={`font-bold ${label.textColor} text-sm mb-3`}>{label.name}</h4>
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">月額</span>
+                                    <span className="font-bold text-gray-900">¥{plan.monthly_price.toLocaleString()}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">年間</span>
+                                    <span className="font-bold text-gray-900">¥{plan.yearly_price.toLocaleString()}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">日次AI</span>
+                                    <span className="font-bold text-gray-900">{plan.daily_ai_limit === -1 ? '無制限' : `${plan.daily_ai_limit}回`}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">月間AI</span>
+                                    <span className="font-bold text-gray-900">{plan.monthly_ai_limit === -1 ? '無制限' : `${plan.monthly_ai_limit}回`}</span>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">年間</span>
-                                <span className="font-bold text-gray-900">¥{kdlSettingsForm.yearlyPrice.toLocaleString()}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* 日次制限表示 */}
-                          <div className="bg-blue-50 rounded-xl p-4">
-                            <h4 className="font-bold text-blue-700 text-sm mb-2">📅 日次上限</h4>
-                            <div className="space-y-1 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">無料</span>
-                                <span className="font-bold text-gray-900">{kdlSettingsForm.dailyLimitDefault}回</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">月額</span>
-                                <span className="font-bold text-gray-900">{kdlSettingsForm.dailyLimitMonthly}回</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">年間</span>
-                                <span className="font-bold text-gray-900">{kdlSettingsForm.dailyLimitYearly}回</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* 月次制限表示 */}
-                          <div className="bg-purple-50 rounded-xl p-4">
-                            <h4 className="font-bold text-purple-700 text-sm mb-2">📆 月間上限</h4>
-                            <div className="space-y-1 text-sm">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">無料</span>
-                                <span className="font-bold text-gray-900">{kdlSettingsForm.monthlyLimitDefault}回</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">月額</span>
-                                <span className="font-bold text-gray-900">{kdlSettingsForm.monthlyLimitMonthly}回</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">年間</span>
-                                <span className="font-bold text-gray-900">{kdlSettingsForm.monthlyLimitYearly === -1 ? '無制限' : `${kdlSettingsForm.monthlyLimitYearly}回`}</span>
-                              </div>
-                            </div>
-                          </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
 
                     {/* 加入者一覧 */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-3">
                         <h3 className="font-bold text-gray-900 flex items-center gap-2">
                           <Users size={18} className="text-amber-600" />
                           KDL加入者一覧
@@ -3414,6 +3484,22 @@ function DashboardContent() {
                             {kdlSubscribers.length}名
                           </span>
                         </h3>
+                        {/* プランTierフィルター */}
+                        <div className="flex gap-2">
+                          {['all', 'lite', 'standard', 'pro', 'business'].map((tier) => (
+                            <button
+                              key={tier}
+                              onClick={() => setKdlTierFilter(tier)}
+                              className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
+                                kdlTierFilter === tier
+                                  ? 'bg-amber-600 text-white'
+                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              {tier === 'all' ? '全て' : tier === 'lite' ? 'ライト' : tier === 'standard' ? 'スタンダード' : tier === 'pro' ? 'プロ' : 'ビジネス'}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                       {kdlSubscribers.length === 0 ? (
                         <div className="p-8 text-center text-gray-500">
@@ -3425,7 +3511,8 @@ function DashboardContent() {
                             <thead>
                               <tr className="border-b border-gray-200">
                                 <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">メール</th>
-                                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">プラン</th>
+                                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">プランTier</th>
+                                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">期間</th>
                                 <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">金額</th>
                                 <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">今日AI</th>
                                 <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">今月AI</th>
@@ -3434,37 +3521,380 @@ function DashboardContent() {
                               </tr>
                             </thead>
                             <tbody>
-                              {kdlSubscribers.map((sub) => (
-                                <tr key={sub.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                  <td className="px-4 py-3 text-gray-900 font-medium">{sub.email}</td>
-                                  <td className="px-4 py-3 text-center">
-                                    <span className={`px-2 py-1 rounded text-xs font-bold ${
-                                      sub.period === 'yearly'
-                                        ? 'bg-purple-100 text-purple-700'
-                                        : 'bg-blue-100 text-blue-700'
-                                    }`}>
-                                      {sub.period === 'yearly' ? '年間' : '月額'}
-                                    </span>
-                                  </td>
-                                  <td className="px-4 py-3 text-right font-bold text-gray-900">
-                                    ¥{(sub.amount || 0).toLocaleString()}
-                                  </td>
-                                  <td className="px-4 py-3 text-right text-amber-600 font-bold">
-                                    {sub.usage?.dailyUsage || 0}
-                                  </td>
-                                  <td className="px-4 py-3 text-right text-green-600 font-bold">
-                                    {sub.usage?.monthlyUsage || 0}
-                                  </td>
-                                  <td className="px-4 py-3 text-right text-red-600 font-bold">
-                                    ¥{(sub.usage?.totalCost || 0).toFixed(2)}
-                                  </td>
-                                  <td className="px-4 py-3 text-gray-500 text-xs">
-                                    {sub.next_payment_date
-                                      ? new Date(sub.next_payment_date).toLocaleDateString('ja-JP')
-                                      : '-'}
-                                  </td>
-                                </tr>
-                              ))}
+                              {kdlSubscribers
+                                .filter(sub => kdlTierFilter === 'all' || sub.plan_tier === kdlTierFilter)
+                                .map((sub) => {
+                                  const tierColors: Record<string, string> = {
+                                    lite: 'bg-gray-100 text-gray-700',
+                                    standard: 'bg-blue-100 text-blue-700',
+                                    pro: 'bg-purple-100 text-purple-700',
+                                    business: 'bg-amber-100 text-amber-700',
+                                    enterprise: 'bg-red-100 text-red-700',
+                                  };
+                                  return (
+                                    <tr key={sub.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                      <td className="px-4 py-3 text-gray-900 font-medium">{sub.email}</td>
+                                      <td className="px-4 py-3 text-center">
+                                        <span className={`px-2 py-1 rounded text-xs font-bold ${tierColors[sub.plan_tier] || 'bg-gray-100 text-gray-700'}`}>
+                                          {sub.plan_tier_label || sub.plan_tier || '-'}
+                                        </span>
+                                      </td>
+                                      <td className="px-4 py-3 text-center">
+                                        <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                          sub.period === 'yearly'
+                                            ? 'bg-indigo-100 text-indigo-700'
+                                            : 'bg-green-100 text-green-700'
+                                        }`}>
+                                          {sub.period === 'yearly' ? '年間' : '月額'}
+                                        </span>
+                                      </td>
+                                      <td className="px-4 py-3 text-right font-bold text-gray-900">
+                                        ¥{(sub.amount || 0).toLocaleString()}
+                                      </td>
+                                      <td className="px-4 py-3 text-right text-amber-600 font-bold">
+                                        {sub.usage?.dailyUsage || 0}
+                                      </td>
+                                      <td className="px-4 py-3 text-right text-green-600 font-bold">
+                                        {sub.usage?.monthlyUsage || 0}
+                                      </td>
+                                      <td className="px-4 py-3 text-right text-red-600 font-bold">
+                                        ¥{(sub.usage?.totalCost || 0).toFixed(2)}
+                                      </td>
+                                      <td className="px-4 py-3 text-gray-500 text-xs">
+                                        {sub.next_payment_date
+                                          ? new Date(sub.next_payment_date).toLocaleDateString('ja-JP')
+                                          : '-'}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 管理者向けアフィリエイト管理セクション */}
+        {isAdmin && (
+          <div className="mt-12">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-black border-l-4 border-emerald-600 pl-4 flex items-center gap-2">
+                <Share2 size={20} className="text-emerald-600" /> アフィリエイト管理
+                <span className="text-xs bg-emerald-500 text-white px-2 py-1 rounded-full">ADMIN</span>
+              </h2>
+              <button
+                onClick={() => {
+                  setShowAffiliateManagement(!showAffiliateManagement);
+                  if (!showAffiliateManagement && !affiliateData) {
+                    fetchAffiliateManagementData();
+                  }
+                }}
+                className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-emerald-700 flex items-center gap-2"
+              >
+                {showAffiliateManagement ? (
+                  <>
+                    <X size={16} /> 閉じる
+                  </>
+                ) : (
+                  <>
+                    <Share2 size={16} /> アフィリエイト管理を開く
+                  </>
+                )}
+              </button>
+            </div>
+
+            {showAffiliateManagement && (
+              <div className="space-y-6">
+                {loadingAffiliateManagement ? (
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
+                    <Loader2 size={32} className="animate-spin mx-auto text-emerald-600 mb-3" />
+                    <p className="text-gray-500">アフィリエイトデータを読み込み中...</p>
+                  </div>
+                ) : !affiliateData?.tableExists ? (
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
+                    <Share2 size={48} className="mx-auto text-gray-300 mb-4" />
+                    <p className="text-gray-500 mb-2">アフィリエイト機能が設定されていません</p>
+                    <p className="text-xs text-gray-400">supabase_affiliate_setup.sql を実行してテーブルを作成してください</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* 統計サマリー */}
+                    {affiliateData?.stats && (
+                      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                          <div className="text-2xl font-black text-emerald-600">{affiliateData.stats.totalAffiliates}</div>
+                          <div className="text-xs text-gray-500 font-bold">総アフィリエイター</div>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                          <div className="text-2xl font-black text-green-600">{affiliateData.stats.activeAffiliates}</div>
+                          <div className="text-xs text-gray-500 font-bold">アクティブ</div>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                          <div className="text-2xl font-black text-blue-600">{affiliateData.stats.thisMonthClicks}</div>
+                          <div className="text-xs text-gray-500 font-bold">今月クリック</div>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                          <div className="text-2xl font-black text-purple-600">{affiliateData.stats.thisMonthConversions}</div>
+                          <div className="text-xs text-gray-500 font-bold">今月成約</div>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                          <div className="text-2xl font-black text-amber-600">¥{affiliateData.stats.thisMonthEarnings.toLocaleString()}</div>
+                          <div className="text-xs text-gray-500 font-bold">今月報酬</div>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                          <div className="text-2xl font-black text-red-600">¥{affiliateData.stats.pendingPayouts.toLocaleString()}</div>
+                          <div className="text-xs text-gray-500 font-bold">未払い報酬</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* アフィリエイター一覧 */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-3">
+                        <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                          <Users size={18} className="text-emerald-600" />
+                          アフィリエイター一覧
+                          <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold ml-2">
+                            {affiliateData?.affiliates.length || 0}名
+                          </span>
+                        </h3>
+                        <div className="flex gap-2">
+                          {['all', 'active', 'suspended', 'pending'].map((status) => (
+                            <button
+                              key={status}
+                              onClick={() => setAffiliateStatusFilter(status)}
+                              className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
+                                affiliateStatusFilter === status
+                                  ? 'bg-emerald-600 text-white'
+                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              {status === 'all' ? '全て' : status === 'active' ? 'アクティブ' : status === 'suspended' ? '停止中' : '保留'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {!affiliateData?.affiliates.length ? (
+                        <div className="p-8 text-center text-gray-500">
+                          まだアフィリエイターがいません
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-gray-200">
+                                <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">メール</th>
+                                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">紹介コード</th>
+                                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">ステータス</th>
+                                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">報酬率</th>
+                                <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">クリック</th>
+                                <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">成約</th>
+                                <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">総報酬</th>
+                                <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">未払い</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {affiliateData.affiliates
+                                .filter(aff => affiliateStatusFilter === 'all' || aff.status === affiliateStatusFilter)
+                                .map((aff) => {
+                                  const statusColors: Record<string, string> = {
+                                    active: 'bg-green-100 text-green-700',
+                                    suspended: 'bg-red-100 text-red-700',
+                                    pending: 'bg-yellow-100 text-yellow-700',
+                                  };
+                                  return (
+                                    <tr key={aff.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                      <td className="px-4 py-3 text-gray-900 font-medium">{aff.email}</td>
+                                      <td className="px-4 py-3">
+                                        <div className="flex flex-col items-center gap-1">
+                                          <code className="bg-emerald-50 border border-emerald-200 px-3 py-1 rounded text-sm font-bold text-emerald-700">{aff.referral_code}</code>
+                                          <button
+                                            onClick={() => {
+                                              const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://makers.tokyo';
+                                              const affiliateLink = `${baseUrl}/kindle/lp?ref=${aff.referral_code}`;
+                                              navigator.clipboard.writeText(affiliateLink);
+                                              setCopiedAffiliateCode(aff.referral_code);
+                                              setTimeout(() => setCopiedAffiliateCode(null), 2000);
+                                            }}
+                                            className="flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 transition-colors"
+                                          >
+                                            {copiedAffiliateCode === aff.referral_code ? (
+                                              <>
+                                                <Check size={12} />
+                                                <span>コピー済み</span>
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Copy size={12} />
+                                                <span>リンクをコピー</span>
+                                              </>
+                                            )}
+                                          </button>
+                                        </div>
+                                      </td>
+                                      <td className="px-4 py-3 text-center">
+                                        <span className={`px-2 py-1 rounded text-xs font-bold ${statusColors[aff.status] || 'bg-gray-100 text-gray-700'}`}>
+                                          {aff.status === 'active' ? 'アクティブ' : aff.status === 'suspended' ? '停止中' : '保留'}
+                                        </span>
+                                      </td>
+                                      <td className="px-4 py-3 text-center">
+                                        <div className="flex items-center justify-center gap-1">
+                                          <input
+                                            type="number"
+                                            defaultValue={aff.commission_rate}
+                                            min="0"
+                                            max="100"
+                                            step="0.5"
+                                            className="w-16 border border-gray-300 rounded px-2 py-1 text-xs text-center text-gray-900 bg-white"
+                                            onBlur={(e) => {
+                                              const newRate = parseFloat(e.target.value);
+                                              if (newRate !== aff.commission_rate) {
+                                                handleUpdateCommissionRate(aff.id, newRate);
+                                              }
+                                            }}
+                                            disabled={updatingAffiliateId === aff.id}
+                                          />
+                                          <span className="text-xs text-gray-500">%</span>
+                                        </div>
+                                      </td>
+                                      <td className="px-4 py-3 text-right text-blue-600 font-bold">
+                                        {aff.total_clicks || 0}
+                                      </td>
+                                      <td className="px-4 py-3 text-right text-purple-600 font-bold">
+                                        {aff.total_conversions || 0}
+                                      </td>
+                                      <td className="px-4 py-3 text-right text-emerald-600 font-bold">
+                                        ¥{(aff.total_earnings || 0).toLocaleString()}
+                                      </td>
+                                      <td className="px-4 py-3 text-right text-orange-600 font-bold">
+                                        ¥{(aff.unpaid_earnings || 0).toLocaleString()}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 成果（コンバージョン）一覧 */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-3">
+                        <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                          <TrendingUp size={18} className="text-emerald-600" />
+                          成果一覧
+                          <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold ml-2">
+                            {affiliateData?.conversions.length || 0}件
+                          </span>
+                        </h3>
+                        <div className="flex gap-2">
+                          {['all', 'pending', 'confirmed', 'paid', 'cancelled'].map((status) => (
+                            <button
+                              key={status}
+                              onClick={() => setConversionStatusFilter(status)}
+                              className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
+                                conversionStatusFilter === status
+                                  ? 'bg-emerald-600 text-white'
+                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              {status === 'all' ? '全て' : status === 'pending' ? '保留中' : status === 'confirmed' ? '確定' : status === 'paid' ? '支払済' : 'キャンセル'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {!affiliateData?.conversions.length ? (
+                        <div className="p-8 text-center text-gray-500">
+                          まだ成果がありません
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-gray-200">
+                                <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">日時</th>
+                                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">紹介者</th>
+                                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">サービス</th>
+                                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">プラン</th>
+                                <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">金額</th>
+                                <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">報酬</th>
+                                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">ステータス</th>
+                                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">操作</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {affiliateData.conversions
+                                .filter(conv => conversionStatusFilter === 'all' || conv.status === conversionStatusFilter)
+                                .map((conv) => {
+                                  const statusColors: Record<string, string> = {
+                                    pending: 'bg-yellow-100 text-yellow-700',
+                                    confirmed: 'bg-green-100 text-green-700',
+                                    paid: 'bg-blue-100 text-blue-700',
+                                    cancelled: 'bg-gray-100 text-gray-500',
+                                  };
+                                  return (
+                                    <tr key={conv.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                      <td className="px-4 py-3 text-gray-500 text-xs">
+                                        {new Date(conv.converted_at).toLocaleDateString('ja-JP')}
+                                      </td>
+                                      <td className="px-4 py-3 text-center">
+                                        <code className="bg-gray-100 px-2 py-1 rounded text-xs">{conv.affiliate_code}</code>
+                                      </td>
+                                      <td className="px-4 py-3 text-center text-xs font-medium">
+                                        {conv.service_label}
+                                      </td>
+                                      <td className="px-4 py-3 text-center text-xs">
+                                        {conv.plan_tier} / {conv.plan_period === 'yearly' ? '年額' : '月額'}
+                                      </td>
+                                      <td className="px-4 py-3 text-right font-bold text-gray-900">
+                                        ¥{(conv.plan_amount || 0).toLocaleString()}
+                                      </td>
+                                      <td className="px-4 py-3 text-right font-bold text-emerald-600">
+                                        ¥{(conv.commission_amount || 0).toLocaleString()}
+                                      </td>
+                                      <td className="px-4 py-3 text-center">
+                                        <span className={`px-2 py-1 rounded text-xs font-bold ${statusColors[conv.status] || 'bg-gray-100 text-gray-700'}`}>
+                                          {conv.status_label}
+                                        </span>
+                                      </td>
+                                      <td className="px-4 py-3 text-center">
+                                        <div className="flex gap-1 justify-center">
+                                          {conv.status === 'pending' && (
+                                            <>
+                                              <button
+                                                onClick={() => handleUpdateConversionStatus(conv.id, 'confirm_conversion')}
+                                                className="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600"
+                                              >
+                                                確定
+                                              </button>
+                                              <button
+                                                onClick={() => handleUpdateConversionStatus(conv.id, 'cancel_conversion')}
+                                                className="px-2 py-1 bg-gray-400 text-white rounded text-xs hover:bg-gray-500"
+                                              >
+                                                取消
+                                              </button>
+                                            </>
+                                          )}
+                                          {conv.status === 'confirmed' && (
+                                            <button
+                                              onClick={() => handleUpdateConversionStatus(conv.id, 'mark_paid')}
+                                              className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
+                                            >
+                                              支払済
+                                            </button>
+                                          )}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
                             </tbody>
                           </table>
                         </div>

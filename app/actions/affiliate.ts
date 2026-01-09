@@ -61,11 +61,12 @@ export async function registerAffiliate(userId: string, displayName?: string): P
     if (error) throw error;
 
     if (data && data.length > 0) {
-      // 登録後の詳細情報を取得
+      // 登録後の詳細情報を取得（戻り値のカラム名はout_プレフィックス付き）
+      const affiliateId = data[0].out_affiliate_id || data[0].affiliate_id;
       const { data: affiliateData, error: fetchError } = await supabase
         .from('affiliates')
         .select('*')
-        .eq('id', data[0].affiliate_id)
+        .eq('id', affiliateId)
         .single();
 
       if (fetchError) throw fetchError;
