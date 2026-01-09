@@ -1168,13 +1168,11 @@ function DashboardContent() {
     }
   };
 
-  const navigateTo = (page: string, addAdminKey: boolean = false) => {
+  const navigateTo = (page: string) => {
     if (page === '/' || page === '') {
       window.location.href = '/';
     } else {
-      // 管理者がKDLページにアクセスする場合はadmin_keyを付与
-      const adminKeyParam = addAdminKey && isAdmin ? '?admin_key=kdl-admin-2026' : '';
-      window.location.href = `/${page}${adminKeyParam}`;
+      window.location.href = `/${page}`;
     }
   };
 
@@ -1831,7 +1829,7 @@ function DashboardContent() {
                     </p>
                   )}
                   <button
-                    onClick={() => navigateTo('kindle', true)}
+                    onClick={() => navigateTo('kindle')}
                     className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
                   >
                     <BookOpen size={16} />

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
   BookOpen, Plus, Loader2, Edit3, Trash2, Calendar, FileText, HelpCircle, Rocket,
-  Crown, Sparkles, Zap, ArrowRight, X
+  Crown, Sparkles, Zap, ArrowRight, X, Users, ChevronDown, ChevronUp, BarChart3, User
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import AIUsageDisplay from '@/components/kindle/AIUsageDisplay';
@@ -18,13 +18,34 @@ interface Book {
   status: string;
   created_at: string;
   updated_at: string;
+  user_id?: string;
+  user_email?: string;
   chapters_count?: number;
   sections_count?: number;
+  completed_sections_count?: number;
+}
+
+interface UserBooks {
+  user_id: string;
+  user_email: string;
+  books: Book[];
+  total_books: number;
+  total_sections: number;
+  completed_sections: number;
+}
+
+interface AdminStats {
+  totalBooks: number;
+  totalUsers: number;
+  totalSections: number;
+  completedSections: number;
 }
 
 export default function KindleListPage() {
   const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
+  const [userBooks, setUserBooks] = useState<UserBooks[]>([]);
+  const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [user, setUser] = useState<any>(null);
@@ -34,6 +55,7 @@ export default function KindleListPage() {
   } | null>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
   const [showBanner, setShowBanner] = useState(true);
+  const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 
   // 管理者かどうかを判定
   const adminEmails = getAdminEmails();
@@ -83,9 +105,7 @@ export default function KindleListPage() {
     fetchUserAndSubscription();
   }, []);
 
-  // アクセス制御はミドルウェアで行うため、クライアントサイドでのリダイレクトは不要
-  // ミドルウェア（middleware.ts）で管理者・課金者のみアクセス可能に制限済み
-
+  // 書籍を取得（管理者と課金者で異なるロジック）
   useEffect(() => {
     const fetchBooks = async () => {
       if (!isSupabaseConfigured() || !supabase) {
@@ -100,20 +120,87 @@ export default function KindleListPage() {
             updated_at: new Date().toISOString(),
             chapters_count: 3,
             sections_count: 9,
+            completed_sections_count: 3,
           },
         ]);
         setIsLoading(false);
         return;
       }
 
-      try {
-        const { data, error: fetchError } = await supabase
-          .from('kdl_books')
-          .select('id, title, subtitle, status, created_at, updated_at')
-          .order('updated_at', { ascending: false });
+      // 管理者判定が完了するまで待つ
+      if (loadingSubscription) return;
 
-        if (fetchError) throw fetchError;
-        setBooks(data || []);
+      try {
+        if (isAdmin) {
+          // 管理者: APIから全ユーザーの書籍を取得
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.access_token) {
+            throw new Error('認証が必要です');
+          }
+
+          const response = await fetch('/api/admin/kdl-books', {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error('書籍の取得に失敗しました');
+          }
+
+          const data = await response.json();
+          setUserBooks(data.userBooks || []);
+          setAdminStats(data.stats || null);
+          // 最初のユーザーを展開状態にする
+          if (data.userBooks && data.userBooks.length > 0) {
+            setExpandedUsers(new Set([data.userBooks[0].user_id]));
+          }
+        } else {
+          // 課金者: 自分の書籍のみ取得
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session?.user) {
+            throw new Error('ログインが必要です');
+          }
+
+          const { data, error: fetchError } = await supabase
+            .from('kdl_books')
+            .select('id, title, subtitle, status, created_at, updated_at, user_id')
+            .eq('user_id', session.user.id)
+            .order('updated_at', { ascending: false });
+
+          if (fetchError) throw fetchError;
+
+          // 各書籍の進捗情報を取得
+          const booksWithProgress = await Promise.all(
+            (data || []).map(async (book) => {
+              // 章数を取得
+              const { count: chaptersCount } = await supabase
+                .from('kdl_chapters')
+                .select('id', { count: 'exact', head: true })
+                .eq('book_id', book.id);
+
+              // 節数を取得
+              const { data: sections } = await supabase
+                .from('kdl_sections')
+                .select('id, content')
+                .eq('book_id', book.id);
+
+              const sectionsCount = sections?.length || 0;
+              const completedSectionsCount = sections?.filter(
+                (s) => s.content && s.content.trim().length > 0
+              ).length || 0;
+
+              return {
+                ...book,
+                chapters_count: chaptersCount || 0,
+                sections_count: sectionsCount,
+                completed_sections_count: completedSectionsCount,
+              };
+            })
+          );
+
+          setBooks(booksWithProgress);
+        }
       } catch (err: any) {
         setError(err.message || '書籍の取得に失敗しました');
       } finally {
@@ -122,7 +209,7 @@ export default function KindleListPage() {
     };
 
     fetchBooks();
-  }, []);
+  }, [isAdmin, loadingSubscription]);
 
   const handleDelete = async (bookId: string) => {
     if (!confirm('この書籍を削除しますか？')) return;
@@ -150,7 +237,16 @@ export default function KindleListPage() {
       // 本を削除
       await supabase.from('kdl_books').delete().eq('id', bookId);
 
-      setBooks(prev => prev.filter(b => b.id !== bookId));
+      if (isAdmin) {
+        // 管理者の場合はuserBooksを更新
+        setUserBooks(prev => prev.map(ub => ({
+          ...ub,
+          books: ub.books.filter(b => b.id !== bookId),
+          total_books: ub.books.filter(b => b.id !== bookId).length,
+        })).filter(ub => ub.books.length > 0));
+      } else {
+        setBooks(prev => prev.filter(b => b.id !== bookId));
+      }
     } catch (err: any) {
       alert('削除に失敗しました: ' + err.message);
     }
@@ -164,8 +260,24 @@ export default function KindleListPage() {
     });
   };
 
+  const toggleUserExpanded = (userId: string) => {
+    setExpandedUsers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(userId)) {
+        newSet.delete(userId);
+      } else {
+        newSet.add(userId);
+      }
+      return newSet;
+    });
+  };
+
+  const getProgressPercentage = (completed: number, total: number) => {
+    if (total === 0) return 0;
+    return Math.round((completed / total) * 100);
+  };
+
   // アクセス権チェック中、または未課金ユーザーがリダイレクト中はローディング表示
-  // ただし、管理者の場合はローディングを早く終了させる
   if (loadingSubscription) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
@@ -176,20 +288,115 @@ export default function KindleListPage() {
       </div>
     );
   }
-  
-  // アクセス制御はミドルウェアで行うため、ここでのリダイレクト待ちは不要
+
+  // 書籍カードコンポーネント
+  const BookCard = ({ book, showUserInfo = false }: { book: Book; showUserInfo?: boolean }) => {
+    const progress = getProgressPercentage(
+      book.completed_sections_count || 0,
+      book.sections_count || 0
+    );
+
+    return (
+      <div className="bg-white rounded-xl shadow-md border border-amber-100 p-5 hover:shadow-lg transition-all group">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <Link 
+              href={`/kindle/${book.id}`}
+              className="block group-hover:text-amber-600 transition-colors"
+            >
+              <h3 className="font-bold text-lg text-gray-900 truncate">
+                {book.title}
+              </h3>
+              {book.subtitle && (
+                <p className="text-gray-500 text-sm truncate mt-1">
+                  {book.subtitle}
+                </p>
+              )}
+            </Link>
+            <div className="flex flex-wrap items-center gap-3 mt-3 text-sm text-gray-400">
+              <span className="flex items-center gap-1">
+                <Calendar size={14} />
+                {formatDate(book.updated_at)}
+              </span>
+              {book.chapters_count !== undefined && (
+                <span className="flex items-center gap-1">
+                  <FileText size={14} />
+                  {book.chapters_count}章
+                </span>
+              )}
+              {book.sections_count !== undefined && book.sections_count > 0 && (
+                <span className="flex items-center gap-1">
+                  <BarChart3 size={14} />
+                  {book.completed_sections_count || 0}/{book.sections_count}節
+                </span>
+              )}
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                book.status === 'published'
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-amber-100 text-amber-700'
+              }`}>
+                {book.status === 'published' ? '公開済み' : '下書き'}
+              </span>
+            </div>
+            {/* 進捗バー */}
+            {book.sections_count !== undefined && book.sections_count > 0 && (
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                  <span>執筆進捗</span>
+                  <span>{progress}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all ${
+                      progress === 100
+                        ? 'bg-green-500'
+                        : progress >= 50
+                        ? 'bg-amber-500'
+                        : 'bg-orange-400'
+                    }`}
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/kindle/${book.id}`}
+              className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+              title="編集"
+            >
+              <Edit3 size={20} />
+            </Link>
+            <button
+              onClick={() => handleDelete(book.id)}
+              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              title="削除"
+            >
+              <Trash2 size={20} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
       {/* ヘッダー */}
       <header className="bg-white/80 backdrop-blur-md border-b border-amber-100 sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className={`mx-auto px-4 py-4 flex items-center justify-between ${isAdmin ? 'max-w-6xl' : 'max-w-4xl'}`}>
           <div className="flex items-center gap-2">
             <BookOpen className="text-amber-600" size={28} />
             <div>
               <span className="font-bold text-xl text-gray-900">キンドルダイレクトライト</span>
               <span className="text-xs text-gray-500 ml-2">KDL</span>
             </div>
+            {isAdmin && (
+              <span className="ml-2 bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full font-bold">
+                管理者モード
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <Link
@@ -221,7 +428,7 @@ export default function KindleListPage() {
       </header>
 
       {/* 未加入者向けサブスク促進バナー */}
-      {showBanner && !loadingSubscription && !subscriptionStatus?.hasActiveSubscription && (
+      {showBanner && !loadingSubscription && !subscriptionStatus?.hasActiveSubscription && !isAdmin && (
         <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white">
           <div className="max-w-4xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between gap-4">
@@ -261,7 +468,7 @@ export default function KindleListPage() {
       )}
 
       {/* 加入者向けステータス表示 */}
-      {!loadingSubscription && subscriptionStatus?.hasActiveSubscription && (
+      {!loadingSubscription && subscriptionStatus?.hasActiveSubscription && !isAdmin && (
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
           <div className="max-w-4xl mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
@@ -285,10 +492,45 @@ export default function KindleListPage() {
         </div>
       )}
 
+      {/* 管理者向け統計バナー */}
+      {isAdmin && adminStats && (
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-100">
+          <div className="max-w-6xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-purple-100 p-2 rounded-lg">
+                  <Users size={20} className="text-purple-600" />
+                </div>
+                <div>
+                  <span className="text-purple-700 font-bold text-sm">全ユーザーの書籍管理</span>
+                  <p className="text-purple-600 text-xs">進捗状況を確認できます</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-6 text-sm">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-purple-700">{adminStats.totalUsers}</p>
+                  <p className="text-xs text-purple-500">ユーザー</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-purple-700">{adminStats.totalBooks}</p>
+                  <p className="text-xs text-purple-500">書籍</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-purple-700">
+                    {getProgressPercentage(adminStats.completedSections, adminStats.totalSections)}%
+                  </p>
+                  <p className="text-xs text-purple-500">全体進捗</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* メインコンテンツ */}
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* AI使用量表示（ログインユーザー向け） */}
-        {user && subscriptionStatus && (
+      <main className={`mx-auto px-4 py-8 ${isAdmin ? 'max-w-6xl' : 'max-w-4xl'}`}>
+        {/* AI使用量表示（ログインユーザー向け、管理者以外） */}
+        {user && subscriptionStatus && !isAdmin && (
           <div className="mb-6">
             <AIUsageDisplay 
               userId={user.id} 
@@ -297,7 +539,9 @@ export default function KindleListPage() {
           </div>
         )}
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">あなたの書籍</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">
+          {isAdmin ? '全ユーザーの書籍' : 'あなたの書籍'}
+        </h1>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
@@ -307,104 +551,99 @@ export default function KindleListPage() {
           <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
             <p className="text-red-600">{error}</p>
           </div>
-        ) : books.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-lg border border-amber-100 p-12 text-center">
-            <BookOpen className="text-gray-300 mx-auto mb-4" size={64} />
-            <h2 className="text-xl font-bold text-gray-700 mb-2">まだ書籍がありません</h2>
-            <p className="text-gray-500 mb-6">新しい本を作成して執筆を始めましょう</p>
-            <Link
-              href="/kindle/new"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-lg"
-            >
-              <Plus size={20} />
-              新しい本を作成
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {books.map((book) => (
-              <div
-                key={book.id}
-                className="bg-white rounded-xl shadow-md border border-amber-100 p-5 hover:shadow-lg transition-all group"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <Link 
-                      href={`/kindle/${book.id}`}
-                      className="block group-hover:text-amber-600 transition-colors"
-                    >
-                      <h3 className="font-bold text-lg text-gray-900 truncate">
-                        {book.title}
-                      </h3>
-                      {book.subtitle && (
-                        <p className="text-gray-500 text-sm truncate mt-1">
-                          {book.subtitle}
+        ) : isAdmin ? (
+          // 管理者向け: ユーザーごとにグループ化した表示
+          userBooks.length === 0 ? (
+            <div className="bg-white rounded-2xl shadow-lg border border-amber-100 p-12 text-center">
+              <BookOpen className="text-gray-300 mx-auto mb-4" size={64} />
+              <h2 className="text-xl font-bold text-gray-700 mb-2">まだ書籍がありません</h2>
+              <p className="text-gray-500 mb-6">ユーザーが書籍を作成するとここに表示されます</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {userBooks.map((userBook) => (
+                <div
+                  key={userBook.user_id}
+                  className="bg-white rounded-2xl shadow-lg border border-purple-100 overflow-hidden"
+                >
+                  {/* ユーザーヘッダー */}
+                  <button
+                    onClick={() => toggleUserExpanded(userBook.user_id)}
+                    className="w-full px-6 py-4 flex items-center justify-between bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="bg-purple-100 p-2 rounded-full">
+                        <User size={20} className="text-purple-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold text-gray-900">{userBook.user_email}</p>
+                        <p className="text-sm text-gray-500">
+                          {userBook.total_books}冊の書籍 · 
+                          {userBook.completed_sections}/{userBook.total_sections}節完了
+                          ({getProgressPercentage(userBook.completed_sections, userBook.total_sections)}%)
                         </p>
-                      )}
-                    </Link>
-                    <div className="flex items-center gap-4 mt-3 text-sm text-gray-400">
-                      <span className="flex items-center gap-1">
-                        <Calendar size={14} />
-                        {formatDate(book.updated_at)}
-                      </span>
-                      {book.chapters_count !== undefined && (
-                        <span className="flex items-center gap-1">
-                          <FileText size={14} />
-                          {book.chapters_count}章
-                        </span>
-                      )}
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        book.status === 'published'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        {book.status === 'published' ? '公開済み' : '下書き'}
-                      </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/kindle/${book.id}`}
-                      className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                      title="編集"
-                    >
-                      <Edit3 size={20} />
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(book.id)}
-                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      title="削除"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  </div>
+                    <div className="flex items-center gap-4">
+                      {/* ユーザー進捗バー */}
+                      <div className="hidden sm:block w-32">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all ${
+                              getProgressPercentage(userBook.completed_sections, userBook.total_sections) === 100
+                                ? 'bg-green-500'
+                                : getProgressPercentage(userBook.completed_sections, userBook.total_sections) >= 50
+                                ? 'bg-amber-500'
+                                : 'bg-orange-400'
+                            }`}
+                            style={{ width: `${getProgressPercentage(userBook.completed_sections, userBook.total_sections)}%` }}
+                          />
+                        </div>
+                      </div>
+                      {expandedUsers.has(userBook.user_id) ? (
+                        <ChevronUp size={20} className="text-gray-400" />
+                      ) : (
+                        <ChevronDown size={20} className="text-gray-400" />
+                      )}
+                    </div>
+                  </button>
+
+                  {/* 書籍リスト */}
+                  {expandedUsers.has(userBook.user_id) && (
+                    <div className="p-4 space-y-3">
+                      {userBook.books.map((book) => (
+                        <BookCard key={book.id} book={book} showUserInfo={false} />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )
+        ) : (
+          // 課金者向け: 自分の書籍のみ表示
+          books.length === 0 ? (
+            <div className="bg-white rounded-2xl shadow-lg border border-amber-100 p-12 text-center">
+              <BookOpen className="text-gray-300 mx-auto mb-4" size={64} />
+              <h2 className="text-xl font-bold text-gray-700 mb-2">まだ書籍がありません</h2>
+              <p className="text-gray-500 mb-6">新しい本を作成して執筆を始めましょう</p>
+              <Link
+                href="/kindle/new"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-lg"
+              >
+                <Plus size={20} />
+                新しい本を作成
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {books.map((book) => (
+                <BookCard key={book.id} book={book} />
+              ))}
+            </div>
+          )
         )}
       </main>
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
