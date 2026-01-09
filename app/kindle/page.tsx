@@ -38,6 +38,7 @@ export default function KindleListPage() {
   // 管理者かどうかを判定
   const adminEmails = getAdminEmails();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdminCheckComplete, setIsAdminCheckComplete] = useState(false);
 
   // ユーザーが読み込まれたら管理者判定
   useEffect(() => {
@@ -46,8 +47,10 @@ export default function KindleListPage() {
         user.email?.toLowerCase() === email.toLowerCase()
       );
       setIsAdmin(adminStatus);
+      setIsAdminCheckComplete(true);
     } else {
       setIsAdmin(false);
+      setIsAdminCheckComplete(true);
     }
   }, [user]);
 
@@ -91,6 +94,9 @@ export default function KindleListPage() {
     // ユーザー情報が読み込まれていない場合は何もしない
     if (!user) return;
     
+    // 管理者判定が完了していない場合は何もしない
+    if (!isAdminCheckComplete) return;
+    
     // 管理者は常にアクセス可能
     if (isAdmin) return;
     
@@ -102,7 +108,7 @@ export default function KindleListPage() {
     
     // 未課金ユーザーはLPの料金セクションにリダイレクト
     router.replace('/kindle/lp#pricing');
-  }, [loadingSubscription, user, isAdmin, subscriptionStatus, router]);
+  }, [loadingSubscription, user, isAdmin, isAdminCheckComplete, subscriptionStatus, router]);
 
   useEffect(() => {
     const fetchBooks = async () => {
