@@ -95,8 +95,15 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // セッションを取得
-  const { data: { session } } = await supabase.auth.getSession();
+  // セッションを取得（getUser を使用してより確実に認証状態を確認）
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+  // デバッグログ
+  console.log('[Middleware] User exists:', !!user);
+  console.log('[Middleware] User error:', userError?.message);
+  
+  // セッション互換性のためのオブジェクト作成
+  const session = user ? { user } : null;
 
   console.log('[Middleware] Session exists:', !!session);
   console.log('[Middleware] User email:', session?.user?.email);
@@ -124,23 +131,30 @@ export async function middleware(request: NextRequest) {
   }
 
   // 課金者チェック（kdl_subscriptionsテーブルを確認）
-  const { data: subscription } = await supabase
+  const { data: subscription, error: subError } = await supabase
     .from('kdl_subscriptions')
     .select('status, current_period_end')
     .eq('user_id', session.user.id)
     .single();
+
+  console.log('[Middleware] Subscription data:', subscription);
+  console.log('[Middleware] Subscription error:', subError?.message);
 
   // 有効なサブスクリプションがあるかチェック
   const hasActiveSubscription = subscription && 
     subscription.status === 'active' &&
     new Date(subscription.current_period_end) > new Date();
 
+  console.log('[Middleware] Has active subscription:', hasActiveSubscription);
+
   // 課金者はアクセス可能
   if (hasActiveSubscription) {
+    console.log('[Middleware] Subscriber access granted');
     return response;
   }
 
   // 未課金ユーザーはLPの料金セクションにリダイレクト
+  console.log('[Middleware] No access, redirecting to LP pricing');
   const redirectUrl = new URL('/kindle/lp#pricing', request.url);
   return NextResponse.redirect(redirectUrl);
 }
