@@ -63,6 +63,8 @@ function KindleNewPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isDemo = searchParams.get('mode') === 'demo';
+  const adminKey = searchParams.get('admin_key');
+  const adminKeyParam = adminKey ? `?admin_key=${adminKey}` : '';
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [state, setState] = useState<WizardState>({
@@ -268,7 +270,7 @@ function KindleNewPageContent() {
       // 保存成功時にlocalStorageをクリア
       clearDraft();
       
-      router.push(`/kindle/${data.bookId}`);
+      router.push(`/kindle/${data.bookId}${adminKeyParam}`);
     } catch (err: any) {
       setSaveError(err.message || '保存中にエラーが発生しました');
     } finally {
@@ -409,7 +411,7 @@ function KindleNewPageContent() {
       {/* ヘッダー */}
       <header className="bg-white/80 backdrop-blur-md border-b border-amber-100 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/kindle" className="flex items-center gap-2 text-gray-700 hover:text-amber-600 transition-colors">
+          <Link href={`/kindle${adminKeyParam}`} className="flex items-center gap-2 text-gray-700 hover:text-amber-600 transition-colors">
             <ArrowLeft size={20} />
             <span className="font-medium">戻る</span>
           </Link>

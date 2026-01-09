@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   BookOpen, Plus, Loader2, Edit3, Trash2, Calendar, FileText, HelpCircle, Rocket,
   Crown, Sparkles, Zap, ArrowRight, X, Users, ChevronDown, ChevronUp, BarChart3, User
@@ -43,11 +43,16 @@ interface AdminStats {
 
 export default function KindleListPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [books, setBooks] = useState<Book[]>([]);
   const [userBooks, setUserBooks] = useState<UserBooks[]>([]);
   const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // admin_keyパラメータを取得（存在する場合はリンクに引き継ぐ）
+  const adminKey = searchParams.get('admin_key');
+  const adminKeyParam = adminKey ? `?admin_key=${adminKey}` : '';
   const [user, setUser] = useState<any>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<{
     hasActiveSubscription: boolean;
@@ -301,7 +306,7 @@ export default function KindleListPage() {
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <Link 
-              href={`/kindle/${book.id}`}
+              href={`/kindle/${book.id}${adminKeyParam}`}
               className="block group-hover:text-amber-600 transition-colors"
             >
               <h3 className="font-bold text-lg text-gray-900 truncate">
@@ -362,7 +367,7 @@ export default function KindleListPage() {
           </div>
           <div className="flex items-center gap-2">
             <Link
-              href={`/kindle/${book.id}`}
+              href={`/kindle/${book.id}${adminKeyParam}`}
               className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
               title="編集"
             >
@@ -416,7 +421,7 @@ export default function KindleListPage() {
               <span className="sm:hidden">🚀</span>
             </Link>
             <Link
-              href="/kindle/new"
+              href={`/kindle/new${adminKeyParam}`}
               className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-5 py-2.5 rounded-xl transition-all shadow-lg"
             >
               <Plus size={20} />
@@ -628,7 +633,7 @@ export default function KindleListPage() {
               <h2 className="text-xl font-bold text-gray-700 mb-2">まだ書籍がありません</h2>
               <p className="text-gray-500 mb-6">新しい本を作成して執筆を始めましょう</p>
               <Link
-                href="/kindle/new"
+                href={`/kindle/new${adminKeyParam}`}
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-lg"
               >
                 <Plus size={20} />

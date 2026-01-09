@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, BookOpen, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
@@ -40,7 +40,12 @@ type LoadingState = 'loading' | 'loaded' | 'error' | 'not-found';
 export default function KindleEditorPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const bookId = params.id as string;
+  
+  // admin_keyパラメータを取得（存在する場合はリンクに引き継ぐ）
+  const adminKey = searchParams.get('admin_key');
+  const adminKeyParam = adminKey ? `?admin_key=${adminKey}` : '';
 
   const [loadingState, setLoadingState] = useState<LoadingState>('loading');
   const [error, setError] = useState<string>('');
@@ -289,7 +294,7 @@ export default function KindleEditorPage() {
               指定されたIDの本が存在しないか、削除された可能性があります。
             </p>
             <Link
-              href="/kindle"
+              href={`/kindle${adminKeyParam}`}
               className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold px-6 py-3 rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg"
             >
               <ArrowLeft size={20} />
@@ -319,7 +324,7 @@ export default function KindleEditorPage() {
                 再試行
               </button>
               <Link
-                href="/kindle"
+                href={`/kindle${adminKeyParam}`}
                 className="inline-flex items-center justify-center gap-2 bg-gray-100 text-gray-700 font-bold px-6 py-3 rounded-xl hover:bg-gray-200 transition-all"
               >
                 <ArrowLeft size={20} />
@@ -344,7 +349,7 @@ export default function KindleEditorPage() {
               この本にはまだ章や節が設定されていません。
             </p>
             <Link
-              href="/kindle"
+              href={`/kindle${adminKeyParam}`}
               className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold px-6 py-3 rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg"
             >
               <ArrowLeft size={20} />
@@ -364,6 +369,7 @@ export default function KindleEditorPage() {
       tocPatternId={tocPatternId}
       onUpdateSectionContent={handleUpdateSectionContent}
       onStructureChange={handleStructureChange}
+      adminKeyParam={adminKeyParam}
     />
   );
 }

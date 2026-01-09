@@ -74,6 +74,7 @@ interface EditorLayoutProps {
   onUpdateSectionContent: (sectionId: string, content: string) => Promise<void>;
   onStructureChange?: () => Promise<void>;
   readOnly?: boolean; // 閲覧専用モード（デモ用）
+  adminKeyParam?: string; // admin_keyパラメータ（リンクに引き継ぐ用）
 }
 
 export const EditorLayout: React.FC<EditorLayoutProps> = ({
@@ -84,6 +85,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   onUpdateSectionContent,
   onStructureChange,
   readOnly = false,
+  adminKeyParam = '',
 }) => {
   // 初期値: 最初の章の最初の節
   const getInitialSectionId = () => {
@@ -811,7 +813,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
       <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md">
         <div className="flex items-center gap-4">
           <Link
-            href={readOnly ? "/kindle/lp" : "/kindle"}
+            href={readOnly ? "/kindle/lp" : `/kindle${adminKeyParam}`}
             className="flex items-center gap-1 text-white/90 hover:text-white text-sm transition-colors"
           >
             <ArrowLeft size={16} />
