@@ -5,6 +5,7 @@
 
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { PlanTier, getAIModelForPlan, getAIProviderForPlan } from './subscription';
 
 // 共通のメッセージ型
 export interface AIMessage {
@@ -228,6 +229,86 @@ export function getProviderForPhase(phase: 'planning' | 'writing'): AIProvider {
     preferProvider,
     model,
   });
+}
+
+/**
+ * プランTierに応じたプロバイダーを取得
+ * 
+ * プランごとに使用するAIモデルが異なる:
+ * - none/lite: Gemini Flash（標準AI）
+ * - standard/pro: GPT-4o-mini（標準AI+/高性能AI）
+ * - business/enterprise: GPT-4o（最高性能AI）
+ */
+export function getProviderForPlanTier(planTier: PlanTier): AIProvider {
+  const preferProvider = getAIProviderForPlan(planTier);
+  const model = getAIModelForPlan(planTier);
+
+  return createAIProvider({
+    preferProvider,
+    model,
+  });
+}
+
+/**
+ * プランTierとフェーズに応じたプロバイダーを取得
+ * 
+ * 上位プランでは執筆フェーズでより高品質なモデルを使用
+ */
+export function getProviderForPlanAndPhase(
+  planTier: PlanTier, 
+  phase: 'planning' | 'writing'
+): AIProvider {
+  // プランに応じた基本プロバイダーを取得
+  const baseProvider = getAIProviderForPlan(planTier);
+  
+  // プランに応じたモデルを取得
+  let model = getAIModelForPlan(planTier);
+  
+  // 執筆フェーズでは、上位プランの場合より高品質なモデルを使用
+  if (phase === 'writing') {
+    switch (planTier) {
+      case 'business':
+      case 'enterprise':
+        // ビジネス/エンタープライズは常にGPT-4o
+        model = 'gpt-4o';
+        break;
+      case 'pro':
+        // プロは執筆時もGPT-4o-mini（十分な品質）
+        model = 'gpt-4o-mini';
+        break;
+      case 'standard':
+        // スタンダードは執筆時もGPT-4o-mini
+        model = 'gpt-4o-mini';
+        break;
+      default:
+        // ライト以下はGemini Flash
+        model = 'gemini-1.5-flash';
+    }
+  }
+
+  return createAIProvider({
+    preferProvider: baseProvider,
+    model,
+  });
+}
+
+/**
+ * プランTierからAIモデル表示名を取得（ユーザー向け）
+ */
+export function getAIModelDisplayName(planTier: PlanTier): string {
+  switch (planTier) {
+    case 'business':
+    case 'enterprise':
+      return '最高性能AI';
+    case 'pro':
+      return '高性能AI';
+    case 'standard':
+      return '標準AI+';
+    case 'lite':
+    case 'none':
+    default:
+      return '標準AI';
+  }
 }
 
 

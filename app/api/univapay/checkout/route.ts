@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server';
 import { getUnivaPayClient, isUnivaPayConfigured, SUBSCRIPTION_PLANS, KDL_PLANS } from '@/lib/univapay';
 import { createClient } from '@supabase/supabase-js';
+import { PlanTier, PLAN_DEFINITIONS } from '@/lib/subscription';
 
-// 設定から価格を取得
+// KDLプランTier別の価格
+const KDL_PLAN_PRICES: Record<PlanTier, { monthly: number; yearly: number }> = {
+  none: { monthly: 0, yearly: 0 },
+  lite: { monthly: 2980, yearly: 29800 },
+  standard: { monthly: 4980, yearly: 49800 },
+  pro: { monthly: 9800, yearly: 98000 },
+  business: { monthly: 29800, yearly: 298000 },
+  enterprise: { monthly: 0, yearly: 0 }, // 要相談
+};
+
+// 設定から価格を取得（レガシー互換）
 async function getKDLPrices(): Promise<{ monthly: number; yearly: number }> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -25,6 +36,19 @@ async function getKDLPrices(): Promise<{ monthly: number; yearly: number }> {
   return { monthly: 4980, yearly: 39800 };
 }
 
+// プランTierから価格を取得
+function getPriceForPlanTier(planTier: PlanTier, period: 'monthly' | 'yearly'): number {
+  const prices = KDL_PLAN_PRICES[planTier];
+  return period === 'yearly' ? prices.yearly : prices.monthly;
+}
+
+// プランTierから表示名を取得
+function getPlanDisplayName(planTier: PlanTier, period: 'monthly' | 'yearly'): string {
+  const plan = PLAN_DEFINITIONS[planTier];
+  const periodLabel = period === 'yearly' ? '年間' : '月額';
+  return `KDL ${plan.nameJa}プラン（${periodLabel}）`;
+}
+
 export async function POST(req: Request) {
   try {
     // UnivaPay設定チェック
@@ -35,29 +59,56 @@ export async function POST(req: Request) {
       );
     }
 
-    const { planId, amount, userId, email, transactionToken, isSubscription, period, planName: customPlanName } = await req.json();
+    const { planId, planTier, amount, userId, email, transactionToken, isSubscription, period, planName: customPlanName } = await req.json();
 
     // プランIDまたは金額の検証
     let finalAmount: number;
     let planName: string;
     let subscriptionPeriod: 'monthly' | 'yearly' = 'monthly';
     let service: string = 'donation';
+    let finalPlanTier: PlanTier = 'standard';
 
-    // KDL用プラン（monthly/yearly）の場合
-    if (planId === 'monthly' || planId === 'yearly') {
+    // 新プラン形式（planTier + period）の場合
+    if (planTier && ['lite', 'standard', 'pro', 'business'].includes(planTier)) {
+      finalPlanTier = planTier as PlanTier;
+      subscriptionPeriod = period === 'yearly' ? 'yearly' : 'monthly';
+      finalAmount = getPriceForPlanTier(finalPlanTier, subscriptionPeriod);
+      planName = getPlanDisplayName(finalPlanTier, subscriptionPeriod);
+      service = 'kdl';
+    }
+    // KDL用プラン（monthly/yearly）の場合 - レガシー互換
+    else if (planId === 'monthly' || planId === 'yearly') {
       const prices = await getKDLPrices();
       finalAmount = planId === 'yearly' ? prices.yearly : prices.monthly;
       planName = planId === 'yearly' ? 'KDL 年間プラン' : 'KDL 月額プラン';
       subscriptionPeriod = planId;
       service = 'kdl';
+      finalPlanTier = 'standard'; // レガシープランはスタンダード扱い
     }
-    // KDL用プラン（kdl_monthly/kdl_yearly）の場合
+    // KDL用プラン（kdl_monthly/kdl_yearly）の場合 - レガシー互換
     else if (planId === 'kdl_monthly' || planId === 'kdl_yearly') {
       const prices = await getKDLPrices();
       finalAmount = planId === 'kdl_yearly' ? prices.yearly : prices.monthly;
       planName = planId === 'kdl_yearly' ? 'KDL 年間プラン' : 'KDL 月額プラン';
       subscriptionPeriod = planId === 'kdl_yearly' ? 'yearly' : 'monthly';
       service = 'kdl';
+      finalPlanTier = 'standard'; // レガシープランはスタンダード扱い
+    }
+    // 新プラン形式（lite_monthly, standard_yearly など）
+    else if (planId && planId.includes('_')) {
+      const [tier, periodPart] = planId.split('_');
+      if (['lite', 'standard', 'pro', 'business'].includes(tier)) {
+        finalPlanTier = tier as PlanTier;
+        subscriptionPeriod = periodPart === 'yearly' ? 'yearly' : 'monthly';
+        finalAmount = getPriceForPlanTier(finalPlanTier, subscriptionPeriod);
+        planName = getPlanDisplayName(finalPlanTier, subscriptionPeriod);
+        service = 'kdl';
+      } else {
+        return NextResponse.json(
+          { error: '無効なプランIDです' },
+          { status: 400 }
+        );
+      }
     }
     // ドネーション用プラン
     else if (planId) {
@@ -75,9 +126,9 @@ export async function POST(req: Request) {
     // 金額直接指定（カスタム金額）
     else if (amount) {
       finalAmount = parseInt(amount);
-      if (isNaN(finalAmount) || finalAmount < 500 || finalAmount > 100000) {
+      if (isNaN(finalAmount) || finalAmount < 500 || finalAmount > 500000) {
         return NextResponse.json(
-          { error: '金額は500円〜100,000円の範囲で指定してください' },
+          { error: '金額は500円〜500,000円の範囲で指定してください' },
           { status: 400 }
         );
       }
@@ -136,6 +187,7 @@ export async function POST(req: Request) {
         metadata: {
           userId: userId || 'anonymous',
           planName,
+          planTier: finalPlanTier,
           service,
           source: service === 'kdl' ? 'kdl_subscription' : 'donation_page',
         },
@@ -176,7 +228,7 @@ export async function POST(req: Request) {
       console.warn('⚠️ UNIVAPAY_STORE_ID not set. Using placeholder checkout URL.');
       return NextResponse.json({
         success: true,
-        checkoutUrl: `${origin}/kindle/lp?checkout=pending&amount=${finalAmount}&plan=${subscriptionPeriod}`,
+        checkoutUrl: `${origin}/kindle/lp?checkout=pending&amount=${finalAmount}&plan=${subscriptionPeriod}&tier=${finalPlanTier}`,
         message: 'UnivaPay Store ID が設定されていません。管理画面で設定してください。',
       });
     }
@@ -191,6 +243,7 @@ export async function POST(req: Request) {
       amount: finalAmount,
       period: subscriptionPeriod,
       planName,
+      planTier: finalPlanTier,
     });
 
   } catch (err: unknown) {

@@ -180,7 +180,7 @@ export default function KindleLPClient() {
     },
     {
       q: 'AIの執筆機能はどのくらい使えますか？',
-      a: '有料プランでは無制限でご利用いただけます。目次生成も執筆も、納得いくまで何度でもお試しいただけます。',
+      a: 'プランによって1日の使用回数が異なります。ライトプランは20回/日、スタンダードプランは50回/日、プロプランは100回/日、ビジネスプランは無制限でご利用いただけます。',
     },
     {
       q: 'どんなジャンルの本が書けますか？',
@@ -489,17 +489,17 @@ export default function KindleLPClient() {
 
       {/* 料金プラン */}
       <section id="pricing" className="py-20 bg-gradient-to-b from-amber-50 to-orange-100">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-700 px-4 py-2 rounded-full font-semibold text-sm mb-4">
               <Crown size={16} />
               料金プラン
             </div>
             <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
-              シンプルな料金体系
+              あなたに合ったプランを選択
             </h2>
             <p className="text-lg text-gray-600">
-              どちらのプランも全機能が使い放題
+              すべてのプランで書籍数無制限・KDP形式エクスポート対応
             </p>
           </div>
 

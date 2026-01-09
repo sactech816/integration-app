@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { PlanTier, PLAN_DEFINITIONS } from './subscription';
 
 // サーバーサイド用Supabaseクライアント（service role key使用）
 const getServiceClient = () => {
@@ -17,7 +18,17 @@ const getServiceClient = () => {
   return createClient(supabaseUrl, serviceKey);
 };
 
+// プランTier別のAI制限を取得
+export function getAILimitsForPlan(planTier: PlanTier): { daily: number; monthly: number } {
+  const plan = PLAN_DEFINITIONS[planTier];
+  return {
+    daily: plan.dailyAILimit,
+    monthly: plan.monthlyAILimit,
+  };
+}
+
 // 環境変数ベースのデフォルト設定（DBがない場合のフォールバック）
+// レガシー互換のため残す
 const DEFAULT_LIMITS = {
   daily: {
     default: parseInt(process.env.AI_DAILY_LIMIT_DEFAULT || '50', 10),
@@ -31,6 +42,16 @@ const DEFAULT_LIMITS = {
   },
 };
 
+// プランTier別のデフォルト制限
+const PLAN_TIER_LIMITS: Record<PlanTier, { daily: number; monthly: number }> = {
+  none: { daily: 3, monthly: 10 },
+  lite: { daily: 20, monthly: 300 },
+  standard: { daily: 50, monthly: 500 },
+  pro: { daily: 100, monthly: 1000 },
+  business: { daily: -1, monthly: -1 }, // 無制限
+  enterprise: { daily: -1, monthly: -1 }, // 無制限
+};
+
 export interface UsageCheckResult {
   dailyUsage: number;
   monthlyUsage: number;
@@ -39,6 +60,7 @@ export interface UsageCheckResult {
   isWithinLimit: boolean;
   remainingDaily: number;
   remainingMonthly: number;
+  planTier?: PlanTier;
 }
 
 export interface LogAIUsageParams {
@@ -116,6 +138,7 @@ export async function checkAIUsageLimit(userId: string): Promise<UsageCheckResul
       remainingMonthly: result.monthly_limit === -1 
         ? Infinity 
         : Math.max(0, result.monthly_limit - result.monthly_usage),
+      planTier: result.plan_tier || undefined,
     };
   } catch (err) {
     console.error('Error checking AI usage limit:', err);
@@ -128,6 +151,86 @@ export async function checkAIUsageLimit(userId: string): Promise<UsageCheckResul
       isWithinLimit: true,
       remainingDaily: DEFAULT_LIMITS.daily.default,
       remainingMonthly: DEFAULT_LIMITS.monthly.default,
+    };
+  }
+}
+
+/**
+ * プランTierを指定してAI使用量リミットをチェック
+ */
+export async function checkAIUsageLimitByPlanTier(
+  userId: string, 
+  planTier: PlanTier
+): Promise<UsageCheckResult> {
+  const supabase = getServiceClient();
+  const limits = PLAN_TIER_LIMITS[planTier];
+
+  // Supabaseがない場合は常に許可（開発環境用）
+  if (!supabase) {
+    return {
+      dailyUsage: 0,
+      monthlyUsage: 0,
+      dailyLimit: limits.daily,
+      monthlyLimit: limits.monthly,
+      isWithinLimit: true,
+      remainingDaily: limits.daily === -1 ? Infinity : limits.daily,
+      remainingMonthly: limits.monthly === -1 ? Infinity : limits.monthly,
+      planTier,
+    };
+  }
+
+  try {
+    // 今日の使用量を取得
+    const today = new Date().toISOString().split('T')[0];
+    const { data: dailyData, error: dailyError } = await supabase
+      .from('ai_usage_logs')
+      .select('id', { count: 'exact' })
+      .eq('user_id', userId)
+      .gte('created_at', `${today}T00:00:00`)
+      .lt('created_at', `${today}T23:59:59`);
+
+    // 今月の使用量を取得
+    const firstDayOfMonth = new Date();
+    firstDayOfMonth.setDate(1);
+    firstDayOfMonth.setHours(0, 0, 0, 0);
+    
+    const { data: monthlyData, error: monthlyError } = await supabase
+      .from('ai_usage_logs')
+      .select('id', { count: 'exact' })
+      .eq('user_id', userId)
+      .gte('created_at', firstDayOfMonth.toISOString());
+
+    const dailyUsage = dailyError ? 0 : (dailyData?.length || 0);
+    const monthlyUsage = monthlyError ? 0 : (monthlyData?.length || 0);
+
+    // 無制限の場合
+    const dailyLimit = limits.daily;
+    const monthlyLimit = limits.monthly;
+
+    const isWithinDailyLimit = dailyLimit === -1 || dailyUsage < dailyLimit;
+    const isWithinMonthlyLimit = monthlyLimit === -1 || monthlyUsage < monthlyLimit;
+
+    return {
+      dailyUsage,
+      monthlyUsage,
+      dailyLimit,
+      monthlyLimit,
+      isWithinLimit: isWithinDailyLimit && isWithinMonthlyLimit,
+      remainingDaily: dailyLimit === -1 ? Infinity : Math.max(0, dailyLimit - dailyUsage),
+      remainingMonthly: monthlyLimit === -1 ? Infinity : Math.max(0, monthlyLimit - monthlyUsage),
+      planTier,
+    };
+  } catch (err) {
+    console.error('Error checking AI usage limit by plan tier:', err);
+    return {
+      dailyUsage: 0,
+      monthlyUsage: 0,
+      dailyLimit: limits.daily,
+      monthlyLimit: limits.monthly,
+      isWithinLimit: true,
+      remainingDaily: limits.daily === -1 ? Infinity : limits.daily,
+      remainingMonthly: limits.monthly === -1 ? Infinity : limits.monthly,
+      planTier,
     };
   }
 }
