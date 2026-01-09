@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
@@ -41,7 +41,20 @@ interface AdminStats {
   completedSections: number;
 }
 
-export default function KindleListPage() {
+// ローディングフォールバックコンポーネント
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="animate-spin text-amber-600" size={40} />
+        <p className="text-gray-600 font-medium">読み込み中...</p>
+      </div>
+    </div>
+  );
+}
+
+// メインページコンポーネント（Suspenseでラップされる）
+function KindleListPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [books, setBooks] = useState<Book[]>([]);
@@ -650,5 +663,14 @@ export default function KindleListPage() {
         )}
       </main>
     </div>
+  );
+}
+
+// エクスポートするページコンポーネント（Suspenseでラップ）
+export default function KindleListPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <KindleListPageContent />
+    </Suspense>
   );
 }
