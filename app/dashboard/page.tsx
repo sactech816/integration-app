@@ -39,6 +39,7 @@ import { getFeaturedContents, addFeaturedContent, removeFeaturedContent, Feature
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import WelcomeBonus from '@/components/gamification/WelcomeBonus';
 import LoginBonusToast from '@/components/gamification/LoginBonusToast';
+import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
 import {
   Sparkles,
   UserCircle,
@@ -1777,6 +1778,14 @@ function DashboardContent() {
               )}
             </div>
           </div>
+
+          {/* アフィリエイトセクション */}
+          {user && (
+            <AffiliateDashboard 
+              userId={user.id} 
+              userEmail={user.email}
+            />
+          )}
 
           {/* 右カラム：サービス選択 + アクセス解析 */}
           <div className="lg:col-span-2 space-y-4">

@@ -41,6 +41,8 @@ interface SubscriptionPlansProps {
   className?: string;
   /** 外部から価格を渡す場合（レガシー互換: スタンダードプランの価格のみ） */
   customPrices?: { monthly: number; yearly: number };
+  /** アフィリエイト紹介コード */
+  referralCode?: string | null;
 }
 
 // プラン情報
@@ -152,6 +154,7 @@ export default function SubscriptionPlans({
   currentPeriod,
   className = '',
   customPrices,
+  referralCode,
 }: SubscriptionPlansProps) {
   const [selectedPlan, setSelectedPlan] = useState<PlanTier | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
@@ -208,6 +211,11 @@ export default function SubscriptionPlans({
       const params = new URLSearchParams({
         email: email,
       });
+      
+      // アフィリエイト紹介コードがあれば追加
+      if (referralCode) {
+        params.set('ref', referralCode);
+      }
       
       window.location.href = `${baseUrl}?${params.toString()}`;
     }

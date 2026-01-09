@@ -36,13 +36,17 @@ import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
 import SubscriptionPlans from '@/components/kindle/SubscriptionPlans';
+import AffiliateTracker from '@/components/affiliate/AffiliateTracker';
+import { getReferralCode } from '@/components/affiliate/AffiliateTracker';
 import { supabase } from '@/lib/supabase';
+import { Suspense } from 'react';
 
 export default function KindleLPClient() {
   const [user, setUser] = useState<{ email?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [prices, setPrices] = useState<{ monthly: number; yearly: number } | null>(null);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -64,6 +68,12 @@ export default function KindleLPClient() {
         }
       } catch (e) {
         console.error('Failed to fetch prices:', e);
+      }
+      
+      // アフィリエイト紹介コードを取得（Cookieから）
+      const refCode = getReferralCode();
+      if (refCode) {
+        setReferralCode(refCode);
       }
     };
     init();
@@ -204,6 +214,11 @@ export default function KindleLPClient() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50">
+      {/* アフィリエイト追跡 */}
+      <Suspense fallback={null}>
+        <AffiliateTracker serviceType="kdl" />
+      </Suspense>
+
       <Header 
         setPage={navigateTo}
         user={user}
@@ -507,6 +522,7 @@ export default function KindleLPClient() {
           <SubscriptionPlans 
             userEmail={user?.email}
             customPrices={prices || undefined}
+            referralCode={referralCode}
           />
 
           {/* 無料体験 */}

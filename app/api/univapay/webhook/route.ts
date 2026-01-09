@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getUnivaPayClient, UnivaPayWebhookEvent } from '@/lib/univapay';
 import { createClient } from '@supabase/supabase-js';
+import { recordAffiliateConversion } from '@/app/actions/affiliate';
 
 /**
  * UnivaPay Webhook エンドポイント
@@ -57,10 +58,12 @@ export async function POST(req: Request) {
     // イベントタイプに応じた処理
     switch (event.event) {
       case 'subscription.created': {
-        const { id, status, metadata } = event.data;
+        const { id, status, metadata, amount } = event.data;
         const userId = metadata?.userId;
         const service = metadata?.service || 'donation';
         const period = metadata?.period || 'monthly';
+        const planTier = metadata?.planTier || 'standard';
+        const referralCode = metadata?.referralCode;
         
         if (userId && userId !== 'anonymous') {
           await supabase.from('subscriptions').upsert({
@@ -76,6 +79,28 @@ export async function POST(req: Request) {
           });
           
           console.log(`✅ Subscription created for user ${userId}: ${id}`);
+          
+          // アフィリエイト成約を記録
+          if (referralCode && service === 'kdl') {
+            try {
+              const result = await recordAffiliateConversion(
+                referralCode,
+                service,
+                id,
+                userId,
+                planTier,
+                period,
+                amount || 0
+              );
+              if (result.success) {
+                console.log(`✅ Affiliate conversion recorded: ${result.conversionId}`);
+              } else {
+                console.warn(`⚠️ Failed to record affiliate conversion: ${result.error}`);
+              }
+            } catch (affErr) {
+              console.error('Affiliate conversion error:', affErr);
+            }
+          }
         }
         break;
       }
