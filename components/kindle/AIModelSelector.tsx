@@ -37,7 +37,8 @@ export default function AIModelSelector({
   const [loading, setLoading] = useState(true);
 
   // モード選択可能かチェック
-  const canSelectMode = isAdmin || planTier === 'pro' || planTier === 'business' || planTier === 'enterprise' || (isMonitor && (planTier === 'pro' || planTier === 'business'));
+  // 管理者、Pro以上のプラン、またはモニターユーザーが選択可能
+  const canSelectMode = isAdmin || planTier === 'pro' || planTier === 'business' || planTier === 'enterprise' || isMonitor;
 
   // クレジット情報を取得
   useEffect(() => {
