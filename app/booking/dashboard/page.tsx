@@ -28,6 +28,7 @@ import {
   AttendanceStatus,
   ATTENDANCE_STATUS_ICONS,
   ATTENDANCE_STATUS_COLORS,
+  ATTENDANCE_STATUS_LABELS,
   ScheduleAdjustmentWithDetails,
 } from '@/types/booking';
 import {
