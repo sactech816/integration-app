@@ -160,11 +160,11 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
     content: initialContent || '',
     immediatelyRender: false, // SSR対応: ハイドレーションミスマッチを防ぐ
     editable: !readOnly, // 閲覧専用モードでは編集不可
-    editorProps: {
-      attributes: {
-        class: `prose prose-lg max-w-none focus:outline-none min-h-[calc(100vh-300px)] px-8 py-6 ${readOnly ? 'cursor-default' : ''}`,
+      editorProps: {
+        attributes: {
+          class: `prose prose-sm sm:prose-lg max-w-none focus:outline-none min-h-[calc(100vh-300px)] px-4 sm:px-8 py-4 sm:py-6 ${readOnly ? 'cursor-default' : ''}`,
+        },
       },
-    },
     onUpdate: ({ editor }) => {
       // 閲覧専用モードでは保存しない
       if (readOnly) return;
@@ -420,31 +420,31 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
   return (
     <div className="h-full flex flex-col bg-white">
       {/* ヘッダー：節タイトルと保存ステータス */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-gray-50/50">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-gray-500">{readOnly ? '閲覧中:' : '執筆中:'}</span>
-          <h2 className="font-bold text-gray-900 text-lg">{sectionTitle}</h2>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-3 sm:px-6 py-2 sm:py-3 border-b border-gray-100 bg-gray-50/50">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <span className="text-xs sm:text-sm font-medium text-gray-500 flex-shrink-0">{readOnly ? '閲覧中:' : '執筆中:'}</span>
+          <h2 className="font-bold text-gray-900 text-sm sm:text-lg truncate">{sectionTitle}</h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {!readOnly && saveStatus === 'saving' && (
-            <span className="flex items-center gap-1.5 text-amber-600 text-sm animate-pulse">
-              <Loader2 className="animate-spin" size={14} />
-              保存中...
+            <span className="flex items-center gap-1 sm:gap-1.5 text-amber-600 text-xs sm:text-sm animate-pulse">
+              <Loader2 className="animate-spin w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">保存中...</span>
             </span>
           )}
           {!readOnly && saveStatus === 'saved' && (
-            <span className="flex items-center gap-1.5 text-green-600 text-sm">
-              <Check size={14} />
-              保存済み
+            <span className="flex items-center gap-1 sm:gap-1.5 text-green-600 text-xs sm:text-sm">
+              <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">保存済み</span>
             </span>
           )}
           {!readOnly && saveStatus === 'error' && (
-            <span className="text-red-500 text-sm">
+            <span className="text-red-500 text-xs sm:text-sm">
               保存エラー
             </span>
           )}
           {readOnly && (
-            <span className="text-blue-600 text-sm font-medium">
+            <span className="text-blue-600 text-xs sm:text-sm font-medium">
               閲覧専用
             </span>
           )}
@@ -453,111 +453,111 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
 
       {/* ツールバー（閲覧専用モードでは非表示） */}
       {!readOnly && (
-        <div className="flex items-center gap-1 px-4 py-2 border-b border-gray-100 bg-white flex-wrap">
-          <div className="flex items-center gap-1 pr-3 border-r border-gray-200">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1 px-2 sm:px-4 py-2 border-b border-gray-100 bg-white overflow-x-auto">
+          <div className="flex items-center gap-1 pr-2 sm:pr-3 border-r border-gray-200 flex-shrink-0">
             <ToolButton
               onClick={() => editor.chain().focus().undo().run()}
               title="元に戻す"
             >
-              <Undo size={18} />
+              <Undo className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
             </ToolButton>
             <ToolButton
               onClick={() => editor.chain().focus().redo().run()}
               title="やり直す"
             >
-              <Redo size={18} />
+              <Redo className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
             </ToolButton>
           </div>
 
-          <div className="flex items-center gap-1 px-3 border-r border-gray-200">
+          <div className="flex items-center gap-1 px-2 sm:px-3 border-r border-gray-200 flex-shrink-0">
             <ToolButton
               onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
               isActive={editor.isActive('heading', { level: 1 })}
               title="見出し1"
             >
-              <Heading1 size={18} />
+              <Heading1 className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
             </ToolButton>
             <ToolButton
               onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
               isActive={editor.isActive('heading', { level: 2 })}
               title="見出し2"
             >
-              <Heading2 size={18} />
+              <Heading2 className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
             </ToolButton>
             <ToolButton
               onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
               isActive={editor.isActive('heading', { level: 3 })}
               title="見出し3"
             >
-              <Heading3 size={18} />
+              <Heading3 className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
             </ToolButton>
           </div>
 
-          <div className="flex items-center gap-1 px-3 border-r border-gray-200">
+          <div className="flex items-center gap-1 px-2 sm:px-3 border-r border-gray-200 flex-shrink-0">
             <ToolButton
               onClick={() => editor.chain().focus().toggleBold().run()}
               isActive={editor.isActive('bold')}
               title="太字"
             >
-              <Bold size={18} />
+              <Bold className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
             </ToolButton>
             <ToolButton
               onClick={() => editor.chain().focus().toggleItalic().run()}
               isActive={editor.isActive('italic')}
               title="斜体"
             >
-              <Italic size={18} />
+              <Italic className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
             </ToolButton>
             <ToolButton
               onClick={() => editor.chain().focus().toggleStrike().run()}
               isActive={editor.isActive('strike')}
               title="取り消し線"
             >
-              <Strikethrough size={18} />
+              <Strikethrough className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
             </ToolButton>
           </div>
 
-          <div className="flex items-center gap-1 px-3 border-r border-gray-200">
+          <div className="flex items-center gap-1 px-2 sm:px-3 border-r border-gray-200 flex-shrink-0">
             <ToolButton
               onClick={() => editor.chain().focus().toggleBulletList().run()}
               isActive={editor.isActive('bulletList')}
               title="箇条書き"
             >
-              <List size={18} />
+              <List className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
             </ToolButton>
             <ToolButton
               onClick={() => editor.chain().focus().toggleOrderedList().run()}
               isActive={editor.isActive('orderedList')}
               title="番号付きリスト"
             >
-              <ListOrdered size={18} />
+              <ListOrdered className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
             </ToolButton>
           </div>
 
-          <div className="flex items-center gap-1 px-3 border-r border-gray-200">
+          <div className="flex items-center gap-1 px-2 sm:px-3 border-r border-gray-200 flex-shrink-0">
             <ToolButton
               onClick={() => editor.chain().focus().toggleBlockquote().run()}
               isActive={editor.isActive('blockquote')}
               title="引用"
             >
-              <Quote size={18} />
+              <Quote className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
             </ToolButton>
             <ToolButton
               onClick={() => editor.chain().focus().setHorizontalRule().run()}
               title="水平線"
             >
-              <Minus size={18} />
+              <Minus className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
             </ToolButton>
           </div>
 
           {/* AI執筆ボタン */}
-          <div className="flex items-center gap-2 px-3">
+          <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 flex-shrink-0">
             <button
               type="button"
               onClick={handleAIButtonClick}
               disabled={isGenerating}
               title="AIにこの節を書いてもらう"
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-all ${
                 isGenerating
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 shadow-md hover:shadow-lg'
@@ -565,13 +565,13 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className="animate-spin" size={16} />
-                  <span>執筆中...</span>
+                  <Loader2 className="animate-spin w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">執筆中...</span>
                 </>
               ) : (
                 <>
-                  <Bot size={16} />
-                  <span>AI執筆</span>
+                  <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">AI執筆</span>
                 </>
               )}
             </button>
@@ -582,7 +582,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
               onClick={handleRewriteButtonClick}
               disabled={isRewriting}
               title="選択したテキストを別のスタイルで書き換える"
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
+              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-all ${
                 isRewriting
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white hover:from-teal-600 hover:to-cyan-600 shadow-md hover:shadow-lg'
@@ -590,27 +590,27 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
             >
               {isRewriting ? (
                 <>
-                  <Loader2 className="animate-spin" size={16} />
-                  <span>書換中...</span>
+                  <Loader2 className="animate-spin w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">書換中...</span>
                 </>
               ) : (
                 <>
-                  <RefreshCw size={16} />
-                  <span>書き換え</span>
+                  <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">書き換え</span>
                 </>
               )}
             </button>
             
             {generateError && (
-              <div className="flex items-center gap-1.5 text-red-500 text-sm animate-pulse">
-                <AlertCircle size={14} />
+              <div className="hidden sm:flex items-center gap-1.5 text-red-500 text-xs sm:text-sm animate-pulse">
+                <AlertCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 <span>{generateError}</span>
               </div>
             )}
             
             {rewriteError && (
-              <div className="flex items-center gap-1.5 text-red-500 text-sm animate-pulse">
-                <AlertCircle size={14} />
+              <div className="hidden sm:flex items-center gap-1.5 text-red-500 text-xs sm:text-sm animate-pulse">
+                <AlertCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 <span>{rewriteError}</span>
               </div>
             )}

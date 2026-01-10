@@ -14,6 +14,7 @@ import {
   ArrowDown,
   Trash2,
   Home,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -62,6 +63,7 @@ interface ChapterSidebarProps {
   batchProgress?: BatchWriteProgress;
   structureHandlers?: StructureHandlers;
   readOnly?: boolean; // 閲覧専用モード（デモ用）
+  onCloseSidebar?: () => void; // スマホ用サイドバーを閉じる関数
 }
 
 // ドロップダウンメニューコンポーネント
@@ -209,6 +211,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
   batchProgress,
   structureHandlers,
   readOnly = false,
+  onCloseSidebar,
 }) => {
   // 初期状態: アクティブな節を含む章を展開
   const getInitialExpandedChapters = () => {
@@ -488,13 +491,24 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-amber-50 to-orange-50">
       {/* ヘッダー: 本のタイトル */}
-      <div className="p-4 border-b border-amber-100 bg-white/60 backdrop-blur-sm">
-        <div className="flex items-start gap-3">
+      <div className="p-3 sm:p-4 border-b border-amber-100 bg-white/60 backdrop-blur-sm">
+        <div className="flex items-start gap-2 sm:gap-3">
+          {/* スマホ用閉じるボタン */}
+          {onCloseSidebar && (
+            <button
+              onClick={onCloseSidebar}
+              className="lg:hidden p-1.5 rounded-lg hover:bg-amber-100 transition-colors flex-shrink-0 -ml-1"
+              title="閉じる"
+            >
+              <X size={18} className="text-gray-600" />
+            </button>
+          )}
+          
           <div className="bg-gradient-to-br from-amber-500 to-orange-500 p-2 rounded-lg shadow-md flex-shrink-0">
-            <BookOpen className="text-white" size={20} />
+            <BookOpen className="text-white" size={18} />
           </div>
-          <div className="min-w-0">
-            <h1 className="font-bold text-gray-900 text-sm leading-tight line-clamp-2">
+          <div className="min-w-0 flex-1">
+            <h1 className="font-bold text-gray-900 text-xs sm:text-sm leading-tight line-clamp-2">
               {bookTitle}
             </h1>
             {bookSubtitle && (
@@ -507,14 +521,14 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
       </div>
 
       {/* 目次ヘッダー */}
-      <div className="px-4 py-3 border-b border-amber-100/50">
+      <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-amber-100/50">
         <h2 className="text-xs font-bold text-amber-700 uppercase tracking-wider">
           目次
         </h2>
       </div>
 
       {/* 章・節リスト */}
-      <div className="flex-1 overflow-y-auto py-2">
+      <div className="flex-1 overflow-y-auto py-2 px-1 sm:px-0">
         {chapters.map((chapter, chapterIndex) => {
           const isExpanded = expandedChapters.has(chapter.id);
           const isActiveChapter = chapterHasActiveSection(chapter);
@@ -526,7 +540,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
             <div key={chapter.id} className="mb-1">
               {/* 章ヘッダー */}
               <div
-                className={`group flex items-center gap-2 px-4 py-3 transition-all ${
+                className={`group flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-3 transition-all ${
                   isActiveChapter
                     ? 'bg-amber-100/80 border-l-4 border-amber-500'
                     : 'hover:bg-amber-50/80 border-l-4 border-transparent'
@@ -548,10 +562,10 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                       value={chapter.title.replace(/^第\d+章[　\s]+/, '')}
                       onSave={(value) => handleRenameChapter(chapter.id, value)}
                       onCancel={() => setEditState({ type: null, id: null })}
-                      className="flex-1 min-w-0"
+                      className="flex-1 min-w-0 text-xs sm:text-sm"
                     />
                   ) : (
-                    <span className={`flex-1 text-sm font-medium truncate ${
+                    <span className={`flex-1 text-xs sm:text-sm font-medium truncate ${
                       isActiveChapter ? 'text-amber-900' : 'text-gray-700'
                     }`}>
                       {chapter.title.replace(/^第\d+章[　\s]+/, '')}
@@ -568,7 +582,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                     }}
                     disabled={batchProgress?.isRunning}
                     title={`この章の未執筆節(${unwrittenCount}件)をAIで一括執筆`}
-                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all flex-shrink-0 ${
+                    className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs font-medium transition-all flex-shrink-0 ${
                       isWriting
                         ? 'bg-purple-500 text-white animate-pulse'
                         : batchProgress?.isRunning
@@ -594,21 +608,21 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                 {structureHandlers && !isEditing && (
                   <button
                     onClick={(e) => openChapterMenu(e, chapter)}
-                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-amber-200/50 transition-all flex-shrink-0 text-gray-500 hover:text-gray-700"
+                    className="opacity-0 group-hover:opacity-100 lg:opacity-0 p-1 rounded hover:bg-amber-200/50 transition-all flex-shrink-0 text-gray-500 hover:text-gray-700"
                     title="章のオプション"
                   >
-                    <MoreVertical size={16} />
+                    <MoreVertical size={14} className="sm:w-4 sm:h-4" />
                   </button>
                 )}
                 
-                <span className="text-xs text-gray-500 bg-white/60 px-1.5 py-0.5 rounded flex-shrink-0">
+                <span className="text-xs text-gray-500 bg-white/60 px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0">
                   {chapter.sections.length}
                 </span>
               </div>
 
               {/* 節リスト */}
               {isExpanded && (
-                <div className="bg-white/40 border-l-4 border-amber-100 ml-4 mr-2 my-1 rounded-lg overflow-hidden">
+                <div className="bg-white/40 border-l-4 border-amber-100 ml-2 sm:ml-4 mr-1 sm:mr-2 my-1 rounded-lg overflow-hidden">
                   {chapter.sections.map((section, sectionIndex) => {
                     const isActive = section.id === activeSectionId;
                     const hasContent = section.content && section.content.trim() !== '';
@@ -618,7 +632,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                     return (
                       <div
                         key={section.id}
-                        className={`group flex items-center gap-2 px-3 py-2.5 transition-all cursor-pointer ${
+                        className={`group flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 sm:py-2.5 transition-all cursor-pointer ${
                           isActive
                             ? 'bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow-md'
                             : isSectionWriting
@@ -648,7 +662,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                               className="flex-1 min-w-0"
                             />
                           ) : (
-                            <span className={`flex-1 text-sm truncate ${isActive ? 'font-medium text-white' : ''}`}>
+                            <span className={`flex-1 text-xs sm:text-sm truncate ${isActive ? 'font-medium text-white' : ''}`}>
                               {section.title || `節 ${sectionIndex + 1}`}
                             </span>
                           )}
@@ -660,10 +674,10 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                           </span>
                         )}
                         {hasContent && !isActive && !isSectionWriting && !isSectionEditing && (
-                          <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" title="執筆済み" />
+                          <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-400 flex-shrink-0" title="執筆済み" />
                         )}
                         {isActive && !isSectionEditing && (
-                          <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full flex-shrink-0">
+                          <span className="text-xs bg-white/20 text-white px-1.5 sm:px-2 py-0.5 rounded-full flex-shrink-0">
                             執筆中
                           </span>
                         )}
@@ -675,14 +689,14 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                               e.stopPropagation();
                               openSectionMenu(e, section, chapter.id);
                             }}
-                            className={`opacity-0 group-hover:opacity-100 p-1 rounded transition-all flex-shrink-0 ${
+                            className={`opacity-0 group-hover:opacity-100 lg:opacity-0 p-1 rounded transition-all flex-shrink-0 ${
                               isActive 
                                 ? 'hover:bg-white/20 text-white/70 hover:text-white' 
                                 : 'hover:bg-amber-200/50 text-gray-500 hover:text-gray-700'
                             }`}
                             title="節のオプション"
                           >
-                            <MoreVertical size={14} />
+                            <MoreVertical size={12} className="sm:w-3.5 sm:h-3.5" />
                           </button>
                         )}
                       </div>
@@ -691,8 +705,8 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
 
                   {/* 節を追加中 */}
                   {addingSectionChapterId === chapter.id && (
-                    <div className="flex items-center gap-2 px-3 py-2.5 bg-amber-50 border-t border-amber-100">
-                      <Plus size={14} className="text-amber-500 flex-shrink-0" />
+                    <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 sm:py-2.5 bg-amber-50 border-t border-amber-100">
+                      <Plus size={12} className="sm:w-3.5 sm:h-3.5 text-amber-500 flex-shrink-0" />
                       <input
                         ref={addSectionInputRef}
                         type="text"
@@ -723,7 +737,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                         }}
                         disabled={isSubmitting}
                         placeholder="新しい節のタイトル..."
-                        className="flex-1 bg-white border-2 border-amber-300 rounded px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-50"
+                        className="flex-1 bg-white border-2 border-amber-300 rounded px-2 py-1 text-xs sm:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-50"
                       />
                     </div>
                   )}
@@ -735,7 +749,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
 
         {/* 新しい章を追加 */}
         {structureHandlers && (
-          <div className="px-4 py-3 border-t border-amber-100/50 mt-2">
+          <div className="px-3 sm:px-4 py-2 sm:py-3 border-t border-amber-100/50 mt-2">
             {isAddingChapter ? (
               <div className="flex items-center gap-2">
                 <input
@@ -767,15 +781,15 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                   }}
                   disabled={isSubmitting}
                   placeholder="新しい章のタイトル..."
-                  className="flex-1 bg-white border-2 border-amber-300 rounded px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-50"
+                  className="flex-1 bg-white border-2 border-amber-300 rounded px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 disabled:opacity-50"
                 />
               </div>
             ) : (
               <button
                 onClick={() => setIsAddingChapter(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-amber-100/80 hover:bg-amber-200/80 text-amber-700 font-medium text-sm transition-all"
+                className="w-full flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-amber-100/80 hover:bg-amber-200/80 text-amber-700 font-medium text-xs sm:text-sm transition-all"
               >
-                <Plus size={16} />
+                <Plus size={14} className="sm:w-4 sm:h-4" />
                 <span>新しい章を追加</span>
               </button>
             )}
@@ -784,16 +798,16 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
       </div>
 
       {/* フッター: 進捗 */}
-      <div className="p-4 border-t border-amber-100 bg-white/60 backdrop-blur-sm">
+      <div className="p-3 sm:p-4 border-t border-amber-100 bg-white/60 backdrop-blur-sm">
         <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
           <span>執筆進捗</span>
-          <span>
+          <span className="text-xs">
             {chapters.reduce((acc, ch) => 
               acc + ch.sections.filter(s => s.content && s.content.trim()).length, 0
             )} / {chapters.reduce((acc, ch) => acc + ch.sections.length, 0)} 節
           </span>
         </div>
-        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div className="w-full h-1.5 sm:h-2 bg-gray-200 rounded-full overflow-hidden">
           <div 
             className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full transition-all duration-500"
             style={{
@@ -807,21 +821,21 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
         </div>
         
         {/* ナビゲーションリンク */}
-        <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-amber-100 text-xs">
+        <div className="flex items-center justify-center gap-2 sm:gap-4 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-amber-100 text-xs">
           <Link
             href="/"
             className="flex items-center gap-1 text-gray-500 hover:text-amber-600 transition-colors"
           >
-            <Home size={12} />
-            <span>集客メーカー</span>
+            <Home size={10} className="sm:w-3 sm:h-3" />
+            <span className="hidden sm:inline">集客メーカー</span>
           </Link>
-          <span className="text-gray-300">|</span>
+          <span className="text-gray-300 hidden sm:inline">|</span>
           <Link
             href="/kindle"
             className="flex items-center gap-1 text-gray-500 hover:text-amber-600 transition-colors"
           >
-            <BookOpen size={12} />
-            <span>KDL一覧</span>
+            <BookOpen size={10} className="sm:w-3 sm:h-3" />
+            <span className="hidden sm:inline">KDL一覧</span>
           </Link>
         </div>
       </div>

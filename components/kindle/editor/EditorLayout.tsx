@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle, Info, Sparkles, Copy, Tag, FileText, FolderTree, Lightbulb, BookOpen, Rocket, PlayCircle, Crown } from 'lucide-react';
+import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle, Info, Sparkles, Copy, Tag, FileText, FolderTree, Lightbulb, BookOpen, Rocket, PlayCircle, Crown, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { ChapterSidebar } from './ChapterSidebar';
 import { TiptapEditor, TiptapEditorRef } from './TiptapEditor';
@@ -124,6 +124,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   const [isGeneratingKdp, setIsGeneratingKdp] = useState(false);
   const [kdpInfo, setKdpInfo] = useState<KdpInfo | null>(null);
   const [kdpError, setKdpError] = useState<string>('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // スマホ用サイドバー表示状態
 
   // 現在選択中の節とその章を取得
   const getActiveInfo = useCallback(() => {
@@ -792,27 +793,36 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     <div className="h-screen flex flex-col overflow-hidden bg-white">
       {/* デモモードバナー */}
       {readOnly && (
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <PlayCircle size={20} />
-            <div>
-              <span className="font-bold">デモモード（閲覧専用）</span>
-              <span className="text-sm opacity-90 ml-2">製品版では編集・AI執筆・Word出力などが可能です</span>
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2 sm:px-4 py-2 sm:py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <PlayCircle size={18} className="flex-shrink-0" />
+            <div className="min-w-0">
+              <span className="font-bold text-sm sm:text-base block sm:inline">デモモード（閲覧専用）</span>
+              <span className="text-xs sm:text-sm opacity-90 block sm:inline sm:ml-2 mt-1 sm:mt-0">製品版では編集・AI執筆・Word出力などが可能です</span>
             </div>
           </div>
           <Link
             href="/kindle/lp#pricing"
-            className="flex items-center gap-2 bg-white text-indigo-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-indigo-50 transition-colors"
+            className="flex items-center gap-2 bg-white text-indigo-600 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-bold text-xs sm:text-sm hover:bg-indigo-50 transition-colors w-full sm:w-auto justify-center sm:justify-start flex-shrink-0"
           >
-            <Crown size={16} />
+            <Crown size={14} className="sm:w-4 sm:h-4" />
             <span>製品版を使う</span>
           </Link>
         </div>
       )}
 
       {/* ヘッダー */}
-      <div className="flex items-center justify-between px-2 sm:px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md">
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+      <div className="flex items-center justify-between px-2 sm:px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md relative z-30">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+          {/* スマホ用サイドバートグルボタン */}
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="lg:hidden p-1.5 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0"
+            title="目次を表示"
+          >
+            <Menu size={20} />
+          </button>
+          
           <Link
             href={readOnly ? "/kindle/lp" : `/kindle${adminKeyParam}`}
             className="flex items-center gap-1 text-white/90 hover:text-white text-sm transition-colors flex-shrink-0"
@@ -822,7 +832,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             <span className="hidden sm:inline">{readOnly ? "LPに戻る" : "一覧に戻る"}</span>
           </Link>
           <div className="text-white/30 hidden sm:block">|</div>
-          <h1 className="font-bold text-xs sm:text-sm truncate max-w-[100px] sm:max-w-xs">{book.title}</h1>
+          <h1 className="font-bold text-xs sm:text-sm truncate max-w-[120px] sm:max-w-xs">{book.title}</h1>
           {readOnly && (
             <div className="flex items-center gap-1 bg-blue-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0">
               <PlayCircle size={12} />
@@ -830,25 +840,27 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             </div>
           )}
         </div>
-        <div className="flex items-center gap-1 sm:gap-2">
+        
+        {/* デスクトップ用ボタン群 */}
+        <div className="hidden lg:flex items-center gap-2">
           <Link
             href="/kindle/guide"
             target="_blank"
-            className="flex items-center justify-center gap-2 p-2 sm:px-3 sm:py-2 rounded-lg font-medium text-sm transition-all bg-white/20 hover:bg-white/30 active:bg-white/40"
+            className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all bg-white/20 hover:bg-white/30 active:bg-white/40"
             title="まずお読みください"
           >
             <BookOpen size={16} />
-            <span className="hidden lg:inline">📖 まずお読みください</span>
+            <span>📖 まずお読みください</span>
           </Link>
           
           <Link
             href="/kindle/publish-guide"
             target="_blank"
-            className="flex items-center justify-center gap-2 p-2 sm:px-3 sm:py-2 rounded-lg font-medium text-sm transition-all bg-white/20 hover:bg-white/30 active:bg-white/40"
+            className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all bg-white/20 hover:bg-white/30 active:bg-white/40"
             title="出版準備ガイド"
           >
             <Rocket size={16} />
-            <span className="hidden lg:inline">🚀 出版準備ガイド</span>
+            <span>🚀 出版準備ガイド</span>
           </Link>
           
           {!readOnly && (
@@ -857,7 +869,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 onClick={handleGenerateKdpInfo}
                 disabled={isGeneratingKdp}
                 title="KDP情報生成"
-                className={`flex items-center justify-center gap-2 p-2 sm:px-4 sm:py-2 rounded-lg font-medium text-sm transition-all ${
+                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
                   isGeneratingKdp
                     ? 'bg-white/20 cursor-not-allowed'
                     : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
@@ -866,12 +878,12 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 {isGeneratingKdp ? (
                   <>
                     <Loader2 className="animate-spin" size={16} />
-                    <span className="hidden sm:inline">生成中...</span>
+                    <span>生成中...</span>
                   </>
                 ) : (
                   <>
                     <Sparkles size={16} />
-                    <span className="hidden sm:inline">✨ KDP情報生成</span>
+                    <span>✨ KDP情報生成</span>
                   </>
                 )}
               </button>
@@ -880,7 +892,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 onClick={handleDownloadDocx}
                 disabled={isDownloading}
                 title="Word出力"
-                className={`flex items-center justify-center gap-2 p-2 sm:px-4 sm:py-2 rounded-lg font-medium text-sm transition-all ${
+                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
                   isDownloading
                     ? 'bg-white/20 cursor-not-allowed'
                     : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
@@ -889,12 +901,12 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 {isDownloading ? (
                   <>
                     <Loader2 className="animate-spin" size={16} />
-                    <span className="hidden sm:inline">生成中...</span>
+                    <span>生成中...</span>
                   </>
                 ) : (
                   <>
                     <FileDown size={16} />
-                    <span className="hidden sm:inline">📥 Word出力</span>
+                    <span>📥 Word出力</span>
                   </>
                 )}
               </button>
@@ -903,7 +915,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 onClick={handleSaveAndBack}
                 disabled={isSavingAndBack}
                 title="保存して戻る"
-                className={`flex items-center justify-center gap-2 p-2 sm:px-4 sm:py-2 rounded-lg font-medium text-sm transition-all ${
+                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
                   isSavingAndBack
                     ? 'bg-green-400 cursor-not-allowed'
                     : 'bg-white text-amber-600 hover:bg-amber-50 active:bg-amber-100'
@@ -912,13 +924,37 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 {isSavingAndBack ? (
                   <>
                     <Check size={16} className="text-white" />
-                    <span className="hidden sm:inline text-white">保存しました</span>
+                    <span className="text-white">保存しました</span>
                   </>
                 ) : (
                   <>
                     <Save size={16} />
-                    <span className="hidden sm:inline">💾 保存して戻る</span>
+                    <span>💾 保存して戻る</span>
                   </>
+                )}
+              </button>
+            </>
+          )}
+        </div>
+        
+        {/* タブレット・スマホ用ボタン群（コンパクト） */}
+        <div className="lg:hidden flex items-center gap-1">
+          {!readOnly && (
+            <>
+              <button
+                onClick={handleSaveAndBack}
+                disabled={isSavingAndBack}
+                title="保存して戻る"
+                className={`flex items-center justify-center p-2 rounded-lg font-medium text-sm transition-all ${
+                  isSavingAndBack
+                    ? 'bg-green-400 cursor-not-allowed'
+                    : 'bg-white text-amber-600 hover:bg-amber-50 active:bg-amber-100'
+                }`}
+              >
+                {isSavingAndBack ? (
+                  <Check size={18} className="text-white" />
+                ) : (
+                  <Save size={18} />
                 )}
               </button>
             </>
@@ -927,24 +963,44 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
       </div>
 
       {/* メインコンテンツ */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* スマホ用サイドバーオーバーレイ */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+        
         {/* 左サイドバー: 目次 */}
-        <div className="w-80 flex-shrink-0 border-r border-gray-200 overflow-hidden">
+        <div className={`
+          fixed lg:static
+          top-0 left-0 h-full
+          w-[85vw] max-w-[320px] lg:w-80
+          flex-shrink-0 border-r border-gray-200 overflow-hidden
+          bg-white z-50 lg:z-auto
+          transform transition-transform duration-300 ease-in-out
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}>
           <ChapterSidebar
             chapters={chaptersData}
             activeSectionId={activeSectionId}
-            onSectionClick={handleSectionClick}
+            onSectionClick={(sectionId) => {
+              handleSectionClick(sectionId);
+              setIsSidebarOpen(false); // スマホで節を選択したらサイドバーを閉じる
+            }}
             bookTitle={book.title}
             bookSubtitle={book.subtitle}
             onBatchWrite={readOnly ? undefined : handleBatchWrite}
             batchProgress={batchProgress}
             structureHandlers={readOnly ? undefined : structureHandlers}
             readOnly={readOnly}
+            onCloseSidebar={() => setIsSidebarOpen(false)} // サイドバーを閉じる関数を渡す
           />
         </div>
 
         {/* 右メイン: エディタ */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden w-full lg:w-auto">
           <TiptapEditor
             ref={editorRef}
             key={activeSectionId}
