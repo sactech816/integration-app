@@ -41,6 +41,8 @@ import WelcomeBonus from '@/components/gamification/WelcomeBonus';
 import LoginBonusToast from '@/components/gamification/LoginBonusToast';
 import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
 import MonitorUsersManager from '@/components/shared/MonitorUsersManager';
+import AdminAISettings from '@/components/shared/AdminAISettings';
+import AdminAIUsageStats, { UserAIUsageDetail, ModelBreakdownButton } from '@/components/shared/AdminAIUsageStats';
 import {
   Sparkles,
   UserCircle,
@@ -278,7 +280,14 @@ function DashboardContent() {
     totalMonthlyAIUsage: number;
     totalMonthlyCost: number;
     monthlyRevenue: number;
+    // モデル別・アクション別統計
+    modelUsageStats?: { gemini: number; openai: number; claude: number; unknown: number };
+    actionUsageStats?: { generate_title: number; generate_toc: number; generate_chapters: number; generate_section: number; rewrite: number; other: number };
+    modelCostStats?: { gemini: number; openai: number; claude: number };
   } | null>(null);
+  
+  // ユーザー別詳細表示の展開状態
+  const [expandedUserDetails, setExpandedUserDetails] = useState<Set<string>>(new Set());
   const [loadingKdlManagement, setLoadingKdlManagement] = useState(false);
   const [editingKdlSettings, setEditingKdlSettings] = useState(false);
   const [kdlPlanSettings, setKdlPlanSettings] = useState<Record<string, {
@@ -3346,6 +3355,26 @@ function DashboardContent() {
                       </div>
                     )}
 
+                    {/* デフォルトAIモデル設定 */}
+                    {user && (
+                      <div className="mb-6">
+                        <AdminAISettings userId={user.id} />
+                      </div>
+                    )}
+
+                    {/* AIモデル使用状況（今月） */}
+                    {kdlStats && kdlStats.modelUsageStats && (
+                      <div className="mb-6">
+                        <AdminAIUsageStats 
+                          stats={{
+                            modelUsageStats: kdlStats.modelUsageStats,
+                            actionUsageStats: kdlStats.actionUsageStats || { generate_title: 0, generate_toc: 0, generate_chapters: 0, generate_section: 0, rewrite: 0, other: 0 },
+                            modelCostStats: kdlStats.modelCostStats || { gemini: 0, openai: 0, claude: 0 },
+                          }}
+                        />
+                      </div>
+                    )}
+
                     {/* 料金・制限設定（4段階プラン対応） */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                       <div className="flex justify-between items-center mb-4">
@@ -3535,6 +3564,7 @@ function DashboardContent() {
                                 <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">金額</th>
                                 <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">今日AI</th>
                                 <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">今月AI</th>
+                                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">モデル内訳</th>
                                 <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">推定コスト</th>
                                 <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">次回更新</th>
                               </tr>
@@ -3550,41 +3580,69 @@ function DashboardContent() {
                                     business: 'bg-amber-100 text-amber-700',
                                     enterprise: 'bg-red-100 text-red-700',
                                   };
+                                  const isExpanded = expandedUserDetails.has(sub.user_id);
+                                  const toggleExpand = () => {
+                                    setExpandedUserDetails(prev => {
+                                      const newSet = new Set(prev);
+                                      if (newSet.has(sub.user_id)) {
+                                        newSet.delete(sub.user_id);
+                                      } else {
+                                        newSet.add(sub.user_id);
+                                      }
+                                      return newSet;
+                                    });
+                                  };
                                   return (
-                                    <tr key={sub.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                      <td className="px-4 py-3 text-gray-900 font-medium">{sub.email}</td>
-                                      <td className="px-4 py-3 text-center">
-                                        <span className={`px-2 py-1 rounded text-xs font-bold ${tierColors[sub.plan_tier] || 'bg-gray-100 text-gray-700'}`}>
-                                          {sub.plan_tier_label || sub.plan_tier || '-'}
-                                        </span>
-                                      </td>
-                                      <td className="px-4 py-3 text-center">
-                                        <span className={`px-2 py-1 rounded text-xs font-bold ${
-                                          sub.period === 'yearly'
-                                            ? 'bg-indigo-100 text-indigo-700'
-                                            : 'bg-green-100 text-green-700'
-                                        }`}>
-                                          {sub.period === 'yearly' ? '年間' : '月額'}
-                                        </span>
-                                      </td>
-                                      <td className="px-4 py-3 text-right font-bold text-gray-900">
-                                        ¥{(sub.amount || 0).toLocaleString()}
-                                      </td>
-                                      <td className="px-4 py-3 text-right text-amber-600 font-bold">
-                                        {sub.usage?.dailyUsage || 0}
-                                      </td>
-                                      <td className="px-4 py-3 text-right text-green-600 font-bold">
-                                        {sub.usage?.monthlyUsage || 0}
-                                      </td>
-                                      <td className="px-4 py-3 text-right text-red-600 font-bold">
-                                        ¥{(sub.usage?.totalCost || 0).toFixed(2)}
-                                      </td>
-                                      <td className="px-4 py-3 text-gray-500 text-xs">
-                                        {sub.next_payment_date
-                                          ? new Date(sub.next_payment_date).toLocaleDateString('ja-JP')
-                                          : '-'}
-                                      </td>
-                                    </tr>
+                                    <React.Fragment key={sub.id}>
+                                      <tr className="border-b border-gray-100 hover:bg-gray-50">
+                                        <td className="px-4 py-3 text-gray-900 font-medium">{sub.email}</td>
+                                        <td className="px-4 py-3 text-center">
+                                          <span className={`px-2 py-1 rounded text-xs font-bold ${tierColors[sub.plan_tier] || 'bg-gray-100 text-gray-700'}`}>
+                                            {sub.plan_tier_label || sub.plan_tier || '-'}
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                          <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                            sub.period === 'yearly'
+                                              ? 'bg-indigo-100 text-indigo-700'
+                                              : 'bg-green-100 text-green-700'
+                                          }`}>
+                                            {sub.period === 'yearly' ? '年間' : '月額'}
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right font-bold text-gray-900">
+                                          ¥{(sub.amount || 0).toLocaleString()}
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-amber-600 font-bold">
+                                          {sub.usage?.dailyUsage || 0}
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-green-600 font-bold">
+                                          {sub.usage?.monthlyUsage || 0}
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                          <ModelBreakdownButton
+                                            detailedStats={sub.usage?.detailedStats}
+                                            isExpanded={isExpanded}
+                                            onToggle={toggleExpand}
+                                          />
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-red-600 font-bold">
+                                          ¥{(sub.usage?.totalCost || 0).toFixed(2)}
+                                        </td>
+                                        <td className="px-4 py-3 text-gray-500 text-xs">
+                                          {sub.next_payment_date
+                                            ? new Date(sub.next_payment_date).toLocaleDateString('ja-JP')
+                                            : '-'}
+                                        </td>
+                                      </tr>
+                                      {isExpanded && sub.usage?.detailedStats && (
+                                        <tr className="bg-gray-50">
+                                          <td colSpan={9} className="px-4 py-2">
+                                            <UserAIUsageDetail detailedStats={sub.usage.detailedStats} />
+                                          </td>
+                                        </tr>
+                                      )}
+                                    </React.Fragment>
                                   );
                                 })}
                             </tbody>

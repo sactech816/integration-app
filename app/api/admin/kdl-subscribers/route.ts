@@ -23,6 +23,56 @@ const PLAN_TIER_LABELS: Record<string, string> = {
   enterprise: 'エンタープライズ',
 };
 
+// モデル名からプロバイダーを判定
+function getProviderFromModel(modelName: string): 'gemini' | 'openai' | 'claude' | 'unknown' {
+  if (!modelName) return 'unknown';
+  const lower = modelName.toLowerCase();
+  if (lower.includes('gemini')) return 'gemini';
+  if (lower.includes('gpt') || lower.includes('o1') || lower.includes('o3')) return 'openai';
+  if (lower.includes('claude') || lower.includes('haiku') || lower.includes('sonnet') || lower.includes('opus')) return 'claude';
+  return 'unknown';
+}
+
+// アクションタイプの表示名
+const ACTION_TYPE_LABELS: Record<string, string> = {
+  generate_title: 'タイトル生成',
+  generate_toc: '目次生成',
+  generate_chapters: '目次生成',
+  recommend_pattern: 'パターン推薦',
+  generate_section: '執筆',
+  rewrite: '書き直し',
+};
+
+// モデル別・アクション別使用統計の型
+interface ModelUsageStats {
+  gemini: number;
+  openai: number;
+  claude: number;
+  unknown: number;
+}
+
+interface ActionUsageStats {
+  generate_title: number;
+  generate_toc: number;
+  generate_chapters: number;
+  generate_section: number;
+  rewrite: number;
+  other: number;
+}
+
+interface ModelCostStats {
+  gemini: number;
+  openai: number;
+  claude: number;
+}
+
+interface DetailedUsageStats {
+  byModel: ModelUsageStats;
+  byAction: ActionUsageStats;
+  byModelCost: ModelCostStats;
+  actionModelBreakdown: Record<string, ModelUsageStats>;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
@@ -129,6 +179,50 @@ export async function GET(request: NextRequest) {
         .eq('user_id', userId)
         .gte('created_at', firstDayOfMonth.toISOString());
 
+      // 今月の詳細使用ログを取得（モデル別・アクション別統計用）
+      const { data: monthlyLogs } = await supabase
+        .from('ai_usage_logs')
+        .select('model_used, action_type, estimated_cost_jpy')
+        .eq('user_id', userId)
+        .gte('created_at', firstDayOfMonth.toISOString());
+
+      // モデル別使用回数を集計
+      const byModel: ModelUsageStats = { gemini: 0, openai: 0, claude: 0, unknown: 0 };
+      const byAction: ActionUsageStats = { 
+        generate_title: 0, 
+        generate_toc: 0, 
+        generate_chapters: 0, 
+        generate_section: 0, 
+        rewrite: 0, 
+        other: 0 
+      };
+      const byModelCost: ModelCostStats = { gemini: 0, openai: 0, claude: 0 };
+      const actionModelBreakdown: Record<string, ModelUsageStats> = {};
+
+      (monthlyLogs || []).forEach((log) => {
+        const provider = getProviderFromModel(log.model_used);
+        byModel[provider]++;
+        
+        // コスト集計
+        if (provider !== 'unknown' && log.estimated_cost_jpy) {
+          byModelCost[provider] += log.estimated_cost_jpy;
+        }
+
+        // アクション別集計
+        const actionType = log.action_type || 'other';
+        if (actionType in byAction) {
+          byAction[actionType as keyof ActionUsageStats]++;
+        } else {
+          byAction.other++;
+        }
+
+        // アクション×モデルの内訳
+        if (!actionModelBreakdown[actionType]) {
+          actionModelBreakdown[actionType] = { gemini: 0, openai: 0, claude: 0, unknown: 0 };
+        }
+        actionModelBreakdown[actionType][provider]++;
+      });
+
       // 総推定コスト
       const { data: costData } = await supabase
         .from('ai_usage_logs')
@@ -142,6 +236,12 @@ export async function GET(request: NextRequest) {
         dailyUsage: dailyCount || 0,
         monthlyUsage: monthlyCount || 0,
         totalCost,
+        detailedStats: {
+          byModel,
+          byAction,
+          byModelCost,
+          actionModelBreakdown,
+        } as DetailedUsageStats,
       };
     });
 
@@ -215,13 +315,43 @@ export async function GET(request: NextRequest) {
       .select('id', { count: 'exact', head: true })
       .gte('created_at', firstDayOfMonth.toISOString());
 
-    // 今月の総推定コスト
-    const { data: allCostData } = await supabase
+    // 今月の全使用ログを取得（全体統計用）
+    const { data: allMonthlyLogs } = await supabase
       .from('ai_usage_logs')
-      .select('estimated_cost_jpy')
+      .select('model_used, action_type, estimated_cost_jpy')
       .gte('created_at', firstDayOfMonth.toISOString());
 
-    const totalMonthlyCost = allCostData?.reduce((sum, item) => sum + (item.estimated_cost_jpy || 0), 0) || 0;
+    // 全体のモデル別・アクション別統計を集計
+    const globalByModel: ModelUsageStats = { gemini: 0, openai: 0, claude: 0, unknown: 0 };
+    const globalByAction: ActionUsageStats = { 
+      generate_title: 0, 
+      generate_toc: 0, 
+      generate_chapters: 0, 
+      generate_section: 0, 
+      rewrite: 0, 
+      other: 0 
+    };
+    const globalByModelCost: ModelCostStats = { gemini: 0, openai: 0, claude: 0 };
+
+    let totalMonthlyCost = 0;
+    (allMonthlyLogs || []).forEach((log) => {
+      const provider = getProviderFromModel(log.model_used);
+      globalByModel[provider]++;
+      
+      if (log.estimated_cost_jpy) {
+        totalMonthlyCost += log.estimated_cost_jpy;
+        if (provider !== 'unknown') {
+          globalByModelCost[provider] += log.estimated_cost_jpy;
+        }
+      }
+
+      const actionType = log.action_type || 'other';
+      if (actionType in globalByAction) {
+        globalByAction[actionType as keyof ActionUsageStats]++;
+      } else {
+        globalByAction.other++;
+      }
+    });
 
     // 月間収益予測（アクティブなサブスクリプションの月額換算合計）
     let monthlyRevenue = 0;
@@ -243,6 +373,14 @@ export async function GET(request: NextRequest) {
         totalMonthlyAIUsage: totalMonthlyAIUsage || 0,
         totalMonthlyCost: Math.round(totalMonthlyCost * 100) / 100,
         monthlyRevenue: Math.round(monthlyRevenue),
+        // 新規追加: モデル別・アクション別統計
+        modelUsageStats: globalByModel,
+        actionUsageStats: globalByAction,
+        modelCostStats: {
+          gemini: Math.round(globalByModelCost.gemini * 100) / 100,
+          openai: Math.round(globalByModelCost.openai * 100) / 100,
+          claude: Math.round(globalByModelCost.claude * 100) / 100,
+        },
       },
       useNewTable,
     });

@@ -312,3 +312,4 @@ export async function POST(request: Request) {
 **バージョン**: 1.0  
 **ステータス**: ✅ UI実装完了 / ⏳ バックエンド連携待ち
 
+

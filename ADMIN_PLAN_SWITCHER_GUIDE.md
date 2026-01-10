@@ -287,3 +287,4 @@ const [adminTestPlan, setAdminTestPlan] = useState<PlanTier>(() => {
 **バージョン**: 1.0  
 **ステータス**: ✅ UI実装完了 / 📝 API連携は手動実装推奨
 
+
