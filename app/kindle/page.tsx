@@ -11,6 +11,7 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import AIUsageDisplay from '@/components/kindle/AIUsageDisplay';
 import AIModelSelector from '@/components/kindle/AIModelSelector';
 import AdminAISettings from '@/components/shared/AdminAISettings';
+import AdminPlanSwitcher from '@/components/shared/AdminPlanSwitcher';
 import { getAdminEmails } from '@/lib/constants';
 
 interface Book {
@@ -78,6 +79,19 @@ function KindleListPageContent() {
   const [loadingSubscription, setLoadingSubscription] = useState(true);
   const [showBanner, setShowBanner] = useState(true);
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
+
+  // 管理者用: プラン体験モード（LocalStorageから復元）
+  const [adminTestPlan, setAdminTestPlan] = useState<'none' | 'lite' | 'standard' | 'pro' | 'business' | 'enterprise'>('pro');
+
+  // 管理者の場合、LocalStorageから体験プランを復元
+  useEffect(() => {
+    if (isAdmin && typeof window !== 'undefined') {
+      const savedPlan = localStorage.getItem('adminTestPlan');
+      if (savedPlan && ['lite', 'standard', 'pro', 'business'].includes(savedPlan)) {
+        setAdminTestPlan(savedPlan as 'lite' | 'standard' | 'pro' | 'business');
+      }
+    }
+  }, [isAdmin]);
 
   // 管理者かどうかを判定
   const adminEmails = getAdminEmails();
@@ -553,6 +567,14 @@ function KindleListPageContent() {
 
       {/* メインコンテンツ */}
       <main className={`mx-auto px-4 py-8 ${isAdmin ? 'max-w-6xl' : 'max-w-4xl'}`}>
+        {/* 管理者用: プラン体験切り替え */}
+        {user && isAdmin && (
+          <AdminPlanSwitcher 
+            currentPlan={adminTestPlan}
+            onPlanChange={setAdminTestPlan}
+          />
+        )}
+
         {/* 管理者用: デフォルトAIモデル設定（KDL専用） */}
         {user && isAdmin && (
           <div className="mb-8">
@@ -575,7 +597,7 @@ function KindleListPageContent() {
           <div className="mb-6">
             <AIModelSelector 
               userId={user.id}
-              planTier={subscriptionStatus.planTier || 'none'}
+              planTier={isAdmin ? adminTestPlan : (subscriptionStatus.planTier || 'none')}
               isAdmin={isAdmin}
               isMonitor={subscriptionStatus.isMonitor || false}
             />

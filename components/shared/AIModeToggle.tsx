@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAICreditCheckResult } from '@/lib/ai-usage';
 import type { AIMode } from '@/lib/types';
 
 interface AIModeToggleProps {
