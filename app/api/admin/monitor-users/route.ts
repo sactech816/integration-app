@@ -155,7 +155,8 @@ export async function POST(request: Request) {
       }
 
       // メールアドレスで検索（大文字小文字を区別しない）
-      const foundUser = usersData.users.find(
+      const users = (usersData?.users || []) as Array<{ id: string; email?: string }>;
+      const foundUser = users.find(
         (u) => u.email?.toLowerCase() === userEmail.toLowerCase()
       );
 
