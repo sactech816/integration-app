@@ -28,7 +28,8 @@ import {
   LayoutGrid,
   BookOpen,
   ClipboardList,
-  Gamepad2
+  Gamepad2,
+  Calendar
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -221,6 +222,14 @@ const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button 
+              onClick={() => handleNav('booking')} 
+              className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              <Calendar size={16} />
+              <span>予約・日程調整</span>
+            </button>
+
+            <button 
               onClick={() => handleNav('announcements')} 
               className="flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-orange-600 transition-colors"
             >
@@ -407,6 +416,16 @@ const Header: React.FC<HeaderProps> = ({
                   <div className="text-left">
                     <span className="font-medium text-amber-700">📚 Kindle出版</span>
                     <p className="text-xs text-gray-500">AIでKindle本を執筆</p>
+                  </div>
+                </button>
+                <button 
+                  onClick={() => handleNav('booking')} 
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition-colors"
+                >
+                  <Calendar size={20} className="text-blue-600" />
+                  <div className="text-left">
+                    <span className="font-medium text-blue-700">予約・日程調整</span>
+                    <p className="text-xs text-gray-500">カレンダー形式で予約を受け付け</p>
                   </div>
                 </button>
                 <button 

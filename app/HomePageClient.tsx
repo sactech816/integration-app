@@ -20,7 +20,9 @@ import {
   Target,
   Share2,
   LayoutGrid,
-  BookOpen
+  BookOpen,
+  Calendar,
+  ClipboardList
 } from 'lucide-react';
 
 export default function HomePageClient() {
@@ -221,6 +223,67 @@ export default function HomePageClient() {
               詳しく見る
               <ArrowRight size={16} />
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* 予約・日程調整・アンケートサービスの誘導 */}
+      <section className="py-12 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b border-blue-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+              その他の便利な機能
+            </h2>
+            <p className="text-gray-600 text-sm">
+              予約管理・アンケート収集など、ビジネスに役立つツール
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* 予約・日程調整 */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-blue-100 hover:shadow-xl transition-all hover:scale-[1.02]">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                  <Calendar size={24} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900 text-lg mb-2">予約・日程調整</h3>
+                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+                    カレンダー形式で予約を受け付け。面談・相談・サービス予約などに最適です。予約枠を簡単に管理できます。
+                  </p>
+                  <button
+                    onClick={() => navigateTo('booking')}
+                    className="inline-flex items-center gap-2 bg-blue-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    <Calendar size={16} />
+                    予約管理を始める
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* アンケート（投票） */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-teal-100 hover:shadow-xl transition-all hover:scale-[1.02]">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                  <ClipboardList size={24} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900 text-lg mb-2">アンケート（投票）</h3>
+                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+                    顧客の声を収集。投票機能付きアンケートで意見を集約。SNSで拡散しやすく、結果をリアルタイムで確認できます。
+                  </p>
+                  <button
+                    onClick={() => navigateTo('survey')}
+                    className="inline-flex items-center gap-2 bg-teal-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-teal-700 transition-colors text-sm"
+                  >
+                    <ClipboardList size={16} />
+                    アンケートを作成
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

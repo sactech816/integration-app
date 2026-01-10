@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Magnet, Sparkles, Building2, UserCircle, TrendingUp, Lightbulb, Heart } from 'lucide-react';
+import { Magnet, Sparkles, Building2, UserCircle, TrendingUp, Lightbulb, Heart, Calendar, ClipboardList } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
 interface FooterProps {
@@ -74,6 +74,18 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
               <li>
                 <Link href="/dashboard" className="hover:text-white transition-colors">
                   マイページ
+                </Link>
+              </li>
+              <li>
+                <Link href="/booking" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Calendar size={14} className="text-blue-400 opacity-60 group-hover:opacity-100" />
+                  予約・日程調整
+                </Link>
+              </li>
+              <li>
+                <Link href="/survey" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <ClipboardList size={14} className="text-teal-400 opacity-60 group-hover:opacity-100" />
+                  アンケート（投票）
                 </Link>
               </li>
               <li>
