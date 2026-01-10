@@ -71,8 +71,8 @@ export const PLAN_DEFINITIONS: Record<PlanTier, PlanDefinition> = {
     nameJa: 'スタンダード',
     monthlyPrice: 4980,
     yearlyPrice: 49800,
-    dailyAILimit: 50,
-    monthlyAILimit: 500,
+    dailyAILimit: 30,
+    monthlyAILimit: 900,
     premiumCreditsDaily: 0,      // Premium枠なし
     standardCreditsDaily: 30,    // Standard枠30回
     aiModel: 'gpt-4o-mini',

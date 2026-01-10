@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import AIUsageDisplay from '@/components/kindle/AIUsageDisplay';
+import AIModelSelector from '@/components/kindle/AIModelSelector';
 import AdminAISettings from '@/components/shared/AdminAISettings';
 import { getAdminEmails } from '@/lib/constants';
 
@@ -71,6 +72,8 @@ function KindleListPageContent() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<{
     hasActiveSubscription: boolean;
     planType: 'monthly' | 'yearly' | 'none';
+    planTier?: 'none' | 'lite' | 'standard' | 'pro' | 'business' | 'enterprise';
+    isMonitor?: boolean;
   } | null>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
   const [showBanner, setShowBanner] = useState(true);
@@ -111,6 +114,8 @@ function KindleListPageContent() {
             setSubscriptionStatus({
               hasActiveSubscription: data.hasActiveSubscription,
               planType: data.planType,
+              planTier: data.planTier,
+              isMonitor: data.isMonitor,
             });
           }
         }
@@ -548,14 +553,14 @@ function KindleListPageContent() {
 
       {/* メインコンテンツ */}
       <main className={`mx-auto px-4 py-8 ${isAdmin ? 'max-w-6xl' : 'max-w-4xl'}`}>
-        {/* 管理者用AI設定 */}
+        {/* 管理者用: デフォルトAIモデル設定（KDL専用） */}
         {user && isAdmin && (
           <div className="mb-8">
             <AdminAISettings userId={user.id} />
           </div>
         )}
 
-        {/* AI使用量表示（ログインユーザー向け、管理者以外） */}
+        {/* AI使用量表示（ログインユーザー向け） */}
         {user && subscriptionStatus && !isAdmin && (
           <div className="mb-6">
             <AIUsageDisplay 
@@ -565,7 +570,19 @@ function KindleListPageContent() {
           </div>
         )}
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">
+        {/* AIモード選択（管理者・課金ユーザー・モニターユーザのPro以上） */}
+        {user && subscriptionStatus && (
+          <div className="mb-6">
+            <AIModelSelector 
+              userId={user.id}
+              planTier={subscriptionStatus.planTier || 'none'}
+              isAdmin={isAdmin}
+              isMonitor={subscriptionStatus.isMonitor || false}
+            />
+          </div>
+        )}
+
+        <h1 className="text-2xl font-bold text-gray-900 mb-6 mt-8">
           {isAdmin ? '全ユーザーの書籍' : 'あなたの書籍'}
         </h1>
 

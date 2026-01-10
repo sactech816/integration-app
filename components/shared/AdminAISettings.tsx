@@ -147,10 +147,13 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
       <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg p-6">
         <div className="flex items-center gap-3 mb-2">
           <Settings size={32} />
-          <h2 className="text-2xl font-bold">プラン別AIモデル設定</h2>
+          <h2 className="text-2xl font-bold">KDL用 デフォルトAIモデル設定</h2>
         </div>
         <p className="text-indigo-100">
-          各プランのデフォルトAIモデルを「候補A」または「候補B」から選択できます
+          Kindle執筆機能で使用するデフォルトAIモデルをプラン別に設定します（候補A/B）
+        </p>
+        <p className="text-xs text-indigo-200 mt-1">
+          ※ユーザーは実行時に「スピードモード」または「ハイクオリティモード」を選択できます
         </p>
       </div>
 

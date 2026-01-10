@@ -79,8 +79,8 @@ export async function GET(request: Request) {
       });
       
       const usersMap = new Map<string, { id: string; email: string }>();
-      if (usersData?.users) {
-        usersData.users.forEach((u) => {
+      if (usersData?.users && Array.isArray(usersData.users)) {
+        (usersData.users as Array<{ id: string; email?: string }>).forEach((u) => {
           usersMap.set(u.id, { id: u.id, email: u.email || '' });
         });
       }
