@@ -509,6 +509,20 @@ export async function submitBooking(
     return { success: false, error: error.message, code: 'UNKNOWN_ERROR' };
   }
 
+  // 予約完了メール送信（非同期で実行、エラーは無視）
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : 'http://localhost:3000';
+    fetch(`${baseUrl}/api/booking/notify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bookingId: data.id, type: 'confirm' }),
+    }).catch(() => {}); // エラーは無視
+  } catch {
+    // メール送信エラーは予約成功に影響させない
+  }
+
   return { success: true, data };
 }
 
