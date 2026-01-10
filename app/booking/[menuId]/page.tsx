@@ -18,8 +18,23 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { BookingMenu, BookingSlotWithAvailability, BOOKING_MENU_TYPE_LABELS } from '@/types/booking';
-import { getBookingMenu, getAvailableSlots, submitBooking } from '@/app/actions/booking';
+import {
+  BookingMenu,
+  BookingSlotWithAvailability,
+  BOOKING_MENU_TYPE_LABELS,
+  AttendanceTableData,
+  AttendanceStatus,
+  ATTENDANCE_STATUS_LABELS,
+  ATTENDANCE_STATUS_ICONS,
+  ATTENDANCE_STATUS_COLORS,
+} from '@/types/booking';
+import {
+  getBookingMenu,
+  getAvailableSlots,
+  submitBooking,
+  getScheduleAdjustments,
+  submitScheduleAdjustment,
+} from '@/app/actions/booking';
 
 // 日付ユーティリティ
 const formatDate = (date: Date) => {
@@ -46,18 +61,25 @@ export default function PublicBookingPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  // カレンダー状態
+  // 予約用の状態
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<BookingSlotWithAvailability | null>(null);
-
-  // 予約フォーム
   const [step, setStep] = useState<'select' | 'form' | 'complete'>('select');
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [guestComment, setGuestComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 日程調整用の状態
+  const [attendanceData, setAttendanceData] = useState<AttendanceTableData | null>(null);
+  const [participantName, setParticipantName] = useState('');
+  const [participantEmail, setParticipantEmail] = useState('');
+  const [participantResponses, setParticipantResponses] = useState<Record<string, AttendanceStatus>>({});
+  const [submittingAdjustment, setSubmittingAdjustment] = useState(false);
+  const [adjustmentComplete, setAdjustmentComplete] = useState(false);
+  const [adjustmentError, setAdjustmentError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -79,12 +101,27 @@ export default function PublicBookingPage() {
 
       setMenu(menuData);
 
-      // 予約枠を取得
-      const slotsData = await getAvailableSlots(menuId, {
-        fromDate: new Date().toISOString(),
-        includeFullSlots: false, // 空きのある枠のみ
-      });
-      setSlots(slotsData);
+      // メニュータイプに応じてデータを取得
+      if (menuData.type === 'adjustment') {
+        // 日程調整の場合: 出欠表データを取得
+        const attendanceTableData = await getScheduleAdjustments(menuId);
+        if (attendanceTableData) {
+          setAttendanceData(attendanceTableData);
+          // 全スロットを取得（表示用）
+          const allSlots = await getAvailableSlots(menuId, {
+            fromDate: new Date().toISOString(),
+            includeFullSlots: true,
+          });
+          setSlots(allSlots);
+        }
+      } else {
+        // 予約の場合: 空き枠を取得
+        const slotsData = await getAvailableSlots(menuId, {
+          fromDate: new Date().toISOString(),
+          includeFullSlots: false, // 空きのある枠のみ
+        });
+        setSlots(slotsData);
+      }
       setLoading(false);
     };
 
@@ -170,6 +207,46 @@ export default function PublicBookingPage() {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
   };
 
+  // 日程調整用のハンドラー
+  const handleAttendanceChange = (slotId: string, status: AttendanceStatus) => {
+    setParticipantResponses({
+      ...participantResponses,
+      [slotId]: status,
+    });
+  };
+
+  const handleSubmitAdjustment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!menu || !participantName.trim()) return;
+
+    setSubmittingAdjustment(true);
+    setAdjustmentError(null);
+
+    const result = await submitScheduleAdjustment({
+      menu_id: menu.id,
+      participant_name: participantName.trim(),
+      participant_email: participantEmail.trim() || undefined,
+      responses: participantResponses,
+    });
+
+    if (result.success) {
+      setAdjustmentComplete(true);
+      // データを再読み込み
+      const updatedData = await getScheduleAdjustments(menuId);
+      if (updatedData) {
+        setAttendanceData(updatedData);
+      }
+      // フォームをリセット
+      setParticipantName('');
+      setParticipantEmail('');
+      setParticipantResponses({});
+    } else {
+      setAdjustmentError('error' in result ? result.error : '回答に失敗しました');
+    }
+
+    setSubmittingAdjustment(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
@@ -235,8 +312,233 @@ export default function PublicBookingPage() {
       </header>
 
       {/* メインコンテンツ */}
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        {step === 'complete' ? (
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        {menu?.type === 'adjustment' ? (
+          /* 日程調整: 出欠表形式 */
+          attendanceData ? (
+            <>
+              {adjustmentComplete ? (
+                <div className="bg-white rounded-2xl shadow-xl p-8 text-center animate-fade-in mb-6">
+                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Check size={40} className="text-green-600" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-3">出欠を登録しました！</h2>
+                  <p className="text-gray-600 mb-6">
+                    メールアドレスを入力されている場合、調整結果をお送りしました。
+                  </p>
+                  <button
+                    onClick={() => setAdjustmentComplete(false)}
+                    className="text-blue-600 font-semibold hover:underline"
+                  >
+                    続けて登録する
+                  </button>
+                </div>
+              ) : null}
+
+              {/* 出欠表 */}
+              {attendanceData.slots.length > 0 ? (
+                <div className="bg-white rounded-2xl shadow-xl p-6 mb-6 overflow-x-auto">
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">出欠表</h2>
+                  <div className="min-w-full">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b-2 border-gray-200">
+                          <th className="text-left p-3 font-semibold text-gray-700 sticky left-0 bg-white z-10 min-w-[120px]">
+                            参加者
+                          </th>
+                          {attendanceData.slots.map((slotSummary) => (
+                          <th
+                            key={slotSummary.slot_id}
+                            className={`text-center p-3 font-semibold text-gray-700 border-l border-gray-200 ${
+                              attendanceData.best_slot_id === slotSummary.slot_id
+                                ? 'bg-green-50 border-green-300'
+                                : ''
+                            }`}
+                          >
+                            <div className="text-sm">
+                              {formatDate(new Date(slotSummary.slot.start_time))}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {formatTime(slotSummary.slot.start_time)} - {formatTime(slotSummary.slot.end_time)}
+                            </div>
+                            {attendanceData.best_slot_id === slotSummary.slot_id && (
+                              <div className="text-xs text-green-600 font-bold mt-1">★ 候補</div>
+                            )}
+                          </th>
+                        ))}
+                      </tr>
+                      <tr className="border-b border-gray-200 bg-gray-50">
+                        <td className="p-2 text-xs text-gray-600 font-medium sticky left-0 bg-gray-50 z-10">
+                          参加可/不可/未定
+                        </td>
+                        {attendanceData.slots.map((slotSummary) => (
+                          <td key={slotSummary.slot_id} className="text-center p-2 text-xs text-gray-600 border-l border-gray-200">
+                            <div>
+                              <span className="text-green-600 font-semibold">{slotSummary.yes_count}</span> /
+                              <span className="text-red-600 font-semibold"> {slotSummary.no_count}</span> /
+                              <span className="text-yellow-600 font-semibold"> {slotSummary.maybe_count}</span>
+                            </div>
+                            <div className="text-gray-500 mt-1">
+                              ({slotSummary.available_count}名参加可能)
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {attendanceData.participants.map((participant) => (
+                        <tr key={participant.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="p-3 font-medium text-gray-900 sticky left-0 bg-white z-10">
+                            {participant.participant_name}
+                          </td>
+                          {attendanceData.slots.map((slotSummary) => {
+                            const status = participant.responses[slotSummary.slot_id] as AttendanceStatus | undefined;
+                            const statusConfig = status ? ATTENDANCE_STATUS_COLORS[status] : { bg: 'bg-gray-50', text: 'text-gray-400', border: 'border-gray-200' };
+                            const icon = status ? ATTENDANCE_STATUS_ICONS[status] : '-';
+                            const label = status ? ATTENDANCE_STATUS_LABELS[status] : '未回答';
+
+                            return (
+                              <td
+                                key={slotSummary.slot_id}
+                                className={`text-center p-3 border-l border-gray-200 ${statusConfig.bg} ${statusConfig.text}`}
+                                title={label}
+                              >
+                                <span className="text-xl font-bold">{icon}</span>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              ) : (
+                <div className="bg-white rounded-2xl shadow-xl p-12 text-center mb-6">
+                  <Calendar size={48} className="mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">日程候補が設定されていません</h3>
+                  <p className="text-gray-600">
+                    日程候補を設定すると、出欠確認が開始できます。
+                  </p>
+                </div>
+              )}
+
+              {/* 出欠入力フォーム */}
+              {attendanceData.slots.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-xl p-6">
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">出欠を登録</h2>
+                  <form onSubmit={handleSubmitAdjustment} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <User size={16} className="inline mr-1" />
+                        お名前（ニックネーム） <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={participantName}
+                        onChange={(e) => setParticipantName(e.target.value)}
+                        placeholder="山田 太郎"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <Mail size={16} className="inline mr-1" />
+                        メールアドレス（任意）
+                      </label>
+                      <input
+                        type="email"
+                        value={participantEmail}
+                        onChange={(e) => setParticipantEmail(e.target.value)}
+                        placeholder="example@email.com（入力すると調整結果がメールで届きます）"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        メールアドレスを入力すると、調整結果の出欠表がメールで送られます。
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        各日程への出欠を選択してください
+                      </label>
+                      <div className="space-y-3">
+                        {attendanceData.slots.map((slotSummary) => {
+                          const currentStatus = participantResponses[slotSummary.slot_id] as AttendanceStatus | undefined;
+
+                          return (
+                            <div
+                              key={slotSummary.slot_id}
+                              className="border border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-colors"
+                            >
+                              <div className="font-semibold text-gray-900 mb-3">
+                                {formatDate(new Date(slotSummary.slot.start_time))} {formatTime(slotSummary.slot.start_time)} - {formatTime(slotSummary.slot.end_time)}
+                              </div>
+                              <div className="flex gap-2">
+                                {(['yes', 'maybe', 'no'] as AttendanceStatus[]).map((status) => {
+                                  const config = ATTENDANCE_STATUS_COLORS[status];
+                                  const isSelected = currentStatus === status;
+
+                                  return (
+                                    <button
+                                      key={status}
+                                      type="button"
+                                      onClick={() => handleAttendanceChange(slotSummary.slot_id, status)}
+                                      className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all border-2 ${
+                                        isSelected
+                                          ? `${config.bg} ${config.text} ${config.border} border-2`
+                                          : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                                      }`}
+                                    >
+                                      <span className="text-lg">{ATTENDANCE_STATUS_ICONS[status]}</span>
+                                      <div className="text-xs mt-1">{ATTENDANCE_STATUS_LABELS[status]}</div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                  {adjustmentError && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-2">
+                      <AlertCircle size={18} />
+                      {adjustmentError}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={submittingAdjustment || !participantName.trim() || Object.keys(participantResponses).length === 0}
+                    className="w-full py-4 bg-purple-600 text-white rounded-xl font-bold text-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {submittingAdjustment ? (
+                      <>
+                        <Loader2 size={20} className="animate-spin" />
+                        送信中...
+                      </>
+                    ) : (
+                      <>
+                        <CalendarCheck size={20} />
+                        出欠を登録
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+              )}
+            </>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
+              <Calendar size={48} className="mx-auto mb-4 text-gray-300" />
+              <p className="text-gray-600">日程候補が設定されていません</p>
+            </div>
+          )
+        ) : step === 'complete' ? (
           /* 完了画面 */
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center animate-fade-in">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">

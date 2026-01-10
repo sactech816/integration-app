@@ -12,6 +12,13 @@ import {
   UpdateBookingMenuInput,
   CreateBookingSlotInput,
   CreateBookingInput,
+  ScheduleAdjustmentResponse,
+  ScheduleAdjustmentWithDetails,
+  CreateScheduleAdjustmentInput,
+  UpdateScheduleAdjustmentInput,
+  AttendanceTableData,
+  SlotAttendanceSummary,
+  AttendanceStatus,
   DEFAULT_DURATION_MIN,
   DEFAULT_MAX_CAPACITY,
 } from '@/types/booking';
@@ -675,5 +682,273 @@ export async function getUserBookings(
   }
 
   return bookings;
+}
+
+// ===========================================
+// 日程調整管理
+// ===========================================
+
+/**
+ * 日程調整への回答を送信または更新
+ */
+export async function submitScheduleAdjustment(
+  input: CreateScheduleAdjustmentInput
+): Promise<BookingResponse<ScheduleAdjustmentResponse>> {
+  const supabase = getSupabaseServer();
+  if (!supabase) {
+    return { success: false, error: 'Database not configured', code: 'DATABASE_NOT_CONFIGURED' };
+  }
+
+  // メニュー存在確認とタイプ確認
+  const menu = await getBookingMenu(input.menu_id);
+  if (!menu) {
+    return { success: false, error: 'Menu not found', code: 'MENU_NOT_FOUND' };
+  }
+  if (menu.type !== 'adjustment') {
+    return { success: false, error: 'This menu is not a schedule adjustment menu', code: 'INVALID_INPUT' };
+  }
+  if (!menu.is_active) {
+    return { success: false, error: 'This menu is not active', code: 'INVALID_INPUT' };
+  }
+
+  if (!input.participant_name?.trim()) {
+    return { success: false, error: 'participant_name is required', code: 'INVALID_INPUT' };
+  }
+
+  // メールアドレスのバリデーション（入力されている場合）
+  if (input.participant_email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(input.participant_email)) {
+      return { success: false, error: 'Invalid email format', code: 'INVALID_INPUT' };
+    }
+  }
+
+  // 既存の回答を確認
+  const { data: existingResponse } = await supabase
+    .from('schedule_adjustment_responses')
+    .select('id')
+    .eq('menu_id', input.menu_id)
+    .eq('participant_name', input.participant_name.trim())
+    .single();
+
+  let data;
+  let error;
+
+  if (existingResponse) {
+    // 更新
+    const { data: updated, error: updateError } = await supabase
+      .from('schedule_adjustment_responses')
+      .update({
+        participant_email: input.participant_email?.trim() || null,
+        responses: input.responses,
+      })
+      .eq('id', existingResponse.id)
+      .select()
+      .single();
+
+    data = updated;
+    error = updateError;
+  } else {
+    // 新規作成
+    const { data: created, error: insertError } = await supabase
+      .from('schedule_adjustment_responses')
+      .insert({
+        menu_id: input.menu_id,
+        participant_name: input.participant_name.trim(),
+        participant_email: input.participant_email?.trim() || null,
+        responses: input.responses,
+      })
+      .select()
+      .single();
+
+    data = created;
+    error = insertError;
+  }
+
+  if (error) {
+    console.error('[Booking] Submit schedule adjustment error:', error);
+    return { success: false, error: error.message, code: 'UNKNOWN_ERROR' };
+  }
+
+  // メール送信（participant_emailがある場合、非同期で実行）
+  if (input.participant_email && data) {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : 'http://localhost:3000');
+      fetch(`${baseUrl}/api/booking/adjustment/notify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ responseId: data.id, type: 'response' }),
+      }).catch(() => {}); // エラーは無視
+    } catch {
+      // メール送信エラーは回答成功に影響させない
+    }
+  }
+
+  return { success: true, data };
+}
+
+/**
+ * 日程調整の出欠表データを取得
+ */
+export async function getScheduleAdjustments(
+  menuId: string
+): Promise<AttendanceTableData | null> {
+  const supabase = getSupabaseServer();
+  if (!supabase) return null;
+
+  // メニュー確認
+  const menu = await getBookingMenu(menuId);
+  if (!menu || menu.type !== 'adjustment') return null;
+
+  // 日程候補（スロット）を取得
+  const { data: slots, error: slotsError } = await supabase
+    .from('booking_slots')
+    .select('*')
+    .eq('menu_id', menuId)
+    .order('start_time', { ascending: true });
+
+  if (slotsError || !slots || slots.length === 0) {
+    return { slots: [], participants: [] };
+  }
+
+  // 回答を取得
+  const { data: responses, error: responsesError } = await supabase
+    .from('schedule_adjustment_responses')
+    .select('*')
+    .eq('menu_id', menuId)
+    .order('created_at', { ascending: true });
+
+  if (responsesError) {
+    console.error('[Booking] Get schedule adjustments error:', responsesError);
+    return null;
+  }
+
+  const participants = (responses || []) as ScheduleAdjustmentResponse[];
+
+  // 各日程候補の集計
+  const slotSummaries: SlotAttendanceSummary[] = slots.map((slot) => {
+    let yesCount = 0;
+    let noCount = 0;
+    let maybeCount = 0;
+
+    participants.forEach((participant) => {
+      const status = participant.responses[slot.id] as AttendanceStatus | undefined;
+      if (status === 'yes') yesCount++;
+      else if (status === 'no') noCount++;
+      else if (status === 'maybe') maybeCount++;
+    });
+
+    const availableCount = yesCount + maybeCount;
+    const totalResponses = yesCount + noCount + maybeCount;
+
+    return {
+      slot_id: slot.id,
+      slot,
+      yes_count: yesCount,
+      no_count: noCount,
+      maybe_count: maybeCount,
+      available_count: availableCount,
+      total_responses: totalResponses,
+    };
+  });
+
+  // 最も多くの人が参加できる日程を判定（available_countが最大のもの）
+  const bestSlot = slotSummaries.reduce((best, current) => {
+    if (current.available_count > best.available_count) {
+      return current;
+    }
+    // 同数の場合、yes_countが多い方を優先
+    if (current.available_count === best.available_count && current.yes_count > best.yes_count) {
+      return current;
+    }
+    return best;
+  }, slotSummaries[0] || null);
+
+  return {
+    slots: slotSummaries,
+    participants,
+    best_slot_id: bestSlot?.slot_id,
+  };
+}
+
+/**
+ * 日程調整の回答を更新
+ */
+export async function updateScheduleAdjustment(
+  menuId: string,
+  participantName: string,
+  input: UpdateScheduleAdjustmentInput
+): Promise<BookingResponse<ScheduleAdjustmentResponse>> {
+  const supabase = getSupabaseServer();
+  if (!supabase) {
+    return { success: false, error: 'Database not configured', code: 'DATABASE_NOT_CONFIGURED' };
+  }
+
+  // 既存の回答を確認
+  const { data: existingResponse, error: findError } = await supabase
+    .from('schedule_adjustment_responses')
+    .select('*')
+    .eq('menu_id', menuId)
+    .eq('participant_name', participantName.trim())
+    .single();
+
+  if (findError || !existingResponse) {
+    return { success: false, error: 'Response not found', code: 'SLOT_NOT_FOUND' };
+  }
+
+  const updateData: Record<string, unknown> = {};
+  if (input.participant_email !== undefined) {
+    updateData.participant_email = input.participant_email?.trim() || null;
+  }
+  if (input.responses) {
+    updateData.responses = input.responses;
+  }
+
+  const { data, error } = await supabase
+    .from('schedule_adjustment_responses')
+    .update(updateData)
+    .eq('id', existingResponse.id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('[Booking] Update schedule adjustment error:', error);
+    return { success: false, error: error.message, code: 'UNKNOWN_ERROR' };
+  }
+
+  return { success: true, data };
+}
+
+/**
+ * メニュー所有者用: 日程調整の全回答を取得
+ */
+export async function getScheduleAdjustmentsByMenu(
+  menuId: string,
+  userId: string
+): Promise<ScheduleAdjustmentWithDetails[]> {
+  const supabase = getSupabaseServer();
+  if (!supabase) return [];
+
+  // メニュー所有者確認
+  const menu = await getBookingMenu(menuId);
+  if (!menu || menu.user_id !== userId) return [];
+
+  const { data, error } = await supabase
+    .from('schedule_adjustment_responses')
+    .select('*')
+    .eq('menu_id', menuId)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('[Booking] Get schedule adjustments by menu error:', error);
+    return [];
+  }
+
+  return (data || []).map((response) => ({
+    ...response,
+    menu,
+  }));
 }
 

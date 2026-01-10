@@ -172,6 +172,82 @@ export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
   cancelled: 'キャンセル',
 };
 
+// -------------------------------------------
+// 日程調整関連の型定義
+// -------------------------------------------
+
+// 出欠ステータス
+export type AttendanceStatus = 'yes' | 'no' | 'maybe';
+
+// 日程調整回答 (schedule_adjustment_responses)
+export interface ScheduleAdjustmentResponse {
+  id: string;
+  menu_id: string;
+  participant_name: string;
+  participant_email?: string | null;
+  responses: Record<string, AttendanceStatus>; // {slot_id: 'yes'|'no'|'maybe'}
+  created_at?: string;
+  updated_at?: string;
+}
+
+// 日程調整回答作成用の入力型
+export interface CreateScheduleAdjustmentInput {
+  menu_id: string;
+  participant_name: string;
+  participant_email?: string;
+  responses: Record<string, AttendanceStatus>; // {slot_id: 'yes'|'no'|'maybe'}
+}
+
+// 日程調整回答更新用の入力型
+export interface UpdateScheduleAdjustmentInput {
+  participant_email?: string;
+  responses: Record<string, AttendanceStatus>;
+}
+
+// 日程調整（詳細情報付き）
+export interface ScheduleAdjustmentWithDetails extends ScheduleAdjustmentResponse {
+  menu?: BookingMenu;
+}
+
+// 日程候補の集計情報
+export interface SlotAttendanceSummary {
+  slot_id: string;
+  slot: BookingSlot;
+  yes_count: number;
+  no_count: number;
+  maybe_count: number;
+  available_count: number; // yes + maybe の合計
+  total_responses: number;
+}
+
+// 出欠表データ（表示用）
+export interface AttendanceTableData {
+  slots: SlotAttendanceSummary[];
+  participants: ScheduleAdjustmentResponse[];
+  best_slot_id?: string; // 最も多くの人が参加できる日程
+}
+
+// 出欠ステータスラベル
+export const ATTENDANCE_STATUS_LABELS: Record<AttendanceStatus, string> = {
+  yes: '参加可',
+  no: '参加不可',
+  maybe: '未定',
+};
+
+// 出欠ステータスアイコン（表示用）
+export const ATTENDANCE_STATUS_ICONS: Record<AttendanceStatus, string> = {
+  yes: '○',
+  no: '×',
+  maybe: '△',
+};
+
+// 出欠ステータスカラー（表示用）
+export const ATTENDANCE_STATUS_COLORS: Record<AttendanceStatus, { bg: string; text: string; border: string }> = {
+  yes: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
+  no: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
+  maybe: { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200' },
+};
+
 // デフォルト値
 export const DEFAULT_DURATION_MIN = 60;
 export const DEFAULT_MAX_CAPACITY = 1;
