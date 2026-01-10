@@ -219,6 +219,184 @@ export const AI_MODELS = {
 } as const;
 
 /**
+ * プラン別AIモデルプリセット設定
+ */
+export const PLAN_AI_PRESETS = {
+  lite: {
+    presetA: {
+      name: 'コスト特化',
+      outline: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
+      writing: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
+      description: 'Flash-Liteで最安値。速度重視の量産向け。',
+    },
+    presetB: {
+      name: 'バランス',
+      outline: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      writing: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      description: 'Flashで統一。指示理解度が高く、実用的。（推奨）',
+    },
+  },
+  standard: {
+    presetA: {
+      name: '利益重視',
+      outline: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      writing: { model: 'claude-3-haiku-20240307', provider: 'anthropic' as const, cost: 1.25 },
+      description: 'Flashで構成、Haikuで執筆。コストを抑えつつ品質向上。',
+    },
+    presetB: {
+      name: '品質重視',
+      outline: { model: 'claude-3-haiku-20240307', provider: 'anthropic' as const, cost: 1.25 },
+      writing: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      description: 'Haikuで人間味のある構成、Flashで大量執筆。（推奨）',
+    },
+  },
+  pro: {
+    presetA: {
+      name: '論理重視',
+      outline: { model: 'o3-mini', provider: 'openai' as const, cost: 4.40 },
+      writing: { model: 'o3-mini', provider: 'openai' as const, cost: 4.40 },
+      description: 'o3-miniで統一。売れるロジックと賢い執筆。',
+    },
+    presetB: {
+      name: '情緒重視',
+      outline: { model: 'claude-3-5-sonnet-20240620', provider: 'anthropic' as const, cost: 15.00 },
+      writing: { model: 'claude-3-haiku-20240307', provider: 'anthropic' as const, cost: 1.25 },
+      description: 'Sonnetでエモい構成、Haikuで執筆。※構成のみ高コスト',
+    },
+  },
+  business: {
+    presetA: {
+      name: '最高峰',
+      outline: { model: 'o1', provider: 'openai' as const, cost: 60.00 },
+      writing: { model: 'claude-3-5-sonnet-20240620', provider: 'anthropic' as const, cost: 15.00 },
+      description: 'o1で最高の構成、Sonnetで最高品質の執筆。',
+    },
+    presetB: {
+      name: '推論特化',
+      outline: { model: 'claude-3-5-sonnet-20240620', provider: 'anthropic' as const, cost: 15.00 },
+      writing: { model: 'o1', provider: 'openai' as const, cost: 60.00 },
+      description: 'Sonnetで構成、o1で深い推論執筆。※執筆が遅い',
+    },
+  },
+  none: {
+    presetA: {
+      name: '無料トライアル',
+      outline: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      writing: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      description: 'Gemini Flashでお試し利用。',
+    },
+    presetB: {
+      name: '無料トライアル',
+      outline: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      writing: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      description: 'Gemini Flashでお試し利用。',
+    },
+  },
+  enterprise: {
+    presetA: {
+      name: 'カスタム',
+      outline: { model: 'custom', provider: 'openai' as const, cost: 0 },
+      writing: { model: 'custom', provider: 'openai' as const, cost: 0 },
+      description: 'カスタムAI環境（要設定）',
+    },
+    presetB: {
+      name: 'カスタム',
+      outline: { model: 'custom', provider: 'openai' as const, cost: 0 },
+      writing: { model: 'custom', provider: 'openai' as const, cost: 0 },
+      description: 'カスタムAI環境（要設定）',
+    },
+  },
+} as const;
+
+/**
+ * ハイブリッドクレジットシステム用モデル設定（レガシー互換）
+ * quality: 高品質AI（Premium Credits使用）
+ * speed: 高速AI（Standard Credits使用）
+ */
+export const MODEL_CONFIG = {
+  quality: {
+    outline: 'o3-mini',                      // 構成作成用（高品質）
+    writing: 'claude-3-5-sonnet-20240620',  // 執筆用（高品質）
+    provider: 'openai' as const,            // OpenAI系モデル
+  },
+  speed: {
+    outline: 'gemini-2.0-flash-exp',        // 構成作成用（高速）
+    writing: 'gemini-2.0-flash-exp',        // 執筆用（高速）
+    provider: 'gemini' as const,            // Gemini系モデル
+  },
+} as const;
+
+/**
+ * プランとプリセットからAIプロバイダーを取得
+ */
+export function getProviderForPlanAndPreset(
+  planTier: PlanTier,
+  preset: 'presetA' | 'presetB',
+  phase: 'outline' | 'writing'
+): AIProvider {
+  const planPresets = PLAN_AI_PRESETS[planTier];
+  const selectedPreset = planPresets[preset];
+  const config = selectedPreset[phase];
+
+  return createAIProvider({
+    preferProvider: config.provider === 'anthropic' ? 'openai' : config.provider,
+    model: config.model,
+  });
+}
+
+/**
+ * 管理者設定からAIプロバイダーを取得
+ * admin_ai_settingsテーブルに保存された設定を使用
+ */
+export async function getProviderFromAdminSettings(
+  phase: 'outline' | 'writing'
+): Promise<AIProvider> {
+  // TODO: admin_ai_settingsから設定を取得
+  // 現在はデフォルトでpresetBを使用
+  return getProviderForPlanAndPreset('standard', 'presetB', phase);
+}
+
+/**
+ * プラン別AIモデル情報を取得（フロントエンド表示用）
+ */
+export function getAIPresetsForPlan(planTier: PlanTier) {
+  return PLAN_AI_PRESETS[planTier];
+}
+
+/**
+ * モード（quality/speed）からモデル名を取得
+ */
+export function getModelForMode(
+  mode: 'quality' | 'speed',
+  phase: 'outline' | 'writing'
+): string {
+  return MODEL_CONFIG[mode][phase];
+}
+
+/**
+ * モード（quality/speed）からプロバイダーを取得
+ */
+export function getProviderForMode(mode: 'quality' | 'speed'): 'openai' | 'gemini' {
+  return MODEL_CONFIG[mode].provider;
+}
+
+/**
+ * モードとフェーズからAIプロバイダーを取得
+ */
+export function getProviderForModeAndPhase(
+  mode: 'quality' | 'speed',
+  phase: 'outline' | 'writing'
+): AIProvider {
+  const provider = getProviderForMode(mode);
+  const model = getModelForMode(mode, phase);
+
+  return createAIProvider({
+    preferProvider: provider,
+    model,
+  });
+}
+
+/**
  * フェーズに応じたプロバイダーを取得
  */
 export function getProviderForPhase(phase: 'planning' | 'writing'): AIProvider {

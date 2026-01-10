@@ -26,3 +26,8 @@ COMMENT ON COLUMN kdl_books.toc_pattern_id IS '目次パターンID（執筆ス�
 
 
 
+
+
+
+
+

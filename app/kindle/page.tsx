@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import AIUsageDisplay from '@/components/kindle/AIUsageDisplay';
+import AdminAISettings from '@/components/shared/AdminAISettings';
 import { getAdminEmails } from '@/lib/constants';
 
 interface Book {
@@ -547,6 +548,13 @@ function KindleListPageContent() {
 
       {/* メインコンテンツ */}
       <main className={`mx-auto px-4 py-8 ${isAdmin ? 'max-w-6xl' : 'max-w-4xl'}`}>
+        {/* 管理者用AI設定 */}
+        {user && isAdmin && (
+          <div className="mb-8">
+            <AdminAISettings userId={user.id} />
+          </div>
+        )}
+
         {/* AI使用量表示（ログインユーザー向け、管理者以外） */}
         {user && subscriptionStatus && !isAdmin && (
           <div className="mb-6">

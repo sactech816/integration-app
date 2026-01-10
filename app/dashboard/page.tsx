@@ -40,6 +40,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import WelcomeBonus from '@/components/gamification/WelcomeBonus';
 import LoginBonusToast from '@/components/gamification/LoginBonusToast';
 import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
+import MonitorUsersManager from '@/components/shared/MonitorUsersManager';
 import {
   Sparkles,
   UserCircle,
@@ -249,12 +250,15 @@ function DashboardContent() {
   const [editingPrizes, setEditingPrizes] = useState<GachaPrize[]>([]);
   const [showPrizeEditor, setShowPrizeEditor] = useState<string | null>(null);
 
-  // KDLサブスクリプション状態
+  // KDLサブスクリプション状態（モニター対応）
   const [kdlSubscription, setKdlSubscription] = useState<{
     hasActiveSubscription: boolean;
     planType: 'monthly' | 'yearly' | 'none';
     nextPaymentDate: string | null;
     amount: number | null;
+    isMonitor?: boolean;
+    monitorExpiresAt?: string;
+    planTier?: string;
   } | null>(null);
   const [loadingKdlSubscription, setLoadingKdlSubscription] = useState(true);
 
@@ -643,7 +647,7 @@ function DashboardContent() {
     }
   }, [user, isAdmin, showGamificationManager]);
 
-  // KDLサブスク状態を取得
+  // KDLサブスク状態を取得（モニター対応）
   useEffect(() => {
     const fetchKdlSubscription = async () => {
       if (!user) {
@@ -659,6 +663,9 @@ function DashboardContent() {
             planType: data.planType,
             nextPaymentDate: data.subscription?.nextPaymentDate || null,
             amount: data.subscription?.amount || null,
+            isMonitor: data.isMonitor || false,
+            monitorExpiresAt: data.monitorExpiresAt || null,
+            planTier: data.planTier || 'none',
           });
         }
       } catch (error) {
@@ -1172,8 +1179,9 @@ function DashboardContent() {
     if (page === '/' || page === '') {
       window.location.href = '/';
     } else {
-      // 管理者がKDLページにアクセスする場合はadmin_keyを付与
-      const adminKeyParam = addAdminKey && isAdmin ? '?admin_key=kdl-admin-2026' : '';
+      // 管理者またはモニターユーザーがKDLページにアクセスする場合はadmin_keyを付与
+      const hasKdlAccess = isAdmin || kdlSubscription?.hasActiveSubscription;
+      const adminKeyParam = addAdminKey && hasKdlAccess ? '?admin_key=kdl-admin-2026' : '';
       window.location.href = `/${page}${adminKeyParam}`;
     }
   };
@@ -1819,13 +1827,24 @@ function DashboardContent() {
                   <div className="flex items-center gap-2">
                     <Crown size={16} className="text-amber-500" />
                     <span className="font-bold text-amber-700">
-                      {isAdmin && !kdlSubscription?.hasActiveSubscription ? '管理者特典' : kdlSubscription?.planType === 'yearly' ? '年間プラン' : '月額プラン'}
+                      {isAdmin && !kdlSubscription?.hasActiveSubscription 
+                        ? '管理者特典' 
+                        : kdlSubscription?.isMonitor 
+                          ? 'モニター特典' 
+                          : kdlSubscription?.planType === 'yearly' 
+                            ? '年間プラン' 
+                            : '月額プラン'}
                     </span>
                     <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold">
                       有効
                     </span>
                   </div>
-                  {kdlSubscription?.nextPaymentDate && !isAdmin && (
+                  {kdlSubscription?.isMonitor && kdlSubscription?.monitorExpiresAt && (
+                    <p className="text-xs text-purple-600 font-bold">
+                      モニター期限: {new Date(kdlSubscription.monitorExpiresAt).toLocaleDateString('ja-JP')}まで
+                    </p>
+                  )}
+                  {kdlSubscription?.nextPaymentDate && !isAdmin && !kdlSubscription?.isMonitor && (
                     <p className="text-xs text-gray-500">
                       次回更新: {new Date(kdlSubscription.nextPaymentDate).toLocaleDateString('ja-JP')}
                     </p>
@@ -3573,6 +3592,12 @@ function DashboardContent() {
                         </div>
                       )}
                     </div>
+
+                    {/* モニターユーザー管理 */}
+                    <MonitorUsersManager 
+                      adminUserId={user?.id || ''} 
+                      adminEmail={user?.email || ''} 
+                    />
                   </>
                 )}
               </div>

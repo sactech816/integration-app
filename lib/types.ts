@@ -897,3 +897,69 @@ export const MISSION_TYPE_LABELS: Record<MissionType, string> = {
   stamp_get: 'スタンプ獲得',
   survey_answer: 'アンケート回答'
 };
+
+// -------------------------------------------
+// ハイブリッドAIクレジット関連の型定義
+// -------------------------------------------
+
+// AIモード（quality: 高品質AI, speed: 高速AI）
+export type AIMode = 'quality' | 'speed';
+
+// AI使用タイプ（premium: Premium Credits, standard: Standard Credits）
+export type AIUsageType = 'premium' | 'standard';
+
+// AIクレジット残高
+export interface AICreditBalance {
+  premiumCredits: number;      // Premium残回数
+  standardCredits: number;     // Standard残回数
+  premiumLimit: number;        // Premium上限
+  standardLimit: number;       // Standard上限
+  canUsePremium: boolean;      // Premium利用可能か
+  canUseStandard: boolean;     // Standard利用可能か
+}
+
+// AI生成リクエスト
+export interface AIGenerationRequest {
+  mode: AIMode;                // quality または speed
+  phase: 'outline' | 'writing'; // 処理フェーズ
+  userId: string;
+  actionType: string;
+  prompt?: string;
+  metadata?: Record<string, any>;
+}
+
+// AIモデル設定
+export interface AIModelConfig {
+  quality: {
+    outline: string;
+    writing: string;
+    provider: 'openai' | 'gemini';
+  };
+  speed: {
+    outline: string;
+    writing: string;
+    provider: 'openai' | 'gemini';
+  };
+}
+
+// AIクレジットチェック結果
+export interface AICreditCheckResult {
+  canProceed: boolean;
+  usageType: AIUsageType;
+  remainingCredits: number;
+  errorMessage?: string;
+  suggestFallback?: boolean;  // Speedモードへのフォールバックを提案
+}
+
+// AIモードラベル
+export const AI_MODE_LABELS: Record<AIMode, string> = {
+  quality: '高品質AI',
+  speed: '高速AI'
+};
+
+// AI使用タイプラベル
+export const AI_USAGE_TYPE_LABELS: Record<AIUsageType, string> = {
+  premium: 'Premium Credits',
+  standard: 'Standard Credits'
+};
+

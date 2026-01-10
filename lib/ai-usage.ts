@@ -61,6 +61,15 @@ export interface UsageCheckResult {
   remainingDaily: number;
   remainingMonthly: number;
   planTier?: PlanTier;
+  // ハイブリッドクレジット用フィールド
+  premiumUsage?: number;
+  standardUsage?: number;
+  premiumLimit?: number;
+  standardLimit?: number;
+  canUsePremium?: boolean;
+  canUseStandard?: boolean;
+  remainingPremium?: number;
+  remainingStandard?: number;
 }
 
 export interface LogAIUsageParams {
@@ -71,12 +80,17 @@ export interface LogAIUsageParams {
   inputTokens?: number;
   outputTokens?: number;
   metadata?: Record<string, any>;
+  usageType?: 'premium' | 'standard';  // ハイブリッドクレジット用
 }
 
 /**
- * ユーザーのAI使用量リミットをチェック
+ * ハイブリッドクレジット制限をチェック（新方式）
+ * Premium Credits と Standard Credits を別々に管理
  */
-export async function checkAIUsageLimit(userId: string): Promise<UsageCheckResult> {
+export async function checkAICreditLimit(
+  userId: string,
+  mode: 'quality' | 'speed' = 'speed'
+): Promise<UsageCheckResult> {
   const supabase = getServiceClient();
 
   // Supabaseがない場合は常に許可（開発環境用）
@@ -84,31 +98,40 @@ export async function checkAIUsageLimit(userId: string): Promise<UsageCheckResul
     return {
       dailyUsage: 0,
       monthlyUsage: 0,
-      dailyLimit: DEFAULT_LIMITS.daily.default,
-      monthlyLimit: DEFAULT_LIMITS.monthly.default,
+      dailyLimit: 100,
+      monthlyLimit: -1,
       isWithinLimit: true,
-      remainingDaily: DEFAULT_LIMITS.daily.default,
-      remainingMonthly: DEFAULT_LIMITS.monthly.default,
+      remainingDaily: 100,
+      remainingMonthly: -1,
+      premiumUsage: 0,
+      standardUsage: 0,
+      premiumLimit: 20,
+      standardLimit: 80,
+      canUsePremium: true,
+      canUseStandard: true,
+      remainingPremium: 20,
+      remainingStandard: 80,
     };
   }
 
   try {
-    // RPC関数を呼び出し
-    const { data, error } = await supabase.rpc('check_ai_usage_limit', {
+    // RPC関数を呼び出し（ハイブリッドクレジットチェック）
+    const { data, error } = await supabase.rpc('check_ai_credit_limit', {
       check_user_id: userId,
+      credit_type: mode === 'quality' ? 'premium' : 'standard',
     });
 
     if (error) {
-      console.error('Failed to check AI usage limit:', error);
+      console.error('Failed to check AI credit limit:', error);
       // エラー時はデフォルト値で許可
       return {
         dailyUsage: 0,
         monthlyUsage: 0,
-        dailyLimit: DEFAULT_LIMITS.daily.default,
-        monthlyLimit: DEFAULT_LIMITS.monthly.default,
+        dailyLimit: 100,
+        monthlyLimit: -1,
         isWithinLimit: true,
-        remainingDaily: DEFAULT_LIMITS.daily.default,
-        remainingMonthly: DEFAULT_LIMITS.monthly.default,
+        remainingDaily: 100,
+        remainingMonthly: -1,
       };
     }
 
@@ -117,42 +140,73 @@ export async function checkAIUsageLimit(userId: string): Promise<UsageCheckResul
       return {
         dailyUsage: 0,
         monthlyUsage: 0,
-        dailyLimit: DEFAULT_LIMITS.daily.default,
-        monthlyLimit: DEFAULT_LIMITS.monthly.default,
+        dailyLimit: 100,
+        monthlyLimit: -1,
         isWithinLimit: true,
-        remainingDaily: DEFAULT_LIMITS.daily.default,
-        remainingMonthly: DEFAULT_LIMITS.monthly.default,
+        remainingDaily: 100,
+        remainingMonthly: -1,
       };
     }
 
     const result = data[0];
-    const monthlyLimit = result.monthly_limit === -1 ? Infinity : result.monthly_limit;
+    
+    // Premium/Standard使用量と制限を取得
+    const premiumUsage = result.premium_usage || 0;
+    const standardUsage = result.standard_usage || 0;
+    const premiumLimit = result.premium_limit || 0;
+    const standardLimit = result.standard_limit || 0;
+    const canUsePremium = result.can_use_premium || false;
+    const canUseStandard = result.can_use_standard || false;
+
+    // レガシー互換：合計使用量
+    const totalUsage = premiumUsage + standardUsage;
+    const totalLimit = (premiumLimit === -1 || standardLimit === -1) 
+      ? -1 
+      : premiumLimit + standardLimit;
+
+    // モードに応じた制限チェック
+    const isWithinLimit = mode === 'quality' ? canUsePremium : canUseStandard;
 
     return {
-      dailyUsage: result.daily_usage,
-      monthlyUsage: result.monthly_usage,
-      dailyLimit: result.daily_limit,
-      monthlyLimit: result.monthly_limit,
-      isWithinLimit: result.is_within_limit,
-      remainingDaily: Math.max(0, result.daily_limit - result.daily_usage),
-      remainingMonthly: result.monthly_limit === -1 
-        ? Infinity 
-        : Math.max(0, result.monthly_limit - result.monthly_usage),
+      dailyUsage: totalUsage,
+      monthlyUsage: totalUsage,
+      dailyLimit: totalLimit,
+      monthlyLimit: -1,
+      isWithinLimit,
+      remainingDaily: totalLimit === -1 ? Infinity : Math.max(0, totalLimit - totalUsage),
+      remainingMonthly: Infinity,
       planTier: result.plan_tier || undefined,
+      // ハイブリッドクレジット情報
+      premiumUsage,
+      standardUsage,
+      premiumLimit,
+      standardLimit,
+      canUsePremium,
+      canUseStandard,
+      remainingPremium: premiumLimit === -1 ? Infinity : Math.max(0, premiumLimit - premiumUsage),
+      remainingStandard: standardLimit === -1 ? Infinity : Math.max(0, standardLimit - standardUsage),
     };
   } catch (err) {
-    console.error('Error checking AI usage limit:', err);
+    console.error('Error checking AI credit limit:', err);
     // エラー時は許可（サービス継続優先）
     return {
       dailyUsage: 0,
       monthlyUsage: 0,
-      dailyLimit: DEFAULT_LIMITS.daily.default,
-      monthlyLimit: DEFAULT_LIMITS.monthly.default,
+      dailyLimit: 100,
+      monthlyLimit: -1,
       isWithinLimit: true,
-      remainingDaily: DEFAULT_LIMITS.daily.default,
-      remainingMonthly: DEFAULT_LIMITS.monthly.default,
+      remainingDaily: 100,
+      remainingMonthly: -1,
     };
   }
+}
+
+/**
+ * ユーザーのAI使用量リミットをチェック（レガシー互換）
+ */
+export async function checkAIUsageLimit(userId: string): Promise<UsageCheckResult> {
+  // 新方式にデリゲート（デフォルトはspeedモード）
+  return checkAICreditLimit(userId, 'speed');
 }
 
 /**
@@ -236,7 +290,7 @@ export async function checkAIUsageLimitByPlanTier(
 }
 
 /**
- * AI使用量を記録
+ * AI使用量を記録（ハイブリッドクレジット対応）
  */
 export async function logAIUsage(params: LogAIUsageParams): Promise<string | null> {
   const supabase = getServiceClient();
@@ -247,6 +301,28 @@ export async function logAIUsage(params: LogAIUsageParams): Promise<string | nul
   }
 
   try {
+    // ハイブリッドクレジットシステムに対応
+    if (params.usageType) {
+      const { data, error } = await supabase.rpc('log_ai_credit_usage', {
+        p_user_id: params.userId,
+        p_action_type: params.actionType,
+        p_usage_type: params.usageType,
+        p_service: params.service || 'kdl',
+        p_model_used: params.modelUsed || 'gemini-1.5-flash',
+        p_input_tokens: params.inputTokens || 0,
+        p_output_tokens: params.outputTokens || 0,
+        p_metadata: params.metadata || null,
+      });
+
+      if (error) {
+        console.error('Failed to log AI credit usage:', error);
+        return null;
+      }
+
+      return data;
+    }
+
+    // レガシーシステム（後方互換性）
     const { data, error } = await supabase.rpc('log_ai_usage', {
       p_user_id: params.userId,
       p_action_type: params.actionType,
@@ -270,7 +346,7 @@ export async function logAIUsage(params: LogAIUsageParams): Promise<string | nul
 }
 
 /**
- * リミットチェック付きでAI使用を実行するラッパー
+ * リミットチェック付きでAI使用を実行するラッパー（ハイブリッドクレジット対応）
  */
 export async function withAIUsageCheck<T>(
   userId: string,
@@ -281,12 +357,21 @@ export async function withAIUsageCheck<T>(
     modelUsed?: string;
     estimateTokens?: { input: number; output: number };
     metadata?: Record<string, any>;
+    mode?: 'quality' | 'speed';  // ハイブリッドクレジット用
   }
 ): Promise<T> {
-  // リミットチェック
-  const usageCheck = await checkAIUsageLimit(userId);
+  // モード指定がある場合はハイブリッドクレジットチェック
+  const mode = options?.mode || 'speed';
+  const usageCheck = await checkAICreditLimit(userId, mode);
 
   if (!usageCheck.isWithinLimit) {
+    // Premium枠がない場合、Standard枠へのフォールバック提案
+    if (mode === 'quality' && usageCheck.canUseStandard) {
+      throw new Error(
+        '高品質AIの本日の使用上限に達しました。高速AIモードをお試しください。'
+      );
+    }
+    
     const message = usageCheck.remainingDaily === 0
       ? '本日のAI使用上限に達しました。明日またお試しください。'
       : '今月のAI使用上限に達しました。';
@@ -305,19 +390,22 @@ export async function withAIUsageCheck<T>(
     inputTokens: options?.estimateTokens?.input,
     outputTokens: options?.estimateTokens?.output,
     metadata: options?.metadata,
+    usageType: mode === 'quality' ? 'premium' : 'standard',
   }).catch(console.error);
 
   return result;
 }
 
 /**
- * ユーザーの使用量サマリーを取得（フロントエンド表示用）
+ * ユーザーの使用量サマリーを取得（フロントエンド表示用・ハイブリッドクレジット対応）
  */
 export async function getAIUsageSummary(userId: string): Promise<{
   daily: { used: number; limit: number; remaining: number };
   monthly: { used: number; limit: number; remaining: number };
+  premium?: { used: number; limit: number; remaining: number };
+  standard?: { used: number; limit: number; remaining: number };
 } | null> {
-  const result = await checkAIUsageLimit(userId);
+  const result = await checkAICreditLimit(userId, 'speed');
 
   return {
     daily: {
@@ -330,6 +418,16 @@ export async function getAIUsageSummary(userId: string): Promise<{
       limit: result.monthlyLimit,
       remaining: result.remainingMonthly === Infinity ? -1 : result.remainingMonthly,
     },
+    premium: result.premiumUsage !== undefined ? {
+      used: result.premiumUsage,
+      limit: result.premiumLimit || 0,
+      remaining: result.remainingPremium === Infinity ? -1 : (result.remainingPremium || 0),
+    } : undefined,
+    standard: result.standardUsage !== undefined ? {
+      used: result.standardUsage,
+      limit: result.standardLimit || 0,
+      remaining: result.remainingStandard === Infinity ? -1 : (result.remainingStandard || 0),
+    } : undefined,
   };
 }
 
