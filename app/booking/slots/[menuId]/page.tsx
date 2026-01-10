@@ -161,7 +161,7 @@ export default function BookingSlotsPage() {
       await loadSlots();
       setShowAddModal(false);
     } else {
-      alert('枠の追加に失敗しました: ' + result.error);
+      alert('枠の追加に失敗しました: ' + ('error' in result ? result.error : '枠の追加に失敗しました'));
     }
 
     setSubmitting(false);
@@ -174,7 +174,7 @@ export default function BookingSlotsPage() {
     if (result.success) {
       await loadSlots();
     } else {
-      alert('削除に失敗しました: ' + result.error);
+      alert('削除に失敗しました: ' + ('error' in result ? result.error : '削除に失敗しました'));
     }
   };
 

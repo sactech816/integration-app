@@ -86,7 +86,7 @@ export default function EditBookingMenuPage() {
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } else {
-      setError(result.error || '更新に失敗しました');
+      setError('error' in result ? result.error : '更新に失敗しました');
     }
     setSubmitting(false);
   };

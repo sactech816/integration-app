@@ -124,7 +124,7 @@ export default function BookingDashboardPage() {
         b.id === bookingId ? { ...b, status: 'cancelled' } : b
       ));
     } else {
-      alert('キャンセルに失敗しました: ' + result.error);
+      alert('キャンセルに失敗しました: ' + ('error' in result ? result.error : '予約のキャンセルに失敗しました'));
     }
     
     setCancellingId(null);

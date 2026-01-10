@@ -69,7 +69,7 @@ export default function BookingPage() {
     if (result.success) {
       setMenus(menus.filter(m => m.id !== menuId));
     } else {
-      alert('削除に失敗しました: ' + result.error);
+      alert('削除に失敗しました: ' + ('error' in result ? result.error : '削除に失敗しました'));
     }
     setDeletingId(null);
   };

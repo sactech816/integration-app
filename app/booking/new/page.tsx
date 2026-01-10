@@ -64,7 +64,7 @@ export default function NewBookingMenuPage() {
       // 作成成功後、枠設定画面へ遷移
       router.push(`/booking/slots/${result.data.id}`);
     } else {
-      setError(result.error || '作成に失敗しました');
+      setError('error' in result ? result.error : '作成に失敗しました');
       setSubmitting(false);
     }
   };
