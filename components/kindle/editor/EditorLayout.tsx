@@ -6,6 +6,7 @@ import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle,
 import Link from 'next/link';
 import { ChapterSidebar } from './ChapterSidebar';
 import { TiptapEditor, TiptapEditorRef } from './TiptapEditor';
+import { Home } from 'lucide-react';
 
 // トースト通知の型
 interface Toast {
@@ -810,43 +811,44 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
       )}
 
       {/* ヘッダー */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between px-2 sm:px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <Link
             href={readOnly ? "/kindle/lp" : `/kindle${adminKeyParam}`}
-            className="flex items-center gap-1 text-white/90 hover:text-white text-sm transition-colors"
+            className="flex items-center gap-1 text-white/90 hover:text-white text-sm transition-colors flex-shrink-0"
+            title={readOnly ? "LPに戻る" : "一覧に戻る"}
           >
             <ArrowLeft size={16} />
-            <span>{readOnly ? "LPに戻る" : "一覧に戻る"}</span>
+            <span className="hidden sm:inline">{readOnly ? "LPに戻る" : "一覧に戻る"}</span>
           </Link>
-          <div className="text-white/30">|</div>
-          <h1 className="font-bold text-sm truncate max-w-xs">{book.title}</h1>
+          <div className="text-white/30 hidden sm:block">|</div>
+          <h1 className="font-bold text-xs sm:text-sm truncate max-w-[100px] sm:max-w-xs">{book.title}</h1>
           {readOnly && (
-            <div className="flex items-center gap-1 bg-blue-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+            <div className="flex items-center gap-1 bg-blue-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0">
               <PlayCircle size={12} />
-              <span>デモ</span>
+              <span className="hidden sm:inline">デモ</span>
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/kindle/guide"
             target="_blank"
-            className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all bg-white/20 hover:bg-white/30 active:bg-white/40"
+            className="flex items-center justify-center gap-2 p-2 sm:px-3 sm:py-2 rounded-lg font-medium text-sm transition-all bg-white/20 hover:bg-white/30 active:bg-white/40"
+            title="まずお読みください"
           >
             <BookOpen size={16} />
             <span className="hidden lg:inline">📖 まずお読みください</span>
-            <span className="lg:hidden">📖</span>
           </Link>
           
           <Link
             href="/kindle/publish-guide"
             target="_blank"
-            className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all bg-white/20 hover:bg-white/30 active:bg-white/40"
+            className="flex items-center justify-center gap-2 p-2 sm:px-3 sm:py-2 rounded-lg font-medium text-sm transition-all bg-white/20 hover:bg-white/30 active:bg-white/40"
+            title="出版準備ガイド"
           >
             <Rocket size={16} />
             <span className="hidden lg:inline">🚀 出版準備ガイド</span>
-            <span className="lg:hidden">🚀</span>
           </Link>
           
           {!readOnly && (
@@ -854,7 +856,8 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
               <button
                 onClick={handleGenerateKdpInfo}
                 disabled={isGeneratingKdp}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                title="KDP情報生成"
+                className={`flex items-center justify-center gap-2 p-2 sm:px-4 sm:py-2 rounded-lg font-medium text-sm transition-all ${
                   isGeneratingKdp
                     ? 'bg-white/20 cursor-not-allowed'
                     : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
@@ -863,12 +866,12 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 {isGeneratingKdp ? (
                   <>
                     <Loader2 className="animate-spin" size={16} />
-                    <span>生成中...</span>
+                    <span className="hidden sm:inline">生成中...</span>
                   </>
                 ) : (
                   <>
                     <Sparkles size={16} />
-                    <span>✨ KDP情報生成</span>
+                    <span className="hidden sm:inline">✨ KDP情報生成</span>
                   </>
                 )}
               </button>
@@ -876,7 +879,8 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
               <button
                 onClick={handleDownloadDocx}
                 disabled={isDownloading}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                title="Word出力"
+                className={`flex items-center justify-center gap-2 p-2 sm:px-4 sm:py-2 rounded-lg font-medium text-sm transition-all ${
                   isDownloading
                     ? 'bg-white/20 cursor-not-allowed'
                     : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
@@ -885,12 +889,12 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 {isDownloading ? (
                   <>
                     <Loader2 className="animate-spin" size={16} />
-                    <span>生成中...</span>
+                    <span className="hidden sm:inline">生成中...</span>
                   </>
                 ) : (
                   <>
                     <FileDown size={16} />
-                    <span>📥 Word出力</span>
+                    <span className="hidden sm:inline">📥 Word出力</span>
                   </>
                 )}
               </button>
@@ -898,7 +902,8 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
               <button
                 onClick={handleSaveAndBack}
                 disabled={isSavingAndBack}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                title="保存して戻る"
+                className={`flex items-center justify-center gap-2 p-2 sm:px-4 sm:py-2 rounded-lg font-medium text-sm transition-all ${
                   isSavingAndBack
                     ? 'bg-green-400 cursor-not-allowed'
                     : 'bg-white text-amber-600 hover:bg-amber-50 active:bg-amber-100'
@@ -907,12 +912,12 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 {isSavingAndBack ? (
                   <>
                     <Check size={16} className="text-white" />
-                    <span className="text-white">保存しました</span>
+                    <span className="hidden sm:inline text-white">保存しました</span>
                   </>
                 ) : (
                   <>
                     <Save size={16} />
-                    <span>💾 保存して戻る</span>
+                    <span className="hidden sm:inline">💾 保存して戻る</span>
                   </>
                 )}
               </button>

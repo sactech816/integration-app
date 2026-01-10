@@ -13,7 +13,9 @@ import {
   ArrowUp,
   ArrowDown,
   Trash2,
+  Home,
 } from 'lucide-react';
+import Link from 'next/link';
 
 interface Section {
   id: string;
@@ -802,6 +804,25 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
               }%`
             }}
           />
+        </div>
+        
+        {/* ナビゲーションリンク */}
+        <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-amber-100 text-xs">
+          <Link
+            href="/"
+            className="flex items-center gap-1 text-gray-500 hover:text-amber-600 transition-colors"
+          >
+            <Home size={12} />
+            <span>集客メーカー</span>
+          </Link>
+          <span className="text-gray-300">|</span>
+          <Link
+            href="/kindle"
+            className="flex items-center gap-1 text-gray-500 hover:text-amber-600 transition-colors"
+          >
+            <BookOpen size={12} />
+            <span>KDL一覧</span>
+          </Link>
         </div>
       </div>
 

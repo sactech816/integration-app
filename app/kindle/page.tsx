@@ -12,6 +12,7 @@ import AIUsageDisplay from '@/components/kindle/AIUsageDisplay';
 import AIModelSelector from '@/components/kindle/AIModelSelector';
 import AdminAISettings from '@/components/shared/AdminAISettings';
 import AdminPlanSwitcher from '@/components/shared/AdminPlanSwitcher';
+import KDLFooter from '@/components/shared/KDLFooter';
 import { getAdminEmails } from '@/lib/constants';
 
 interface Book {
@@ -423,41 +424,43 @@ function KindleListPageContent() {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
       {/* ヘッダー */}
       <header className="bg-white/80 backdrop-blur-md border-b border-amber-100 sticky top-0 z-50">
-        <div className={`mx-auto px-4 py-4 flex items-center justify-between ${isAdmin ? 'max-w-6xl' : 'max-w-4xl'}`}>
+        <div className={`mx-auto px-4 py-3 sm:py-4 flex items-center justify-between ${isAdmin ? 'max-w-6xl' : 'max-w-4xl'}`}>
           <div className="flex items-center gap-2">
-            <BookOpen className="text-amber-600" size={28} />
+            <BookOpen className="text-amber-600" size={24} />
             <div>
-              <span className="font-bold text-xl text-gray-900">キンドルダイレクトライト</span>
-              <span className="text-xs text-gray-500 ml-2">KDL</span>
+              <span className="font-bold text-base sm:text-xl text-gray-900 hidden sm:inline">キンドルダイレクトライト</span>
+              <span className="font-bold text-base text-gray-900 sm:hidden">KDL</span>
+              <span className="text-xs text-gray-500 ml-1 hidden sm:inline">KDL</span>
             </div>
             {isAdmin && (
-              <span className="ml-2 bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full font-bold">
-                管理者モード
+              <span className="ml-1 sm:ml-2 bg-purple-100 text-purple-700 text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold">
+                <span className="hidden sm:inline">管理者モード</span>
+                <span className="sm:hidden">管理者</span>
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             <Link
               href="/kindle/guide"
-              className="flex items-center gap-1.5 text-amber-600 hover:text-amber-700 transition-colors bg-amber-50 hover:bg-amber-100 px-3 py-2 rounded-lg text-sm font-medium"
+              className="flex items-center justify-center gap-1.5 text-amber-600 hover:text-amber-700 transition-colors bg-amber-50 hover:bg-amber-100 p-2 sm:px-3 sm:py-2 rounded-lg text-sm font-medium"
+              title="まずお読みください"
             >
-              <HelpCircle size={16} />
+              <HelpCircle size={18} />
               <span className="hidden sm:inline">📖 まずお読みください</span>
-              <span className="sm:hidden">📖</span>
             </Link>
             <Link
               href="/kindle/publish-guide"
-              className="flex items-center gap-1.5 text-orange-600 hover:text-orange-700 transition-colors bg-orange-50 hover:bg-orange-100 px-3 py-2 rounded-lg text-sm font-medium"
+              className="flex items-center justify-center gap-1.5 text-orange-600 hover:text-orange-700 transition-colors bg-orange-50 hover:bg-orange-100 p-2 sm:px-3 sm:py-2 rounded-lg text-sm font-medium"
+              title="出版準備ガイド"
             >
-              <Rocket size={16} />
+              <Rocket size={18} />
               <span className="hidden sm:inline">🚀 出版準備ガイド</span>
-              <span className="sm:hidden">🚀</span>
             </Link>
             <Link
               href={`/kindle/new${adminKeyParam}`}
-              className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-5 py-2.5 rounded-xl transition-all shadow-lg"
+              className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl transition-all shadow-lg"
             >
-              <Plus size={20} />
+              <Plus size={18} />
               <span className="hidden sm:inline">新しい本を作成</span>
               <span className="sm:hidden">新規</span>
             </Link>
@@ -709,6 +712,9 @@ function KindleListPageContent() {
           )
         )}
       </main>
+
+      {/* 共通フッター */}
+      <KDLFooter adminKeyParam={adminKeyParam} />
     </div>
   );
 }

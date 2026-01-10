@@ -804,6 +804,12 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       return;
     }
 
+    // Supabaseが設定されているか確認
+    if (!supabase) {
+      alert('データベース接続が設定されていません');
+      return;
+    }
+
     // カスタムスラッグのバリデーション
     if (customSlug && !validateCustomSlug(customSlug)) {
       return;
@@ -811,31 +817,63 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
     setIsSaving(true);
     try {
-      const payload = {
-        nickname: customSlug || null,
-        content: profile.content,
-        settings: profile.settings,
-        user_id: initialData?.id ? undefined : user.id,
-        slug: savedSlug || generateSlug(),
-      };
-
       let result;
+      
       if (initialData?.id) {
+        // 更新の場合：既存のslugを維持
+        const updatePayload = {
+          nickname: customSlug || null,
+          content: profile.content,
+          settings: profile.settings,
+        };
+        
         result = await supabase
-          ?.from('profiles')
-          .update(payload)
+          .from('profiles')
+          .update(updatePayload)
           .eq('id', initialData.id)
           .select()
           .single();
       } else {
-        result = await supabase
-          ?.from('profiles')
-          .insert({ ...payload, user_id: user.id })
-          .select()
-          .single();
+        // 新規作成の場合：ユニークなslugを生成（リトライ付き）
+        let attempts = 0;
+        const maxAttempts = 5;
+        
+        while (attempts < maxAttempts) {
+          const newSlug = generateSlug();
+          const insertPayload = {
+            nickname: customSlug || null,
+            content: profile.content,
+            settings: profile.settings,
+            slug: newSlug,
+            user_id: user.id,
+          };
+          
+          result = await supabase
+            .from('profiles')
+            .insert(insertPayload)
+            .select()
+            .single();
+          
+          // slug重複エラー（23505）の場合はリトライ
+          if (result.error?.code === '23505' && result.error?.message?.includes('profiles_slug_key')) {
+            attempts++;
+            console.log(`Slug collision, retrying... (attempt ${attempts}/${maxAttempts})`);
+            continue;
+          }
+          
+          // その他のエラーまたは成功の場合はループを抜ける
+          break;
+        }
+        
+        if (attempts >= maxAttempts) {
+          throw new Error('ユニークなURLの生成に失敗しました。もう一度お試しください。');
+        }
       }
 
-      if (result?.error) throw result.error;
+      if (result?.error) {
+        console.error('Supabase error:', result.error);
+        throw new Error(result.error.message || 'データベースエラー');
+      }
 
       if (result?.data) {
         setSavedSlug(result.data.slug);
@@ -855,7 +893,8 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       }
     } catch (error) {
       console.error('Save error:', error);
-      alert('保存中にエラーが発生しました');
+      const errorMessage = error instanceof Error ? error.message : '不明なエラー';
+      alert(`保存中にエラーが発生しました: ${errorMessage}`);
     } finally {
       setIsSaving(false);
     }

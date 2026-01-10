@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
-  BookOpen, ArrowLeft, ArrowRight, Lightbulb, Check, Target, List, ChevronRight, FileText, Trash2, HelpCircle, PlayCircle, Loader2
+  BookOpen, ArrowLeft, ArrowRight, Lightbulb, Check, Target, List, ChevronRight, FileText, Trash2, HelpCircle, PlayCircle, Loader2, Cloud, CloudOff
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -22,6 +22,7 @@ import { Step2Subtitle } from '@/components/kindle/wizard/Step2Subtitle';
 import { Step3Target } from '@/components/kindle/wizard/Step3Target';
 import { Step4TOC } from '@/components/kindle/wizard/Step4TOC';
 import AuthModal from '@/components/shared/AuthModal';
+import KDLFooter from '@/components/shared/KDLFooter';
 import { supabase } from '@/lib/supabase';
 
 // localStorageのキー
@@ -102,6 +103,9 @@ function KindleNewPageContent() {
   // 下書き復元の確認モーダル
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [pendingDraft, setPendingDraft] = useState<SavedDraft | null>(null);
+  
+  // 下書き保存状態
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
   // localStorageから下書きを復元（初回のみ）
   useEffect(() => {
@@ -116,7 +120,10 @@ function KindleNewPageContent() {
         const now = Date.now();
         const hoursDiff = (now - savedTime) / (1000 * 60 * 60);
         
-        if (hoursDiff < 24 && draft.state.theme) {
+        // theme または selectedTitle があれば復元対象
+        const hasDraftContent = draft.state.theme || draft.state.selectedTitle || draft.titleSuggestions?.length > 0;
+        
+        if (hoursDiff < 24 && hasDraftContent) {
           setPendingDraft(draft);
           setShowRestoreModal(true);
         }
@@ -132,9 +139,14 @@ function KindleNewPageContent() {
   useEffect(() => {
     if (!isInitialized) return;
     
-    // 何も入力されていない場合は保存しない
-    if (!state.theme && !state.selectedTitle) return;
+    // theme, selectedTitle, またはタイトル候補があれば保存
+    const hasDraftContent = state.theme || state.selectedTitle || titleSuggestions.length > 0;
+    if (!hasDraftContent) {
+      setLastSavedAt(null);
+      return;
+    }
     
+    const now = new Date();
     const draft: SavedDraft = {
       currentStep,
       state,
@@ -142,11 +154,12 @@ function KindleNewPageContent() {
       subtitleSuggestions,
       relatedKeywords,
       targetSuggestions,
-      savedAt: new Date().toISOString(),
+      savedAt: now.toISOString(),
     };
     
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+      setLastSavedAt(now);
     } catch (e) {
       console.error('Failed to save draft:', e);
     }
@@ -410,31 +423,40 @@ function KindleNewPageContent() {
       
       {/* ヘッダー */}
       <header className="bg-white/80 backdrop-blur-md border-b border-amber-100 sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href={`/kindle${adminKeyParam}`} className="flex items-center gap-2 text-gray-700 hover:text-amber-600 transition-colors">
-            <ArrowLeft size={20} />
-            <span className="font-medium">戻る</span>
+        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
+          <Link href={`/kindle${adminKeyParam}`} className="flex items-center gap-1.5 sm:gap-2 text-gray-700 hover:text-amber-600 transition-colors">
+            <ArrowLeft size={18} />
+            <span className="font-medium text-sm sm:text-base">戻る</span>
           </Link>
-          <div className="flex items-center gap-2">
-            <BookOpen className="text-amber-600" size={24} />
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <BookOpen className="text-amber-600" size={20} />
             <div>
-              <span className="font-bold text-gray-900">キンドルダイレクトライト</span>
-              <span className="text-xs text-gray-500 ml-1">KDL</span>
+              <span className="font-bold text-gray-900 hidden sm:inline">キンドルダイレクトライト</span>
+              <span className="font-bold text-gray-900 sm:hidden">KDL</span>
+              <span className="text-xs text-gray-500 ml-1 hidden sm:inline">KDL</span>
             </div>
             {isDemo && (
-              <div className="flex items-center gap-1 bg-blue-500 text-white px-2 py-0.5 rounded-full text-xs font-bold ml-2">
+              <div className="flex items-center gap-1 bg-blue-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-bold ml-1 sm:ml-2">
                 <PlayCircle size={12} />
-                <span>体験版</span>
+                <span className="hidden sm:inline">体験版</span>
+              </div>
+            )}
+            {/* 下書き保存状態インジケーター */}
+            {!isDemo && lastSavedAt && (
+              <div className="flex items-center gap-1 bg-green-100 text-green-700 px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-medium ml-1 sm:ml-2" title={`最終保存: ${lastSavedAt.toLocaleTimeString('ja-JP')}`}>
+                <Cloud size={12} />
+                <span className="hidden sm:inline">下書き保存済み</span>
               </div>
             )}
           </div>
           <Link 
             href="/kindle/guide" 
             target="_blank"
-            className="flex items-center gap-1.5 text-amber-600 hover:text-amber-700 transition-colors bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-lg text-sm font-medium"
+            className="flex items-center justify-center gap-1.5 text-amber-600 hover:text-amber-700 transition-colors bg-amber-50 hover:bg-amber-100 p-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium"
+            title="まずお読みください"
           >
-            <HelpCircle size={16} />
-            <span>📖 まずお読みください</span>
+            <HelpCircle size={18} />
+            <span className="hidden sm:inline">📖 まずお読みください</span>
           </Link>
         </div>
       </header>
@@ -525,6 +547,9 @@ function KindleNewPageContent() {
           )}
         </div>
       </main>
+
+      {/* 共通フッター */}
+      <KDLFooter adminKeyParam={adminKeyParam} />
     </div>
   );
 }
