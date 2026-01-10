@@ -156,7 +156,7 @@ export default function PublicBookingPage() {
     if (result.success) {
       setStep('complete');
     } else {
-      setError(result.error || '予約に失敗しました');
+      setError('error' in result ? result.error : '予約に失敗しました');
     }
 
     setSubmitting(false);
