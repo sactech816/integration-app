@@ -80,22 +80,12 @@ function KindleListPageContent() {
   const [showBanner, setShowBanner] = useState(true);
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 
-  // 管理者用: プラン体験モード（LocalStorageから復元）
-  const [adminTestPlan, setAdminTestPlan] = useState<'none' | 'lite' | 'standard' | 'pro' | 'business' | 'enterprise'>('pro');
-
-  // 管理者の場合、LocalStorageから体験プランを復元
-  useEffect(() => {
-    if (isAdmin && typeof window !== 'undefined') {
-      const savedPlan = localStorage.getItem('adminTestPlan');
-      if (savedPlan && ['lite', 'standard', 'pro', 'business'].includes(savedPlan)) {
-        setAdminTestPlan(savedPlan as 'lite' | 'standard' | 'pro' | 'business');
-      }
-    }
-  }, [isAdmin]);
-
   // 管理者かどうかを判定
   const adminEmails = getAdminEmails();
   const [isAdmin, setIsAdmin] = useState(false);
+
+  // 管理者用: プラン体験モード（LocalStorageから復元）
+  const [adminTestPlan, setAdminTestPlan] = useState<'none' | 'lite' | 'standard' | 'pro' | 'business' | 'enterprise'>('pro');
 
   // ユーザーが読み込まれたら管理者判定
   useEffect(() => {
@@ -108,6 +98,16 @@ function KindleListPageContent() {
       setIsAdmin(false);
     }
   }, [user]);
+
+  // 管理者の場合、LocalStorageから体験プランを復元
+  useEffect(() => {
+    if (isAdmin && typeof window !== 'undefined') {
+      const savedPlan = localStorage.getItem('adminTestPlan');
+      if (savedPlan && ['lite', 'standard', 'pro', 'business'].includes(savedPlan)) {
+        setAdminTestPlan(savedPlan as 'lite' | 'standard' | 'pro' | 'business');
+      }
+    }
+  }, [isAdmin]);
 
   // ユーザーとサブスク状態を取得
   useEffect(() => {
