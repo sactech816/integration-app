@@ -176,7 +176,7 @@ export default function NewBookingMenuPage() {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="例: 30分無料相談"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 placeholder:text-gray-400"
                   required
                 />
               </div>
@@ -190,7 +190,7 @@ export default function NewBookingMenuPage() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="メニューの説明を入力してください"
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none text-gray-900 placeholder:text-gray-400"
                 />
               </div>
 
@@ -203,7 +203,7 @@ export default function NewBookingMenuPage() {
                   <select
                     value={formData.duration_min}
                     onChange={(e) => setFormData({ ...formData, duration_min: Number(e.target.value) })}
-                    className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900"
                   >
                     <option value={15}>15分</option>
                     <option value={30}>30分</option>

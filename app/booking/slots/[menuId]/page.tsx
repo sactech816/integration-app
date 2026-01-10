@@ -438,7 +438,7 @@ export default function BookingSlotsPage() {
                   type="time"
                   value={newSlotTime}
                   onChange={(e) => setNewSlotTime(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 />
               </div>
 
@@ -461,7 +461,7 @@ export default function BookingSlotsPage() {
                   max={100}
                   value={newSlotCapacity}
                   onChange={(e) => setNewSlotCapacity(Number(e.target.value))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 />
               </div>
             </div>

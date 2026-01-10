@@ -438,7 +438,7 @@ export default function PublicBookingPage() {
                         value={participantName}
                         onChange={(e) => setParticipantName(e.target.value)}
                         placeholder="山田 太郎"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 placeholder:text-gray-400"
                         required
                       />
                     </div>
@@ -453,7 +453,7 @@ export default function PublicBookingPage() {
                         value={participantEmail}
                         onChange={(e) => setParticipantEmail(e.target.value)}
                         placeholder="example@email.com（入力すると調整結果がメールで届きます）"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 placeholder:text-gray-400"
                       />
                       <p className="text-xs text-gray-500 mt-1">
                         メールアドレスを入力すると、調整結果の出欠表がメールで送られます。
@@ -617,7 +617,7 @@ export default function PublicBookingPage() {
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
                       placeholder="山田 太郎"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder:text-gray-400"
                       required
                     />
                   </div>
@@ -632,7 +632,7 @@ export default function PublicBookingPage() {
                       value={guestEmail}
                       onChange={(e) => setGuestEmail(e.target.value)}
                       placeholder="example@email.com"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder:text-gray-400"
                       required
                     />
                   </div>
@@ -649,7 +649,7 @@ export default function PublicBookingPage() {
                   onChange={(e) => setGuestComment(e.target.value)}
                   placeholder="ご質問やご要望があればお書きください"
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-900 placeholder:text-gray-400"
                 />
               </div>
 

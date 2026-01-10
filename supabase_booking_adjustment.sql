@@ -44,6 +44,12 @@ CREATE INDEX IF NOT EXISTS idx_schedule_adjustment_responses_responses ON public
 -- RLSを有効化
 ALTER TABLE public.schedule_adjustment_responses ENABLE ROW LEVEL SECURITY;
 
+-- 既存のポリシーを削除（エラー回避のため）
+DROP POLICY IF EXISTS "Menu owners can view all responses" ON public.schedule_adjustment_responses;
+DROP POLICY IF EXISTS "Anyone can create schedule adjustment responses" ON public.schedule_adjustment_responses;
+DROP POLICY IF EXISTS "Anyone can update schedule adjustment responses" ON public.schedule_adjustment_responses;
+DROP POLICY IF EXISTS "Anyone can view responses of active menus" ON public.schedule_adjustment_responses;
+
 -- メニュー所有者は全回答を閲覧可能
 CREATE POLICY "Menu owners can view all responses" ON public.schedule_adjustment_responses
   FOR SELECT
@@ -86,6 +92,9 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- 既存のトリガーを削除（エラー回避のため）
+DROP TRIGGER IF EXISTS trigger_update_schedule_adjustment_responses_updated_at ON public.schedule_adjustment_responses;
 
 CREATE TRIGGER trigger_update_schedule_adjustment_responses_updated_at
   BEFORE UPDATE ON public.schedule_adjustment_responses
