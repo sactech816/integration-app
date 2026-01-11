@@ -1,10 +1,11 @@
 /**
  * AI Provider Abstraction Layer
- * OpenAI と Gemini を統一的に扱うための抽象化レイヤー
+ * OpenAI、Gemini、Anthropic を統一的に扱うための抽象化レイヤー
  */
 
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import Anthropic from '@anthropic-ai/sdk';
 import { PlanTier, getAIModelForPlan, getAIProviderForPlan } from './subscription';
 
 // 共通のメッセージ型
@@ -25,7 +26,7 @@ export interface AIGenerateRequest {
 export interface AIGenerateResponse {
   content: string;
   model: string;
-  provider: 'openai' | 'gemini';
+  provider: 'openai' | 'gemini' | 'anthropic';
 }
 
 // AI Provider の共通インターフェース
@@ -160,16 +161,111 @@ export class GeminiProvider implements AIProvider {
 }
 
 /**
+ * Anthropic Provider
+ */
+export class AnthropicProvider implements AIProvider {
+  private client: Anthropic;
+  private model: string;
+
+  constructor(apiKey?: string, model: string = 'claude-3-haiku-20240307') {
+    if (!apiKey) {
+      throw new Error('Anthropic API key is required');
+    }
+    this.client = new Anthropic({ apiKey });
+    this.model = model;
+  }
+
+  async generate(request: AIGenerateRequest): Promise<AIGenerateResponse> {
+    // System メッセージと User/Assistant メッセージを分離
+    const systemMessages = request.messages
+      .filter((msg) => msg.role === 'system')
+      .map((msg) => msg.content)
+      .join('\n\n');
+
+    // User と Assistant メッセージを Anthropic 形式に変換
+    const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+    
+    for (const msg of request.messages) {
+      if (msg.role === 'system') continue;
+      
+      // Anthropic では 'user' と 'assistant' のみサポート
+      if (msg.role === 'user' || msg.role === 'assistant') {
+        messages.push({
+          role: msg.role,
+          content: msg.content,
+        });
+      }
+    }
+
+    // リクエストパラメータの構築
+    const params: any = {
+      model: this.model,
+      max_tokens: request.maxTokens || 4096,
+      messages: messages,
+    };
+
+    // System メッセージがある場合は追加
+    if (systemMessages) {
+      params.system = systemMessages;
+    }
+
+    // Temperature の設定（Anthropic では 0-1 の範囲）
+    if (request.temperature !== undefined) {
+      params.temperature = request.temperature;
+    }
+
+    // JSON モードの設定
+    if (request.responseFormat === 'json') {
+      params.response_format = { type: 'json_object' };
+    }
+
+    const response = await this.client.messages.create(params);
+
+    // レスポンスからテキストコンテンツを取得
+    const contentBlock = response.content[0];
+    if (!contentBlock || contentBlock.type !== 'text') {
+      throw new Error('Anthropic returned non-text response');
+    }
+
+    const content = contentBlock.text;
+    if (!content) {
+      throw new Error('Anthropic returned empty response');
+    }
+
+    return {
+      content,
+      model: this.model,
+      provider: 'anthropic',
+    };
+  }
+
+  isAvailable(): boolean {
+    return !!process.env.ANTHROPIC_API_KEY;
+  }
+
+  getProviderName(): string {
+    return 'Anthropic';
+  }
+}
+
+/**
  * プロバイダーのファクトリー関数
  * 環境変数に基づいて適切なプロバイダーを返す
  */
 export function createAIProvider(options?: {
-  preferProvider?: 'openai' | 'gemini';
+  preferProvider?: 'openai' | 'gemini' | 'anthropic';
   model?: string;
 }): AIProvider {
   const preferProvider = options?.preferProvider || process.env.AI_PROVIDER || 'openai';
 
   // 優先プロバイダーを試す
+  if (preferProvider === 'anthropic' && process.env.ANTHROPIC_API_KEY) {
+    return new AnthropicProvider(
+      process.env.ANTHROPIC_API_KEY,
+      options?.model || 'claude-3-haiku-20240307'
+    );
+  }
+
   if (preferProvider === 'gemini' && process.env.GEMINI_API_KEY) {
     return new GeminiProvider(
       process.env.GEMINI_API_KEY,
@@ -192,14 +288,21 @@ export function createAIProvider(options?: {
     );
   }
 
-  if (process.env.GEMINI_API_KEY) {
-    return new GeminiProvider(
-      process.env.GEMINI_API_KEY,
-      options?.model || 'gemini-1.5-flash'
+  if (process.env.ANTHROPIC_API_KEY) {
+    return new AnthropicProvider(
+      process.env.ANTHROPIC_API_KEY,
+      options?.model || 'claude-3-haiku-20240307'
     );
   }
 
-  throw new Error('No AI provider available. Please set OPENAI_API_KEY or GEMINI_API_KEY');
+  if (process.env.GEMINI_API_KEY) {
+    return new GeminiProvider(
+      process.env.GEMINI_API_KEY,
+      options?.model || process.env.GEMINI_MODEL || 'gemini-1.5-flash'
+    );
+  }
+
+  throw new Error('No AI provider available. Please set OPENAI_API_KEY, GEMINI_API_KEY, or ANTHROPIC_API_KEY');
 }
 
 /**
@@ -339,7 +442,7 @@ export function getProviderForPlanAndPreset(
   const config = selectedPreset[phase];
 
   return createAIProvider({
-    preferProvider: config.provider === 'anthropic' ? 'openai' : config.provider,
+    preferProvider: config.provider,
     model: config.model,
   });
 }
