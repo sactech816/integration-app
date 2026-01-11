@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 
 /**
  * KDL（Kindleダイレクトライト）のアクセス制限Middleware
@@ -131,11 +132,19 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
+  // サービスロールキーを使用してRLSをバイパス（モニター・サブスク確認用）
+  // 注意: middlewareではRLSが正しく機能しないため、サービスロールを使用
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseAdmin = serviceRoleKey 
+    ? createClient(supabaseUrl, serviceRoleKey)
+    : null;
+
   // モニター権限チェック（monitor_usersテーブルを確認）
   // モニター権限は有効期限内の場合、アクセスを許可
-  // 注意: RLSポリシーにより、ユーザーは自分のモニター情報のみ閲覧可能
   const now = new Date().toISOString();
-  const { data: monitorData, error: monitorError } = await supabase
+  const supabaseForQuery = supabaseAdmin || supabase;
+  
+  const { data: monitorData, error: monitorError } = await supabaseForQuery
     .from('monitor_users')
     .select('monitor_expires_at, monitor_start_at')
     .eq('user_id', session.user.id)
@@ -158,7 +167,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // 課金者チェック（kdl_subscriptionsテーブルを確認）
-  const { data: subscription, error: subError } = await supabase
+  const { data: subscription, error: subError } = await supabaseForQuery
     .from('kdl_subscriptions')
     .select('status, current_period_end')
     .eq('user_id', session.user.id)
