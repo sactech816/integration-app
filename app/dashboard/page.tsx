@@ -1188,9 +1188,9 @@ function DashboardContent() {
     if (page === '/' || page === '') {
       window.location.href = '/';
     } else {
-      // 管理者またはモニターユーザーがKDLページにアクセスする場合はadmin_keyを付与
-      const hasKdlAccess = isAdmin || kdlSubscription?.hasActiveSubscription;
-      const adminKeyParam = addAdminKey && hasKdlAccess ? '?admin_key=kdl-admin-2026' : '';
+      // admin_keyは管理者専用のバイパスキー（緊急時用）
+      // モニター・課金ユーザーは通常の認証フローを通るため、admin_keyは不要
+      const adminKeyParam = addAdminKey && isAdmin ? '?admin_key=kdl-admin-2026' : '';
       window.location.href = `/${page}${adminKeyParam}`;
     }
   };

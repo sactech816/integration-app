@@ -57,7 +57,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 管理者バイパス（?admin_key=xxx）- セミナーなど緊急時用
+  // 管理者バイパス（?admin_key=xxx）- 緊急時の管理者専用バイパスキー
+  // 注意: このキーは管理者のみが使用すべき。モニター・課金ユーザーは通常の認証フローを通る
   const adminKey = searchParams.get('admin_key');
   console.log('[Middleware] Checking admin_key:', adminKey, 'Expected:', ADMIN_BYPASS_KEY);
   if (adminKey === ADMIN_BYPASS_KEY) {
@@ -127,6 +128,24 @@ export async function middleware(request: NextRequest) {
   // 管理者は常にアクセス可能
   if (isAdmin) {
     console.log('[Middleware] Admin access granted');
+    return response;
+  }
+
+  // モニター権限チェック（monitor_usersテーブルを確認）
+  // モニター権限は有効期限内の場合、アクセスを許可
+  const { data: monitorData } = await supabase
+    .from('monitor_users')
+    .select('monitor_expires_at')
+    .eq('user_id', session.user.id)
+    .lte('monitor_start_at', new Date().toISOString())
+    .gt('monitor_expires_at', new Date().toISOString())
+    .single();
+
+  const hasMonitorAccess = !!monitorData;
+  console.log('[Middleware] Has monitor access:', hasMonitorAccess);
+
+  if (hasMonitorAccess) {
+    console.log('[Middleware] Monitor user access granted');
     return response;
   }
 
