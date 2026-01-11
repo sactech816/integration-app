@@ -133,19 +133,24 @@ export async function middleware(request: NextRequest) {
 
   // モニター権限チェック（monitor_usersテーブルを確認）
   // モニター権限は有効期限内の場合、アクセスを許可
+  // 注意: RLSポリシーにより、ユーザーは自分のモニター情報のみ閲覧可能
+  const now = new Date().toISOString();
   const { data: monitorData, error: monitorError } = await supabase
     .from('monitor_users')
-    .select('monitor_expires_at')
+    .select('monitor_expires_at, monitor_start_at')
     .eq('user_id', session.user.id)
-    .lte('monitor_start_at', new Date().toISOString())
-    .gt('monitor_expires_at', new Date().toISOString())
     .maybeSingle();
 
-  const hasMonitorAccess = !!monitorData;
-  console.log('[Middleware] Has monitor access:', hasMonitorAccess);
+  console.log('[Middleware] Monitor data:', monitorData);
   if (monitorError) {
     console.log('[Middleware] Monitor check error:', monitorError.message);
   }
+
+  // モニター権限が有効期限内かチェック
+  const hasMonitorAccess = monitorData && 
+    new Date(monitorData.monitor_start_at) <= new Date(now) &&
+    new Date(monitorData.monitor_expires_at) > new Date(now);
+  console.log('[Middleware] Has monitor access:', hasMonitorAccess);
 
   if (hasMonitorAccess) {
     console.log('[Middleware] Monitor user access granted');
