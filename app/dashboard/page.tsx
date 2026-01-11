@@ -1189,7 +1189,7 @@ function DashboardContent() {
       window.location.href = '/';
     } else {
       // admin_keyは管理者専用のバイパスキー（緊急時用）
-      // モニター・課金ユーザーは通常の認証フローを通るため、admin_keyは不要
+      // モニター・課金ユーザーは通常の認証フローを通る
       const adminKeyParam = addAdminKey && isAdmin ? '?admin_key=kdl-admin-2026' : '';
       window.location.href = `/${page}${adminKeyParam}`;
     }

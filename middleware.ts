@@ -7,7 +7,14 @@ import { createClient } from '@supabase/supabase-js';
  * 
  * /kindle 配下のページへのアクセスを制御し、
  * 未ログイン・未課金ユーザーを /kindle/lp にリダイレクトします。
- * 管理者と課金者のみアクセス可能です。
+ * 
+ * アクセス制御の優先順位:
+ * 1. 公開パス（/kindle/lp, /kindle/guide等）は認証不要
+ * 2. admin_keyパラメータ（管理者専用バイパス）
+ * 3. 管理者（環境変数で指定されたメールアドレス）
+ * 4. モニターユーザー（monitor_usersテーブルで有効期限内）
+ * 5. 課金ユーザー（kdl_subscriptionsテーブルで有効なサブスクリプション）
+ * 6. 上記以外は /kindle/lp#pricing にリダイレクト
  */
 
 // 管理者メールアドレス（環境変数から取得、カンマ区切り）
@@ -25,7 +32,7 @@ const PUBLIC_PATHS = [
   '/kindle/agency',
   '/kindle/guide',
   '/kindle/publish-guide',
-  '/kindle/demo', // デモページ（閲覧専用）
+  '/kindle/demo',
 ];
 
 // デモモード用のパス（クエリパラメータ付き）
@@ -36,10 +43,6 @@ const ADMIN_BYPASS_KEY = process.env.KDL_ADMIN_BYPASS_KEY || 'kdl-admin-2026';
 
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
-
-  // デバッグログ
-  console.log('[Middleware] pathname:', pathname);
-  console.log('[Middleware] admin_key:', searchParams.get('admin_key'));
 
   // /kindle 配下以外は通過
   if (!pathname.startsWith('/kindle')) {
@@ -59,11 +62,9 @@ export async function middleware(request: NextRequest) {
   }
 
   // 管理者バイパス（?admin_key=xxx）- 緊急時の管理者専用バイパスキー
-  // 注意: このキーは管理者のみが使用すべき。モニター・課金ユーザーは通常の認証フローを通る
+  // 注意: このキーは管理者のみが使用すべき
   const adminKey = searchParams.get('admin_key');
-  console.log('[Middleware] Checking admin_key:', adminKey, 'Expected:', ADMIN_BYPASS_KEY);
   if (adminKey === ADMIN_BYPASS_KEY) {
-    console.log('[Middleware] Admin bypass activated!');
     return NextResponse.next();
   }
 
@@ -83,6 +84,8 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  const allCookies = request.cookies.getAll();
+  
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
@@ -97,100 +100,103 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // セッションを取得（getUser を使用してより確実に認証状態を確認）
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  // セッション情報を取得
+  // @supabase/ssrのgetSessionが正しく動作しない場合があるため、
+  // Cookieから直接ユーザー情報を取得するフォールバックを実装
+  let user = null;
   
-  // デバッグログ
-  console.log('[Middleware] User exists:', !!user);
-  console.log('[Middleware] User error:', userError?.message);
+  // まずgetSessionを試す
+  const { data: { session } } = await supabase.auth.getSession();
   
-  // セッション互換性のためのオブジェクト作成
-  const session = user ? { user } : null;
-
-  console.log('[Middleware] Session exists:', !!session);
-  console.log('[Middleware] User email:', session?.user?.email);
+  if (session?.user) {
+    user = session.user;
+  } else {
+    // getSessionが失敗した場合、Cookieから直接ユーザー情報を取得
+    const authCookie = allCookies.find(c => c.name.includes('auth-token'));
+    if (authCookie?.value) {
+      try {
+        // base64-プレフィックスを除去してデコード
+        let tokenData = authCookie.value;
+        if (tokenData.startsWith('base64-')) {
+          tokenData = tokenData.substring(7);
+        }
+        const decoded = JSON.parse(Buffer.from(tokenData, 'base64').toString('utf-8'));
+        
+        // userオブジェクトが直接含まれている場合はそれを使用
+        if (decoded.user) {
+          user = decoded.user;
+        }
+      } catch (e) {
+        // デコードエラーは無視
+      }
+    }
+    
+    // それでも失敗した場合、getUserを試す
+    if (!user) {
+      const { data: { user: fallbackUser } } = await supabase.auth.getUser();
+      user = fallbackUser;
+    }
+  }
 
   // 未ログインの場合はLPにリダイレクト
-  if (!session) {
-    console.log('[Middleware] No session, redirecting to LP');
+  if (!user) {
     const redirectUrl = new URL('/kindle/lp', request.url);
     return NextResponse.redirect(redirectUrl);
   }
 
   // 管理者チェック
   const adminEmails = getAdminEmails();
-  const userEmail = session.user.email?.toLowerCase() || '';
+  const userEmail = user.email?.toLowerCase() || '';
   const isAdmin = adminEmails.includes(userEmail);
-
-  console.log('[Middleware] Admin emails:', adminEmails);
-  console.log('[Middleware] User email:', userEmail);
-  console.log('[Middleware] Is admin:', isAdmin);
 
   // 管理者は常にアクセス可能
   if (isAdmin) {
-    console.log('[Middleware] Admin access granted');
     return response;
   }
 
   // サービスロールキーを使用してRLSをバイパス（モニター・サブスク確認用）
-  // 注意: middlewareではRLSが正しく機能しないため、サービスロールを使用
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const supabaseAdmin = serviceRoleKey 
     ? createClient(supabaseUrl, serviceRoleKey)
     : null;
 
-  // モニター権限チェック（monitor_usersテーブルを確認）
-  // モニター権限は有効期限内の場合、アクセスを許可
   const now = new Date().toISOString();
   const supabaseForQuery = supabaseAdmin || supabase;
   
-  const { data: monitorData, error: monitorError } = await supabaseForQuery
+  // モニター権限チェック（monitor_usersテーブルを確認）
+  const { data: monitorData } = await supabaseForQuery
     .from('monitor_users')
     .select('monitor_expires_at, monitor_start_at')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .maybeSingle();
-
-  console.log('[Middleware] Monitor data:', monitorData);
-  if (monitorError) {
-    console.log('[Middleware] Monitor check error:', monitorError.message);
-  }
 
   // モニター権限が有効期限内かチェック
   const hasMonitorAccess = monitorData && 
     new Date(monitorData.monitor_start_at) <= new Date(now) &&
     new Date(monitorData.monitor_expires_at) > new Date(now);
-  console.log('[Middleware] Has monitor access:', hasMonitorAccess);
 
   if (hasMonitorAccess) {
-    console.log('[Middleware] Monitor user access granted');
     return response;
   }
 
   // 課金者チェック（kdl_subscriptionsテーブルを確認）
-  const { data: subscription, error: subError } = await supabaseForQuery
+  const { data: subscription } = await supabaseForQuery
     .from('kdl_subscriptions')
     .select('status, current_period_end')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .maybeSingle();
-
-  console.log('[Middleware] Subscription data:', subscription);
-  console.log('[Middleware] Subscription error:', subError?.message);
 
   // 有効なサブスクリプションがあるかチェック
   const hasActiveSubscription = subscription && 
     subscription.status === 'active' &&
     new Date(subscription.current_period_end) > new Date();
 
-  console.log('[Middleware] Has active subscription:', hasActiveSubscription);
-
   // 課金者はアクセス可能
   if (hasActiveSubscription) {
-    console.log('[Middleware] Subscriber access granted');
     return response;
   }
 
   // 未課金ユーザーはLPの料金セクションにリダイレクト
-  console.log('[Middleware] No access, redirecting to LP pricing');
   const redirectUrl = new URL('/kindle/lp#pricing', request.url);
   return NextResponse.redirect(redirectUrl);
 }
@@ -202,6 +208,3 @@ export const config = {
     '/kindle/:path*',
   ],
 };
-
-
-
