@@ -104,14 +104,20 @@ export async function middleware(request: NextRequest) {
   // 本番環境で問題が発生することがある
   let user = null;
   
+  // デバッグ: Cookieの確認
+  const allCookies = request.cookies.getAll();
+  console.log('[KDL Middleware] Cookies:', allCookies.map(c => c.name).join(', '));
+  
   // getUser()を最初に試す（トークン検証を行う、推奨方法）
   const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+  console.log('[KDL Middleware] getUser result:', authUser?.id || 'null', 'error:', authError?.message || 'none');
   
   if (authUser) {
     user = authUser;
   } else {
     // getUser()が失敗した場合、getSession()をフォールバックとして試す
     const { data: { session } } = await supabase.auth.getSession();
+    console.log('[KDL Middleware] getSession result:', session?.user?.id || 'null');
     if (session?.user) {
       user = session.user;
     }
@@ -119,17 +125,22 @@ export async function middleware(request: NextRequest) {
 
   // 未ログインの場合はLPにリダイレクト
   if (!user) {
+    console.log('[KDL Middleware] No user found, redirecting to LP');
     const redirectUrl = new URL('/kindle/lp', request.url);
     return NextResponse.redirect(redirectUrl);
   }
+
+  console.log('[KDL Middleware] User found:', user.id, user.email);
 
   // 管理者チェック
   const adminEmails = getAdminEmails();
   const userEmail = user.email?.toLowerCase() || '';
   const isAdmin = adminEmails.includes(userEmail);
+  console.log('[KDL Middleware] Admin check:', isAdmin, 'adminEmails:', adminEmails.join(','));
 
   // 管理者は常にアクセス可能
   if (isAdmin) {
+    console.log('[KDL Middleware] Admin access granted');
     return response;
   }
 
@@ -138,32 +149,40 @@ export async function middleware(request: NextRequest) {
   const supabaseAdmin = serviceRoleKey 
     ? createClient(supabaseUrl, serviceRoleKey)
     : null;
+  console.log('[KDL Middleware] Service role key available:', !!serviceRoleKey);
 
   const now = new Date().toISOString();
   const supabaseForQuery = supabaseAdmin || supabase;
   
   // モニター権限チェック（monitor_usersテーブルを確認）
-  const { data: monitorData } = await supabaseForQuery
+  const { data: monitorData, error: monitorError } = await supabaseForQuery
     .from('monitor_users')
     .select('monitor_expires_at, monitor_start_at')
     .eq('user_id', user.id)
     .maybeSingle();
+
+  console.log('[KDL Middleware] Monitor data:', JSON.stringify(monitorData), 'error:', monitorError?.message || 'none');
 
   // モニター権限が有効期限内かチェック
   const hasMonitorAccess = monitorData && 
     new Date(monitorData.monitor_start_at) <= new Date(now) &&
     new Date(monitorData.monitor_expires_at) > new Date(now);
 
+  console.log('[KDL Middleware] Monitor access:', hasMonitorAccess, 'now:', now);
+
   if (hasMonitorAccess) {
+    console.log('[KDL Middleware] Monitor access granted');
     return response;
   }
 
   // 課金者チェック（kdl_subscriptionsテーブルを確認）
-  const { data: subscription } = await supabaseForQuery
+  const { data: subscription, error: subError } = await supabaseForQuery
     .from('kdl_subscriptions')
     .select('status, current_period_end')
     .eq('user_id', user.id)
     .maybeSingle();
+
+  console.log('[KDL Middleware] Subscription data:', JSON.stringify(subscription), 'error:', subError?.message || 'none');
 
   // 有効なサブスクリプションがあるかチェック
   const hasActiveSubscription = subscription && 
@@ -172,10 +191,12 @@ export async function middleware(request: NextRequest) {
 
   // 課金者はアクセス可能
   if (hasActiveSubscription) {
+    console.log('[KDL Middleware] Subscription access granted');
     return response;
   }
 
   // 未課金ユーザーはLPの料金セクションにリダイレクト
+  console.log('[KDL Middleware] No access, redirecting to LP#pricing');
   const redirectUrl = new URL('/kindle/lp#pricing', request.url);
   return NextResponse.redirect(redirectUrl);
 }
