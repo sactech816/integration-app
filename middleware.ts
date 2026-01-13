@@ -84,8 +84,6 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const allCookies = request.cookies.getAll();
-  
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
@@ -101,40 +99,21 @@ export async function middleware(request: NextRequest) {
   });
 
   // セッション情報を取得
-  // @supabase/ssrのgetSessionが正しく動作しない場合があるため、
-  // Cookieから直接ユーザー情報を取得するフォールバックを実装
+  // Supabase公式推奨: middlewareではgetUser()を使用（トークン検証を行う）
+  // getSession()はCookieからセッションを読み取るだけでトークン検証を行わないため、
+  // 本番環境で問題が発生することがある
   let user = null;
   
-  // まずgetSessionを試す
-  const { data: { session } } = await supabase.auth.getSession();
+  // getUser()を最初に試す（トークン検証を行う、推奨方法）
+  const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
   
-  if (session?.user) {
-    user = session.user;
+  if (authUser) {
+    user = authUser;
   } else {
-    // getSessionが失敗した場合、Cookieから直接ユーザー情報を取得
-    const authCookie = allCookies.find(c => c.name.includes('auth-token'));
-    if (authCookie?.value) {
-      try {
-        // base64-プレフィックスを除去してデコード
-        let tokenData = authCookie.value;
-        if (tokenData.startsWith('base64-')) {
-          tokenData = tokenData.substring(7);
-        }
-        const decoded = JSON.parse(Buffer.from(tokenData, 'base64').toString('utf-8'));
-        
-        // userオブジェクトが直接含まれている場合はそれを使用
-        if (decoded.user) {
-          user = decoded.user;
-        }
-      } catch (e) {
-        // デコードエラーは無視
-      }
-    }
-    
-    // それでも失敗した場合、getUserを試す
-    if (!user) {
-      const { data: { user: fallbackUser } } = await supabase.auth.getUser();
-      user = fallbackUser;
+    // getUser()が失敗した場合、getSession()をフォールバックとして試す
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      user = session.user;
     }
   }
 
