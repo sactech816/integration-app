@@ -225,8 +225,14 @@ function KindleListPageContent() {
                 .eq('book_id', book.id);
 
               const sectionsCount = sections?.length || 0;
+              // 完成判定: 100文字以上のテキストコンテンツがある節のみカウント
               const completedSectionsCount = sections?.filter(
-                (s) => s.content && s.content.trim().length > 0
+                (s) => {
+                  if (!s.content) return false;
+                  // HTMLタグを除去してテキストのみを抽出
+                  const textOnly = s.content.replace(/<[^>]*>/g, '').trim();
+                  return textOnly.length >= 100;
+                }
               ).length || 0;
 
               return {
@@ -370,11 +376,13 @@ function KindleListPageContent() {
                 </span>
               )}
               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                book.status === 'published'
+                progress === 100
                   ? 'bg-green-100 text-green-700'
+                  : progress > 0
+                  ? 'bg-blue-100 text-blue-700'
                   : 'bg-amber-100 text-amber-700'
               }`}>
-                {book.status === 'published' ? '公開済み' : '下書き'}
+                {progress === 100 ? '執筆完了' : progress > 0 ? '執筆中' : '下書き'}
               </span>
             </div>
             {/* 進捗バー */}

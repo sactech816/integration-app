@@ -58,18 +58,109 @@ function buildBookHtml(book: Book, chapters: Chapter[], sections: Section[]): st
     <head>
       <meta charset="UTF-8">
       <style>
-        body { font-family: 'Merriweather', 'Georgia', serif; line-height: 1.8; }
-        h1 { font-size: 28pt; text-align: center; margin-bottom: 20pt; }
-        h2 { font-size: 20pt; margin-top: 24pt; margin-bottom: 12pt; page-break-before: always; }
-        h2:first-of-type { page-break-before: avoid; }
-        h3 { font-size: 14pt; margin-top: 18pt; margin-bottom: 8pt; }
-        p { font-size: 11pt; margin-bottom: 10pt; text-indent: 1em; }
-        .chapter-summary { font-style: italic; color: #666; margin-bottom: 16pt; }
-        .page-break { page-break-after: always; }
-        ul, ol { margin: 10pt 0; padding-left: 24pt; }
-        li { margin-bottom: 6pt; }
-        strong { font-weight: bold; }
-        blockquote { margin: 12pt 24pt; padding-left: 12pt; border-left: 3px solid #ccc; font-style: italic; }
+        body { 
+          font-family: 'Merriweather', 'Georgia', serif; 
+          line-height: 1.9; 
+          color: #333;
+        }
+        h1 { 
+          font-size: 28pt; 
+          text-align: center; 
+          margin-bottom: 20pt; 
+          color: #2c3e50;
+        }
+        h2 { 
+          font-size: 22pt; 
+          font-weight: bold;
+          text-align: center;
+          color: #2c3e50;
+          background-color: #ecf0f1;
+          padding: 16pt 0;
+          border-top: 3pt solid #3498db;
+          border-bottom: 3pt solid #3498db;
+          margin-top: 24pt; 
+          margin-bottom: 18pt; 
+          page-break-before: always; 
+        }
+        h2:first-of-type { 
+          page-break-before: avoid; 
+        }
+        h3 { 
+          font-size: 14pt; 
+          font-weight: bold;
+          color: #34495e;
+          background-color: #f8f9fa;
+          padding: 8pt 12pt;
+          border-left: 4pt solid #3498db;
+          margin-top: 18pt; 
+          margin-bottom: 10pt; 
+        }
+        p { 
+          font-size: 11pt; 
+          margin-bottom: 12pt; 
+          text-indent: 1em; 
+          line-height: 1.9;
+        }
+        .subtitle {
+          text-align: center; 
+          font-size: 14pt; 
+          margin-top: -10pt;
+          color: #7f8c8d;
+        }
+        .chapter-summary { 
+          font-style: italic; 
+          color: #7f8c8d; 
+          margin-bottom: 16pt; 
+          padding: 8pt;
+          background-color: #f9f9f9;
+          border-left: 3pt solid #bdc3c7;
+        }
+        .page-break { 
+          page-break-after: always; 
+        }
+        .toc-container {
+          margin: 40pt 0;
+        }
+        .toc-title {
+          font-size: 24pt;
+          font-weight: bold;
+          text-align: center;
+          margin-bottom: 30pt;
+          color: #2c3e50;
+        }
+        .toc-item {
+          margin-bottom: 12pt;
+          padding-left: 20pt;
+          position: relative;
+        }
+        .toc-chapter {
+          font-weight: bold;
+          font-size: 12pt;
+          color: #2c3e50;
+        }
+        .toc-section {
+          font-size: 10pt;
+          color: #7f8c8d;
+          padding-left: 20pt;
+          margin-top: 4pt;
+        }
+        ul, ol { 
+          margin: 10pt 0; 
+          padding-left: 24pt; 
+        }
+        li { 
+          margin-bottom: 6pt; 
+        }
+        strong { 
+          font-weight: bold; 
+        }
+        blockquote { 
+          margin: 12pt 24pt; 
+          padding-left: 12pt; 
+          border-left: 3px solid #bdc3c7; 
+          font-style: italic; 
+          background-color: #f9f9f9;
+        }
       </style>
     </head>
     <body>
@@ -78,8 +169,33 @@ function buildBookHtml(book: Book, chapters: Chapter[], sections: Section[]): st
   // タイトルページ
   html += `<h1>${escapeHtml(book.title)}</h1>`;
   if (book.subtitle) {
-    html += `<p style="text-align: center; font-size: 14pt; margin-top: -10pt;">${escapeHtml(book.subtitle)}</p>`;
+    html += `<p class="subtitle">${escapeHtml(book.subtitle)}</p>`;
   }
+  
+  // 改ページ
+  html += `<div class="page-break"></div>`;
+
+  // 目次ページ
+  html += `<div class="toc-container">`;
+  html += `<h2 class="toc-title">目次</h2>`;
+  
+  for (const chapter of chapters) {
+    html += `<div class="toc-item">`;
+    html += `<div class="toc-chapter">${escapeHtml(chapter.title)}</div>`;
+    
+    // この章の節を取得
+    const chapterSections = sections
+      .filter(s => s.chapter_id === chapter.id)
+      .sort((a, b) => a.order_index - b.order_index);
+    
+    for (const section of chapterSections) {
+      html += `<div class="toc-section">・${escapeHtml(section.title)}</div>`;
+    }
+    
+    html += `</div>`;
+  }
+  
+  html += `</div>`;
   
   // 改ページ
   html += `<div class="page-break"></div>`;
@@ -96,7 +212,7 @@ function buildBookHtml(book: Book, chapters: Chapter[], sections: Section[]): st
     
     // 章の概要
     if (chapter.summary) {
-      html += `<p class="chapter-summary">${escapeHtml(chapter.summary)}</p>`;
+      html += `<div class="chapter-summary">${escapeHtml(chapter.summary)}</div>`;
     }
 
     // この章の節を取得
@@ -269,21 +385,111 @@ function buildDemoHtml(): string {
     <head>
       <meta charset="UTF-8">
       <style>
-        body { font-family: 'Merriweather', 'Georgia', serif; line-height: 1.8; }
-        h1 { font-size: 28pt; text-align: center; margin-bottom: 20pt; }
-        h2 { font-size: 20pt; margin-top: 24pt; margin-bottom: 12pt; }
-        h3 { font-size: 14pt; margin-top: 18pt; margin-bottom: 8pt; }
-        p { font-size: 11pt; margin-bottom: 10pt; }
+        body { 
+          font-family: 'Merriweather', 'Georgia', serif; 
+          line-height: 1.9; 
+          color: #333;
+        }
+        h1 { 
+          font-size: 28pt; 
+          text-align: center; 
+          margin-bottom: 20pt; 
+          color: #2c3e50;
+        }
+        h2 { 
+          font-size: 22pt; 
+          font-weight: bold;
+          text-align: center;
+          color: #2c3e50;
+          background-color: #ecf0f1;
+          padding: 16pt 0;
+          border-top: 3pt solid #3498db;
+          border-bottom: 3pt solid #3498db;
+          margin-top: 24pt; 
+          margin-bottom: 18pt; 
+        }
+        h3 { 
+          font-size: 14pt; 
+          font-weight: bold;
+          color: #34495e;
+          background-color: #f8f9fa;
+          padding: 8pt 12pt;
+          border-left: 4pt solid #3498db;
+          margin-top: 18pt; 
+          margin-bottom: 10pt; 
+        }
+        p { 
+          font-size: 11pt; 
+          margin-bottom: 12pt; 
+          line-height: 1.9;
+        }
+        .subtitle {
+          text-align: center; 
+          font-size: 14pt; 
+          color: #7f8c8d;
+        }
+        .chapter-summary { 
+          font-style: italic; 
+          color: #7f8c8d; 
+          padding: 8pt;
+          background-color: #f9f9f9;
+          border-left: 3pt solid #bdc3c7;
+          margin-bottom: 16pt;
+        }
+        .toc-title {
+          font-size: 24pt;
+          font-weight: bold;
+          text-align: center;
+          margin-bottom: 30pt;
+          color: #2c3e50;
+        }
+        .toc-item {
+          margin-bottom: 12pt;
+          padding-left: 20pt;
+        }
+        .toc-chapter {
+          font-weight: bold;
+          font-size: 12pt;
+          color: #2c3e50;
+        }
+        .toc-section {
+          font-size: 10pt;
+          color: #7f8c8d;
+          padding-left: 20pt;
+          margin-top: 4pt;
+        }
       </style>
     </head>
     <body>
       <h1>デモ用サンプル書籍</h1>
-      <p style="text-align: center; font-size: 14pt;">Kindle執筆システムの使い方</p>
+      <p class="subtitle">Kindle執筆システムの使い方</p>
+      
+      <div style="page-break-after: always;"></div>
+      
+      <h2 class="toc-title">目次</h2>
+      <div class="toc-item">
+        <div class="toc-chapter">第1章　はじめに</div>
+        <div class="toc-section">・この本の目的</div>
+        <div class="toc-section">・対象読者</div>
+        <div class="toc-section">・本書の構成</div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-chapter">第2章　基本操作</div>
+        <div class="toc-section">・目次の作成</div>
+        <div class="toc-section">・章と節の管理</div>
+        <div class="toc-section">・執筆エディタの使い方</div>
+      </div>
+      <div class="toc-item">
+        <div class="toc-chapter">第3章　応用テクニック</div>
+        <div class="toc-section">・効率的な執筆フロー</div>
+        <div class="toc-section">・AIアシスタントの活用</div>
+        <div class="toc-section">・まとめ</div>
+      </div>
       
       <div style="page-break-after: always;"></div>
       
       <h2>第1章　はじめに</h2>
-      <p style="font-style: italic; color: #666;">この本の概要と目的</p>
+      <div class="chapter-summary">この本の概要と目的</div>
       
       <h3>この本の目的</h3>
       <p>この本では、Kindle執筆システムの使い方を学びます。効率的な執筆フローから、AIを活用した執筆術まで、幅広くカバーしています。</p>
@@ -297,7 +503,7 @@ function buildDemoHtml(): string {
       <div style="page-break-after: always;"></div>
       
       <h2>第2章　基本操作</h2>
-      <p style="font-style: italic; color: #666;">システムの基本的な使い方</p>
+      <div class="chapter-summary">システムの基本的な使い方</div>
       
       <h3>目次の作成</h3>
       <p>まずは本の構造を決めましょう。章と節を追加して、目次を作成します。</p>
@@ -311,7 +517,7 @@ function buildDemoHtml(): string {
       <div style="page-break-after: always;"></div>
       
       <h2>第3章　応用テクニック</h2>
-      <p style="font-style: italic; color: #666;">より効率的な執筆のために</p>
+      <div class="chapter-summary">より効率的な執筆のために</div>
       
       <h3>効率的な執筆フロー</h3>
       <p>まず全体の構成を固め、その後各節を執筆していくのが効率的です。</p>

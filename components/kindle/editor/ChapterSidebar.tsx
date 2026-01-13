@@ -59,6 +59,8 @@ interface ChapterSidebarProps {
   onSectionClick: (sectionId: string) => void;
   bookTitle: string;
   bookSubtitle?: string | null;
+  bookId: string; // 追加: 書籍ID
+  onUpdateBookInfo?: (title: string, subtitle: string | null) => Promise<void>; // 追加: 書籍情報更新ハンドラー
   onBatchWrite?: (chapterId: string) => void;
   batchProgress?: BatchWriteProgress;
   structureHandlers?: StructureHandlers;
@@ -207,6 +209,8 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
   onSectionClick,
   bookTitle,
   bookSubtitle,
+  bookId,
+  onUpdateBookInfo,
   onBatchWrite,
   batchProgress,
   structureHandlers,
@@ -238,7 +242,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
   }>({ type: null, id: null, position: { x: 0, y: 0 } });
   
   const [editState, setEditState] = useState<{
-    type: 'chapter' | 'section' | null;
+    type: 'chapter' | 'section' | 'book-title' | 'book-subtitle' | null;
     id: string | null;
     chapterId?: string;
   }>({ type: null, id: null });
@@ -488,6 +492,16 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
     }
   };
 
+  // 書籍情報のリネーム
+  const handleUpdateBookInfo = async (newTitle: string, newSubtitle: string | null) => {
+    if (!onUpdateBookInfo) return;
+    try {
+      await onUpdateBookInfo(newTitle, newSubtitle || '');
+    } finally {
+      setEditState({ type: null, id: null });
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-amber-50 to-orange-50">
       {/* ヘッダー: 本のタイトル */}
@@ -508,14 +522,59 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
             <BookOpen className="text-white" size={18} />
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="font-bold text-gray-900 text-xs sm:text-sm leading-tight line-clamp-2">
-              {bookTitle}
-            </h1>
-            {bookSubtitle && (
-              <p className="text-xs text-gray-500 mt-1 line-clamp-1">
-                {bookSubtitle}
-              </p>
+            {editState.type === 'book-title' ? (
+              <InlineEdit
+                value={bookTitle}
+                onSave={(newValue) => handleUpdateBookInfo(newValue, bookSubtitle || null)}
+                onCancel={() => setEditState({ type: null, id: null })}
+                className="w-full text-xs sm:text-sm font-bold"
+              />
+            ) : (
+              <div className="flex items-center gap-2">
+                <h1 className="font-bold text-gray-900 text-xs sm:text-sm leading-tight line-clamp-2 flex-1">
+                  {bookTitle}
+                </h1>
+                {!readOnly && onUpdateBookInfo && (
+                  <button
+                    onClick={() => setEditState({ type: 'book-title', id: bookId })}
+                    className="text-gray-400 hover:text-amber-600 transition-colors p-1 rounded hover:bg-amber-50 flex-shrink-0"
+                    title="タイトルを編集"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
+              </div>
             )}
+            {editState.type === 'book-subtitle' ? (
+              <InlineEdit
+                value={bookSubtitle || ''}
+                onSave={(newValue) => handleUpdateBookInfo(bookTitle, newValue || null)}
+                onCancel={() => setEditState({ type: null, id: null })}
+                className="w-full text-xs"
+              />
+            ) : bookSubtitle ? (
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-xs text-gray-500 line-clamp-1 flex-1">
+                  {bookSubtitle}
+                </p>
+                {!readOnly && onUpdateBookInfo && (
+                  <button
+                    onClick={() => setEditState({ type: 'book-subtitle', id: bookId })}
+                    className="text-gray-400 hover:text-amber-600 transition-colors p-1 rounded hover:bg-amber-50 flex-shrink-0"
+                    title="サブタイトルを編集"
+                  >
+                    <Pencil size={12} />
+                  </button>
+                )}
+              </div>
+            ) : !readOnly && onUpdateBookInfo ? (
+              <button
+                onClick={() => setEditState({ type: 'book-subtitle', id: bookId })}
+                className="text-xs text-gray-400 hover:text-amber-600 transition-colors mt-1"
+              >
+                + サブタイトルを追加
+              </button>
+            ) : null}
           </div>
         </div>
       </div>

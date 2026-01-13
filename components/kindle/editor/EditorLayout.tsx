@@ -766,6 +766,35 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     });
   }, [showToast]);
 
+  // 書籍情報を更新
+  const handleUpdateBookInfo = useCallback(async (title: string, subtitle: string | null) => {
+    try {
+      const response = await fetch('/api/kdl/update-book', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookId: book.id,
+          title,
+          subtitle,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '書籍情報の更新に失敗しました');
+      }
+
+      // ローカルの状態を更新
+      book.title = title;
+      book.subtitle = subtitle;
+
+      showToast('success', '書籍情報を更新しました');
+    } catch (error: any) {
+      console.error('Update book info error:', error);
+      showToast('error', error.message);
+    }
+  }, [book, showToast]);
+
   // 構成変更ハンドラーをまとめたオブジェクト
   const structureHandlers = {
     onAddChapter: handleAddChapter,
@@ -991,6 +1020,8 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             }}
             bookTitle={book.title}
             bookSubtitle={book.subtitle}
+            bookId={book.id}
+            onUpdateBookInfo={readOnly ? undefined : handleUpdateBookInfo}
             onBatchWrite={readOnly ? undefined : handleBatchWrite}
             batchProgress={batchProgress}
             structureHandlers={readOnly ? undefined : structureHandlers}
