@@ -101,7 +101,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ isOpen, onClose, items, pos
   return (
     <div
       ref={menuRef}
-      className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200 py-1 min-w-[160px] animate-fade-in"
+      className="fixed z-[100] bg-white rounded-lg shadow-xl border border-gray-200 py-1 min-w-[160px] animate-fade-in"
       style={{ 
         top: adjustedY,
         left: adjustedX,
