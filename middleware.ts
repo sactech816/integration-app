@@ -44,14 +44,20 @@ const ADMIN_BYPASS_KEY = process.env.KDL_ADMIN_BYPASS_KEY || 'kdl-admin-2026';
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
+  // デバッグ: middleware実行確認
+  console.log('[KDL Middleware] START - pathname:', pathname);
+
   // /kindle 配下以外は通過
   if (!pathname.startsWith('/kindle')) {
     return NextResponse.next();
   }
 
+  console.log('[KDL Middleware] Processing /kindle path');
+
   // 公開パスはそのまま通過
   for (const publicPath of PUBLIC_PATHS) {
     if (pathname === publicPath || pathname.startsWith(publicPath + '/')) {
+      console.log('[KDL Middleware] Public path, passing through:', pathname);
       return NextResponse.next();
     }
   }
@@ -127,7 +133,11 @@ export async function middleware(request: NextRequest) {
   if (!user) {
     console.log('[KDL Middleware] No user found, redirecting to LP');
     const redirectUrl = new URL('/kindle/lp', request.url);
-    return NextResponse.redirect(redirectUrl);
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+    // デバッグ用ヘッダー
+    redirectResponse.headers.set('X-KDL-Debug', 'no-user');
+    redirectResponse.headers.set('X-KDL-Cookies', allCookies.map(c => c.name).join(',').substring(0, 200));
+    return redirectResponse;
   }
 
   console.log('[KDL Middleware] User found:', user.id, user.email);
@@ -141,6 +151,7 @@ export async function middleware(request: NextRequest) {
   // 管理者は常にアクセス可能
   if (isAdmin) {
     console.log('[KDL Middleware] Admin access granted');
+    response.headers.set('X-KDL-Debug', 'admin-access');
     return response;
   }
 
@@ -172,6 +183,7 @@ export async function middleware(request: NextRequest) {
 
   if (hasMonitorAccess) {
     console.log('[KDL Middleware] Monitor access granted');
+    response.headers.set('X-KDL-Debug', 'monitor-access');
     return response;
   }
 
@@ -192,13 +204,20 @@ export async function middleware(request: NextRequest) {
   // 課金者はアクセス可能
   if (hasActiveSubscription) {
     console.log('[KDL Middleware] Subscription access granted');
+    response.headers.set('X-KDL-Debug', 'subscription-access');
     return response;
   }
 
   // 未課金ユーザーはLPの料金セクションにリダイレクト
   console.log('[KDL Middleware] No access, redirecting to LP#pricing');
   const redirectUrl = new URL('/kindle/lp#pricing', request.url);
-  return NextResponse.redirect(redirectUrl);
+  const redirectResponse = NextResponse.redirect(redirectUrl);
+  // デバッグ用ヘッダー
+  redirectResponse.headers.set('X-KDL-Debug', `no-access:user=${user.id}:monitor=${!!monitorData}:sub=${!!subscription}:svckey=${!!serviceRoleKey}`);
+  if (monitorError) {
+    redirectResponse.headers.set('X-KDL-Monitor-Error', monitorError.message.substring(0, 100));
+  }
+  return redirectResponse;
 }
 
 // Middlewareを適用するパスを指定
