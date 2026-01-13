@@ -76,10 +76,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // デバッグ: Cookieの確認
-  const allCookies = request.cookies.getAll();
-  const cookieNames = allCookies.map(c => c.name).join(',');
-
   // Supabaseクライアントを作成
   let response = NextResponse.next({
     request: {
@@ -102,44 +98,35 @@ export async function middleware(request: NextRequest) {
       },
     });
 
-    // セッション情報を取得
+    // セッション情報を取得（getUser()を使用、トークン検証を行う）
     let user = null;
-    let authMethod = 'none';
     
-    // getUser()を最初に試す（トークン検証を行う、推奨方法）
     try {
       const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
       if (authUser) {
         user = authUser;
-        authMethod = 'getUser';
       } else if (authError) {
         // getUser()がエラーの場合、getSession()をフォールバックとして試す
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           user = session.user;
-          authMethod = 'getSession';
         }
       }
-    } catch (authErr: any) {
+    } catch {
       // 認証エラーの場合もgetSession()を試す
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           user = session.user;
-          authMethod = 'getSession-fallback';
         }
-      } catch (sessionErr) {
+      } catch {
         // 両方失敗
       }
     }
 
     // 未ログインの場合はLPにリダイレクト
     if (!user) {
-      const redirectUrl = new URL('/kindle/lp', request.url);
-      const redirectResponse = NextResponse.redirect(redirectUrl);
-      redirectResponse.headers.set('X-KDL-Debug', `no-user:method=${authMethod}`);
-      redirectResponse.headers.set('X-KDL-Cookies', cookieNames.substring(0, 200));
-      return redirectResponse;
+      return NextResponse.redirect(new URL('/kindle/lp', request.url));
     }
 
     // 管理者チェック
@@ -149,7 +136,6 @@ export async function middleware(request: NextRequest) {
 
     // 管理者は常にアクセス可能
     if (isAdmin) {
-      response.headers.set('X-KDL-Debug', 'admin-access');
       return response;
     }
 
@@ -163,7 +149,7 @@ export async function middleware(request: NextRequest) {
     const supabaseForQuery = supabaseAdmin || supabase;
     
     // モニター権限チェック（monitor_usersテーブルを確認）
-    const { data: monitorData, error: monitorError } = await supabaseForQuery
+    const { data: monitorData } = await supabaseForQuery
       .from('monitor_users')
       .select('monitor_expires_at, monitor_start_at')
       .eq('user_id', user.id)
@@ -175,12 +161,11 @@ export async function middleware(request: NextRequest) {
       new Date(monitorData.monitor_expires_at) > new Date(now);
 
     if (hasMonitorAccess) {
-      response.headers.set('X-KDL-Debug', 'monitor-access');
       return response;
     }
 
     // 課金者チェック（kdl_subscriptionsテーブルを確認）
-    const { data: subscription, error: subError } = await supabaseForQuery
+    const { data: subscription } = await supabaseForQuery
       .from('kdl_subscriptions')
       .select('status, current_period_end')
       .eq('user_id', user.id)
@@ -193,26 +178,15 @@ export async function middleware(request: NextRequest) {
 
     // 課金者はアクセス可能
     if (hasActiveSubscription) {
-      response.headers.set('X-KDL-Debug', 'subscription-access');
       return response;
     }
 
     // 未課金ユーザーはLPの料金セクションにリダイレクト
-    const redirectUrl = new URL('/kindle/lp#pricing', request.url);
-    const redirectResponse = NextResponse.redirect(redirectUrl);
-    redirectResponse.headers.set('X-KDL-Debug', `no-access:user=${user.id}:monitor=${!!monitorData}:sub=${!!subscription}:svckey=${!!serviceRoleKey}`);
-    if (monitorError) {
-      redirectResponse.headers.set('X-KDL-Monitor-Error', monitorError.message.substring(0, 100));
-    }
-    return redirectResponse;
+    return NextResponse.redirect(new URL('/kindle/lp#pricing', request.url));
 
-  } catch (err: any) {
-    // エラーが発生した場合はデバッグ情報付きでLPにリダイレクト
-    const redirectUrl = new URL('/kindle/lp', request.url);
-    const redirectResponse = NextResponse.redirect(redirectUrl);
-    redirectResponse.headers.set('X-KDL-Debug', `error:${err.message?.substring(0, 100) || 'unknown'}`);
-    redirectResponse.headers.set('X-KDL-Cookies', cookieNames.substring(0, 200));
-    return redirectResponse;
+  } catch {
+    // エラーが発生した場合はLPにリダイレクト
+    return NextResponse.redirect(new URL('/kindle/lp', request.url));
   }
 }
 
