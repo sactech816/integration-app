@@ -1782,14 +1782,7 @@ function DashboardContent() {
 
             {/* みんなの作品を見るボタン */}
             <button
-              onClick={() => {
-                const demoUrls = {
-                  quiz: '/quiz/demo',
-                  profile: '/profile/demo',
-                  business: '/business/demo'
-                };
-                window.open(demoUrls[selectedService], '_blank');
-              }}
+              onClick={() => window.open('https://makers.tokyo/portal', '_blank')}
               className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center gap-3"
             >
               <div className="bg-white/20 p-2 rounded-full">
@@ -1797,7 +1790,7 @@ function DashboardContent() {
               </div>
               <div className="text-left">
                 <p className="font-bold text-sm">みんなの作品を見る</p>
-                <p className="text-xs text-white/80">{SERVICE_LABELS[selectedService]}のデモ一覧</p>
+                <p className="text-xs text-white/80">ポータルサイトで公開作品をチェック</p>
               </div>
             </button>
 

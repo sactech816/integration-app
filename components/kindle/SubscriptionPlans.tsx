@@ -132,17 +132,17 @@ const PLANS: PlanDisplay[] = [
   },
 ];
 
-// UnivaPayリンク（環境変数から取得）
+// UnivaPayリンク（直接指定）
 const getUnivaPayLink = (planId: PlanTier, period: BillingPeriod): string => {
   const links: Record<string, string> = {
-    'lite_monthly': process.env.NEXT_PUBLIC_UNIVAPAY_LITE_MONTHLY_URL || '',
-    'lite_yearly': process.env.NEXT_PUBLIC_UNIVAPAY_LITE_YEARLY_URL || '',
-    'standard_monthly': process.env.NEXT_PUBLIC_UNIVAPAY_STANDARD_MONTHLY_URL || process.env.NEXT_PUBLIC_UNIVAPAY_MONTHLY_URL || '',
-    'standard_yearly': process.env.NEXT_PUBLIC_UNIVAPAY_STANDARD_YEARLY_URL || process.env.NEXT_PUBLIC_UNIVAPAY_YEARLY_URL || '',
-    'pro_monthly': process.env.NEXT_PUBLIC_UNIVAPAY_PRO_MONTHLY_URL || '',
-    'pro_yearly': process.env.NEXT_PUBLIC_UNIVAPAY_PRO_YEARLY_URL || '',
-    'business_monthly': process.env.NEXT_PUBLIC_UNIVAPAY_BUSINESS_MONTHLY_URL || '',
-    'business_yearly': process.env.NEXT_PUBLIC_UNIVAPAY_BUSINESS_YEARLY_URL || '',
+    'lite_monthly': 'https://univa.cc/TcYdjU',      // 月額ライトプラン
+    'lite_yearly': 'https://univa.cc/22A2p3',       // 年額ライトプラン
+    'standard_monthly': 'https://univa.cc/M6-JZs',  // 月額スタンダード
+    'standard_yearly': 'https://univa.cc/NAXogx',   // 年額スタンダード
+    'pro_monthly': 'https://univa.cc/D3vw_H',       // 月額プロプラン
+    'pro_yearly': 'https://univa.cc/HSqmOl',        // 年額プロプラン
+    'business_monthly': 'https://univa.cc/0okQBL',  // 月額ビジネス
+    'business_yearly': 'https://univa.cc/BV733Z',   // 年額ビジネス
   };
   return links[`${planId}_${period}`] || '';
 };
@@ -411,7 +411,7 @@ export default function SubscriptionPlans({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="example@email.com"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none placeholder:text-gray-400"
               />
               <p className="text-xs text-gray-500 mt-1">
                 決済完了通知とアカウント情報をお送りします
