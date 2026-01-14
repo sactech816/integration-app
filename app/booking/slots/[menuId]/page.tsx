@@ -306,38 +306,40 @@ export default function BookingSlotsPage() {
 
       {/* メインコンテンツ */}
       <main className="max-w-6xl mx-auto px-4 py-8">
-        {/* 日程調整モードの場合、複数選択ボタンを表示 */}
-        {menu?.type === 'adjustment' && (
-          <div className="mb-4 flex items-center justify-between bg-white rounded-xl p-4 shadow-lg">
-            <div>
-              <h3 className="font-bold text-gray-900">複数日程を選択して一括追加</h3>
-              <p className="text-sm text-gray-600">
-                {selectedDates.length > 0 
-                  ? `${selectedDates.length}日選択中`
-                  : 'カレンダーで複数の日付をクリックして選択'}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              {selectedDates.length > 0 && (
-                <>
-                  <button
-                    onClick={() => setSelectedDates([])}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
-                  >
-                    選択をクリア
-                  </button>
-                  <button
-                    onClick={() => setShowBulkAddModal(true)}
-                    className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors"
-                  >
-                    <Plus size={18} />
-                    時間を設定して追加
-                  </button>
-                </>
-              )}
-            </div>
+        {/* 複数選択ボタンを表示 */}
+        <div className="mb-4 flex items-center justify-between bg-white rounded-xl p-4 shadow-lg">
+          <div>
+            <h3 className="font-bold text-gray-900">複数日程を選択して一括追加</h3>
+            <p className="text-sm text-gray-600">
+              {selectedDates.length > 0 
+                ? `${selectedDates.length}日選択中`
+                : 'カレンダーで複数の日付をクリックして選択'}
+            </p>
           </div>
-        )}
+          <div className="flex gap-2">
+            {selectedDates.length > 0 && (
+              <>
+                <button
+                  onClick={() => setSelectedDates([])}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  選択をクリア
+                </button>
+                <button
+                  onClick={() => setShowBulkAddModal(true)}
+                  className={`flex items-center gap-2 text-white px-4 py-2 rounded-lg font-semibold transition-colors ${
+                    menu?.type === 'adjustment' 
+                      ? 'bg-purple-600 hover:bg-purple-700' 
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
+                >
+                  <Plus size={18} />
+                  時間を設定して追加
+                </button>
+              </>
+            )}
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* カレンダー */}
@@ -396,13 +398,8 @@ export default function BookingSlotsPage() {
                     key={dateKey}
                     onClick={() => {
                       if (isPast) return;
-                      // 日程調整モードでは複数選択
-                      if (menu?.type === 'adjustment') {
-                        toggleDateSelection(date);
-                      } else {
-                        // 予約モードでは単一選択
-                        setSelectedDate(date);
-                      }
+                      // 複数選択モード
+                      toggleDateSelection(date);
                     }}
                     disabled={isPast}
                     className={`aspect-square p-1 rounded-xl transition-all relative ${
@@ -451,6 +448,15 @@ export default function BookingSlotsPage() {
                         {daySlots.length}枠
                       </div>
                     )}
+                    {hasSlots && daySlots.length > 0 && (
+                      <div
+                        className={`text-[9px] mt-0.5 ${
+                          isMultiSelected || isSelected ? 'text-blue-200' : 'text-gray-400'
+                        }`}
+                      >
+                        {formatTime(daySlots[0].start_time)}～
+                      </div>
+                    )}
                   </button>
                 );
               })}
@@ -459,8 +465,8 @@ export default function BookingSlotsPage() {
 
           {/* 選択日の詳細 */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
-            {menu?.type === 'adjustment' && selectedDates.length > 0 ? (
-              // 日程調整モードで複数選択中
+            {selectedDates.length > 0 ? (
+              // 複数選択中
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-3">
                   選択中の日付
@@ -469,7 +475,9 @@ export default function BookingSlotsPage() {
                   {selectedDates.sort((a, b) => a.getTime() - b.getTime()).map((date, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-between p-3 bg-purple-50 rounded-lg"
+                      className={`flex items-center justify-between p-3 rounded-lg ${
+                        menu?.type === 'adjustment' ? 'bg-purple-50' : 'bg-blue-50'
+                      }`}
                     >
                       <span className="font-medium text-gray-900">
                         {formatDate(date)}
@@ -485,7 +493,7 @@ export default function BookingSlotsPage() {
                 </div>
               </div>
             ) : selectedDate ? (
-              // 通常モードまたは単一選択
+              // 単一選択（従来の動作）
               <>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-gray-900">
@@ -703,28 +711,28 @@ export default function BookingSlotsPage() {
                   <button
                     type="button"
                     onClick={() => setBulkSlotTime('10:00')}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-3 py-2 text-sm font-semibold border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
                   >
                     朝 10:00
                   </button>
                   <button
                     type="button"
                     onClick={() => setBulkSlotTime('13:00')}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-3 py-2 text-sm font-semibold border-2 border-orange-500 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors"
                   >
                     昼 13:00
                   </button>
                   <button
                     type="button"
                     onClick={() => setBulkSlotTime('17:00')}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-3 py-2 text-sm font-semibold border-2 border-amber-500 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition-colors"
                   >
                     夕 17:00
                   </button>
                   <button
                     type="button"
                     onClick={() => setBulkSlotTime('19:00')}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-3 py-2 text-sm font-semibold border-2 border-indigo-500 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors"
                   >
                     夜 19:00
                   </button>
@@ -765,7 +773,11 @@ export default function BookingSlotsPage() {
               <button
                 onClick={handleBulkAddSlots}
                 disabled={submitting}
-                className="flex-1 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className={`flex-1 py-3 text-white rounded-xl font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${
+                  menu?.type === 'adjustment' 
+                    ? 'bg-purple-600 hover:bg-purple-700' 
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
               >
                 {submitting ? (
                   <Loader2 size={20} className="animate-spin" />

@@ -776,6 +776,15 @@ export default function PublicBookingPage() {
                           >
                             {menu?.type === 'reservation' ? `空${availableCount}` : `${availableCount}枠`}
                           </div>
+                          {daySlots.length > 0 && (
+                            <div
+                              className={`text-[9px] mt-0.5 ${
+                                isSelected ? 'text-blue-200' : 'text-gray-500'
+                              }`}
+                            >
+                              {formatTime(daySlots[0].start_time)}～
+                            </div>
+                          )}
                         </>
                       )}
                     </button>
