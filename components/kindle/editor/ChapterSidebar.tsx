@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   ChevronDown, 
   BookOpen, 
@@ -78,6 +79,11 @@ interface DropdownMenuProps {
 
 const DropdownMenu: React.FC<DropdownMenuProps> = ({ isOpen, onClose, items, position }) => {
   const menuRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -92,16 +98,16 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ isOpen, onClose, items, pos
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   // 画面外にはみ出さないように位置調整
   const adjustedX = Math.min(position.x, window.innerWidth - 180);
   const adjustedY = Math.min(position.y, window.innerHeight - 200);
 
-  return (
+  const menuContent = (
     <div
       ref={menuRef}
-      className="fixed z-[100] bg-white rounded-lg shadow-xl border border-gray-200 py-1 min-w-[160px] animate-fade-in"
+      className="fixed z-[9999] bg-white rounded-lg shadow-2xl border border-gray-200 py-1 min-w-[160px] animate-fade-in"
       style={{ 
         top: adjustedY,
         left: adjustedX,
@@ -126,6 +132,9 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ isOpen, onClose, items, pos
       ))}
     </div>
   );
+
+  // React Portalを使用してdocument.body直下にレンダリング
+  return createPortal(menuContent, document.body);
 };
 
 // インライン編集用コンポーネント
