@@ -525,23 +525,23 @@ export const Step4TOC: React.FC<Step4TOCProps> = ({ state, setState, onSave, isS
           </div>
         ) : (
           <div className="space-y-3">
-            <button
-              onClick={onSave}
-              disabled={isSaving}
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg disabled:shadow-none text-lg"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="animate-spin" size={24} />
-                  保存中...
-                </>
-              ) : (
-                <>
-                  <Rocket size={24} />
+          <button
+            onClick={onSave}
+            disabled={isSaving}
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg disabled:shadow-none text-lg"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="animate-spin" size={24} />
+                保存中...
+              </>
+            ) : (
+              <>
+                <Rocket size={24} />
                   保存して今すぐ執筆を始める
-                </>
-              )}
-            </button>
+              </>
+            )}
+          </button>
             <p className="text-center text-sm text-gray-500">
               ✅ 保存すると書籍一覧に追加され、いつでも続きから執筆できます
             </p>
