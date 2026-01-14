@@ -195,16 +195,16 @@ export async function POST(request: Request) {
     `;
 
     // メール送信
-    const result = await resend.emails.send({
+    await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
       to: response.participant_email,
       subject: `【日程調整結果】${menu.title}`,
       html: emailHtml,
     });
 
-    console.log('[Booking Adjustment Notify] Email sent successfully:', result);
+    console.log('[Booking Adjustment Notify] Email sent successfully');
 
-    return NextResponse.json({ success: true, emailId: result.id });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('[Booking Adjustment Notify] Error:', error);
     

@@ -227,3 +227,4 @@ echo $RESEND_FROM_EMAIL
 問題が解決しない場合は、[Resendサポート](https://resend.com/support)に問い合わせてください。
 
 
+

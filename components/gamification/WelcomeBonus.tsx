@@ -224,3 +224,4 @@ export default function WelcomeBonus({ userId, onPointsEarned }: WelcomeBonusPro
 
 
 
+
