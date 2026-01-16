@@ -178,64 +178,7 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
   }
 
   const planData = settings[selectedPlan];
-  const currentTab = activeTab; // 型の問題を回避するため一時変数に格納
-  
-  // データが存在しない、またはプリセットがない場合（AIモデル設定のみ必要）
-  if (currentTab === 'models' && (!planData || !planData.presets)) {
-    return (
-      <div className="space-y-6">
-        {/* ヘッダー */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Settings size={32} />
-            <h2 className="text-2xl font-bold">AI設定管理</h2>
-          </div>
-          <p className="text-indigo-100">
-            プラン別のAIモデル設定と使用制限を管理します
-          </p>
-        </div>
-
-        {/* タブ切り替え */}
-        <div className="flex gap-2 border-b border-gray-200">
-          <button
-            onClick={() => setActiveTab('models')}
-            className={`px-6 py-3 font-semibold transition-all ${
-              currentTab === 'models'
-                ? 'text-indigo-600 border-b-2 border-indigo-600'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Zap size={20} />
-              AIモデル設定
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveTab('limits')}
-            className={`px-6 py-3 font-semibold transition-all ${
-              currentTab === 'limits'
-                ? 'text-indigo-600 border-b-2 border-indigo-600'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Activity size={20} />
-              使用制限設定
-            </div>
-          </button>
-        </div>
-
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-          <p className="text-yellow-800">
-            プラン設定を読み込めませんでした。データベースマイグレーションを実行してください。
-          </p>
-          <p className="text-sm text-yellow-600 mt-2">
-            実行: <code className="bg-yellow-100 px-2 py-1 rounded">supabase_admin_ai_settings.sql</code>
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const hasPresets = planData && planData.presets;
 
   return (
     <div className="space-y-6">
@@ -312,7 +255,7 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
           </div>
 
           {/* プリセット選択 */}
-          {planData?.presets ? (
+          {hasPresets ? (
             <div className="grid md:grid-cols-2 gap-6">
               {/* Preset A */}
               <PresetCard
@@ -333,7 +276,10 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
           ) : (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
               <p className="text-yellow-800">
-                プリセットデータを読み込めませんでした。
+                プリセットデータを読み込めませんでした。データベースマイグレーションを実行してください。
+              </p>
+              <p className="text-sm text-yellow-600 mt-2">
+                実行: <code className="bg-yellow-100 px-2 py-1 rounded">supabase_admin_ai_settings.sql</code>
               </p>
             </div>
           )}
