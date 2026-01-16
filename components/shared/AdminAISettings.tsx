@@ -178,9 +178,10 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
   }
 
   const planData = settings[selectedPlan];
+  const currentTab = activeTab; // 型の問題を回避するため一時変数に格納
   
   // データが存在しない、またはプリセットがない場合（AIモデル設定のみ必要）
-  if (activeTab === 'models' && (!planData || !planData.presets)) {
+  if (currentTab === 'models' && (!planData || !planData.presets)) {
     return (
       <div className="space-y-6">
         {/* ヘッダー */}
@@ -199,7 +200,7 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
           <button
             onClick={() => setActiveTab('models')}
             className={`px-6 py-3 font-semibold transition-all ${
-              activeTab === 'models'
+              currentTab === 'models'
                 ? 'text-indigo-600 border-b-2 border-indigo-600'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
@@ -212,7 +213,7 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
           <button
             onClick={() => setActiveTab('limits')}
             className={`px-6 py-3 font-semibold transition-all ${
-              activeTab === 'limits'
+              currentTab === 'limits'
                 ? 'text-indigo-600 border-b-2 border-indigo-600'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
