@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Calendar,
@@ -16,6 +16,10 @@ import {
   CalendarCheck,
   ArrowLeft,
   AlertCircle,
+  Copy,
+  ExternalLink,
+  Plus,
+  LayoutDashboard,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -53,6 +57,7 @@ const isSameDay = (d1: Date, d2: Date) => {
 
 export default function PublicBookingPage() {
   const params = useParams();
+  const router = useRouter();
   const menuId = params.menuId as string;
 
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
@@ -60,6 +65,11 @@ export default function PublicBookingPage() {
   const [slots, setSlots] = useState<BookingSlotWithAvailability[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  // UI state for creator features
+  const [isCreator, setIsCreator] = useState(false);
+  const [showUrlModal, setShowUrlModal] = useState(false);
+  const [urlCopied, setUrlCopied] = useState(false);
 
   // 予約用の状態
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -100,6 +110,12 @@ export default function PublicBookingPage() {
       }
 
       setMenu(menuData);
+
+      // Check if current user is the creator
+      const editKeys = JSON.parse(localStorage.getItem('booking_edit_keys') || '[]');
+      const isOwner = (user && menuData.user_id === user.id) || 
+                      editKeys.includes(menuData.edit_key);
+      setIsCreator(isOwner);
 
       // メニュータイプに応じてデータを取得
       if (menuData.type === 'adjustment') {
@@ -180,23 +196,28 @@ export default function PublicBookingPage() {
     setSubmitting(true);
     setError(null);
 
-    const result = await submitBooking(
-      {
-        slot_id: selectedSlot.id,
-        guest_name: user ? undefined : guestName,
-        guest_email: user ? undefined : guestEmail,
-        guest_comment: guestComment || undefined,
-      },
-      user?.id
-    );
+    try {
+      const result = await submitBooking(
+        {
+          slot_id: selectedSlot.id,
+          guest_name: user ? undefined : guestName,
+          guest_email: user ? undefined : guestEmail,
+          guest_comment: guestComment || undefined,
+        },
+        user?.id
+      );
 
-    if (result.success) {
-      setStep('complete');
-    } else {
-      setError('error' in result ? result.error : '予約に失敗しました');
+      if (result.success) {
+        setStep('complete');
+      } else {
+        setError('error' in result ? result.error : '予約に失敗しました');
+      }
+    } catch (err) {
+      console.error('Booking submission error:', err);
+      setError('予約処理中にエラーが発生しました');
+    } finally {
+      setSubmitting(false);
     }
-
-    setSubmitting(false);
   };
 
   const prevMonth = () => {
@@ -247,6 +268,18 @@ export default function PublicBookingPage() {
     setSubmittingAdjustment(false);
   };
 
+  // URL copy handler
+  const handleCopyUrl = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      setUrlCopied(true);
+      setTimeout(() => setUrlCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy URL:', err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
@@ -284,22 +317,53 @@ export default function PublicBookingPage() {
       {/* ヘッダー */}
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <Calendar className="text-white" size={28} />
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Calendar className="text-white" size={28} />
+              </div>
+              <div>
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mb-1 ${
+                  menu?.type === 'reservation'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-purple-100 text-purple-700'
+                }`}>
+                  {BOOKING_MENU_TYPE_LABELS[menu?.type || 'reservation']}
+                </span>
+                <h1 className="text-2xl font-bold text-gray-900">{menu?.title}</h1>
+                {menu?.description && (
+                  <p className="text-gray-600 mt-1">{menu.description}</p>
+                )}
+              </div>
             </div>
-            <div>
-              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mb-1 ${
-                menu?.type === 'reservation'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-purple-100 text-purple-700'
-              }`}>
-                {BOOKING_MENU_TYPE_LABELS[menu?.type || 'reservation']}
-              </span>
-              <h1 className="text-2xl font-bold text-gray-900">{menu?.title}</h1>
-              {menu?.description && (
-                <p className="text-gray-600 mt-1">{menu.description}</p>
+            
+            {/* Navigation Buttons */}
+            <div className="flex items-center gap-2">
+              {isCreator && (
+                <>
+                  <button
+                    onClick={() => router.push('/booking')}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-semibold"
+                  >
+                    <LayoutDashboard size={18} />
+                    管理画面に戻る
+                  </button>
+                  <button
+                    onClick={() => setShowUrlModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-semibold"
+                  >
+                    <ExternalLink size={18} />
+                    公開アドレス
+                  </button>
+                </>
               )}
+              <button
+                onClick={() => router.push('/booking/new')}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold"
+              >
+                <Plus size={18} />
+                新規作成
+              </button>
             </div>
           </div>
           <div className="flex items-center gap-4 mt-4 text-sm text-gray-600">
@@ -310,6 +374,50 @@ export default function PublicBookingPage() {
           </div>
         </div>
       </header>
+
+      {/* URL Modal */}
+      {showUrlModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowUrlModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">公開アドレス</h3>
+              <button
+                onClick={() => setShowUrlModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <span className="text-2xl">&times;</span>
+              </button>
+            </div>
+            
+            <p className="text-gray-600 text-sm mb-4">
+              予約・日程調整が作成されました。このURLページにて予約・日程調整を入力してもらいましょう。
+            </p>
+            
+            <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-200">
+              <p className="text-sm text-gray-700 break-all font-mono">
+                {typeof window !== 'undefined' ? window.location.href : ''}
+              </p>
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={handleCopyUrl}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+              >
+                <Copy size={18} />
+                {urlCopied ? 'コピーしました！' : 'アドレスをコピー'}
+              </button>
+              <button
+                onClick={() => window.open(window.location.href, '_blank')}
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-semibold"
+              >
+                <ExternalLink size={18} />
+                アクセス
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* メインコンテンツ */}
       <main className="max-w-6xl mx-auto px-4 py-8">
@@ -687,18 +795,18 @@ export default function PublicBookingPage() {
               <div className="flex items-center justify-between mb-6">
                 <button
                   onClick={prevMonth}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="px-4 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition-colors"
                 >
-                  <ChevronLeft size={24} />
+                  先月
                 </button>
                 <h2 className="text-xl font-bold text-gray-900">
                   {currentMonth.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' })}
                 </h2>
                 <button
                   onClick={nextMonth}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="px-4 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition-colors"
                 >
-                  <ChevronRight size={24} />
+                  翌月
                 </button>
               </div>
 
