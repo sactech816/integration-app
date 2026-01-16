@@ -44,6 +44,9 @@ export default function BookingSlotsPage() {
   const router = useRouter();
   const params = useParams();
   const menuId = params.menuId as string;
+  
+  // URLパラメータから編集キーを取得
+  const [editKey, setEditKey] = useState<string | null>(null);
 
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [menu, setMenu] = useState<BookingMenu | null>(null);
@@ -67,6 +70,15 @@ export default function BookingSlotsPage() {
   const [bulkSlotCapacity, setBulkSlotCapacity] = useState(1);
 
   useEffect(() => {
+    // URLパラメータから編集キーを取得
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const key = urlParams.get('key');
+      setEditKey(key);
+    }
+  }, []);
+
+  useEffect(() => {
     const loadData = async () => {
       if (!supabase) {
         setLoading(false);
@@ -74,15 +86,23 @@ export default function BookingSlotsPage() {
       }
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/');
+      if (user) {
+        setUser({ id: user.id });
+      }
+
+      const menuData = await getBookingMenu(menuId);
+      if (!menuData) {
+        router.push('/booking');
         return;
       }
 
-      setUser({ id: user.id });
+      // 認証チェック: ユーザーIDまたは編集キー
+      const isAuthorized = 
+        (user && menuData.user_id === user.id) ||
+        (editKey && menuData.edit_key === editKey);
 
-      const menuData = await getBookingMenu(menuId);
-      if (!menuData || menuData.user_id !== user.id) {
+      if (!isAuthorized) {
+        alert('この予約メニューを編集する権限がありません');
         router.push('/booking');
         return;
       }
@@ -92,8 +112,10 @@ export default function BookingSlotsPage() {
       setLoading(false);
     };
 
-    loadData();
-  }, [router, menuId]);
+    if (editKey !== null) { // editKeyが初期化されてから実行
+      loadData();
+    }
+  }, [router, menuId, editKey]);
 
   const loadSlots = async () => {
     const slotsData = await getAvailableSlots(menuId, {
@@ -144,7 +166,7 @@ export default function BookingSlotsPage() {
   }, [selectedDate, slotsByDate]);
 
   const handleAddSlot = async () => {
-    if (!user || !menu || !selectedDate) return;
+    if (!menu || !selectedDate) return;
 
     setSubmitting(true);
 
@@ -169,7 +191,7 @@ export default function BookingSlotsPage() {
       max_capacity: newSlotCapacity,
     };
 
-    const result = await createBookingSlots(menuId, user.id, [newSlot]);
+    const result = await createBookingSlots(menuId, user?.id || null, [newSlot], editKey || undefined);
 
     if (result.success) {
       await loadSlots();
@@ -182,9 +204,9 @@ export default function BookingSlotsPage() {
   };
 
   const handleDeleteSlot = async (slotId: string) => {
-    if (!user || !confirm('この予約枠を削除しますか？')) return;
+    if (!confirm('この予約枠を削除しますか？')) return;
 
-    const result = await deleteBookingSlot(slotId, user.id);
+    const result = await deleteBookingSlot(slotId, user?.id || null, editKey || undefined);
     if (result.success) {
       await loadSlots();
     } else {
@@ -214,7 +236,7 @@ export default function BookingSlotsPage() {
 
   // 複数日付の一括追加
   const handleBulkAddSlots = async () => {
-    if (!user || !menu || selectedDates.length === 0) return;
+    if (!menu || selectedDates.length === 0) return;
 
     setSubmitting(true);
 
@@ -256,7 +278,7 @@ export default function BookingSlotsPage() {
       return;
     }
 
-    const result = await createBookingSlots(menuId, user.id, newSlots);
+    const result = await createBookingSlots(menuId, user?.id || null, newSlots, editKey || undefined);
 
     if (result.success) {
       await loadSlots();
