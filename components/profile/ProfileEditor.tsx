@@ -1270,9 +1270,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     const newLinks = block.data.links.filter((_: unknown, idx: number) => idx !== i);
                     updateBlock(block.id, { links: newLinks });
                   }}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                  className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={18} />
                 </button>
                 <Input label="ラベル" val={link.label} onChange={(v) => {
                   const newLinks = [...block.data.links];
@@ -1381,9 +1381,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id);
                     updateBlock(block.id, { items: newItems });
                   }}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                  className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={18} />
                 </button>
                 <div className="font-bold text-emerald-600 mb-2 text-sm">Q{i + 1}</div>
                 <Input label="質問" val={item.question} onChange={(v) => {
@@ -1421,9 +1421,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     const newPlans = block.data.plans.filter((p: { id: string }) => p.id !== plan.id);
                     updateBlock(block.id, { plans: newPlans });
                   }}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                  className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={18} />
                 </button>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="font-bold text-emerald-600">プラン {i + 1}</span>
@@ -1480,9 +1480,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id);
                     updateBlock(block.id, { items: newItems });
                   }}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                  className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={18} />
                 </button>
                 <div className="font-bold text-emerald-600 mb-2 text-sm">お客様 {i + 1}</div>
                 
@@ -1769,9 +1769,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                         const newItems = block.data.items.filter((_, idx) => idx !== i);
                         updateBlock(block.id, { items: newItems });
                       }}
-                      className="text-red-500 hover:text-red-700"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={18} />
                     </button>
                   </div>
                   <div className="flex gap-2">
@@ -2115,9 +2115,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     </button>
                     <button
                       onClick={() => removeBlock(block.id)}
-                      className="p-1 text-gray-400 hover:text-red-500"
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={18} />
                     </button>
                     <button
                       onClick={() => setExpandedBlock(expandedBlock === block.id ? null : block.id)}

@@ -88,9 +88,10 @@ export async function POST(request) {
       "id": "q1",
       "text": "質問文",
       "options": [
-        { "text": "選択肢A", "score": { "A": 1, "B": 0, "C": 0 } },
-        { "text": "選択肢B", "score": { "A": 0, "B": 1, "C": 0 } },
-        { "text": "選択肢C", "score": { "A": 0, "B": 0, "C": 1 } }
+        { "text": "選択肢A", "score": { "A": 1, "B": 0, "C": 0, "D": 0 } },
+        { "text": "選択肢B", "score": { "A": 0, "B": 1, "C": 0, "D": 0 } },
+        { "text": "選択肢C", "score": { "A": 0, "B": 0, "C": 1, "D": 0 } },
+        { "text": "選択肢D", "score": { "A": 0, "B": 0, "C": 0, "D": 1 } }
       ]
     }
   ],
@@ -105,7 +106,7 @@ export async function POST(request) {
 
 質問数: ${questionCount}問
 結果パターン数: ${resultCount}個
-各選択肢は3つ用意してください。`;
+各選択肢は4つ用意してください。`;
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',

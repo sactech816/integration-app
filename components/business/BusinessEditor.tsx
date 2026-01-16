@@ -1114,7 +1114,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
             {block.data.items?.map((item: { id: string; icon?: string; title: string; description: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <IconPicker 
                     value={item.icon || ''} 
@@ -1141,7 +1141,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
             {block.data.items?.map((item: { id: string; icon?: string; title: string; description: string; borderColor?: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <IconPicker 
                     value={item.icon || ''} 
@@ -1460,7 +1460,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
           <div className="space-y-4">
             {block.data.plans?.map((plan: { id: string; title: string; price: string; features: string[]; isRecommended: boolean }, i: number) => (
               <div key={plan.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newPlans = block.data.plans.filter((p: { id: string }) => p.id !== plan.id); updateBlock(block.id, { plans: newPlans }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
+                <button onClick={() => { const newPlans = block.data.plans.filter((p: { id: string }) => p.id !== plan.id); updateBlock(block.id, { plans: newPlans }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="font-bold text-amber-600">プラン {i + 1}</span>
                   <label className="flex items-center gap-1 text-sm">
@@ -1482,7 +1482,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
           <div className="space-y-4">
             {block.data.items?.map((item: { id: string; question: string; answer: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
                 <div className="font-bold text-amber-600 mb-2 text-sm">Q{i + 1}</div>
                 <Input label="質問" val={item.question} onChange={(v) => { const newItems = [...block.data.items]; newItems[i].question = v; updateBlock(block.id, { items: newItems }); }} ph="よくある質問" />
                 <Textarea label="回答" val={item.answer} onChange={(v) => { const newItems = [...block.data.items]; newItems[i].answer = v; updateBlock(block.id, { items: newItems }); }} />
@@ -1614,7 +1614,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
             {block.data.items?.map((item: { id: string; icon?: string; title: string; description: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
                 <div className="mb-3">
                   <IconPicker 
                     value={item.icon || ''} 
@@ -1641,7 +1641,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
             {block.data.items?.map((item: { id: string; icon?: string; title: string; description: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
                 <div className="mb-3">
                   <IconPicker 
                     value={item.icon || ''} 
@@ -1675,7 +1675,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
             {block.data.items?.map((item: { id: string; icon?: string; title: string; description?: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <IconPicker 
                     value={item.icon || ''} 
@@ -1741,7 +1741,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
             {block.data.items?.map((item: { id: string; imageUrl?: string; category?: string; title: string; description: string; categoryColor?: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
                 <div className="mb-3">
                   <label className="text-sm font-bold text-gray-900 block mb-2">事例画像</label>
                   <div className="flex gap-2">
@@ -1814,7 +1814,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
             {block.data.items?.map((item: { id: string; imageUrl: string; caption?: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm font-medium text-gray-500">画像 {i + 1}</span>
                   {item.imageUrl && <img src={item.imageUrl} alt="" className="w-12 h-12 rounded object-cover" />}
@@ -2014,7 +2014,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                   <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     <button onClick={() => moveBlock(block.id, 'up')} disabled={index === 0} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ArrowUp size={16} /></button>
                     <button onClick={() => moveBlock(block.id, 'down')} disabled={index === (lp.content?.length || 0) - 1} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ArrowDown size={16} /></button>
-                    <button onClick={() => removeBlock(block.id)} className="p-1 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
+                    <button onClick={() => removeBlock(block.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"><Trash2 size={18} /></button>
                     <button onClick={() => setExpandedBlock(expandedBlock === block.id ? null : block.id)} className="p-1 text-gray-400">
                   {expandedBlock === block.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               </button>

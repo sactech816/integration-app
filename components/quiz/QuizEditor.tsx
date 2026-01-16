@@ -961,7 +961,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                             <div className="space-y-4">
                                 {form.questions.map((q: any, i: number)=>(
                                     <div key={i} className="bg-gray-50 p-4 rounded-xl border border-gray-200 relative">
-                                        <button onClick={()=>removeQuestion(i)} className="absolute top-2 right-2 text-gray-300 hover:text-red-500 p-1"><Trash2 size={16}/></button>
+                                        <button onClick={()=>removeQuestion(i)} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18}/></button>
                                         <div className="font-bold text-indigo-600 mb-2 text-sm">Q{i+1}</div>
                                         <input 
                                             className="w-full border border-gray-300 p-2 rounded-lg text-black font-bold focus:ring-2 focus:ring-indigo-500 outline-none bg-white mb-3 text-sm" 
@@ -979,7 +979,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                         <div className="space-y-2">
                                             {q.options.map((o: any, j: number)=>(
                                                 <div key={j} className="bg-white p-2 rounded border border-gray-200 flex items-center gap-2">
-                                                    <button onClick={()=>removeOption(i, j)} className="text-gray-300 hover:text-red-500"><Trash2 size={12}/></button>
+                                                    <button onClick={()=>removeOption(i, j)} className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition-colors"><Trash2 size={16}/></button>
                                                     <input className="flex-grow p-1 outline-none text-sm text-gray-900" value={o.label} onChange={e=>{const n=[...form.questions];n[i].options[j].label=e.target.value;setForm({...form, questions:n});}} placeholder={`選択肢${j+1}`} />
                                                     
                                                     {form.mode === 'test' && (
@@ -1027,7 +1027,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                             <div className="space-y-4">
                                 {form.results.map((r: any, i: number)=>(
                                     <div key={i} className="bg-gray-50 p-4 rounded-xl border border-gray-200 relative">
-                                        <button onClick={()=>removeResult(i)} className="absolute top-2 right-2 text-gray-300 hover:text-red-500 p-1"><Trash2 size={16}/></button>
+                                        <button onClick={()=>removeResult(i)} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18}/></button>
                                         <div className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold inline-block mb-3">
                                             {form.mode === 'test' ? `ランク ${i+1}` : `パターン ${r.type}`}
                                         </div>
@@ -1035,7 +1035,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                         <Textarea label="説明文" val={r.description} onChange={v=>{const n=[...form.results];n[i].description=v;setForm({...form, results:n});}}/>
                                         
                                         {/* 誘導ボタン設定 */}
-                                        <details className="bg-white p-3 rounded-lg border border-gray-200 mt-3">
+                                        <details className="bg-white p-3 rounded-lg border border-gray-200 mt-3" open>
                                             <summary className="text-sm font-bold text-gray-700 cursor-pointer flex items-center gap-2">
                                                 <Link size={14}/> 誘導ボタン設定（任意）
                                             </summary>
