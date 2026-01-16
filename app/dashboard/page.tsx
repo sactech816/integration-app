@@ -42,6 +42,7 @@ import LoginBonusToast from '@/components/gamification/LoginBonusToast';
 import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
 import MonitorUsersManager from '@/components/shared/MonitorUsersManager';
 import AdminAISettings from '@/components/shared/AdminAISettings';
+import AdminFeatureLimitsSettings from '@/components/shared/AdminFeatureLimitsSettings';
 import AdminAIUsageStats, { UserAIUsageDetail, ModelBreakdownButton } from '@/components/shared/AdminAIUsageStats';
 import {
   Sparkles,
@@ -3251,6 +3252,24 @@ function DashboardContent() {
                 )}
               </div>
             )}
+          </div>
+        )}
+
+        {/* 管理者向けLP・診断クイズ管理セクション */}
+        {isAdmin && (
+          <div className="mt-12">
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-black border-l-4 border-purple-600 pl-4 flex items-center gap-2">
+                <Sparkles size={20} className="text-purple-600" /> LP・診断クイズ管理
+                <span className="text-xs bg-purple-500 text-white px-2 py-1 rounded-full">ADMIN</span>
+              </h2>
+              <p className="text-sm text-gray-600 mt-2 ml-8">
+                プロフィールLP、ビジネスLP、診断クイズのAI生成機能の使用制限を設定します
+              </p>
+            </div>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <AdminFeatureLimitsSettings userId={user.id} />
+            </div>
           </div>
         )}
 
