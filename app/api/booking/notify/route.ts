@@ -33,6 +33,8 @@ export async function POST(request: Request) {
   try {
     const { bookingId, type } = await request.json();
 
+    console.log('[Booking Notify] Received request:', { bookingId, type });
+
     if (!bookingId) {
       return NextResponse.json({ error: 'bookingId is required' }, { status: 400 });
     }
@@ -213,6 +215,12 @@ export async function POST(request: Request) {
     }
 
     // メール送信
+    console.log('[Booking Notify] Sending emails...', {
+      customerEmail,
+      ownerEmail,
+      emailCount: emailPromises.length
+    });
+
     const results = await Promise.allSettled(emailPromises);
     
     // 送信結果をログ出力
@@ -233,6 +241,8 @@ export async function POST(request: Request) {
         detail: 'Check server logs for details'
       }, { status: 500 });
     }
+
+    console.log(`[Booking Notify] Successfully sent ${successCount}/${results.length} emails`);
 
     return NextResponse.json({ 
       success: true, 

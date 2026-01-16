@@ -38,6 +38,8 @@ export async function POST(request: Request) {
   try {
     const { responseId, type } = await request.json();
 
+    console.log('[Booking Adjustment Notify] Received request:', { responseId, type });
+
     if (!responseId) {
       return NextResponse.json({ error: 'responseId is required' }, { status: 400 });
     }
@@ -195,16 +197,18 @@ export async function POST(request: Request) {
     `;
 
     // メール送信
-    await resend.emails.send({
+    console.log('[Booking Adjustment Notify] Sending email to:', response.participant_email);
+    
+    const result = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
       to: response.participant_email,
       subject: `【日程調整結果】${menu.title}`,
       html: emailHtml,
     });
 
-    console.log('[Booking Adjustment Notify] Email sent successfully');
+    console.log('[Booking Adjustment Notify] Email sent successfully:', result);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, emailId: result.id });
   } catch (error) {
     console.error('[Booking Adjustment Notify] Error:', error);
     

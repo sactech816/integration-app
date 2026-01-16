@@ -249,7 +249,6 @@ export async function createBookingSlots(
   }
 
   // 入力バリデーション
-  const now = new Date();
   for (const slot of slots) {
     if (!slot.start_time || !slot.end_time) {
       return { success: false, error: 'start_time and end_time are required', code: 'INVALID_INPUT' };
@@ -261,10 +260,6 @@ export async function createBookingSlots(
     }
     if (start >= end) {
       return { success: false, error: 'start_time must be before end_time', code: 'INVALID_INPUT' };
-    }
-    // 過去日時チェック
-    if (start <= now) {
-      return { success: false, error: 'Cannot create slots in the past', code: 'INVALID_INPUT' };
     }
   }
 
@@ -521,18 +516,30 @@ export async function submitBooking(
     return { success: false, error: error.message, code: 'UNKNOWN_ERROR' };
   }
 
-  // 予約完了メール送信（非同期で実行、エラーは無視）
+  // 予約完了メール送信
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : 'http://localhost:3000';
-    fetch(`${baseUrl}/api/booking/notify`, {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000');
+    
+    console.log('[Booking] Sending notification email to:', `${baseUrl}/api/booking/notify`);
+    
+    const response = await fetch(`${baseUrl}/api/booking/notify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ bookingId: data.id, type: 'confirm' }),
-    }).catch(() => {}); // エラーは無視
-  } catch {
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[Booking] Email notification failed:', response.status, errorData);
+    } else {
+      const result = await response.json();
+      console.log('[Booking] Email notification sent:', result);
+    }
+  } catch (emailError) {
     // メール送信エラーは予約成功に影響させない
+    console.error('[Booking] Email notification error:', emailError);
   }
 
   return { success: true, data };
@@ -775,19 +782,31 @@ export async function submitScheduleAdjustment(
     return { success: false, error: error.message, code: 'UNKNOWN_ERROR' };
   }
 
-  // メール送信（participant_emailがある場合、非同期で実行）
+  // メール送信（participant_emailがある場合）
   if (input.participant_email && data) {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL
         ? `https://${process.env.VERCEL_URL}`
         : 'http://localhost:3000');
-      fetch(`${baseUrl}/api/booking/adjustment/notify`, {
+      
+      console.log('[Schedule Adjustment] Sending notification email to:', `${baseUrl}/api/booking/adjustment/notify`);
+      
+      const response = await fetch(`${baseUrl}/api/booking/adjustment/notify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ responseId: data.id, type: 'response' }),
-      }).catch(() => {}); // エラーは無視
-    } catch {
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[Schedule Adjustment] Email notification failed:', response.status, errorData);
+      } else {
+        const result = await response.json();
+        console.log('[Schedule Adjustment] Email notification sent:', result);
+      }
+    } catch (emailError) {
       // メール送信エラーは回答成功に影響させない
+      console.error('[Schedule Adjustment] Email notification error:', emailError);
     }
   }
 
