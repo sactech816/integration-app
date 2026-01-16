@@ -94,6 +94,23 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
       setSelectedPresets(presets);
       setFeatureLimits(limits);
 
+      // featureLimitsが空のプランにはデフォルト値を設定
+      const allPlans: PlanTier[] = ['lite', 'standard', 'pro', 'business'];
+      const defaultLimits: FeatureLimits = {
+        profile: 5,
+        business: 5,
+        quiz: 5,
+        total: null
+      };
+      
+      allPlans.forEach(plan => {
+        if (!limits[plan]) {
+          limits[plan] = defaultLimits;
+        }
+      });
+      
+      setFeatureLimits(limits);
+
       // マイグレーション必要な場合は警告
       if (needsMigration) {
         alert('⚠️ データベースマイグレーションが必要です\n\nSupabase Studioで以下のSQLファイルを実行してください:\n- supabase_admin_ai_settings.sql\n- supabase_ai_feature_limits.sql\n\n設定の保存機能を有効化するために必要です。');
@@ -142,6 +159,10 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
     setFeatureLimits(prev => ({
       ...prev,
       [planTier]: {
+        profile: prev[planTier]?.profile ?? 5,
+        business: prev[planTier]?.business ?? 5,
+        quiz: prev[planTier]?.quiz ?? 5,
+        total: prev[planTier]?.total ?? null,
         ...prev[planTier],
         [field]: field === 'total' && value === '' ? null : numValue
       }
@@ -158,16 +179,59 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
 
   const planData = settings[selectedPlan];
   
-  // データが存在しない、またはプリセットがない場合
-  if (!planData || !planData.presets) {
+  // データが存在しない、またはプリセットがない場合（AIモデル設定のみ必要）
+  if (activeTab === 'models' && (!planData || !planData.presets)) {
     return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-        <p className="text-yellow-800">
-          プラン設定を読み込めませんでした。データベースマイグレーションを実行してください。
-        </p>
-        <p className="text-sm text-yellow-600 mt-2">
-          実行: <code className="bg-yellow-100 px-2 py-1 rounded">supabase_admin_ai_settings.sql</code>
-        </p>
+      <div className="space-y-6">
+        {/* ヘッダー */}
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <Settings size={32} />
+            <h2 className="text-2xl font-bold">AI設定管理</h2>
+          </div>
+          <p className="text-indigo-100">
+            プラン別のAIモデル設定と使用制限を管理します
+          </p>
+        </div>
+
+        {/* タブ切り替え */}
+        <div className="flex gap-2 border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab('models')}
+            className={`px-6 py-3 font-semibold transition-all ${
+              activeTab === 'models'
+                ? 'text-indigo-600 border-b-2 border-indigo-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Zap size={20} />
+              AIモデル設定
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('limits')}
+            className={`px-6 py-3 font-semibold transition-all ${
+              activeTab === 'limits'
+                ? 'text-indigo-600 border-b-2 border-indigo-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Activity size={20} />
+              使用制限設定
+            </div>
+          </button>
+        </div>
+
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+          <p className="text-yellow-800">
+            プラン設定を読み込めませんでした。データベースマイグレーションを実行してください。
+          </p>
+          <p className="text-sm text-yellow-600 mt-2">
+            実行: <code className="bg-yellow-100 px-2 py-1 rounded">supabase_admin_ai_settings.sql</code>
+          </p>
+        </div>
       </div>
     );
   }
@@ -247,23 +311,31 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
           </div>
 
           {/* プリセット選択 */}
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Preset A */}
-            <PresetCard
-              preset="presetA"
-              data={planData.presets.presetA}
-              selected={selectedPresets[selectedPlan] === 'presetA'}
-              onSelect={() => handlePresetChange(selectedPlan, 'presetA')}
-            />
+          {planData?.presets ? (
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Preset A */}
+              <PresetCard
+                preset="presetA"
+                data={planData.presets.presetA}
+                selected={selectedPresets[selectedPlan] === 'presetA'}
+                onSelect={() => handlePresetChange(selectedPlan, 'presetA')}
+              />
 
-            {/* Preset B */}
-            <PresetCard
-              preset="presetB"
-              data={planData.presets.presetB}
-              selected={selectedPresets[selectedPlan] === 'presetB'}
-              onSelect={() => handlePresetChange(selectedPlan, 'presetB')}
-            />
-          </div>
+              {/* Preset B */}
+              <PresetCard
+                preset="presetB"
+                data={planData.presets.presetB}
+                selected={selectedPresets[selectedPlan] === 'presetB'}
+                onSelect={() => handlePresetChange(selectedPlan, 'presetB')}
+              />
+            </div>
+          ) : (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+              <p className="text-yellow-800">
+                プリセットデータを読み込めませんでした。
+              </p>
+            </div>
+          )}
         </>
       )}
 
