@@ -593,7 +593,25 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
         body: JSON.stringify({ prompt: generatePrompt }),
       });
 
-      if (!response.ok) throw new Error('生成に失敗しました');
+      if (!response.ok) {
+        const errorData = await response.json();
+        
+        // 未ログインエラー
+        if (errorData.error === 'LOGIN_REQUIRED') {
+          if (confirm('AI機能を利用するにはログインが必要です。ログイン画面を開きますか？')) {
+            setShowAuth?.(true);
+          }
+          return;
+        }
+        
+        // 使用制限エラー
+        if (errorData.error === 'LIMIT_EXCEEDED') {
+          alert(`${errorData.message}\n\nプランをアップグレードすると、より多くのAI機能をご利用いただけます。`);
+          return;
+        }
+        
+        throw new Error(errorData.message || '生成に失敗しました');
+      }
 
       const data = await response.json();
       
@@ -612,18 +630,13 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       alert('AI生成が完了しました！');
     } catch (error) {
       console.error('Generate error:', error);
-      alert('AI生成中にエラーが発生しました');
+      alert('AI生成中にエラーが発生しました: ' + (error instanceof Error ? error.message : '不明なエラー'));
     } finally {
       setIsGenerating(false);
     }
   };
 
   const handleSave = async () => {
-    if (!user) {
-      setShowAuth(true);
-      return;
-    }
-
     setIsSaving(true);
     try {
       // カスタムURL or 既存 or 自動生成
@@ -655,7 +668,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       } else {
         result = await supabase
           ?.from('business_projects')
-          .insert({ ...payload, user_id: user.id })
+          .insert({ ...payload, user_id: user?.id || null }) // ログイン済みの場合のみユーザーIDを設定
           .select()
           .single();
       }

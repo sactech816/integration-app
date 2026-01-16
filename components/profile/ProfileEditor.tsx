@@ -799,11 +799,6 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
   };
 
   const handleSave = async () => {
-    if (!user) {
-      setShowAuth(true);
-      return;
-    }
-
     // Supabaseが設定されているか確認
     if (!supabase) {
       alert('データベース接続が設定されていません');
@@ -845,7 +840,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
             content: profile.content,
             settings: profile.settings,
             slug: newSlug,
-            user_id: user.id,
+            user_id: user?.id || null, // ログイン済みの場合のみユーザーIDを設定
           };
           
           result = await supabase
@@ -1019,7 +1014,22 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || 'API request failed');
+        
+        // 未ログインエラー
+        if (errorData.error === 'LOGIN_REQUIRED') {
+          if (confirm('AI機能を利用するにはログインが必要です。ログイン画面を開きますか？')) {
+            setShowAuth?.(true);
+          }
+          return;
+        }
+        
+        // 使用制限エラー
+        if (errorData.error === 'LIMIT_EXCEEDED') {
+          alert(`${errorData.message}\n\nプランをアップグレードすると、より多くのAI機能をご利用いただけます。`);
+          return;
+        }
+        
+        throw new Error(errorData.message || errorData.error || 'API request failed');
       }
       
       const { data } = await res.json();

@@ -396,7 +396,22 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
             
             if (!res.ok) {
                 const errorData = await res.json();
-                throw new Error(errorData.error || 'API request failed');
+                
+                // 未ログインエラー
+                if (errorData.error === 'LOGIN_REQUIRED') {
+                    if (confirm('AI機能を利用するにはログインが必要です。ログイン画面を開きますか？')) {
+                        setShowAuth?.(true);
+                    }
+                    return;
+                }
+                
+                // 使用制限エラー
+                if (errorData.error === 'LIMIT_EXCEEDED') {
+                    alert(`${errorData.message}\n\nプランをアップグレードすると、より多くのAI機能をご利用いただけます。`);
+                    return;
+                }
+                
+                throw new Error(errorData.message || errorData.error || 'API request failed');
             }
             
             const { data: json } = await res.json();

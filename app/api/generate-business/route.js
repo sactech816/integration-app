@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
+import { checkAIUsageLimitForFeature, logAIUsage } from '@/lib/ai-usage';
 
 // Gemini または OpenAI を使用
 const genAI = process.env.GOOGLE_GEMINI_API_KEY 
@@ -13,6 +16,51 @@ const openai = process.env.OPENAI_API_KEY
 
 export async function POST(request) {
   try {
+    // 1. 認証チェック
+    const cookieStore = cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          get(name) {
+            return cookieStore.get(name)?.value;
+          },
+        },
+      }
+    );
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (!user || authError) {
+      return NextResponse.json(
+        { error: 'LOGIN_REQUIRED', message: 'AI機能を利用するにはログインが必要です' },
+        { status: 401 }
+      );
+    }
+
+    // 2. AI使用量チェック（機能タイプごと）
+    const featureType = 'business';
+    const usageCheck = await checkAIUsageLimitForFeature(user.id, featureType);
+    
+    if (!usageCheck.isWithinLimit) {
+      return NextResponse.json(
+        { 
+          error: 'LIMIT_EXCEEDED', 
+          message: `本日のビジネスLP AI生成上限に達しました（残り: ${usageCheck.featureRemaining}回）`,
+          usage: {
+            featureUsage: usageCheck.featureUsage,
+            featureLimit: usageCheck.featureLimit,
+            featureRemaining: usageCheck.featureRemaining,
+            totalUsage: usageCheck.dailyUsage,
+            totalLimit: usageCheck.dailyLimit,
+          }
+        },
+        { status: 429 }
+      );
+    }
+
+    // 3. リクエストボディの取得
     const { prompt } = await request.json();
 
     if (!prompt) {
@@ -177,6 +225,17 @@ export async function POST(request) {
         } : {}),
       }));
     }
+
+    // 4. 使用量を記録
+    const modelUsed = genAI ? 'gemini-1.5-flash' : 'gpt-4o-mini';
+    await logAIUsage({
+      userId: user.id,
+      actionType: 'business_generate',
+      service: 'business',
+      featureType: featureType,
+      modelUsed: modelUsed,
+      metadata: { prompt }
+    });
 
     return NextResponse.json(result);
   } catch (error) {

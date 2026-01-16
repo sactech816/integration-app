@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import OpenAI from 'openai';
+import { checkAIUsageLimitForFeature, logAIUsage } from '@/lib/ai-usage';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -7,6 +10,51 @@ const openai = new OpenAI({
 
 export async function POST(request) {
   try {
+    // 1. 認証チェック
+    const cookieStore = cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          get(name) {
+            return cookieStore.get(name)?.value;
+          },
+        },
+      }
+    );
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (!user || authError) {
+      return NextResponse.json(
+        { error: 'LOGIN_REQUIRED', message: 'AI機能を利用するにはログインが必要です' },
+        { status: 401 }
+      );
+    }
+
+    // 2. AI使用量チェック（機能タイプごと）
+    const featureType = 'quiz';
+    const usageCheck = await checkAIUsageLimitForFeature(user.id, featureType);
+    
+    if (!usageCheck.isWithinLimit) {
+      return NextResponse.json(
+        { 
+          error: 'LIMIT_EXCEEDED', 
+          message: `本日の診断クイズAI生成上限に達しました（残り: ${usageCheck.featureRemaining}回）`,
+          usage: {
+            featureUsage: usageCheck.featureUsage,
+            featureLimit: usageCheck.featureLimit,
+            featureRemaining: usageCheck.featureRemaining,
+            totalUsage: usageCheck.dailyUsage,
+            totalLimit: usageCheck.dailyLimit,
+          }
+        },
+        { status: 429 }
+      );
+    }
+
+    // 3. リクエストボディの取得
     const { prompt, mode = 'diagnosis', questionCount = 5, resultCount = 3 } = await request.json();
 
     if (!prompt) {
@@ -70,6 +118,16 @@ export async function POST(request) {
     }
 
     const quiz = JSON.parse(content);
+
+    // 4. 使用量を記録
+    await logAIUsage({
+      userId: user.id,
+      actionType: 'quiz_generate',
+      service: 'quiz',
+      featureType: featureType,
+      modelUsed: 'gpt-4o-mini',
+      metadata: { prompt, mode, questionCount, resultCount }
+    });
 
     return NextResponse.json({ data: quiz });
   } catch (error) {

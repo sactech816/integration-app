@@ -72,6 +72,13 @@ export interface UsageCheckResult {
   remainingStandard?: number;
 }
 
+export interface FeatureUsageCheckResult extends UsageCheckResult {
+  featureType: 'profile' | 'business' | 'quiz' | 'total';
+  featureLimit: number;
+  featureUsage: number;
+  featureRemaining: number;
+}
+
 export interface LogAIUsageParams {
   userId: string;
   actionType: string;
@@ -81,6 +88,7 @@ export interface LogAIUsageParams {
   outputTokens?: number;
   metadata?: Record<string, any>;
   usageType?: 'premium' | 'standard';  // ハイブリッドクレジット用
+  featureType?: 'profile' | 'business' | 'quiz';  // 機能タイプ
 }
 
 /**
@@ -202,6 +210,96 @@ export async function checkAICreditLimit(
 }
 
 /**
+ * 機能タイプごとのAI使用量制限をチェック
+ */
+export async function checkAIUsageLimitForFeature(
+  userId: string,
+  featureType: 'profile' | 'business' | 'quiz'
+): Promise<FeatureUsageCheckResult> {
+  const supabase = getServiceClient();
+  
+  if (!supabase) {
+    // 開発環境用のデフォルト値
+    return {
+      dailyUsage: 0,
+      monthlyUsage: 0,
+      dailyLimit: 5,
+      monthlyLimit: -1,
+      isWithinLimit: true,
+      remainingDaily: 5,
+      remainingMonthly: -1,
+      featureType,
+      featureLimit: 5,
+      featureUsage: 0,
+      featureRemaining: 5
+    };
+  }
+
+  try {
+    // RPC関数を呼び出し（機能タイプごとの制限チェック）
+    const { data, error } = await supabase.rpc('check_ai_feature_limit', {
+      check_user_id: userId,
+      feature_type: featureType
+    });
+
+    if (error) {
+      console.error('Failed to check AI feature limit:', error);
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      // データがない場合はデフォルトで許可
+      return {
+        dailyUsage: 0,
+        monthlyUsage: 0,
+        dailyLimit: 5,
+        monthlyLimit: -1,
+        isWithinLimit: true,
+        remainingDaily: 5,
+        remainingMonthly: -1,
+        featureType,
+        featureLimit: 5,
+        featureUsage: 0,
+        featureRemaining: 5
+      };
+    }
+
+    const result = data[0];
+    
+    return {
+      dailyUsage: result.total_usage || 0,
+      monthlyUsage: result.total_usage || 0,
+      dailyLimit: result.total_limit === -1 ? Infinity : (result.total_limit || 5),
+      monthlyLimit: -1,
+      isWithinLimit: result.can_use || false,
+      remainingDaily: result.total_remaining === -1 ? Infinity : (result.total_remaining || 0),
+      remainingMonthly: -1,
+      planTier: result.plan_tier || undefined,
+      featureType,
+      featureLimit: result.feature_limit === -1 ? Infinity : (result.feature_limit || 5),
+      featureUsage: result.feature_usage || 0,
+      featureRemaining: result.feature_remaining === -1 ? Infinity : (result.feature_remaining || 0)
+    };
+  } catch (err) {
+    console.error('Error checking AI feature limit:', err);
+    // エラー時は許可（サービス継続優先）
+    return {
+      dailyUsage: 0,
+      monthlyUsage: 0,
+      dailyLimit: 5,
+      monthlyLimit: -1,
+      isWithinLimit: true,
+      remainingDaily: 5,
+      remainingMonthly: -1,
+      featureType,
+      featureLimit: 5,
+      featureUsage: 0,
+      featureRemaining: 5
+    };
+  }
+}
+
+/**
  * ユーザーのAI使用量リミットをチェック（レガシー互換）
  */
 export async function checkAIUsageLimit(userId: string): Promise<UsageCheckResult> {
@@ -290,7 +388,7 @@ export async function checkAIUsageLimitByPlanTier(
 }
 
 /**
- * AI使用量を記録（ハイブリッドクレジット対応）
+ * AI使用量を記録（ハイブリッドクレジット対応 & 機能タイプ対応）
  */
 export async function logAIUsage(params: LogAIUsageParams): Promise<string | null> {
   const supabase = getServiceClient();
@@ -319,7 +417,40 @@ export async function logAIUsage(params: LogAIUsageParams): Promise<string | nul
         return null;
       }
 
+      // feature_typeがある場合は追加で更新
+      if (params.featureType && data) {
+        await supabase
+          .from('ai_usage_logs')
+          .update({ feature_type: params.featureType })
+          .eq('id', data);
+      }
+
       return data;
+    }
+
+    // 機能タイプを含む直接INSERT（新しい機能）
+    if (params.featureType) {
+      const { data, error } = await supabase
+        .from('ai_usage_logs')
+        .insert({
+          user_id: params.userId,
+          action_type: params.actionType,
+          service: params.service || 'profile',
+          model_used: params.modelUsed || 'gpt-4o-mini',
+          input_tokens: params.inputTokens || 0,
+          output_tokens: params.outputTokens || 0,
+          metadata: params.metadata || null,
+          feature_type: params.featureType,
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        console.error('Failed to log AI usage with feature type:', error);
+        return null;
+      }
+
+      return data?.id || null;
     }
 
     // レガシーシステム（後方互換性）

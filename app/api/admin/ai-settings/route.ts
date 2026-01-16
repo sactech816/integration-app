@@ -127,6 +127,12 @@ export async function GET(request: Request) {
       },
       customOutlineModel: data?.custom_outline_model || null,
       customWritingModel: data?.custom_writing_model || null,
+      feature_limits: data?.feature_limits || {
+        profile: 5,
+        business: 5,
+        quiz: 5,
+        total: null
+      },
       requiresMigration: false,
     });
   } catch (error: any) {
@@ -144,7 +150,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { planTier, selectedPreset, customOutlineModel, customWritingModel, userId } = body;
+    const { planTier, selectedPreset, customOutlineModel, customWritingModel, featureLimits, userId } = body;
 
     if (!planTier || !selectedPreset) {
       return NextResponse.json(
@@ -180,6 +186,24 @@ export async function POST(request: Request) {
         { error: 'Failed to update settings: ' + error.message },
         { status: 500 }
       );
+    }
+
+    // feature_limitsがある場合は別途更新
+    if (featureLimits) {
+      const { error: limitsError } = await supabase
+        .from('admin_ai_settings')
+        .update({ feature_limits: featureLimits })
+        .eq('plan_tier', planTier);
+
+      if (limitsError) {
+        console.error('Failed to update feature limits:', limitsError);
+        // エラーがあってもAI設定は保存されているので警告のみ
+        return NextResponse.json({
+          success: true,
+          warning: 'AI設定は保存されましたが、使用制限の保存に失敗しました。',
+          message: 'AI設定を更新しました（使用制限の保存は失敗）',
+        });
+      }
     }
 
     return NextResponse.json({
