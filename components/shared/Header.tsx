@@ -157,10 +157,23 @@ const Header: React.FC<HeaderProps> = ({
                         </div>
                       </button>
                     ))}
+                    {/* 予約・日程調整 */}
+                    <button
+                      onClick={() => { setIsServiceMenuOpen(false); router.push('/booking/new'); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors border-t border-gray-100"
+                    >
+                      <div className="p-2 rounded-lg bg-blue-50">
+                        <Calendar size={18} className="text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">予約・日程調整</div>
+                        <div className="text-xs text-gray-500">新規作成</div>
+                      </div>
+                    </button>
                     {/* アンケート */}
                     <button
                       onClick={() => { setIsServiceMenuOpen(false); router.push('/survey/new'); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors border-t border-gray-100"
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
                     >
                       <div className={`p-2 rounded-lg ${surveyService.bg}`}>
                         <surveyService.icon size={18} className={surveyService.color} />
@@ -219,14 +232,6 @@ const Header: React.FC<HeaderProps> = ({
             >
               <BookOpen size={16} />
               <span>📚 Kindle出版</span>
-            </button>
-
-            <button 
-              onClick={() => handleNav('booking')} 
-              className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-            >
-              <Calendar size={16} />
-              <span>予約・日程調整</span>
             </button>
 
             <button 
@@ -345,6 +350,17 @@ const Header: React.FC<HeaderProps> = ({
                     </div>
                   </button>
                 ))}
+                {/* 予約・日程調整 */}
+                <button
+                  onClick={() => { setIsMenuOpen(false); router.push('/booking/new'); }}
+                  className="flex items-center gap-3 p-4 rounded-xl bg-blue-50 transition-all hover:scale-[1.02]"
+                >
+                  <Calendar size={24} className="text-blue-600" />
+                  <div className="text-left">
+                    <div className="font-bold text-blue-600">予約・日程調整</div>
+                    <div className="text-xs text-gray-500">新規作成</div>
+                  </div>
+                </button>
                 {/* アンケート */}
                 <button
                   onClick={() => { setIsMenuOpen(false); router.push('/survey/new'); }}

@@ -59,18 +59,15 @@ function getSupabaseServer() {
 
 /**
  * 予約メニューを新規作成
+ * @param userId ユーザーID（オプション、非ログインユーザーの場合はnull）
  */
 export async function createBookingMenu(
-  userId: string,
+  userId: string | null,
   input: CreateBookingMenuInput
 ): Promise<BookingResponse<BookingMenu>> {
   const supabase = getSupabaseServer();
   if (!supabase) {
     return { success: false, error: 'Database not configured', code: 'DATABASE_NOT_CONFIGURED' };
-  }
-
-  if (!userId) {
-    return { success: false, error: 'User ID is required', code: 'UNAUTHORIZED' };
   }
 
   if (!input.title?.trim()) {
@@ -80,7 +77,7 @@ export async function createBookingMenu(
   const { data, error } = await supabase
     .from('booking_menus')
     .insert({
-      user_id: userId,
+      user_id: userId || null,
       title: input.title.trim(),
       description: input.description?.trim() || null,
       duration_min: input.duration_min ?? DEFAULT_DURATION_MIN,
@@ -141,12 +138,38 @@ export async function getBookingMenu(menuId: string): Promise<BookingMenu | null
 }
 
 /**
+ * 編集キーで予約メニューを取得
+ */
+export async function getBookingMenuByEditKey(editKey: string): Promise<BookingMenu | null> {
+  const supabase = getSupabaseServer();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from('booking_menus')
+    .select('*')
+    .eq('edit_key', editKey)
+    .single();
+
+  if (error) {
+    console.error('[Booking] Get menu by edit key error:', error);
+    return null;
+  }
+
+  return data;
+}
+
+/**
  * 予約メニューを更新
+ * @param menuId メニューID
+ * @param userId ユーザーID（オプション）
+ * @param input 更新内容
+ * @param editKey 編集キー（オプション、非ログインユーザーの場合）
  */
 export async function updateBookingMenu(
   menuId: string,
-  userId: string,
-  input: UpdateBookingMenuInput
+  userId: string | null,
+  input: UpdateBookingMenuInput,
+  editKey?: string
 ): Promise<BookingResponse<BookingMenu>> {
   const supabase = getSupabaseServer();
   if (!supabase) {
@@ -158,7 +181,13 @@ export async function updateBookingMenu(
   if (!existingMenu) {
     return { success: false, error: 'Menu not found', code: 'MENU_NOT_FOUND' };
   }
-  if (existingMenu.user_id !== userId) {
+
+  // 認証チェック: ユーザーIDまたは編集キーで認証
+  const isAuthorized = 
+    (userId && existingMenu.user_id === userId) ||
+    (editKey && existingMenu.edit_key === editKey);
+
+  if (!isAuthorized) {
     return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
   }
 
@@ -186,10 +215,14 @@ export async function updateBookingMenu(
 
 /**
  * 予約メニューを削除
+ * @param menuId メニューID
+ * @param userId ユーザーID（オプション）
+ * @param editKey 編集キー（オプション、非ログインユーザーの場合）
  */
 export async function deleteBookingMenu(
   menuId: string,
-  userId: string
+  userId: string | null,
+  editKey?: string
 ): Promise<BookingResponse<{ deleted: boolean }>> {
   const supabase = getSupabaseServer();
   if (!supabase) {
@@ -201,7 +234,13 @@ export async function deleteBookingMenu(
   if (!existingMenu) {
     return { success: false, error: 'Menu not found', code: 'MENU_NOT_FOUND' };
   }
-  if (existingMenu.user_id !== userId) {
+
+  // 認証チェック: ユーザーIDまたは編集キーで認証
+  const isAuthorized = 
+    (userId && existingMenu.user_id === userId) ||
+    (editKey && existingMenu.edit_key === editKey);
+
+  if (!isAuthorized) {
     return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
   }
 
@@ -224,11 +263,16 @@ export async function deleteBookingMenu(
 
 /**
  * 予約枠を一括登録
+ * @param menuId メニューID
+ * @param userId ユーザーID（オプション）
+ * @param slots 予約枠リスト
+ * @param editKey 編集キー（オプション、非ログインユーザーの場合）
  */
 export async function createBookingSlots(
   menuId: string,
-  userId: string,
-  slots: CreateBookingSlotInput[]
+  userId: string | null,
+  slots: CreateBookingSlotInput[],
+  editKey?: string
 ): Promise<BookingResponse<BookingSlot[]>> {
   const supabase = getSupabaseServer();
   if (!supabase) {
@@ -240,7 +284,13 @@ export async function createBookingSlots(
   if (!menu) {
     return { success: false, error: 'Menu not found', code: 'MENU_NOT_FOUND' };
   }
-  if (menu.user_id !== userId) {
+
+  // 認証チェック: ユーザーIDまたは編集キーで認証
+  const isAuthorized = 
+    (userId && menu.user_id === userId) ||
+    (editKey && menu.edit_key === editKey);
+
+  if (!isAuthorized) {
     return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
   }
 
@@ -365,10 +415,14 @@ export async function getAvailableSlots(
 
 /**
  * 予約枠を削除
+ * @param slotId 予約枠ID
+ * @param userId ユーザーID（オプション）
+ * @param editKey 編集キー（オプション、非ログインユーザーの場合）
  */
 export async function deleteBookingSlot(
   slotId: string,
-  userId: string
+  userId: string | null,
+  editKey?: string
 ): Promise<BookingResponse<{ deleted: boolean }>> {
   const supabase = getSupabaseServer();
   if (!supabase) {
@@ -386,7 +440,12 @@ export async function deleteBookingSlot(
     return { success: false, error: 'Slot not found', code: 'SLOT_NOT_FOUND' };
   }
 
-  if (slot.menu?.user_id !== userId) {
+  // 認証チェック: ユーザーIDまたは編集キーで認証
+  const isAuthorized = 
+    (userId && slot.menu?.user_id === userId) ||
+    (editKey && slot.menu?.edit_key === editKey);
+
+  if (!isAuthorized) {
     return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
   }
 

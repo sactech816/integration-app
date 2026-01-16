@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Calendar,
@@ -16,18 +16,24 @@ import {
 import { supabase } from '@/lib/supabase';
 import { BookingMenu, UpdateBookingMenuInput } from '@/types/booking';
 import { getBookingMenu, updateBookingMenu } from '@/app/actions/booking';
+import Header from '@/components/shared/Header';
+import Footer from '@/components/shared/Footer';
+import AuthModal from '@/components/shared/AuthModal';
 
 export default function EditBookingMenuPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const menuId = params.menuId as string;
+  const editKey = searchParams.get('key');
 
-  const [user, setUser] = useState<{ id: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [menu, setMenu] = useState<BookingMenu | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
 
   const [formData, setFormData] = useState<UpdateBookingMenuInput>({
     title: '',
@@ -45,15 +51,23 @@ export default function EditBookingMenuPage() {
       }
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/');
+      if (user) {
+        setUser({ id: user.id, email: user.email });
+      }
+
+      const menuData = await getBookingMenu(menuId);
+      if (!menuData) {
+        router.push('/booking');
         return;
       }
 
-      setUser({ id: user.id });
+      // 認証チェック: ユーザーIDまたは編集キー
+      const isAuthorized = 
+        (user && menuData.user_id === user.id) ||
+        (editKey && menuData.edit_key === editKey);
 
-      const menuData = await getBookingMenu(menuId);
-      if (!menuData || menuData.user_id !== user.id) {
+      if (!isAuthorized) {
+        alert('このメニューを編集する権限がありません');
         router.push('/booking');
         return;
       }
@@ -70,17 +84,32 @@ export default function EditBookingMenuPage() {
     };
 
     loadData();
-  }, [router, menuId]);
+  }, [router, menuId, editKey]);
+
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+      setUser(null);
+    }
+  };
+
+  const navigateTo = (page: string) => {
+    if (page === '/' || page === '') {
+      router.push('/');
+    } else {
+      router.push(`/${page}`);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !menu) return;
+    if (!menu) return;
 
     setSubmitting(true);
     setError(null);
     setSuccess(false);
 
-    const result = await updateBookingMenu(menu.id, user.id, formData);
+    const result = await updateBookingMenu(menu.id, user?.id || null, formData, editKey || undefined);
 
     if (result.success) {
       setSuccess(true);
@@ -93,37 +122,68 @@ export default function EditBookingMenuPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Header 
+          setPage={navigateTo}
+          user={user}
+          onLogout={handleLogout}
+          setShowAuth={setShowAuth}
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* ヘッダー */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Link
-            href="/booking"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft size={20} className="text-gray-600" />
-          </Link>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Calendar className="text-white" size={22} />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">メニュー編集</h1>
-              <p className="text-xs text-gray-500">予約メニューの設定を変更</p>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Header 
+        setPage={navigateTo}
+        user={user}
+        onLogout={handleLogout}
+        setShowAuth={setShowAuth}
+      />
+
+      <AuthModal 
+        isOpen={showAuth} 
+        onClose={() => setShowAuth(false)} 
+        setUser={setUser}
+        onNavigate={navigateTo}
+      />
 
       {/* メインコンテンツ */}
-      <main className="max-w-3xl mx-auto px-4 py-8">
+      <main className="flex-1 max-w-3xl mx-auto px-4 py-8 w-full">
+        <div className="mb-6">
+          <Link
+            href="/booking"
+            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold"
+          >
+            <ArrowLeft size={20} />
+            戻る
+          </Link>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Calendar className="text-white" size={24} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">メニュー編集</h1>
+              <p className="text-sm text-gray-500">予約メニューの設定を変更</p>
+            </div>
+          </div>
+
+          {editKey && !user && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <p className="text-sm text-amber-800">
+                ⚠️ 編集キーで編集しています。ログインすると、マイページで一括管理できます。
+              </p>
+            </div>
+          )}
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* メニュータイプ選択 */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -297,7 +357,7 @@ export default function EditBookingMenuPage() {
           {/* 枠管理へのリンク */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <Link
-              href={`/booking/slots/${menuId}`}
+              href={`/booking/slots/${menuId}${editKey ? `?key=${editKey}` : ''}`}
               className="flex items-center justify-between p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors"
             >
               <div className="flex items-center gap-3">
@@ -316,6 +376,13 @@ export default function EditBookingMenuPage() {
           </div>
         </form>
       </main>
+
+      <Footer 
+        setPage={navigateTo}
+        onCreate={(service) => service && navigateTo(`${service}/editor`)}
+        user={user}
+        setShowAuth={setShowAuth}
+      />
     </div>
   );
 }

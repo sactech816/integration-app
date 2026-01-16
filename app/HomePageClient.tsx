@@ -251,11 +251,11 @@ export default function HomePageClient() {
                     カレンダー形式で予約を受け付け。面談・相談・サービス予約などに最適です。予約枠を簡単に管理できます。
                   </p>
                   <button
-                    onClick={() => navigateTo('booking')}
+                    onClick={() => navigateTo('booking/new')}
                     className="inline-flex items-center gap-2 bg-blue-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-colors text-sm"
                   >
                     <Calendar size={16} />
-                    予約管理を始める
+                    予約メニューを作成
                     <ArrowRight size={14} />
                   </button>
                 </div>
@@ -274,7 +274,7 @@ export default function HomePageClient() {
                     顧客の声を収集。投票機能付きアンケートで意見を集約。SNSで拡散しやすく、結果をリアルタイムで確認できます。
                   </p>
                   <button
-                    onClick={() => navigateTo('survey')}
+                    onClick={() => navigateTo('survey/new')}
                     className="inline-flex items-center gap-2 bg-teal-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-teal-700 transition-colors text-sm"
                   >
                     <ClipboardList size={16} />

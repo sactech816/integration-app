@@ -11,17 +11,27 @@ import {
   FileText,
   CalendarCheck,
   CalendarClock,
+  Copy,
+  Check,
+  X,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { CreateBookingMenuInput, BookingMenuType } from '@/types/booking';
 import { createBookingMenu } from '@/app/actions/booking';
+import Header from '@/components/shared/Header';
+import Footer from '@/components/shared/Footer';
+import AuthModal from '@/components/shared/AuthModal';
 
 export default function NewBookingMenuPage() {
   const router = useRouter();
-  const [user, setUser] = useState<{ id: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAuth, setShowAuth] = useState(false);
+  const [showEditKeyModal, setShowEditKeyModal] = useState(false);
+  const [createdMenu, setCreatedMenu] = useState<{ id: string; edit_key?: string | null } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const [formData, setFormData] = useState<CreateBookingMenuInput>({
     title: '',
@@ -39,69 +49,205 @@ export default function NewBookingMenuPage() {
       }
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/');
-        return;
+      if (user) {
+        setUser({ id: user.id, email: user.email });
       }
-
-      setUser({ id: user.id });
       setLoading(false);
     };
 
     checkAuth();
-  }, [router]);
+  }, []);
+
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+      setUser(null);
+    }
+  };
+
+  const navigateTo = (page: string) => {
+    if (page === '/' || page === '') {
+      router.push('/');
+    } else {
+      router.push(`/${page}`);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
 
     setSubmitting(true);
     setError(null);
 
-    const result = await createBookingMenu(user.id, formData);
+    const result = await createBookingMenu(user?.id || null, formData);
 
     if (result.success && result.data) {
-      // 作成成功後、枠設定画面へ遷移
-      router.push(`/booking/slots/${result.data.id}`);
+      const menu = result.data;
+      
+      // 編集キーをローカルストレージに保存
+      if (!user && menu.edit_key) {
+        const editKeys = JSON.parse(localStorage.getItem('booking_edit_keys') || '[]');
+        editKeys.push({ menuId: menu.id, editKey: menu.edit_key, createdAt: new Date().toISOString() });
+        localStorage.setItem('booking_edit_keys', JSON.stringify(editKeys));
+      }
+
+      setCreatedMenu(menu);
+
+      // 非ログインユーザーの場合、編集キーを表示
+      if (!user && menu.edit_key) {
+        setShowEditKeyModal(true);
+      } else {
+        // ログインユーザーの場合、直接枠設定画面へ
+        router.push(`/booking/slots/${menu.id}`);
+      }
     } else {
       setError('error' in result ? result.error : '作成に失敗しました');
       setSubmitting(false);
     }
   };
 
+  const copyEditKey = () => {
+    if (createdMenu?.edit_key) {
+      navigator.clipboard.writeText(createdMenu.edit_key);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const proceedToSlots = () => {
+    if (createdMenu) {
+      router.push(`/booking/slots/${createdMenu.id}?key=${createdMenu.edit_key}`);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="min-h-screen bg-gray-50">
+        <Header 
+          setPage={navigateTo}
+          user={user}
+          onLogout={handleLogout}
+          setShowAuth={setShowAuth}
+        />
+        <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 64px)' }}>
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* ヘッダー */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Link
-            href="/booking"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft size={20} className="text-gray-600" />
-          </Link>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Calendar className="text-white" size={22} />
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Header 
+        setPage={navigateTo}
+        user={user}
+        onLogout={handleLogout}
+        setShowAuth={setShowAuth}
+      />
+
+      <AuthModal 
+        isOpen={showAuth} 
+        onClose={() => setShowAuth(false)} 
+        setUser={setUser}
+        onNavigate={navigateTo}
+      />
+
+      {/* 編集キー表示モーダル */}
+      {showEditKeyModal && createdMenu?.edit_key && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">🎉 予約メニューを作成しました！</h2>
+              <button
+                onClick={() => setShowEditKeyModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">新規メニュー作成</h1>
-              <p className="text-xs text-gray-500">予約メニューの基本情報を設定</p>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+              <p className="text-sm text-amber-800 font-semibold mb-2">
+                ⚠️ 重要：この編集キーを必ず保存してください
+              </p>
+              <p className="text-xs text-amber-700">
+                ログインしていないため、このキーを使って予約メニューを編集できます。
+                このキーを紛失すると、メニューの編集ができなくなります。
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                編集キー
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={createdMenu.edit_key}
+                  readOnly
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-900 font-mono text-sm"
+                />
+                <button
+                  onClick={copyEditKey}
+                  className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                  title="コピー"
+                >
+                  {copied ? <Check size={20} /> : <Copy size={20} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={proceedToSlots}
+                className="w-full py-3 px-6 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+              >
+                予約枠を設定する
+              </button>
+              <button
+                onClick={() => router.push('/booking')}
+                className="w-full py-3 px-6 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+              >
+                後で設定する
+              </button>
             </div>
           </div>
         </div>
-      </header>
+      )}
 
       {/* メインコンテンツ */}
-      <main className="max-w-3xl mx-auto px-4 py-8">
+      <main className="flex-1 max-w-3xl mx-auto px-4 py-8 w-full">
+        <div className="mb-6">
+          <Link
+            href="/booking"
+            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold"
+          >
+            <ArrowLeft size={20} />
+            戻る
+          </Link>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Calendar className="text-white" size={24} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">新規メニュー作成</h1>
+              <p className="text-sm text-gray-500">予約メニューの基本情報を設定</p>
+            </div>
+          </div>
+
+          {!user && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+              <p className="text-sm text-blue-800">
+                💡 <strong>ログインなしでも作成できます！</strong>
+                作成後に編集キーが発行されます。ログインすると、マイページで一括管理できます。
+              </p>
+            </div>
+          )}
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* メニュータイプ選択 */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -244,13 +390,20 @@ export default function NewBookingMenuPage() {
                 </>
               ) : (
                 <>
-                  作成して枠を設定
+                  作成して次へ
                 </>
               )}
             </button>
           </div>
         </form>
       </main>
+
+      <Footer 
+        setPage={navigateTo}
+        onCreate={(service) => service && navigateTo(`${service}/editor`)}
+        user={user}
+        setShowAuth={setShowAuth}
+      />
     </div>
   );
 }

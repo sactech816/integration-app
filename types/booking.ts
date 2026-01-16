@@ -17,7 +17,8 @@ export type BookingStatus = 'ok' | 'pending' | 'cancelled';
 // -------------------------------------------
 export interface BookingMenu {
   id: string;
-  user_id: string;
+  user_id?: string | null;
+  edit_key?: string | null;
   title: string;
   description?: string | null;
   duration_min: number;
