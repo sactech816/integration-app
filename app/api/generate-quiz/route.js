@@ -60,7 +60,7 @@ export async function POST(request) {
     }
 
     // 3. リクエストボディの取得
-    const { prompt, mode = 'diagnosis', questionCount = 5, resultCount = 3 } = await request.json();
+    const { prompt, mode = 'diagnosis', questionCount = 5, resultCount = 3, resultTypes } = await request.json();
 
     if (!prompt) {
       return NextResponse.json({ error: 'プロンプトが必要です' }, { status: 400 });
@@ -70,11 +70,31 @@ export async function POST(request) {
       return NextResponse.json({ error: 'OpenAI APIキーが設定されていません' }, { status: 500 });
     }
 
+    // 結果タイプの配列（渡されていない場合はデフォルト）
+    const types = resultTypes && resultTypes.length > 0 ? resultTypes : ['A', 'B', 'C'].slice(0, resultCount);
+    
     const modeDescription = {
       diagnosis: '性格診断・タイプ診断',
       test: '正解がある検定クイズ',
       fortune: '占い・運勢診断',
     };
+
+    // スコアの例を動的に生成
+    const scoreExamples = types.map((type, idx) => {
+      const score = {};
+      types.forEach(t => score[t] = t === type ? 3 : 0);
+      return `        { "label": "選択肢${idx + 1}の内容", "score": ${JSON.stringify(score)} }`;
+    }).join(',\n');
+    
+    // 4つ目の選択肢（全タイプに均等配分）
+    const balancedScore = {};
+    types.forEach(t => balancedScore[t] = 1);
+    const balancedScoreExample = `        { "label": "選択肢${types.length + 1}の内容", "score": ${JSON.stringify(balancedScore)} }`;
+
+    // 結果パターンの例
+    const resultExamples = types.map(type => 
+      `    {\n      "type": "${type}",\n      "title": "結果${type}のタイトル",\n      "description": "結果${type}の説明（150文字程度）"\n    }`
+    ).join(',\n');
 
     const systemPrompt = `あなたは診断クイズ作成の専門家です。
 ユーザーのリクエストに基づいて、${modeDescription[mode] || modeDescription.diagnosis}を作成してください。
@@ -85,28 +105,26 @@ export async function POST(request) {
   "description": "診断の説明文",
   "questions": [
     {
-      "id": "q1",
       "text": "質問文",
       "options": [
-        { "text": "選択肢A", "score": { "A": 1, "B": 0, "C": 0, "D": 0 } },
-        { "text": "選択肢B", "score": { "A": 0, "B": 1, "C": 0, "D": 0 } },
-        { "text": "選択肢C", "score": { "A": 0, "B": 0, "C": 1, "D": 0 } },
-        { "text": "選択肢D", "score": { "A": 0, "B": 0, "C": 0, "D": 1 } }
+${scoreExamples},
+${balancedScoreExample}
       ]
     }
   ],
   "results": [
-    {
-      "type": "A",
-      "title": "結果タイトル",
-      "description": "結果の説明（150文字程度）"
-    }
+${resultExamples}
   ]
 }
 
-質問数: ${questionCount}問
-結果パターン数: ${resultCount}個
-各選択肢は4つ用意してください。`;
+重要な注意事項：
+- 質問数: ${questionCount}問
+- 結果パターン: ${types.join(', ')}（${resultCount}個）
+- 各質問には必ず4つの選択肢を用意してください
+- 選択肢の"label"フィールドには具体的な選択肢の文章を入れてください（空にしないでください）
+- 各選択肢のscoreは、どの結果タイプに対応するかを示します（0〜3の数値）
+- 最初の${types.length}個の選択肢は各結果タイプに3点ずつ振り分け、最後の選択肢は全タイプに1点ずつ振り分けてください
+- 診断として意味のある、魅力的な質問と選択肢を作成してください`;
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
