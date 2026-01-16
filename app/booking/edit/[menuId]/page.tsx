@@ -156,7 +156,7 @@ export default function EditBookingMenuPage() {
       <main className="flex-1 max-w-3xl mx-auto px-4 py-8 w-full">
         <div className="mb-6">
           <Link
-            href="/booking"
+            href="/"
             className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold"
           >
             <ArrowLeft size={20} />
@@ -330,7 +330,7 @@ export default function EditBookingMenuPage() {
           {/* 送信ボタン */}
           <div className="flex gap-4">
             <Link
-              href="/booking"
+              href="/"
               className="flex-1 py-3 px-6 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors text-center"
             >
               戻る

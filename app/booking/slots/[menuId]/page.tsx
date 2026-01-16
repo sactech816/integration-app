@@ -15,6 +15,9 @@ import {
   Users,
   X,
   Check,
+  Copy,
+  ExternalLink,
+  LayoutDashboard,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { BookingMenu, BookingSlotWithAvailability, CreateBookingSlotInput } from '@/types/booking';
@@ -45,14 +48,19 @@ export default function BookingSlotsPage() {
   const params = useParams();
   const menuId = params.menuId as string;
   
-  // URLパラメータから編集キーを取得
-  const [editKey, setEditKey] = useState<string | null>(null);
+  // URLパラメータから編集キーを取得 (undefined = 未初期化, null = キーなし, string = キーあり)
+  const [editKey, setEditKey] = useState<string | null | undefined>(undefined);
 
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [menu, setMenu] = useState<BookingMenu | null>(null);
   const [slots, setSlots] = useState<BookingSlotWithAvailability[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  // UI state
+  const [showUrlModal, setShowUrlModal] = useState(false);
+  const [urlCopied, setUrlCopied] = useState(false);
+  const [isCreator, setIsCreator] = useState(false);
 
   // カレンダー状態
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -74,7 +82,7 @@ export default function BookingSlotsPage() {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const key = urlParams.get('key');
-      setEditKey(key);
+      setEditKey(key); // key が null の場合も明示的に設定（キーなし）
     }
   }, []);
 
@@ -107,12 +115,13 @@ export default function BookingSlotsPage() {
         return;
       }
 
+      setIsCreator(true);
       setMenu(menuData);
       await loadSlots();
       setLoading(false);
     };
 
-    if (editKey !== null) { // editKeyが初期化されてから実行
+    if (editKey !== undefined) { // editKeyが初期化されてから実行 (null = キーなし, string = キーあり)
       loadData();
     }
   }, [router, menuId, editKey]);
@@ -292,6 +301,19 @@ export default function BookingSlotsPage() {
     setSubmitting(false);
   };
 
+  // URL copy handler
+  const handleCopyUrl = async () => {
+    if (!menu) return;
+    const url = `${window.location.origin}/booking/${menu.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setUrlCopied(true);
+      setTimeout(() => setUrlCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy URL:', err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
@@ -307,24 +329,97 @@ export default function BookingSlotsPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* ヘッダー */}
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Link
-            href="/booking"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft size={20} className="text-gray-600" />
-          </Link>
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
-              <Calendar className="text-white" size={22} />
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <Link
+                href="/"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors shrink-0"
+              >
+                <ArrowLeft size={20} className="text-gray-600" />
+              </Link>
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
+                <Calendar className="text-white" size={22} />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-xl font-bold text-gray-900 truncate">{menu?.title}</h1>
+                <p className="text-xs text-gray-500">予約枠の管理</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h1 className="text-xl font-bold text-gray-900 truncate">{menu?.title}</h1>
-              <p className="text-xs text-gray-500">予約枠の管理</p>
+
+            {/* Navigation Buttons */}
+            <div className="flex items-center gap-2">
+              {isCreator && (
+                <button
+                  onClick={() => router.push('/booking')}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-semibold"
+                >
+                  <LayoutDashboard size={18} />
+                  管理画面に戻る
+                </button>
+              )}
+              <button
+                onClick={() => setShowUrlModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-semibold"
+              >
+                <ExternalLink size={18} />
+                公開アドレス
+              </button>
+              <button
+                onClick={() => router.push('/booking/new')}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold"
+              >
+                <Plus size={18} />
+                新規作成
+              </button>
             </div>
           </div>
         </div>
       </header>
+
+      {/* URL Modal */}
+      {showUrlModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowUrlModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">公開アドレス</h3>
+              <button
+                onClick={() => setShowUrlModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <span className="text-2xl">&times;</span>
+              </button>
+            </div>
+            
+            <p className="text-gray-600 text-sm mb-4">
+              予約・日程調整が作成されました。このURLページにて予約・日程調整を入力してもらいましょう。
+            </p>
+            
+            <div className="bg-gray-50 rounded-lg p-3 mb-4 border border-gray-200">
+              <p className="text-sm text-gray-700 break-all font-mono">
+                {typeof window !== 'undefined' && menu ? `${window.location.origin}/booking/${menu.id}` : ''}
+              </p>
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={handleCopyUrl}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+              >
+                <Copy size={18} />
+                {urlCopied ? 'コピーしました！' : 'アドレスをコピー'}
+              </button>
+              <button
+                onClick={() => menu && window.open(`${window.location.origin}/booking/${menu.id}`, '_blank')}
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-semibold"
+              >
+                <ExternalLink size={18} />
+                アクセス
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* メインコンテンツ */}
       <main className="max-w-6xl mx-auto px-4 py-8">
@@ -370,18 +465,18 @@ export default function BookingSlotsPage() {
             <div className="flex items-center justify-between mb-6">
               <button
                 onClick={prevMonth}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition-colors"
               >
-                <ChevronLeft size={24} />
+                先月
               </button>
               <h2 className="text-xl font-bold text-gray-900">
                 {currentMonth.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' })}
               </h2>
               <button
                 onClick={nextMonth}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition-colors"
               >
-                <ChevronRight size={24} />
+                翌月
               </button>
             </div>
 

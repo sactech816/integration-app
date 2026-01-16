@@ -79,29 +79,36 @@ export default function NewBookingMenuPage() {
     setSubmitting(true);
     setError(null);
 
-    const result = await createBookingMenu(user?.id || null, formData);
+    try {
+      const result = await createBookingMenu(user?.id || null, formData);
 
-    if (result.success && result.data) {
-      const menu = result.data;
-      
-      // 編集キーをローカルストレージに保存
-      if (!user && menu.edit_key) {
-        const editKeys = JSON.parse(localStorage.getItem('booking_edit_keys') || '[]');
-        editKeys.push({ menuId: menu.id, editKey: menu.edit_key, createdAt: new Date().toISOString() });
-        localStorage.setItem('booking_edit_keys', JSON.stringify(editKeys));
-      }
+      if (result.success && result.data) {
+        const menu = result.data;
+        
+        // 編集キーをローカルストレージに保存
+        if (!user && menu.edit_key) {
+          const editKeys = JSON.parse(localStorage.getItem('booking_edit_keys') || '[]');
+          editKeys.push({ menuId: menu.id, editKey: menu.edit_key, createdAt: new Date().toISOString() });
+          localStorage.setItem('booking_edit_keys', JSON.stringify(editKeys));
+        }
 
-      setCreatedMenu(menu);
+        setCreatedMenu(menu);
 
-      // 非ログインユーザーの場合、編集キーを表示
-      if (!user && menu.edit_key) {
-        setShowEditKeyModal(true);
+        // 非ログインユーザーの場合、編集キーを表示
+        if (!user && menu.edit_key) {
+          setShowEditKeyModal(true);
+          setSubmitting(false);
+        } else {
+          // ログインユーザーの場合、直接枠設定画面へ
+          router.push(`/booking/slots/${menu.id}`);
+        }
       } else {
-        // ログインユーザーの場合、直接枠設定画面へ
-        router.push(`/booking/slots/${menu.id}`);
+        setError('error' in result ? result.error : '作成に失敗しました');
+        setSubmitting(false);
       }
-    } else {
-      setError('error' in result ? result.error : '作成に失敗しました');
+    } catch (err) {
+      console.error('Menu creation error:', err);
+      setError('予約メニューの作成中にエラーが発生しました');
       setSubmitting(false);
     }
   };
@@ -219,7 +226,7 @@ export default function NewBookingMenuPage() {
       <main className="flex-1 max-w-3xl mx-auto px-4 py-8 w-full">
         <div className="mb-6">
           <Link
-            href="/booking"
+            href="/"
             className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold"
           >
             <ArrowLeft size={20} />
