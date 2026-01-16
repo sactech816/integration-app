@@ -208,7 +208,7 @@ export async function POST(request: Request) {
 
     console.log('[Booking Adjustment Notify] Email sent successfully:', result);
 
-    return NextResponse.json({ success: true, emailId: result.id });
+    return NextResponse.json({ success: true, result });
   } catch (error) {
     console.error('[Booking Adjustment Notify] Error:', error);
     
