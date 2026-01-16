@@ -1,9 +1,32 @@
 import { supabase } from '@/lib/supabase';
 import { Metadata } from 'next';
 import QuizPlayerWrapper from '@/components/quiz/QuizPlayerWrapper';
+import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
 
 interface Props {
   params: Promise<{ slug: string }>;
+}
+
+// 静的パラメータ生成（SSG対応）
+export async function generateStaticParams() {
+  if (!supabase) {
+    return [];
+  }
+
+  try {
+    const { data: quizzes } = await supabase
+      .from('quizzes')
+      .select('slug')
+      .eq('show_in_portal', true)
+      .not('slug', 'is', null);
+
+    return quizzes?.map((quiz) => ({
+      slug: quiz.slug,
+    })) || [];
+  } catch (error) {
+    console.error('Failed to generate static params for quizzes:', error);
+    return [];
+  }
 }
 
 // メタデータ生成
@@ -36,6 +59,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: quiz.title,
     description: quiz.description,
+    alternates: {
+      canonical: `${siteUrl}/quiz/${slug}`,
+    },
     openGraph: {
       title: quiz.title,
       description: quiz.description,
@@ -99,11 +125,24 @@ export default async function QuizPage({ params }: Props) {
     },
   };
 
+  // パンくずリスト構造化データ
+  const breadcrumbSchema = generateBreadcrumbSchema(
+    [
+      { name: '診断クイズ一覧', href: '/portal?tab=quiz' },
+      { name: quiz.title },
+    ],
+    siteUrl
+  );
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(quizSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <QuizPlayerWrapper quiz={quiz} />
     </>

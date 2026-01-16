@@ -1,9 +1,32 @@
 import { supabase } from '@/lib/supabase';
 import { Metadata } from 'next';
 import ProfileViewer from '@/components/profile/ProfileViewer';
+import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
 
 interface Props {
   params: Promise<{ slug: string }>;
+}
+
+// 静的パラメータ生成（SSG対応）
+export async function generateStaticParams() {
+  if (!supabase) {
+    return [];
+  }
+
+  try {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('slug')
+      .eq('featured_on_top', true)
+      .not('slug', 'is', null);
+
+    return profiles?.map((profile) => ({
+      slug: profile.slug,
+    })) || [];
+  } catch (error) {
+    console.error('Failed to generate static params for profiles:', error);
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -36,6 +59,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: name,
     description: title,
+    alternates: {
+      canonical: `${siteUrl}/profile/${slug}`,
+    },
     openGraph: {
       title: name,
       description: title,
@@ -102,11 +128,24 @@ export default async function ProfilePage({ params }: Props) {
     },
   };
 
+  // パンくずリスト構造化データ
+  const breadcrumbSchema = generateBreadcrumbSchema(
+    [
+      { name: 'プロフィール一覧', href: '/portal?tab=profile' },
+      { name: name },
+    ],
+    siteUrl
+  );
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(profileSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <ProfileViewer profile={profile} />
     </>

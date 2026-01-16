@@ -20,6 +20,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
+      url: `${BASE_URL}/tools`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
       url: `${BASE_URL}/announcements`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
@@ -111,28 +117,121 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.6,
     },
+    // アンケートツール
+    {
+      url: `${BASE_URL}/survey`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/survey/new`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/survey/editor`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    // 予約システム
+    {
+      url: `${BASE_URL}/booking`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/booking/new`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    // ゲーミフィケーションツール
+    {
+      url: `${BASE_URL}/gamification`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/fukubiki`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${BASE_URL}/gacha`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${BASE_URL}/slot`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${BASE_URL}/scratch`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${BASE_URL}/stamp-rally`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${BASE_URL}/login-bonus`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${BASE_URL}/point-quiz`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${BASE_URL}/arcade`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
   ];
 
   // 動的コンテンツをSupabaseから取得
   let quizPages: MetadataRoute.Sitemap = [];
   let profilePages: MetadataRoute.Sitemap = [];
   let businessPages: MetadataRoute.Sitemap = [];
+  let surveyPages: MetadataRoute.Sitemap = [];
+  let bookingPages: MetadataRoute.Sitemap = [];
 
   if (supabase) {
     try {
       // 公開されている診断クイズを取得
       const { data: quizzes } = await supabase
         .from('quizzes')
-        .select('slug, updated_at')
+        .select('slug, updated_at, views_count, completions_count')
         .eq('show_in_portal', true)
         .not('slug', 'is', null);
 
-      quizPages = quizzes?.map(quiz => ({
-        url: `${BASE_URL}/quiz/${quiz.slug}`,
-        lastModified: new Date(quiz.updated_at),
-        changeFrequency: 'weekly' as const,
-        priority: 0.6,
-      })) || [];
+      quizPages = quizzes?.map(quiz => {
+        // 人気コンテンツは優先度を高く設定
+        const isPopular = (quiz.views_count || 0) > 10 || (quiz.completions_count || 0) > 5;
+        return {
+          url: `${BASE_URL}/quiz/${quiz.slug}`,
+          lastModified: new Date(quiz.updated_at),
+          changeFrequency: 'weekly' as const,
+          priority: isPopular ? 0.8 : 0.6,
+        };
+      }) || [];
 
       // 公開されているプロフィールLPを取得
       const { data: profiles } = await supabase
@@ -161,12 +260,38 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'weekly' as const,
         priority: 0.6,
       })) || [];
+
+      // 公開されているアンケートを取得
+      const { data: surveys } = await supabase
+        .from('surveys')
+        .select('slug, updated_at')
+        .not('slug', 'is', null);
+
+      surveyPages = surveys?.map(survey => ({
+        url: `${BASE_URL}/survey/${survey.slug}`,
+        lastModified: new Date(survey.updated_at),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })) || [];
+
+      // アクティブな予約メニューを取得
+      const { data: bookingMenus } = await supabase
+        .from('booking_menus')
+        .select('id, updated_at')
+        .eq('is_active', true);
+
+      bookingPages = bookingMenus?.map(menu => ({
+        url: `${BASE_URL}/booking/${menu.id}`,
+        lastModified: new Date(menu.updated_at),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })) || [];
     } catch (error) {
       console.error('Sitemap: Failed to fetch dynamic content', error);
     }
   }
 
-  return [...staticPages, ...quizPages, ...profilePages, ...businessPages];
+  return [...staticPages, ...quizPages, ...profilePages, ...businessPages, ...surveyPages, ...bookingPages];
 }
 
 

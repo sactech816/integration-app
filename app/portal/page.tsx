@@ -657,6 +657,41 @@ function PortalPageContent() {
       {/* タブ & 検索 */}
       <section className="sticky top-0 z-20 bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* クイックナビゲーション */}
+          <div className="py-3 border-b border-gray-100">
+            <div className="flex items-center gap-3 overflow-x-auto">
+              <span className="text-sm font-semibold text-gray-600 flex-shrink-0">クイックリンク:</span>
+              <Link
+                href="/tools"
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline flex-shrink-0 flex items-center gap-1"
+              >
+                <LayoutGrid size={14} />
+                全ツール一覧
+              </Link>
+              <span className="text-gray-300">|</span>
+              <Link
+                href="/howto"
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline flex-shrink-0"
+              >
+                使い方ガイド
+              </Link>
+              <span className="text-gray-300">|</span>
+              <Link
+                href="/faq"
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline flex-shrink-0"
+              >
+                よくある質問
+              </Link>
+              <span className="text-gray-300">|</span>
+              <Link
+                href="/effective-use"
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline flex-shrink-0"
+              >
+                効果的な活用法
+              </Link>
+            </div>
+          </div>
+
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4">
             {/* タブ */}
             <div className="flex gap-1 overflow-x-auto pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">

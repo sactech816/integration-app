@@ -12,7 +12,12 @@ export default function robots(): MetadataRoute.Robots {
           '/api/',
           '/dashboard/',
           '/_next/',
-          '/*/preview',
+          '/quiz/editor',
+          '/profile/editor',
+          '/business/editor',
+          '/survey/editor',
+          '/gamification/editor',
+          '/*/edit/*',
         ],
       },
       // Google AI/Bard等のAIクローラーを許可

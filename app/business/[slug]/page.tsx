@@ -1,9 +1,31 @@
 import { supabase } from '@/lib/supabase';
 import { Metadata } from 'next';
 import BusinessViewer from '@/components/business/BusinessViewer';
+import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
 
 interface Props {
   params: Promise<{ slug: string }>;
+}
+
+// 静的パラメータ生成（SSG対応）
+export async function generateStaticParams() {
+  if (!supabase) {
+    return [];
+  }
+
+  try {
+    const { data: businessLPs } = await supabase
+      .from('business_projects')
+      .select('slug')
+      .not('slug', 'is', null);
+
+    return businessLPs?.map((lp) => ({
+      slug: lp.slug,
+    })) || [];
+  } catch (error) {
+    console.error('Failed to generate static params for business LPs:', error);
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -38,6 +60,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
+    alternates: {
+      canonical: `${siteUrl}/business/${slug}`,
+    },
     openGraph: {
       title,
       description,
@@ -124,11 +149,24 @@ export default async function BusinessPage({ params }: Props) {
     },
   };
 
+  // パンくずリスト構造化データ
+  const breadcrumbSchema = generateBreadcrumbSchema(
+    [
+      { name: 'ビジネスLP一覧', href: '/portal?tab=business' },
+      { name: lpTitle },
+    ],
+    siteUrl
+  );
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <BusinessViewer lp={businessLP} />
     </>
