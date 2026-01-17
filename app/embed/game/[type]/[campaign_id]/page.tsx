@@ -213,7 +213,7 @@ export default function EmbedGamePage() {
         return <ScratchAnimation {...commonProps} />;
       case 'gacha':
       case 'roulette':
-        return <RouletteAnimation {...commonProps} />;
+        return <RouletteAnimation {...commonProps} prizes={prizes} />;
       default:
         return <SlotAnimation {...commonProps} />;
     }

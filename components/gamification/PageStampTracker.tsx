@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { getCampaigns, acquireStamp } from '@/app/actions/gamification';
 import { GamificationCampaign, StampRallySettings } from '@/lib/types';
@@ -9,7 +8,7 @@ import StampNotification from './StampNotification';
 
 interface PageStampTrackerProps {
   pageUrl: string; // '/howto', '/effective-use' など
-  user?: User | null;
+  user?: { id?: string; email?: string } | null;
 }
 
 export default function PageStampTracker({ pageUrl, user }: PageStampTrackerProps) {
@@ -54,12 +53,13 @@ export default function PageStampTracker({ pageUrl, user }: PageStampTrackerProp
               continue;
             }
 
-            // スタンプを取得
+            // スタンプを取得（userがいる場合のみIDを使用）
+            const userId = user?.id ? user.id : undefined;
             const result = await acquireStamp(
               campaign.id,
               pageStamp.stamp_id,
               pageStamp.stamp_index,
-              user?.id
+              userId
             );
 
             console.log('[PageStampTracker] Acquire stamp result:', result);
