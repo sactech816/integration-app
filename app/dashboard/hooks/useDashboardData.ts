@@ -298,12 +298,24 @@ export function useDashboardData(): UseDashboardDataReturn {
         : supabase.from(TABLES.BUSINESS_LPS).select('id', { count: 'exact', head: true }).eq('user_id', user.id);
       const { count: businessCount } = await businessQuery;
 
+      // 予約メニュー数
+      const bookingQuery = isAdmin
+        ? supabase.from('booking_menus').select('id', { count: 'exact', head: true })
+        : supabase.from('booking_menus').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
+      const { count: bookingCount } = await bookingQuery;
+
+      // アンケート数
+      const surveyQuery = isAdmin
+        ? supabase.from('surveys').select('id', { count: 'exact', head: true })
+        : supabase.from('surveys').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
+      const { count: surveyCount } = await surveyQuery;
+
       setContentCounts({
         quiz: quizCount || 0,
         profile: profileCount || 0,
         business: businessCount || 0,
-        booking: 0, // TODO: 予約機能のカウント
-        survey: 0, // TODO: アンケート機能のカウント
+        booking: bookingCount || 0,
+        survey: surveyCount || 0,
         gamification: 0, // TODO: ゲーミフィケーションのカウント
       });
     } catch (error) {

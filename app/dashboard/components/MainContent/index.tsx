@@ -6,6 +6,9 @@ import DashboardHome from './DashboardHome';
 import ContentList from './ContentList';
 import { ContentItem } from './ContentCard';
 import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
+import AccountSettings from '../Settings/AccountSettings';
+import BookingList from './BookingList';
+import SurveyList from './SurveyList';
 
 export type ActiveView =
   | 'dashboard'
@@ -65,6 +68,7 @@ type MainContentProps = {
   onPurchase: (item: ContentItem) => void;
   onCreateNew: () => void;
   onNavigate: (path: string, addAdminKey?: boolean) => void;
+  onLogout: () => void;
   // 管理者コンポーネント
   adminComponents?: {
     UserManager?: React.ReactNode;
@@ -100,6 +104,7 @@ export default function MainContent({
   onPurchase,
   onCreateNew,
   onNavigate,
+  onLogout,
   adminComponents,
 }: MainContentProps) {
   // ダッシュボードホーム
@@ -162,34 +167,18 @@ export default function MainContent({
 
   // 予約・日程調整
   if (activeView === 'booking') {
-    return (
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">予約・日程調整</h2>
-        <p className="text-gray-500 mb-6">予約メニューの管理ができます</p>
-        <button
-          onClick={() => onNavigate('booking/dashboard')}
-          className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 transition-colors"
-        >
-          予約管理を開く
-        </button>
-      </div>
-    );
+    if (user) {
+      return <BookingList userId={user.id} isAdmin={isAdmin} />;
+    }
+    return null;
   }
 
   // アンケート
   if (activeView === 'survey') {
-    return (
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">アンケート（投票）</h2>
-        <p className="text-gray-500 mb-6">アンケートの作成・管理ができます</p>
-        <button
-          onClick={() => onNavigate('survey/new')}
-          className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 transition-colors"
-        >
-          新規アンケート作成
-        </button>
-      </div>
-    );
+    if (user) {
+      return <SurveyList userId={user.id} isAdmin={isAdmin} />;
+    }
+    return null;
   }
 
   // ゲーミフィケーション（管理者のみ）
@@ -215,18 +204,7 @@ export default function MainContent({
 
   // 設定
   if (activeView === 'settings') {
-    return (
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">アカウント設定</h2>
-        <p className="text-gray-500 mb-6">アカウント情報の確認・変更ができます</p>
-        <button
-          onClick={() => onNavigate('dashboard/settings')}
-          className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 transition-colors"
-        >
-          設定を開く
-        </button>
-      </div>
-    );
+    return <AccountSettings user={user} onLogout={onLogout} />;
   }
 
   // 管理者メニュー

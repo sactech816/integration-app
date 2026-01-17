@@ -21,6 +21,7 @@ type SidebarProps = {
   totalViews: number;
   onLogout: () => void;
   onNavigate: (path: string) => void;
+  hasKdlSubscription?: boolean;
 };
 
 export default function Sidebar({
@@ -32,6 +33,7 @@ export default function Sidebar({
   totalViews,
   onLogout,
   onNavigate,
+  hasKdlSubscription = false,
 }: SidebarProps) {
   const totalContentCount = Object.values(contentCounts).reduce((a, b) => a + b, 0);
 
@@ -58,6 +60,7 @@ export default function Sidebar({
         isAdmin={isAdmin}
         contentCounts={contentCounts}
         onLogout={onLogout}
+        hasKdlSubscription={hasKdlSubscription}
       />
 
       {/* フッターリンク */}

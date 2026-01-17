@@ -312,6 +312,7 @@ function DashboardContent() {
               totalViews={totalViews}
               onLogout={handleLogout}
               onNavigate={handleNavigate}
+              hasKdlSubscription={kdlSubscription?.hasActiveSubscription || false}
             />
           }
         >
@@ -339,6 +340,7 @@ function DashboardContent() {
             onPurchase={handlePurchase}
             onCreateNew={handleCreateNew}
             onNavigate={handleNavigate}
+            onLogout={handleLogout}
             adminComponents={adminComponents}
           />
         </DashboardLayout>

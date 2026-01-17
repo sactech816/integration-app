@@ -29,6 +29,9 @@ export type MenuItem = {
   adminOnly?: boolean;
   onClick?: () => void;
   href?: string;
+  // グレーアウト関連
+  isDisabled?: boolean;
+  disabledBadge?: string;
 };
 
 type SidebarNavProps = {
@@ -44,6 +47,8 @@ type SidebarNavProps = {
     gamification: number;
   };
   onLogout: () => void;
+  // KDLサブスクリプション状態
+  hasKdlSubscription?: boolean;
 };
 
 export default function SidebarNav({
@@ -52,7 +57,11 @@ export default function SidebarNav({
   isAdmin,
   contentCounts,
   onLogout,
+  hasKdlSubscription = false,
 }: SidebarNavProps) {
+  // KDLの状態判定（管理者は常にアクセス可能）
+  const kdlDisabled = !hasKdlSubscription && !isAdmin;
+
   const menuItems: MenuItem[] = [
     // メインメニュー
     { id: 'dashboard', label: 'ダッシュボード', icon: Home, section: 'main' },
@@ -62,7 +71,14 @@ export default function SidebarNav({
     { id: 'booking', label: '予約・日程調整', icon: Calendar, section: 'main', badge: contentCounts.booking },
     { id: 'survey', label: 'アンケート（投票）', icon: ClipboardList, section: 'main', badge: contentCounts.survey },
     { id: 'gamification', label: 'ゲーミフィケーション', icon: Gamepad2, section: 'main', badge: contentCounts.gamification, adminOnly: true },
-    { id: 'kindle', label: 'Kindle執筆 (KDL)', icon: BookOpen, section: 'main' },
+    { 
+      id: 'kindle', 
+      label: 'Kindle執筆 (KDL)', 
+      icon: BookOpen, 
+      section: 'main',
+      isDisabled: kdlDisabled,
+      disabledBadge: kdlDisabled ? '未加入' : undefined,
+    },
     { id: 'affiliate', label: 'アフィリエイト', icon: Share2, section: 'main' },
     
     // 設定メニュー
@@ -83,6 +99,9 @@ export default function SidebarNav({
 
     const Icon = item.icon;
     const isActive = activeItem === item.id;
+    const isDisabled = item.isDisabled;
+    // 件数が0のコンテンツ系メニューはグレーアウト（ただしクリックは可能）
+    const hasNoContent = item.badge === 0 && ['quiz', 'profile', 'business', 'booking', 'survey'].includes(item.id);
 
     const handleClick = () => {
       if (item.onClick) {
@@ -92,21 +111,51 @@ export default function SidebarNav({
       }
     };
 
+    // グレーアウト状態のスタイル
+    const getButtonStyles = () => {
+      if (isDisabled) {
+        return 'text-gray-400 cursor-pointer hover:bg-gray-50 opacity-60';
+      }
+      if (isActive) {
+        return 'bg-indigo-50 text-indigo-700 font-bold';
+      }
+      if (hasNoContent) {
+        return 'text-gray-400 hover:bg-gray-100';
+      }
+      return 'text-gray-700 hover:bg-gray-100';
+    };
+
+    const getIconStyles = () => {
+      if (isDisabled || hasNoContent) {
+        return 'text-gray-300';
+      }
+      if (isActive) {
+        return 'text-indigo-600';
+      }
+      return 'text-gray-500';
+    };
+
     return (
       <button
         key={item.id}
         onClick={handleClick}
         className={`
           w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all
-          ${isActive
-            ? 'bg-indigo-50 text-indigo-700 font-bold'
-            : 'text-gray-700 hover:bg-gray-100'
-          }
+          ${getButtonStyles()}
         `}
       >
-        <Icon size={18} className={isActive ? 'text-indigo-600' : 'text-gray-500'} />
+        <Icon size={18} className={getIconStyles()} />
         <span className="flex-1 text-sm">{item.label}</span>
-        {item.badge !== undefined && item.badge > 0 && (
+        
+        {/* 無効化バッジ（KDL未加入など） */}
+        {item.disabledBadge && (
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 text-gray-500 font-bold">
+            {item.disabledBadge}
+          </span>
+        )}
+        
+        {/* コンテンツ件数バッジ */}
+        {!item.disabledBadge && item.badge !== undefined && item.badge > 0 && (
           <span className={`
             text-xs px-2 py-0.5 rounded-full font-bold
             ${isActive ? 'bg-indigo-200 text-indigo-700' : 'bg-gray-200 text-gray-600'}
@@ -114,7 +163,7 @@ export default function SidebarNav({
             {item.badge}
           </span>
         )}
-        {item.badge === 0 && (
+        {!item.disabledBadge && item.badge === 0 && (
           <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-400 font-bold">
             0
           </span>
