@@ -34,14 +34,23 @@ export default function LoginBonusToast({ userId, onPointsEarned }: LoginBonusTo
 
     async function checkAndClaimBonus() {
       try {
+        console.log('[LoginBonusToast] Checking login bonus, userId:', userId);
+        
         // ユーザー設定を確認して非表示設定されているかチェック
         if (userId) {
           const settings = await getUserGamificationSettings(userId);
+          console.log('[LoginBonusToast] User settings:', settings);
+          
           if (settings?.hide_login_bonus_toast) {
             // 非表示設定されているのでスキップ（ポイントは付与する）
+            console.log('[LoginBonusToast] Toast is hidden, but claiming points silently');
             const campaign = await getActiveLoginBonusCampaign();
             if (campaign) {
-              await claimLoginBonus(campaign.id, userId);
+              console.log('[LoginBonusToast] Active campaign found:', campaign.id);
+              const result = await claimLoginBonus(campaign.id, userId);
+              console.log('[LoginBonusToast] Silent claim result:', result);
+            } else {
+              console.log('[LoginBonusToast] No active login bonus campaign');
             }
             if (typeof window !== 'undefined') {
               sessionStorage.setItem(checkedKey, 'true');
@@ -51,11 +60,18 @@ export default function LoginBonusToast({ userId, onPointsEarned }: LoginBonusTo
         }
 
         // アクティブなログインボーナスキャンペーンを取得
+        console.log('[LoginBonusToast] Getting active campaign...');
         const campaign = await getActiveLoginBonusCampaign();
-        if (!campaign) return;
+        if (!campaign) {
+          console.log('[LoginBonusToast] No active campaign found');
+          return;
+        }
+        console.log('[LoginBonusToast] Active campaign:', campaign);
 
         // 今日すでに取得済みかチェック
         const alreadyClaimed = await checkLoginBonusClaimed(campaign.id, userId);
+        console.log('[LoginBonusToast] Already claimed today:', alreadyClaimed);
+        
         if (alreadyClaimed) {
           // チェック済みフラグを立てる
           if (typeof window !== 'undefined') {
@@ -65,9 +81,12 @@ export default function LoginBonusToast({ userId, onPointsEarned }: LoginBonusTo
         }
 
         // ログインボーナスを取得
+        console.log('[LoginBonusToast] Claiming login bonus...');
         const result = await claimLoginBonus(campaign.id, userId);
+        console.log('[LoginBonusToast] Claim result:', result);
         
         if (result.success && result.points) {
+          console.log('[LoginBonusToast] Login bonus granted:', result.points);
           setPoints(result.points);
           setAnimating(true);
           setVisible(true);
@@ -93,12 +112,13 @@ export default function LoginBonusToast({ userId, onPointsEarned }: LoginBonusTo
           }, 8000);
         } else {
           // 取得済みの場合もフラグを立てる
+          console.log('[LoginBonusToast] Not granted (already claimed or error)');
           if (typeof window !== 'undefined') {
             sessionStorage.setItem(checkedKey, 'true');
           }
         }
       } catch (error) {
-        console.error('Error checking login bonus:', error);
+        console.error('[LoginBonusToast] Error checking login bonus:', error);
       }
     }
 

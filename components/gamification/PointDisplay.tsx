@@ -28,11 +28,15 @@ export default function PointDisplay({
   useEffect(() => {
     async function loadBalance() {
       try {
+        console.log('[PointDisplay] Loading balance, userId:', userId, 'refreshTrigger:', refreshTrigger);
         const balance = await getPointBalance(userId);
+        
+        console.log('[PointDisplay] Balance loaded:', balance);
         
         if (balance) {
           // ポイントが増えた場合はアニメーション
           if (prevPoints !== null && balance.current_points > prevPoints) {
+            console.log('[PointDisplay] Points increased from', prevPoints, 'to', balance.current_points);
             setAnimating(true);
             setTimeout(() => setAnimating(false), 600);
           }
@@ -41,11 +45,12 @@ export default function PointDisplay({
           setCurrentPoints(balance.current_points);
           setTotalPoints(balance.total_accumulated_points);
         } else {
+          console.warn('[PointDisplay] No balance returned, setting to 0');
           setCurrentPoints(0);
           setTotalPoints(0);
         }
       } catch (error) {
-        console.error('Error loading point balance:', error);
+        console.error('[PointDisplay] Error loading point balance:', error);
         setCurrentPoints(0);
         setTotalPoints(0);
       } finally {

@@ -114,7 +114,10 @@ export default function SlotPage() {
     const settings = campaign.settings as GachaSettings;
     const cost = settings.cost_per_play || 10;
 
+    console.log('[Slot] Play button clicked, current points:', currentPoints, 'cost:', cost);
+
     if (currentPoints < cost) {
+      console.warn('[Slot] Insufficient points');
       setResult({ success: false, error_code: 'insufficient_points' });
       setShowResult(true);
       return;
@@ -125,7 +128,9 @@ export default function SlotPage() {
     setShowResult(false);
 
     try {
+      console.log('[Slot] Calling playGacha for campaign:', campaignId);
       const gachaResult = await playGacha(campaignId);
+      console.log('[Slot] Gacha result:', gachaResult);
       
       // アニメーション時間分待機
       const animationDuration = 3500;
@@ -136,19 +141,23 @@ export default function SlotPage() {
         setPlaying(false);
 
         if (gachaResult.success && gachaResult.new_balance !== undefined) {
+          console.log('[Slot] Updating points to:', gachaResult.new_balance);
           setCurrentPoints(gachaResult.new_balance);
           setRefreshTrigger(prev => prev + 1);
           
           // 獲得景品リストを更新
           if (gachaResult.is_winning) {
+            console.log('[Slot] Won a prize, refreshing prize list');
             getUserPrizes().then(data => {
               setUserPrizes(data.filter(p => p.campaign_id === campaignId));
             });
           }
+        } else {
+          console.error('[Slot] Gacha failed or no new balance:', gachaResult);
         }
       }, animationDuration);
     } catch (error) {
-      console.error('Error playing slot:', error);
+      console.error('[Slot] Error playing slot:', error);
       setResult({ success: false, error_code: 'campaign_not_found' });
       setShowResult(true);
       setPlaying(false);

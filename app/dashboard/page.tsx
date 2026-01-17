@@ -39,6 +39,7 @@ import { getFeaturedContents, addFeaturedContent, removeFeaturedContent, Feature
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import WelcomeBonus from '@/components/gamification/WelcomeBonus';
 import LoginBonusToast from '@/components/gamification/LoginBonusToast';
+import EmbedCodeGenerator from '@/components/gamification/EmbedCodeGenerator';
 import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
 import MonitorUsersManager from '@/components/shared/MonitorUsersManager';
 import AdminAISettings from '@/components/shared/AdminAISettings';
@@ -153,6 +154,7 @@ function DashboardContent() {
   const [contents, setContents] = useState<ContentItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [embedModalCampaign, setEmbedModalCampaign] = useState<{ id: string; type: string } | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'graph' | 'table'>('table');
@@ -2347,6 +2349,24 @@ function DashboardContent() {
                             </div>
 
                             <div className="flex items-center gap-2">
+                              {/* 埋め込みコード（ガチャ系のみ） */}
+                              {['gacha', 'slot', 'fukubiki', 'scratch'].includes(campaign.campaign_type) && campaign.animation_type && (
+                                <button
+                                  onClick={() => {
+                                    setEmbedModalCampaign({
+                                      id: campaign.id,
+                                      type: campaign.animation_type || 'slot'
+                                    });
+                                  }}
+                                  className="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
+                                  title="埋め込みコード"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+                                  </svg>
+                                </button>
+                              )}
+                              
                               {/* リンクコピー */}
                               <button
                                 onClick={() => {
@@ -4205,6 +4225,16 @@ function DashboardContent() {
         <>
           <WelcomeBonus userId={user.id} />
           <LoginBonusToast userId={user.id} />
+          
+          {/* 埋め込みコード生成モーダル */}
+          {embedModalCampaign && (
+            <EmbedCodeGenerator
+              campaignId={embedModalCampaign.id}
+              gameType={embedModalCampaign.type as any}
+              isOpen={true}
+              onClose={() => setEmbedModalCampaign(null)}
+            />
+          )}
         </>
       )}
     </div>

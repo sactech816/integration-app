@@ -203,11 +203,17 @@ export async function deleteCampaign(campaignId: string): Promise<{ success: boo
  */
 export async function getPointBalance(userId?: string): Promise<UserPointBalance | null> {
   const supabase = getSupabaseServer();
-  if (!supabase) return null;
+  if (!supabase) {
+    console.error('[Gamification] Database not configured for getPointBalance');
+    return null;
+  }
   
   const sessionId = userId ? null : await getSessionId();
   
+  console.log('[Gamification] getPointBalance called:', { userId, sessionId });
+  
   if (!userId && !sessionId) {
+    console.warn('[Gamification] No userId or sessionId available');
     return null;
   }
   
@@ -218,8 +224,16 @@ export async function getPointBalance(userId?: string): Promise<UserPointBalance
   
   if (error) {
     console.error('[Gamification] Get point balance error:', error);
+    console.error('[Gamification] Error details:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
     return null;
   }
+  
+  console.log('[Gamification] Point balance response:', data);
   
   if (data && data.length > 0) {
     return {
@@ -231,6 +245,8 @@ export async function getPointBalance(userId?: string): Promise<UserPointBalance
     };
   }
   
+  // データがない場合は初期値を返す
+  console.log('[Gamification] No balance found, returning default 0');
   return {
     id: '',
     user_id: userId,
@@ -254,10 +270,21 @@ export async function updatePoints(
 ): Promise<{ success: boolean; newBalance?: number; error?: string }> {
   const supabase = getSupabaseServer();
   if (!supabase) {
+    console.error('[Gamification] Database not configured');
     return { success: false, error: 'Database not configured' };
   }
   
   const sessionId = options?.userId ? null : await getOrCreateSessionId();
+  
+  // デバッグログ
+  console.log('[Gamification] updatePoints called:', {
+    changeAmount,
+    eventType,
+    userId: options?.userId,
+    sessionId,
+    campaignId: options?.campaignId,
+    eventData: options?.eventData,
+  });
   
   const { data, error } = await supabase.rpc('update_user_points', {
     p_user_id: options?.userId || null,
@@ -270,14 +297,27 @@ export async function updatePoints(
   
   if (error) {
     console.error('[Gamification] Update points error:', error);
+    console.error('[Gamification] Error details:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
     return { success: false, error: error.message };
   }
   
+  console.log('[Gamification] Update points response:', data);
+  
   if (data && data.length > 0 && data[0].success) {
+    console.log('[Gamification] Points updated successfully:', {
+      newBalance: data[0].new_balance,
+      logId: data[0].log_id,
+    });
     return { success: true, newBalance: data[0].new_balance };
   }
   
-  return { success: false, error: 'Insufficient points' };
+  console.warn('[Gamification] Points update failed:', data);
+  return { success: false, error: 'Insufficient points or update failed' };
 }
 
 // =============================================
@@ -295,10 +335,13 @@ export async function acquireStamp(
 ): Promise<{ success: boolean; alreadyAcquired?: boolean; newBalance?: number; error?: string }> {
   const supabase = getSupabaseServer();
   if (!supabase) {
+    console.error('[Gamification] Database not configured for acquireStamp');
     return { success: false, error: 'Database not configured' };
   }
   
   const sessionId = userId ? null : await getOrCreateSessionId();
+  
+  console.log('[Gamification] acquireStamp called:', { campaignId, stampId, stampIndex, userId, sessionId });
   
   // 重複チェック
   const { data: isAcquired } = await supabase.rpc('check_stamp_acquired', {
@@ -308,6 +351,8 @@ export async function acquireStamp(
     p_stamp_id: stampId,
   });
   
+  console.log('[Gamification] Stamp already acquired:', isAcquired);
+  
   if (isAcquired) {
     return { success: false, alreadyAcquired: true };
   }
@@ -315,11 +360,14 @@ export async function acquireStamp(
   // キャンペーン設定を取得
   const campaign = await getCampaign(campaignId);
   if (!campaign) {
+    console.error('[Gamification] Campaign not found:', campaignId);
     return { success: false, error: 'Campaign not found' };
   }
   
   const settings = campaign.settings as StampRallySettings;
   const pointsPerStamp = settings.points_per_stamp || 1;
+  
+  console.log('[Gamification] Granting', pointsPerStamp, 'points for stamp');
   
   // ポイントを付与
   const result = await updatePoints(pointsPerStamp, 'stamp_get', {
@@ -329,14 +377,18 @@ export async function acquireStamp(
   });
   
   if (!result.success) {
+    console.error('[Gamification] Failed to grant stamp points:', result.error);
     return result;
   }
   
   // コンプリートチェック
   const stamps = await getUserStamps(campaignId, userId);
+  console.log('[Gamification] Total stamps acquired:', stamps.length, '/', settings.total_stamps);
+  
   if (stamps.length + 1 >= (settings.total_stamps || 10)) {
     // コンプリートボーナス付与
     if (settings.completion_bonus) {
+      console.log('[Gamification] Granting completion bonus:', settings.completion_bonus);
       await updatePoints(settings.completion_bonus, 'stamp_completion', {
         userId,
         campaignId,
@@ -388,10 +440,13 @@ export async function claimLoginBonus(
 ): Promise<{ success: boolean; alreadyClaimed?: boolean; points?: number; newBalance?: number; error?: string }> {
   const supabase = getSupabaseServer();
   if (!supabase) {
+    console.error('[Gamification] Database not configured for claimLoginBonus');
     return { success: false, error: 'Database not configured' };
   }
   
   const sessionId = userId ? null : await getOrCreateSessionId();
+  
+  console.log('[Gamification] claimLoginBonus called:', { campaignId, userId, sessionId });
   
   // 今日すでに取得済みかチェック
   const { data: alreadyClaimed } = await supabase.rpc('check_login_bonus_today', {
@@ -400,6 +455,8 @@ export async function claimLoginBonus(
     p_campaign_id: campaignId,
   });
   
+  console.log('[Gamification] Login bonus already claimed today:', alreadyClaimed);
+  
   if (alreadyClaimed) {
     return { success: false, alreadyClaimed: true };
   }
@@ -407,11 +464,14 @@ export async function claimLoginBonus(
   // キャンペーン設定を取得
   const campaign = await getCampaign(campaignId);
   if (!campaign) {
+    console.error('[Gamification] Campaign not found:', campaignId);
     return { success: false, error: 'Campaign not found' };
   }
   
   const settings = campaign.settings as { points_per_day?: number };
   const pointsPerDay = settings.points_per_day || 1;
+  
+  console.log('[Gamification] Granting login bonus:', pointsPerDay, 'points');
   
   // ポイントを付与
   const result = await updatePoints(pointsPerDay, 'login_bonus', {
@@ -421,9 +481,11 @@ export async function claimLoginBonus(
   });
   
   if (!result.success) {
+    console.error('[Gamification] Failed to grant login bonus:', result.error);
     return result;
   }
   
+  console.log('[Gamification] Login bonus granted successfully');
   return { success: true, points: pointsPerDay, newBalance: result.newBalance };
 }
 
@@ -462,10 +524,13 @@ export async function playGacha(
 ): Promise<GachaResult> {
   const supabase = getSupabaseServer();
   if (!supabase) {
+    console.error('[Gamification] Database not configured for playGacha');
     return { success: false, error_code: 'campaign_not_found' };
   }
   
   const sessionId = userId ? null : await getOrCreateSessionId();
+  
+  console.log('[Gamification] playGacha called:', { campaignId, userId, sessionId });
   
   const { data, error } = await supabase.rpc('play_gacha', {
     p_user_id: userId || null,
@@ -475,11 +540,26 @@ export async function playGacha(
   
   if (error) {
     console.error('[Gamification] Play gacha error:', error);
+    console.error('[Gamification] Error details:', {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
     return { success: false, error_code: 'campaign_not_found' };
   }
   
+  console.log('[Gamification] Play gacha response:', data);
+  
   if (data && data.length > 0) {
     const result = data[0];
+    console.log('[Gamification] Gacha result details:', {
+      success: result.success,
+      error_code: result.error_code,
+      prize_name: result.prize_name,
+      is_winning: result.is_winning,
+      new_balance: result.new_balance,
+    });
     return {
       success: result.success,
       error_code: result.error_code,
@@ -491,6 +571,7 @@ export async function playGacha(
     };
   }
   
+  console.warn('[Gamification] No data returned from play_gacha');
   return { success: false, error_code: 'campaign_not_found' };
 }
 

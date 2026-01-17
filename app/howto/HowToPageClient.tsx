@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { HowToPage } from '@/components/shared/StaticPages';
+import PageStampTracker from '@/components/gamification/PageStampTracker';
 
 export default function HowToPageClient() {
   const router = useRouter();
@@ -45,13 +46,16 @@ export default function HowToPageClient() {
   };
 
   return (
-    <HowToPage
-      onBack={handleBack}
-      setPage={navigateTo}
-      user={user}
-      onLogout={handleLogout}
-      setShowAuth={() => router.push('/?auth=true')}
-    />
+    <>
+      <PageStampTracker pageUrl="/howto" user={user} />
+      <HowToPage
+        onBack={handleBack}
+        setPage={navigateTo}
+        user={user}
+        onLogout={handleLogout}
+        setShowAuth={() => router.push('/?auth=true')}
+      />
+    </>
   );
 }
 

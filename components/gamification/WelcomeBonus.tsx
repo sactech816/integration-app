@@ -57,10 +57,15 @@ export default function WelcomeBonus({ userId, onPointsEarned }: WelcomeBonusPro
 
     async function checkAndClaimBonus() {
       try {
+        console.log('[WelcomeBonus] Checking welcome bonus for user:', userId);
+        
         // ユーザー設定を取得して非表示設定を確認
         const settings = await getUserGamificationSettings(userId);
+        console.log('[WelcomeBonus] User settings:', settings);
+        
         if (settings?.hide_welcome_toast) {
           // 非表示設定されているのでスキップ
+          console.log('[WelcomeBonus] Welcome toast is hidden by user settings');
           if (typeof window !== 'undefined') {
             localStorage.setItem(checkedKey, 'true');
           }
@@ -68,9 +73,12 @@ export default function WelcomeBonus({ userId, onPointsEarned }: WelcomeBonusPro
         }
 
         // ウェルカムボーナスを取得
+        console.log('[WelcomeBonus] Claiming welcome bonus...');
         const result = await claimWelcomeBonus(userId);
+        console.log('[WelcomeBonus] Claim result:', result);
         
         if (result.success && result.points_granted > 0) {
+          console.log('[WelcomeBonus] Welcome bonus granted:', result.points_granted);
           setPoints(result.points_granted);
           setMessage(result.message);
           setAnimating(true);
@@ -88,12 +96,15 @@ export default function WelcomeBonus({ userId, onPointsEarned }: WelcomeBonusPro
           setTimeout(() => setAnimating(false), 1500);
         } else if (result.already_claimed) {
           // すでに取得済みなのでチェック済みフラグを立てる
+          console.log('[WelcomeBonus] Already claimed');
           if (typeof window !== 'undefined') {
             localStorage.setItem(checkedKey, 'true');
           }
+        } else {
+          console.warn('[WelcomeBonus] Failed to claim:', result);
         }
       } catch (error) {
-        console.error('Error claiming welcome bonus:', error);
+        console.error('[WelcomeBonus] Error claiming welcome bonus:', error);
       }
     }
 
