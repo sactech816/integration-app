@@ -184,19 +184,63 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
             // エラーメッセージをユーザーフレンドリーに変換
             let errorMessage = 'エラー';
             
-            if (e.message.includes('Invalid login credentials') || 
-                e.message.includes('Invalid email or password')) {
+            // メールアドレスの形式エラー
+            if (e.message.includes('is invalid') || 
+                e.message.includes('invalid format') ||
+                e.message.includes('Unable to validate email')) {
+                errorMessage = 'メールアドレスの形式が正しくありません。\n\n正しいメールアドレスを入力してください。\n例: user@example.com';
+            }
+            // パスワードが短い
+            else if (e.message.includes('at least 6 characters') || 
+                     e.message.includes('Password should be')) {
+                errorMessage = 'パスワードは6文字以上で入力してください。';
+            }
+            // パスワードが弱い
+            else if (e.message.includes('password is too weak') || 
+                     e.message.includes('Password is too common')) {
+                errorMessage = 'パスワードが簡単すぎます。\n\n数字や記号を含めた、より強力なパスワードを設定してください。';
+            }
+            // ログイン認証エラー
+            else if (e.message.includes('Invalid login credentials') || 
+                     e.message.includes('Invalid email or password')) {
                 errorMessage = isLogin 
-                    ? 'メールアドレスまたはパスワードが正しくありません。\n\nパスワードを忘れた場合は「パスワードを忘れた方」をクリックしてください。'
+                    ? 'メールアドレスまたはパスワードが正しくありません。\n\nパスワードを忘れた場合は「パスワードをお忘れですか？」をクリックしてください。'
                     : 'メールアドレスまたはパスワードが正しくありません。';
-            } else if (e.message.includes('Email not confirmed')) {
+            }
+            // メール未確認
+            else if (e.message.includes('Email not confirmed')) {
                 errorMessage = 'メールアドレスが確認されていません。\n\n確認メールをご確認ください。';
-            } else if (e.message.includes('User not found')) {
+            }
+            // ユーザーが見つからない
+            else if (e.message.includes('User not found')) {
                 errorMessage = 'このメールアドレスは登録されていません。';
-            } else if (e.message.includes('Email rate limit exceeded')) {
+            }
+            // レート制限
+            else if (e.message.includes('Email rate limit exceeded')) {
                 errorMessage = '送信回数が上限に達しました。\n\nしばらく時間をおいてから再度お試しください。';
-            } else {
-                errorMessage = 'エラー: ' + e.message;
+            }
+            // ネットワークエラー
+            else if (e.message.includes('Network') || 
+                     e.message.includes('Failed to fetch')) {
+                errorMessage = 'ネットワークエラーが発生しました。\n\nインターネット接続を確認して、再度お試しください。';
+            }
+            // サーバーエラー
+            else if (e.message.includes('500') || 
+                     e.message.includes('Internal Server Error')) {
+                errorMessage = 'サーバーエラーが発生しました。\n\nしばらく時間をおいてから再度お試しください。';
+            }
+            // タイムアウト
+            else if (e.message.includes('timeout') || 
+                     e.message.includes('timed out')) {
+                errorMessage = '接続がタイムアウトしました。\n\nもう一度お試しください。';
+            }
+            // 不明なエラー
+            else {
+                // 開発者向けには詳細を表示、本番では一般的なメッセージ
+                const isDevelopment = process.env.NODE_ENV === 'development';
+                errorMessage = isDevelopment 
+                    ? `エラーが発生しました\n\n${e.message}`
+                    : 'エラーが発生しました。\n\nもう一度お試しいただくか、問題が続く場合はサポートにお問い合わせください。';
             }
             
             alert(errorMessage);
