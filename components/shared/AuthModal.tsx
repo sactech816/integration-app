@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowPasswordReset = null, onNavigate }: {
+const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowPasswordReset = null, onNavigate, defaultTab = 'signup' }: {
     isOpen: boolean;
     onClose: () => void;
     setUser: (user: any) => void;
     isPasswordReset?: boolean;
     setShowPasswordReset?: ((show: boolean) => void) | null;
     onNavigate?: (page: string) => void;
+    defaultTab?: 'login' | 'signup';
 }) => {
-    const [isLogin, setIsLogin] = useState(true);
+    const [isLogin, setIsLogin] = useState(defaultTab === 'login');
     const [isResetMode, setIsResetMode] = useState(false);
     const [isChangePasswordMode, setIsChangePasswordMode] = useState(isPasswordReset);
     const [email, setEmail] = useState('');
@@ -509,46 +510,120 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
             <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl relative animate-fade-in">
                 <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X/></button>
-                <h2 className="text-xl font-bold mb-6 text-center text-gray-900">{isLogin ? 'ログイン' : '新規登録'}</h2>
+                
+                {/* タブ切り替え */}
+                <div className="flex justify-center mb-6 border-b border-gray-200">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setIsLogin(true);
+                            setEmail('');
+                            setPassword('');
+                        }}
+                        className={`flex-1 py-3 font-bold text-center transition-colors relative ${
+                            isLogin 
+                                ? 'text-indigo-600' 
+                                : 'text-gray-400 hover:text-gray-600'
+                        }`}
+                    >
+                        ログイン
+                        {isLogin && (
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"></div>
+                        )}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setIsLogin(false);
+                            setEmail('');
+                            setPassword('');
+                        }}
+                        className={`flex-1 py-3 font-bold text-center transition-colors relative ${
+                            !isLogin 
+                                ? 'text-indigo-600' 
+                                : 'text-gray-400 hover:text-gray-600'
+                        }`}
+                    >
+                        新規登録
+                        {!isLogin && (
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600"></div>
+                        )}
+                    </button>
+                </div>
+
                 <form onSubmit={handleAuth} className="space-y-4">
-                    <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} className="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 text-gray-900" placeholder="Email" />
+                    {/* 補足説明テキスト */}
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-3 text-center">
+                        <p className="text-sm text-indigo-900">
+                            {isLogin ? (
+                                '登録済みのメールアドレスとパスワードを入力してください'
+                            ) : (
+                                <>
+                                    <span className="font-bold">初めての方は新規登録（1分で完了）</span>
+                                    <br />
+                                    <span className="text-xs">メールアドレスでログインできます</span>
+                                </>
+                            )}
+                        </p>
+                    </div>
+                    
+                    {/* メールアドレス入力欄 */}
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                            メールアドレス
+                        </label>
+                        <input 
+                            id="email"
+                            type="email" 
+                            required 
+                            value={email} 
+                            onChange={e=>setEmail(e.target.value)} 
+                            className="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 text-gray-900" 
+                            placeholder="例: user@example.com" 
+                        />
+                    </div>
                     
                     {/* パスワード入力欄（表示/非表示ボタン付き） */}
-                    <div className="relative">
-                        <input 
-                            type={showPassword ? "text" : "password"} 
-                            required 
-                            value={password} 
-                            onChange={e=>setPassword(e.target.value)} 
-                            className="w-full border border-gray-300 p-3 pr-12 rounded-lg bg-gray-50 text-gray-900" 
-                            placeholder="Password" 
-                        />
-                        <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                            tabIndex={-1}
-                        >
-                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                        </button>
+                    <div>
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                            パスワード
+                        </label>
+                        <div className="relative">
+                            <input 
+                                id="password"
+                                type={showPassword ? "text" : "password"} 
+                                required 
+                                value={password} 
+                                onChange={e=>setPassword(e.target.value)} 
+                                className="w-full border border-gray-300 p-3 pr-12 rounded-lg bg-gray-50 text-gray-900" 
+                                placeholder="6文字以上" 
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                tabIndex={-1}
+                            >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
                     </div>
                     
                     {isLogin && (
-                        <button 
-                            type="button"
-                            onClick={() => setIsResetMode(true)} 
-                            className="w-full text-right text-xs text-indigo-600 font-bold underline"
-                        >
-                            パスワードを忘れた方
-                        </button>
+                        <div className="text-right">
+                            <button 
+                                type="button"
+                                onClick={() => setIsResetMode(true)} 
+                                className="text-xs text-indigo-600 font-bold underline hover:text-indigo-800"
+                            >
+                                パスワードをお忘れですか？
+                            </button>
+                        </div>
                     )}
                     <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition-colors">
-                        {loading ? '処理中...' : (isLogin ? 'ログイン' : '登録する')}
+                        {loading ? '処理中...' : (isLogin ? 'ログイン' : '新規登録する')}
                     </button>
                 </form>
-                <button onClick={()=>setIsLogin(!isLogin)} className="w-full text-center mt-4 text-sm text-indigo-600 font-bold underline">
-                    {isLogin ? 'アカウントをお持ちでない方はこちら' : 'すでにアカウントをお持ちの方はこちら'}
-                </button>
             </div>
         </div>
     );
