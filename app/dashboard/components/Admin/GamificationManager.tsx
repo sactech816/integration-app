@@ -2,18 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Gamepad2, Plus, Loader2, Edit, Trash2, Power, PowerOff } from 'lucide-react';
+import { getCampaigns, updateCampaign, deleteCampaign } from '@/app/actions/gamification';
+import type { GamificationCampaign, CampaignType } from '@/lib/types';
 
-type CampaignType = 'stamp_rally' | 'login_bonus' | 'gacha';
-
-type GamificationCampaign = {
-  id: string;
-  title: string;
-  description: string | null;
-  campaign_type: CampaignType;
-  status: 'active' | 'inactive';
-  animation_type: string | null;
-  settings: any;
-  created_at: string;
+const CAMPAIGN_TYPE_LABELS: Record<CampaignType, string> = {
+  stamp_rally: 'スタンプラリー',
+  login_bonus: 'ログインボーナス',
+  gacha: 'ガチャ/抽選',
 };
 
 export default function GamificationManager() {
@@ -29,11 +24,8 @@ export default function GamificationManager() {
   const fetchCampaigns = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/gamification/campaigns');
-      if (response.ok) {
-        const data = await response.json();
-        setCampaigns(data.campaigns || []);
-      }
+      const data = await getCampaigns();
+      setCampaigns(data);
     } catch (error) {
       console.error('Failed to fetch campaigns:', error);
     } finally {
@@ -41,43 +33,30 @@ export default function GamificationManager() {
     }
   };
 
-  const handleToggleStatus = async (campaignId: string, currentStatus: string) => {
+  const handleToggleStatus = async (campaign: GamificationCampaign) => {
     try {
-      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-      const response = await fetch(`/api/gamification/campaigns/${campaignId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (response.ok) {
-        await fetchCampaigns();
-      }
+      const newStatus = campaign.status === 'active' ? 'inactive' : 'active';
+      await updateCampaign(campaign.id, { status: newStatus });
+      await fetchCampaigns();
     } catch (error) {
       console.error('Failed to toggle status:', error);
+      alert('ステータスの更新に失敗しました');
     }
   };
 
   const handleDelete = async (campaignId: string) => {
     if (!confirm('このキャンペーンを削除しますか？')) return;
     try {
-      const response = await fetch(`/api/gamification/campaigns/${campaignId}`, {
-        method: 'DELETE',
-      });
-      if (response.ok) {
-        await fetchCampaigns();
-      }
+      await deleteCampaign(campaignId);
+      await fetchCampaigns();
     } catch (error) {
       console.error('Failed to delete campaign:', error);
+      alert('キャンペーンの削除に失敗しました');
     }
   };
 
   const getCampaignTypeLabel = (type: CampaignType) => {
-    const labels: Record<CampaignType, string> = {
-      stamp_rally: 'スタンプラリー',
-      login_bonus: 'ログインボーナス',
-      gacha: 'ガチャ/抽選',
-    };
-    return labels[type];
+    return CAMPAIGN_TYPE_LABELS[type] || type;
   };
 
   const getCampaignTypeColor = (type: CampaignType) => {
@@ -86,7 +65,7 @@ export default function GamificationManager() {
       login_bonus: 'bg-blue-100 text-blue-700',
       gacha: 'bg-purple-100 text-purple-700',
     };
-    return colors[type];
+    return colors[type] || 'bg-gray-100 text-gray-700';
   };
 
   if (loading) {
@@ -163,7 +142,7 @@ export default function GamificationManager() {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleToggleStatus(campaign.id, campaign.status)}
+                    onClick={() => handleToggleStatus(campaign)}
                     className={`p-2 rounded-lg transition-colors ${
                       campaign.status === 'active'
                         ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
@@ -205,7 +184,7 @@ export default function GamificationManager() {
               {editingCampaign ? 'キャンペーン編集' : '新規キャンペーン作成'}
             </h3>
             <p className="text-gray-500 mb-4">
-              キャンペーンの作成/編集機能は、APIエンドポイントの実装が必要です。
+              キャンペーンの作成/編集機能は、専用のUIが必要です。
               <br />
               現在は一覧表示とステータス切り替えのみ対応しています。
             </p>

@@ -124,6 +124,68 @@ CREATE POLICY "Admins can manage all business_projects" ON public.business_proje
   WITH CHECK (is_admin(auth.uid()));
 
 -- ===========================================
+-- 6. アフィリエイト管理のRLSポリシー追加
+-- ===========================================
+
+-- affiliates: 管理者は全てのアフィリエイターを閲覧・管理可能
+DROP POLICY IF EXISTS "Admins can view all affiliates" ON public.affiliates;
+CREATE POLICY "Admins can view all affiliates" ON public.affiliates
+  FOR SELECT
+  USING (is_admin(auth.uid()));
+
+DROP POLICY IF EXISTS "Admins can manage all affiliates" ON public.affiliates;
+CREATE POLICY "Admins can manage all affiliates" ON public.affiliates
+  FOR ALL
+  USING (is_admin(auth.uid()))
+  WITH CHECK (is_admin(auth.uid()));
+
+-- affiliate_clicks: 管理者は全てのクリックを閲覧可能
+DROP POLICY IF EXISTS "Admins can view all clicks" ON public.affiliate_clicks;
+CREATE POLICY "Admins can view all clicks" ON public.affiliate_clicks
+  FOR SELECT
+  USING (is_admin(auth.uid()));
+
+-- affiliate_conversions: 管理者は全てのコンバージョンを閲覧・管理可能
+DROP POLICY IF EXISTS "Admins can view all conversions" ON public.affiliate_conversions;
+CREATE POLICY "Admins can view all conversions" ON public.affiliate_conversions
+  FOR SELECT
+  USING (is_admin(auth.uid()));
+
+DROP POLICY IF EXISTS "Admins can manage all conversions" ON public.affiliate_conversions;
+CREATE POLICY "Admins can manage all conversions" ON public.affiliate_conversions
+  FOR ALL
+  USING (is_admin(auth.uid()))
+  WITH CHECK (is_admin(auth.uid()));
+
+-- ===========================================
+-- 7. ゲーミフィケーション管理のRLSポリシー追加
+-- ===========================================
+
+-- gamification_campaigns: 管理者は全てのキャンペーンを閲覧・管理可能
+DROP POLICY IF EXISTS "Admins can view all campaigns" ON public.gamification_campaigns;
+CREATE POLICY "Admins can view all campaigns" ON public.gamification_campaigns
+  FOR SELECT
+  USING (is_admin(auth.uid()));
+
+DROP POLICY IF EXISTS "Admins can manage all campaigns" ON public.gamification_campaigns;
+CREATE POLICY "Admins can manage all campaigns" ON public.gamification_campaigns
+  FOR ALL
+  USING (is_admin(auth.uid()))
+  WITH CHECK (is_admin(auth.uid()));
+
+-- gacha_prizes: 管理者は全ての景品を閲覧・管理可能
+DROP POLICY IF EXISTS "Admins can view all prizes" ON public.gacha_prizes;
+CREATE POLICY "Admins can view all prizes" ON public.gacha_prizes
+  FOR SELECT
+  USING (is_admin(auth.uid()));
+
+DROP POLICY IF EXISTS "Admins can manage all prizes" ON public.gacha_prizes;
+CREATE POLICY "Admins can manage all prizes" ON public.gacha_prizes
+  FOR ALL
+  USING (is_admin(auth.uid()))
+  WITH CHECK (is_admin(auth.uid()));
+
+-- ===========================================
 -- 実行完了メッセージ
 -- ===========================================
 DO $$
