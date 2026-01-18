@@ -4,12 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Gamepad2, Plus, Loader2, Edit, Trash2, Power, PowerOff } from 'lucide-react';
 import { getCampaigns, updateCampaign, deleteCampaign } from '@/app/actions/gamification';
 import type { GamificationCampaign, CampaignType } from '@/lib/types';
-
-const CAMPAIGN_TYPE_LABELS: Record<CampaignType, string> = {
-  stamp_rally: 'スタンプラリー',
-  login_bonus: 'ログインボーナス',
-  gacha: 'ガチャ/抽選',
-};
+import { CAMPAIGN_TYPE_LABELS } from '@/lib/types';
 
 export default function GamificationManager() {
   const [loading, setLoading] = useState(true);
@@ -64,6 +59,9 @@ export default function GamificationManager() {
       stamp_rally: 'bg-amber-100 text-amber-700',
       login_bonus: 'bg-blue-100 text-blue-700',
       gacha: 'bg-purple-100 text-purple-700',
+      scratch: 'bg-pink-100 text-pink-700',
+      fukubiki: 'bg-green-100 text-green-700',
+      slot: 'bg-orange-100 text-orange-700',
     };
     return colors[type] || 'bg-gray-100 text-gray-700';
   };
