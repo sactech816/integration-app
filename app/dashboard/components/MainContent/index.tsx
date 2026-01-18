@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ServiceType } from '@/lib/types';
 import DashboardHome from './DashboardHome';
 import ContentList from './ContentList';
@@ -107,132 +107,130 @@ export default function MainContent({
   onLogout,
   adminComponents,
 }: MainContentProps) {
-  // ダッシュボードホーム
-  if (activeView === 'dashboard') {
-    return (
-      <DashboardHome
-        user={user}
-        isAdmin={isAdmin}
-        selectedService={selectedService}
-        onServiceChange={onServiceChange}
-        contents={contents}
-        contentCounts={{
-          quiz: contentCounts.quiz,
-          profile: contentCounts.profile,
-          business: contentCounts.business,
-        }}
-        isLoading={isLoading}
-        proAccessMap={proAccessMap}
-        processingId={processingId}
-        copiedId={copiedId}
-        kdlSubscription={kdlSubscription}
-        loadingKdlSubscription={loadingKdlSubscription}
-        onEdit={onEdit}
-        onDuplicate={onDuplicate}
-        onDelete={onDelete}
-        onView={onView}
-        onCopyUrl={onCopyUrl}
-        onEmbed={onEmbed}
-        onDownloadHtml={onDownloadHtml}
-        onPurchase={onPurchase}
-        onCreateNew={onCreateNew}
-        onNavigate={onNavigate}
-      />
-    );
-  }
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  // コンテンツ一覧（診断クイズ、プロフィールLP、ビジネスLP）
-  if (['quiz', 'profile', 'business'].includes(activeView)) {
-    return (
-      <ContentList
-        contents={contents}
-        selectedService={activeView as ServiceType}
-        isLoading={isLoading}
-        isAdmin={isAdmin}
-        proAccessMap={proAccessMap}
-        processingId={processingId}
-        copiedId={copiedId}
-        onEdit={onEdit}
-        onDuplicate={onDuplicate}
-        onDelete={onDelete}
-        onView={onView}
-        onCopyUrl={onCopyUrl}
-        onEmbed={onEmbed}
-        onDownloadHtml={onDownloadHtml}
-        onPurchase={onPurchase}
-        onCreateNew={onCreateNew}
-      />
-    );
-  }
-
-  // 予約・日程調整
-  if (activeView === 'booking') {
-    if (user) {
-      return <BookingList userId={user.id} isAdmin={isAdmin} />;
+  // activeViewが変更されたときにスクロール位置を最上部にリセット
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
     }
-    return null;
-  }
+    // メインコンテンツエリアのスクロールもリセット
+    window.scrollTo(0, 0);
+  }, [activeView]);
 
-  // アンケート
-  if (activeView === 'survey') {
-    if (user) {
-      return <SurveyList userId={user.id} isAdmin={isAdmin} />;
-    }
-    return null;
-  }
-
-  // ゲーミフィケーション（管理者のみ）
-  if (activeView === 'gamification') {
-    if (adminComponents?.GamificationManager) {
-      return <>{adminComponents.GamificationManager}</>;
-    }
-    return (
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">ゲーミフィケーション</h2>
-        <p className="text-gray-500">キャンペーン管理機能</p>
-      </div>
-    );
-  }
-
-  // アフィリエイト
-  if (activeView === 'affiliate') {
-    if (user) {
-      return <AffiliateDashboard userId={user.id} userEmail={user.email} />;
-    }
-    return null;
-  }
-
-  // 設定
-  if (activeView === 'settings') {
-    return <AccountSettings user={user} onLogout={onLogout} />;
-  }
-
-  // 管理者メニュー
-  if (activeView === 'admin-users' && adminComponents?.UserManager) {
-    return <>{adminComponents.UserManager}</>;
-  }
-
-  if (activeView === 'admin-announcements' && adminComponents?.AnnouncementManager) {
-    return <>{adminComponents.AnnouncementManager}</>;
-  }
-
-  if (activeView === 'admin-kdl' && adminComponents?.KdlManager) {
-    return <>{adminComponents.KdlManager}</>;
-  }
-
-  if (activeView === 'admin-affiliate' && adminComponents?.AffiliateManager) {
-    return <>{adminComponents.AffiliateManager}</>;
-  }
-
-  if (activeView === 'admin-featured' && adminComponents?.FeaturedManager) {
-    return <>{adminComponents.FeaturedManager}</>;
-  }
-
-  // デフォルト
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
-      <p className="text-gray-500">この機能は現在準備中です</p>
+    <div ref={contentRef}>
+      {activeView === 'dashboard' && (
+        <DashboardHome
+          user={user}
+          isAdmin={isAdmin}
+          selectedService={selectedService}
+          onServiceChange={onServiceChange}
+          contents={contents}
+          contentCounts={{
+            quiz: contentCounts.quiz,
+            profile: contentCounts.profile,
+            business: contentCounts.business,
+          }}
+          isLoading={isLoading}
+          proAccessMap={proAccessMap}
+          processingId={processingId}
+          copiedId={copiedId}
+          kdlSubscription={kdlSubscription}
+          loadingKdlSubscription={loadingKdlSubscription}
+          onEdit={onEdit}
+          onDuplicate={onDuplicate}
+          onDelete={onDelete}
+          onView={onView}
+          onCopyUrl={onCopyUrl}
+          onEmbed={onEmbed}
+          onDownloadHtml={onDownloadHtml}
+          onPurchase={onPurchase}
+          onCreateNew={onCreateNew}
+          onNavigate={onNavigate}
+        />
+      )}
+
+      {['quiz', 'profile', 'business'].includes(activeView) && (
+        <ContentList
+          contents={contents}
+          selectedService={activeView as ServiceType}
+          isLoading={isLoading}
+          isAdmin={isAdmin}
+          proAccessMap={proAccessMap}
+          processingId={processingId}
+          copiedId={copiedId}
+          onEdit={onEdit}
+          onDuplicate={onDuplicate}
+          onDelete={onDelete}
+          onView={onView}
+          onCopyUrl={onCopyUrl}
+          onEmbed={onEmbed}
+          onDownloadHtml={onDownloadHtml}
+          onPurchase={onPurchase}
+          onCreateNew={onCreateNew}
+        />
+      )}
+
+      {/* 予約・日程調整 */}
+      {activeView === 'booking' && user && (
+        <BookingList userId={user.id} isAdmin={isAdmin} />
+      )}
+
+      {/* アンケート */}
+      {activeView === 'survey' && user && (
+        <SurveyList userId={user.id} isAdmin={isAdmin} />
+      )}
+
+      {/* ゲーミフィケーション（管理者のみ） */}
+      {activeView === 'gamification' && adminComponents?.GamificationManager && (
+        <>{adminComponents.GamificationManager}</>
+      )}
+      {activeView === 'gamification' && !adminComponents?.GamificationManager && (
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">ゲーミフィケーション</h2>
+          <p className="text-gray-500">キャンペーン管理機能</p>
+        </div>
+      )}
+
+      {/* アフィリエイト */}
+      {activeView === 'affiliate' && user && (
+        <AffiliateDashboard userId={user.id} userEmail={user.email} />
+      )}
+
+      {/* 設定 */}
+      {activeView === 'settings' && (
+        <AccountSettings user={user} onLogout={onLogout} />
+      )}
+
+      {/* 管理者メニュー */}
+      {activeView === 'admin-users' && adminComponents?.UserManager && (
+        <>{adminComponents.UserManager}</>
+      )}
+
+      {activeView === 'admin-announcements' && adminComponents?.AnnouncementManager && (
+        <>{adminComponents.AnnouncementManager}</>
+      )}
+
+      {activeView === 'admin-kdl' && adminComponents?.KdlManager && (
+        <>{adminComponents.KdlManager}</>
+      )}
+
+      {activeView === 'admin-affiliate' && adminComponents?.AffiliateManager && (
+        <>{adminComponents.AffiliateManager}</>
+      )}
+
+      {activeView === 'admin-featured' && adminComponents?.FeaturedManager && (
+        <>{adminComponents.FeaturedManager}</>
+      )}
+
+      {/* デフォルト */}
+      {!['dashboard', 'quiz', 'profile', 'business', 'booking', 'survey', 'gamification', 'affiliate', 'settings', 'admin-users', 'admin-announcements', 'admin-kdl', 'admin-affiliate', 'admin-featured'].includes(activeView) && (
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
+          <p className="text-gray-500">この機能は現在準備中です</p>
+        </div>
+      )}
     </div>
   );
 }

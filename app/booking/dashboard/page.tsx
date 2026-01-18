@@ -61,7 +61,8 @@ const formatTime = (dateStr: string) => {
 
 export default function BookingDashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<{ id: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [menus, setMenus] = useState<BookingMenu[]>([]);
   const [selectedMenuId, setSelectedMenuId] = useState<string>('all');
   const [bookings, setBookings] = useState<BookingWithDetails[]>([]);
@@ -88,7 +89,18 @@ export default function BookingDashboardPage() {
         return;
       }
 
-      setUser({ id: user.id });
+      setUser({ id: user.id, email: user.email });
+
+      // 管理者チェック
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+      
+      const adminStatus = !!roleData;
+      setIsAdmin(adminStatus);
       
       // メニュー一覧を取得
       const menusData = await getBookingMenus(user.id);
@@ -262,10 +274,13 @@ export default function BookingDashboardPage() {
             <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
               <CalendarDays className="text-white" size={22} />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">予約・日程調整ダッシュボード</h1>
-              <p className="text-xs text-gray-500">予約一覧・日程調整管理</p>
-            </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">予約・日程調整ダッシュボード</h1>
+            <p className="text-xs text-gray-500">
+              予約一覧・日程調整管理
+              {isAdmin && <span className="ml-2 bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-bold">ADMIN</span>}
+            </p>
+          </div>
           </div>
         </div>
       </header>

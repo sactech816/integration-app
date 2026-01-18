@@ -12,6 +12,9 @@ import LoginBonusToast from '@/components/gamification/LoginBonusToast';
 import MonitorUsersManager from '@/components/shared/MonitorUsersManager';
 import AdminAISettings from '@/components/shared/AdminAISettings';
 import AdminFeatureLimitsSettings from '@/components/shared/AdminFeatureLimitsSettings';
+import AffiliateManager from './components/Admin/AffiliateManager';
+import FeaturedManager from './components/Admin/FeaturedManager';
+import GamificationManager from './components/Admin/GamificationManager';
 import { Loader2 } from 'lucide-react';
 
 // 新しいコンポーネント
@@ -135,7 +138,12 @@ function DashboardContent() {
       });
       if (response.ok) {
         const data = await response.json();
-        setKdlSubscription(data);
+        // モニター権限も hasActiveSubscription に含める
+        const hasAccess = data.hasActiveSubscription || data.isMonitor;
+        setKdlSubscription({
+          ...data,
+          hasActiveSubscription: hasAccess,
+        });
       }
     } catch (error) {
       console.error('KDL subscription fetch error:', error);
@@ -275,24 +283,9 @@ function DashboardContent() {
             <AdminFeatureLimitsSettings userId={user.id} />
           </div>
         ) : null,
-        GamificationManager: (
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">ゲーミフィケーション管理</h2>
-            <p className="text-gray-500">キャンペーン管理機能（準備中）</p>
-          </div>
-        ),
-        AffiliateManager: (
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">アフィリエイト管理</h2>
-            <p className="text-gray-500">アフィリエイト管理機能（準備中）</p>
-          </div>
-        ),
-        FeaturedManager: (
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">ピックアップ管理</h2>
-            <p className="text-gray-500">ピックアップ管理機能（準備中）</p>
-          </div>
-        ),
+        GamificationManager: <GamificationManager />,
+        AffiliateManager: <AffiliateManager />,
+        FeaturedManager: <FeaturedManager contents={contents} />,
       }
     : undefined;
 

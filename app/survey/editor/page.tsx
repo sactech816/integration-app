@@ -39,7 +39,7 @@ function EditorContent() {
         const { data, error: fetchError } = await supabase
           .from("surveys")
           .select("*")
-          .eq("id", surveyId)
+          .eq("slug", surveyId)
           .single();
 
         if (fetchError) {

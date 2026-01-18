@@ -2,13 +2,22 @@
 
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import RightPanel from './RightPanel';
 
 type DashboardLayoutProps = {
   sidebar: React.ReactNode;
   children: React.ReactNode;
+  // 右側パネル用のprops
+  rightPanel?: {
+    isOpen: boolean;
+    onClose: () => void;
+    title?: string;
+    content?: React.ReactNode;
+    width?: 'normal' | 'wide' | 'full';
+  };
 };
 
-export default function DashboardLayout({ sidebar, children }: DashboardLayoutProps) {
+export default function DashboardLayout({ sidebar, children, rightPanel }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
@@ -50,6 +59,18 @@ export default function DashboardLayout({ sidebar, children }: DashboardLayoutPr
           {children}
         </div>
       </main>
+
+      {/* 右側パネル */}
+      {rightPanel && (
+        <RightPanel
+          isOpen={rightPanel.isOpen}
+          onClose={rightPanel.onClose}
+          title={rightPanel.title}
+          width={rightPanel.width}
+        >
+          {rightPanel.content}
+        </RightPanel>
+      )}
     </div>
   );
 }
