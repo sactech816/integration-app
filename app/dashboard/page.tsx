@@ -284,7 +284,7 @@ function DashboardContent() {
           </div>
         ) : null,
         GamificationManager: <GamificationManager />,
-        AffiliateManager: <AffiliateManager />,
+        AffiliateManager: <AffiliateManager user={user} />,
         FeaturedManager: <FeaturedManager contents={contents} />,
       }
     : undefined;

@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { DollarSign, Users, TrendingUp, Link as LinkIcon, Loader2, Copy, Check, Eye } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { DollarSign, Users, TrendingUp, Link as LinkIcon, Loader2, Copy, Check, Eye, Filter } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+type AffiliateManagerProps = {
+  user: { id: string; email?: string } | null;
+};
 
 type AffiliateStats = {
   totalAffiliates: number;
@@ -45,9 +44,13 @@ type AffiliateConversion = {
   affiliate_code?: string;
   service_label?: string;
   status_label?: string;
+  service_type?: string;
+  plan_tier?: string;
 };
 
-export default function AffiliateManager() {
+export default function AffiliateManager({ user }: AffiliateManagerProps) {
+  console.log('[AffiliateManager] Component mounted, user:', user);
+  
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<AffiliateStats>({
     totalAffiliates: 0,
@@ -60,30 +63,67 @@ export default function AffiliateManager() {
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
   const [conversions, setConversions] = useState<AffiliateConversion[]>([]);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const [showClickDetails, setShowClickDetails] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [affiliateStatusFilter, setAffiliateStatusFilter] = useState<'all' | 'active' | 'suspended'>('all');
+  const [conversionStatusFilter, setConversionStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'paid' | 'cancelled'>('all');
+
+  // セッションの準備を待つ
+  useEffect(() => {
+    const checkAuth = async () => {
+      // userがpropsで渡されている場合は、セッションチェックをスキップ
+      if (user) {
+        setAuthReady(true);
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setAuthReady(true);
+      } else {
+        // セッションがない場合、少し待ってから再試行
+        setTimeout(async () => {
+          const { data: { session: retrySession } } = await supabase.auth.getSession();
+          if (retrySession) {
+            setAuthReady(true);
+          } else {
+            console.error('[AffiliateManager] セッションを確立できませんでした');
+            setLoading(false);
+          }
+        }, 1000);
+      }
+    };
+    checkAuth();
+  }, [user]);
 
   useEffect(() => {
-    fetchAffiliateData();
-  }, []);
+    if (authReady) {
+      fetchAffiliateData();
+    }
+  }, [authReady]);
 
   const fetchAffiliateData = async () => {
     setLoading(true);
     try {
+      console.log('[AffiliateManager] Fetching session...');
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 
       if (!token) {
-        console.error('認証トークンがありません');
+        console.error('[AffiliateManager] 認証トークンがありません');
         return;
       }
 
+      console.log('[AffiliateManager] Fetching affiliate data from API...');
       const response = await fetch('/api/admin/affiliates', {
         headers: { 'Authorization': `Bearer ${token}` },
       });
 
+      console.log('[AffiliateManager] API Response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('[AffiliateManager] API Response data:', data);
         setAffiliates(data.affiliates || []);
         setConversions(data.conversions || []);
         setStats(data.stats || {
@@ -94,16 +134,21 @@ export default function AffiliateManager() {
           thisMonthEarnings: 0,
           pendingPayouts: 0,
         });
+      } else {
+        const errorData = await response.json();
+        console.error('[AffiliateManager] API Error:', errorData);
       }
     } catch (error) {
-      console.error('Failed to fetch affiliate data:', error);
+      console.error('[AffiliateManager] Failed to fetch affiliate data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
+  const handleCopyAffiliateLink = (code: string) => {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://makers.tokyo';
+    const affiliateLink = `${baseUrl}/kindle/lp?ref=${code}`;
+    navigator.clipboard.writeText(affiliateLink);
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 2000);
   };
@@ -142,42 +187,6 @@ export default function AffiliateManager() {
     }
   };
 
-  const handleToggleActive = async (affiliateId: string, currentStatus: string) => {
-    setUpdatingId(affiliateId);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-      if (!token) throw new Error('認証トークンがありません');
-
-      const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
-
-      const response = await fetch('/api/admin/affiliates', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'update_affiliate_status',
-          affiliateId,
-          status: newStatus,
-        }),
-      });
-
-      if (response.ok) {
-        await fetchAffiliateData();
-      } else {
-        alert('ステータスの更新に失敗しました');
-      }
-    } catch (error) {
-      console.error('Toggle active error:', error);
-      alert('ステータスの更新に失敗しました');
-    } finally {
-      setUpdatingId(null);
-    }
-  };
-
   const handleUpdateConversionStatus = async (
     conversionId: string,
     action: 'confirm_conversion' | 'mark_paid' | 'cancel_conversion'
@@ -211,10 +220,6 @@ export default function AffiliateManager() {
     }
   };
 
-  const getAffiliateConversions = (affiliateId: string) => {
-    return conversions.filter((c) => c.affiliate_id === affiliateId);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -222,6 +227,28 @@ export default function AffiliateManager() {
       </div>
     );
   }
+
+  if (!authReady) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 space-y-4">
+        <p className="text-gray-600">認証エラー: セッションを確立できませんでした</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          再読み込み
+        </button>
+      </div>
+    );
+  }
+
+  const filteredAffiliates = affiliateStatusFilter === 'all'
+    ? affiliates
+    : affiliates.filter((aff) => aff.status === affiliateStatusFilter);
+
+  const filteredConversions = conversionStatusFilter === 'all'
+    ? conversions
+    : conversions.filter((conv) => conv.status === conversionStatusFilter);
 
   return (
     <div className="space-y-6">
@@ -260,148 +287,222 @@ export default function AffiliateManager() {
 
       {/* アフィリエイター一覧 */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
           <h3 className="font-bold text-gray-900">アフィリエイター一覧</h3>
+          <div className="flex items-center gap-2">
+            <Filter size={16} className="text-gray-500" />
+            <select
+              value={affiliateStatusFilter}
+              onChange={(e) => setAffiliateStatusFilter(e.target.value as any)}
+              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 text-gray-900 bg-white"
+            >
+              <option value="all">全て</option>
+              <option value="active">アクティブ</option>
+              <option value="suspended">停止中</option>
+            </select>
+          </div>
         </div>
-        {affiliates.length === 0 ? (
+        {filteredAffiliates.length === 0 ? (
           <div className="p-12 text-center">
             <LinkIcon size={48} className="mx-auto text-gray-300 mb-4" />
             <p className="text-gray-500">アフィリエイターがいません</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
-            {affiliates.map((affiliate) => {
-              const affiliateConversions = getAffiliateConversions(affiliate.id);
-
-              return (
-                <div key={affiliate.id} className="p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-bold text-gray-900">
-                          {affiliate.email || affiliate.display_name || affiliate.referral_code}
-                        </span>
-                        <button
-                          onClick={() => handleCopyCode(affiliate.referral_code)}
-                          className="p-1 hover:bg-gray-200 rounded transition-colors"
-                          title="コピー"
-                        >
-                          {copiedCode === affiliate.referral_code ? (
-                            <Check size={14} className="text-green-600" />
-                          ) : (
-                            <Copy size={14} className="text-gray-500" />
-                          )}
-                        </button>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">メールアドレス</th>
+                  <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">紹介コード</th>
+                  <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">ステータス</th>
+                  <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">報酬率</th>
+                  <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">クリック</th>
+                  <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">成約</th>
+                  <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">総報酬</th>
+                  <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">未払い</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAffiliates.map((aff) => {
+                  const statusColors: Record<string, string> = {
+                    active: 'bg-green-100 text-green-700',
+                    suspended: 'bg-red-100 text-red-700',
+                    pending: 'bg-yellow-100 text-yellow-700',
+                  };
+                  return (
+                    <tr key={aff.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="px-4 py-3 text-gray-900 font-medium">{aff.email}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col items-center gap-1">
+                          <code className="bg-emerald-50 border border-emerald-200 px-3 py-1 rounded text-sm font-bold text-emerald-700">
+                            {aff.referral_code}
+                          </code>
+                          <button
+                            onClick={() => handleCopyAffiliateLink(aff.referral_code)}
+                            className="flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 transition-colors"
+                          >
+                            {copiedCode === aff.referral_code ? (
+                              <>
+                                <Check size={12} />
+                                <span>コピー済み</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy size={12} />
+                                <span>リンクをコピー</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-center">
                         <span
-                          className={`text-xs px-2 py-1 rounded-full font-bold ${
-                            affiliate.status === 'active'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-gray-100 text-gray-600'
+                          className={`px-2 py-1 rounded text-xs font-bold ${
+                            statusColors[aff.status] || 'bg-gray-100 text-gray-700'
                           }`}
                         >
-                          {affiliate.status === 'active' ? '有効' : '無効'}
+                          {aff.status === 'active' ? 'アクティブ' : aff.status === 'suspended' ? '停止中' : '保留'}
                         </span>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-600">
-                        <span>クリック: {affiliate.total_clicks || 0}</span>
-                        <span>成約: {affiliate.total_conversions || 0}</span>
-                        <span>報酬: ¥{(affiliate.total_earnings || 0).toLocaleString()}</span>
-                        <span>手数料: {affiliate.commission_rate}%</span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleToggleActive(affiliate.id, affiliate.status)}
-                        disabled={updatingId === affiliate.id}
-                        className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                          affiliate.status === 'active'
-                            ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                            : 'bg-green-100 hover:bg-green-200 text-green-700'
-                        } disabled:opacity-50`}
-                      >
-                        {affiliate.status === 'active' ? '無効化' : '有効化'}
-                      </button>
-                      <button
-                        onClick={() =>
-                          setShowClickDetails(showClickDetails === affiliate.id ? null : affiliate.id)
-                        }
-                        className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors"
-                        title="詳細"
-                      >
-                        <Eye size={16} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* クリック詳細 */}
-                  {showClickDetails === affiliate.id && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <h4 className="font-bold text-sm text-gray-900 mb-2">コンバージョン詳細</h4>
-                      {affiliateConversions.length === 0 ? (
-                        <p className="text-sm text-gray-500">コンバージョンがありません</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {affiliateConversions.map((conversion) => (
-                            <div
-                              key={conversion.id}
-                              className="flex items-center justify-between text-sm bg-white p-2 rounded border border-gray-200"
-                            >
-                              <div>
-                                <span className="font-medium text-gray-900">
-                                  {conversion.service_label || 'サービス'}
-                                </span>
-                                <span className="text-gray-500 ml-2">
-                                  (報酬: ¥{conversion.commission_amount.toLocaleString()})
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className={`text-xs px-2 py-1 rounded-full font-bold ${
-                                    conversion.status === 'confirmed'
-                                      ? 'bg-green-100 text-green-700'
-                                      : conversion.status === 'paid'
-                                      ? 'bg-blue-100 text-blue-700'
-                                      : conversion.status === 'cancelled'
-                                      ? 'bg-red-100 text-red-700'
-                                      : 'bg-yellow-100 text-yellow-700'
-                                  }`}
-                                >
-                                  {conversion.status_label || conversion.status}
-                                </span>
-                                {conversion.status === 'pending' && (
-                                  <div className="flex gap-1">
-                                    <button
-                                      onClick={() => handleUpdateConversionStatus(conversion.id, 'confirm_conversion')}
-                                      className="px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 rounded text-xs"
-                                    >
-                                      承認
-                                    </button>
-                                    <button
-                                      onClick={() => handleUpdateConversionStatus(conversion.id, 'cancel_conversion')}
-                                      className="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-xs"
-                                    >
-                                      却下
-                                    </button>
-                                  </div>
-                                )}
-                                {conversion.status === 'confirmed' && (
-                                  <button
-                                    onClick={() => handleUpdateConversionStatus(conversion.id, 'mark_paid')}
-                                    className="px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-xs"
-                                  >
-                                    支払済み
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          ))}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-1">
+                          <input
+                            type="number"
+                            defaultValue={aff.commission_rate}
+                            min="0"
+                            max="100"
+                            step="0.5"
+                            className="w-16 border border-gray-300 rounded px-2 py-1 text-xs text-center text-gray-900 bg-white"
+                            onBlur={(e) => {
+                              const newRate = parseFloat(e.target.value);
+                              if (newRate !== aff.commission_rate) {
+                                handleUpdateCommissionRate(aff.id, newRate);
+                              }
+                            }}
+                            disabled={updatingId === aff.id}
+                          />
+                          <span className="text-xs text-gray-500">%</span>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                      </td>
+                      <td className="px-4 py-3 text-right text-blue-600 font-bold">{aff.total_clicks || 0}</td>
+                      <td className="px-4 py-3 text-right text-purple-600 font-bold">{aff.total_conversions || 0}</td>
+                      <td className="px-4 py-3 text-right text-emerald-600 font-bold">
+                        ¥{(aff.total_earnings || 0).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right text-orange-600 font-bold">
+                        ¥{(aff.unpaid_earnings || 0).toLocaleString()}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* コンバージョン一覧 */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+          <h3 className="font-bold text-gray-900">成果（コンバージョン）一覧</h3>
+          <div className="flex items-center gap-2">
+            <Filter size={16} className="text-gray-500" />
+            <select
+              value={conversionStatusFilter}
+              onChange={(e) => setConversionStatusFilter(e.target.value as any)}
+              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 text-gray-900 bg-white"
+            >
+              <option value="all">全て</option>
+              <option value="pending">保留中</option>
+              <option value="confirmed">確定</option>
+              <option value="paid">支払済</option>
+              <option value="cancelled">キャンセル</option>
+            </select>
+          </div>
+        </div>
+        {filteredConversions.length === 0 ? (
+          <div className="p-12 text-center">
+            <p className="text-gray-500">コンバージョンがありません</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">アフィリエイター</th>
+                  <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">サービス</th>
+                  <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">契約金額</th>
+                  <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">報酬額</th>
+                  <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">ステータス</th>
+                  <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">日時</th>
+                  <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredConversions.map((conv) => {
+                  const statusColors: Record<string, string> = {
+                    pending: 'bg-yellow-100 text-yellow-700',
+                    confirmed: 'bg-green-100 text-green-700',
+                    paid: 'bg-blue-100 text-blue-700',
+                    cancelled: 'bg-red-100 text-red-700',
+                  };
+                  return (
+                    <tr key={conv.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="px-4 py-3 text-gray-900">
+                        <div className="text-sm font-medium">{conv.affiliate_email || '不明'}</div>
+                        <div className="text-xs text-gray-500">{conv.affiliate_code || ''}</div>
+                      </td>
+                      <td className="px-4 py-3 text-gray-900 text-sm">{conv.service_label || conv.service_type}</td>
+                      <td className="px-4 py-3 text-right text-gray-900 font-medium">
+                        ¥{(conv.plan_amount || 0).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right text-emerald-600 font-bold">
+                        ¥{conv.commission_amount.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`px-2 py-1 rounded text-xs font-bold ${statusColors[conv.status]}`}>
+                          {conv.status_label || conv.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center text-sm text-gray-600">
+                        {new Date(conv.converted_at).toLocaleDateString('ja-JP')}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex justify-center gap-1">
+                          {conv.status === 'pending' && (
+                            <>
+                              <button
+                                onClick={() => handleUpdateConversionStatus(conv.id, 'confirm_conversion')}
+                                className="px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 rounded text-xs font-medium"
+                              >
+                                承認
+                              </button>
+                              <button
+                                onClick={() => handleUpdateConversionStatus(conv.id, 'cancel_conversion')}
+                                className="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-xs font-medium"
+                              >
+                                却下
+                              </button>
+                            </>
+                          )}
+                          {conv.status === 'confirmed' && (
+                            <button
+                              onClick={() => handleUpdateConversionStatus(conv.id, 'mark_paid')}
+                              className="px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-xs font-medium"
+                            >
+                              支払済み
+                            </button>
+                          )}
+                          {(conv.status === 'paid' || conv.status === 'cancelled') && (
+                            <span className="text-xs text-gray-400">-</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
