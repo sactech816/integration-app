@@ -6,6 +6,7 @@ import DashboardHome from './DashboardHome';
 import ContentList from './ContentList';
 import { ContentItem } from './ContentCard';
 import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
+import AccountSettings from '../Settings/AccountSettings';
 import BookingList from './BookingList';
 import SurveyList from './SurveyList';
 
@@ -117,58 +118,58 @@ export default function MainContent({
     window.scrollTo(0, 0);
   }, [activeView]);
 
-  return (
+    return (
     <div ref={contentRef}>
       {activeView === 'dashboard' && (
-        <DashboardHome
-          user={user}
-          isAdmin={isAdmin}
-          selectedService={selectedService}
-          onServiceChange={onServiceChange}
-          contents={contents}
-          contentCounts={{
-            quiz: contentCounts.quiz,
-            profile: contentCounts.profile,
-            business: contentCounts.business,
-          }}
-          isLoading={isLoading}
-          proAccessMap={proAccessMap}
-          processingId={processingId}
-          copiedId={copiedId}
-          kdlSubscription={kdlSubscription}
-          loadingKdlSubscription={loadingKdlSubscription}
-          onEdit={onEdit}
-          onDuplicate={onDuplicate}
-          onDelete={onDelete}
-          onView={onView}
-          onCopyUrl={onCopyUrl}
-          onEmbed={onEmbed}
-          onDownloadHtml={onDownloadHtml}
-          onPurchase={onPurchase}
-          onCreateNew={onCreateNew}
-          onNavigate={onNavigate}
-        />
+      <DashboardHome
+        user={user}
+        isAdmin={isAdmin}
+        selectedService={selectedService}
+        onServiceChange={onServiceChange}
+        contents={contents}
+        contentCounts={{
+          quiz: contentCounts.quiz,
+          profile: contentCounts.profile,
+          business: contentCounts.business,
+        }}
+        isLoading={isLoading}
+        proAccessMap={proAccessMap}
+        processingId={processingId}
+        copiedId={copiedId}
+        kdlSubscription={kdlSubscription}
+        loadingKdlSubscription={loadingKdlSubscription}
+        onEdit={onEdit}
+        onDuplicate={onDuplicate}
+        onDelete={onDelete}
+        onView={onView}
+        onCopyUrl={onCopyUrl}
+        onEmbed={onEmbed}
+        onDownloadHtml={onDownloadHtml}
+        onPurchase={onPurchase}
+        onCreateNew={onCreateNew}
+        onNavigate={onNavigate}
+      />
       )}
 
       {['quiz', 'profile', 'business'].includes(activeView) && (
-        <ContentList
-          contents={contents}
-          selectedService={activeView as ServiceType}
-          isLoading={isLoading}
-          isAdmin={isAdmin}
-          proAccessMap={proAccessMap}
-          processingId={processingId}
-          copiedId={copiedId}
-          onEdit={onEdit}
-          onDuplicate={onDuplicate}
-          onDelete={onDelete}
-          onView={onView}
-          onCopyUrl={onCopyUrl}
-          onEmbed={onEmbed}
-          onDownloadHtml={onDownloadHtml}
-          onPurchase={onPurchase}
-          onCreateNew={onCreateNew}
-        />
+      <ContentList
+        contents={contents}
+        selectedService={activeView as ServiceType}
+        isLoading={isLoading}
+        isAdmin={isAdmin}
+        proAccessMap={proAccessMap}
+        processingId={processingId}
+        copiedId={copiedId}
+        onEdit={onEdit}
+        onDuplicate={onDuplicate}
+        onDelete={onDelete}
+        onView={onView}
+        onCopyUrl={onCopyUrl}
+        onEmbed={onEmbed}
+        onDownloadHtml={onDownloadHtml}
+        onPurchase={onPurchase}
+        onCreateNew={onCreateNew}
+      />
       )}
 
       {/* 予約・日程調整 */}
@@ -186,15 +187,20 @@ export default function MainContent({
         <>{adminComponents.GamificationManager}</>
       )}
       {activeView === 'gamification' && !adminComponents?.GamificationManager && (
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">ゲーミフィケーション</h2>
-          <p className="text-gray-500">キャンペーン管理機能</p>
-        </div>
+      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">ゲーミフィケーション</h2>
+        <p className="text-gray-500">キャンペーン管理機能</p>
+      </div>
       )}
 
       {/* アフィリエイト */}
       {activeView === 'affiliate' && user && (
         <AffiliateDashboard userId={user.id} userEmail={user.email} />
+      )}
+
+      {/* 設定 */}
+      {activeView === 'settings' && (
+        <AccountSettings user={user} onLogout={onLogout} />
       )}
 
       {/* 管理者メニュー */}
@@ -219,10 +225,10 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'quiz', 'profile', 'business', 'booking', 'survey', 'gamification', 'affiliate', 'admin-users', 'admin-announcements', 'admin-kdl', 'admin-affiliate', 'admin-featured'].includes(activeView) && (
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
-          <p className="text-gray-500">この機能は現在準備中です</p>
+      {!['dashboard', 'quiz', 'profile', 'business', 'booking', 'survey', 'gamification', 'affiliate', 'settings', 'admin-users', 'admin-announcements', 'admin-kdl', 'admin-affiliate', 'admin-featured'].includes(activeView) && (
+    <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
+      <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
+      <p className="text-gray-500">この機能は現在準備中です</p>
         </div>
       )}
     </div>

@@ -160,19 +160,6 @@ function DashboardContent() {
 
   // サイドバーのメニュー項目クリック時の処理
   const handleMenuItemClick = (itemId: string) => {
-    // 設定は右側パネルで表示
-    if (itemId === 'settings') {
-      setRightPanelTitle('アカウント設定');
-      setRightPanelContent(
-        <div className="max-w-2xl mx-auto">
-          <AccountSettings user={user} onLogout={handleLogout} />
-        </div>
-      );
-      setRightPanelOpen(true);
-      return;
-    }
-
-    // それ以外は通常のビュー切り替え
     setActiveView(itemId as ActiveView);
 
     // サービス選択の場合はselectedServiceも更新
@@ -321,13 +308,6 @@ function DashboardContent() {
               hasKdlSubscription={kdlSubscription?.hasActiveSubscription || false}
             />
           }
-          rightPanel={{
-            isOpen: rightPanelOpen,
-            onClose: () => setRightPanelOpen(false),
-            title: rightPanelTitle,
-            content: rightPanelContent,
-            width: 'wide',
-          }}
         >
           <MainContent
             activeView={activeView}
