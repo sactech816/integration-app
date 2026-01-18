@@ -15,6 +15,7 @@ import AdminFeatureLimitsSettings from '@/components/shared/AdminFeatureLimitsSe
 import AffiliateManager from './components/Admin/AffiliateManager';
 import FeaturedManager from './components/Admin/FeaturedManager';
 import GamificationManager from './components/Admin/GamificationManager';
+import AccountSettings from './components/Settings/AccountSettings';
 import { Loader2 } from 'lucide-react';
 
 // 新しいコンポーネント
@@ -75,6 +76,11 @@ function DashboardContent() {
   const [showAuth, setShowAuth] = useState(false);
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
   const [selectedService, setSelectedService] = useState<ServiceType>('quiz');
+  
+  // 右側パネル状態
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [rightPanelContent, setRightPanelContent] = useState<React.ReactNode>(null);
+  const [rightPanelTitle, setRightPanelTitle] = useState<string>('');
   
   // KDLサブスクリプション状態
   const [kdlSubscription, setKdlSubscription] = useState<KdlSubscription | null>(null);
@@ -154,6 +160,19 @@ function DashboardContent() {
 
   // サイドバーのメニュー項目クリック時の処理
   const handleMenuItemClick = (itemId: string) => {
+    // 設定は右側パネルで表示
+    if (itemId === 'settings') {
+      setRightPanelTitle('アカウント設定');
+      setRightPanelContent(
+        <div className="max-w-2xl mx-auto">
+          <AccountSettings user={user} onLogout={handleLogout} />
+        </div>
+      );
+      setRightPanelOpen(true);
+      return;
+    }
+
+    // それ以外は通常のビュー切り替え
     setActiveView(itemId as ActiveView);
 
     // サービス選択の場合はselectedServiceも更新
@@ -166,12 +185,6 @@ function DashboardContent() {
     if (itemId === 'kindle') {
       const adminKey = isAdmin ? `?admin_key=${process.env.NEXT_PUBLIC_ADMIN_KEY || ''}` : '';
       router.push(`/kindle${adminKey}`);
-      return;
-    }
-
-    // 設定への遷移
-    if (itemId === 'settings') {
-      router.push('/dashboard/settings');
       return;
     }
   };
@@ -308,6 +321,13 @@ function DashboardContent() {
               hasKdlSubscription={kdlSubscription?.hasActiveSubscription || false}
             />
           }
+          rightPanel={{
+            isOpen: rightPanelOpen,
+            onClose: () => setRightPanelOpen(false),
+            title: rightPanelTitle,
+            content: rightPanelContent,
+            width: 'wide',
+          }}
         >
           <MainContent
             activeView={activeView}

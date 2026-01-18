@@ -6,7 +6,6 @@ import DashboardHome from './DashboardHome';
 import ContentList from './ContentList';
 import { ContentItem } from './ContentCard';
 import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
-import AccountSettings from '../Settings/AccountSettings';
 import BookingList from './BookingList';
 import SurveyList from './SurveyList';
 
@@ -198,11 +197,6 @@ export default function MainContent({
         <AffiliateDashboard userId={user.id} userEmail={user.email} />
       )}
 
-      {/* 設定 */}
-      {activeView === 'settings' && (
-        <AccountSettings user={user} onLogout={onLogout} />
-      )}
-
       {/* 管理者メニュー */}
       {activeView === 'admin-users' && adminComponents?.UserManager && (
         <>{adminComponents.UserManager}</>
@@ -225,7 +219,7 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'quiz', 'profile', 'business', 'booking', 'survey', 'gamification', 'affiliate', 'settings', 'admin-users', 'admin-announcements', 'admin-kdl', 'admin-affiliate', 'admin-featured'].includes(activeView) && (
+      {!['dashboard', 'quiz', 'profile', 'business', 'booking', 'survey', 'gamification', 'affiliate', 'admin-users', 'admin-announcements', 'admin-kdl', 'admin-affiliate', 'admin-featured'].includes(activeView) && (
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
           <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
           <p className="text-gray-500">この機能は現在準備中です</p>

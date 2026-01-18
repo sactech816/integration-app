@@ -147,7 +147,7 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
         <User size={28} className="text-indigo-600" />
         アカウント設定
