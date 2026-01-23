@@ -25,6 +25,8 @@ import {
   ClipboardList,
   TrendingUp,
   Eye,
+  Gamepad2,
+  Layers,
 } from 'lucide-react';
 
 interface PopularContent {
