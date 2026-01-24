@@ -38,8 +38,9 @@ const PUBLIC_PATHS = [
 // デモモード用のパス（クエリパラメータ付き）
 const DEMO_PATH = '/kindle/new';
 
-// 管理者バイパス用シークレットキー（環境変数から取得）
-const ADMIN_BYPASS_KEY = process.env.KDL_ADMIN_BYPASS_KEY || 'kdl-admin-2026';
+// 管理者バイパス用シークレットキー（環境変数から取得、デフォルト値なし）
+// セキュリティ: 環境変数が未設定の場合はバイパス機能を無効化
+const ADMIN_BYPASS_KEY = process.env.KDL_ADMIN_BYPASS_KEY;
 
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
@@ -62,8 +63,9 @@ export async function middleware(request: NextRequest) {
   }
 
   // 管理者バイパス（?admin_key=xxx）- 緊急時の管理者専用バイパスキー
+  // セキュリティ: 環境変数が設定されている場合のみ有効
   const adminKey = searchParams.get('admin_key');
-  if (adminKey === ADMIN_BYPASS_KEY) {
+  if (ADMIN_BYPASS_KEY && adminKey === ADMIN_BYPASS_KEY) {
     return NextResponse.next();
   }
 

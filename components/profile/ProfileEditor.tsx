@@ -2521,7 +2521,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
             <ArrowLeft size={20} />
           </button>
           <h2 className="font-bold text-lg text-gray-900 line-clamp-1">
-            {initialData ? 'プロフィール編集' : '新規作成'}
+            {initialData ? 'プロフィール編集' : 'プロフィールLP作成'}
           </h2>
         </div>
         <div className="flex gap-2">

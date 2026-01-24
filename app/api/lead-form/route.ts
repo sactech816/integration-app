@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
+import { escapeHtml, isValidEmail, truncate } from '@/lib/security/sanitize';
+import { rateLimit, createRateLimitResponse } from '@/lib/security/rate-limit';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -17,6 +19,12 @@ function getSupabase() {
 
 export async function POST(request: Request) {
   try {
+    // レート制限チェック（フォーム送信: 3回/分）
+    const rateLimitResult = rateLimit(request, 'form');
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult.resetIn);
+    }
+
     const {
       content_id,
       content_type,
@@ -35,14 +43,24 @@ export async function POST(request: Request) {
       );
     }
 
-    // メールバリデーション
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // メールバリデーション（セキュリティ強化版）
+    if (!isValidEmail(email)) {
       return NextResponse.json(
         { error: '有効なメールアドレスを入力してください' },
         { status: 400 }
       );
     }
+
+    // 入力値の長さ制限とサニタイズ
+    const safeName = truncate(name || '', 100);
+    const safeMessage = truncate(message || '', 5000);
+    const safeContentTitle = truncate(content_title || '', 200);
+
+    // XSSエスケープ（HTMLメール用）
+    const escapedName = escapeHtml(safeName);
+    const escapedEmail = escapeHtml(email);
+    const escapedMessage = escapeHtml(safeMessage);
+    const escapedContentTitle = escapeHtml(safeContentTitle);
 
     // リードをDBに保存
     const supabase = getSupabase();
@@ -90,7 +108,7 @@ export async function POST(request: Request) {
                 <h1 style="margin: 0; font-size: 24px;">✉️ ご登録ありがとうございます</h1>
               </div>
               <div class="content">
-                <p>${name ? `${name} 様` : 'お客様'}</p>
+                <p>${escapedName ? `${escapedName} 様` : 'お客様'}</p>
                 <p>LPからのご登録を受け付けました。</p>
                 <p>ご登録いただきありがとうございます。<br>担当者より追ってご連絡させていただきます。</p>
                 <div class="footer">
@@ -134,23 +152,23 @@ export async function POST(request: Request) {
               <div class="container">
                 <div class="header">
                   <h1 style="margin: 0; font-size: 24px;">🎉 新規リード獲得</h1>
-                  ${content_title ? `<p style="margin: 10px 0 0 0; opacity: 0.9;">${content_title}</p>` : ''}
+                  ${escapedContentTitle ? `<p style="margin: 10px 0 0 0; opacity: 0.9;">${escapedContentTitle}</p>` : ''}
                 </div>
                 <div class="content">
                   <div class="info-block">
                     <div class="label">メールアドレス</div>
-                    <div class="value">${email}</div>
+                    <div class="value">${escapedEmail}</div>
                   </div>
-                  ${name ? `
+                  ${escapedName ? `
                   <div class="info-block">
                     <div class="label">お名前</div>
-                    <div class="value">${name}</div>
+                    <div class="value">${escapedName}</div>
                   </div>
                   ` : ''}
-                  ${message ? `
+                  ${escapedMessage ? `
                   <div class="info-block">
                     <div class="label">メッセージ</div>
-                    <div class="value">${message}</div>
+                    <div class="value">${escapedMessage}</div>
                   </div>
                   ` : ''}
                   <div class="info-block">

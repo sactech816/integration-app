@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { verifyOrigin, createOriginErrorResponse } from '@/lib/security/origin';
+import { rateLimit, createRateLimitResponse } from '@/lib/security/rate-limit';
 
 // サーバーサイド用Supabaseクライアント
 function getSupabaseServer() {
@@ -25,6 +27,18 @@ function getSupabaseServer() {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Origin検証（不正なサイトからのリクエストを拒否）
+    if (!verifyOrigin(request)) {
+      console.warn('[Analytics API] Invalid origin:', request.headers.get('origin'));
+      return createOriginErrorResponse();
+    }
+
+    // レート制限（API一般: 30回/分）
+    const rateLimitResult = rateLimit(request, 'api');
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult.resetIn);
+    }
+
     const supabase = getSupabaseServer();
     if (!supabase) {
       return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });

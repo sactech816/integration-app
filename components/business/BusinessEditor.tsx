@@ -2357,7 +2357,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             <ArrowLeft size={20} />
           </button>
           <h2 className="font-bold text-lg text-gray-900 line-clamp-1">
-            {initialData ? 'ビジネスLP編集' : '新規作成'}
+            {initialData ? 'ビジネスLP編集' : 'ビジネスLP作成'}
           </h2>
         </div>
         <div className="flex gap-2">
