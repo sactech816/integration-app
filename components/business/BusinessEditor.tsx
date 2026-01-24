@@ -296,27 +296,46 @@ const Section = ({
   isOpen, 
   onToggle, 
   children,
-  badge
+  badge,
+  step,
+  stepLabel,
+  headerBgColor = 'bg-gray-50',
+  headerHoverColor = 'hover:bg-gray-100',
+  accentColor = 'bg-amber-100 text-amber-600'
 }: { 
   title: string, 
   icon: React.ComponentType<{ size?: number }>, 
   isOpen: boolean, 
   onToggle: () => void, 
   children: React.ReactNode,
-  badge?: string
+  badge?: string,
+  step?: number,
+  stepLabel?: string,
+  headerBgColor?: string,
+  headerHoverColor?: string,
+  accentColor?: string
 }) => (
   <div className="border border-gray-200 rounded-xl overflow-hidden mb-4 bg-white">
+    {/* ステップ見出し */}
+    {step && stepLabel && (
+      <div className={`px-5 py-2 ${headerBgColor} border-b border-gray-200/50`}>
+        <span className="text-xs font-bold text-gray-600 bg-white/60 px-2 py-0.5 rounded">
+          STEP {step}
+        </span>
+        <span className="text-sm text-gray-700 ml-2">{stepLabel}</span>
+      </div>
+    )}
     <button 
       onClick={onToggle}
-      className="w-full px-5 py-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+      className={`w-full px-5 py-4 flex items-center justify-between ${headerBgColor} ${headerHoverColor} transition-colors`}
     >
       <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg ${isOpen ? 'bg-amber-100 text-amber-600' : 'bg-gray-200 text-gray-500'}`}>
+        <div className={`p-2 rounded-lg ${isOpen ? accentColor : 'bg-gray-200 text-gray-500'}`}>
           <Icon size={18} />
         </div>
         <span className="font-bold text-gray-900">{title}</span>
         {badge && (
-          <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">{badge}</span>
+          <span className="text-xs bg-white/80 text-gray-700 px-2 py-0.5 rounded-full border border-gray-200">{badge}</span>
         )}
       </div>
       {isOpen ? <ChevronUp size={20} className="text-gray-500" /> : <ChevronDown size={20} className="text-gray-500" />}
@@ -1860,12 +1879,17 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   // エディター本体のレンダリング
   const renderEditor = () => (
     <div className="space-y-4">
-      {/* テンプレート・AI生成セクション */}
+      {/* ステップ1: テンプレート・AI生成セクション */}
       <Section
         title="テンプレート・AI生成"
         icon={Sparkles}
         isOpen={openSections.template}
         onToggle={() => toggleSection('template')}
+        step={1}
+        stepLabel="テンプレートやAIでLPの下書きを作成（任意）"
+        headerBgColor="bg-purple-50"
+        headerHoverColor="hover:bg-purple-100"
+        accentColor="bg-purple-100 text-purple-600"
       >
         {/* テンプレート選択 */}
         <div className="mb-6">
@@ -1915,12 +1939,17 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
         </div>
       </Section>
 
-      {/* テーマ設定 */}
+      {/* ステップ2: テーマ設定 */}
       <Section
         title="テーマ設定"
         icon={Palette}
         isOpen={openSections.theme}
         onToggle={() => toggleSection('theme')}
+        step={2}
+        stepLabel="タイトル・背景デザインを設定"
+        headerBgColor="bg-blue-50"
+        headerHoverColor="hover:bg-blue-100"
+        accentColor="bg-blue-100 text-blue-600"
       >
         <div className="space-y-6">
       {/* 基本設定 */}
@@ -1977,13 +2006,18 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       </div>
       </Section>
 
-      {/* ブロック編集セクション */}
+      {/* ステップ3: ブロック編集セクション */}
       <Section
         title="ブロック"
         icon={Layout}
         isOpen={openSections.blocks}
         onToggle={() => toggleSection('blocks')}
         badge={`${lp.content?.length || 0}個`}
+        step={3}
+        stepLabel="コンテンツブロックを追加・編集"
+        headerBgColor="bg-orange-50"
+        headerHoverColor="hover:bg-orange-100"
+        accentColor="bg-orange-100 text-orange-600"
       >
       {/* ブロック一覧 */}
         <div className="space-y-3 min-h-[100px]">
@@ -2068,12 +2102,17 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
         </div>
       </Section>
 
-      {/* 高度な設定 */}
+      {/* ステップ4: 高度な設定 */}
       <Section
         title="高度な設定"
         icon={Settings}
         isOpen={openSections.advanced}
         onToggle={() => toggleSection('advanced')}
+        step={4}
+        stepLabel="各種オプションを設定（任意）"
+        headerBgColor="bg-gray-100"
+        headerHoverColor="hover:bg-gray-200"
+        accentColor="bg-gray-200 text-gray-600"
       >
         <div className="space-y-4">
           {/* ポータル掲載 */}

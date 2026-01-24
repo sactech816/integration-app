@@ -44,6 +44,11 @@ const Section = ({
   onToggle,
   children,
   badge,
+  step,
+  stepLabel,
+  headerBgColor = "bg-gray-50",
+  headerHoverColor = "hover:bg-gray-100",
+  accentColor = "bg-teal-100 text-teal-600",
 }: {
   title: string;
   icon: React.ElementType;
@@ -51,23 +56,37 @@ const Section = ({
   onToggle: () => void;
   children: React.ReactNode;
   badge?: string;
+  step?: number;
+  stepLabel?: string;
+  headerBgColor?: string;
+  headerHoverColor?: string;
+  accentColor?: string;
 }) => (
   <div className="border border-gray-200 rounded-xl overflow-hidden mb-4 bg-white">
+    {/* ステップ見出し */}
+    {step && stepLabel && (
+      <div className={`px-5 py-2 ${headerBgColor} border-b border-gray-200/50`}>
+        <span className="text-xs font-bold text-gray-600 bg-white/60 px-2 py-0.5 rounded">
+          STEP {step}
+        </span>
+        <span className="text-sm text-gray-700 ml-2">{stepLabel}</span>
+      </div>
+    )}
     <button
       onClick={onToggle}
-      className="w-full px-5 py-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+      className={`w-full px-5 py-4 flex items-center justify-between ${headerBgColor} ${headerHoverColor} transition-colors`}
     >
       <div className="flex items-center gap-3">
         <div
           className={`p-2 rounded-lg ${
-            isOpen ? "bg-teal-100 text-teal-600" : "bg-gray-200 text-gray-500"
+            isOpen ? accentColor : "bg-gray-200 text-gray-500"
           }`}
         >
           <Icon size={18} />
         </div>
         <span className="font-bold text-gray-900">{title}</span>
         {badge && (
-          <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">
+          <span className="text-xs bg-white/80 text-gray-700 px-2 py-0.5 rounded-full border border-gray-200">
             {badge}
           </span>
         )}
@@ -597,12 +616,17 @@ export default function SurveyEditor({ onBack, initialData, user, templateId }: 
           }`}
         >
           <div className="max-w-2xl mx-auto space-y-4">
-            {/* テンプレート選択 */}
+            {/* ステップ1: テンプレート選択 */}
             <Section
               title="テンプレートから作成"
               icon={Sparkles}
               isOpen={openSections.template}
               onToggle={() => toggleSection("template")}
+              step={1}
+              stepLabel="テンプレートからアンケートを作成（任意）"
+              headerBgColor="bg-purple-50"
+              headerHoverColor="hover:bg-purple-100"
+              accentColor="bg-purple-100 text-purple-600"
             >
               <p className="text-sm text-gray-600 mb-2">
                 よく使われるアンケートのテンプレートから始めることができます。
@@ -633,12 +657,17 @@ export default function SurveyEditor({ onBack, initialData, user, templateId }: 
               </div>
             </Section>
 
-            {/* 基本設定 */}
+            {/* ステップ2: 基本設定 */}
             <Section
               title="基本設定"
               icon={FileText}
               isOpen={openSections.basic}
               onToggle={() => toggleSection("basic")}
+              step={2}
+              stepLabel="タイトル・説明文・通知先を設定"
+              headerBgColor="bg-blue-50"
+              headerHoverColor="hover:bg-blue-100"
+              accentColor="bg-blue-100 text-blue-600"
             >
               <Input
                 label="アンケートタイトル"
@@ -675,13 +704,18 @@ export default function SurveyEditor({ onBack, initialData, user, templateId }: 
               />
             </Section>
 
-            {/* 質問編集 */}
+            {/* ステップ3: 質問編集 */}
             <Section
               title="質問"
               icon={MessageSquare}
               isOpen={openSections.questions}
               onToggle={() => toggleSection("questions")}
               badge={`${form.questions.length}問`}
+              step={3}
+              stepLabel="質問と選択肢を作成・編集"
+              headerBgColor="bg-green-50"
+              headerHoverColor="hover:bg-green-100"
+              accentColor="bg-green-100 text-green-600"
             >
               <div className="space-y-4">
                 {form.questions.map((q, i) => (
@@ -826,12 +860,17 @@ export default function SurveyEditor({ onBack, initialData, user, templateId }: 
               </div>
             </Section>
 
-            {/* 詳細設定 */}
+            {/* ステップ4: 詳細設定 */}
             <Section
               title="詳細設定"
               icon={Settings}
               isOpen={openSections.settings}
               onToggle={() => toggleSection("settings")}
+              step={4}
+              stepLabel="完了メッセージ・公開設定（任意）"
+              headerBgColor="bg-gray-100"
+              headerHoverColor="hover:bg-gray-200"
+              accentColor="bg-gray-200 text-gray-600"
             >
               <Textarea
                 label="完了メッセージ"
