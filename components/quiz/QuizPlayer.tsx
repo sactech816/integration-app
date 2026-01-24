@@ -211,6 +211,8 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
     if(!isPreview && supabase) supabase.rpc('increment_views', { row_id: quiz.id }).then(({error})=> error && console.error(error));
 
     const rawQuestions = typeof quiz.questions === 'string' ? JSON.parse(quiz.questions) : quiz.questions;
+    
+    // 選択肢の表示順を処理する関数
     const shuffleArray = (array) => {
         const newArr = [...array];
         for (let i = newArr.length - 1; i > 0; i--) {
@@ -219,7 +221,15 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
         }
         return newArr;
     };
-    setPlayableQuestions(rawQuestions.map(q => ({ ...q, options: shuffleArray(q.options) })));
+    
+    const processOptions = (options) => {
+        const order = quiz.option_order || 'random';
+        if (order === 'desc') return [...options].reverse();
+        if (order === 'random') return shuffleArray(options);
+        return options; // 'asc' または未指定は登録順のまま
+    };
+    
+    setPlayableQuestions(rawQuestions.map(q => ({ ...q, options: processOptions(q.options) })));
   }, []);
 
   useEffect(() => {

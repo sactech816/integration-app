@@ -23,7 +23,8 @@ export type GamificationEventType =
   | 'share'             // SNSシェア
   | 'stamp_get'         // スタンプ獲得
   | 'survey_create'     // アンケート作成
-  | 'survey_answer';    // アンケート回答
+  | 'survey_answer'     // アンケート回答
+  | 'page_view';        // ページ閲覧（スタンプラリー用）
 
 /**
  * イベントとミッションタイプのマッピング
@@ -56,6 +57,7 @@ const EVENT_TO_STAMP_TRIGGER: Record<GamificationEventType, string> = {
   stamp_get: 'stamp_get',
   survey_create: 'survey_create',
   survey_answer: 'survey_answer',
+  page_view: 'page_view',
 };
 
 /**

@@ -98,7 +98,7 @@ interface GachaPrizeForm {
   is_winning: boolean;
   stock: number | null;
   display_order: number;
-  points_reward?: number; // ポイント報酬
+  point_reward?: number; // ポイント報酬（当選時に付与）
 }
 
 interface GachaFormData {
@@ -153,35 +153,35 @@ const getDefaultPrizes = (gameType: GameType): GachaPrizeForm[] => {
   switch (gameType) {
     case 'slot':
       return [
-        { id: '1', name: 'ジャックポット', description: '200pt獲得！', image_url: '', probability: 2, is_winning: true, stock: null, display_order: 0, points_reward: 200 },
-        { id: '2', name: '大当たり', description: '100pt獲得！', image_url: '', probability: 5, is_winning: true, stock: null, display_order: 1, points_reward: 100 },
-        { id: '3', name: '中当たり', description: '50pt獲得！', image_url: '', probability: 10, is_winning: true, stock: null, display_order: 2, points_reward: 50 },
-        { id: '4', name: '小当たり', description: '20pt獲得！', image_url: '', probability: 20, is_winning: true, stock: null, display_order: 3, points_reward: 20 },
-        { id: '5', name: 'ハズレ', description: 'また挑戦してね！', image_url: '', probability: 63, is_winning: false, stock: null, display_order: 4, points_reward: 0 },
+        { id: '1', name: 'ジャックポット', description: '200pt獲得！', image_url: '', probability: 2, is_winning: true, stock: null, display_order: 0, point_reward: 200 },
+        { id: '2', name: '大当たり', description: '100pt獲得！', image_url: '', probability: 5, is_winning: true, stock: null, display_order: 1, point_reward: 100 },
+        { id: '3', name: '中当たり', description: '50pt獲得！', image_url: '', probability: 10, is_winning: true, stock: null, display_order: 2, point_reward: 50 },
+        { id: '4', name: '小当たり', description: '20pt獲得！', image_url: '', probability: 20, is_winning: true, stock: null, display_order: 3, point_reward: 20 },
+        { id: '5', name: 'ハズレ', description: 'また挑戦してね！', image_url: '', probability: 63, is_winning: false, stock: null, display_order: 4, point_reward: 0 },
       ];
     case 'scratch':
       return [
-        { id: '1', name: '大当たり', description: '100pt獲得！', image_url: '', probability: 3, is_winning: true, stock: null, display_order: 0, points_reward: 100 },
-        { id: '2', name: '中当たり', description: '50pt獲得！', image_url: '', probability: 10, is_winning: true, stock: null, display_order: 1, points_reward: 50 },
-        { id: '3', name: '小当たり', description: '30pt獲得！', image_url: '', probability: 20, is_winning: true, stock: null, display_order: 2, points_reward: 30 },
-        { id: '4', name: 'ハズレ', description: 'また挑戦してね！', image_url: '', probability: 67, is_winning: false, stock: null, display_order: 3, points_reward: 0 },
+        { id: '1', name: '大当たり', description: '100pt獲得！', image_url: '', probability: 3, is_winning: true, stock: null, display_order: 0, point_reward: 100 },
+        { id: '2', name: '中当たり', description: '50pt獲得！', image_url: '', probability: 10, is_winning: true, stock: null, display_order: 1, point_reward: 50 },
+        { id: '3', name: '小当たり', description: '30pt獲得！', image_url: '', probability: 20, is_winning: true, stock: null, display_order: 2, point_reward: 30 },
+        { id: '4', name: 'ハズレ', description: 'また挑戦してね！', image_url: '', probability: 67, is_winning: false, stock: null, display_order: 3, point_reward: 0 },
       ];
     case 'fukubiki':
       return [
-        { id: '1', name: '特賞（金玉）', description: '150pt獲得！', image_url: '', probability: 2, is_winning: true, stock: null, display_order: 0, points_reward: 150 },
-        { id: '2', name: '1等（赤玉）', description: '80pt獲得！', image_url: '', probability: 8, is_winning: true, stock: null, display_order: 1, points_reward: 80 },
-        { id: '3', name: '2等（青玉）', description: '40pt獲得！', image_url: '', probability: 15, is_winning: true, stock: null, display_order: 2, points_reward: 40 },
-        { id: '4', name: '3等（緑玉）', description: '20pt獲得！', image_url: '', probability: 25, is_winning: true, stock: null, display_order: 3, points_reward: 20 },
-        { id: '5', name: 'ハズレ（白玉）', description: 'また挑戦してね！', image_url: '', probability: 50, is_winning: false, stock: null, display_order: 4, points_reward: 0 },
+        { id: '1', name: '特賞（金玉）', description: '150pt獲得！', image_url: '', probability: 2, is_winning: true, stock: null, display_order: 0, point_reward: 150 },
+        { id: '2', name: '1等（赤玉）', description: '80pt獲得！', image_url: '', probability: 8, is_winning: true, stock: null, display_order: 1, point_reward: 80 },
+        { id: '3', name: '2等（青玉）', description: '40pt獲得！', image_url: '', probability: 15, is_winning: true, stock: null, display_order: 2, point_reward: 40 },
+        { id: '4', name: '3等（緑玉）', description: '20pt獲得！', image_url: '', probability: 25, is_winning: true, stock: null, display_order: 3, point_reward: 20 },
+        { id: '5', name: 'ハズレ（白玉）', description: 'また挑戦してね！', image_url: '', probability: 50, is_winning: false, stock: null, display_order: 4, point_reward: 0 },
       ];
     case 'gacha':
     default:
       return [
-        { id: '1', name: 'SSR（超レア）', description: '500pt獲得！', image_url: '', probability: 1, is_winning: true, stock: null, display_order: 0, points_reward: 500 },
-        { id: '2', name: 'SR（激レア）', description: '100pt獲得！', image_url: '', probability: 5, is_winning: true, stock: null, display_order: 1, points_reward: 100 },
-        { id: '3', name: 'R（レア）', description: '30pt獲得！', image_url: '', probability: 15, is_winning: true, stock: null, display_order: 2, points_reward: 30 },
-        { id: '4', name: 'N（ノーマル）', description: '10pt獲得！', image_url: '', probability: 30, is_winning: false, stock: null, display_order: 3, points_reward: 10 },
-        { id: '5', name: 'ハズレ', description: 'また挑戦してね！', image_url: '', probability: 49, is_winning: false, stock: null, display_order: 4, points_reward: 0 },
+        { id: '1', name: 'SSR（超レア）', description: '500pt獲得！', image_url: '', probability: 1, is_winning: true, stock: null, display_order: 0, point_reward: 500 },
+        { id: '2', name: 'SR（激レア）', description: '100pt獲得！', image_url: '', probability: 5, is_winning: true, stock: null, display_order: 1, point_reward: 100 },
+        { id: '3', name: 'R（レア）', description: '30pt獲得！', image_url: '', probability: 15, is_winning: true, stock: null, display_order: 2, point_reward: 30 },
+        { id: '4', name: 'N（ノーマル）', description: '10pt獲得！', image_url: '', probability: 30, is_winning: false, stock: null, display_order: 3, point_reward: 10 },
+        { id: '5', name: 'ハズレ', description: 'また挑戦してね！', image_url: '', probability: 49, is_winning: false, stock: null, display_order: 4, point_reward: 0 },
       ];
   }
 };
@@ -250,7 +250,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth, ga
               is_winning: p.is_winning,
               stock: p.stock,
               display_order: p.display_order,
-              points_reward: p.points_reward || 0,
+              point_reward: p.point_reward || 0,
             })),
           }));
         }
@@ -283,7 +283,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth, ga
           is_winning: false,
           stock: null,
           display_order: prev.prizes.length,
-          points_reward: 0,
+          point_reward: 0,
         },
       ],
     }));
@@ -382,7 +382,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth, ga
         is_winning: prize.is_winning,
         stock: prize.stock,
         display_order: index,
-        points_reward: prize.points_reward || 0,
+        point_reward: prize.point_reward || 0,
       }));
 
       await supabase.from('gacha_prizes').insert(prizesData);
@@ -581,8 +581,8 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth, ga
                       <label className="text-xs text-gray-500">報酬</label>
                       <input
                         type="number"
-                        value={prize.points_reward || 0}
-                        onChange={e => updatePrize(prize.id, { points_reward: parseInt(e.target.value) || 0 })}
+                        value={prize.point_reward || 0}
+                        onChange={e => updatePrize(prize.id, { point_reward: parseInt(e.target.value) || 0 })}
                         className="w-20 border border-gray-300 px-2 py-1 rounded text-sm text-center"
                         min={0}
                       />

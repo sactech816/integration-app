@@ -559,6 +559,7 @@ export async function playGacha(
       prize_name: result.prize_name,
       is_winning: result.is_winning,
       new_balance: result.new_balance,
+      points_won: result.points_won,
     });
     return {
       success: result.success,
@@ -568,6 +569,7 @@ export async function playGacha(
       prize_image_url: result.prize_image_url,
       is_winning: result.is_winning,
       new_balance: result.new_balance,
+      points_won: result.points_won || 0,
     };
   }
   

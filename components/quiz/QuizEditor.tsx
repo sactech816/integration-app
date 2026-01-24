@@ -237,6 +237,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
         collect_email: false,
         show_in_portal: true,
         theme: "standard" as const,
+        option_order: "random" as const,
         questions: Array(5).fill(null).map((_,i)=>({text:`質問${i+1}を入力してください`, options: Array(4).fill(null).map((_,j)=>({label:`選択肢${j+1}`, score:{A:j===0?3:0, B:j===1?3:0, C:j===2?3:0}}))})),
         results: [ 
             {type:"A", title:"結果A", description:"説明...", link_url:"", link_text:"", line_url:"", line_text:"", qr_url:"", qr_text:""}, 
@@ -492,6 +493,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                 mode: form.mode || 'diagnosis',
                 collect_email: form.collect_email || false,
                 theme: form.theme || 'standard',
+                option_order: form.option_order || 'random',
                 show_in_portal: form.show_in_portal === undefined ? true : form.show_in_portal,
                 user_id: user?.id || null
             };
@@ -931,6 +933,31 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                     <button onClick={handleRandomImage} className="bg-gray-100 px-4 py-3 rounded-lg text-sm font-bold hover:bg-gray-200 flex items-center justify-center gap-1 whitespace-nowrap"><ImageIcon size={16}/> 自動</button>
                                 </div>
                                 {form.image_url && <img src={form.image_url} alt="Preview" className="h-32 w-full object-cover rounded-lg mt-2 border"/>}
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="text-sm font-bold text-gray-900 block mb-2">選択肢の表示順</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <button 
+                                        onClick={()=>{setForm({...form, option_order:'random'}); resetPreview();}} 
+                                        className={`py-3 rounded-lg font-bold text-sm border flex items-center justify-center gap-2 ${form.option_order==='random' || !form.option_order ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'bg-white border-gray-200 text-gray-500'}`}
+                                    >
+                                        <Shuffle size={16}/> ランダム
+                                    </button>
+                                    <button 
+                                        onClick={()=>{setForm({...form, option_order:'asc'}); resetPreview();}} 
+                                        className={`py-3 rounded-lg font-bold text-sm border flex items-center justify-center gap-2 ${form.option_order==='asc' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'bg-white border-gray-200 text-gray-500'}`}
+                                    >
+                                        昇順
+                                    </button>
+                                    <button 
+                                        onClick={()=>{setForm({...form, option_order:'desc'}); resetPreview();}} 
+                                        className={`py-3 rounded-lg font-bold text-sm border flex items-center justify-center gap-2 ${form.option_order==='desc' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'bg-white border-gray-200 text-gray-500'}`}
+                                    >
+                                        降順
+                                    </button>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">ランダム: 毎回シャッフル / 昇順: 登録順 / 降順: 登録順の逆</p>
                             </div>
                         </Section>
 

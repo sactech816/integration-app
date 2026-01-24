@@ -678,6 +678,7 @@ export interface GachaPrize {
   stock?: number | null;
   won_count: number;
   display_order: number;
+  point_reward?: number; // 当選時に付与されるポイント報酬
   created_at?: string;
   updated_at?: string;
 }
@@ -712,6 +713,7 @@ export interface GachaResult {
   prize_image_url?: string;
   is_winning?: boolean;
   new_balance?: number;
+  points_won?: number; // 獲得したポイント報酬
 }
 
 // キャンペーン統計
