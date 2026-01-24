@@ -13,6 +13,9 @@ COMMENT ON COLUMN gacha_prizes.point_reward IS '当選時に付与されるポ�
 -- 2. play_gacha関数を修正（当たり時にポイント報酬を付与）
 -- =============================================
 
+-- 既存の関数を削除（戻り値の型が変わるため必須）
+DROP FUNCTION IF EXISTS play_gacha(UUID, TEXT, UUID);
+
 CREATE OR REPLACE FUNCTION play_gacha(
   p_user_id UUID,
   p_session_id TEXT,
