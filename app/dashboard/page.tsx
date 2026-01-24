@@ -55,6 +55,7 @@ function DashboardContent() {
     proAccessMap,
     processingId,
     copiedId,
+    isPartner,
     fetchContents,
     fetchPurchases,
     fetchAllContentCounts,
@@ -124,15 +125,21 @@ function DashboardContent() {
     verifyPayment();
   }, [searchParams, fetchPurchases, fetchContents, selectedService]);
 
-  // 初期データ取得
+  // アナリティクス取得をスキップするかどうか（有料会員/パートナー/管理者以外はスキップ）
+  const shouldSkipAnalytics = !isAdmin && !isPartner && !kdlSubscription?.hasActiveSubscription;
+
+  // 初期データ取得（並列化で高速化）
   useEffect(() => {
     if (user) {
-      fetchContents(selectedService);
-      fetchPurchases();
-      fetchAllContentCounts();
-      fetchKdlSubscription();
+      // 並列でデータ取得（アナリティクスは条件付き）
+      Promise.all([
+        fetchContents(selectedService, { skipAnalytics: shouldSkipAnalytics }),
+        fetchPurchases(),
+        fetchAllContentCounts(),
+        fetchKdlSubscription(),
+      ]);
     }
-  }, [user, selectedService, fetchContents, fetchPurchases, fetchAllContentCounts]);
+  }, [user, selectedService]);
 
   // 管理者データ取得
   useEffect(() => {
@@ -323,6 +330,7 @@ function DashboardContent() {
             activeView={activeView}
             user={user}
             isAdmin={isAdmin}
+            isPartner={isPartner}
             selectedService={selectedService}
             onServiceChange={handleServiceChange}
             contents={contents}

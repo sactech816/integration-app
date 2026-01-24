@@ -21,6 +21,7 @@ type KdlSubscription = {
 type DashboardHomeProps = {
   user: { id: string; email?: string } | null;
   isAdmin: boolean;
+  isPartner: boolean;
   selectedService: ServiceType;
   onServiceChange: (service: ServiceType) => void;
   contents: ContentItem[];
@@ -50,6 +51,7 @@ type DashboardHomeProps = {
 export default function DashboardHome({
   user,
   isAdmin,
+  isPartner,
   selectedService,
   onServiceChange,
   contents,
@@ -71,6 +73,9 @@ export default function DashboardHome({
   onCreateNew,
   onNavigate,
 }: DashboardHomeProps) {
+  // アナリティクス機能のアンロック判定
+  // 管理者、パートナー、KDLサブスクリプション保持者はアンロック
+  const isAnalyticsUnlocked = isAdmin || isPartner || kdlSubscription?.hasActiveSubscription;
   return (
     <div className="space-y-6">
       {/* KDLサブスクリプション状態（コンパクト版） */}
@@ -144,7 +149,12 @@ export default function DashboardHome({
       />
 
       {/* アクセス解析 */}
-      <AnalyticsSection contents={contents} selectedService={selectedService} />
+      <AnalyticsSection 
+        contents={contents} 
+        selectedService={selectedService} 
+        isUnlocked={isAnalyticsUnlocked}
+        onNavigate={onNavigate}
+      />
 
       {/* コンテンツ一覧 */}
       <ContentList

@@ -89,6 +89,21 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
                 </Link>
               </li>
               <li>
+                <Link href="/portal" className="hover:text-white transition-colors">
+                  ポータル（作品一覧）
+                </Link>
+              </li>
+              <li>
+                <Link href="/tools" className="hover:text-white transition-colors">
+                  ツール一覧
+                </Link>
+              </li>
+              <li>
+                <Link href="/sitemap-html" className="hover:text-white transition-colors">
+                  サイトマップ
+                </Link>
+              </li>
+              <li>
                 <Link href="/howto" className="hover:text-white transition-colors">
                   使い方・機能一覧
                 </Link>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Trophy, BarChart2, Table } from 'lucide-react';
+import { Trophy, BarChart2, Table, Lock, Sparkles } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ServiceType } from '@/lib/types';
 import { ContentItem } from './ContentCard';
@@ -9,9 +9,16 @@ import { ContentItem } from './ContentCard';
 type AnalyticsSectionProps = {
   contents: ContentItem[];
   selectedService: ServiceType;
+  isUnlocked?: boolean; // アナリティクス機能がアンロックされているか（有料会員/パートナー/管理者）
+  onNavigate?: (path: string) => void; // KDL LPへの遷移用
 };
 
-export default function AnalyticsSection({ contents, selectedService }: AnalyticsSectionProps) {
+export default function AnalyticsSection({ 
+  contents, 
+  selectedService, 
+  isUnlocked = false,
+  onNavigate 
+}: AnalyticsSectionProps) {
   const [viewMode, setViewMode] = useState<'graph' | 'table'>('table');
 
   // グラフデータ生成
@@ -22,33 +29,66 @@ export default function AnalyticsSection({ contents, selectedService }: Analytic
     clicks: item.clicks_count || 0,
   }));
 
+  // ロック状態の表示（診断クイズ以外で無料ユーザーの場合）
+  // 診断クイズはテーブルにカウンターがあるので常に表示可能
+  const showLockedState = !isUnlocked && selectedService !== 'quiz';
+
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 min-h-[350px]">
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-bold text-gray-700 flex items-center gap-2">
           <Trophy size={18} /> アクセス解析
+          {showLockedState && (
+            <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+              <Lock size={10} /> Pro
+            </span>
+          )}
         </h3>
-        <div className="flex bg-gray-100 rounded-lg p-1">
-          <button
-            onClick={() => setViewMode('graph')}
-            className={`p-1.5 rounded ${
-              viewMode === 'graph' ? 'bg-white shadow text-indigo-600' : 'text-gray-400'
-            }`}
-          >
-            <BarChart2 size={16} />
-          </button>
-          <button
-            onClick={() => setViewMode('table')}
-            className={`p-1.5 rounded ${
-              viewMode === 'table' ? 'bg-white shadow text-indigo-600' : 'text-gray-400'
-            }`}
-          >
-            <Table size={16} />
-          </button>
-        </div>
+        {!showLockedState && (
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('graph')}
+              className={`p-1.5 rounded ${
+                viewMode === 'graph' ? 'bg-white shadow text-indigo-600' : 'text-gray-400'
+              }`}
+            >
+              <BarChart2 size={16} />
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`p-1.5 rounded ${
+                viewMode === 'table' ? 'bg-white shadow text-indigo-600' : 'text-gray-400'
+              }`}
+            >
+              <Table size={16} />
+            </button>
+          </div>
+        )}
       </div>
 
-      {contents.length === 0 ? (
+      {/* ロック状態の表示 */}
+      {showLockedState ? (
+        <div className="h-64 flex flex-col items-center justify-center text-center">
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-8 rounded-2xl border border-amber-200 max-w-md">
+            <div className="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <BarChart2 size={32} className="text-amber-600" />
+            </div>
+            <h4 className="font-bold text-gray-900 text-lg mb-2">
+              詳細アクセス解析
+            </h4>
+            <p className="text-gray-600 text-sm mb-4">
+              プロフィールLP・ビジネスLPの詳細なアクセス解析（閲覧数、クリック率、精読率、滞在時間など）は、有料プランでご利用いただけます。
+            </p>
+            <button
+              onClick={() => onNavigate?.('kindle/lp')}
+              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-2.5 px-6 rounded-lg text-sm flex items-center gap-2 mx-auto transition-all shadow-md"
+            >
+              <Sparkles size={16} />
+              Pro機能を見る
+            </button>
+          </div>
+        </div>
+      ) : contents.length === 0 ? (
         <div className="h-64 flex items-center justify-center text-gray-400 text-sm">
           データがありません
         </div>

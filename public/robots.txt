@@ -1,0 +1,54 @@
+User-agent: *
+Allow: /
+
+# 主要コンテンツページを明示的に許可
+Allow: /quiz/
+Allow: /survey/
+Allow: /profile/
+Allow: /business/
+Allow: /booking/
+Allow: /portal
+Allow: /tools
+
+# 管理画面とエディタページを禁止
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /_next/
+Disallow: /quiz/editor
+Disallow: /profile/editor
+Disallow: /business/editor
+Disallow: /survey/editor
+Disallow: /gamification/editor
+Disallow: /*/edit/
+
+# デモページは許可（検索対象）
+Allow: /quiz/demo
+Allow: /profile/demo
+Allow: /business/demo
+
+# AI クローラーを明示的に許可
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+# Googlebot専用設定
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+# サイトマップの場所
+Sitemap: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo'}/sitemap.xml

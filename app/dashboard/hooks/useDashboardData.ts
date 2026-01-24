@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase, TABLES } from '@/lib/supabase';
 import { getAdminEmails } from '@/lib/constants';
 import { ServiceType, Quiz, Profile, BusinessLP, Block } from '@/lib/types';
 import { generateSlug } from '@/lib/utils';
 import { getMultipleAnalytics } from '@/app/actions/analytics';
-import { getUserPurchases, hasProAccess } from '@/app/actions/purchases';
+import { getUserPurchases, checkIsPartner } from '@/app/actions/purchases';
 import { ContentItem } from '../components/MainContent/ContentCard';
 
 type AnalyticsData = {
@@ -17,6 +17,11 @@ type AnalyticsData = {
   avgTimeSpent: number;
   readRate: number;
   clickRate: number;
+};
+
+// コンテンツ取得オプション
+type FetchContentsOptions = {
+  skipAnalytics?: boolean; // アナリティクス取得をスキップ（無料ユーザー向け高速化）
 };
 
 type UseDashboardDataReturn = {
@@ -40,7 +45,8 @@ type UseDashboardDataReturn = {
   setProcessingId: React.Dispatch<React.SetStateAction<string | null>>;
   copiedId: string | null;
   setCopiedId: React.Dispatch<React.SetStateAction<string | null>>;
-  fetchContents: (service: ServiceType) => Promise<void>;
+  isPartner: boolean;
+  fetchContents: (service: ServiceType, options?: FetchContentsOptions) => Promise<void>;
   fetchPurchases: () => Promise<void>;
   fetchAllContentCounts: () => Promise<void>;
   handleEdit: (item: ContentItem) => void;
@@ -82,6 +88,10 @@ export function useDashboardData(): UseDashboardDataReturn {
   const [purchases, setPurchases] = useState<string[]>([]);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isPartner, setIsPartner] = useState(false);
+  
+  // パートナーステータスのキャッシュ（重複取得防止）
+  const partnerCheckedRef = useRef(false);
 
   // 管理者判定
   const adminEmails = getAdminEmails();
@@ -98,6 +108,11 @@ export function useDashboardData(): UseDashboardDataReturn {
       if (supabase) {
         supabase.auth.onAuthStateChange((event, session) => {
           setUser(session?.user || null);
+          // ユーザーが変わったらパートナーステータスをリセット
+          if (!session?.user) {
+            partnerCheckedRef.current = false;
+            setIsPartner(false);
+          }
         });
 
         const {
@@ -111,16 +126,34 @@ export function useDashboardData(): UseDashboardDataReturn {
     init();
   }, []);
 
-  // コンテンツ取得
+  // パートナーステータスを一度だけ取得
+  useEffect(() => {
+    const fetchPartnerStatus = async () => {
+      if (!user || partnerCheckedRef.current) return;
+      partnerCheckedRef.current = true;
+      
+      try {
+        const partnerStatus = await checkIsPartner(user.id);
+        setIsPartner(partnerStatus);
+      } catch (error) {
+        console.error('Partner status check error:', error);
+      }
+    };
+    
+    fetchPartnerStatus();
+  }, [user]);
+
+  // コンテンツ取得（アナリティクス取得はオプション）
   const fetchContents = useCallback(
-    async (selectedService: ServiceType) => {
+    async (selectedService: ServiceType, options?: FetchContentsOptions) => {
       if (!supabase || !user) return;
 
+      const skipAnalytics = options?.skipAnalytics ?? false;
       setIsLoading(true);
       const allContents: ContentItem[] = [];
 
       try {
-        // 診断クイズ取得
+        // 診断クイズ取得（カウンターはテーブルに保存済み）
         if (selectedService === 'quiz') {
           const query = isAdmin
             ? supabase.from(TABLES.QUIZZES).select('*').order('created_at', { ascending: false })
@@ -151,12 +184,15 @@ export function useDashboardData(): UseDashboardDataReturn {
 
           const { data: profiles } = await query;
           if (profiles) {
-            const profileIds = profiles.map((p: Profile) => p.id);
-            const analyticsResults = await getMultipleAnalytics(profileIds, 'profile');
-            const analyticsMapObj: Record<string, AnalyticsData> = {};
-            analyticsResults.forEach((result) => {
-              analyticsMapObj[result.contentId] = result.analytics;
-            });
+            // アナリティクス取得（有料会員のみ）
+            let analyticsMapObj: Record<string, AnalyticsData> = {};
+            if (!skipAnalytics) {
+              const profileIds = profiles.map((p: Profile) => p.id);
+              const analyticsResults = await getMultipleAnalytics(profileIds, 'profile');
+              analyticsResults.forEach((result) => {
+                analyticsMapObj[result.contentId] = result.analytics;
+              });
+            }
 
             allContents.push(
               ...profiles.map((p: Profile) => {
@@ -190,12 +226,15 @@ export function useDashboardData(): UseDashboardDataReturn {
 
           const { data: businessLps } = await query;
           if (businessLps) {
-            const businessSlugs = businessLps.map((b: BusinessLP) => b.slug);
-            const analyticsResults = await getMultipleAnalytics(businessSlugs, 'business');
-            const analyticsMapObj: Record<string, AnalyticsData> = {};
-            analyticsResults.forEach((result) => {
-              analyticsMapObj[result.contentId] = result.analytics;
-            });
+            // アナリティクス取得（有料会員のみ）
+            let analyticsMapObj: Record<string, AnalyticsData> = {};
+            if (!skipAnalytics) {
+              const businessSlugs = businessLps.map((b: BusinessLP) => b.slug);
+              const analyticsResults = await getMultipleAnalytics(businessSlugs, 'business');
+              analyticsResults.forEach((result) => {
+                analyticsMapObj[result.contentId] = result.analytics;
+              });
+            }
 
             allContents.push(
               ...businessLps.map((b: BusinessLP) => {
@@ -231,7 +270,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
         setContents(allContents);
 
-        // アクセス権を確認
+        // アクセス権を確認（パートナーステータスはキャッシュ済み）
         await fetchProAccessForContents(allContents);
       } catch (error) {
         console.error('Contents fetch error:', error);
@@ -242,33 +281,45 @@ export function useDashboardData(): UseDashboardDataReturn {
     [user, isAdmin]
   );
 
-  // Pro機能のアクセス権を確認（並列化）
+  // Pro機能のアクセス権を確認（最適化版：パートナーステータスはキャッシュ使用）
   const fetchProAccessForContents = useCallback(
     async (contentItems: ContentItem[]) => {
       if (!user) return;
 
-      // 並列で全コンテンツのアクセス権を確認
-      const results = await Promise.all(
-        contentItems.map(async (item) => {
-          try {
-            const result = await hasProAccess(user.id, user.email, item.id, item.type, item.user_id || undefined);
-            return { id: item.id, result };
-          } catch (error) {
-            console.error(`Check access for ${item.id}:`, error);
-            return { id: item.id, result: { hasAccess: false } };
-          }
-        })
-      );
+      // 管理者は全コンテンツにアクセス可能
+      if (isAdmin) {
+        const accessMap: Record<string, { hasAccess: boolean; reason?: string }> = {};
+        contentItems.forEach((item) => {
+          accessMap[item.id] = { hasAccess: true, reason: 'admin' };
+        });
+        setProAccessMap(accessMap);
+        return;
+      }
 
-      // 結果をマップに変換
+      // パートナーは自分のコンテンツにアクセス可能（キャッシュ済みのisPartnerを使用）
+      // 購入履歴は一括取得済みのpurchasesを使用
       const accessMap: Record<string, { hasAccess: boolean; reason?: string }> = {};
-      results.forEach(({ id, result }) => {
-        accessMap[id] = result;
+      
+      contentItems.forEach((item) => {
+        // パートナーで自分のコンテンツの場合
+        if (isPartner && item.user_id === user.id) {
+          accessMap[item.id] = { hasAccess: true, reason: 'partner' };
+          return;
+        }
+        
+        // 購入済みの場合
+        if (purchases.includes(item.id)) {
+          accessMap[item.id] = { hasAccess: true, reason: 'purchased' };
+          return;
+        }
+        
+        // それ以外はアクセス不可
+        accessMap[item.id] = { hasAccess: false };
       });
 
       setProAccessMap(accessMap);
     },
-    [user]
+    [user, isAdmin, isPartner, purchases]
   );
 
   // 購入履歴を取得
@@ -282,48 +333,42 @@ export function useDashboardData(): UseDashboardDataReturn {
     }
   }, [user]);
 
-  // すべてのコンテンツ数を取得
+  // すべてのコンテンツ数を取得（並列化で高速化）
   const fetchAllContentCounts = useCallback(async () => {
     if (!supabase || !user) return;
 
     try {
-      // 診断クイズ数
-      const quizQuery = isAdmin
-        ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true })
-        : supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).eq('user_id', user.id);
-      const { count: quizCount } = await quizQuery;
-
-      // プロフィールLP数
-      const profileQuery = isAdmin
-        ? supabase.from(TABLES.PROFILES).select('id', { count: 'exact', head: true })
-        : supabase.from(TABLES.PROFILES).select('id', { count: 'exact', head: true }).eq('user_id', user.id);
-      const { count: profileCount } = await profileQuery;
-
-      // ビジネスLP数
-      const businessQuery = isAdmin
-        ? supabase.from(TABLES.BUSINESS_LPS).select('id', { count: 'exact', head: true })
-        : supabase.from(TABLES.BUSINESS_LPS).select('id', { count: 'exact', head: true }).eq('user_id', user.id);
-      const { count: businessCount } = await businessQuery;
-
-      // 予約メニュー数
-      const bookingQuery = isAdmin
-        ? supabase.from('booking_menus').select('id', { count: 'exact', head: true })
-        : supabase.from('booking_menus').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
-      const { count: bookingCount } = await bookingQuery;
-
-      // アンケート数
-      const surveyQuery = isAdmin
-        ? supabase.from('surveys').select('id', { count: 'exact', head: true })
-        : supabase.from('surveys').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
-      const { count: surveyCount } = await surveyQuery;
+      // 全クエリを並列実行
+      const [quizResult, profileResult, businessResult, bookingResult, surveyResult] = await Promise.all([
+        // 診断クイズ数
+        isAdmin
+          ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true })
+          : supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // プロフィールLP数
+        isAdmin
+          ? supabase.from(TABLES.PROFILES).select('id', { count: 'exact', head: true })
+          : supabase.from(TABLES.PROFILES).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // ビジネスLP数
+        isAdmin
+          ? supabase.from(TABLES.BUSINESS_LPS).select('id', { count: 'exact', head: true })
+          : supabase.from(TABLES.BUSINESS_LPS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // 予約メニュー数
+        isAdmin
+          ? supabase.from('booking_menus').select('id', { count: 'exact', head: true })
+          : supabase.from('booking_menus').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // アンケート数
+        isAdmin
+          ? supabase.from('surveys').select('id', { count: 'exact', head: true })
+          : supabase.from('surveys').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+      ]);
 
       setContentCounts({
-        quiz: quizCount || 0,
-        profile: profileCount || 0,
-        business: businessCount || 0,
-        booking: bookingCount || 0,
-        survey: surveyCount || 0,
-        gamification: 0, // TODO: ゲーミフィケーションのカウント
+        quiz: quizResult.count || 0,
+        profile: profileResult.count || 0,
+        business: businessResult.count || 0,
+        booking: bookingResult.count || 0,
+        survey: surveyResult.count || 0,
+        gamification: 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);
@@ -540,6 +585,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     setProcessingId,
     copiedId,
     setCopiedId,
+    isPartner,
     fetchContents,
     fetchPurchases,
     fetchAllContentCounts,

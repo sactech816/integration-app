@@ -41,6 +41,7 @@ type MainContentProps = {
   activeView: ActiveView;
   user: { id: string; email?: string } | null;
   isAdmin: boolean;
+  isPartner: boolean;
   selectedService: ServiceType;
   onServiceChange: (service: ServiceType) => void;
   contents: ContentItem[];
@@ -84,6 +85,7 @@ export default function MainContent({
   activeView,
   user,
   isAdmin,
+  isPartner,
   selectedService,
   onServiceChange,
   contents,
@@ -124,6 +126,7 @@ export default function MainContent({
       <DashboardHome
         user={user}
         isAdmin={isAdmin}
+        isPartner={isPartner}
         selectedService={selectedService}
         onServiceChange={onServiceChange}
         contents={contents}
