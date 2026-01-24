@@ -124,27 +124,46 @@ const Section = ({
     isOpen, 
     onToggle, 
     children,
-    badge
+    badge,
+    step,
+    stepLabel,
+    headerBgColor = 'bg-gray-50',
+    headerHoverColor = 'hover:bg-gray-100',
+    accentColor = 'bg-indigo-100 text-indigo-600'
 }: { 
     title: string, 
     icon: any, 
     isOpen: boolean, 
     onToggle: () => void, 
     children: React.ReactNode,
-    badge?: string
+    badge?: string,
+    step?: number,
+    stepLabel?: string,
+    headerBgColor?: string,
+    headerHoverColor?: string,
+    accentColor?: string
 }) => (
     <div className="border border-gray-200 rounded-xl overflow-hidden mb-4 bg-white">
+        {/* ステップ見出し */}
+        {step && stepLabel && (
+            <div className={`px-5 py-2 ${headerBgColor} border-b border-gray-200/50`}>
+                <span className="text-xs font-bold text-gray-600 bg-white/60 px-2 py-0.5 rounded">
+                    STEP {step}
+                </span>
+                <span className="text-sm text-gray-700 ml-2">{stepLabel}</span>
+            </div>
+        )}
         <button 
             onClick={onToggle}
-            className="w-full px-5 py-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+            className={`w-full px-5 py-4 flex items-center justify-between ${headerBgColor} ${headerHoverColor} transition-colors`}
         >
             <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${isOpen ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-200 text-gray-500'}`}>
+                <div className={`p-2 rounded-lg ${isOpen ? accentColor : 'bg-gray-200 text-gray-500'}`}>
                     <Icon size={18} />
                 </div>
                 <span className="font-bold text-gray-900">{title}</span>
                 {badge && (
-                    <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">{badge}</span>
+                    <span className="text-xs bg-white/80 text-gray-700 px-2 py-0.5 rounded-full border border-gray-200">{badge}</span>
                 )}
             </div>
             {isOpen ? <ChevronUp size={20} className="text-gray-500" /> : <ChevronDown size={20} className="text-gray-500" />}
@@ -745,7 +764,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                 <div className="flex items-center gap-3">
                     <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full text-gray-700"><ArrowLeft/></button>
                     <h2 className="font-bold text-lg text-gray-900 line-clamp-1">
-                        {initialData ? '編集' : '新規作成'}
+                        {initialData ? 'クイズ編集' : 'クイズ作成'}
                     </h2>
                     <span className={`hidden md:inline text-xs px-2 py-1 rounded font-bold ml-2 ${
                         form.mode === 'test' ? 'bg-orange-100 text-orange-700' : 
@@ -787,7 +806,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                         }`}
                     >
-                        <Edit3 size={18}/> 編集
+                        <Edit3 size={18}/> 編集エリア
                     </button>
                     <button 
                         onClick={() => { setMobileTab('preview'); resetPreview(); }}
@@ -808,12 +827,17 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                 <div className={`w-full lg:w-1/2 overflow-y-auto p-4 md:p-6 bg-gray-50 ${mobileTab === 'preview' ? 'hidden lg:block' : ''}`}>
                     <div className="max-w-2xl mx-auto space-y-4">
                         
-                        {/* テンプレート・作成方法セクション */}
+                        {/* ステップ1: テンプレート・作成方法セクション */}
                         <Section 
                             title="テンプレート・作成方法" 
                             icon={Sparkles} 
                             isOpen={openSections.template} 
                             onToggle={() => toggleSection('template')}
+                            step={1}
+                            stepLabel="テンプレートやAIでクイズの下書きを作成（任意）"
+                            headerBgColor="bg-purple-50"
+                            headerHoverColor="hover:bg-purple-100"
+                            accentColor="bg-purple-100 text-purple-600"
                         >
                             {/* クイズモード選択 */}
                             <div className="mb-6">
@@ -880,12 +904,17 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                             </button>
                         </Section>
 
-                        {/* 基本設定セクション */}
+                        {/* ステップ2: 基本設定セクション */}
                         <Section 
                             title="基本設定" 
                             icon={Edit3} 
                             isOpen={openSections.basic} 
                             onToggle={() => toggleSection('basic')}
+                            step={2}
+                            stepLabel="タイトル・説明文・デザインを設定"
+                            headerBgColor="bg-blue-50"
+                            headerHoverColor="hover:bg-blue-100"
+                            accentColor="bg-blue-100 text-blue-600"
                         >
                             <Input label="タイトル" val={form.title} onChange={v=>{setForm({...form, title:v}); resetPreview();}} ph="例: あなたの起業家タイプ診断" />
                             <Textarea label="説明文" val={form.description} onChange={v=>{setForm({...form, description:v}); resetPreview();}} />
@@ -905,12 +934,15 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                             </div>
                         </Section>
 
-                        {/* デザインセクション */}
+                        {/* デザインセクション（ステップ2の続き） */}
                         <Section 
                             title="デザイン" 
                             icon={Palette} 
                             isOpen={openSections.design} 
                             onToggle={() => toggleSection('design')}
+                            headerBgColor="bg-blue-50"
+                            headerHoverColor="hover:bg-blue-100"
+                            accentColor="bg-blue-100 text-blue-600"
                         >
                             <div className="mb-4">
                                 <label className="text-sm font-bold text-gray-900 block mb-2">表示レイアウト</label>
@@ -950,13 +982,18 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                             </div>
                         </Section>
 
-                        {/* 質問セクション */}
+                        {/* ステップ3: 質問セクション */}
                         <Section 
                             title="質問" 
                             icon={MessageSquare} 
                             isOpen={openSections.questions} 
                             onToggle={() => toggleSection('questions')}
                             badge={`${form.questions.length}問`}
+                            step={3}
+                            stepLabel="質問と選択肢を作成・編集"
+                            headerBgColor="bg-green-50"
+                            headerHoverColor="hover:bg-green-100"
+                            accentColor="bg-green-100 text-green-600"
                         >
                             <div className="space-y-4">
                                 {form.questions.map((q: any, i: number)=>(
@@ -1012,13 +1049,18 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                             </div>
                         </Section>
 
-                        {/* 結果セクション */}
+                        {/* ステップ4: 結果セクション */}
                         <Section 
                             title="結果パターン" 
                             icon={Trophy} 
                             isOpen={openSections.results} 
                             onToggle={() => toggleSection('results')}
                             badge={`${form.results.length}パターン`}
+                            step={4}
+                            stepLabel="結果ページの文章・リンクを設定"
+                            headerBgColor="bg-orange-50"
+                            headerHoverColor="hover:bg-orange-100"
+                            accentColor="bg-orange-100 text-orange-600"
                         >
                             <div className={`p-3 rounded-lg mb-4 text-sm font-bold ${form.mode==='test'?'bg-orange-50 text-orange-800':form.mode==='fortune'?'bg-purple-50 text-purple-800':'bg-blue-50 text-blue-800'}`}>
                                 💡 {form.mode === 'test' ? "正解数に応じて結果が変わります" : form.mode === 'fortune' ? "結果はランダムに表示されます" : "獲得ポイントが多いタイプの結果が表示されます"}
@@ -1060,12 +1102,17 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                             </div>
                         </Section>
 
-                        {/* 高度な設定セクション */}
+                        {/* ステップ5: 高度な設定セクション */}
                         <Section 
                             title="高度な設定" 
                             icon={FileText} 
                             isOpen={openSections.advanced} 
                             onToggle={() => toggleSection('advanced')}
+                            step={5}
+                            stepLabel="各種オプションを設定（任意）"
+                            headerBgColor="bg-gray-100"
+                            headerHoverColor="hover:bg-gray-200"
+                            accentColor="bg-gray-200 text-gray-600"
                         >
                             {/* ポータル掲載 */}
                             <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-xl flex items-start justify-between mb-4">

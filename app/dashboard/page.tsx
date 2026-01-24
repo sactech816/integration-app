@@ -76,6 +76,16 @@ function DashboardContent() {
   const [showAuth, setShowAuth] = useState(false);
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
   const [selectedService, setSelectedService] = useState<ServiceType>('quiz');
+
+  // URLパラメータからビューを設定
+  useEffect(() => {
+    const view = searchParams?.get('view');
+    if (view && ['booking', 'survey', 'quiz', 'profile', 'business', 'affiliate', 'settings'].includes(view)) {
+      setActiveView(view as ActiveView);
+      // URLパラメータをクリア
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, [searchParams]);
   
   // 右側パネル状態
   const [rightPanelOpen, setRightPanelOpen] = useState(false);

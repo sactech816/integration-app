@@ -20,6 +20,8 @@ import {
   ExternalLink,
   Plus,
   LayoutDashboard,
+  Grid3X3,
+  LayoutGrid,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -39,6 +41,9 @@ import {
   getScheduleAdjustments,
   submitScheduleAdjustment,
 } from '@/app/actions/booking';
+import WeeklyCalendar from '@/components/booking/WeeklyCalendar';
+
+type CalendarViewMode = 'month' | 'week';
 
 // 日付ユーティリティ
 const formatDate = (date: Date) => {
@@ -70,6 +75,9 @@ export default function PublicBookingPage() {
   const [isCreator, setIsCreator] = useState(false);
   const [showUrlModal, setShowUrlModal] = useState(false);
   const [urlCopied, setUrlCopied] = useState(false);
+
+  // カレンダー表示モード
+  const [calendarViewMode, setCalendarViewMode] = useState<CalendarViewMode>('month');
 
   // 予約用の状態
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -189,6 +197,24 @@ export default function PublicBookingPage() {
     setError(null);
   };
 
+  // 週表示からの枠選択
+  const handleWeekSlotClick = (date: Date, hour: number) => {
+    // 該当する枠を探す
+    const dateKey = date.toDateString();
+    const daySlots = slotsByDate[dateKey] || [];
+    const matchingSlot = daySlots.find(slot => {
+      const slotHour = new Date(slot.start_time).getHours();
+      return slotHour === hour && slot.remaining_capacity > 0;
+    });
+    
+    if (matchingSlot) {
+      handleSelectSlot(matchingSlot);
+    } else {
+      // 枠がない場合は日付を選択
+      setSelectedDate(date);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSlot) return;
@@ -290,21 +316,37 @@ export default function PublicBookingPage() {
 
   if (notFound) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 text-center max-w-md">
-          <AlertCircle size={48} className="mx-auto mb-4 text-gray-400" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">予約ページが見つかりません</h1>
-          <p className="text-gray-600 mb-6">
-            このページは存在しないか、現在公開されていません。
-          </p>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-blue-600 font-semibold hover:underline"
-          >
-            <ArrowLeft size={18} />
-            トップページへ戻る
-          </Link>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex flex-col">
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center max-w-md">
+            <AlertCircle size={48} className="mx-auto mb-4 text-gray-400" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">予約ページが見つかりません</h1>
+            <p className="text-gray-600 mb-6">
+              このページは存在しないか、現在公開されていません。
+            </p>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-blue-600 font-semibold hover:underline"
+            >
+              <ArrowLeft size={18} />
+              トップページへ戻る
+            </Link>
+          </div>
         </div>
+        {/* フッター */}
+        <footer className="py-4 text-center">
+          <p className="text-xs text-gray-400">
+            予約・出欠表作成{' '}
+            <a 
+              href="https://makers.tokyo/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-gray-500 transition-colors"
+            >
+              https://makers.tokyo/
+            </a>
+          </p>
+        </footer>
       </div>
     );
   }
@@ -313,13 +355,17 @@ export default function PublicBookingPage() {
   today.setHours(0, 0, 0, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex flex-col">
       {/* ヘッダー */}
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
+                menu?.type === 'adjustment'
+                  ? 'bg-gradient-to-br from-purple-500 to-indigo-600'
+                  : 'bg-gradient-to-br from-blue-500 to-indigo-600'
+              }`}>
                 <Calendar className="text-white" size={28} />
               </div>
               <div>
@@ -338,7 +384,7 @@ export default function PublicBookingPage() {
             </div>
             
             {/* Navigation Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {isCreator && (
                 <>
                   <button
@@ -346,14 +392,14 @@ export default function PublicBookingPage() {
                     className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-semibold"
                   >
                     <LayoutDashboard size={18} />
-                    管理画面に戻る
+                    <span className="hidden sm:inline">管理画面に戻る</span>
                   </button>
                   <button
                     onClick={() => setShowUrlModal(true)}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-semibold"
                   >
                     <ExternalLink size={18} />
-                    公開アドレス
+                    <span className="hidden sm:inline">公開アドレス</span>
                   </button>
                 </>
               )}
@@ -362,7 +408,7 @@ export default function PublicBookingPage() {
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold"
               >
                 <Plus size={18} />
-                新規作成
+                <span className="hidden sm:inline">新規作成</span>
               </button>
             </div>
           </div>
@@ -420,7 +466,7 @@ export default function PublicBookingPage() {
       )}
 
       {/* メインコンテンツ */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="flex-1 max-w-6xl mx-auto px-4 py-8 w-full">
         {menu?.type === 'adjustment' ? (
           /* 日程調整: 出欠表形式 */
           attendanceData ? (
@@ -436,7 +482,7 @@ export default function PublicBookingPage() {
                   </p>
                   <button
                     onClick={() => setAdjustmentComplete(false)}
-                    className="text-blue-600 font-semibold hover:underline"
+                    className="text-purple-600 font-semibold hover:underline"
                   >
                     続けて登録する
                   </button>
@@ -789,171 +835,235 @@ export default function PublicBookingPage() {
           </div>
         ) : (
           /* 日時選択 */
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* カレンダー */}
-            <div className="lg:col-span-2 bg-white rounded-2xl shadow-xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <button
-                  onClick={prevMonth}
-                  className="px-4 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition-colors"
-                >
-                  先月
-                </button>
-                <h2 className="text-xl font-bold text-gray-900">
-                  {currentMonth.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' })}
-                </h2>
-                <button
-                  onClick={nextMonth}
-                  className="px-4 py-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition-colors"
-                >
-                  翌月
-                </button>
-              </div>
-
-              <div className="grid grid-cols-7 gap-1 mb-2">
-                {['日', '月', '火', '水', '木', '金', '土'].map((day, i) => (
-                  <div
-                    key={day}
-                    className={`text-center text-sm font-semibold py-2 ${
-                      i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : 'text-gray-600'
+          <>
+            {/* カレンダー表示切り替え */}
+            <div className="bg-white rounded-2xl shadow-xl p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-gray-900">日時を選択</h2>
+                <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setCalendarViewMode('month')}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+                      calendarViewMode === 'month'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    {day}
-                  </div>
-                ))}
+                    <LayoutGrid size={16} />
+                    月表示
+                  </button>
+                  <button
+                    onClick={() => setCalendarViewMode('week')}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+                      calendarViewMode === 'week'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <Grid3X3 size={16} />
+                    週表示
+                  </button>
+                </div>
               </div>
+            </div>
 
-              <div className="grid grid-cols-7 gap-1">
-                {calendarDays.map((date, index) => {
-                  if (!date) {
-                    return <div key={`empty-${index}`} className="aspect-square" />;
-                  }
-
-                  const dateKey = date.toDateString();
-                  const daySlots = slotsByDate[dateKey] || [];
-                  const hasSlots = daySlots.length > 0;
-                  const isPast = date < today;
-                  const isSelected = selectedDate && isSameDay(date, selectedDate);
-                  const isToday = isSameDay(date, new Date());
-                  const dayOfWeek = date.getDay();
-
-                  // 予約モードでは空き枠数を計算
-                  const availableCount = menu?.type === 'reservation' 
-                    ? daySlots.reduce((sum, slot) => sum + (slot.remaining_capacity || 0), 0)
-                    : daySlots.length;
-
-                  return (
+            {calendarViewMode === 'week' ? (
+              /* 週表示カレンダー */
+              <div className="bg-white rounded-2xl shadow-xl p-6">
+                <WeeklyCalendar
+                  slots={slots}
+                  onSlotClick={handleWeekSlotClick}
+                  durationMin={menu?.duration_min || 60}
+                  readOnly={true}
+                  menuType={menu?.type || 'reservation'}
+                />
+                <p className="text-sm text-gray-500 text-center mt-4">
+                  予約可能な時間帯をクリックして予約できます
+                </p>
+              </div>
+            ) : (
+              /* 月表示カレンダー */
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* カレンダー */}
+                <div className="lg:col-span-2 bg-white rounded-2xl shadow-xl p-6">
+                  <div className="flex items-center justify-between mb-6">
                     <button
-                      key={dateKey}
-                      onClick={() => hasSlots && !isPast && setSelectedDate(date)}
-                      disabled={isPast || !hasSlots}
-                      className={`aspect-square p-1 rounded-xl transition-all relative ${
-                        isPast || !hasSlots
-                          ? 'opacity-40 cursor-not-allowed'
-                          : isSelected
-                          ? 'bg-blue-500 text-white shadow-lg scale-105'
-                          : 'hover:bg-blue-50'
-                      }`}
+                      onClick={prevMonth}
+                      className="p-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition-colors"
                     >
+                      <ChevronLeft size={24} />
+                    </button>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      {currentMonth.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' })}
+                    </h2>
+                    <button
+                      onClick={nextMonth}
+                      className="p-2 text-blue-600 font-semibold hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <ChevronRight size={24} />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1 mb-2">
+                    {['日', '月', '火', '水', '木', '金', '土'].map((day, i) => (
                       <div
-                        className={`text-sm font-semibold ${
-                          isSelected
-                            ? 'text-white'
-                            : isToday
-                            ? 'text-blue-600'
-                            : dayOfWeek === 0
-                            ? 'text-red-500'
-                            : dayOfWeek === 6
-                            ? 'text-blue-500'
-                            : 'text-gray-700'
+                        key={day}
+                        className={`text-center text-sm font-semibold py-2 ${
+                          i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : 'text-gray-600'
                         }`}
                       >
-                        {date.getDate()}
+                        {day}
                       </div>
-                      {hasSlots && (
-                        <>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1">
+                    {calendarDays.map((date, index) => {
+                      if (!date) {
+                        return <div key={`empty-${index}`} className="aspect-square" />;
+                      }
+
+                      const dateKey = date.toDateString();
+                      const daySlots = slotsByDate[dateKey] || [];
+                      const hasSlots = daySlots.length > 0;
+                      const isPast = date < today;
+                      const isSelected = selectedDate && isSameDay(date, selectedDate);
+                      const isToday = isSameDay(date, new Date());
+                      const dayOfWeek = date.getDay();
+
+                      // 予約モードでは空き枠数を計算
+                      const availableCount = menu?.type === 'reservation' 
+                        ? daySlots.reduce((sum, slot) => sum + (slot.remaining_capacity || 0), 0)
+                        : daySlots.length;
+
+                      return (
+                        <button
+                          key={dateKey}
+                          onClick={() => hasSlots && !isPast && setSelectedDate(date)}
+                          disabled={isPast || !hasSlots}
+                          className={`aspect-square p-1 rounded-xl transition-all relative ${
+                            isPast || !hasSlots
+                              ? 'opacity-40 cursor-not-allowed'
+                              : isSelected
+                              ? 'bg-blue-500 text-white shadow-lg scale-105'
+                              : 'hover:bg-blue-50'
+                          }`}
+                        >
                           <div
-                            className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full ${
-                              isSelected ? 'bg-white' : 'bg-green-500'
-                            }`}
-                          />
-                          <div
-                            className={`text-[10px] font-semibold ${
-                              isSelected ? 'text-blue-100' : 'text-green-600'
+                            className={`text-sm font-semibold ${
+                              isSelected
+                                ? 'text-white'
+                                : isToday
+                                ? 'text-blue-600'
+                                : dayOfWeek === 0
+                                ? 'text-red-500'
+                                : dayOfWeek === 6
+                                ? 'text-blue-500'
+                                : 'text-gray-700'
                             }`}
                           >
-                            {menu?.type === 'reservation' ? `空${availableCount}` : `${availableCount}枠`}
+                            {date.getDate()}
                           </div>
-                          {daySlots.length > 0 && (
-                            <div
-                              className={`text-[9px] mt-0.5 ${
-                                isSelected ? 'text-blue-200' : 'text-gray-500'
-                              }`}
-                            >
-                              {formatTime(daySlots[0].start_time)}～
-                            </div>
+                          {hasSlots && (
+                            <>
+                              <div
+                                className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full ${
+                                  isSelected ? 'bg-white' : 'bg-green-500'
+                                }`}
+                              />
+                              <div
+                                className={`text-[10px] font-semibold ${
+                                  isSelected ? 'text-blue-100' : 'text-green-600'
+                                }`}
+                              >
+                                {menu?.type === 'reservation' ? `空${availableCount}` : `${availableCount}枠`}
+                              </div>
+                              {daySlots.length > 0 && (
+                                <div
+                                  className={`text-[9px] mt-0.5 ${
+                                    isSelected ? 'text-blue-200' : 'text-gray-500'
+                                  }`}
+                                >
+                                  {formatTime(daySlots[0].start_time)}～
+                                </div>
+                              )}
+                            </>
                           )}
-                        </>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {slots.length === 0 && (
-                <div className="mt-6 text-center py-8 bg-gray-50 rounded-xl">
-                  <Calendar size={40} className="mx-auto mb-3 text-gray-400" />
-                  <p className="text-gray-600">現在予約可能な枠がありません</p>
-                </div>
-              )}
-            </div>
-
-            {/* 時間選択 */}
-            <div className="bg-white rounded-2xl shadow-xl p-6">
-              {selectedDate ? (
-                <>
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">
-                    {formatDate(selectedDate)}
-                  </h3>
-                  {selectedDateSlots.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <Clock size={32} className="mx-auto mb-2 opacity-50" />
-                      <p>この日は空きがありません</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {selectedDateSlots.map((slot) => (
-                        <button
-                          key={slot.id}
-                          onClick={() => handleSelectSlot(slot)}
-                          className="w-full p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-left group"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 font-bold text-gray-900 group-hover:text-blue-600">
-                              <Clock size={18} />
-                              {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
-                            </div>
-                            <span className="text-sm text-green-600 font-semibold">
-                              空き{slot.remaining_capacity}
-                            </span>
-                          </div>
                         </button>
-                      ))}
+                      );
+                    })}
+                  </div>
+
+                  {slots.length === 0 && (
+                    <div className="mt-6 text-center py-8 bg-gray-50 rounded-xl">
+                      <Calendar size={40} className="mx-auto mb-3 text-gray-400" />
+                      <p className="text-gray-600">現在予約可能な枠がありません</p>
                     </div>
                   )}
-                </>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <Calendar size={48} className="mx-auto mb-4 opacity-50" />
-                  <p className="font-medium">日付を選択してください</p>
-                  <p className="text-sm mt-1">○印のある日が予約可能です</p>
                 </div>
-              )}
-            </div>
-          </div>
+
+                {/* 時間選択 */}
+                <div className="bg-white rounded-2xl shadow-xl p-6">
+                  {selectedDate ? (
+                    <>
+                      <h3 className="text-lg font-bold text-gray-900 mb-4">
+                        {formatDate(selectedDate)}
+                      </h3>
+                      {selectedDateSlots.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          <Clock size={32} className="mx-auto mb-2 opacity-50" />
+                          <p>この日は空きがありません</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {selectedDateSlots.map((slot) => (
+                            <button
+                              key={slot.id}
+                              onClick={() => handleSelectSlot(slot)}
+                              className="w-full p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-left group"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 font-bold text-gray-900 group-hover:text-blue-600">
+                                  <Clock size={18} />
+                                  {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                                </div>
+                                <span className="text-sm text-green-600 font-semibold">
+                                  空き{slot.remaining_capacity}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-12 text-gray-500">
+                      <Calendar size={48} className="mx-auto mb-4 opacity-50" />
+                      <p className="font-medium">日付を選択してください</p>
+                      <p className="text-sm mt-1">○印のある日が予約可能です</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </main>
+
+      {/* フッター */}
+      <footer className="py-4 text-center">
+        <p className="text-xs text-gray-400">
+          予約・出欠表作成{' '}
+          <a 
+            href="https://makers.tokyo/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hover:text-gray-500 transition-colors"
+          >
+            https://makers.tokyo/
+          </a>
+        </p>
+      </footer>
     </div>
   );
 }
-

@@ -346,6 +346,7 @@ export async function getAvailableSlots(
   options?: {
     fromDate?: string; // ISO 8601形式、指定日以降の枠のみ取得
     includeFullSlots?: boolean; // 満席の枠も含めるか（デフォルト: false）
+    includePastSlots?: boolean; // 過去の枠も含めるか（デフォルト: false、編集画面用）
   }
 ): Promise<BookingSlotWithAvailability[]> {
   const supabase = getSupabaseServer();
@@ -362,9 +363,11 @@ export async function getAvailableSlots(
     .eq('menu_id', menuId)
     .order('start_time', { ascending: true });
 
-  // 日付フィルター
-  const fromDate = options?.fromDate || new Date().toISOString();
-  query = query.gte('start_time', fromDate);
+  // 日付フィルター（includePastSlotsがtrueの場合はフィルターしない）
+  if (!options?.includePastSlots) {
+    const fromDate = options?.fromDate || new Date().toISOString();
+    query = query.gte('start_time', fromDate);
+  }
 
   const { data: slots, error: slotsError } = await query;
 
