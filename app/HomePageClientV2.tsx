@@ -26,6 +26,10 @@ import {
   Target,
   Eye,
   LayoutGrid,
+  X,
+  CreditCard,
+  Crown,
+  ExternalLink,
 } from 'lucide-react';
 
 interface PopularContent {
@@ -55,6 +59,10 @@ export default function HomePageClientV2() {
   
   // タブ切り替え用のstate
   const [activeTab, setActiveTab] = useState('tab-freelance');
+  
+  // プロプランモーダル用のstate
+  const [showProPlanModal, setShowProPlanModal] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -190,6 +198,43 @@ export default function HomePageClientV2() {
     return winner[0];
   };
 
+  // プロプラン決済処理（UnivaPay）
+  const handleProPlanCheckout = async () => {
+    setIsProcessingPayment(true);
+    
+    try {
+      const response = await fetch('/api/univapay/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: 3980,
+          period: 'monthly',
+          planName: 'プロプラン（月額）',
+          userId: (user as { id?: string })?.id || null,
+          email: user?.email || null,
+          service: 'makers_pro',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.checkoutUrl) {
+        // UnivaPay決済ページへリダイレクト
+        window.location.href = data.checkoutUrl;
+      } else if (data.error) {
+        throw new Error(data.error);
+      } else {
+        // チェックアウトURLがない場合（開発環境など）
+        alert('決済ページの準備中です。しばらくお待ちください。');
+      }
+    } catch (error) {
+      console.error('決済エラー:', error);
+      alert('決済の開始に失敗しました。もう一度お試しください。');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
@@ -224,6 +269,17 @@ export default function HomePageClientV2() {
           background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
           background-size: 20px 20px;
         }
+        @keyframes gradient-xy {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        .animate-gradient-xy {
+          animation: gradient-xy 15s ease infinite;
+          background-size: 400% 400%;
+        }
+        .pricing-gradient {
+          background: linear-gradient(-45deg, #fef3c7, #fce7f3, #e0e7ff, #ccfbf1);
+        }
       `}</style>
 
       <Header 
@@ -239,6 +295,109 @@ export default function HomePageClientV2() {
         setUser={setUser} 
         onNavigate={navigateTo}
       />
+
+      {/* プロプランモーダル */}
+      {showProPlanModal && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-fade-in"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* ヘッダー */}
+            <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-5 flex justify-between items-center z-10 rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <Crown size={24} />
+                <h3 className="font-bold text-xl">プロプラン</h3>
+              </div>
+              <button 
+                onClick={() => setShowProPlanModal(false)}
+                className="text-white/80 hover:text-white transition p-1"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* コンテンツ */}
+            <div className="p-6">
+              {/* 価格 */}
+              <div className="text-center mb-6">
+                <div className="text-4xl font-black text-gray-900">
+                  ¥3,980<span className="text-lg font-normal text-gray-500">/月</span>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">税込 / いつでも解約可能</p>
+              </div>
+
+              {/* 機能一覧 */}
+              <div className="bg-gradient-to-br from-orange-50 to-pink-50 rounded-xl p-5 mb-6">
+                <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Sparkles size={18} className="text-orange-500" />
+                  プロプランで使える機能
+                </h4>
+                <ul className="space-y-3">
+                  {[
+                    { text: 'フリープランの全機能', highlight: false },
+                    { text: 'AI利用（優先・回数無制限）', highlight: true },
+                    { text: 'HTMLダウンロード', highlight: true },
+                    { text: '埋め込みコード発行', highlight: true },
+                    { text: '広告非表示', highlight: true },
+                    { text: '優先サポート', highlight: true },
+                  ].map((item, idx) => (
+                    <li key={idx} className="flex items-center gap-3">
+                      <Check size={18} className={item.highlight ? 'text-orange-500' : 'text-green-500'} />
+                      <span className={`text-sm ${item.highlight ? 'font-bold text-gray-900' : 'text-gray-700'}`}>
+                        {item.text}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* ログイン案内（未ログイン時） */}
+              {!user && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                  <p className="text-sm text-blue-800">
+                    <span className="font-bold">💡 ヒント：</span>
+                    ログインすると、購入履歴がアカウントに紐付けられます。
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowProPlanModal(false);
+                      setShowAuth(true);
+                    }}
+                    className="mt-2 text-sm text-blue-600 font-bold hover:underline"
+                  >
+                    ログイン / 新規登録はこちら →
+                  </button>
+                </div>
+              )}
+
+              {/* 決済ボタン */}
+              <button
+                onClick={handleProPlanCheckout}
+                disabled={isProcessingPayment}
+                className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isProcessingPayment ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    処理中...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard size={20} />
+                    決済ページへ進む
+                    <ExternalLink size={16} />
+                  </>
+                )}
+              </button>
+
+              <p className="text-xs text-gray-500 text-center mt-4">
+                UnivaPayによる安全な決済処理。カード情報は当サイトに保存されません。
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section */}
       <section className="hero-pattern pt-32 pb-12 lg:pt-40 lg:pb-20 overflow-hidden">
@@ -270,7 +429,7 @@ export default function HomePageClientV2() {
       </section>
 
       {/* Infinite Scroll (Marquee) */}
-      <section className="py-10 bg-gray-50 border-y border-gray-200 overflow-hidden">
+      <section className="py-10 bg-gradient-to-r from-indigo-50 via-white to-purple-50 border-y border-gray-200 overflow-hidden">
         <div className="container mx-auto px-4 mb-4 text-center">
           <p className="text-xs font-bold text-gray-400 tracking-widest uppercase">ALL IN ONE PLATFORM</p>
         </div>
@@ -381,7 +540,7 @@ export default function HomePageClientV2() {
       </section>
 
       {/* 比較表 */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gradient-to-b from-white to-blue-50">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16">
@@ -436,7 +595,7 @@ export default function HomePageClientV2() {
       </section>
 
       {/* Gallery */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gradient-to-br from-pink-50 via-white to-orange-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">プロ級のデザインが、あなたのものに。</h2>
@@ -507,7 +666,7 @@ export default function HomePageClientV2() {
       </section>
 
       {/* Features */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gradient-to-b from-blue-50 to-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">ビジネスを加速させる「3つの力」</h2>
@@ -545,7 +704,7 @@ export default function HomePageClientV2() {
        </section>
 
       {/* Cases Tabs */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gradient-to-br from-indigo-50 via-white to-teal-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">あなたの「やりたいこと」別、活用レシピ</h2>
@@ -718,7 +877,7 @@ export default function HomePageClientV2() {
       </section>
 
       {/* Simple Steps */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gradient-to-b from-white to-emerald-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">使い方はシンプル</h2>
@@ -765,7 +924,7 @@ export default function HomePageClientV2() {
       </section>
 
       {/* Pricing */}
-      <section id="create-section" className="py-20 bg-white border-t border-gray-100">
+      <section id="create-section" className="py-20 pricing-gradient animate-gradient-xy border-t border-gray-100">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">わかりやすい料金プラン</h2>
@@ -950,10 +1109,10 @@ export default function HomePageClientV2() {
               </ul>
 
               <button
-                onClick={() => navigateTo('dashboard')}
+                onClick={() => setShowProPlanModal(true)}
                 className="block w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-bold text-center rounded-xl transition text-sm shadow-md"
               >
-                プロプラン詳細
+                プロプランに申し込む
               </button>
             </div>
           </div>
@@ -961,7 +1120,7 @@ export default function HomePageClientV2() {
       </section>
 
       {/* FAQ */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gradient-to-br from-amber-50 via-white to-rose-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">よくある質問</h2>
@@ -1023,7 +1182,7 @@ export default function HomePageClientV2() {
       </section>
 
       {/* サービス選択セクション */}
-      <section id="create-section-services" className="py-20 lg:py-28">
+      <section id="create-section-services" className="py-20 lg:py-28 bg-gradient-to-b from-rose-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
@@ -1143,7 +1302,7 @@ export default function HomePageClientV2() {
 
       {/* 人気コンテンツセクション */}
       {popularContents.length > 0 && (
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-gradient-to-br from-purple-50 via-white to-indigo-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full mb-4">
@@ -1225,7 +1384,7 @@ export default function HomePageClientV2() {
       )}
 
       {/* 特徴セクション */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gradient-to-b from-indigo-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
