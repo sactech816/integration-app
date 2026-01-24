@@ -4,8 +4,8 @@ import { Metadata } from 'next';
 // トップページのバージョン切り替え
 // 使いたいバージョンのコメントを外してください
 // ========================================
-import HomePageClient from './HomePageClientV1';    // V1: makes2.txtベース（2026-01-24実装）✅ 現在使用中
-// import HomePageClient from './HomePageClientV2'; // V2: 新パターン（未実装）
+// import HomePageClient from './HomePageClientV1';    // V1: makes2.txtベース（2026-01-24実装）
+import HomePageClient from './HomePageClientV2'; // V2: makes2.txt完全版（2026-01-24実装）✅ 現在使用中
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 

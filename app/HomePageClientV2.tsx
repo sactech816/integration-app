@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
+import ServiceSelector from '@/components/shared/ServiceSelector';
 import { 
   Sparkles, 
   UserCircle, 
@@ -21,12 +22,26 @@ import {
   BarChart3,
   Share2,
   ChevronDown,
+  Zap,
+  Target,
+  Eye,
+  LayoutGrid,
 } from 'lucide-react';
+
+interface PopularContent {
+  id: string;
+  slug: string;
+  title: string;
+  description?: string;
+  type: 'quiz' | 'profile' | 'business';
+  views_count: number;
+}
 
 export default function HomePageClientV2() {
   const [user, setUser] = useState<{ email?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [popularContents, setPopularContents] = useState<PopularContent[]>([]);
   
   // 診断ツール用のstate
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -50,6 +65,26 @@ export default function HomePageClientV2() {
 
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user || null);
+
+        // 人気コンテンツを取得（診断クイズのTOP5）
+        try {
+          const { data: quizzes } = await supabase
+            .from('quizzes')
+            .select('id, slug, title, description, views_count')
+            .eq('show_in_portal', true)
+            .order('views_count', { ascending: false, nullsFirst: false })
+            .limit(5);
+
+          if (quizzes) {
+            setPopularContents(quizzes.map(q => ({
+              ...q,
+              type: 'quiz' as const,
+              views_count: q.views_count || 0,
+            })));
+          }
+        } catch (error) {
+          console.error('Failed to fetch popular contents:', error);
+        }
       }
       setIsLoading(false);
     };
@@ -68,12 +103,16 @@ export default function HomePageClientV2() {
     if (page === '/' || page === '') {
       window.location.href = '/';
     } else if (page === 'create') {
-      document.getElementById('create-section')?.scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('create-section-services')?.scrollIntoView({ behavior: 'smooth' });
     } else if (page === 'diagnosis') {
       document.getElementById('diagnosis')?.scrollIntoView({ behavior: 'smooth' });
     } else {
       window.location.href = `/${page}`;
     }
+  };
+
+  const handleServiceSelect = (service: string) => {
+    navigateTo(`${service}/editor`);
   };
 
   // 診断ツールのロジック
@@ -407,7 +446,11 @@ export default function HomePageClientV2() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <div className="group">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative aspect-[3/4] mb-4 transition group-hover:-translate-y-2 duration-300">
-                <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-gray-300">
+                {/* 画像を変更する場合:
+                  1. 以下のグラデーション部分を削除または非表示にする
+                  2. <img src="/path/to/image.jpg" alt="美容・サロン向けテンプレート" className="w-full h-full object-cover" /> を追加
+                */}
+                <div className="absolute inset-0 bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white/30">
                   <Sparkles size={64} />
                 </div>
                 <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/70 to-transparent p-6 pt-12">
@@ -419,7 +462,11 @@ export default function HomePageClientV2() {
             </div>
             <div className="group">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative aspect-[3/4] mb-4 transition group-hover:-translate-y-2 duration-300">
-                <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-gray-300">
+                {/* 画像を変更する場合:
+                  1. 以下のグラデーション部分を削除または非表示にする
+                  2. <img src="/path/to/image.jpg" alt="ビジネス・講師向けテンプレート" className="w-full h-full object-cover" /> を追加
+                */}
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center text-white/30">
                   <UserCircle size={64} />
                 </div>
                 <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/70 to-transparent p-6 pt-12">
@@ -431,7 +478,11 @@ export default function HomePageClientV2() {
             </div>
             <div className="group">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative aspect-[3/4] mb-4 transition group-hover:-translate-y-2 duration-300">
-                <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-gray-300">
+                {/* 画像を変更する場合:
+                  1. 以下のグラデーション部分を削除または非表示にする
+                  2. <img src="/path/to/image.jpg" alt="飲食・エンタメ向けテンプレート" className="w-full h-full object-cover" /> を追加
+                */}
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white/30">
                   <Building2 size={64} />
                 </div>
                 <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/70 to-transparent p-6 pt-12">
@@ -468,8 +519,8 @@ export default function HomePageClientV2() {
               <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
                 <TrendingUp size={28} />
               </div>
-              <h3 className="text-xl font-bold mb-3">【集客】知ってもらう</h3>
-              <p className="text-sm text-gray-500 font-bold mb-4 uppercase tracking-wider">プロフィールLP / ビジネスLP</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">【集客】知ってもらう</h3>
+              <p className="text-sm text-gray-900 font-bold mb-4 uppercase tracking-wider">プロフィールLP / ビジネスLP</p>
               <p className="text-gray-600 text-sm">テンプレートを選ぶだけで、名刺代わりのWebページが完成。あなたの魅力やサービス内容を、スマホで見やすく伝えます。</p>
             </div>
             <div className="bg-indigo-50 p-8 rounded-2xl border border-indigo-100 shadow-lg transform md:-translate-y-4 relative group">
@@ -477,16 +528,16 @@ export default function HomePageClientV2() {
               <div className="w-14 h-14 bg-pink-100 text-pink-600 rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
                 <Gamepad2 size={28} />
               </div>
-              <h3 className="text-xl font-bold mb-3">【接客】ファンにする</h3>
-              <p className="text-sm text-gray-500 font-bold mb-4 uppercase tracking-wider">診断クイズ / ゲーム作成</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">【接客】ファンにする</h3>
+              <p className="text-sm text-gray-900 font-bold mb-4 uppercase tracking-wider">診断クイズ / ゲーム作成</p>
               <p className="text-gray-600 text-sm">ただ読ませるだけじゃない。「あなたは何タイプ？」「検定クイズ」などの遊べるコンテンツで、お客様との距離を縮めます。</p>
             </div>
             <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 hover:border-green-200 transition group">
               <div className="w-14 h-14 bg-green-100 text-green-600 rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
                 <Calendar size={28} />
               </div>
-              <h3 className="text-xl font-bold mb-3">【成約】スムーズに繋がる</h3>
-              <p className="text-sm text-gray-500 font-bold mb-4 uppercase tracking-wider">予約・日程調整 / アンケート</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">【成約】スムーズに繋がる</h3>
+              <p className="text-sm text-gray-900 font-bold mb-4 uppercase tracking-wider">予約・日程調整 / アンケート</p>
               <p className="text-gray-600 text-sm">面倒な日程調整の往復メールは不要。予約受付から顧客の声の収集まで自動化し、チャンスを逃しません。</p>
             </div>
            </div>
@@ -637,9 +688,9 @@ export default function HomePageClientV2() {
                 「あなたにぴったりの美肌ケア診断」を公式LINEで配信したところ、<span className="font-bold text-pink-600">診断実施者の42%が予約ページへ遷移</span>。従来のクーポン配布よりも高い反応率を記録しました。
               </p>
               <div className="flex gap-2 flex-wrap">
-                <span className="text-xs bg-white px-3 py-1 rounded-full border border-pink-200 font-bold">診断クイズ</span>
-                <span className="text-xs bg-white px-3 py-1 rounded-full border border-pink-200 font-bold">予約機能</span>
-                <span className="text-xs bg-white px-3 py-1 rounded-full border border-pink-200 font-bold">プロフィールLP</span>
+                <span className="text-xs bg-white px-3 py-1 rounded-full border-2 border-pink-300 font-bold text-gray-900">診断クイズ</span>
+                <span className="text-xs bg-white px-3 py-1 rounded-full border-2 border-pink-300 font-bold text-gray-900">予約機能</span>
+                <span className="text-xs bg-white px-3 py-1 rounded-full border-2 border-pink-300 font-bold text-gray-900">プロフィールLP</span>
               </div>
             </div>
 
@@ -657,9 +708,9 @@ export default function HomePageClientV2() {
                 従来はメール・LINE・電話で日程調整していたが、プロフィールに「予約機能」を統合したことで、<span className="font-bold text-indigo-600">事務作業が週10時間削減</span>。空いた時間を本業に充てられるようになりました。
               </p>
               <div className="flex gap-2 flex-wrap">
-                <span className="text-xs bg-white px-3 py-1 rounded-full border border-indigo-200 font-bold">プロフィールLP</span>
-                <span className="text-xs bg-white px-3 py-1 rounded-full border border-indigo-200 font-bold">予約機能</span>
-                <span className="text-xs bg-white px-3 py-1 rounded-full border border-indigo-200 font-bold">アンケート</span>
+                <span className="text-xs bg-white px-3 py-1 rounded-full border-2 border-indigo-300 font-bold text-gray-900">プロフィールLP</span>
+                <span className="text-xs bg-white px-3 py-1 rounded-full border-2 border-indigo-300 font-bold text-gray-900">予約機能</span>
+                <span className="text-xs bg-white px-3 py-1 rounded-full border-2 border-indigo-300 font-bold text-gray-900">アンケート</span>
               </div>
             </div>
           </div>
@@ -680,21 +731,21 @@ export default function HomePageClientV2() {
                 <div className="w-20 h-20 bg-indigo-600 text-white rounded-full flex items-center justify-center text-3xl font-black mx-auto mb-6 shadow-lg">
                   1
                 </div>
-                <h3 className="font-bold text-lg mb-3">テンプレートを選ぶ</h3>
+                <h3 className="font-bold text-lg text-gray-900 mb-3">テンプレートを選ぶ</h3>
                 <p className="text-sm text-gray-600">業種や目的に合わせて、豊富なテンプレートから選択。デザインの知識は不要です。</p>
               </div>
               <div className="text-center">
                 <div className="w-20 h-20 bg-pink-500 text-white rounded-full flex items-center justify-center text-3xl font-black mx-auto mb-6 shadow-lg">
                   2
                 </div>
-                <h3 className="font-bold text-lg mb-3">文字と画像を変える</h3>
+                <h3 className="font-bold text-lg text-gray-900 mb-3">文字と画像を変える</h3>
                 <p className="text-sm text-gray-600">あなたのビジネス内容に合わせて、テキストや画像を差し替えるだけ。直感的に編集できます。</p>
               </div>
               <div className="text-center">
                 <div className="w-20 h-20 bg-green-500 text-white rounded-full flex items-center justify-center text-3xl font-black mx-auto mb-6 shadow-lg">
                   3
                 </div>
-                <h3 className="font-bold text-lg mb-3">公開してシェア</h3>
+                <h3 className="font-bold text-lg text-gray-900 mb-3">公開してシェア</h3>
                 <p className="text-sm text-gray-600">あなた専用のURLが発行されます。SNSや名刺に載せて、すぐに集客スタート！</p>
               </div>
             </div>
@@ -714,133 +765,197 @@ export default function HomePageClientV2() {
       </section>
 
       {/* Pricing */}
-      <section id="create-section" className="py-20 bg-white">
+      <section id="create-section" className="py-20 bg-white border-t border-gray-100">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">シンプルでわかりやすい料金プラン</h2>
-            <p className="text-gray-600">まずは無料で試して、必要に応じてアップグレード。</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">わかりやすい料金プラン</h2>
+            <p className="text-gray-600">まずは無料で、すべての機能をお試しいただけます。</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {/* Guest Plan */}
-            <div className="bg-gray-50 border-2 border-gray-200 rounded-2xl p-8 hover:shadow-lg transition">
-              <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-gray-700 mb-2">ゲスト</h3>
-                <div className="text-4xl font-black text-gray-900 mb-2">¥0</div>
-                <p className="text-sm text-gray-500">とりあえず試したい方へ</p>
+          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
+            {/* ゲスト */}
+            <div className="border border-gray-200 rounded-2xl p-6 flex flex-col bg-white hover:shadow-lg transition">
+              <div className="mb-4 text-center">
+                <span className="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full">お試し体験</span>
+                <h3 className="text-xl font-bold text-gray-800 mt-2">ゲスト</h3>
+                <div className="mt-1 text-gray-500">
+                  <span className="text-3xl font-bold text-gray-800">¥0</span>
+                  <span className="text-xs">/ 回</span>
+                </div>
               </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start gap-2 text-sm">
-                  <Check className="text-green-500 flex-shrink-0 mt-0.5" size={16} />
-                  <span>診断クイズ（3種類まで）</span>
+              <p className="text-xs text-gray-500 mb-6 text-center">
+                登録なしで、今すぐお試し作成。<br />※保存はされません
+              </p>
+              
+              <ul className="space-y-3 mb-6 flex-1 border-t border-gray-100 pt-4">
+                <li className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">新規作成</span>
+                  <Check size={16} className="text-green-500" />
                 </li>
-                <li className="flex items-start gap-2 text-sm">
-                  <Check className="text-green-500 flex-shrink-0 mt-0.5" size={16} />
-                  <span>アンケート機能</span>
+                <li className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">ポータル掲載</span>
+                  <Check size={16} className="text-green-500" />
                 </li>
-                <li className="flex items-start gap-2 text-sm text-gray-400">
-                  <span className="w-4 h-4 flex-shrink-0 mt-0.5">✕</span>
-                  <span>プロフィールLP</span>
+                <li className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">URL発行</span>
+                  <Check size={16} className="text-green-500" />
                 </li>
-                <li className="flex items-start gap-2 text-sm text-gray-400">
-                  <span className="w-4 h-4 flex-shrink-0 mt-0.5">✕</span>
-                  <span>予約機能</span>
+                <li className="flex items-center justify-between text-sm text-gray-400">
+                  <span>編集・更新</span>
+                  <span className="text-gray-300">×</span>
+                </li>
+                <li className="flex items-center justify-between text-sm text-gray-400">
+                  <span>アフィリエイト機能</span>
+                  <span className="text-gray-300">×</span>
+                </li>
+                <li className="flex items-center justify-between text-sm text-gray-400">
+                  <span>アクセス解析</span>
+                  <span className="text-gray-300">×</span>
+                </li>
+                <li className="flex items-center justify-between text-sm text-gray-400">
+                  <span>AI利用</span>
+                  <span className="text-gray-300">×</span>
+                </li>
+                <li className="flex items-center justify-between text-sm text-gray-400">
+                  <span>HTMLダウンロード</span>
+                  <span className="text-gray-300">×</span>
+                </li>
+                <li className="flex items-center justify-between text-sm text-gray-400">
+                  <span>埋め込みコード発行</span>
+                  <span className="text-gray-300">×</span>
                 </li>
               </ul>
+
               <button
-                onClick={() => setShowAuth(true)}
-                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition"
+                onClick={() => navigateTo('create')}
+                className="block w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-center rounded-xl transition text-sm"
               >
-                今すぐ試す
+                登録せず試す
               </button>
             </div>
 
-            {/* Free Plan */}
-            <div className="bg-white border-2 border-indigo-500 rounded-2xl p-8 relative shadow-xl transform md:-translate-y-2">
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-indigo-500 text-white text-xs font-bold px-4 py-1 rounded-full">
-                人気No.1
+            {/* フリープラン */}
+            <div className="border-2 border-indigo-600 rounded-2xl p-6 flex flex-col bg-white shadow-xl">
+              <div className="mb-4 text-center">
+                <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full">標準</span>
+                <h3 className="text-xl font-bold text-indigo-800 mt-2">フリープラン</h3>
+                <div className="mt-1 text-gray-500">
+                  <span className="text-3xl font-bold text-gray-800">¥0</span>
+                  <span className="text-xs">/ 月</span>
+                </div>
               </div>
-              <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-indigo-600 mb-2">フリー</h3>
-                <div className="text-4xl font-black text-gray-900 mb-2">¥0</div>
-                <p className="text-sm text-gray-500">ずっと無料で使える</p>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start gap-2 text-sm">
-                  <Check className="text-green-500 flex-shrink-0 mt-0.5" size={16} />
-                  <span>診断クイズ（無制限）</span>
+              <p className="text-xs text-gray-600 mb-6 text-center font-bold">
+                15秒でできるアカウント登録だけでOK！<br />
+                ずっと無料で使い放題。
+              </p>
+              
+              <ul className="space-y-3 mb-6 flex-1 border-t border-gray-100 pt-4">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>新規作成</span>
+                  <Check size={16} className="text-indigo-600" />
                 </li>
-                <li className="flex items-start gap-2 text-sm">
-                  <Check className="text-green-500 flex-shrink-0 mt-0.5" size={16} />
-                  <span>プロフィールLP</span>
+                <li className="flex items-center justify-between text-sm text-gray-700">
+                  <span>ポータル掲載</span>
+                  <Check size={16} className="text-indigo-600" />
                 </li>
-                <li className="flex items-start gap-2 text-sm">
-                  <Check className="text-green-500 flex-shrink-0 mt-0.5" size={16} />
-                  <span>ビジネスLP</span>
+                <li className="flex items-center justify-between text-sm text-gray-700">
+                  <span>URL発行</span>
+                  <Check size={16} className="text-indigo-600" />
                 </li>
-                <li className="flex items-start gap-2 text-sm">
-                  <Check className="text-green-500 flex-shrink-0 mt-0.5" size={16} />
-                  <span>予約機能（月30件まで）</span>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>編集・更新</span>
+                  <Check size={16} className="text-indigo-600" />
                 </li>
-                <li className="flex items-start gap-2 text-sm">
-                  <Check className="text-green-500 flex-shrink-0 mt-0.5" size={16} />
-                  <span>アンケート機能</span>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>アフィリエイト機能</span>
+                  <Check size={16} className="text-indigo-600" />
                 </li>
-                <li className="flex items-start gap-2 text-sm text-gray-400">
-                  <span className="w-4 h-4 flex-shrink-0 mt-0.5">✕</span>
-                  <span>広告非表示</span>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>アクセス解析</span>
+                  <Check size={16} className="text-indigo-600" />
+                </li>
+                <li className="flex items-center justify-between text-sm text-gray-700">
+                  <span>AI利用（回数制限）</span>
+                  <Check size={16} className="text-indigo-600" />
+                </li>
+                <li className="flex items-center justify-between text-sm text-gray-400">
+                  <span>HTMLダウンロード</span>
+                  <span className="text-gray-300">×</span>
+                </li>
+                <li className="flex items-center justify-between text-sm text-gray-400">
+                  <span>埋め込みコード発行</span>
+                  <span className="text-gray-300">×</span>
                 </li>
               </ul>
+
               <button
                 onClick={() => setShowAuth(true)}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition shadow-lg"
+                className="block w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center rounded-xl transition text-sm shadow-md"
               >
-                無料登録する
+                無料で登録する
               </button>
             </div>
 
-            {/* Pro Plan */}
-            <div className="bg-gradient-to-br from-orange-50 to-pink-50 border-2 border-orange-200 rounded-2xl p-8 hover:shadow-lg transition">
-              <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-orange-600 mb-2">プロ</h3>
-                <div className="text-4xl font-black text-gray-900 mb-2">¥1,980</div>
-                <p className="text-sm text-gray-500">本格的に運用したい方へ</p>
+            {/* プロプラン */}
+            <div className="border-2 border-orange-300 rounded-2xl p-6 flex flex-col bg-gradient-to-br from-orange-50 to-pink-50 hover:shadow-lg transition">
+              <div className="mb-4 text-center">
+                <span className="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full">ビジネス向け</span>
+                <h3 className="text-xl font-bold text-orange-800 mt-2">プロプラン</h3>
+                <div className="mt-1 text-gray-500">
+                  <span className="text-3xl font-bold text-gray-800">¥3,980</span>
+                  <span className="text-xs">/ 月</span>
+                </div>
               </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start gap-2 text-sm">
-                  <Check className="text-green-500 flex-shrink-0 mt-0.5" size={16} />
-                  <span className="font-bold">フリープランの全機能</span>
+              <p className="text-xs text-gray-600 mb-6 text-center">
+                本格的なビジネス運用に。<br />制限なしで使い放題。
+              </p>
+              
+              <ul className="space-y-3 mb-6 flex-1 border-t border-orange-100 pt-4">
+                <li className="flex items-center justify-between text-sm text-gray-700">
+                  <span>新規作成</span>
+                  <Check size={16} className="text-orange-500" />
                 </li>
-                <li className="flex items-start gap-2 text-sm">
-                  <Check className="text-green-500 flex-shrink-0 mt-0.5" size={16} />
-                  <span>予約無制限</span>
+                <li className="flex items-center justify-between text-sm text-gray-700">
+                  <span>ポータル掲載</span>
+                  <Check size={16} className="text-orange-500" />
                 </li>
-                <li className="flex items-start gap-2 text-sm">
-                  <Check className="text-green-500 flex-shrink-0 mt-0.5" size={16} />
-                  <span>広告非表示</span>
+                <li className="flex items-center justify-between text-sm text-gray-700">
+                  <span>URL発行</span>
+                  <Check size={16} className="text-orange-500" />
                 </li>
-                <li className="flex items-start gap-2 text-sm">
-                  <Check className="text-green-500 flex-shrink-0 mt-0.5" size={16} />
-                  <span>詳細なアクセス解析</span>
+                <li className="flex items-center justify-between text-sm text-gray-700">
+                  <span>編集・更新</span>
+                  <Check size={16} className="text-orange-500" />
                 </li>
-                <li className="flex items-start gap-2 text-sm">
-                  <Check className="text-green-500 flex-shrink-0 mt-0.5" size={16} />
-                  <span>優先サポート</span>
+                <li className="flex items-center justify-between text-sm text-gray-700">
+                  <span>アフィリエイト機能</span>
+                  <Check size={16} className="text-orange-500" />
+                </li>
+                <li className="flex items-center justify-between text-sm text-gray-700">
+                  <span>アクセス解析</span>
+                  <Check size={16} className="text-orange-500" />
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>AI利用（優先）</span>
+                  <Check size={16} className="text-orange-500" />
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>HTMLダウンロード</span>
+                  <Check size={16} className="text-orange-500" />
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>埋め込みコード発行</span>
+                  <Check size={16} className="text-orange-500" />
                 </li>
               </ul>
+
               <button
-                onClick={() => setShowAuth(true)}
-                className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-bold py-3 rounded-lg transition shadow-lg"
+                onClick={() => navigateTo('dashboard')}
+                className="block w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-bold text-center rounded-xl transition text-sm shadow-md"
               >
-                プロで始める
+                プロプラン詳細
               </button>
             </div>
-          </div>
-
-          <div className="text-center mt-10">
-            <p className="text-sm text-gray-500">
-              ※ プランはいつでも変更可能です。最初は無料で試してから、必要に応じてアップグレードできます。
-            </p>
           </div>
         </div>
       </section>
@@ -903,6 +1018,256 @@ export default function HomePageClientV2() {
                 makers.tokyo/あなたのID というURLで公開されます。このリンクをSNSのプロフィール、名刺、チラシなどに掲載してご利用ください。プロプランでは独自ドメインの設定も可能です（準備中）。
               </div>
             </details>
+          </div>
+        </div>
+      </section>
+
+      {/* サービス選択セクション */}
+      <section id="create-section-services" className="py-20 lg:py-28">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
+              何を作りますか？
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              目的に合わせて最適なコンテンツタイプを選択してください
+            </p>
+          </div>
+
+          <ServiceSelector 
+            onSelect={handleServiceSelect}
+            variant="cards"
+            showDescription={true}
+          />
+          
+          {/* ログイン案内 */}
+          {!user && (
+            <div className="mt-12 max-w-2xl mx-auto">
+              <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6">
+                <div className="flex items-start gap-4">
+                  <div className="bg-orange-500 p-2 rounded-lg flex-shrink-0">
+                    <Sparkles size={20} className="text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+                      ログインすると便利な機能が使えます！
+                    </h3>
+                    <ul className="text-sm text-gray-700 space-y-1 mb-4">
+                      <li className="flex items-center gap-2">
+                        <Check size={14} className="text-green-600 flex-shrink-0" />
+                        作成したコンテンツの編集・削除が可能
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check size={14} className="text-green-600 flex-shrink-0" />
+                        マイページでアクセス解析を確認
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check size={14} className="text-green-600 flex-shrink-0" />
+                        HTMLダウンロード・埋め込みコードなどの追加オプションが利用可能
+                      </li>
+                    </ul>
+                    <button
+                      onClick={() => setShowAuth(true)}
+                      className="bg-orange-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-orange-700 transition-colors text-sm"
+                    >
+                      ログイン / 新規登録
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* 予約・日程調整・アンケートサービスの誘導 */}
+      <section className="py-12 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b border-blue-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+              その他の便利な機能
+            </h2>
+            <p className="text-gray-600 text-sm">
+              予約管理・アンケート収集など、ビジネスに役立つツール
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* 予約・日程調整 */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-blue-100 hover:shadow-xl transition-all hover:scale-[1.02]">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                  <Calendar size={24} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900 text-lg mb-2">予約・日程調整</h3>
+                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+                    カレンダー形式で予約を受け付け。面談・相談・サービス予約などに最適です。予約枠を簡単に管理できます。
+                  </p>
+                  <button
+                    onClick={() => navigateTo('booking/new')}
+                    className="inline-flex items-center gap-2 bg-blue-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    <Calendar size={16} />
+                    予約メニューを作成
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* アンケート（投票） */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-teal-100 hover:shadow-xl transition-all hover:scale-[1.02]">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                  <ClipboardList size={24} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900 text-lg mb-2">アンケート（投票）</h3>
+                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+                    顧客の声を収集。投票機能付きアンケートで意見を集約。SNSで拡散しやすく、結果をリアルタイムで確認できます。
+                  </p>
+                  <button
+                    onClick={() => navigateTo('survey/new')}
+                    className="inline-flex items-center gap-2 bg-teal-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-teal-700 transition-colors text-sm"
+                  >
+                    <ClipboardList size={16} />
+                    アンケートを作成
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 人気コンテンツセクション */}
+      {popularContents.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full mb-4">
+                <TrendingUp size={20} />
+                <span className="font-bold">人気コンテンツ</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
+                みんなが楽しんでいる診断クイズ
+              </h2>
+              <p className="text-lg text-gray-600">
+                人気の診断クイズをチェックしてみよう
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {popularContents.slice(0, 3).map((content, index) => (
+                <a
+                  key={content.id}
+                  href={`/${content.type}/${content.slug}`}
+                  className="group bg-gradient-to-br from-gray-50 to-indigo-50 rounded-2xl border-2 border-gray-100 p-6 hover:border-indigo-300 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                >
+                  {/* ランキングバッジ */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl ${
+                      index === 0 
+                        ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-white' 
+                        : index === 1
+                        ? 'bg-gradient-to-br from-gray-300 to-gray-500 text-white'
+                        : 'bg-gradient-to-br from-orange-400 to-orange-600 text-white'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <Eye size={16} />
+                      <span className="font-bold">{content.views_count.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {/* コンテンツ情報 */}
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                      <Sparkles size={24} className="text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-lg text-gray-900 mb-1 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+                        {content.title}
+                      </h3>
+                      {content.description && (
+                        <p className="text-sm text-gray-600 line-clamp-2">
+                          {content.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* CTA */}
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <span className="text-sm font-bold text-indigo-600 group-hover:gap-2 transition-all flex items-center gap-1">
+                      診断を受ける
+                      <ArrowRight size={16} />
+                    </span>
+                  </div>
+                </a>
+              ))}
+            </div>
+
+            {/* もっと見るボタン */}
+            <div className="text-center mt-8">
+              <a
+                href="/portal?tab=quiz"
+                className="inline-flex items-center gap-2 bg-white text-indigo-600 font-bold px-6 py-3 rounded-xl border-2 border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 transition-all"
+              >
+                <LayoutGrid size={20} />
+                もっと見る
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 特徴セクション */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
+              集客メーカーが選ばれる理由
+            </h2>
+            <p className="text-lg text-gray-600">
+              ビジネスを加速させる「3つの力」
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: Zap,
+                title: 'AI自動生成',
+                description: 'テーマを入力するだけでAIが質問・結果・キャッチコピーを自動生成。プロ品質のコンテンツが数分で完成',
+                color: 'text-yellow-500',
+                bg: 'bg-yellow-50'
+              },
+              {
+                icon: Share2,
+                title: 'SNS拡散設計',
+                description: 'シェアされやすい診断結果、魅力的なOGP画像。オーガニックな拡散で広告費ゼロの集客を実現',
+                color: 'text-indigo-500',
+                bg: 'bg-indigo-50'
+              },
+              {
+                icon: Target,
+                title: 'SEO・AI検索対応',
+                description: '構造化データ対応でGoogle・ChatGPT両方からの流入を最大化。検索で見つかるコンテンツに',
+                color: 'text-orange-500',
+                bg: 'bg-orange-50'
+              }
+            ].map((feature, index) => (
+              <div key={index} className="text-center p-8 bg-gray-50 rounded-2xl border border-gray-100 hover:border-indigo-200 transition">
+                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl ${feature.bg} mb-6`}>
+                  <feature.icon size={32} className={feature.color} />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
