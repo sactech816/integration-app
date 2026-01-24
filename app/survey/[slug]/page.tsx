@@ -155,8 +155,21 @@ export default async function SurveyPage({ params }: { params: Promise<{ slug: s
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <main className="min-h-screen bg-gradient-to-br from-gray-50 to-teal-50 py-10 px-4">
-        <SurveyPlayer survey={survey as Survey} />
+      <main className="min-h-screen bg-gradient-to-br from-gray-50 to-teal-50 py-10 px-4 flex flex-col">
+        <div className="flex-1">
+          <SurveyPlayer survey={survey as Survey} />
+        </div>
+        {/* フッター */}
+        <footer className="mt-12 text-center">
+          <a
+            href="https://makers.tokyo/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-gray-400 hover:text-gray-500 transition-colors"
+          >
+            &copy; {new Date().getFullYear()} アンケートメーカー
+          </a>
+        </footer>
       </main>
     </>
   );

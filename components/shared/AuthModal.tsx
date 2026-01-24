@@ -61,7 +61,10 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
             
             if (error) {
                 console.log('認証エラー詳細:', error);
+                
                 // 重複メールアドレスのエラーハンドリング
+                // ユーザー体験優先: 自動ログイン機能を提供
+                // ※セキュリティ重視に切り替える場合は、下記のコメントアウトされたコードを使用
                 if (!isLogin && (
                     error.message.includes('already registered') || 
                     error.message.includes('User already registered') ||
@@ -80,12 +83,10 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                         // パスワードが合っていた場合、自動的にログイン
                         alert('このメールアドレスは既に登録されています。\n\n自動的にログインしました。');
                         setUser(loginData.user);
-                        // パスワードリセットモードをリセット
                         if (setShowPasswordReset) {
                             setShowPasswordReset(false);
                         }
                         onClose();
-                        // ログイン成功時にマイページにリダイレクト
                         if (onNavigate) {
                             onNavigate('dashboard');
                         } else if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard') {
@@ -96,28 +97,39 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                     } else {
                         // パスワードが間違っている場合、ログイン画面に切り替え
                         alert(
-                            '【重要】このメールアドレスは既に登録されています。\n\n' +
-                            '※メールは送信されていません。\n\n' +
+                            'このメールアドレスは既に登録されています。\n\n' +
                             'ログイン画面に切り替えます。\n' +
-                            'パスワードを忘れた場合は「パスワードを忘れた方」をクリックしてください。'
+                            'パスワードを忘れた場合は「パスワードをお忘れですか？」をクリックしてください。'
                         );
-                        // 自動的にログイン画面に切り替え
                         setIsLogin(true);
-                        // パスワードのみクリア（メールアドレスは保持）
                         setPassword('');
                         setLoading(false);
                         return;
                     }
+                    
+                    /* ========================================
+                     * セキュリティ重視版（将来用）
+                     * メールアドレスの存在を推測されないようにする
+                     * ----------------------------------------
+                    alert(
+                        '確認メールを送信しました。\n\n' +
+                        'メール内のリンクをクリックして認証を完了させてください。\n\n' +
+                        '※既にアカウントをお持ちの場合は、ログイン画面からログインしてください。'
+                    );
+                    setIsLogin(true);
+                    setPassword('');
+                    setLoading(false);
+                    return;
+                     * ======================================== */
                 }
                 throw error;
             }
             
-            // 新規登録の場合、エラーがなくてもユーザーが既に存在する可能性がある
-            // （Supabaseの設定によっては重複登録を許可する場合がある）
+            // 新規登録の場合
             if (!isLogin && data.user) {
                 // セッションがない場合は確認メールが送信された
                 if (!data.session) {
-                    // メールが本当に送信されたか確認するため、ユーザーが既に存在するかチェック
+                    // ユーザー体験優先: 既存ユーザーかどうか確認
                     const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ 
                         email, 
                         password 
@@ -127,7 +139,6 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                         // ユーザーが既に存在し、パスワードが合っている
                         alert('このメールアドレスは既に登録されています。\n\n自動的にログインしました。');
                         setUser(loginData.user);
-                        // パスワードリセットモードをリセット
                         if (setShowPasswordReset) {
                             setShowPasswordReset(false);
                         }
@@ -141,10 +152,18 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                         return;
                     } else {
                         // 新規登録で確認メールが送信された
-                        alert('確認メールを送信しました。メール内のリンクをクリックして認証を完了させてください。');
+                        alert('確認メールを送信しました。\n\nメール内のリンクをクリックして認証を完了させてください。');
                         setLoading(false);
                         return;
                     }
+                    
+                    /* ========================================
+                     * セキュリティ重視版（将来用）
+                     * ----------------------------------------
+                    alert('確認メールを送信しました。\n\nメール内のリンクをクリックして認証を完了させてください。');
+                    setLoading(false);
+                    return;
+                     * ======================================== */
                 }
             }
 

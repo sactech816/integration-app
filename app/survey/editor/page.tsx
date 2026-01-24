@@ -95,7 +95,7 @@ function EditorContent() {
           <div className="text-center">
             <p className="text-red-600 mb-4">{error}</p>
             <button
-              onClick={() => router.push("/survey")}
+              onClick={() => router.push("/dashboard?view=survey")}
               className="bg-teal-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-teal-700"
             >
               一覧に戻る
@@ -123,7 +123,7 @@ function EditorContent() {
       />
 
       <SurveyEditor
-        onBack={() => router.push("/survey")}
+        onBack={() => router.push("/dashboard?view=survey")}
         initialData={survey || undefined}
         user={user}
       />

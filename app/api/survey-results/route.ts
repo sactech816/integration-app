@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
     if (!surveyId) {
       return NextResponse.json(
-        { error: 'survey_id is required' },
+        { error: 'アンケートIDが指定されていません' },
         { status: 400 }
       );
     }
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     const supabase = getSupabase();
     if (!supabase) {
       return NextResponse.json(
-        { error: 'Database not configured' },
+        { error: 'データベースに接続できません' },
         { status: 500 }
       );
     }
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
 
     if (surveyError || !survey) {
       return NextResponse.json(
-        { error: 'Survey not found' },
+        { error: 'アンケートが見つかりません' },
         { status: 404 }
       );
     }
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     // 投票モードがOFFの場合は結果を返さない
     if (!survey.show_results_after_submission) {
       return NextResponse.json(
-        { error: 'Results not available for this survey' },
+        { error: 'このアンケートは結果を公開していません' },
         { status: 403 }
       );
     }
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
 
     if (responsesError) {
       return NextResponse.json(
-        { error: 'Failed to fetch responses' },
+        { error: '回答データの取得に失敗しました' },
         { status: 500 }
       );
     }
@@ -130,7 +130,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Survey results error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'サーバーエラーが発生しました' },
       { status: 500 }
     );
   }

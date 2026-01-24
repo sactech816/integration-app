@@ -97,18 +97,17 @@ export async function createBookingMenu(
 
 /**
  * 自分の予約メニュー一覧を取得
- * Service Role Keyを使用している場合、RLSをバイパスして取得
- * （管理者は supabase_admin_access.sql のRLSポリシーで全メニュー取得可能）
+ * Service Role Keyを使用している場合でも、user_idでフィルタリングして自分のメニューのみ取得
  */
 export async function getBookingMenus(userId: string): Promise<BookingMenu[]> {
   const supabase = getSupabaseServer();
   if (!supabase || !userId) return [];
 
-  // Service Role Keyを使用している場合はRLSバイパスで全データ取得
-  // そうでない場合（Anon Key）はRLSポリシーに従う
+  // ユーザーIDでフィルタリングして自分のメニューのみ取得
   const { data, error } = await supabase
     .from('booking_menus')
     .select('*')
+    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) {

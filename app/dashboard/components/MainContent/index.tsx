@@ -179,7 +179,7 @@ export default function MainContent({
 
       {/* アンケート */}
       {activeView === 'survey' && user && (
-        <SurveyList userId={user.id} isAdmin={isAdmin} />
+        <SurveyList userId={user.id} isAdmin={isAdmin} userEmail={user.email} />
       )}
 
       {/* ゲーミフィケーション（管理者のみ） */}

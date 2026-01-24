@@ -78,7 +78,7 @@ function NewSurveyContent() {
       />
 
       <SurveyEditor
-        onBack={() => router.push("/survey")}
+        onBack={() => router.push("/dashboard?view=survey")}
         user={user}
         templateId={templateId as any}
       />

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ClipboardList,
@@ -16,46 +16,55 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Survey } from '@/lib/types';
+import SurveyResultsView from './SurveyResultsView';
+
+// 表示モード
+type ViewMode = 'list' | 'results';
 
 type SurveyListProps = {
   userId: string;
   isAdmin: boolean;
+  userEmail?: string;
 };
 
-export default function SurveyList({ userId, isAdmin }: SurveyListProps) {
+export default function SurveyList({ userId, isAdmin, userEmail }: SurveyListProps) {
   const router = useRouter();
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  
+  // 表示モード管理
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null);
+
+  const loadSurveys = useCallback(async () => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const query = isAdmin
+        ? supabase.from('surveys').select('*').order('created_at', { ascending: false })
+        : supabase.from('surveys').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+
+      const { data, error } = await query;
+      if (error) throw error;
+      setSurveys(data || []);
+    } catch (error) {
+      console.error('アンケート取得エラー:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, isAdmin]);
 
   useEffect(() => {
-    const loadSurveys = async () => {
-      if (!supabase) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const query = isAdmin
-          ? supabase.from('surveys').select('*').order('created_at', { ascending: false })
-          : supabase.from('surveys').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-
-        const { data, error } = await query;
-        if (error) throw error;
-        setSurveys(data || []);
-      } catch (error) {
-        console.error('アンケート取得エラー:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (userId) {
       loadSurveys();
     }
-  }, [userId, isAdmin]);
+  }, [userId, loadSurveys]);
 
   const handleCopyUrl = (slug: string, id: number) => {
     const url = `${window.location.origin}/survey/${slug}`;
@@ -81,7 +90,32 @@ export default function SurveyList({ userId, isAdmin }: SurveyListProps) {
     }
   };
 
-  if (loading) {
+  // 新規作成（別ページに遷移）
+  const handleCreateNew = () => {
+    router.push('/survey/new');
+  };
+
+  // 編集（別ページに遷移）
+  const handleEdit = (survey: Survey) => {
+    router.push(`/survey/editor?id=${survey.slug}`);
+  };
+
+  // 結果表示
+  const handleViewResults = (survey: Survey) => {
+    setSelectedSurvey(survey);
+    setViewMode('results');
+  };
+
+  // 一覧に戻る
+  const handleBackToList = () => {
+    setViewMode('list');
+    setSelectedSurvey(null);
+    // データを再読み込み
+    loadSurveys();
+  };
+
+  // ローディング表示
+  if (loading && viewMode === 'list') {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="animate-spin text-indigo-600" size={32} />
@@ -89,6 +123,17 @@ export default function SurveyList({ userId, isAdmin }: SurveyListProps) {
     );
   }
 
+  // 結果表示
+  if (viewMode === 'results' && selectedSurvey) {
+    return (
+      <SurveyResultsView
+        survey={selectedSurvey}
+        onBack={handleBackToList}
+      />
+    );
+  }
+
+  // 一覧表示
   return (
     <div>
       {/* ヘッダー */}
@@ -101,7 +146,7 @@ export default function SurveyList({ userId, isAdmin }: SurveyListProps) {
           )}
         </h2>
         <button
-          onClick={() => router.push('/survey/new')}
+          onClick={handleCreateNew}
           className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-teal-700 flex items-center gap-2"
         >
           <Plus size={16} /> 新規作成
@@ -114,7 +159,7 @@ export default function SurveyList({ userId, isAdmin }: SurveyListProps) {
           <ClipboardList size={48} className="mx-auto text-gray-300 mb-4" />
           <p className="text-gray-500 mb-4">まだアンケートを作成していません</p>
           <button
-            onClick={() => router.push('/survey/new')}
+            onClick={handleCreateNew}
             className="bg-teal-600 text-white px-6 py-2 rounded-full font-bold hover:bg-teal-700"
           >
             新規作成する
@@ -180,7 +225,7 @@ export default function SurveyList({ userId, isAdmin }: SurveyListProps) {
                 {/* アクションボタン */}
                 <div className="flex gap-2 mb-2">
                   <button
-                    onClick={() => router.push(`/survey/editor?id=${survey.slug}`)}
+                    onClick={() => handleEdit(survey)}
                     className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors"
                   >
                     <Edit size={14} /> 編集
@@ -194,7 +239,7 @@ export default function SurveyList({ userId, isAdmin }: SurveyListProps) {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => router.push(`/survey/${survey.slug}/results`)}
+                    onClick={() => handleViewResults(survey)}
                     className="flex-1 bg-purple-50 hover:bg-purple-100 text-purple-600 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors"
                   >
                     <BarChart2 size={14} /> 結果を見る
