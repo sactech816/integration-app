@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
   User,
@@ -14,7 +14,11 @@ import {
   AlertTriangle,
   Eye,
   EyeOff,
+  Crown,
+  Sparkles,
+  ArrowRight,
 } from 'lucide-react';
+import { fetchSubscriptionStatus, SubscriptionStatus } from '@/lib/subscription';
 
 type AccountSettingsProps = {
   user: { id: string; email?: string } | null;
@@ -34,6 +38,10 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
   // 通知設定
   const [emailNotifications, setEmailNotifications] = useState(true);
 
+  // サブスクリプション状態
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
+
   // 状態管理
   const [savingEmail, setSavingEmail] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
@@ -41,6 +49,25 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
+  // サブスクリプション状態を取得
+  useEffect(() => {
+    const loadSubscriptionStatus = async () => {
+      if (!user?.id) {
+        setLoadingSubscription(false);
+        return;
+      }
+      try {
+        const status = await fetchSubscriptionStatus(user.id);
+        setSubscriptionStatus(status);
+      } catch (error) {
+        console.error('Failed to load subscription status:', error);
+      } finally {
+        setLoadingSubscription(false);
+      }
+    };
+    loadSubscriptionStatus();
+  }, [user?.id]);
 
   // メッセージ
   const [successMessage, setSuccessMessage] = useState('');
@@ -166,6 +193,170 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
           {errorMessage}
         </div>
       )}
+
+      {/* 現在のプラン */}
+      <div className={`p-6 rounded-2xl shadow-sm border ${
+        subscriptionStatus?.hasActiveSubscription 
+          ? 'bg-gradient-to-r from-orange-50 to-pink-50 border-orange-200' 
+          : 'bg-white border-gray-200'
+      }`}>
+        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <Crown size={20} className={subscriptionStatus?.hasActiveSubscription ? 'text-orange-500' : 'text-gray-400'} />
+          現在のプラン
+        </h2>
+        
+        {loadingSubscription ? (
+          <div className="flex items-center gap-2 text-gray-500">
+            <Loader2 size={16} className="animate-spin" />
+            読み込み中...
+          </div>
+        ) : subscriptionStatus?.hasActiveSubscription ? (
+          // プロプラン表示
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 py-2 rounded-full font-bold text-sm">
+                ビジネス向け
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+                プロプラン
+              </span>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-bold text-gray-900">¥3,980</span>
+              <span className="text-gray-500">/月</span>
+            </div>
+            <p className="text-gray-600">
+              本格的なビジネス運用に。制限なしで使い放題。
+            </p>
+            <div className="bg-white/60 rounded-xl p-4 space-y-2">
+              <p className="text-sm font-bold text-gray-700 mb-2">ご利用中の機能</p>
+              <ul className="space-y-1.5 text-sm text-gray-600">
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  新規作成・編集・更新
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  ポータル掲載・URL発行
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  アフィリエイト機能
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  アクセス解析
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  AI利用（優先）
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  HTMLダウンロード
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  埋め込みコード発行
+                </li>
+              </ul>
+            </div>
+            {subscriptionStatus.isMonitor && (
+              <div className="bg-amber-100 text-amber-800 px-4 py-2 rounded-lg text-sm">
+                <span className="font-bold">モニター特典適用中</span>
+                {subscriptionStatus.monitorExpiresAt && (
+                  <span className="ml-2">
+                    （{new Date(subscriptionStatus.monitorExpiresAt).toLocaleDateString('ja-JP')}まで）
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          // フリープラン表示 + プロプランへの誘導
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full font-bold text-sm">
+                標準
+              </div>
+              <span className="text-2xl font-bold text-indigo-700">
+                フリープラン
+              </span>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-bold text-gray-900">¥0</span>
+              <span className="text-gray-500">/月</span>
+            </div>
+            <p className="text-gray-600">
+              15秒でできるアカウント登録だけでOK！ずっと無料で使い放題。
+            </p>
+            <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+              <p className="text-sm font-bold text-gray-700 mb-2">ご利用中の機能</p>
+              <ul className="space-y-1.5 text-sm text-gray-600">
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  新規作成
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  ポータル掲載
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  URL発行
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  編集・更新
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  アフィリエイト機能
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  アクセス解析
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  AI利用（回数制限）
+                </li>
+                <li className="flex items-center gap-2 text-gray-400">
+                  <span className="w-3.5 h-3.5 flex items-center justify-center">×</span>
+                  HTMLダウンロード
+                </li>
+                <li className="flex items-center gap-2 text-gray-400">
+                  <span className="w-3.5 h-3.5 flex items-center justify-center">×</span>
+                  埋め込みコード発行
+                </li>
+              </ul>
+            </div>
+
+            {/* プロプランへの誘導 */}
+            <div className="bg-gradient-to-r from-orange-500 to-pink-500 rounded-xl p-5 text-white">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles size={20} />
+                <span className="font-bold">プロプランにアップグレード</span>
+              </div>
+              <p className="text-sm text-white/90 mb-4">
+                HTMLダウンロード、埋め込みコード発行、AI優先利用など、
+                ビジネスに必要な全機能が使い放題！
+              </p>
+              <div className="flex items-baseline gap-1 mb-4">
+                <span className="text-2xl font-bold">¥3,980</span>
+                <span className="text-white/80">/月</span>
+              </div>
+              <a
+                href="/dashboard?tab=subscription"
+                className="inline-flex items-center gap-2 bg-white text-orange-600 px-6 py-3 rounded-lg font-bold hover:bg-orange-50 transition-colors"
+              >
+                プロプラン詳細
+                <ArrowRight size={18} />
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* 基本情報 */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">

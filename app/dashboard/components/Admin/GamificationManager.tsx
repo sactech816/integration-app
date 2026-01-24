@@ -16,8 +16,20 @@ import {
   X
 } from 'lucide-react';
 import { getCampaigns, updateCampaign, deleteCampaign, createCampaign } from '@/app/actions/gamification';
-import type { GamificationCampaign, CampaignType, StampRallySettings, LoginBonusSettings } from '@/lib/types';
-import { CAMPAIGN_TYPE_LABELS } from '@/lib/types';
+import type { 
+  GamificationCampaign, 
+  CampaignType, 
+  StampRallySettings, 
+  LoginBonusSettings,
+  StampTrigger,
+  StampTriggerType
+} from '@/lib/types';
+import { 
+  CAMPAIGN_TYPE_LABELS,
+  STAMP_PAGE_OPTIONS,
+  STAMP_CONTENT_OPTIONS,
+  STAMP_TRIGGER_TYPE_LABELS
+} from '@/lib/types';
 
 // サイト全体用のキャンペーンタイプ（管理者専用）
 const SITE_WIDE_CAMPAIGN_TYPES: CampaignType[] = ['login_bonus', 'stamp_rally'];
@@ -63,6 +75,7 @@ export default function GamificationManager() {
     total_stamps: 5,
     points_per_stamp: 10,
     completion_bonus: 50,
+    triggers: [] as StampTrigger[],
   });
 
   useEffect(() => {
@@ -120,6 +133,7 @@ export default function GamificationManager() {
       total_stamps: 5,
       points_per_stamp: 10,
       completion_bonus: 50,
+      triggers: [],
     });
     setShowEditor(true);
   };
@@ -137,8 +151,62 @@ export default function GamificationManager() {
       total_stamps: (settings as StampRallySettings).total_stamps || 5,
       points_per_stamp: (settings as StampRallySettings).points_per_stamp || 10,
       completion_bonus: (settings as StampRallySettings).completion_bonus || 50,
+      triggers: (settings as StampRallySettings).triggers || [],
     });
     setShowEditor(true);
+  };
+
+  // トリガー追加
+  const handleAddTrigger = () => {
+    const newTrigger: StampTrigger = {
+      id: `trigger_${Date.now()}`,
+      type: 'page_view',
+      target: '/faq',
+      stamp_index: formData.triggers.length,
+      name: `スタンプ${formData.triggers.length + 1}`,
+    };
+    setFormData({
+      ...formData,
+      triggers: [...formData.triggers, newTrigger],
+    });
+  };
+
+  // トリガー更新
+  const handleUpdateTrigger = (index: number, updates: Partial<StampTrigger>) => {
+    const newTriggers = [...formData.triggers];
+    newTriggers[index] = { ...newTriggers[index], ...updates };
+    setFormData({ ...formData, triggers: newTriggers });
+  };
+
+  // トリガー削除
+  const handleRemoveTrigger = (index: number) => {
+    const newTriggers = formData.triggers.filter((_, i) => i !== index);
+    // stamp_indexを再設定
+    newTriggers.forEach((t, i) => {
+      t.stamp_index = i;
+      t.name = `スタンプ${i + 1}`;
+    });
+    setFormData({ ...formData, triggers: newTriggers });
+  };
+
+  // トリガーのラベルを取得
+  const getTriggerLabel = (trigger: StampTrigger): string => {
+    const typeLabel = STAMP_TRIGGER_TYPE_LABELS[trigger.type];
+    if (trigger.type === 'page_view') {
+      const pageOption = STAMP_PAGE_OPTIONS.find(p => p.value === trigger.target && p.value !== 'custom');
+      return `${typeLabel}: ${pageOption?.label || trigger.target || '(未設定)'}`;
+    }
+    if (trigger.type === 'content_create') {
+      const contentOption = STAMP_CONTENT_OPTIONS.find(c => c.value === trigger.target && c.value !== 'custom');
+      return `${typeLabel}: ${contentOption?.label || trigger.target || '(未設定)'}`;
+    }
+    if (trigger.type === 'quiz_play') {
+      return `${typeLabel}: ${trigger.target || '(URL未設定)'}`;
+    }
+    if (trigger.type === 'share') {
+      return `${typeLabel}: ${trigger.target || '(URL未設定)'}`;
+    }
+    return typeLabel;
   };
 
   const handleSave = async () => {
@@ -152,6 +220,7 @@ export default function GamificationManager() {
             total_stamps: formData.total_stamps,
             points_per_stamp: formData.points_per_stamp,
             completion_bonus: formData.completion_bonus,
+            triggers: formData.triggers,
           };
 
       if (editingCampaign) {
@@ -302,6 +371,23 @@ export default function GamificationManager() {
                         <p>スタンプ数: {(campaign.settings as StampRallySettings).total_stamps || 5}個</p>
                         <p>ポイント/スタンプ: {(campaign.settings as StampRallySettings).points_per_stamp || 10}pt</p>
                         <p>コンプリートボーナス: {(campaign.settings as StampRallySettings).completion_bonus || 0}pt</p>
+                        {/* トリガー情報を表示 */}
+                        {(campaign.settings as StampRallySettings).triggers && 
+                         (campaign.settings as StampRallySettings).triggers!.length > 0 && (
+                          <div className="mt-2 pt-2 border-t border-gray-200">
+                            <p className="font-medium text-gray-600 mb-1">スタンプ取得条件:</p>
+                            <ul className="space-y-0.5">
+                              {(campaign.settings as StampRallySettings).triggers!.map((trigger, i) => (
+                                <li key={i} className="flex items-center gap-1">
+                                  <span className="w-4 h-4 bg-amber-100 text-amber-700 rounded-full text-[10px] flex items-center justify-center font-bold">
+                                    {i + 1}
+                                  </span>
+                                  <span>{getTriggerLabel(trigger)}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </>
                     )}
                   </div>
@@ -401,7 +487,8 @@ export default function GamificationManager() {
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  placeholder="例: デイリーログインボーナス"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500"
                 />
               </div>
 
@@ -413,7 +500,8 @@ export default function GamificationManager() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  placeholder="キャンペーンの説明を入力..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500"
                 />
               </div>
 
@@ -428,7 +516,8 @@ export default function GamificationManager() {
                     min={1}
                     value={formData.points_per_day}
                     onChange={(e) => setFormData({ ...formData, points_per_day: parseInt(e.target.value) || 1 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    placeholder="10"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   />
                 </div>
               )}
@@ -436,42 +525,169 @@ export default function GamificationManager() {
               {/* スタンプラリー設定 */}
               {selectedType === 'stamp_rally' && (
                 <>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">
-                      スタンプ数
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={20}
-                      value={formData.total_stamps}
-                      onChange={(e) => setFormData({ ...formData, total_stamps: parseInt(e.target.value) || 5 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                    />
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">
+                        スタンプ数
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={formData.total_stamps}
+                        onChange={(e) => setFormData({ ...formData, total_stamps: parseInt(e.target.value) || 5 })}
+                        placeholder="5"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">
+                        pt/スタンプ
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={formData.points_per_stamp}
+                        onChange={(e) => setFormData({ ...formData, points_per_stamp: parseInt(e.target.value) || 0 })}
+                        placeholder="10"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">
+                        完了ボーナス
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={formData.completion_bonus}
+                        onChange={(e) => setFormData({ ...formData, completion_bonus: parseInt(e.target.value) || 0 })}
+                        placeholder="50"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">
-                      スタンプ1個あたりのポイント
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={formData.points_per_stamp}
-                      onChange={(e) => setFormData({ ...formData, points_per_stamp: parseInt(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">
-                      コンプリートボーナス
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={formData.completion_bonus}
-                      onChange={(e) => setFormData({ ...formData, completion_bonus: parseInt(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                    />
+
+                  {/* トリガー設定 */}
+                  <div className="border-t border-gray-200 pt-4 mt-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <label className="text-sm font-bold text-gray-700">
+                        スタンプ取得条件
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleAddTrigger}
+                        className="text-xs px-3 py-1 bg-amber-100 text-amber-700 rounded-full hover:bg-amber-200 font-bold"
+                      >
+                        + 条件を追加
+                      </button>
+                    </div>
+
+                    {formData.triggers.length === 0 ? (
+                      <p className="text-sm text-gray-400 text-center py-4 bg-gray-50 rounded-lg">
+                        条件を追加すると、ユーザーがその条件を満たした時にスタンプを取得できます
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {formData.triggers.map((trigger, index) => {
+                          const isCustomPageView = trigger.type === 'page_view' && 
+                            !STAMP_PAGE_OPTIONS.find(p => p.value === trigger.target && p.value !== 'custom');
+                          const isCustomContent = trigger.type === 'content_create' && 
+                            !STAMP_CONTENT_OPTIONS.find(c => c.value === trigger.target && c.value !== 'custom');
+                          const needsUrlInput = trigger.type === 'quiz_play' || trigger.type === 'share' || isCustomPageView || isCustomContent;
+
+                          return (
+                            <div key={trigger.id} className="bg-gray-50 p-3 rounded-lg">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="w-6 h-6 bg-amber-500 text-white rounded-full text-xs flex items-center justify-center font-bold flex-shrink-0">
+                                  {index + 1}
+                                </span>
+                                
+                                {/* トリガータイプ選択 */}
+                                <select
+                                  value={trigger.type}
+                                  onChange={(e) => {
+                                    const newType = e.target.value as StampTriggerType;
+                                    const defaultTarget = newType === 'page_view' ? '/faq' : 
+                                                         newType === 'content_create' ? 'quiz' : '';
+                                    handleUpdateTrigger(index, { type: newType, target: defaultTarget });
+                                  }}
+                                  className="px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:ring-2 focus:ring-red-500 min-w-[120px]"
+                                >
+                                  {Object.entries(STAMP_TRIGGER_TYPE_LABELS).map(([value, label]) => (
+                                    <option key={value} value={value}>{label}</option>
+                                  ))}
+                                </select>
+
+                                {/* ページ閲覧の選択 */}
+                                {trigger.type === 'page_view' && (
+                                  <select
+                                    value={STAMP_PAGE_OPTIONS.find(p => p.value === trigger.target) ? trigger.target : 'custom'}
+                                    onChange={(e) => {
+                                      if (e.target.value === 'custom') {
+                                        handleUpdateTrigger(index, { target: '' });
+                                      } else {
+                                        handleUpdateTrigger(index, { target: e.target.value });
+                                      }
+                                    }}
+                                    className="flex-1 px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:ring-2 focus:ring-red-500"
+                                  >
+                                    {STAMP_PAGE_OPTIONS.map((option) => (
+                                      <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                  </select>
+                                )}
+
+                                {/* コンテンツ作成の選択 */}
+                                {trigger.type === 'content_create' && (
+                                  <select
+                                    value={STAMP_CONTENT_OPTIONS.find(c => c.value === trigger.target) ? trigger.target : 'custom'}
+                                    onChange={(e) => {
+                                      if (e.target.value === 'custom') {
+                                        handleUpdateTrigger(index, { target: '' });
+                                      } else {
+                                        handleUpdateTrigger(index, { target: e.target.value });
+                                      }
+                                    }}
+                                    className="flex-1 px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:ring-2 focus:ring-red-500"
+                                  >
+                                    {STAMP_CONTENT_OPTIONS.map((option) => (
+                                      <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                  </select>
+                                )}
+
+                                {/* 削除ボタン */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveTrigger(index)}
+                                  className="p-1.5 text-red-500 hover:bg-red-100 rounded-lg flex-shrink-0"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+
+                              {/* カスタムURL入力（2行目） */}
+                              {needsUrlInput && (
+                                <div className="ml-8">
+                                  <input
+                                    type="text"
+                                    value={trigger.target || ''}
+                                    onChange={(e) => handleUpdateTrigger(index, { target: e.target.value })}
+                                    placeholder={
+                                      trigger.type === 'quiz_play' ? 'クイズのURL（例: /quiz/xxx）' :
+                                      trigger.type === 'share' ? 'シェア対象のURL（例: https://...）' :
+                                      'カスタムURL（例: /custom-page）'
+                                    }
+                                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-red-500"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </>
               )}

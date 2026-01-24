@@ -339,7 +339,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, profileResult, businessResult, bookingResult, surveyResult] = await Promise.all([
+      const [quizResult, profileResult, businessResult, bookingResult, surveyResult, gamificationResult] = await Promise.all([
         // 診断クイズ数
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true })
@@ -360,6 +360,8 @@ export function useDashboardData(): UseDashboardDataReturn {
         isAdmin
           ? supabase.from('surveys').select('id', { count: 'exact', head: true })
           : supabase.from('surveys').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // ゲーミフィケーションキャンペーン数（ユーザーが作成したもの）
+        supabase.from('gamification_campaigns').select('id', { count: 'exact', head: true }).eq('owner_id', user.id),
       ]);
 
       setContentCounts({
@@ -368,7 +370,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         business: businessResult.count || 0,
         booking: bookingResult.count || 0,
         survey: surveyResult.count || 0,
-        gamification: 0,
+        gamification: gamificationResult.count || 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);

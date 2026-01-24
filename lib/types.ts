@@ -610,11 +610,65 @@ export type GachaAnimationType = 'capsule' | 'roulette' | 'omikuji';
 export type PointEventType = 'stamp_get' | 'login_bonus' | 'gacha_play' | 'gacha_win' | 'manual_adjust' | 'stamp_completion' | 'scratch_play' | 'scratch_win' | 'fukubiki_play' | 'fukubiki_win' | 'slot_play' | 'slot_win' | 'quiz_correct';
 
 // キャンペーン設定（JSONB）
+// スタンプラリーのトリガータイプ
+export type StampTriggerType = 'page_view' | 'content_create' | 'quiz_play' | 'share';
+
+// スタンプラリーのトリガー設定
+export interface StampTrigger {
+  id: string;
+  type: StampTriggerType;
+  target?: string; // page_viewの場合はURL、content_createの場合はタイプ（quiz, profile等）
+  stamp_index: number;
+  name: string;
+}
+
+// 固定ページの選択肢
+export const STAMP_PAGE_OPTIONS = [
+  { value: '/faq', label: 'よくある質問' },
+  { value: '/howto', label: '使い方ガイド' },
+  { value: '/effective-use', label: '効果的な活用法' },
+  { value: '/gamification/effective-use', label: 'ゲーミフィケーション活用法' },
+  { value: '/arcade', label: 'ゲームセンター' },
+  { value: '/portal', label: 'ポータルサイト' },
+  { value: '/announcements', label: 'お知らせ一覧' },
+  { value: '/contact', label: 'お問い合わせ' },
+  { value: '/privacy', label: 'プライバシーポリシー' },
+  { value: '/legal', label: '特定商取引法' },
+  { value: '/donation', label: '開発支援' },
+  { value: '/dashboard', label: 'マイページ' },
+  { value: '/login-bonus', label: 'ログインボーナス' },
+  { value: '/stamp', label: 'スタンプラリー' },
+  { value: 'custom', label: 'カスタムURL...' },
+];
+
+// コンテンツ作成の選択肢
+export const STAMP_CONTENT_OPTIONS = [
+  { value: 'quiz', label: '診断クイズ作成' },
+  { value: 'profile', label: 'プロフィールLP作成' },
+  { value: 'business', label: 'ビジネスLP作成' },
+  { value: 'survey', label: 'アンケート作成' },
+  { value: 'booking', label: '予約ページ作成' },
+  { value: 'gacha', label: 'ガチャ作成' },
+  { value: 'slot', label: 'スロット作成' },
+  { value: 'scratch', label: 'スクラッチ作成' },
+  { value: 'fukubiki', label: '福引作成' },
+  { value: 'custom', label: 'カスタムURL...' },
+];
+
+// トリガータイプのラベル
+export const STAMP_TRIGGER_TYPE_LABELS: Record<StampTriggerType, string> = {
+  page_view: 'ページ閲覧',
+  content_create: 'コンテンツ作成',
+  quiz_play: 'クイズプレイ',
+  share: 'SNSシェア',
+};
+
 export interface StampRallySettings {
   total_stamps: number;
   points_per_stamp: number;
   completion_bonus?: number;
   stamp_ids?: string[]; // スタンプID一覧
+  triggers?: StampTrigger[]; // トリガー設定
 }
 
 export interface LoginBonusSettings {
