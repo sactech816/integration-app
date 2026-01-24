@@ -242,22 +242,29 @@ export function useDashboardData(): UseDashboardDataReturn {
     [user, isAdmin]
   );
 
-  // Pro機能のアクセス権を確認
+  // Pro機能のアクセス権を確認（並列化）
   const fetchProAccessForContents = useCallback(
     async (contentItems: ContentItem[]) => {
       if (!user) return;
 
-      const accessMap: Record<string, { hasAccess: boolean; reason?: string }> = {};
+      // 並列で全コンテンツのアクセス権を確認
+      const results = await Promise.all(
+        contentItems.map(async (item) => {
+          try {
+            const result = await hasProAccess(user.id, user.email, item.id, item.type, item.user_id || undefined);
+            return { id: item.id, result };
+          } catch (error) {
+            console.error(`Check access for ${item.id}:`, error);
+            return { id: item.id, result: { hasAccess: false } };
+          }
+        })
+      );
 
-      for (const item of contentItems) {
-        try {
-          const result = await hasProAccess(user.id, user.email, item.id, item.type, item.user_id || undefined);
-          accessMap[item.id] = result;
-        } catch (error) {
-          console.error(`Check access for ${item.id}:`, error);
-          accessMap[item.id] = { hasAccess: false };
-        }
-      }
+      // 結果をマップに変換
+      const accessMap: Record<string, { hasAccess: boolean; reason?: string }> = {};
+      results.forEach(({ id, result }) => {
+        accessMap[id] = result;
+      });
 
       setProAccessMap(accessMap);
     },

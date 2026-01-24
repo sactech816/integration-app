@@ -37,6 +37,8 @@ import {
   getBookingsByMenu,
   cancelBooking,
   getScheduleAdjustments,
+  getAllBookingsForUser,
+  getAllAdjustmentsForUser,
 } from '@/app/actions/booking';
 
 type BookingListProps = {
@@ -112,17 +114,43 @@ export default function BookingList({ userId, isAdmin }: BookingListProps) {
     }
   }, [userId]);
 
-  // 予約一覧を読み込み
+  // メニュー読み込み完了後に予約・出欠データを事前読み込み（一括取得API使用）
+  useEffect(() => {
+    if (menus.length === 0) return;
+
+    // 一括取得APIで高速に事前読み込み
+    const preloadData = async () => {
+      // 予約データと出欠データを並列で一括取得
+      const [allBookings, allAdjustments] = await Promise.all([
+        getAllBookingsForUser(userId),
+        getAllAdjustmentsForUser(userId),
+      ]);
+
+      // 予約データをセット（日時でソート）
+      if (allBookings.length > 0) {
+        allBookings.sort((a, b) => {
+          const dateA = a.slot?.start_time ? new Date(a.slot.start_time).getTime() : 0;
+          const dateB = b.slot?.start_time ? new Date(b.slot.start_time).getTime() : 0;
+          return dateB - dateA;
+        });
+        setBookings(allBookings);
+      }
+
+      // 出欠データをセット
+      if (Object.keys(allAdjustments).length > 0) {
+        setAdjustmentData(allAdjustments);
+      }
+    };
+
+    preloadData();
+  }, [menus, userId]);
+
+  // 予約一覧を読み込み（一括取得API使用）
   const loadAllBookings = async () => {
     setLoadingBookings(true);
-    const allBookings: BookingWithDetails[] = [];
-
-    for (const menu of menus) {
-      if (menu.type === 'reservation') {
-        const menuBookings = await getBookingsByMenu(menu.id, userId);
-        allBookings.push(...menuBookings);
-      }
-    }
+    
+    // 一括取得APIで高速に取得
+    const allBookings = await getAllBookingsForUser(userId);
 
     // 日時でソート（新しい順）
     allBookings.sort((a, b) => {
@@ -135,18 +163,12 @@ export default function BookingList({ userId, isAdmin }: BookingListProps) {
     setLoadingBookings(false);
   };
 
-  // 出欠表データを読み込み
+  // 出欠表データを読み込み（一括取得API使用）
   const loadAllAdjustments = async () => {
     setLoadingAdjustments(true);
-    const dataMap: Record<string, AttendanceTableData> = {};
-    const adjustmentMenus = menus.filter(m => m.type === 'adjustment');
 
-    for (const menu of adjustmentMenus) {
-      const data = await getScheduleAdjustments(menu.id);
-      if (data) {
-        dataMap[menu.id] = data;
-      }
-    }
+    // 一括取得APIで高速に取得
+    const dataMap = await getAllAdjustmentsForUser(userId);
 
     setAdjustmentData(dataMap);
     setLoadingAdjustments(false);

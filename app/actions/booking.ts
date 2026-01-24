@@ -1041,3 +1041,168 @@ export async function getScheduleAdjustmentsByMenu(
   }));
 }
 
+/**
+ * ユーザーの全予約を一括取得（ダッシュボード用・高速化）
+ * N+1問題を回避するため、1クエリで全データを取得
+ */
+export async function getAllBookingsForUser(
+  userId: string
+): Promise<BookingWithDetails[]> {
+  const supabase = getSupabaseServer();
+  if (!supabase || !userId) return [];
+
+  // ユーザーが所有する予約タイプのメニューIDを取得
+  const { data: menus, error: menusError } = await supabase
+    .from('booking_menus')
+    .select('id, title, description, type, duration_min, is_active, user_id, created_at, updated_at')
+    .eq('user_id', userId)
+    .eq('type', 'reservation');
+
+  if (menusError || !menus || menus.length === 0) return [];
+
+  const menuIds = menus.map(m => m.id);
+  const menuMap: Record<string, BookingMenu> = {};
+  menus.forEach(m => {
+    menuMap[m.id] = m as BookingMenu;
+  });
+
+  // 該当メニューの全スロットIDを取得
+  const { data: slots, error: slotsError } = await supabase
+    .from('booking_slots')
+    .select('id, menu_id')
+    .in('menu_id', menuIds);
+
+  if (slotsError || !slots || slots.length === 0) return [];
+
+  const slotIds = slots.map(s => s.id);
+  const slotMenuMap: Record<string, string> = {};
+  slots.forEach(s => {
+    slotMenuMap[s.id] = s.menu_id;
+  });
+
+  // 全予約を一括取得
+  const { data: bookings, error: bookingsError } = await supabase
+    .from('bookings')
+    .select(`
+      *,
+      slot:booking_slots(*)
+    `)
+    .in('slot_id', slotIds)
+    .order('created_at', { ascending: false });
+
+  if (bookingsError) {
+    console.error('[Booking] Get all bookings for user error:', bookingsError);
+    return [];
+  }
+
+  // メニュー情報を付与
+  return (bookings || []).map((booking) => {
+    const menuId = slotMenuMap[booking.slot_id];
+    return {
+      ...booking,
+      menu: menuMap[menuId] || null,
+    };
+  });
+}
+
+/**
+ * ユーザーの全出欠表データを一括取得（ダッシュボード用・高速化）
+ * N+1問題を回避するため、効率的にデータを取得
+ */
+export async function getAllAdjustmentsForUser(
+  userId: string
+): Promise<Record<string, AttendanceTableData>> {
+  const supabase = getSupabaseServer();
+  if (!supabase || !userId) return {};
+
+  // ユーザーが所有する日程調整タイプのメニューを取得
+  const { data: menus, error: menusError } = await supabase
+    .from('booking_menus')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('type', 'adjustment');
+
+  if (menusError || !menus || menus.length === 0) return {};
+
+  const menuIds = menus.map(m => m.id);
+
+  // 全スロットを一括取得
+  const { data: allSlots, error: slotsError } = await supabase
+    .from('booking_slots')
+    .select('*')
+    .in('menu_id', menuIds)
+    .order('start_time', { ascending: true });
+
+  if (slotsError) {
+    console.error('[Booking] Get all slots error:', slotsError);
+    return {};
+  }
+
+  // 全回答を一括取得
+  const { data: allResponses, error: responsesError } = await supabase
+    .from('schedule_adjustment_responses')
+    .select('*')
+    .in('menu_id', menuIds)
+    .order('created_at', { ascending: true });
+
+  if (responsesError) {
+    console.error('[Booking] Get all responses error:', responsesError);
+    return {};
+  }
+
+  // メニューごとにデータを整理
+  const result: Record<string, AttendanceTableData> = {};
+
+  for (const menu of menus) {
+    const menuSlots = (allSlots || []).filter(s => s.menu_id === menu.id);
+    const menuResponses = (allResponses || []).filter(r => r.menu_id === menu.id);
+
+    if (menuSlots.length === 0) {
+      result[menu.id] = { slots: [], participants: [] };
+      continue;
+    }
+
+    // 各日程候補の集計
+    const slotSummaries: SlotAttendanceSummary[] = menuSlots.map((slot) => {
+      let yesCount = 0;
+      let noCount = 0;
+      let maybeCount = 0;
+
+      menuResponses.forEach((response) => {
+        const status = response.responses?.[slot.id] as AttendanceStatus | undefined;
+        if (status === 'yes') yesCount++;
+        else if (status === 'no') noCount++;
+        else if (status === 'maybe') maybeCount++;
+      });
+
+      return {
+        slot_id: slot.id,
+        slot,
+        yes_count: yesCount,
+        no_count: noCount,
+        maybe_count: maybeCount,
+        available_count: yesCount + maybeCount,
+        total_responses: menuResponses.length,
+      };
+    });
+
+    // 最適な日程を判定
+    let bestSlotId: string | undefined;
+    let maxYes = 0;
+    slotSummaries.forEach((summary) => {
+      if (summary.yes_count > maxYes) {
+        maxYes = summary.yes_count;
+        bestSlotId = summary.slot_id;
+      }
+    });
+
+    result[menu.id] = {
+      slots: slotSummaries,
+      participants: menuResponses as ScheduleAdjustmentResponse[],
+      best_slot_id: bestSlotId,
+    };
+  }
+
+  return result;
+}
+
