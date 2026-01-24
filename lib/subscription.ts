@@ -429,4 +429,35 @@ export function getAICreditsForPlan(planTier: PlanTier): {
   };
 }
 
+// ========================================
+// ゲーミフィケーション作成数制限
+// ========================================
+
+/**
+ * プランごとのゲーム作成数制限
+ */
+export const GAMIFICATION_LIMITS: Record<PlanTier, number> = {
+  none: 1,        // 無料: 1件まで
+  lite: 3,        // ライト: 3件まで
+  standard: 5,    // スタンダード: 5件まで
+  pro: 10,        // プロ: 10件まで
+  business: 50,   // ビジネス: 50件まで
+  enterprise: 999, // エンタープライズ: 無制限
+};
+
+/**
+ * ゲーム作成数制限を取得
+ */
+export function getGamificationLimit(planTier: PlanTier): number {
+  return GAMIFICATION_LIMITS[planTier] || 1;
+}
+
+/**
+ * ゲーム作成が可能かチェック
+ */
+export function canCreateGamification(planTier: PlanTier, currentCount: number): boolean {
+  const limit = getGamificationLimit(planTier);
+  return currentCount < limit;
+}
+
 

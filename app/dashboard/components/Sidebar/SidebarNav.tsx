@@ -70,7 +70,7 @@ export default function SidebarNav({
     { id: 'business', label: 'ビジネスLP', icon: Building2, section: 'main', badge: contentCounts.business },
     { id: 'booking', label: '予約・日程調整', icon: Calendar, section: 'main', badge: contentCounts.booking },
     { id: 'survey', label: 'アンケート（投票）', icon: ClipboardList, section: 'main', badge: contentCounts.survey },
-    { id: 'gamification', label: 'ゲーミフィケーション', icon: Gamepad2, section: 'main', badge: contentCounts.gamification, adminOnly: true },
+    { id: 'my-games', label: 'ゲーム作成', icon: Gamepad2, section: 'main', badge: contentCounts.gamification },
     { 
       id: 'kindle', 
       label: 'Kindle執筆 (KDL)', 
@@ -91,6 +91,7 @@ export default function SidebarNav({
     { id: 'admin-kdl', label: 'KDL管理', icon: BookOpen, section: 'admin', adminOnly: true },
     { id: 'admin-affiliate', label: 'アフィリエイト管理', icon: Share2, section: 'admin', adminOnly: true },
     { id: 'admin-featured', label: 'ピックアップ管理', icon: Star, section: 'admin', adminOnly: true },
+    { id: 'admin-gamification', label: 'ゲーミフィケーション管理', icon: Gamepad2, section: 'admin', adminOnly: true },
   ];
 
   const renderMenuItem = (item: MenuItem) => {

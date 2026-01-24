@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { GachaResult } from '@/lib/types';
-import { Gift, Sparkles, AlertCircle, RotateCcw } from 'lucide-react';
+import { Gift, Sparkles, AlertCircle, RotateCcw, Coins } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface FukubikiAnimationProps {
@@ -186,16 +186,23 @@ export default function FukubikiAnimation({
           {result.success ? (
             <>
               <div className="flex items-center justify-center gap-2 mb-2">
-                {result.is_winning ? (
+                {result.is_winning || (result.points_won && result.points_won > 0) ? (
                   <Sparkles className="w-6 h-6" />
                 ) : (
                   <Gift className="w-6 h-6" />
                 )}
                 <span className="text-xl font-bold">
-                  {result.is_winning ? `🎊 ${finalBall.label}玉！大当たり！` : `${finalBall.label}玉...残念`}
+                  {result.is_winning || (result.points_won && result.points_won > 0) ? `🎊 ${finalBall.label}玉！大当たり！` : `${finalBall.label}玉...残念`}
                 </span>
               </div>
               <p className="text-lg font-medium">{result.prize_name}</p>
+              {/* 獲得ポイント表示 */}
+              {result.points_won && result.points_won > 0 && (
+                <div className="flex items-center justify-center gap-2 mt-3 bg-white/20 rounded-full px-4 py-2">
+                  <Coins className="w-5 h-5" />
+                  <span className="font-bold text-lg">+{result.points_won} pt 獲得！</span>
+                </div>
+              )}
               {result.prize_image_url && (
                 <img 
                   src={result.prize_image_url} 

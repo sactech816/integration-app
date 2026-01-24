@@ -9,6 +9,8 @@ import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
 import AccountSettings from '../Settings/AccountSettings';
 import BookingList from './BookingList';
 import SurveyList from './SurveyList';
+import MyGamification from './MyGamification';
+import { PlanTier } from '@/lib/subscription';
 
 export type ActiveView =
   | 'dashboard'
@@ -17,7 +19,7 @@ export type ActiveView =
   | 'business'
   | 'booking'
   | 'survey'
-  | 'gamification'
+  | 'my-games'
   | 'kindle'
   | 'affiliate'
   | 'settings'
@@ -25,7 +27,8 @@ export type ActiveView =
   | 'admin-announcements'
   | 'admin-kdl'
   | 'admin-affiliate'
-  | 'admin-featured';
+  | 'admin-featured'
+  | 'admin-gamification';
 
 type KdlSubscription = {
   hasActiveSubscription: boolean;
@@ -35,6 +38,10 @@ type KdlSubscription = {
   isMonitor?: boolean;
   monitorExpiresAt?: string;
   planTier?: string;
+};
+
+type UserSubscription = {
+  planTier: PlanTier;
 };
 
 type MainContentProps = {
@@ -59,6 +66,7 @@ type MainContentProps = {
   copiedId: string | null;
   kdlSubscription: KdlSubscription | null;
   loadingKdlSubscription: boolean;
+  userSubscription?: UserSubscription | null;
   onEdit: (item: ContentItem) => void;
   onDuplicate: (item: ContentItem) => void;
   onDelete: (item: ContentItem) => void;
@@ -96,6 +104,7 @@ export default function MainContent({
   copiedId,
   kdlSubscription,
   loadingKdlSubscription,
+  userSubscription,
   onEdit,
   onDuplicate,
   onDelete,
@@ -185,15 +194,17 @@ export default function MainContent({
         <SurveyList userId={user.id} isAdmin={isAdmin} userEmail={user.email} />
       )}
 
-      {/* ゲーミフィケーション（管理者のみ） */}
-      {activeView === 'gamification' && adminComponents?.GamificationManager && (
-        <>{adminComponents.GamificationManager}</>
+      {/* ゲーム作成（全ユーザー） */}
+      {activeView === 'my-games' && user && (
+        <MyGamification 
+          userId={user.id} 
+          planTier={userSubscription?.planTier || 'none'} 
+        />
       )}
-      {activeView === 'gamification' && !adminComponents?.GamificationManager && (
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">ゲーミフィケーション</h2>
-        <p className="text-gray-500">キャンペーン管理機能</p>
-      </div>
+
+      {/* ゲーミフィケーション管理（管理者のみ） */}
+      {activeView === 'admin-gamification' && adminComponents?.GamificationManager && (
+        <>{adminComponents.GamificationManager}</>
       )}
 
       {/* アフィリエイト */}
@@ -228,7 +239,7 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'quiz', 'profile', 'business', 'booking', 'survey', 'gamification', 'affiliate', 'settings', 'admin-users', 'admin-announcements', 'admin-kdl', 'admin-affiliate', 'admin-featured'].includes(activeView) && (
+      {!['dashboard', 'quiz', 'profile', 'business', 'booking', 'survey', 'my-games', 'affiliate', 'settings', 'admin-users', 'admin-announcements', 'admin-kdl', 'admin-affiliate', 'admin-featured', 'admin-gamification'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>

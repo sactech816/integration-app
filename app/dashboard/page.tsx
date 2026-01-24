@@ -28,6 +28,8 @@ import { UserManager, AnnouncementManager, UserExport } from './components/Admin
 import { useDashboardData } from './hooks/useDashboardData';
 import { useAdminData } from './hooks/useAdminData';
 
+import { PlanTier } from '@/lib/subscription';
+
 // KDLサブスクリプション状態の型
 type KdlSubscription = {
   hasActiveSubscription: boolean;
@@ -37,6 +39,11 @@ type KdlSubscription = {
   isMonitor?: boolean;
   monitorExpiresAt?: string;
   planTier?: string;
+};
+
+// ユーザーサブスクリプション状態の型
+type UserSubscription = {
+  planTier: PlanTier;
 };
 
 function DashboardContent() {
@@ -96,6 +103,9 @@ function DashboardContent() {
   // KDLサブスクリプション状態
   const [kdlSubscription, setKdlSubscription] = useState<KdlSubscription | null>(null);
   const [loadingKdlSubscription, setLoadingKdlSubscription] = useState(true);
+  
+  // ユーザーサブスクリプション状態（ゲーム作成制限用）
+  const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
 
   // 決済完了後の検証
   useEffect(() => {
@@ -137,9 +147,27 @@ function DashboardContent() {
         fetchPurchases(),
         fetchAllContentCounts(),
         fetchKdlSubscription(),
+        fetchUserSubscription(),
       ]);
     }
   }, [user, selectedService]);
+  
+  // ユーザーサブスクリプション状態を取得
+  const fetchUserSubscription = async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(`/api/subscription/status?userId=${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setUserSubscription({
+          planTier: data.planTier || 'none',
+        });
+      }
+    } catch (error) {
+      console.error('User subscription fetch error:', error);
+      setUserSubscription({ planTier: 'none' });
+    }
+  };
 
   // 管理者データ取得
   useEffect(() => {
@@ -341,6 +369,7 @@ function DashboardContent() {
             copiedId={copiedId}
             kdlSubscription={kdlSubscription}
             loadingKdlSubscription={loadingKdlSubscription}
+            userSubscription={userSubscription}
             onEdit={handleEdit}
             onDuplicate={handleDuplicate}
             onDelete={handleDelete}

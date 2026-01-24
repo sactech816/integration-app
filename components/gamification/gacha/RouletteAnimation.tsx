@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { GachaPrize, GachaResult } from '@/lib/types';
-import { Sparkles, AlertCircle, RotateCcw } from 'lucide-react';
+import { Sparkles, AlertCircle, RotateCcw, Coins } from 'lucide-react';
 
 interface RouletteAnimationProps {
   prizes: GachaPrize[];
@@ -157,10 +157,17 @@ export default function RouletteAnimation({
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Sparkles className="w-6 h-6" />
                 <span className="text-xl font-bold">
-                  {result.is_winning ? '🎉 大当たり！' : '残念...'}
+                  {result.is_winning || (result.points_won && result.points_won > 0) ? '🎉 大当たり！' : '残念...'}
                 </span>
               </div>
               <p className="text-lg font-medium">{result.prize_name}</p>
+              {/* 獲得ポイント表示 */}
+              {result.points_won && result.points_won > 0 && (
+                <div className="flex items-center justify-center gap-2 mt-3 bg-white/20 rounded-full px-4 py-2">
+                  <Coins className="w-5 h-5" />
+                  <span className="font-bold text-lg">+{result.points_won} pt 獲得！</span>
+                </div>
+              )}
             </>
           ) : (
             <div className="flex items-center justify-center gap-2">

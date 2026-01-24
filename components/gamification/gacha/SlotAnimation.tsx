@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { GachaResult } from '@/lib/types';
-import { Gift, Sparkles, AlertCircle, RotateCcw, Zap } from 'lucide-react';
+import { Gift, Sparkles, AlertCircle, RotateCcw, Zap, Coins } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface SlotAnimationProps {
@@ -257,7 +257,7 @@ export default function SlotAnimation({
       {showResult && result && (
         <div className={`
           mb-8 p-6 rounded-2xl text-center w-full max-w-sm
-          ${result.success && result.is_winning 
+          ${result.success && (result.is_winning || (result.points_won && result.points_won > 0))
             ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white animate-result-pop' 
             : result.success 
             ? 'bg-white/20 text-white'
@@ -266,16 +266,23 @@ export default function SlotAnimation({
           {result.success ? (
             <>
               <div className="flex items-center justify-center gap-2 mb-2">
-                {result.is_winning ? (
+                {result.is_winning || (result.points_won && result.points_won > 0) ? (
                   <Sparkles className="w-6 h-6" />
                 ) : (
                   <Gift className="w-6 h-6" />
                 )}
                 <span className="text-xl font-bold">
-                  {result.is_winning ? '🎉 大当たり！' : '残念...'}
+                  {result.is_winning || (result.points_won && result.points_won > 0) ? '🎉 大当たり！' : '残念...'}
                 </span>
               </div>
               <p className="text-lg font-medium">{result.prize_name}</p>
+              {/* 獲得ポイント表示 */}
+              {result.points_won && result.points_won > 0 && (
+                <div className="flex items-center justify-center gap-2 mt-3 bg-white/20 rounded-full px-4 py-2">
+                  <Coins className="w-5 h-5" />
+                  <span className="font-bold text-lg">+{result.points_won} pt 獲得！</span>
+                </div>
+              )}
               {result.prize_image_url && (
                 <img 
                   src={result.prize_image_url} 
