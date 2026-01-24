@@ -112,6 +112,23 @@ export const QUIZ_THEMES: Record<string, QuizTheme> = {
     progressBg: '#cccccc',
     progressFill: '#333333',
   },
+  nature: {
+    id: 'nature',
+    name: 'ナチュラル',
+    description: '自然',
+    background: 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #a5d6a7 100%)',
+    cardBg: '#fffef5',
+    cardBorder: '2px solid #81c784',
+    textPrimary: '#2e7d32',
+    textSecondary: '#558b2f',
+    accentColor: '#43a047',
+    accentColorHover: '#388e3c',
+    optionBg: '#f1f8e9',
+    optionBorder: '#aed581',
+    optionHoverBg: '#dcedc8',
+    progressBg: '#c5e1a5',
+    progressFill: '#43a047',
+  },
 };
 
 // テーマIDの配列（UI用）

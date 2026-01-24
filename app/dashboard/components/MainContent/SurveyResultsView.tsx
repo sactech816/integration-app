@@ -253,10 +253,10 @@ function ResultCard({ result, index }: { result: SurveyResultData; index: number
                   <XAxis type="number" domain={[0, 'dataMax']} tickFormatter={(v) => `${v}`} />
                   <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 12 }} />
                   <Tooltip
-                    formatter={(value: number, name: string, props: { payload: { percentage: number } }) => [
-                      `${value} 票 (${props.payload.percentage}%)`,
-                      '回答数',
-                    ]}
+                    formatter={(value, _name, props) => {
+                      const percentage = (props.payload as { percentage?: number })?.percentage ?? 0;
+                      return [`${value} 票 (${percentage}%)`, '回答数'];
+                    }}
                     contentStyle={{
                       backgroundColor: 'white',
                       border: '1px solid #e5e7eb',

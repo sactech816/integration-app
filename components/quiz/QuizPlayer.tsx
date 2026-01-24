@@ -481,6 +481,146 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
       );
   }
 
+  // ポップレイアウト
+  if (quiz.layout === 'pop') {
+    return (
+      <div 
+        className="min-h-screen flex flex-col items-center justify-center py-6 font-sans"
+        style={{ background: 'linear-gradient(135deg, #fce4ec 0%, #f3e5f5 50%, #e8eaf6 100%)' }}
+      >
+        <FeedbackOverlay />
+        <SEO title={`${quiz.title} | 診断中`} description={quiz.description} image={quiz.image_url} />
+        
+        <div className="max-w-md lg:max-w-xl mx-auto w-full px-4">
+          {/* メインカード */}
+          <div className="bg-white rounded-3xl border-4 border-gray-900 shadow-2xl overflow-hidden">
+            {/* ヘッダー */}
+            <div className="p-6 pb-4">
+              <div className="flex items-center justify-between mb-6">
+                {/* Q番号バッジ */}
+                <div className="bg-yellow-400 text-gray-900 font-black text-sm px-4 py-2 rounded-lg shadow-md">
+                  Q.{currentStep + 1}
+                </div>
+                {/* 進捗ドット */}
+                <div className="flex gap-1">
+                  {playableQuestions.map((_, idx) => (
+                    <div 
+                      key={idx}
+                      className={`w-3 h-3 rounded-full transition-all ${
+                        idx <= currentStep ? 'bg-pink-500' : 'bg-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+              
+              {/* 質問文 */}
+              <h3 className="text-xl font-bold text-gray-900 text-center leading-relaxed mb-2">
+                {question.text}
+              </h3>
+            </div>
+            
+            {/* 選択肢 */}
+            <div className="px-6 pb-6 space-y-3">
+              {!feedback && question.options.map((opt, idx) => {
+                // 水色とピンクを交互に
+                const bgColor = idx % 2 === 0 ? '#a0f0f0' : '#ffb6d9';
+                return (
+                  <button 
+                    key={idx} 
+                    onClick={() => handleAnswer(opt)} 
+                    className="w-full p-4 rounded-xl font-bold text-gray-900 border-3 border-gray-900 transition-all active:scale-95 hover:shadow-lg text-center text-base"
+                    style={{ 
+                      backgroundColor: bgColor,
+                      borderWidth: '3px'
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+              {feedback && <div className="text-center text-sm py-4 text-gray-500">判定中...</div>}
+            </div>
+          </div>
+          
+          {/* 戻るボタン */}
+          <div className="mt-4 text-center">
+            <button 
+              onClick={onBack} 
+              className="text-gray-500 font-bold text-sm flex items-center gap-1 mx-auto hover:text-gray-700 transition-colors"
+            >
+              <ArrowLeft size={14}/> 戻る
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // グリッドレイアウト
+  if (quiz.layout === 'grid') {
+    return (
+      <div 
+        className="min-h-screen flex flex-col items-center justify-center py-6 font-sans"
+        style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)' }}
+      >
+        <FeedbackOverlay />
+        <SEO title={`${quiz.title} | 診断中`} description={quiz.description} image={quiz.image_url} />
+        
+        <div className="max-w-lg lg:max-w-2xl mx-auto w-full px-4">
+          {/* 進捗バー */}
+          <div className="mb-6">
+            <div className="flex gap-1 justify-center mb-2">
+              {playableQuestions.map((_, idx) => (
+                <div 
+                  key={idx}
+                  className={`h-1 rounded-full transition-all ${
+                    idx <= currentStep ? 'bg-pink-400 w-8' : 'bg-white/30 w-4'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+          
+          {/* 質問文 */}
+          <h3 className="text-2xl font-bold text-white text-center leading-relaxed mb-8 drop-shadow-lg">
+            {question.text}
+          </h3>
+          
+          {/* 2x2グリッド選択肢 */}
+          <div className="grid grid-cols-2 gap-4">
+            {!feedback && question.options.map((opt, idx) => {
+              // 紫系の半透明背景
+              return (
+                <button 
+                  key={idx} 
+                  onClick={() => handleAnswer(opt)} 
+                  className="aspect-square rounded-2xl font-bold text-white border-2 border-white/30 transition-all active:scale-95 hover:bg-white/30 flex flex-col items-center justify-center p-4 text-center"
+                  style={{ 
+                    backgroundColor: 'rgba(139, 92, 246, 0.4)',
+                  }}
+                >
+                  <span className="text-base leading-relaxed">{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          {feedback && <div className="text-center text-sm py-4 text-white/70">判定中...</div>}
+          
+          {/* 戻るボタン */}
+          <div className="mt-6 text-center">
+            <button 
+              onClick={onBack} 
+              className="text-white/70 font-bold text-sm flex items-center gap-1 mx-auto hover:text-white transition-colors"
+            >
+              <ArrowLeft size={14}/> 戻る
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Card Mode
   return (
     <div 
@@ -489,7 +629,7 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
     >
       <FeedbackOverlay />
       <SEO title={`${quiz.title} | 診断中`} description={quiz.description} image={quiz.image_url} />
-      <div className="w-full max-w-md mb-4 px-4">
+      <div className="w-full max-w-md lg:max-w-2xl mb-4 px-4">
           <button 
             onClick={onBack} 
             className="font-bold flex items-center gap-1 transition-colors"
@@ -498,7 +638,7 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
             <ArrowLeft size={16}/> 戻る
           </button>
       </div>
-      <div className="max-w-md mx-auto w-full px-4">
+      <div className="max-w-md lg:max-w-2xl mx-auto w-full px-4">
         <div 
           className="text-white rounded-t-3xl text-center shadow-lg transition-colors duration-500 relative overflow-hidden"
           style={{ backgroundColor: theme.accentColor }}

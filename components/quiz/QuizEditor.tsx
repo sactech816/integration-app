@@ -946,12 +946,18 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                         >
                             <div className="mb-4">
                                 <label className="text-sm font-bold text-gray-900 block mb-2">表示レイアウト</label>
-                                <div className="flex gap-2">
-                                    <button onClick={()=>{setForm({...form, layout:'card'}); resetPreview();}} className={`flex-1 py-3 rounded-lg font-bold text-sm border flex items-center justify-center gap-2 ${form.layout==='card' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'bg-white border-gray-200 text-gray-500'}`}>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button onClick={()=>{setForm({...form, layout:'card'}); resetPreview();}} className={`py-3 rounded-lg font-bold text-sm border flex items-center justify-center gap-2 ${form.layout==='card' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'bg-white border-gray-200 text-gray-500'}`}>
                                         <Layout size={16}/> カード
                                     </button>
-                                    <button onClick={()=>{setForm({...form, layout:'chat'}); resetPreview();}} className={`flex-1 py-3 rounded-lg font-bold text-sm border flex items-center justify-center gap-2 ${form.layout==='chat' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'bg-white border-gray-200 text-gray-500'}`}>
+                                    <button onClick={()=>{setForm({...form, layout:'chat'}); resetPreview();}} className={`py-3 rounded-lg font-bold text-sm border flex items-center justify-center gap-2 ${form.layout==='chat' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'bg-white border-gray-200 text-gray-500'}`}>
                                         <MessageCircle size={16}/> チャット
+                                    </button>
+                                    <button onClick={()=>{setForm({...form, layout:'pop'}); resetPreview();}} className={`py-3 rounded-lg font-bold text-sm border flex items-center justify-center gap-2 ${form.layout==='pop' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'bg-white border-gray-200 text-gray-500'}`}>
+                                        <Sparkles size={16}/> ポップ
+                                    </button>
+                                    <button onClick={()=>{setForm({...form, layout:'grid'}); resetPreview();}} className={`py-3 rounded-lg font-bold text-sm border flex items-center justify-center gap-2 ${form.layout==='grid' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'bg-white border-gray-200 text-gray-500'}`}>
+                                        <Layout size={16}/> グリッド
                                     </button>
                                 </div>
                             </div>
@@ -964,7 +970,8 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                         { id: 'cyberpunk', name: 'サイバーパンク', color: 'bg-black', desc: '未来的', border: 'border-green-500' },
                                         { id: 'japanese', name: '和風・雅', color: 'bg-red-800', desc: '伝統的' },
                                         { id: 'pastel', name: 'パステルポップ', color: 'bg-gradient-to-r from-pink-300 to-purple-300', desc: '優しい' },
-                                        { id: 'monochrome', name: 'モノトーン', color: 'bg-gray-900', desc: 'クール' }
+                                        { id: 'monochrome', name: 'モノトーン', color: 'bg-gray-900', desc: 'クール' },
+                                        { id: 'nature', name: 'ナチュラル', color: 'bg-gradient-to-r from-green-400 to-green-600', desc: '自然' }
                                     ].map(theme => (
                                         <button 
                                             key={theme.id} 
