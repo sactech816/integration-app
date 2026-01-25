@@ -490,6 +490,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   const [isUploading, setIsUploading] = useState(false);
   const [savedSlug, setSavedSlug] = useState<string | null>(null);
+  const [savedProjectId, setSavedProjectId] = useState<string | null>(initialData?.id || null); // 保存後のプロジェクトID
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [previewMode, setPreviewMode] = useState<'pc' | 'mobile'>('pc');
@@ -558,6 +559,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
     if (initialData) {
       setLp(initialData);
       setSavedSlug(initialData.slug);
+      setSavedProjectId(initialData.id); // プロジェクトIDも設定
       setCustomSlug(initialData.slug || '');
       setJustSavedSlug(initialData.slug);
       setOpenSections({
@@ -656,6 +658,14 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   };
 
   const handleSave = async () => {
+    // 未ログインの場合はログインを促す
+    if (!user) {
+      if (confirm('保存するにはログインが必要です。ログイン画面を開きますか？')) {
+        setShowAuth?.(true);
+      }
+      return;
+    }
+
     setIsSaving(true);
     try {
       // カスタムURL or 既存 or 自動生成
@@ -677,17 +687,20 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       };
 
       let result;
-      if (initialData?.id) {
+      // 既存プロジェクトの更新（initialDataまたは保存済みIDがある場合）
+      const existingId = initialData?.id || savedProjectId;
+      if (existingId) {
         result = await supabase
           ?.from('business_projects')
           .update(payload)
-          .eq('id', initialData.id)
+          .eq('id', existingId)
           .select()
           .single();
       } else {
+        // 新規作成
         result = await supabase
           ?.from('business_projects')
-          .insert({ ...payload, user_id: user?.id || null }) // ログイン済みの場合のみユーザーIDを設定
+          .insert({ ...payload, user_id: user?.id }) // ログインユーザーのIDを設定
           .select()
           .single();
       }
@@ -700,7 +713,8 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       if (result?.data) {
         setSavedSlug(result.data.slug);
         setJustSavedSlug(result.data.slug);
-        if (!initialData) {
+        setSavedProjectId(result.data.id); // プロジェクトIDを保持（2回目以降の保存でUPDATEになる）
+        if (!initialData && !savedProjectId) {
           setShowSuccessModal(true);
         } else {
           alert('保存しました！');
