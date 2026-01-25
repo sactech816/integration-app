@@ -890,8 +890,12 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       }
 
       if (result?.data) {
+        // 新規作成かどうかを判定（initialDataがない、かつまだ保存していない場合）
+        const isNewCreation = !initialData && !savedSlug;
+        
         setSavedSlug(result.data.slug);
-        if (!initialData) {
+        
+        if (isNewCreation) {
           setShowSuccessModal(true);
           
           // ゲーミフィケーションイベント発火（プロフィール作成）

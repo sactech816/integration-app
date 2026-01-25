@@ -154,7 +154,10 @@ const Header: React.FC<HeaderProps> = ({
               
               {isServiceMenuOpen && (
                 <>
-                  <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[120] animate-fade-in">
+                  {/* ボタンとメニューの間の透明なブリッジ */}
+                  <div className="absolute top-full left-0 w-full h-2" />
+                  <div className="absolute top-full left-0 pt-2 w-56 z-[120]">
+                    <div className="bg-white rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in">
                     {services.map((service) => (
                       <button
                         key={service.id}
@@ -226,6 +229,7 @@ const Header: React.FC<HeaderProps> = ({
                         </button>
                       </div>
                     )}
+                    </div>
                   </div>
                 </>
               )}

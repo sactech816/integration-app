@@ -658,11 +658,9 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   };
 
   const handleSave = async () => {
-    // 未ログインの場合はログインを促す
-    if (!user) {
-      if (confirm('保存するにはログインが必要です。ログイン画面を開きますか？')) {
-        setShowAuth?.(true);
-      }
+    // Supabaseが設定されているか確認
+    if (!supabase) {
+      alert('データベース接続が設定されていません');
       return;
     }
 
@@ -691,16 +689,16 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       const existingId = initialData?.id || savedProjectId;
       if (existingId) {
         result = await supabase
-          ?.from('business_projects')
+          .from('business_projects')
           .update(payload)
           .eq('id', existingId)
           .select()
           .single();
       } else {
-        // 新規作成
+        // 新規作成（未ログインでも保存可能）
         result = await supabase
-          ?.from('business_projects')
-          .insert({ ...payload, user_id: user?.id }) // ログインユーザーのIDを設定
+          .from('business_projects')
+          .insert({ ...payload, user_id: user?.id || null }) // ログイン済みの場合のみユーザーIDを設定
           .select()
           .single();
       }
