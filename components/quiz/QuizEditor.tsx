@@ -478,6 +478,17 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
             return;
         }
 
+        // 編集時のみ数値IDを渡す（テンプレートのtemplateIdは除外）
+        const existingId = savedId || (initialData?.id && !initialData?.templateId ? initialData.id : null);
+        
+        // 編集にはログインが必要（新規作成後の編集も含む）
+        if (existingId && !user) {
+            if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
+                setShowAuth?.(true);
+            }
+            return;
+        }
+
         setIsSaving(true);
         
         try {
@@ -497,21 +508,11 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                 show_in_portal: form.show_in_portal === undefined ? true : form.show_in_portal,
                 user_id: user?.id || null
             };
-
-            // 編集時のみ数値IDを渡す（テンプレートのtemplateIdは除外）
-            const existingId = savedId || (initialData?.id && !initialData?.templateId ? initialData.id : null);
             
             let result;
             
             if (existingId) {
-                // 編集にはログインが必要
-                if (!user) {
-                    if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
-                        setShowAuth?.(true);
-                    }
-                    return;
-                }
-                // 更新
+                // 更新（ログイン済みユーザーのみ）
                 const updateData: any = { ...saveData };
                 if (regenerateSlug) {
                     updateData.slug = generateSlug();

@@ -829,23 +829,22 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       return;
     }
 
+    // 編集の場合（initialDataがある = ダッシュボードから来た、またはsavedSlugがある = 一度保存済み）
+    const isEditing = initialData?.id || savedSlug;
+    
+    // 編集にはログインが必要（新規作成後の編集も含む）
+    if (isEditing && !user) {
+      if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
+        setShowAuth?.(true);
+      }
+      return;
+    }
+
     setIsSaving(true);
     try {
       let result;
       
-      // 編集の場合（initialDataがある = ダッシュボードから来た、またはsavedSlugがある = 一度保存済み）
-      const isEditing = initialData?.id || savedSlug;
-      
       if (isEditing) {
-        // 編集にはログインが必要
-        if (!user) {
-          setIsSaving(false);
-          if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
-            setShowAuth?.(true);
-          }
-          return;
-        }
-        
         if (initialData?.id) {
           // ダッシュボードから来た場合：既存のslugを維持して更新
           const updatePayload = {
