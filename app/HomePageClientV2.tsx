@@ -198,33 +198,29 @@ export default function HomePageClientV2() {
     return winner[0];
   };
 
-  // プロプラン決済処理（UnivaPay）
+  // プロプラン決済処理（Stripe）
   const handleProPlanCheckout = async () => {
     setIsProcessingPayment(true);
     
     try {
-      const response = await fetch('/api/univapay/checkout', {
+      const response = await fetch('/api/subscription/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: 3980,
-          period: 'monthly',
-          planName: 'プロプラン（月額）',
+          planId: 'makers_pro_monthly',
           userId: (user as { id?: string })?.id || null,
           email: user?.email || null,
-          service: 'makers_pro',
         }),
       });
 
       const data = await response.json();
 
-      if (data.checkoutUrl) {
-        // UnivaPay決済ページへリダイレクト
-        window.location.href = data.checkoutUrl;
+      if (data.url) {
+        // Stripe決済ページへリダイレクト
+        window.location.href = data.url;
       } else if (data.error) {
         throw new Error(data.error);
       } else {
-        // チェックアウトURLがない場合（開発環境など）
         alert('決済ページの準備中です。しばらくお待ちください。');
       }
     } catch (error) {
@@ -392,7 +388,7 @@ export default function HomePageClientV2() {
               </button>
 
               <p className="text-xs text-gray-500 text-center mt-4">
-                UnivaPayによる安全な決済処理。カード情報は当サイトに保存されません。
+                Stripeによる安全な決済処理。カード情報は当サイトに保存されません。
               </p>
             </div>
           </div>
@@ -424,7 +420,7 @@ export default function HomePageClientV2() {
               今すぐ診断する
             </button>
           </div>
-          <p className="text-xs text-gray-500">※ アカウント作成は45秒で完了します</p>
+          <p className="text-xs text-gray-500">※ アカウント作成は30秒で完了します</p>
         </div>
       </section>
 
@@ -915,7 +911,7 @@ export default function HomePageClientV2() {
                 className="bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-bold py-4 px-12 rounded-full shadow-xl shadow-indigo-200 transition transform hover:-translate-y-1 inline-flex items-center gap-2"
               >
                 <Sparkles size={20} />
-                無料で始める（45秒で登録完了）
+                無料で始める（30秒で登録完了）
               </button>
               <p className="text-xs text-gray-500 mt-3">※ クレジットカード登録不要</p>
             </div>
@@ -946,41 +942,61 @@ export default function HomePageClientV2() {
                 登録なしで、今すぐお試し作成。<br />※保存はされません
               </p>
               
-              <ul className="space-y-3 mb-6 flex-1 border-t border-gray-100 pt-4">
-                <li className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">新規作成</span>
+              <ul className="space-y-2 mb-6 flex-1 border-t border-gray-100 pt-4">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>新規作成</span>
                   <Check size={16} className="text-green-500" />
                 </li>
-                <li className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">ポータル掲載</span>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>ポータル掲載</span>
                   <Check size={16} className="text-green-500" />
                 </li>
-                <li className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">URL発行</span>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>URL発行</span>
                   <Check size={16} className="text-green-500" />
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-400">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
                   <span>編集・更新</span>
                   <span className="text-gray-300">×</span>
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-400">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
                   <span>アフィリエイト機能</span>
                   <span className="text-gray-300">×</span>
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-400">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
                   <span>アクセス解析</span>
                   <span className="text-gray-300">×</span>
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-400">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
                   <span>AI利用</span>
                   <span className="text-gray-300">×</span>
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-400">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
+                  <span>ゲーミフィケーション</span>
+                  <span className="text-gray-300">×</span>
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
                   <span>HTMLダウンロード</span>
                   <span className="text-gray-300">×</span>
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-400">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
                   <span>埋め込みコード発行</span>
+                  <span className="text-gray-300">×</span>
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
+                  <span>コピーライト非表示</span>
+                  <span className="text-gray-300">×</span>
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
+                  <span>お問い合わせ</span>
+                  <span className="text-gray-300">×</span>
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
+                  <span>各種セミナー参加</span>
+                  <span className="text-gray-300">×</span>
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
+                  <span>グループコンサル</span>
                   <span className="text-gray-300">×</span>
                 </li>
               </ul>
@@ -1004,20 +1020,20 @@ export default function HomePageClientV2() {
                 </div>
               </div>
               <p className="text-xs text-gray-600 mb-6 text-center font-bold">
-                15秒でできるアカウント登録だけでOK！<br />
+                30秒でできるアカウント登録だけでOK！<br />
                 ずっと無料で使い放題。
               </p>
               
-              <ul className="space-y-3 mb-6 flex-1 border-t border-gray-100 pt-4">
+              <ul className="space-y-2 mb-6 flex-1 border-t border-gray-100 pt-4">
                 <li className="flex items-center justify-between text-sm font-bold text-gray-800">
                   <span>新規作成</span>
                   <Check size={16} className="text-indigo-600" />
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-700">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
                   <span>ポータル掲載</span>
                   <Check size={16} className="text-indigo-600" />
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-700">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
                   <span>URL発行</span>
                   <Check size={16} className="text-indigo-600" />
                 </li>
@@ -1029,20 +1045,40 @@ export default function HomePageClientV2() {
                   <span>アフィリエイト機能</span>
                   <Check size={16} className="text-indigo-600" />
                 </li>
-                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
                   <span>アクセス解析</span>
-                  <Check size={16} className="text-indigo-600" />
+                  <span className="text-gray-300">×</span>
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-700">
-                  <span>AI利用（回数制限）</span>
-                  <Check size={16} className="text-indigo-600" />
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>AI利用</span>
+                  <span className="text-xs text-indigo-600">回数制限</span>
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-400">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>ゲーミフィケーション</span>
+                  <span className="text-xs text-indigo-600">回数制限</span>
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
                   <span>HTMLダウンロード</span>
                   <span className="text-gray-300">×</span>
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-400">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
                   <span>埋め込みコード発行</span>
+                  <span className="text-gray-300">×</span>
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
+                  <span>コピーライト非表示</span>
+                  <span className="text-gray-300">×</span>
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
+                  <span>お問い合わせ</span>
+                  <span className="text-gray-300">×</span>
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
+                  <span>各種セミナー参加</span>
+                  <span className="text-gray-300">×</span>
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-400">
+                  <span>グループコンサル</span>
                   <span className="text-gray-300">×</span>
                 </li>
               </ul>
@@ -1069,34 +1105,38 @@ export default function HomePageClientV2() {
                 本格的なビジネス運用に。<br />制限なしで使い放題。
               </p>
               
-              <ul className="space-y-3 mb-6 flex-1 border-t border-orange-100 pt-4">
-                <li className="flex items-center justify-between text-sm text-gray-700">
+              <ul className="space-y-2 mb-6 flex-1 border-t border-orange-100 pt-4">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
                   <span>新規作成</span>
                   <Check size={16} className="text-orange-500" />
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-700">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
                   <span>ポータル掲載</span>
                   <Check size={16} className="text-orange-500" />
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-700">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
                   <span>URL発行</span>
                   <Check size={16} className="text-orange-500" />
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-700">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
                   <span>編集・更新</span>
                   <Check size={16} className="text-orange-500" />
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-700">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
                   <span>アフィリエイト機能</span>
                   <Check size={16} className="text-orange-500" />
                 </li>
-                <li className="flex items-center justify-between text-sm text-gray-700">
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
                   <span>アクセス解析</span>
                   <Check size={16} className="text-orange-500" />
                 </li>
                 <li className="flex items-center justify-between text-sm font-bold text-gray-800">
-                  <span>AI利用（優先）</span>
-                  <Check size={16} className="text-orange-500" />
+                  <span>AI利用</span>
+                  <span className="text-xs text-orange-500">優先</span>
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>ゲーミフィケーション</span>
+                  <span className="text-xs text-orange-500">無制限</span>
                 </li>
                 <li className="flex items-center justify-between text-sm font-bold text-gray-800">
                   <span>HTMLダウンロード</span>
@@ -1104,6 +1144,22 @@ export default function HomePageClientV2() {
                 </li>
                 <li className="flex items-center justify-between text-sm font-bold text-gray-800">
                   <span>埋め込みコード発行</span>
+                  <Check size={16} className="text-orange-500" />
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>コピーライト非表示</span>
+                  <Check size={16} className="text-orange-500" />
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>お問い合わせ</span>
+                  <Check size={16} className="text-orange-500" />
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>各種セミナー参加</span>
+                  <Check size={16} className="text-orange-500" />
+                </li>
+                <li className="flex items-center justify-between text-sm font-bold text-gray-800">
+                  <span>グループコンサル</span>
                   <Check size={16} className="text-orange-500" />
                 </li>
               </ul>
@@ -1465,7 +1521,7 @@ export default function HomePageClientV2() {
           </div>
 
           <p className="text-sm text-indigo-200">
-            ※ 登録は45秒で完了 / クレジットカード不要 / いつでも無料で使えます
+            ※ 登録は30秒で完了 / クレジットカード不要 / いつでも無料で使えます
           </p>
         </div>
       </section>

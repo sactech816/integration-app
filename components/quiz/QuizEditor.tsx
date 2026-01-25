@@ -972,7 +972,15 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                             accentColor="bg-blue-100 text-blue-600"
                         >
                             <div className="mb-4">
-                                <label className="text-sm font-bold text-gray-900 block mb-2">表示レイアウト</label>
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="text-sm font-bold text-gray-900">表示レイアウト</label>
+                                    <button 
+                                        onClick={()=>{setForm({...form, theme: 'standard'}); resetPreview();}}
+                                        className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
+                                    >
+                                        初期値の配色
+                                    </button>
+                                </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <button onClick={()=>{setForm({...form, layout:'card'}); resetPreview();}} className={`py-3 rounded-lg font-bold text-sm border flex items-center justify-center gap-2 ${form.layout==='card' ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'bg-white border-gray-200 text-gray-500'}`}>
                                         <Layout size={16}/> カード

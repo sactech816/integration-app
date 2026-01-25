@@ -201,6 +201,9 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
   // テーマを取得
   const theme = getQuizTheme(quiz.theme);
   
+  // レイアウト固有の初期配色（theme が 'standard' または未設定の場合に使用）
+  const useDefaultLayoutColors = !quiz.theme || quiz.theme === 'standard';
+  
   // ★修正: タイマーIDと「次の処理」を保存するRefを追加
   const messagesEndRef = useRef(null);
   const timerRef = useRef(null);
@@ -432,39 +435,66 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
   }
 
   if (quiz.layout === 'chat') {
+      // チャットレイアウトの初期配色（緑系LINE風）
+      const chatColors = useDefaultLayoutColors ? {
+          background: '#e5e5e5',
+          headerBg: 'linear-gradient(135deg, #00B900 0%, #00C851 100%)',
+          headerColor: '#00B900',
+          cardBg: '#f0f0f0',
+          messageBg: '#ffffff',
+          userMessageBg: '#00B900',
+          buttonBorder: '#00B900',
+          buttonText: '#00B900',
+          textPrimary: '#333333',
+          textSecondary: '#888888',
+      } : null;
+
       return (
-        <div className="min-h-screen bg-gray-200 flex items-center justify-center font-sans">
+        <div className="min-h-screen flex items-center justify-center font-sans" style={{ background: useDefaultLayoutColors ? chatColors.background : theme.background }}>
             <FeedbackOverlay />
-            <div className="w-full max-w-md bg-[#f0f0f0] h-[100dvh] flex flex-col relative shadow-2xl overflow-hidden">
-                <div className="bg-gradient-to-br from-[#00B900] to-[#00C851] p-4 text-white text-center relative shadow-sm z-10 shrink-0">
+            <div className="w-full max-w-md h-[100dvh] flex flex-col relative shadow-2xl overflow-hidden" style={{ backgroundColor: useDefaultLayoutColors ? chatColors.cardBg : theme.cardBg }}>
+                <div 
+                    className="p-4 text-white text-center relative shadow-sm z-10 shrink-0"
+                    style={{ background: useDefaultLayoutColors ? chatColors.headerBg : theme.accentColor }}
+                >
                     <div className="text-xs opacity-90 absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer" onClick={onBack}><ArrowLeft size={20}/></div>
                     <h1 className="font-bold text-sm">{quiz.title}</h1>
                     <div className="text-[10px] opacity-80">{quiz.mode === 'test' ? '検定中' : 'オンライン'}</div>
-                    <div className="bg-white/30 h-1 mt-2 rounded-full overflow-hidden w-1/2 mx-auto">
-                        <div className="h-full bg-white transition-all duration-500" style={{width: `${progress}%`}}></div>
+                    <div className="h-1 mt-2 rounded-full overflow-hidden w-1/2 mx-auto" style={{ backgroundColor: 'rgba(255,255,255,0.3)' }}>
+                        <div className="h-full bg-white transition-all duration-500" style={{ width: `${progress}%` }}></div>
                     </div>
                 </div>
 
-                <div className="flex-grow p-4 overflow-y-auto pb-72 bg-[#f0f0f0]">
+                <div className="flex-grow p-4 overflow-y-auto pb-72" style={{ backgroundColor: useDefaultLayoutColors ? chatColors.cardBg : theme.optionBg }}>
                     {chatHistory.map((msg, i) => (
                         <div key={i} className={`flex mb-4 animate-fade-in-up ${msg.type === 'user' ? 'justify-end' : 'items-start gap-2'}`}>
                             {msg.type === 'bot' && (
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00B900] to-[#00C851] flex items-center justify-center text-white flex-shrink-0 text-xl shadow-sm">🤖</div>
+                                <div 
+                                    className="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 text-xl shadow-sm"
+                                    style={{ background: useDefaultLayoutColors ? chatColors.headerBg : theme.accentColor }}
+                                >🤖</div>
                             )}
-                            <div className={`relative max-w-[85%] p-4 rounded-2xl shadow-sm text-sm font-medium leading-relaxed whitespace-pre-wrap
-                                ${msg.type === 'user' 
-                                    ? 'bg-[#00B900] text-white rounded-tr-sm' 
-                                    : 'bg-white text-gray-800 rounded-tl-sm'
-                                }`}>
-                                {msg.qNum && <div className="text-[10px] text-gray-400 mb-1">質問 {msg.qNum} / {playableQuestions.length}</div>}
+                            <div 
+                                className={`relative max-w-[85%] p-4 rounded-2xl shadow-sm text-sm font-medium leading-relaxed whitespace-pre-wrap ${msg.type === 'user' ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}
+                                style={{ 
+                                    backgroundColor: msg.type === 'user' 
+                                        ? (useDefaultLayoutColors ? chatColors.userMessageBg : theme.accentColor)
+                                        : (useDefaultLayoutColors ? chatColors.messageBg : theme.cardBg),
+                                    color: msg.type === 'user' ? '#ffffff' : (useDefaultLayoutColors ? chatColors.textPrimary : theme.textPrimary)
+                                }}
+                            >
+                                {msg.qNum && <div className="text-[10px] mb-1" style={{ color: useDefaultLayoutColors ? chatColors.textSecondary : theme.textSecondary }}>質問 {msg.qNum} / {playableQuestions.length}</div>}
                                 {msg.text}
                             </div>
                         </div>
                     ))}
                     {isTyping && (
                         <div className="flex items-start gap-2 mb-4 animate-fade-in">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00B900] to-[#00C851] flex items-center justify-center text-white flex-shrink-0 text-xl shadow-sm">🤖</div>
-                            <div className="bg-white p-4 rounded-2xl rounded-tl-sm shadow-sm flex gap-1 items-center h-[52px]">
+                            <div 
+                                className="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 text-xl shadow-sm"
+                                style={{ background: useDefaultLayoutColors ? chatColors.headerBg : theme.accentColor }}
+                            >🤖</div>
+                            <div className="p-4 rounded-2xl rounded-tl-sm shadow-sm flex gap-1 items-center h-[52px]" style={{ backgroundColor: useDefaultLayoutColors ? chatColors.messageBg : theme.cardBg }}>
                                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
                                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
@@ -474,12 +504,30 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
                     <div ref={messagesEndRef} />
                 </div>
 
-                <div className="absolute bottom-0 left-0 w-full bg-white border-t p-4 z-20 pb-8 safe-area-bottom shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+                <div 
+                    className="absolute bottom-0 left-0 w-full border-t p-4 z-20 pb-8 safe-area-bottom shadow-[0_-5px_20px_rgba(0,0,0,0.05)]"
+                    style={{ backgroundColor: useDefaultLayoutColors ? '#ffffff' : theme.cardBg, borderColor: useDefaultLayoutColors ? '#e0e0e0' : theme.optionBorder }}
+                >
                     <div className="max-w-md mx-auto space-y-2">
                         {(!isTyping && !feedback && (chatHistory.length === 0 || chatHistory[chatHistory.length-1].type === 'bot')) && (
                             question.options.map((opt, idx) => (
-                                <button key={idx} onClick={() => handleAnswer(opt)} 
-                                    className="w-full bg-white border-2 border-[#00B900] text-[#00B900] hover:bg-[#00B900] hover:text-white font-bold py-3 rounded-full transition-all active:scale-95 shadow-sm text-sm">
+                                <button 
+                                    key={idx} 
+                                    onClick={() => handleAnswer(opt)} 
+                                    className="w-full border-2 font-bold py-3 rounded-full transition-all active:scale-95 shadow-sm text-sm bg-white"
+                                    style={{ 
+                                        borderColor: useDefaultLayoutColors ? chatColors.buttonBorder : theme.accentColor,
+                                        color: useDefaultLayoutColors ? chatColors.buttonText : theme.accentColor
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = useDefaultLayoutColors ? chatColors.userMessageBg : theme.accentColor;
+                                        e.currentTarget.style.color = '#ffffff';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = '#ffffff';
+                                        e.currentTarget.style.color = useDefaultLayoutColors ? chatColors.buttonText : theme.accentColor;
+                                    }}
+                                >
                                     {opt.label}
                                 </button>
                             ))
@@ -493,22 +541,66 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
 
   // ポップレイアウト
   if (quiz.layout === 'pop') {
+    // ポップレイアウトの初期配色（カラフル）
+    const popDefaultColors = useDefaultLayoutColors ? {
+        background: 'linear-gradient(135deg, #fce4ec 0%, #f3e5f5 50%, #e8eaf6 100%)',
+        cardBg: '#ffffff',
+        cardBorder: '#1a1a1a',
+        badgeBg: '#fbbf24',
+        badgeText: '#1a1a1a',
+        progressActive: '#ec4899',
+        progressInactive: '#d1d5db',
+        textPrimary: '#1a1a1a',
+        textSecondary: '#6b7280',
+        optionColors: ['#a0f0f0', '#ffb6d9'], // 水色とピンクの交互
+    } : null;
+    
     return (
       <div 
         className="min-h-screen flex flex-col items-center justify-center py-6 font-sans"
-        style={{ background: 'linear-gradient(135deg, #fce4ec 0%, #f3e5f5 50%, #e8eaf6 100%)' }}
+        style={{ background: useDefaultLayoutColors ? popDefaultColors.background : theme.background }}
       >
         <FeedbackOverlay />
         <SEO title={`${quiz.title} | 診断中`} description={quiz.description} image={quiz.image_url} />
         
         <div className="max-w-md lg:max-w-xl mx-auto w-full px-4">
+          {/* タイトル・説明文 */}
+          <div className="text-center mb-4">
+            <h1 
+              className="text-xl font-bold mb-2"
+              style={{ color: useDefaultLayoutColors ? popDefaultColors.textPrimary : theme.textPrimary }}
+            >
+              {quiz.title}
+            </h1>
+            {quiz.description && (
+              <p 
+                className="text-sm"
+                style={{ color: useDefaultLayoutColors ? popDefaultColors.textSecondary : theme.textSecondary }}
+              >
+                {quiz.description}
+              </p>
+            )}
+          </div>
+
           {/* メインカード */}
-          <div className="bg-white rounded-3xl border-4 border-gray-900 shadow-2xl overflow-hidden">
+          <div 
+            className="rounded-3xl border-4 shadow-2xl overflow-hidden"
+            style={{ 
+                backgroundColor: useDefaultLayoutColors ? popDefaultColors.cardBg : theme.cardBg, 
+                borderColor: useDefaultLayoutColors ? popDefaultColors.cardBorder : theme.textPrimary 
+            }}
+          >
             {/* ヘッダー */}
             <div className="p-6 pb-4">
               <div className="flex items-center justify-between mb-6">
                 {/* Q番号バッジ */}
-                <div className="bg-yellow-400 text-gray-900 font-black text-sm px-4 py-2 rounded-lg shadow-md">
+                <div 
+                  className="font-black text-sm px-4 py-2 rounded-lg shadow-md"
+                  style={{ 
+                      backgroundColor: useDefaultLayoutColors ? popDefaultColors.badgeBg : theme.accentColor, 
+                      color: useDefaultLayoutColors ? popDefaultColors.badgeText : '#ffffff' 
+                  }}
+                >
                   Q.{currentStep + 1}
                 </div>
                 {/* 進捗ドット */}
@@ -516,16 +608,22 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
                   {playableQuestions.map((_, idx) => (
                     <div 
                       key={idx}
-                      className={`w-3 h-3 rounded-full transition-all ${
-                        idx <= currentStep ? 'bg-pink-500' : 'bg-gray-300'
-                      }`}
+                      className="w-3 h-3 rounded-full transition-all"
+                      style={{ 
+                          backgroundColor: idx <= currentStep 
+                              ? (useDefaultLayoutColors ? popDefaultColors.progressActive : theme.progressFill)
+                              : (useDefaultLayoutColors ? popDefaultColors.progressInactive : theme.progressBg)
+                      }}
                     />
                   ))}
                 </div>
               </div>
               
               {/* 質問文 */}
-              <h3 className="text-xl font-bold text-gray-900 text-center leading-relaxed mb-2">
+              <h3 
+                className="text-xl font-bold text-center leading-relaxed mb-2"
+                style={{ color: useDefaultLayoutColors ? popDefaultColors.textPrimary : theme.textPrimary }}
+              >
                 {question.text}
               </h3>
             </div>
@@ -533,23 +631,26 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
             {/* 選択肢 */}
             <div className="px-6 pb-6 space-y-3">
               {!feedback && question.options.map((opt, idx) => {
-                // 水色とピンクを交互に
-                const bgColor = idx % 2 === 0 ? '#a0f0f0' : '#ffb6d9';
+                const bgColor = useDefaultLayoutColors 
+                    ? popDefaultColors.optionColors[idx % 2]
+                    : (idx % 2 === 0 ? theme.optionBg : theme.optionHoverBg);
                 return (
                   <button 
                     key={idx} 
                     onClick={() => handleAnswer(opt)} 
-                    className="w-full p-4 rounded-xl font-bold text-gray-900 border-3 border-gray-900 transition-all active:scale-95 hover:shadow-lg text-center text-base"
+                    className="w-full p-4 rounded-xl font-bold transition-all active:scale-95 hover:shadow-lg text-center text-base"
                     style={{ 
                       backgroundColor: bgColor,
-                      borderWidth: '3px'
+                      borderWidth: '3px',
+                      borderColor: useDefaultLayoutColors ? popDefaultColors.cardBorder : theme.optionBorder,
+                      color: useDefaultLayoutColors ? popDefaultColors.textPrimary : theme.textPrimary
                     }}
                   >
                     {opt.label}
                   </button>
                 );
               })}
-              {feedback && <div className="text-center text-sm py-4 text-gray-500">判定中...</div>}
+              {feedback && <div className="text-center text-sm py-4" style={{ color: useDefaultLayoutColors ? popDefaultColors.textSecondary : theme.textSecondary }}>判定中...</div>}
             </div>
           </div>
           
@@ -557,7 +658,8 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
           <div className="mt-4 text-center">
             <button 
               onClick={onBack} 
-              className="text-gray-500 font-bold text-sm flex items-center gap-1 mx-auto hover:text-gray-700 transition-colors"
+              className="font-bold text-sm flex items-center gap-1 mx-auto transition-colors"
+              style={{ color: useDefaultLayoutColors ? popDefaultColors.textSecondary : theme.textSecondary }}
             >
               <ArrowLeft size={14}/> 戻る
             </button>
@@ -569,45 +671,91 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
 
   // グリッドレイアウト
   if (quiz.layout === 'grid') {
+    // グリッドレイアウトの初期配色（紫系グラデーション）
+    const gridDefaultColors = useDefaultLayoutColors ? {
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        progressActive: '#f472b6',
+        progressInactive: 'rgba(255,255,255,0.3)',
+        textPrimary: '#ffffff',
+        textSecondary: 'rgba(255,255,255,0.7)',
+        optionBg: 'rgba(139, 92, 246, 0.4)',
+        optionBorder: 'rgba(255,255,255,0.3)',
+        optionHoverBg: 'rgba(255,255,255,0.3)',
+    } : null;
+
     return (
       <div 
         className="min-h-screen flex flex-col items-center justify-center py-6 font-sans"
-        style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)' }}
+        style={{ background: useDefaultLayoutColors ? gridDefaultColors.background : theme.background }}
       >
         <FeedbackOverlay />
         <SEO title={`${quiz.title} | 診断中`} description={quiz.description} image={quiz.image_url} />
         
         <div className="max-w-lg lg:max-w-2xl mx-auto w-full px-4">
+          {/* タイトル・説明文 */}
+          <div className="text-center mb-6">
+            <h1 
+              className="text-2xl font-bold mb-2 drop-shadow-lg"
+              style={{ color: useDefaultLayoutColors ? gridDefaultColors.textPrimary : theme.textPrimary }}
+            >
+              {quiz.title}
+            </h1>
+            {quiz.description && (
+              <p 
+                className="text-sm"
+                style={{ color: useDefaultLayoutColors ? gridDefaultColors.textSecondary : theme.textSecondary }}
+              >
+                {quiz.description}
+              </p>
+            )}
+          </div>
+
           {/* 進捗バー */}
           <div className="mb-6">
             <div className="flex gap-1 justify-center mb-2">
               {playableQuestions.map((_, idx) => (
                 <div 
                   key={idx}
-                  className={`h-1 rounded-full transition-all ${
-                    idx <= currentStep ? 'bg-pink-400 w-8' : 'bg-white/30 w-4'
-                  }`}
+                  className="h-1 rounded-full transition-all"
+                  style={{ 
+                    backgroundColor: idx <= currentStep 
+                        ? (useDefaultLayoutColors ? gridDefaultColors.progressActive : theme.progressFill)
+                        : (useDefaultLayoutColors ? gridDefaultColors.progressInactive : theme.progressBg),
+                    width: idx <= currentStep ? '2rem' : '1rem'
+                  }}
                 />
               ))}
             </div>
           </div>
           
           {/* 質問文 */}
-          <h3 className="text-2xl font-bold text-white text-center leading-relaxed mb-8 drop-shadow-lg">
+          <h3 
+            className="text-2xl font-bold text-center leading-relaxed mb-8 drop-shadow-lg"
+            style={{ color: useDefaultLayoutColors ? gridDefaultColors.textPrimary : theme.textPrimary }}
+          >
             {question.text}
           </h3>
           
           {/* 2x2グリッド選択肢 */}
           <div className="grid grid-cols-2 gap-4">
             {!feedback && question.options.map((opt, idx) => {
-              // 紫系の半透明背景
               return (
                 <button 
                   key={idx} 
                   onClick={() => handleAnswer(opt)} 
-                  className="aspect-square rounded-2xl font-bold text-white border-2 border-white/30 transition-all active:scale-95 hover:bg-white/30 flex flex-col items-center justify-center p-4 text-center"
+                  className="aspect-square rounded-2xl font-bold border-2 transition-all active:scale-95 flex flex-col items-center justify-center p-4 text-center"
                   style={{ 
-                    backgroundColor: 'rgba(139, 92, 246, 0.4)',
+                    backgroundColor: useDefaultLayoutColors ? gridDefaultColors.optionBg : theme.optionBg,
+                    borderColor: useDefaultLayoutColors ? gridDefaultColors.optionBorder : theme.optionBorder,
+                    color: useDefaultLayoutColors ? gridDefaultColors.textPrimary : theme.textPrimary
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = useDefaultLayoutColors ? gridDefaultColors.optionHoverBg : theme.optionHoverBg;
+                    if (!useDefaultLayoutColors) e.currentTarget.style.borderColor = theme.accentColor;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = useDefaultLayoutColors ? gridDefaultColors.optionBg : theme.optionBg;
+                    e.currentTarget.style.borderColor = useDefaultLayoutColors ? gridDefaultColors.optionBorder : theme.optionBorder;
                   }}
                 >
                   <span className="text-base leading-relaxed">{opt.label}</span>
@@ -615,13 +763,14 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
               );
             })}
           </div>
-          {feedback && <div className="text-center text-sm py-4 text-white/70">判定中...</div>}
+          {feedback && <div className="text-center text-sm py-4" style={{ color: useDefaultLayoutColors ? gridDefaultColors.textSecondary : theme.textSecondary }}>判定中...</div>}
           
           {/* 戻るボタン */}
           <div className="mt-6 text-center">
             <button 
               onClick={onBack} 
-              className="text-white/70 font-bold text-sm flex items-center gap-1 mx-auto hover:text-white transition-colors"
+              className="font-bold text-sm flex items-center gap-1 mx-auto transition-colors"
+              style={{ color: useDefaultLayoutColors ? gridDefaultColors.textSecondary : theme.textSecondary }}
             >
               <ArrowLeft size={14}/> 戻る
             </button>
