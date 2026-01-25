@@ -299,8 +299,20 @@ export default function BookingEditor({
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* 完了モーダル（新規作成時のみ） */}
       {showCompleteModal && createdMenuId && mode === 'create' && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 animate-fade-in">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4"
+          onClick={() => {
+            // モーダル外クリックで編集ページへ遷移
+            const editUrl = createdEditKey 
+              ? `/booking/edit/${createdMenuId}?key=${createdEditKey}`
+              : `/booking/edit/${createdMenuId}`;
+            router.push(editUrl);
+          }}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="text-center mb-6">
               <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
                 formData.type === 'adjustment' ? 'bg-purple-100' : 'bg-green-100'
@@ -378,6 +390,23 @@ export default function BookingEditor({
               >
                 <ExternalLink size={18} />
                 公開ページを開く
+              </button>
+              <button
+                onClick={() => {
+                  // 編集ページへ遷移（編集キーがある場合はURLパラメータに含める）
+                  const editUrl = createdEditKey 
+                    ? `/booking/edit/${createdMenuId}?key=${createdEditKey}`
+                    : `/booking/edit/${createdMenuId}`;
+                  router.push(editUrl);
+                }}
+                className={`w-full py-3 px-6 border-2 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 ${
+                  formData.type === 'adjustment'
+                    ? 'border-purple-300 text-purple-700 hover:bg-purple-50'
+                    : 'border-blue-300 text-blue-700 hover:bg-blue-50'
+                }`}
+              >
+                <Calendar size={18} />
+                予約枠を修正する
               </button>
               <button
                 onClick={() => router.push('/dashboard?view=booking')}
@@ -801,47 +830,47 @@ export default function BookingEditor({
                   </div>
                 </div>
 
-                {/* 月表示の場合の複数選択UI */}
-                {calendarView === 'month' && (
-                  <div className={`mb-4 p-3 rounded-xl ${
-                    formData.type === 'adjustment' ? 'bg-purple-50' : 'bg-blue-50'
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-gray-700">
-                          複数日程を選択して一括追加
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {selectedDates.length > 0 
-                            ? `${selectedDates.length}日選択中`
+                {/* 複数選択UI（週表示・月表示共通） */}
+                <div className={`mb-4 p-3 rounded-xl ${
+                  formData.type === 'adjustment' ? 'bg-purple-50' : 'bg-blue-50'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">
+                        複数日程を選択して一括追加
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {selectedDates.length > 0 
+                          ? `${selectedDates.length}日選択中`
+                          : calendarView === 'week'
+                            ? '曜日ヘッダーをクリックして日付を選択'
                             : 'カレンダーで日付をクリックして選択'}
-                        </p>
-                      </div>
-                      {selectedDates.length > 0 && (
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={handleClearSelectedDates}
-                            className="px-3 py-1.5 text-sm font-semibold border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                          >
-                            クリア
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleBulkAdd}
-                            className={`px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors ${
-                              formData.type === 'adjustment'
-                                ? 'bg-purple-600 hover:bg-purple-700'
-                                : 'bg-blue-600 hover:bg-blue-700'
-                            }`}
-                          >
-                            時間を設定して追加
-                          </button>
-                        </div>
-                      )}
+                      </p>
                     </div>
+                    {selectedDates.length > 0 && (
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleClearSelectedDates}
+                          className="px-3 py-1.5 text-sm font-semibold border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                          クリア
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleBulkAdd}
+                          className={`px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors ${
+                            formData.type === 'adjustment'
+                              ? 'bg-purple-600 hover:bg-purple-700'
+                              : 'bg-blue-600 hover:bg-blue-700'
+                          }`}
+                        >
+                          時間を設定して追加
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
 
                 {/* カレンダー本体 */}
                 {calendarView === 'week' ? (
@@ -852,6 +881,9 @@ export default function BookingEditor({
                     onSlotDelete={handleDeleteSlot}
                     durationMin={formData.duration_min}
                     menuType={formData.type}
+                    multiSelect={true}
+                    selectedDates={selectedDates}
+                    onDateToggle={handleMonthDateToggle}
                   />
                 ) : (
                   <MonthlyCalendar
@@ -867,7 +899,7 @@ export default function BookingEditor({
                 {/* 操作ヒント */}
                 <div className="mt-4 text-xs text-gray-500 text-center">
                   {calendarView === 'week' 
-                    ? 'カレンダーのセルをクリックして予約枠を追加'
+                    ? '曜日ヘッダーをクリックで日付選択、セルをクリックで1枠追加'
                     : '日付をクリックして選択し、「時間を設定して追加」で一括追加'}
                 </div>
               </div>

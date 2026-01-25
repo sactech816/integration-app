@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Trash2, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, Clock, Check } from 'lucide-react';
 import { BookingSlotWithAvailability } from '@/types/booking';
 
 // 日付ユーティリティ
@@ -55,6 +55,10 @@ interface WeeklyCalendarProps {
   endHour?: number;
   readOnly?: boolean;
   menuType?: 'reservation' | 'adjustment';
+  // 複数日選択モード
+  multiSelect?: boolean;
+  selectedDates?: Date[];
+  onDateToggle?: (date: Date) => void;
 }
 
 export default function WeeklyCalendar({
@@ -67,6 +71,9 @@ export default function WeeklyCalendar({
   endHour = 21,
   readOnly = false,
   menuType = 'reservation',
+  multiSelect = false,
+  selectedDates = [],
+  onDateToggle,
 }: WeeklyCalendarProps) {
   const [currentWeekStart, setCurrentWeekStart] = useState(() => getWeekStart(new Date()));
 
@@ -195,23 +202,40 @@ export default function WeeklyCalendar({
               const isToday = isSameDay(day, new Date());
               const isPast = day < today;
               const dayOfWeek = day.getDay();
+              const isSelected = multiSelect && selectedDates.some(d => isSameDay(d, day));
               
               return (
                 <div
                   key={index}
-                  className={`p-2 text-center border-r border-gray-200 last:border-r-0 ${
-                    isToday ? `bg-${themeColor}-50` : 'bg-gray-50'
-                  } ${isPast ? 'opacity-50' : ''}`}
+                  onClick={() => {
+                    if (multiSelect && !isPast && onDateToggle) {
+                      onDateToggle(day);
+                    }
+                  }}
+                  className={`p-2 text-center border-r border-gray-200 last:border-r-0 transition-all ${
+                    isSelected
+                      ? menuType === 'adjustment'
+                        ? 'bg-purple-100 ring-2 ring-purple-400 ring-inset'
+                        : 'bg-blue-100 ring-2 ring-blue-400 ring-inset'
+                      : isToday 
+                        ? menuType === 'adjustment' ? 'bg-purple-50' : 'bg-blue-50'
+                        : 'bg-gray-50'
+                  } ${isPast ? 'opacity-50' : multiSelect ? 'cursor-pointer hover:bg-gray-100' : ''}`}
                 >
                   <div className={`text-xs font-semibold ${
                     dayOfWeek === 0 ? 'text-red-500' : dayOfWeek === 6 ? 'text-blue-500' : 'text-gray-600'
                   }`}>
                     {formatWeekday(day)}
                   </div>
-                  <div className={`text-sm font-bold ${
-                    isToday ? `text-${themeColor}-600` : 'text-gray-900'
+                  <div className={`text-sm font-bold flex items-center justify-center gap-1 ${
+                    isSelected
+                      ? menuType === 'adjustment' ? 'text-purple-700' : 'text-blue-700'
+                      : isToday 
+                        ? menuType === 'adjustment' ? 'text-purple-600' : 'text-blue-600'
+                        : 'text-gray-900'
                   }`}>
                     {formatDate(day)}
+                    {isSelected && <Check size={14} />}
                   </div>
                 </div>
               );
