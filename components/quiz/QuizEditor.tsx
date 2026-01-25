@@ -478,10 +478,22 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
             return;
         }
 
+        // 編集時のみ数値IDを渡す（テンプレートのtemplateIdは除外）
+        const existingId = savedId || (initialData?.id && !initialData?.templateId ? initialData.id : null);
+        
+        // 編集にはログインが必要
+        if (existingId && !user) {
+            if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
+                setShowAuth?.(true);
+            }
+            return;
+        }
+
         setIsSaving(true);
         
         try {
-            const saveData = {
+            // UPDATE用のデータ（user_idは含めない）
+            const updateData: Record<string, unknown> = {
                 title: form.title, 
                 description: form.description, 
                 category: form.category, 
@@ -495,17 +507,12 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                 theme: form.theme || 'standard',
                 option_order: form.option_order || 'random',
                 show_in_portal: form.show_in_portal === undefined ? true : form.show_in_portal,
-                user_id: user?.id || null
             };
-
-            // 編集時のみ数値IDを渡す（テンプレートのtemplateIdは除外）
-            const existingId = savedId || (initialData?.id && !initialData?.templateId ? initialData.id : null);
             
             let result;
             
             if (existingId) {
-                // 更新
-                const updateData: any = { ...saveData };
+                // 更新（user_idは変更しない）
                 if (regenerateSlug) {
                     updateData.slug = generateSlug();
                 }
@@ -522,9 +529,15 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
             } else {
                 // 新規作成（カスタムスラッグがあればそれを使用、なければ自動生成）
                 const newSlug = customSlug || generateSlug();
+                const insertData = {
+                    ...updateData,
+                    slug: newSlug,
+                    user_id: user?.id || null, // INSERT時のみuser_idを設定
+                };
+                
                 const { data, error } = await supabase
                     .from('quizzes')
-                    .insert({ ...saveData, slug: newSlug })
+                    .insert(insertData)
                     .select()
                     .single();
                     
@@ -534,12 +547,13 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
             }
             
             if (result) {
+                const wasNewCreation = !existingId; // 保存前の状態で判定
+                
                 setSavedId(result.id);
                 setSavedSlug(result.slug);
                 
                 // 新規作成時のみ開発支援モーダルを表示
-                const isNewCreation = !initialData || (initialData.templateId && !initialData.id);
-                if (isNewCreation && !savedId) {
+                if (wasNewCreation) {
                     setJustSavedQuizId(result.slug);
                     setShowDonationModal(true);
                     

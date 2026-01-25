@@ -22,12 +22,19 @@
 -- =============================================
 -- 1. quizzes（診断クイズ）
 -- =============================================
+-- 既存のポリシーを全て削除（古いポリシーが残っている可能性があるため）
 DROP POLICY IF EXISTS "Anyone can view quizzes" ON public.quizzes;
 DROP POLICY IF EXISTS "Anyone can create quizzes" ON public.quizzes;
 DROP POLICY IF EXISTS "Users can update own quizzes" ON public.quizzes;
 DROP POLICY IF EXISTS "Users can delete own quizzes" ON public.quizzes;
 DROP POLICY IF EXISTS "Public Insert" ON public.quizzes;
 DROP POLICY IF EXISTS "Public Select" ON public.quizzes;
+DROP POLICY IF EXISTS "Enable read access for all users" ON public.quizzes;
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON public.quizzes;
+DROP POLICY IF EXISTS "Enable update for users based on user_id" ON public.quizzes;
+DROP POLICY IF EXISTS "Enable delete for users based on user_id" ON public.quizzes;
+DROP POLICY IF EXISTS "Admins can view all quizzes" ON public.quizzes;
+DROP POLICY IF EXISTS "Admins can manage all quizzes" ON public.quizzes;
 
 -- 誰でも閲覧可能
 CREATE POLICY "Anyone can view quizzes" ON public.quizzes

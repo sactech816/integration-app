@@ -742,7 +742,8 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiTheme, setAiTheme] = useState('');
   const [isUploading, setIsUploading] = useState(false);
-  const [savedSlug, setSavedSlug] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(initialData?.id || null);
+  const [savedSlug, setSavedSlug] = useState<string | null>(initialData?.slug || null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [customSlug, setCustomSlug] = useState('');
@@ -761,7 +762,8 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
   useEffect(() => {
     if (initialData) {
       setProfile(initialData);
-      setSavedSlug(initialData.slug);
+      setSavedId(initialData.id || null);
+      setSavedSlug(initialData.slug || null);
       setCustomSlug(initialData.nickname || '');
       // 編集時はtemplateを閉じてblocksを開く
       setOpenSections({
@@ -829,12 +831,23 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       return;
     }
 
+    // 既存IDの判定（savedIdまたはinitialData.id）
+    const existingId = savedId || initialData?.id;
+    
+    // 編集にはログインが必要
+    if (existingId && !user) {
+      if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
+        setShowAuth?.(true);
+      }
+      return;
+    }
+
     setIsSaving(true);
     try {
       let result;
       
-      if (initialData?.id) {
-        // 更新の場合：既存のslugを維持
+      if (existingId) {
+        // 更新の場合：既存のslugを維持（user_idは変更しない）
         const updatePayload = {
           nickname: customSlug || null,
           content: profile.content,
@@ -844,7 +857,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         result = await supabase
           .from('profiles')
           .update(updatePayload)
-          .eq('id', initialData.id)
+          .eq('id', existingId)
           .select()
           .single();
       } else {
@@ -859,7 +872,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
             content: profile.content,
             settings: profile.settings,
             slug: newSlug,
-            user_id: user?.id || null, // ログイン済みの場合のみユーザーIDを設定
+            user_id: user?.id || null, // INSERT時のみuser_idを設定
           };
           
           result = await supabase
@@ -890,12 +903,13 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       }
 
       if (result?.data) {
-        // 新規作成かどうかを判定（initialDataがない、かつまだ保存していない場合）
-        const isNewCreation = !initialData && !savedSlug;
+        // 新規作成かどうかを判定（保存前の状態で判定）
+        const wasNewCreation = !existingId;
         
+        setSavedId(result.data.id);
         setSavedSlug(result.data.slug);
         
-        if (isNewCreation) {
+        if (wasNewCreation) {
           setShowSuccessModal(true);
           
           // ゲーミフィケーションイベント発火（プロフィール作成）

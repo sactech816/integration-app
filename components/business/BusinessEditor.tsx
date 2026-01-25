@@ -658,18 +658,18 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   };
 
   const handleSave = async () => {
-    // 未ログインで編集しようとした場合はログインを促す
-    const existingId = initialData?.id || savedProjectId;
-    if (existingId && !user) {
-      if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
-        setShowAuth?.(true);
-      }
+    // Supabaseが設定されているか確認
+    if (!supabase) {
+      alert('データベース接続が設定されていません');
       return;
     }
+
+    // 既存IDの判定（savedProjectIdまたはinitialData.id）
+    const existingId = savedProjectId || initialData?.id;
     
-    // 未ログインで新規作成の場合はログインを促す
-    if (!existingId && !user) {
-      if (confirm('保存するにはログインが必要です。ログイン画面を開きますか？')) {
+    // 編集にはログインが必要
+    if (existingId && !user) {
+      if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
         setShowAuth?.(true);
       }
       return;
@@ -677,37 +677,38 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
 
     setIsSaving(true);
     try {
-      // カスタムURL or 既存 or 自動生成
-      const newSlug = customSlug.trim() || savedSlug || generateSlug();
-      
       // タイトルが未入力の場合はデフォルト名を使用
       const finalTitle = lp.title?.trim() || '無題のビジネスLP';
       
-      // business_projectsテーブルの構造に合わせる
-      // title, descriptionはsettingsに含める
-      const payload = {
+      // UPDATE用のペイロード（slugは変更しない、user_idも含めない）
+      const updatePayload = {
         content: lp.content,
         settings: {
           ...lp.settings,
           title: finalTitle,
           description: lp.description,
         },
-        slug: newSlug,
       };
 
       let result;
       if (existingId) {
+        // 更新（slugは変更しない、user_idも変更しない）
         result = await supabase
-          ?.from('business_projects')
-          .update(payload)
+          .from('business_projects')
+          .update(updatePayload)
           .eq('id', existingId)
           .select()
           .single();
       } else {
-        // 新規作成
+        // 新規作成（slugを生成、user_idを設定）
+        const newSlug = customSlug.trim() || generateSlug();
         result = await supabase
-          ?.from('business_projects')
-          .insert({ ...payload, user_id: user?.id }) // ログインユーザーのIDを設定
+          .from('business_projects')
+          .insert({ 
+            ...updatePayload, 
+            slug: newSlug,
+            user_id: user?.id || null, // INSERT時のみuser_idを設定
+          })
           .select()
           .single();
       }
@@ -718,10 +719,13 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       }
 
       if (result?.data) {
+        const wasNewCreation = !existingId; // 保存前の状態で判定
+        
         setSavedSlug(result.data.slug);
         setJustSavedSlug(result.data.slug);
         setSavedProjectId(result.data.id); // プロジェクトIDを保持（2回目以降の保存でUPDATEになる）
-        if (!initialData && !savedProjectId) {
+        
+        if (wasNewCreation) {
           setShowSuccessModal(true);
         } else {
           alert('保存しました！');

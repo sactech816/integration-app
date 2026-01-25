@@ -412,10 +412,22 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
       return;
     }
 
+    // 既存IDの判定（savedIdまたはinitialData.id）
+    const existingId = savedId || initialData?.id;
+    
+    // 編集にはログインが必要
+    if (existingId && !user) {
+      if (confirm("編集・更新にはログインが必要です。ログイン画面を開きますか？")) {
+        setShowAuth?.(true);
+      }
+      return;
+    }
+
     setIsSaving(true);
 
     try {
-      const saveData = {
+      // UPDATE用のデータ（user_idは含めない）
+      const updateData = {
         title: form.title,
         description: form.description,
         questions: form.questions,
@@ -425,28 +437,33 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
         settings: form.settings,
         show_in_portal: form.settings?.showInPortal || false,
         show_results_after_submission: form.show_results_after_submission || false,
-        user_id: user?.id || null,
       };
 
       let result;
 
-      if (savedId) {
-        // 更新
+      if (existingId) {
+        // 更新（user_idは変更しない）
         const { data, error } = await supabase
           .from("surveys")
-          .update(saveData)
-          .eq("id", savedId)
+          .update(updateData)
+          .eq("id", existingId)
           .select()
           .single();
 
         if (error) throw error;
         result = data;
       } else {
-        // 新規作成
+        // 新規作成（slugとuser_idを追加）
         const newSlug = generateSlug();
+        const insertData = {
+          ...updateData,
+          slug: newSlug,
+          user_id: user?.id || null, // INSERT時のみuser_idを設定
+        };
+        
         const { data, error } = await supabase
           .from("surveys")
-          .insert({ ...saveData, slug: newSlug })
+          .insert(insertData)
           .select()
           .single();
 
@@ -455,10 +472,12 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
       }
 
       if (result) {
+        const wasNewCreation = !existingId; // 保存前の状態で判定
+        
         setSavedId(result.id);
         setSavedSlug(result.slug);
 
-        if (!initialData?.id && !savedId) {
+        if (wasNewCreation) {
           setShowSuccessModal(true);
         } else {
           alert("保存しました！");
