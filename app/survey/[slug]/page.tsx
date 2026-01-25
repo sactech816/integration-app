@@ -4,6 +4,10 @@ import { Survey } from "@/lib/types";
 import SurveyPlayer from "@/components/survey/SurveyPlayer";
 import { generateBreadcrumbSchema } from "@/components/shared/Breadcrumb";
 
+// 動的レンダリングを強制（常に最新のデータを取得）
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // サーバーサイドでSupabaseクライアントを作成
 function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

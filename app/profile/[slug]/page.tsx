@@ -3,6 +3,10 @@ import { Metadata } from 'next';
 import ProfileViewer from '@/components/profile/ProfileViewer';
 import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
 
+// 動的レンダリングを強制（常に最新のデータを取得）
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
