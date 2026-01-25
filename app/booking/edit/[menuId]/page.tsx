@@ -243,6 +243,7 @@ export default function EditBookingMenuPage() {
           existingSlots={slots}
           editKey={editKey}
           onUpdate={handleUpdate}
+          setShowAuth={setShowAuth}
         />
       </main>
 

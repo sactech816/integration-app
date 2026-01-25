@@ -504,6 +504,13 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
             let result;
             
             if (existingId) {
+                // 編集にはログインが必要
+                if (!user) {
+                    if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
+                        setShowAuth?.(true);
+                    }
+                    return;
+                }
                 // 更新
                 const updateData: any = { ...saveData };
                 if (regenerateSlug) {

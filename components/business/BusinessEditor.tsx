@@ -688,6 +688,13 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       // 既存プロジェクトの更新（initialDataまたは保存済みIDがある場合）
       const existingId = initialData?.id || savedProjectId;
       if (existingId) {
+        // 編集にはログインが必要
+        if (!user) {
+          if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
+            setShowAuth?.(true);
+          }
+          return;
+        }
         result = await supabase
           .from('business_projects')
           .update(payload)

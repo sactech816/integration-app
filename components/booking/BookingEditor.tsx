@@ -41,6 +41,8 @@ interface BookingEditorProps {
     newSlots: LocalSlot[],
     deletedSlotIds: string[]
   ) => Promise<{ success: boolean; error?: string }>;
+  // ログインモーダル表示用
+  setShowAuth?: (show: boolean) => void;
 }
 
 type CalendarView = 'week' | 'month';
@@ -53,6 +55,7 @@ export default function BookingEditor({
   existingSlots = [],
   editKey,
   onUpdate,
+  setShowAuth,
 }: BookingEditorProps) {
   const router = useRouter();
   
@@ -216,6 +219,14 @@ export default function BookingEditor({
   // 更新処理（編集モード）
   const handleUpdate = async () => {
     if (!onUpdate) return;
+    
+    // 編集にはログインが必要（編集キーがない場合）
+    if (!userId && !editKey) {
+      if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
+        setShowAuth?.(true);
+      }
+      return;
+    }
     
     if (!formData.title.trim()) {
       setError('タイトルを入力してください');

@@ -168,6 +168,7 @@ export default function NewBookingMenuPage() {
         <BookingEditor 
           userId={user?.id}
           onSave={handleSave}
+          setShowAuth={setShowAuth}
         />
       </main>
 

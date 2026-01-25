@@ -126,6 +126,7 @@ function EditorContent() {
         onBack={() => router.push("/dashboard?view=survey")}
         initialData={survey || undefined}
         user={user}
+        setShowAuth={setShowAuth}
       />
     </div>
   );

@@ -247,9 +247,10 @@ interface SurveyEditorProps {
   initialData?: Partial<Survey>;
   user?: { id: string; email?: string } | null;
   templateId?: keyof typeof SURVEY_TEMPLATES;
+  setShowAuth?: (show: boolean) => void;
 }
 
-export default function SurveyEditor({ onBack, initialData, user, templateId }: SurveyEditorProps) {
+export default function SurveyEditor({ onBack, initialData, user, templateId, setShowAuth }: SurveyEditorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState<number | null>(initialData?.id || null);
   const [savedSlug, setSavedSlug] = useState<string | null>(initialData?.slug || null);
@@ -429,19 +430,30 @@ export default function SurveyEditor({ onBack, initialData, user, templateId }: 
 
       let result;
 
-      if (savedId) {
+      // 編集の場合（initialDataがある = ダッシュボードから来た、またはsavedIdがある = 一度保存済み）
+      const isEditing = initialData?.id || savedId;
+
+      if (isEditing) {
+        // 編集にはログインが必要
+        if (!user) {
+          setIsSaving(false);
+          if (confirm("編集・更新にはログインが必要です。ログイン画面を開きますか？")) {
+            setShowAuth?.(true);
+          }
+          return;
+        }
         // 更新
         const { data, error } = await supabase
           .from("surveys")
           .update(saveData)
-          .eq("id", savedId)
+          .eq("id", savedId || initialData?.id)
           .select()
           .single();
 
         if (error) throw error;
         result = data;
       } else {
-        // 新規作成
+        // 新規作成（未ログインでも可能）
         const newSlug = generateSlug();
         const { data, error } = await supabase
           .from("surveys")
