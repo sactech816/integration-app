@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -29,7 +29,8 @@ import {
   BookOpen,
   ClipboardList,
   Gamepad2,
-  Calendar
+  Calendar,
+  Monitor
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -52,6 +53,19 @@ const Header: React.FC<HeaderProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isServiceMenuOpen, setIsServiceMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  // ESCキーでメニューを閉じる
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsMenuOpen(false);
+        setIsServiceMenuOpen(false);
+        setIsUserMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
 
   const handleNav = (page: string) => {
     setIsMenuOpen(false);
@@ -123,13 +137,16 @@ const Header: React.FC<HeaderProps> = ({
         {/* 右側: ナビゲーション + アクション */}
         <div className="flex items-center gap-3">
           {/* PC版ナビゲーション */}
-          <nav className="hidden lg:flex items-center gap-4 mr-4">
-            {/* 作成ドロップダウン */}
-            <div className="relative">
-                <button 
-                  onClick={() => setIsServiceMenuOpen(!isServiceMenuOpen)}
-                  className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-orange-600 transition-colors"
-                >
+          <nav className="hidden lg:flex items-center gap-1 mr-4">
+            {/* 新規作成ドロップダウン */}
+            <div 
+              className="relative"
+              onMouseEnter={() => setIsServiceMenuOpen(true)}
+              onMouseLeave={() => setIsServiceMenuOpen(false)}
+            >
+              <button 
+                className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg px-3 py-2 transition-all"
+              >
                 <PlusCircle size={18} />
                 <span>新規作成</span>
                 <ChevronDown size={14} className={`transition-transform ${isServiceMenuOpen ? 'rotate-180' : ''}`} />
@@ -137,11 +154,7 @@ const Header: React.FC<HeaderProps> = ({
               
               {isServiceMenuOpen && (
                 <>
-                  <div 
-                    className="fixed inset-0 z-[110]" 
-                    onClick={() => setIsServiceMenuOpen(false)}
-                  />
-                  <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[120] animate-fade-in">
+                  <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[120] animate-fade-in">
                     {services.map((service) => (
                       <button
                         key={service.id}
@@ -219,44 +232,47 @@ const Header: React.FC<HeaderProps> = ({
             </div>
 
             <button 
-              onClick={() => handleNav('portal')} 
-              className="flex items-center gap-1.5 text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors"
+              onClick={() => handleNav('kindle/lp')} 
+              className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-amber-600 hover:bg-amber-50 rounded-lg px-3 py-2 transition-all"
             >
-              <LayoutGrid size={16} />
-              <span>ポータル</span>
+              <BookOpen size={16} />
+              <span>Kindle出版</span>
             </button>
 
             <button 
-              onClick={() => handleNav('kindle/lp')} 
-              className="flex items-center gap-1.5 text-sm font-semibold text-amber-600 hover:text-amber-700 transition-colors"
+              onClick={() => handleNav('demos')} 
+              className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg px-3 py-2 transition-all"
             >
-              <BookOpen size={16} />
-              <span>📚 Kindle出版</span>
+              <Monitor size={16} />
+              <span>デモ一覧</span>
+            </button>
+
+            <button 
+              onClick={() => handleNav('portal')} 
+              className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg px-3 py-2 transition-all"
+            >
+              <LayoutGrid size={16} />
+              <span>作品集</span>
             </button>
 
             <button 
               onClick={() => handleNav('announcements')} 
-              className="flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-orange-600 transition-colors"
+              className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg px-3 py-2 transition-all"
             >
               <Bell size={16} />
               <span>お知らせ</span>
-            </button>
-
-            <button 
-              onClick={() => handleNav('donation')} 
-              className="flex items-center gap-1.5 text-sm font-semibold text-rose-600 hover:text-rose-700 transition-colors"
-            >
-              <Heart size={16} />
-              <span>❤️ 開発支援</span>
             </button>
           </nav>
 
           {/* PC版ユーザーアクション */}
           <div className="hidden lg:flex items-center gap-3">
             {user ? (
-              <div className="relative">
+              <div 
+                className="relative"
+                onMouseEnter={() => setIsUserMenuOpen(true)}
+                onMouseLeave={() => setIsUserMenuOpen(false)}
+              >
                 <button 
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center gap-2 bg-orange-50 text-orange-700 px-4 py-2 rounded-full font-semibold hover:bg-orange-100 transition-colors"
                 >
                   <LayoutDashboard size={18} />
@@ -265,45 +281,39 @@ const Header: React.FC<HeaderProps> = ({
                 </button>
 
                 {isUserMenuOpen && (
-                  <>
-                    <div 
-                      className="fixed inset-0 z-[110]" 
-                      onClick={() => setIsUserMenuOpen(false)}
-                    />
-                    <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[120] animate-fade-in">
-                      {/* メールアドレス表示 */}
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-xs text-gray-500">ログイン中</p>
-                        <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
-                      </div>
-
-                      <button
-                        onClick={() => handleNav('dashboard')}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <LayoutDashboard size={18} className="text-gray-500" />
-                        <span className="font-medium text-gray-700">マイページ</span>
-                      </button>
-
-                      <button
-                        onClick={() => { setIsUserMenuOpen(false); router.push('/survey'); }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <ClipboardList size={18} className="text-teal-500" />
-                        <span className="font-medium text-gray-700">アンケート（投票）管理</span>
-                      </button>
-
-                      <div className="border-t border-gray-100 mt-2 pt-2">
-                        <button
-                          onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-red-50 transition-colors"
-                        >
-                          <LogOut size={18} className="text-red-500" />
-                          <span className="font-medium text-red-600">ログアウト</span>
-                        </button>
-                      </div>
+                  <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[120] animate-fade-in">
+                    {/* メールアドレス表示 */}
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-xs text-gray-500">ログイン中</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
                     </div>
-                  </>
+
+                    <button
+                      onClick={() => handleNav('dashboard')}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                    >
+                      <LayoutDashboard size={18} className="text-gray-500" />
+                      <span className="font-medium text-gray-700">マイページ</span>
+                    </button>
+
+                    <button
+                      onClick={() => { setIsUserMenuOpen(false); router.push('/survey'); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                    >
+                      <ClipboardList size={18} className="text-teal-500" />
+                      <span className="font-medium text-gray-700">アンケート（投票）管理</span>
+                    </button>
+
+                    <div className="border-t border-gray-100 mt-2 pt-2">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut size={18} className="text-red-500" />
+                        <span className="font-medium text-red-600">ログアウト</span>
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             ) : (
@@ -331,261 +341,318 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* メニュー - headerの外に配置してスタッキングコンテキストの問題を回避 */}
       {isMenuOpen && (
-        <div className="fixed inset-0 top-16 bg-white z-[200] overflow-y-auto animate-fade-in">
-          <div className="p-6 space-y-6">
-            {/* 作成セクション */}
-            <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">新規作成</p>
-              <div className="grid grid-cols-1 gap-2">
-                {services.map((service) => (
+        <>
+          {/* オーバーレイ：クリックでメニューを閉じる */}
+          <div 
+            className="fixed inset-0 top-16 bg-black/20 backdrop-blur-sm z-[190]"
+            onClick={() => setIsMenuOpen(false)}
+          />
+          
+          {/* メニューコンテンツ */}
+          <div className="fixed inset-0 top-16 left-0 right-0 bottom-0 bg-white z-[200] overflow-y-auto animate-fade-in">
+            <div className="p-6 space-y-6">
+              {/* 作成セクション */}
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">新規作成</p>
+                <div className="grid grid-cols-1 gap-2">
+                  {services.map((service) => (
+                    <button
+                      key={service.id}
+                      onClick={() => handleCreate(service.id)}
+                      className={`flex items-center gap-3 p-4 rounded-xl ${service.bg} transition-all hover:scale-[1.02]`}
+                    >
+                      <service.icon size={24} className={service.color} />
+                      <div className="text-left">
+                        <div className={`font-bold ${service.color}`}>{service.label}</div>
+                        <div className="text-xs text-gray-500">新規作成</div>
+                      </div>
+                    </button>
+                  ))}
+                  {/* 予約・日程調整 */}
                   <button
-                    key={service.id}
-                    onClick={() => handleCreate(service.id)}
-                    className={`flex items-center gap-3 p-4 rounded-xl ${service.bg} transition-all hover:scale-[1.02]`}
+                    onClick={() => { setIsMenuOpen(false); router.push('/booking/new'); }}
+                    className="flex items-center gap-3 p-4 rounded-xl bg-blue-50 transition-all hover:scale-[1.02]"
                   >
-                    <service.icon size={24} className={service.color} />
+                    <Calendar size={24} className="text-blue-600" />
                     <div className="text-left">
-                      <div className={`font-bold ${service.color}`}>{service.label}</div>
+                      <div className="font-bold text-blue-600">予約・日程調整</div>
                       <div className="text-xs text-gray-500">新規作成</div>
                     </div>
                   </button>
-                ))}
-                {/* 予約・日程調整 */}
-                <button
-                  onClick={() => { setIsMenuOpen(false); router.push('/booking/new'); }}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-blue-50 transition-all hover:scale-[1.02]"
-                >
-                  <Calendar size={24} className="text-blue-600" />
-                  <div className="text-left">
-                    <div className="font-bold text-blue-600">予約・日程調整</div>
-                    <div className="text-xs text-gray-500">新規作成</div>
-                  </div>
-                </button>
-                {/* アンケート */}
-                <button
-                  onClick={() => { setIsMenuOpen(false); router.push('/survey/new'); }}
-                  className={`flex items-center gap-3 p-4 rounded-xl ${surveyService.bg} transition-all hover:scale-[1.02]`}
-                >
-                  <surveyService.icon size={24} className={surveyService.color} />
-                  <div className="text-left">
-                    <div className={`font-bold ${surveyService.color}`}>{surveyService.label}</div>
-                    <div className="text-xs text-gray-500">新規作成</div>
-                  </div>
-                </button>
-                {/* ゲーミフィケーション */}
-                <button
-                  onClick={() => { setIsMenuOpen(false); router.push('/gamification/new'); }}
-                  className={`flex items-center gap-3 p-4 rounded-xl ${gamificationService.bg} transition-all hover:scale-[1.02]`}
-                >
-                  <gamificationService.icon size={24} className={gamificationService.color} />
-                  <div className="text-left">
-                    <div className={`font-bold ${gamificationService.color}`}>{gamificationService.label}</div>
-                    <div className="text-xs text-gray-500">ガチャ・スタンプラリー等</div>
-                  </div>
-                </button>
-              </div>
-              {!user && (
-                <div className="mt-3 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                  <p className="text-xs text-gray-600 mb-3 flex items-center gap-1 text-left">
-                    <Sparkles size={12} className="text-orange-500" />
-                    ログインすると便利な機能が使えます
-                  </p>
+                  {/* アンケート */}
                   <button
-                    onClick={() => {
-                      setShowAuth(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full bg-gray-900 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-800 transition-colors text-sm"
+                    onClick={() => { setIsMenuOpen(false); router.push('/survey/new'); }}
+                    className={`flex items-center gap-3 p-4 rounded-xl ${surveyService.bg} transition-all hover:scale-[1.02]`}
                   >
+                    <surveyService.icon size={24} className={surveyService.color} />
+                    <div className="text-left">
+                      <div className={`font-bold ${surveyService.color}`}>{surveyService.label}</div>
+                      <div className="text-xs text-gray-500">新規作成</div>
+                    </div>
+                  </button>
+                  {/* ゲーミフィケーション */}
+                  <button
+                    onClick={() => { setIsMenuOpen(false); router.push('/gamification/new'); }}
+                    className={`flex items-center gap-3 p-4 rounded-xl ${gamificationService.bg} transition-all hover:scale-[1.02]`}
+                  >
+                    <gamificationService.icon size={24} className={gamificationService.color} />
+                    <div className="text-left">
+                      <div className={`font-bold ${gamificationService.color}`}>{gamificationService.label}</div>
+                      <div className="text-xs text-gray-500">ガチャ・スタンプラリー等</div>
+                    </div>
+                  </button>
+                </div>
+                {!user && (
+                  <div className="mt-3 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                    <p className="text-xs text-gray-600 mb-3 flex items-center gap-1 text-left">
+                      <Sparkles size={12} className="text-orange-500" />
+                      ログインすると便利な機能が使えます
+                    </p>
+                    <button
+                      onClick={() => {
+                        setShowAuth(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full bg-gray-900 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-800 transition-colors text-sm"
+                    >
+                      ログイン / 新規登録
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* ナビゲーション */}
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">メニュー</p>
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => handleNav('/')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <Home size={20} className="text-gray-500" />
+                    <span className="font-medium text-gray-700">トップページ</span>
+                  </button>
+                  <button 
+                    onClick={() => handleNav('portal')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 transition-colors"
+                  >
+                    <LayoutGrid size={20} className="text-purple-600" />
+                    <div className="text-left">
+                      <span className="font-medium text-purple-700">作品集（ポータル）</span>
+                      <p className="text-xs text-gray-500">みんなの作品を見る</p>
+                    </div>
+                  </button>
+                  <button 
+                    onClick={() => handleNav('demos')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 transition-colors"
+                  >
+                    <Monitor size={20} className="text-indigo-600" />
+                    <div className="text-left">
+                      <span className="font-medium text-indigo-700">デモ一覧</span>
+                      <p className="text-xs text-gray-500">テンプレートを見る</p>
+                    </div>
+                  </button>
+                  <button 
+                    onClick={() => handleNav('kindle/lp')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 transition-colors"
+                  >
+                    <BookOpen size={20} className="text-amber-600" />
+                    <div className="text-left">
+                      <span className="font-medium text-amber-700">Kindle出版</span>
+                      <p className="text-xs text-gray-500">AIでKindle本を執筆</p>
+                    </div>
+                  </button>
+                  <button 
+                    onClick={() => handleNav('announcements')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <Bell size={20} className="text-gray-500" />
+                    <span className="font-medium text-gray-700">お知らせ</span>
+                  </button>
+                  <button 
+                    onClick={() => handleNav('howto')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <FileText size={20} className="text-gray-500" />
+                    <span className="font-medium text-gray-700">使い方・機能一覧</span>
+                  </button>
+                  <button 
+                    onClick={() => handleNav('tools')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <LayoutGrid size={20} className="text-gray-500" />
+                    <span className="font-medium text-gray-700">ツール一覧</span>
+                  </button>
+                  <button 
+                    onClick={() => handleNav('sitemap-html')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <FileText size={20} className="text-gray-500" />
+                    <span className="font-medium text-gray-700">サイトマップ</span>
+                  </button>
+                  <button 
+                    onClick={() => handleNav('faq')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <HelpCircle size={20} className="text-gray-500" />
+                    <span className="font-medium text-gray-700">よくある質問</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 集客ノウハウ */}
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <TrendingUp size={12} className="text-orange-500" />
+                  集客ノウハウ
+                </p>
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => handleNav('effective-use')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100 transition-colors"
+                  >
+                    <Lightbulb size={20} className="text-yellow-500" />
+                    <div className="text-left">
+                      <span className="font-medium text-gray-700">効果的な活用法9選</span>
+                      <p className="text-xs text-gray-500">集客効果を最大化するヒント</p>
+                    </div>
+                  </button>
+                  <button 
+                    onClick={() => handleNav('selling-content')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 transition-colors"
+                  >
+                    <TrendingUp size={20} className="text-green-500" />
+                    <div className="text-left">
+                      <span className="font-medium text-gray-700">売れるコンテンツの作り方</span>
+                      <p className="text-xs text-gray-500">心理トリガーを押さえた鉄板ロジック</p>
+                    </div>
+                  </button>
+                  <button 
+                    onClick={() => handleNav('gamification/effective-use')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 transition-colors"
+                  >
+                    <Gamepad2 size={20} className="text-purple-500" />
+                    <div className="text-left">
+                      <span className="font-medium text-gray-700">ゲーミフィケーション活用法</span>
+                      <p className="text-xs text-gray-500">エンゲージメントを高める</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Kindleコンテンツ */}
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <BookOpen size={12} className="text-amber-500" />
+                  Kindleコンテンツ
+                </p>
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => handleNav('kindle/lp')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <BookOpen size={20} className="text-amber-500" />
+                    <span className="font-medium text-gray-700">Kindle出版LP</span>
+                  </button>
+                  <button 
+                    onClick={() => handleNav('kindle/agency')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <Building2 size={20} className="text-blue-500" />
+                    <span className="font-medium text-gray-700">代理店パートナー募集</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 開発支援・サポート */}
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">応援・サポート</p>
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => handleNav('donation')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-rose-50 to-pink-50 hover:from-rose-100 hover:to-pink-100 transition-colors"
+                  >
+                    <Heart size={20} className="text-rose-500" />
+                    <div className="text-left">
+                      <span className="font-medium text-rose-700">❤️ 開発支援・サポート</span>
+                      <p className="text-xs text-gray-500">サービスの運営を応援する</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* サポート */}
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">サポート・規約</p>
+                <div className="space-y-1">
+                  <button 
+                    onClick={() => handleNav('contact')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <Mail size={20} className="text-gray-500" />
+                    <span className="font-medium text-gray-700">お問い合わせ</span>
+                  </button>
+                  <button 
+                    onClick={() => handleNav('legal')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                  >
+                    <Scale size={18} className="text-gray-400" />
+                    <span className="text-gray-600">特定商取引法に基づく表記</span>
+                  </button>
+                  <button 
+                    onClick={() => handleNav('privacy')} 
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                  >
+                    <Shield size={18} className="text-gray-400" />
+                    <span className="text-gray-600">プライバシーポリシー</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* ユーザーアクション */}
+              <div className="pt-4 border-t border-gray-100">
+                {user ? (
+                  <div className="space-y-2">
+                    {/* メールアドレス表示 */}
+                    <div className="px-4 py-2 bg-gray-50 rounded-xl mb-3">
+                      <p className="text-xs text-gray-500">ログイン中</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
+                    </div>
+                  <button 
+                    onClick={() => handleNav('dashboard')} 
+                    className="w-full flex items-center justify-center gap-2 bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition-colors"
+                  >
+                      <LayoutDashboard size={20} />
+                      マイページ
+                    </button>
+                    <button 
+                      onClick={() => { setIsMenuOpen(false); router.push('/survey'); }}
+                      className="w-full flex items-center justify-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 py-3 rounded-xl font-bold hover:bg-teal-100 transition-colors"
+                    >
+                      <ClipboardList size={20} />
+                      アンケート（投票）管理
+                    </button>
+                    <button 
+                      onClick={handleLogout} 
+                      className="w-full flex items-center justify-center gap-2 border border-red-200 text-red-600 py-3 rounded-xl font-medium hover:bg-red-50 transition-colors"
+                    >
+                      <LogOut size={20} />
+                      ログアウト
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => { setShowAuth(true); setIsMenuOpen(false); }} 
+                    className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors"
+                  >
+                    <User size={20} />
                     ログイン / 新規登録
                   </button>
-                </div>
-              )}
-            </div>
-
-            {/* ナビゲーション */}
-            <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">メニュー</p>
-              <div className="space-y-1">
-                <button 
-                  onClick={() => handleNav('/')} 
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <Home size={20} className="text-gray-500" />
-                  <span className="font-medium text-gray-700">トップページ</span>
-                </button>
-                <button 
-                  onClick={() => handleNav('portal')} 
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 transition-colors"
-                >
-                  <LayoutGrid size={20} className="text-purple-600" />
-                  <div className="text-left">
-                    <span className="font-medium text-purple-700">ポータル</span>
-                    <p className="text-xs text-gray-500">みんなの作品を見る</p>
-                  </div>
-                </button>
-                <button 
-                  onClick={() => handleNav('kindle/lp')} 
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 transition-colors"
-                >
-                  <BookOpen size={20} className="text-amber-600" />
-                  <div className="text-left">
-                    <span className="font-medium text-amber-700">📚 Kindle出版</span>
-                    <p className="text-xs text-gray-500">AIでKindle本を執筆</p>
-                  </div>
-                </button>
-                <button 
-                  onClick={() => handleNav('booking')} 
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition-colors"
-                >
-                  <Calendar size={20} className="text-blue-600" />
-                  <div className="text-left">
-                    <span className="font-medium text-blue-700">予約・日程調整</span>
-                    <p className="text-xs text-gray-500">カレンダー形式で予約を受け付け</p>
-                  </div>
-                </button>
-                <button 
-                  onClick={() => handleNav('announcements')} 
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <Bell size={20} className="text-gray-500" />
-                  <span className="font-medium text-gray-700">お知らせ</span>
-                </button>
-                <button 
-                  onClick={() => handleNav('howto')} 
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <FileText size={20} className="text-gray-500" />
-                  <span className="font-medium text-gray-700">使い方・機能一覧</span>
-                </button>
-                <button 
-                  onClick={() => handleNav('faq')} 
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <HelpCircle size={20} className="text-gray-500" />
-                  <span className="font-medium text-gray-700">よくある質問</span>
-                </button>
+                )}
               </div>
-            </div>
-
-            {/* 集客ノウハウ */}
-            <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <TrendingUp size={12} className="text-orange-500" />
-                集客ノウハウ
-              </p>
-              <div className="space-y-1">
-                <button 
-                  onClick={() => handleNav('effective-use')} 
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100 transition-colors"
-                >
-                  <Lightbulb size={20} className="text-yellow-500" />
-                  <div className="text-left">
-                    <span className="font-medium text-gray-700">効果的な活用法9選</span>
-                    <p className="text-xs text-gray-500">集客効果を最大化するヒント</p>
-                  </div>
-                </button>
-                <button 
-                  onClick={() => handleNav('selling-content')} 
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 transition-colors"
-                >
-                  <TrendingUp size={20} className="text-green-500" />
-                  <div className="text-left">
-                    <span className="font-medium text-gray-700">売れるコンテンツの作り方</span>
-                    <p className="text-xs text-gray-500">心理トリガーを押さえた鉄板ロジック</p>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            {/* 開発支援・サポート */}
-            <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">応援・サポート</p>
-              <div className="space-y-1">
-                <button 
-                  onClick={() => handleNav('donation')} 
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-rose-50 to-pink-50 hover:from-rose-100 hover:to-pink-100 transition-colors"
-                >
-                  <Heart size={20} className="text-rose-500" />
-                  <div className="text-left">
-                    <span className="font-medium text-rose-700">❤️ 開発支援・サポート</span>
-                    <p className="text-xs text-gray-500">サービスの運営を応援する</p>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            {/* サポート */}
-            <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">サポート・規約</p>
-              <div className="space-y-1">
-                <button 
-                  onClick={() => handleNav('contact')} 
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <Mail size={20} className="text-gray-500" />
-                  <span className="font-medium text-gray-700">お問い合わせ</span>
-                </button>
-                <button 
-                  onClick={() => handleNav('legal')} 
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors text-sm"
-                >
-                  <Scale size={18} className="text-gray-400" />
-                  <span className="text-gray-600">特定商取引法に基づく表記</span>
-                </button>
-                <button 
-                  onClick={() => handleNav('privacy')} 
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors text-sm"
-                >
-                  <Shield size={18} className="text-gray-400" />
-                  <span className="text-gray-600">プライバシーポリシー</span>
-                </button>
-              </div>
-            </div>
-
-            {/* ユーザーアクション */}
-            <div className="pt-4 border-t border-gray-100">
-              {user ? (
-                <div className="space-y-2">
-                  {/* メールアドレス表示 */}
-                  <div className="px-4 py-2 bg-gray-50 rounded-xl mb-3">
-                    <p className="text-xs text-gray-500">ログイン中</p>
-                    <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
-                  </div>
-                <button 
-                  onClick={() => handleNav('dashboard')} 
-                  className="w-full flex items-center justify-center gap-2 bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition-colors"
-                >
-                    <LayoutDashboard size={20} />
-                    マイページ
-                  </button>
-                  <button 
-                    onClick={() => { setIsMenuOpen(false); router.push('/survey'); }}
-                    className="w-full flex items-center justify-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 py-3 rounded-xl font-bold hover:bg-teal-100 transition-colors"
-                  >
-                    <ClipboardList size={20} />
-                    アンケート（投票）管理
-                  </button>
-                  <button 
-                    onClick={handleLogout} 
-                    className="w-full flex items-center justify-center gap-2 border border-red-200 text-red-600 py-3 rounded-xl font-medium hover:bg-red-50 transition-colors"
-                  >
-                    <LogOut size={20} />
-                    ログアウト
-                  </button>
-                </div>
-              ) : (
-                <button 
-                  onClick={() => { setShowAuth(true); setIsMenuOpen(false); }} 
-                  className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors"
-                >
-                  <User size={20} />
-                  ログイン / 新規登録
-                </button>
-              )}
             </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );

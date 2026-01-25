@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Magnet, Sparkles, Building2, UserCircle, TrendingUp, Lightbulb, Heart, Calendar, ClipboardList } from 'lucide-react';
+import { Magnet, Sparkles, Building2, UserCircle, TrendingUp, Lightbulb, Heart, Calendar, ClipboardList, Gamepad2, BookOpen, Monitor } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
 interface FooterProps {
@@ -33,7 +33,7 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
   return (
     <footer className="bg-gray-900 text-gray-400 py-16 border-t border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12">
           {/* ブランド */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
@@ -52,18 +52,36 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
           {/* サービス */}
           <div>
             <h3 className="text-white font-bold mb-4 text-sm uppercase tracking-wider">サービス</h3>
-            <ul className="space-y-3">
+            <ul className="space-y-3 text-sm">
               {services.map((service) => (
                 <li key={service.id}>
                   <button 
                     onClick={() => handleCreate(service.id)} 
-                    className="flex items-center gap-2 text-sm hover:text-white transition-colors group"
+                    className="flex items-center gap-2 hover:text-white transition-colors group"
                   >
                     <service.icon size={16} className="opacity-60 group-hover:opacity-100" />
                     <span>{service.label}を作成</span>
                   </button>
                 </li>
               ))}
+              <li>
+                <Link href="/booking/new" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Calendar size={16} className="opacity-60 group-hover:opacity-100" />
+                  予約・日程調整
+                </Link>
+              </li>
+              <li>
+                <Link href="/survey/new" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <ClipboardList size={16} className="opacity-60 group-hover:opacity-100" />
+                  アンケート（投票）
+                </Link>
+              </li>
+              <li>
+                <Link href="/gamification/new" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Gamepad2 size={16} className="opacity-60 group-hover:opacity-100" />
+                  ゲーミフィケーション
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -77,20 +95,14 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
                 </Link>
               </li>
               <li>
-                <Link href="/booking" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <Calendar size={14} className="text-blue-400 opacity-60 group-hover:opacity-100" />
-                  予約・日程調整
-                </Link>
-              </li>
-              <li>
-                <Link href="/survey" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <ClipboardList size={14} className="text-teal-400 opacity-60 group-hover:opacity-100" />
-                  アンケート（投票）
-                </Link>
-              </li>
-              <li>
                 <Link href="/portal" className="hover:text-white transition-colors">
-                  ポータル（作品一覧）
+                  作品集（ポータル）
+                </Link>
+              </li>
+              <li>
+                <Link href="/demos" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Monitor size={14} className="opacity-60 group-hover:opacity-100" />
+                  デモ一覧
                 </Link>
               </li>
               <li>
@@ -116,6 +128,26 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
             </ul>
           </div>
 
+          {/* Kindle出版 */}
+          <div>
+            <h3 className="text-white font-bold mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
+              <BookOpen size={14} className="text-amber-400" />
+              Kindle出版
+            </h3>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link href="/kindle/lp" className="hover:text-white transition-colors">
+                  Kindle出版LP
+                </Link>
+              </li>
+              <li>
+                <Link href="/kindle/agency" className="hover:text-white transition-colors">
+                  代理店パートナー募集
+                </Link>
+              </li>
+            </ul>
+          </div>
+
           {/* 集客ノウハウ */}
           <div>
             <h3 className="text-white font-bold mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
@@ -135,6 +167,12 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
                   売れるコンテンツの作り方
                 </Link>
               </li>
+              <li>
+                <Link href="/gamification/effective-use" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Gamepad2 size={14} className="text-purple-500 opacity-60 group-hover:opacity-100" />
+                  ゲーミフィケーション活用法
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -145,7 +183,7 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
               <li>
                 <Link href="/donation" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Heart size={14} className="text-rose-500 opacity-80 group-hover:opacity-100" />
-                  ❤️ 開発支援・サポート
+                  開発支援・サポート
                 </Link>
               </li>
               <li>
