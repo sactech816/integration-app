@@ -658,18 +658,18 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   };
 
   const handleSave = async () => {
-    // Supabaseが設定されているか確認
-    if (!supabase) {
-      alert('データベース接続が設定されていません');
-      return;
-    }
-
-    // 既存プロジェクトの更新（initialDataまたは保存済みIDがある場合）
+    // 未ログインで編集しようとした場合はログインを促す
     const existingId = initialData?.id || savedProjectId;
-    
-    // 編集にはログインが必要（新規作成後の編集も含む）
     if (existingId && !user) {
       if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
+        setShowAuth?.(true);
+      }
+      return;
+    }
+    
+    // 未ログインで新規作成の場合はログインを促す
+    if (!existingId && !user) {
+      if (confirm('保存するにはログインが必要です。ログイン画面を開きますか？')) {
         setShowAuth?.(true);
       }
       return;
@@ -697,33 +697,23 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
 
       let result;
       if (existingId) {
-        // 更新（ログイン済みユーザーのみ）
-        console.log('Updating business project:', { existingId, userId: user?.id, payload });
         result = await supabase
-          .from('business_projects')
+          ?.from('business_projects')
           .update(payload)
           .eq('id', existingId)
           .select()
           .single();
-        console.log('Update result:', result);
       } else {
-        // 新規作成（未ログインでも保存可能）
-        console.log('Creating new business project:', { userId: user?.id, payload });
+        // 新規作成
         result = await supabase
-          .from('business_projects')
-          .insert({ ...payload, user_id: user?.id || null }) // ログイン済みの場合のみユーザーIDを設定
+          ?.from('business_projects')
+          .insert({ ...payload, user_id: user?.id }) // ログインユーザーのIDを設定
           .select()
           .single();
-        console.log('Insert result:', result);
       }
 
       if (result?.error) {
         console.error('Business LP save error:', result.error);
-        // PGRST116: 行が見つからない（RLSで弾かれた可能性）
-        if (result.error.code === 'PGRST116') {
-          alert('このプロジェクトを更新する権限がありません。');
-          return;
-        }
         throw result.error;
       }
 
@@ -736,10 +726,6 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
         } else {
           alert('保存しました！');
         }
-      } else {
-        // resultはあるがdataがない場合（更新対象が見つからなかった）
-        console.error('No data returned from save operation');
-        alert('更新対象が見つかりませんでした。ページを再読み込みしてください。');
       }
     } catch (error) {
       console.error('Save error:', error);

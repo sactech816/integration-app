@@ -412,17 +412,6 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
       return;
     }
 
-    // 編集の場合（initialDataがある = ダッシュボードから来た、またはsavedIdがある = 一度保存済み）
-    const isEditing = initialData?.id || savedId;
-
-    // 編集にはログインが必要（新規作成後の編集も含む）
-    if (isEditing && !user) {
-      if (confirm("編集・更新にはログインが必要です。ログイン画面を開きますか？")) {
-        setShowAuth?.(true);
-      }
-      return;
-    }
-
     setIsSaving(true);
 
     try {
@@ -441,19 +430,19 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
 
       let result;
 
-      if (isEditing) {
-        // 更新（ログイン済みユーザーのみ）
+      if (savedId) {
+        // 更新
         const { data, error } = await supabase
           .from("surveys")
           .update(saveData)
-          .eq("id", savedId || initialData?.id)
+          .eq("id", savedId)
           .select()
           .single();
 
         if (error) throw error;
         result = data;
       } else {
-        // 新規作成（未ログインでも可能）
+        // 新規作成
         const newSlug = generateSlug();
         const { data, error } = await supabase
           .from("surveys")

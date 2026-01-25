@@ -829,51 +829,24 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       return;
     }
 
-    // 編集の場合（initialDataがある = ダッシュボードから来た、またはsavedSlugがある = 一度保存済み）
-    const isEditing = initialData?.id || savedSlug;
-    
-    // 編集にはログインが必要（新規作成後の編集も含む）
-    if (isEditing && !user) {
-      if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
-        setShowAuth?.(true);
-      }
-      return;
-    }
-
     setIsSaving(true);
     try {
       let result;
       
-      if (isEditing) {
-        if (initialData?.id) {
-          // ダッシュボードから来た場合：既存のslugを維持して更新
-          const updatePayload = {
-            nickname: customSlug || null,
-            content: profile.content,
-            settings: profile.settings,
-          };
-          
-          result = await supabase
-            .from('profiles')
-            .update(updatePayload)
-            .eq('id', initialData.id)
-            .select()
-            .single();
-        } else {
-          // savedSlugがある場合：slugで更新
-          const updatePayload = {
-            nickname: customSlug || null,
-            content: profile.content,
-            settings: profile.settings,
-          };
-          
-          result = await supabase
-            .from('profiles')
-            .update(updatePayload)
-            .eq('slug', savedSlug)
-            .select()
-            .single();
-        }
+      if (initialData?.id) {
+        // 更新の場合：既存のslugを維持
+        const updatePayload = {
+          nickname: customSlug || null,
+          content: profile.content,
+          settings: profile.settings,
+        };
+        
+        result = await supabase
+          .from('profiles')
+          .update(updatePayload)
+          .eq('id', initialData.id)
+          .select()
+          .single();
       } else {
         // 新規作成の場合：ユニークなslugを生成（リトライ付き）
         let attempts = 0;
