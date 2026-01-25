@@ -621,51 +621,33 @@ export default function HomePageClientV2() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <div className="group">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative aspect-[3/4] mb-4 transition group-hover:-translate-y-2 duration-300">
-                {/* 画像を変更する場合:
-                  1. 以下のグラデーション部分を削除または非表示にする
-                  2. <img src="/path/to/image.jpg" alt="美容・サロン向けテンプレート" className="w-full h-full object-cover" /> を追加
-                */}
-                <div className="absolute inset-0 bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white/30">
-                  <Sparkles size={64} />
-                </div>
+                <img src="/lp/images/1.jpg" alt="カフェ＆ダイニング向けLP" className="w-full h-full object-cover" />
                 <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/70 to-transparent p-6 pt-12">
-                  <span className="text-xs font-bold text-white bg-pink-500 px-2 py-1 rounded">美容・サロン</span>
-                  <h4 className="text-white font-bold mt-2">予約機能付きLP</h4>
+                  <span className="text-xs font-bold text-white bg-emerald-500 px-2 py-1 rounded">飲食・カフェ</span>
+                  <h4 className="text-white font-bold mt-2">店舗紹介LP</h4>
                 </div>
               </div>
-              <p className="text-sm text-center text-gray-600 font-bold">スタイリッシュなサロン向け</p>
+              <p className="text-sm text-center text-gray-600 font-bold">おしゃれなカフェ・飲食店向け</p>
             </div>
             <div className="group">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative aspect-[3/4] mb-4 transition group-hover:-translate-y-2 duration-300">
-                {/* 画像を変更する場合:
-                  1. 以下のグラデーション部分を削除または非表示にする
-                  2. <img src="/path/to/image.jpg" alt="ビジネス・講師向けテンプレート" className="w-full h-full object-cover" /> を追加
-                */}
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-400 to-blue-500 flex items-center justify-center text-white/30">
-                  <UserCircle size={64} />
-                </div>
+                <img src="/lp/images/2.jpg" alt="デザイナー・クリエイター向けLP" className="w-full h-full object-cover" />
                 <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/70 to-transparent p-6 pt-12">
-                  <span className="text-xs font-bold text-white bg-indigo-500 px-2 py-1 rounded">ビジネス・講師</span>
-                  <h4 className="text-white font-bold mt-2">信頼感のあるプロフィール</h4>
+                  <span className="text-xs font-bold text-white bg-blue-500 px-2 py-1 rounded">ビジネス・講師</span>
+                  <h4 className="text-white font-bold mt-2">ポートフォリオLP</h4>
                 </div>
               </div>
-              <p className="text-sm text-center text-gray-600 font-bold">講師・コンサルタント向け</p>
+              <p className="text-sm text-center text-gray-600 font-bold">デザイナー・クリエイター向け</p>
             </div>
             <div className="group">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative aspect-[3/4] mb-4 transition group-hover:-translate-y-2 duration-300">
-                {/* 画像を変更する場合:
-                  1. 以下のグラデーション部分を削除または非表示にする
-                  2. <img src="/path/to/image.jpg" alt="飲食・エンタメ向けテンプレート" className="w-full h-full object-cover" /> を追加
-                */}
-                <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white/30">
-                  <Building2 size={64} />
-                </div>
+                <img src="/lp/images/3.jpg" alt="ビジネス課題診断クイズ" className="w-full h-full object-cover" />
                 <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/70 to-transparent p-6 pt-12">
-                  <span className="text-xs font-bold text-white bg-yellow-500 px-2 py-1 rounded">飲食・エンタメ</span>
-                  <h4 className="text-white font-bold mt-2">診断クイズ＆クーポン</h4>
+                  <span className="text-xs font-bold text-white bg-amber-600 px-2 py-1 rounded">診断クイズ</span>
+                  <h4 className="text-white font-bold mt-2">ビジネス課題診断</h4>
                 </div>
               </div>
-              <p className="text-sm text-center text-gray-600 font-bold">ポップな店舗紹介向け</p>
+              <p className="text-sm text-center text-gray-600 font-bold">集客・リード獲得向け</p>
             </div>
           </div>
           
