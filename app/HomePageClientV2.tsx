@@ -30,6 +30,7 @@ import {
   CreditCard,
   Crown,
   ExternalLink,
+  ArrowUp,
 } from 'lucide-react';
 
 interface PopularContent {
@@ -63,6 +64,9 @@ export default function HomePageClientV2() {
   // プロプランモーダル用のstate
   const [showProPlanModal, setShowProPlanModal] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  
+  // トップに戻るボタン用のstate
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -99,6 +103,22 @@ export default function HomePageClientV2() {
 
     init();
   }, []);
+
+  // スクロール監視（トップに戻るボタン表示用）
+  useEffect(() => {
+    const handleScroll = () => {
+      // 300px以上スクロールしたらボタンを表示
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // トップにスクロール
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleLogout = async () => {
     if (supabase) {
@@ -1525,6 +1545,17 @@ export default function HomePageClientV2() {
           </p>
         </div>
       </section>
+
+      {/* トップに戻るボタン */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-50 w-12 h-12 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
+          aria-label="トップに戻る"
+        >
+          <ArrowUp size={24} />
+        </button>
+      )}
 
        <Footer
         setPage={navigateTo}
