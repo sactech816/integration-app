@@ -517,12 +517,16 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                     updateData.slug = generateSlug();
                 }
                 
+                console.log('QuizEditor UPDATE:', { existingId, updateData });
+                
                 const { data, error } = await supabase
                     .from('quizzes')
                     .update(updateData)
                     .eq('id', existingId)
                     .select()
                     .single();
+                
+                console.log('QuizEditor UPDATE result:', { data, error });
                     
                 if (error) throw error;
                 result = data;
