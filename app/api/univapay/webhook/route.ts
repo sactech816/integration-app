@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getUnivaPayClient, UnivaPayWebhookEvent } from '@/lib/univapay';
 import { createClient } from '@supabase/supabase-js';
-import { recordAffiliateConversion } from '@/app/actions/affiliate';
+import { recordAffiliateConversion, getAffiliateServiceSetting } from '@/app/actions/affiliate';
 
 /**
  * UnivaPay Webhook エンドポイント
@@ -80,22 +80,33 @@ export async function POST(req: Request) {
           
           console.log(`✅ Subscription created for user ${userId}: ${id}`);
           
-          // アフィリエイト成約を記録
-          if (referralCode && service === 'kdl') {
+          // アフィリエイト成約を記録（KDLおよびメインサイト対応）
+          if (referralCode) {
             try {
-              const result = await recordAffiliateConversion(
-                referralCode,
-                service,
-                id,
-                userId,
-                planTier,
-                period,
-                amount || 0
-              );
-              if (result.success) {
-                console.log(`✅ Affiliate conversion recorded: ${result.conversionId}`);
+              // サービス設定から報酬率を取得
+              const serviceSetting = await getAffiliateServiceSetting(service);
+              const commissionRate = serviceSetting.data?.commission_rate || 20;
+              const isEnabled = serviceSetting.data?.enabled ?? true;
+
+              if (isEnabled) {
+                console.log(`📊 Affiliate service setting for ${service}: rate=${commissionRate}%, enabled=${isEnabled}`);
+                
+                const result = await recordAffiliateConversion(
+                  referralCode,
+                  service,
+                  id,
+                  userId,
+                  planTier,
+                  period,
+                  amount || 0
+                );
+                if (result.success) {
+                  console.log(`✅ Affiliate conversion recorded: ${result.conversionId}`);
+                } else {
+                  console.warn(`⚠️ Failed to record affiliate conversion: ${result.error}`);
+                }
               } else {
-                console.warn(`⚠️ Failed to record affiliate conversion: ${result.error}`);
+                console.log(`ℹ️ Affiliate is disabled for service: ${service}`);
               }
             } catch (affErr) {
               console.error('Affiliate conversion error:', affErr);

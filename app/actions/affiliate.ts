@@ -378,3 +378,324 @@ export async function markConversionPaid(
   }
 }
 
+// =====================================================
+// サービス別アフィリエイト設定
+// =====================================================
+
+// サービス設定の型定義
+export type AffiliateServiceSetting = {
+  id: string;
+  service_type: string;
+  display_name: string;
+  commission_rate: number;
+  signup_points: number;
+  enabled: boolean;
+  description: string | null;
+  landing_page: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+// 全サービス設定を取得
+export async function getAllAffiliateServiceSettings(): Promise<{
+  success: boolean;
+  data?: AffiliateServiceSetting[];
+  error?: string;
+}> {
+  try {
+    const { data, error } = await supabase
+      .from('affiliate_service_settings')
+      .select('*')
+      .order('service_type');
+
+    if (error) {
+      // テーブルがない場合はデフォルト値を返す
+      if (error.code === '42P01') {
+        return {
+          success: true,
+          data: [
+            {
+              id: 'default-main',
+              service_type: 'main',
+              display_name: 'メインサイト',
+              commission_rate: 20,
+              signup_points: 500,
+              enabled: true,
+              description: 'メインサイトのアフィリエイト',
+              landing_page: '/',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            {
+              id: 'default-kdl',
+              service_type: 'kdl',
+              display_name: 'Kindle執筆',
+              commission_rate: 20,
+              signup_points: 0,
+              enabled: true,
+              description: 'Kindle Direct Liteのアフィリエイト',
+              landing_page: '/kindle/lp',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ],
+        };
+      }
+      throw error;
+    }
+
+    return { success: true, data: data || [] };
+  } catch (error: any) {
+    console.error('Get all affiliate service settings error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// 特定サービスの設定を取得
+export async function getAffiliateServiceSetting(serviceType: string): Promise<{
+  success: boolean;
+  data?: AffiliateServiceSetting;
+  error?: string;
+}> {
+  try {
+    const { data, error } = await supabase
+      .from('affiliate_service_settings')
+      .select('*')
+      .eq('service_type', serviceType)
+      .single();
+
+    if (error) {
+      // テーブルがない場合やレコードがない場合はデフォルト値を返す
+      if (error.code === '42P01' || error.code === 'PGRST116') {
+        const defaults: Record<string, AffiliateServiceSetting> = {
+          main: {
+            id: 'default-main',
+            service_type: 'main',
+            display_name: 'メインサイト',
+            commission_rate: 20,
+            signup_points: 500,
+            enabled: true,
+            description: 'メインサイトのアフィリエイト',
+            landing_page: '/',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          kdl: {
+            id: 'default-kdl',
+            service_type: 'kdl',
+            display_name: 'Kindle執筆',
+            commission_rate: 20,
+            signup_points: 0,
+            enabled: true,
+            description: 'Kindle Direct Liteのアフィリエイト',
+            landing_page: '/kindle/lp',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        };
+        return { success: true, data: defaults[serviceType] };
+      }
+      throw error;
+    }
+
+    return { success: true, data };
+  } catch (error: any) {
+    console.error('Get affiliate service setting error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// サービス設定を更新（管理者用）
+export async function updateAffiliateServiceSetting(
+  serviceType: string,
+  updates: Partial<Pick<AffiliateServiceSetting, 'commission_rate' | 'signup_points' | 'enabled' | 'description'>>
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('affiliate_service_settings')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('service_type', serviceType);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Update affiliate service setting error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// 紹介登録時にアフィリエイターへポイント付与
+export async function grantAffiliateSignupPoints(
+  referralCode: string,
+  serviceType: string,
+  referredUserId: string
+): Promise<{
+  success: boolean;
+  pointsGranted?: number;
+  affiliateId?: string;
+  message?: string;
+}> {
+  try {
+    const { data, error } = await supabase.rpc('grant_affiliate_signup_points', {
+      p_referral_code: referralCode,
+      p_service_type: serviceType,
+      p_referred_user_id: referredUserId,
+    });
+
+    if (error) {
+      // RPC関数がない場合は手動で処理
+      if (error.code === '42883') {
+        // サービス設定を取得
+        const settingResult = await getAffiliateServiceSetting(serviceType);
+        if (!settingResult.success || !settingResult.data?.enabled || !settingResult.data?.signup_points) {
+          return { success: false, message: 'ポイント付与設定がありません' };
+        }
+
+        // アフィリエイターを取得
+        const { data: affiliate } = await supabase
+          .from('affiliates')
+          .select('id, user_id')
+          .eq('referral_code', referralCode)
+          .eq('status', 'active')
+          .single();
+
+        if (!affiliate) {
+          return { success: false, message: '有効なアフィリエイターが見つかりません' };
+        }
+
+        // 自分自身の紹介は無効
+        if (affiliate.user_id === referredUserId) {
+          return { success: false, message: '自分自身を紹介することはできません' };
+        }
+
+        const pointsToGrant = settingResult.data.signup_points;
+
+        // ポイントを付与
+        const { error: pointError } = await supabase
+          .from('user_point_balances')
+          .upsert({
+            user_id: affiliate.user_id,
+            balance: pointsToGrant,
+          }, {
+            onConflict: 'user_id',
+          });
+
+        if (pointError) {
+          // upsertが失敗した場合は既存のバランスに加算
+          await supabase.rpc('add_points', {
+            p_user_id: affiliate.user_id,
+            p_amount: pointsToGrant,
+          });
+        }
+
+        // ポイントログを記録
+        await supabase.from('point_logs').insert({
+          user_id: affiliate.user_id,
+          amount: pointsToGrant,
+          event_type: 'affiliate_signup',
+          description: 'アフィリエイト紹介による新規登録ボーナス',
+          metadata: {
+            referral_code: referralCode,
+            service_type: serviceType,
+            referred_user_id: referredUserId,
+          },
+        });
+
+        return {
+          success: true,
+          pointsGranted: pointsToGrant,
+          affiliateId: affiliate.id,
+          message: 'ポイントを付与しました',
+        };
+      }
+      throw error;
+    }
+
+    if (data && data.length > 0) {
+      const result = data[0];
+      return {
+        success: result.success,
+        pointsGranted: result.points_granted,
+        affiliateId: result.affiliate_id,
+        message: result.message,
+      };
+    }
+
+    return { success: false, message: '処理に失敗しました' };
+  } catch (error: any) {
+    console.error('Grant affiliate signup points error:', error);
+    return { success: false, message: error.message };
+  }
+}
+
+// サービス別の統計を取得
+export async function getAffiliateStatsByService(userId: string): Promise<{
+  success: boolean;
+  data?: Record<string, {
+    clicks: number;
+    conversions: number;
+    earnings: number;
+  }>;
+  error?: string;
+}> {
+  try {
+    // まずアフィリエイトIDを取得
+    const { data: affiliate, error: affiliateError } = await supabase
+      .from('affiliates')
+      .select('id')
+      .eq('user_id', userId)
+      .single();
+
+    if (affiliateError) {
+      if (affiliateError.code === 'PGRST116') {
+        return { success: true, data: {} };
+      }
+      throw affiliateError;
+    }
+
+    // クリック数をサービス別に集計
+    const { data: clicks } = await supabase
+      .from('affiliate_clicks')
+      .select('service_type')
+      .eq('affiliate_id', affiliate.id);
+
+    // 成約をサービス別に集計
+    const { data: conversions } = await supabase
+      .from('affiliate_conversions')
+      .select('service_type, commission_amount, status')
+      .eq('affiliate_id', affiliate.id)
+      .neq('status', 'cancelled');
+
+    // 集計
+    const stats: Record<string, { clicks: number; conversions: number; earnings: number }> = {};
+
+    clicks?.forEach((click) => {
+      const st = click.service_type || 'unknown';
+      if (!stats[st]) {
+        stats[st] = { clicks: 0, conversions: 0, earnings: 0 };
+      }
+      stats[st].clicks++;
+    });
+
+    conversions?.forEach((conv) => {
+      const st = conv.service_type || 'unknown';
+      if (!stats[st]) {
+        stats[st] = { clicks: 0, conversions: 0, earnings: 0 };
+      }
+      stats[st].conversions++;
+      if (conv.status === 'confirmed' || conv.status === 'paid') {
+        stats[st].earnings += parseFloat(conv.commission_amount as any) || 0;
+      }
+    });
+
+    return { success: true, data: stats };
+  } catch (error: any) {
+    console.error('Get affiliate stats by service error:', error);
+    return { success: false, error: error.message };
+  }
+}
+

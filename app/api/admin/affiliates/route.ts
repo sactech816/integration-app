@@ -23,6 +23,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 // サービスタイプラベル
 const SERVICE_LABELS: Record<string, string> = {
+  main: 'メインサイト',
   kdl: 'Kindle執筆',
   quiz: '診断クイズ',
   profile: 'プロフィールLP',
@@ -177,9 +178,115 @@ export async function GET(request: NextRequest) {
     // アクティブなアフィリエイター数
     const activeAffiliates = affiliates?.filter((a) => a.status === 'active').length || 0;
 
+    // サービス別統計を計算
+    const { data: allClicks } = await supabase
+      .from('affiliate_clicks')
+      .select('affiliate_id, service_type');
+
+    const { data: allConversions } = await supabase
+      .from('affiliate_conversions')
+      .select('affiliate_id, service_type, commission_amount, status')
+      .neq('status', 'cancelled');
+
+    // 全体のサービス別に集計
+    const serviceStatsMap: Record<string, { clicks: number; conversions: number; earnings: number }> = {};
+    
+    // 個人×サービス別に集計
+    const affiliateServiceStatsMap: Record<string, Record<string, { clicks: number; conversions: number; earnings: number }>> = {};
+    
+    allClicks?.forEach((click) => {
+      const st = click.service_type || 'unknown';
+      const affId = click.affiliate_id;
+      
+      // 全体統計
+      if (!serviceStatsMap[st]) {
+        serviceStatsMap[st] = { clicks: 0, conversions: 0, earnings: 0 };
+      }
+      serviceStatsMap[st].clicks++;
+      
+      // 個人別統計
+      if (affId) {
+        if (!affiliateServiceStatsMap[affId]) {
+          affiliateServiceStatsMap[affId] = {};
+        }
+        if (!affiliateServiceStatsMap[affId][st]) {
+          affiliateServiceStatsMap[affId][st] = { clicks: 0, conversions: 0, earnings: 0 };
+        }
+        affiliateServiceStatsMap[affId][st].clicks++;
+      }
+    });
+
+    allConversions?.forEach((conv) => {
+      const st = conv.service_type || 'unknown';
+      const affId = conv.affiliate_id;
+      
+      // 全体統計
+      if (!serviceStatsMap[st]) {
+        serviceStatsMap[st] = { clicks: 0, conversions: 0, earnings: 0 };
+      }
+      serviceStatsMap[st].conversions++;
+      if (conv.status === 'confirmed' || conv.status === 'paid') {
+        serviceStatsMap[st].earnings += parseFloat(conv.commission_amount as any) || 0;
+      }
+      
+      // 個人別統計
+      if (affId) {
+        if (!affiliateServiceStatsMap[affId]) {
+          affiliateServiceStatsMap[affId] = {};
+        }
+        if (!affiliateServiceStatsMap[affId][st]) {
+          affiliateServiceStatsMap[affId][st] = { clicks: 0, conversions: 0, earnings: 0 };
+        }
+        affiliateServiceStatsMap[affId][st].conversions++;
+        if (conv.status === 'confirmed' || conv.status === 'paid') {
+          affiliateServiceStatsMap[affId][st].earnings += parseFloat(conv.commission_amount as any) || 0;
+        }
+      }
+    });
+
+    // サービス別設定を取得
+    let serviceSettings: any[] = [];
+    try {
+      const { data: settingsData, error: settingsError } = await supabase
+        .from('affiliate_service_settings')
+        .select('*')
+        .order('service_type');
+
+      if (!settingsError && settingsData) {
+        serviceSettings = settingsData;
+      }
+    } catch (e) {
+      // テーブルがない場合はデフォルト値を返す
+      serviceSettings = [
+        {
+          id: 'default-main',
+          service_type: 'main',
+          display_name: 'メインサイト',
+          commission_rate: 20,
+          signup_points: 500,
+          enabled: true,
+          description: 'メインサイトのアフィリエイト。新規登録で500ポイント付与。',
+          landing_page: '/',
+        },
+        {
+          id: 'default-kdl',
+          service_type: 'kdl',
+          display_name: 'Kindle執筆',
+          commission_rate: 20,
+          signup_points: 0,
+          enabled: true,
+          description: 'Kindle Direct Liteのアフィリエイト。有料課金のみ20%報酬。',
+          landing_page: '/kindle/lp',
+        },
+      ];
+    }
+
     return NextResponse.json({
       affiliates: enrichedAffiliates,
       conversions: enrichedConversions,
+      serviceSettings,
+      serviceStats: serviceStatsMap,
+      affiliateServiceStats: affiliateServiceStatsMap,
       stats: {
         totalAffiliates: affiliates?.length || 0,
         activeAffiliates,
@@ -235,7 +342,27 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { action, affiliateId, conversionId, commissionRate, status } = body;
+    const { action, affiliateId, conversionId, commissionRate, status, serviceType, commission_rate, signup_points, enabled } = body;
+
+    // サービス設定の更新
+    if (action === 'update_service_setting' && serviceType) {
+      const updates: Record<string, any> = {
+        updated_at: new Date().toISOString(),
+      };
+      
+      if (commission_rate !== undefined) updates.commission_rate = commission_rate;
+      if (signup_points !== undefined) updates.signup_points = signup_points;
+      if (enabled !== undefined) updates.enabled = enabled;
+
+      const { error: updateError } = await supabase
+        .from('affiliate_service_settings')
+        .update(updates)
+        .eq('service_type', serviceType);
+
+      if (updateError) throw updateError;
+
+      return NextResponse.json({ success: true, action, serviceType, updates });
+    }
 
     // 報酬率の更新
     if (action === 'update_commission_rate' && affiliateId && commissionRate !== undefined) {

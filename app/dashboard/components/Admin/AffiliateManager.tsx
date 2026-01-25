@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { DollarSign, Users, TrendingUp, Link as LinkIcon, Loader2, Copy, Check, Eye, Filter } from 'lucide-react';
+import { DollarSign, Users, TrendingUp, Link as LinkIcon, Loader2, Copy, Check, Eye, Filter, Settings, Globe, BookOpen, Save } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 type AffiliateManagerProps = {
@@ -48,6 +48,26 @@ type AffiliateConversion = {
   plan_tier?: string;
 };
 
+type ServiceSetting = {
+  id: string;
+  service_type: string;
+  display_name: string;
+  commission_rate: number;
+  signup_points: number;
+  enabled: boolean;
+  description: string | null;
+  landing_page: string | null;
+};
+
+// サービスタイプのアイコンと色
+const SERVICE_CONFIG: Record<string, { icon: React.ReactNode; color: string; bgColor: string }> = {
+  main: { icon: <Globe size={14} />, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+  kdl: { icon: <BookOpen size={14} />, color: 'text-amber-600', bgColor: 'bg-amber-50' },
+  quiz: { icon: <Settings size={14} />, color: 'text-purple-600', bgColor: 'bg-purple-50' },
+  profile: { icon: <Users size={14} />, color: 'text-green-600', bgColor: 'bg-green-50' },
+  business: { icon: <TrendingUp size={14} />, color: 'text-red-600', bgColor: 'bg-red-50' },
+};
+
 export default function AffiliateManager({ user }: AffiliateManagerProps) {
   console.log('[AffiliateManager] Component mounted, user:', user);
   
@@ -62,11 +82,16 @@ export default function AffiliateManager({ user }: AffiliateManagerProps) {
   });
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
   const [conversions, setConversions] = useState<AffiliateConversion[]>([]);
+  const [serviceSettings, setServiceSettings] = useState<ServiceSetting[]>([]);
+  const [serviceStats, setServiceStats] = useState<Record<string, { clicks: number; conversions: number; earnings: number }>>({});
+  const [affiliateServiceStats, setAffiliateServiceStats] = useState<Record<string, Record<string, { clicks: number; conversions: number; earnings: number }>>>({});
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [savingSettings, setSavingSettings] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [affiliateStatusFilter, setAffiliateStatusFilter] = useState<'all' | 'active' | 'suspended'>('all');
   const [conversionStatusFilter, setConversionStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'paid' | 'cancelled'>('all');
+  const [serviceTypeFilter, setServiceTypeFilter] = useState<string>('all');
 
   // セッションの準備を待つ
   useEffect(() => {
@@ -126,6 +151,9 @@ export default function AffiliateManager({ user }: AffiliateManagerProps) {
         console.log('[AffiliateManager] API Response data:', data);
         setAffiliates(data.affiliates || []);
         setConversions(data.conversions || []);
+        setServiceSettings(data.serviceSettings || []);
+        setServiceStats(data.serviceStats || {});
+        setAffiliateServiceStats(data.affiliateServiceStats || {});
         setStats(data.stats || {
           totalAffiliates: 0,
           activeAffiliates: 0,
@@ -145,11 +173,13 @@ export default function AffiliateManager({ user }: AffiliateManagerProps) {
     }
   };
 
-  const handleCopyAffiliateLink = (code: string) => {
+  const handleCopyAffiliateLink = (code: string, serviceType: 'main' | 'kdl') => {
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://makers.tokyo';
-    const affiliateLink = `${baseUrl}/kindle/lp?ref=${code}`;
+    const landingPage = serviceType === 'kdl' ? '/kindle/lp' : '/';
+    const separator = landingPage.includes('?') ? '&' : '?';
+    const affiliateLink = `${baseUrl}${landingPage}${separator}ref=${code}`;
     navigator.clipboard.writeText(affiliateLink);
-    setCopiedCode(code);
+    setCopiedCode(`${code}-${serviceType}`);
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
@@ -220,6 +250,41 @@ export default function AffiliateManager({ user }: AffiliateManagerProps) {
     }
   };
 
+  // サービス設定を更新
+  const handleUpdateServiceSetting = async (serviceType: string, updates: Partial<ServiceSetting>) => {
+    setSavingSettings(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) throw new Error('認証トークンがありません');
+
+      const response = await fetch('/api/admin/affiliates', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'update_service_setting',
+          serviceType,
+          ...updates,
+        }),
+      });
+
+      if (response.ok) {
+        await fetchAffiliateData();
+      } else {
+        alert('設定の更新に失敗しました');
+      }
+    } catch (error) {
+      console.error('Update service setting error:', error);
+      alert('設定の更新に失敗しました');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -246,9 +311,12 @@ export default function AffiliateManager({ user }: AffiliateManagerProps) {
     ? affiliates
     : affiliates.filter((aff) => aff.status === affiliateStatusFilter);
 
-  const filteredConversions = conversionStatusFilter === 'all'
-    ? conversions
-    : conversions.filter((conv) => conv.status === conversionStatusFilter);
+  // サービスタイプとステータスでフィルタ
+  const filteredConversions = conversions.filter((conv) => {
+    const statusMatch = conversionStatusFilter === 'all' || conv.status === conversionStatusFilter;
+    const serviceMatch = serviceTypeFilter === 'all' || conv.service_type === serviceTypeFilter;
+    return statusMatch && serviceMatch;
+  });
 
   return (
     <div className="space-y-6">
@@ -285,6 +353,152 @@ export default function AffiliateManager({ user }: AffiliateManagerProps) {
         </div>
       </div>
 
+      {/* サービス別統計 */}
+      {Object.keys(serviceStats).length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 className="font-bold text-gray-900">サービス別統計（累計）</h3>
+          </div>
+          <div className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* メインサイト */}
+              <div className="border border-blue-200 rounded-lg p-4 bg-blue-50/50">
+                <div className="flex items-center gap-2 mb-3">
+                  <Globe size={18} className="text-blue-600" />
+                  <span className="font-bold text-gray-900">メインサイト</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="text-xs text-gray-500">クリック</p>
+                    <p className="text-xl font-bold text-blue-600">{serviceStats.main?.clicks || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">成約</p>
+                    <p className="text-xl font-bold text-purple-600">{serviceStats.main?.conversions || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">報酬</p>
+                    <p className="text-xl font-bold text-emerald-600">¥{(serviceStats.main?.earnings || 0).toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+              {/* Kindle */}
+              <div className="border border-amber-200 rounded-lg p-4 bg-amber-50/50">
+                <div className="flex items-center gap-2 mb-3">
+                  <BookOpen size={18} className="text-amber-600" />
+                  <span className="font-bold text-gray-900">Kindle執筆</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="text-xs text-gray-500">クリック</p>
+                    <p className="text-xl font-bold text-blue-600">{serviceStats.kdl?.clicks || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">成約</p>
+                    <p className="text-xl font-bold text-purple-600">{serviceStats.kdl?.conversions || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">報酬</p>
+                    <p className="text-xl font-bold text-emerald-600">¥{(serviceStats.kdl?.earnings || 0).toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* サービス別設定 */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+          <h3 className="font-bold text-gray-900 flex items-center gap-2">
+            <Settings size={18} />
+            サービス別アフィリエイト設定
+          </h3>
+          <p className="text-xs text-gray-500 mt-1">各サービスの報酬率と登録ポイントを設定できます</p>
+        </div>
+        <div className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {serviceSettings.map((setting) => {
+              const config = SERVICE_CONFIG[setting.service_type] || SERVICE_CONFIG.main;
+              return (
+                <div
+                  key={setting.id}
+                  className={`border rounded-lg p-4 ${setting.enabled ? 'border-gray-200' : 'border-gray-100 bg-gray-50 opacity-60'}`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className={`${config.bgColor} ${config.color} p-1.5 rounded`}>
+                        {config.icon}
+                      </span>
+                      <span className="font-bold text-gray-900">{setting.display_name}</span>
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <span className="text-xs text-gray-500">有効</span>
+                      <input
+                        type="checkbox"
+                        checked={setting.enabled}
+                        onChange={(e) => handleUpdateServiceSetting(setting.service_type, { enabled: e.target.checked })}
+                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        disabled={savingSettings}
+                      />
+                    </label>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1">報酬率</label>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          defaultValue={setting.commission_rate}
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm text-gray-900 bg-white"
+                          onBlur={(e) => {
+                            const newRate = parseFloat(e.target.value);
+                            if (newRate !== setting.commission_rate) {
+                              handleUpdateServiceSetting(setting.service_type, { commission_rate: newRate });
+                            }
+                          }}
+                          disabled={savingSettings || !setting.enabled}
+                        />
+                        <span className="text-sm text-gray-500">%</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1">登録ポイント</label>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          defaultValue={setting.signup_points}
+                          min="0"
+                          step="100"
+                          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm text-gray-900 bg-white"
+                          onBlur={(e) => {
+                            const newPoints = parseInt(e.target.value);
+                            if (newPoints !== setting.signup_points) {
+                              handleUpdateServiceSetting(setting.service_type, { signup_points: newPoints });
+                            }
+                          }}
+                          disabled={savingSettings || !setting.enabled}
+                        />
+                        <span className="text-sm text-gray-500">pt</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {setting.description && (
+                    <p className="text-xs text-gray-400 mt-2">{setting.description}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       {/* アフィリエイター一覧 */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
@@ -313,13 +527,12 @@ export default function AffiliateManager({ user }: AffiliateManagerProps) {
               <thead>
                 <tr className="border-b border-gray-200">
                   <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">メールアドレス</th>
-                  <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">紹介コード</th>
+                  <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">紹介リンク</th>
                   <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">ステータス</th>
-                  <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">報酬率</th>
+                  <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">サービス</th>
                   <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">クリック</th>
                   <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">成約</th>
-                  <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">総報酬</th>
-                  <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">未払い</th>
+                  <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">報酬</th>
                 </tr>
               </thead>
               <tbody>
@@ -329,70 +542,96 @@ export default function AffiliateManager({ user }: AffiliateManagerProps) {
                     suspended: 'bg-red-100 text-red-700',
                     pending: 'bg-yellow-100 text-yellow-700',
                   };
+                  const affStats = affiliateServiceStats[aff.id] || {};
+                  const mainStats = affStats.main || { clicks: 0, conversions: 0, earnings: 0 };
+                  const kdlStats = affStats.kdl || { clicks: 0, conversions: 0, earnings: 0 };
+                  
                   return (
-                    <tr key={aff.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-900 font-medium">{aff.email}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col items-center gap-1">
-                          <code className="bg-emerald-50 border border-emerald-200 px-3 py-1 rounded text-sm font-bold text-emerald-700">
-                            {aff.referral_code}
-                          </code>
-                          <button
-                            onClick={() => handleCopyAffiliateLink(aff.referral_code)}
-                            className="flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 transition-colors"
+                    <React.Fragment key={aff.id}>
+                      {/* メインサイト行 */}
+                      <tr className="border-b border-gray-100 hover:bg-gray-50">
+                        <td rowSpan={2} className="px-4 py-3 text-gray-900 font-medium align-top border-r border-gray-100">
+                          {aff.email}
+                        </td>
+                        <td rowSpan={2} className="px-4 py-3 align-top border-r border-gray-100">
+                          <div className="flex flex-col items-center gap-2">
+                            <code className="bg-emerald-50 border border-emerald-200 px-3 py-1 rounded text-sm font-bold text-emerald-700">
+                              {aff.referral_code}
+                            </code>
+                            {/* メインサイト用リンク */}
+                            <button
+                              onClick={() => handleCopyAffiliateLink(aff.referral_code, 'main')}
+                              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors bg-blue-50 px-2 py-1 rounded"
+                            >
+                              <Globe size={10} />
+                              {copiedCode === `${aff.referral_code}-main` ? (
+                                <>
+                                  <Check size={10} />
+                                  <span>コピー済み</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy size={10} />
+                                  <span>メイン</span>
+                                </>
+                              )}
+                            </button>
+                            {/* Kindle用リンク */}
+                            <button
+                              onClick={() => handleCopyAffiliateLink(aff.referral_code, 'kdl')}
+                              className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 transition-colors bg-amber-50 px-2 py-1 rounded"
+                            >
+                              <BookOpen size={10} />
+                              {copiedCode === `${aff.referral_code}-kdl` ? (
+                                <>
+                                  <Check size={10} />
+                                  <span>コピー済み</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy size={10} />
+                                  <span>Kindle</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                        <td rowSpan={2} className="px-4 py-3 text-center align-top border-r border-gray-100">
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-bold ${
+                              statusColors[aff.status] || 'bg-gray-100 text-gray-700'
+                            }`}
                           >
-                            {copiedCode === aff.referral_code ? (
-                              <>
-                                <Check size={12} />
-                                <span>コピー済み</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy size={12} />
-                                <span>リンクをコピー</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-bold ${
-                            statusColors[aff.status] || 'bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {aff.status === 'active' ? 'アクティブ' : aff.status === 'suspended' ? '停止中' : '保留'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-1">
-                          <input
-                            type="number"
-                            defaultValue={aff.commission_rate}
-                            min="0"
-                            max="100"
-                            step="0.5"
-                            className="w-16 border border-gray-300 rounded px-2 py-1 text-xs text-center text-gray-900 bg-white"
-                            onBlur={(e) => {
-                              const newRate = parseFloat(e.target.value);
-                              if (newRate !== aff.commission_rate) {
-                                handleUpdateCommissionRate(aff.id, newRate);
-                              }
-                            }}
-                            disabled={updatingId === aff.id}
-                          />
-                          <span className="text-xs text-gray-500">%</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-right text-blue-600 font-bold">{aff.total_clicks || 0}</td>
-                      <td className="px-4 py-3 text-right text-purple-600 font-bold">{aff.total_conversions || 0}</td>
-                      <td className="px-4 py-3 text-right text-emerald-600 font-bold">
-                        ¥{(aff.total_earnings || 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right text-orange-600 font-bold">
-                        ¥{(aff.unpaid_earnings || 0).toLocaleString()}
-                      </td>
-                    </tr>
+                            {aff.status === 'active' ? 'アクティブ' : aff.status === 'suspended' ? '停止中' : '保留'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                            <Globe size={10} />
+                            メイン
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-right text-blue-600 font-bold">{mainStats.clicks}</td>
+                        <td className="px-4 py-2 text-right text-purple-600 font-bold">{mainStats.conversions}</td>
+                        <td className="px-4 py-2 text-right text-emerald-600 font-bold">
+                          ¥{mainStats.earnings.toLocaleString()}
+                        </td>
+                      </tr>
+                      {/* Kindle行 */}
+                      <tr className="border-b border-gray-200 hover:bg-gray-50 bg-amber-50/30">
+                        <td className="px-4 py-2 text-center">
+                          <span className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                            <BookOpen size={10} />
+                            Kindle
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-right text-blue-600 font-bold">{kdlStats.clicks}</td>
+                        <td className="px-4 py-2 text-right text-purple-600 font-bold">{kdlStats.conversions}</td>
+                        <td className="px-4 py-2 text-right text-emerald-600 font-bold">
+                          ¥{kdlStats.earnings.toLocaleString()}
+                        </td>
+                      </tr>
+                    </React.Fragment>
                   );
                 })}
               </tbody>
@@ -403,16 +642,30 @@ export default function AffiliateManager({ user }: AffiliateManagerProps) {
 
       {/* コンバージョン一覧 */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-bold text-gray-900">成果（コンバージョン）一覧</h3>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Filter size={16} className="text-gray-500" />
+            {/* サービスタイプフィルター */}
+            <select
+              value={serviceTypeFilter}
+              onChange={(e) => setServiceTypeFilter(e.target.value)}
+              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 text-gray-900 bg-white"
+            >
+              <option value="all">全サービス</option>
+              <option value="main">メインサイト</option>
+              <option value="kdl">Kindle執筆</option>
+              <option value="quiz">診断クイズ</option>
+              <option value="profile">プロフィールLP</option>
+              <option value="business">ビジネスLP</option>
+            </select>
+            {/* ステータスフィルター */}
             <select
               value={conversionStatusFilter}
               onChange={(e) => setConversionStatusFilter(e.target.value as any)}
               className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 text-gray-900 bg-white"
             >
-              <option value="all">全て</option>
+              <option value="all">全ステータス</option>
               <option value="pending">保留中</option>
               <option value="confirmed">確定</option>
               <option value="paid">支払済</option>

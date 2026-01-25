@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { grantAffiliateSignupPoints } from '@/app/actions/affiliate';
+import { getReferralCode, clearReferralCode } from '@/components/affiliate/AffiliateTracker';
 
 const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowPasswordReset = null, onNavigate, defaultTab = 'signup' }: {
     isOpen: boolean;
@@ -183,6 +185,34 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
             } else if (!isLogin && data.user) {
                 if (!data.session) alert('確認メールを送信しました。メール内のリンクをクリックして認証を完了させてください。');
                 else { 
+                    // 新規登録成功時、アフィリエイトポイント付与を試みる
+                    try {
+                        const referralCode = getReferralCode();
+                        if (referralCode && data.user.id) {
+                            // 現在のページからサービスタイプを判定
+                            const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+                            const serviceType = currentPath.includes('/kindle') ? 'kdl' : 'main';
+                            
+                            console.log('[AuthModal] Attempting to grant affiliate signup points:', {
+                                referralCode,
+                                serviceType,
+                                userId: data.user.id,
+                            });
+                            
+                            const result = await grantAffiliateSignupPoints(referralCode, serviceType, data.user.id);
+                            if (result.success) {
+                                console.log('[AuthModal] Affiliate signup points granted:', result.pointsGranted);
+                            } else {
+                                console.log('[AuthModal] Affiliate signup points not granted:', result.message);
+                            }
+                            
+                            // 紹介コードをクリア（重複付与防止）
+                            clearReferralCode();
+                        }
+                    } catch (affErr) {
+                        console.error('[AuthModal] Affiliate signup points error:', affErr);
+                    }
+                    
                     setUser(data.user); 
                     // パスワードリセットモードをリセット
                     if (setShowPasswordReset) {

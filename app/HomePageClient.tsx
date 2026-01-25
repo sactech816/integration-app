@@ -8,6 +8,7 @@ import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
 import ServiceSelector from '@/components/shared/ServiceSelector';
 import AnnouncementBanner from '@/components/shared/AnnouncementBanner';
+import AffiliateTracker from '@/components/affiliate/AffiliateTracker';
 import { 
   Sparkles, 
   UserCircle, 
@@ -209,6 +210,9 @@ export default function HomePageClient() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* メインサイト用アフィリエイトトラッカー */}
+      <AffiliateTracker serviceType="main" />
+      
       <AnnouncementBanner serviceType="all" />
       
       <Header 

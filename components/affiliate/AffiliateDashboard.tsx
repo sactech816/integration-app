@@ -15,15 +15,20 @@ import {
   ChevronDown,
   ChevronUp,
   Gift,
+  BookOpen,
+  Globe,
 } from 'lucide-react';
 import {
   getAffiliateInfo,
   getAffiliateStats,
   getAffiliateConversions,
+  getAffiliateStatsByService,
+  getAllAffiliateServiceSettings,
   registerAffiliate,
   AffiliateInfo,
   AffiliateStats,
   AffiliateConversion,
+  AffiliateServiceSetting,
 } from '@/app/actions/affiliate';
 
 type Props = {
@@ -32,10 +37,16 @@ type Props = {
 };
 
 const SERVICE_LABELS: Record<string, string> = {
+  main: 'メインサイト',
   kdl: 'Kindle執筆',
   quiz: '診断クイズ',
   profile: 'プロフィールLP',
   business: 'ビジネスLP',
+};
+
+const SERVICE_ICONS: Record<string, React.ReactNode> = {
+  main: <Globe size={14} />,
+  kdl: <BookOpen size={14} />,
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
@@ -51,7 +62,9 @@ export default function AffiliateDashboard({ userId, userEmail }: Props) {
   const [affiliateInfo, setAffiliateInfo] = useState<AffiliateInfo | null>(null);
   const [stats, setStats] = useState<AffiliateStats | null>(null);
   const [conversions, setConversions] = useState<AffiliateConversion[]>([]);
-  const [copied, setCopied] = useState(false);
+  const [serviceSettings, setServiceSettings] = useState<AffiliateServiceSetting[]>([]);
+  const [serviceStats, setServiceStats] = useState<Record<string, { clicks: number; conversions: number; earnings: number }>>({});
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,6 +78,13 @@ export default function AffiliateDashboard({ userId, userEmail }: Props) {
     setIsLoading(true);
     setError(null);
     try {
+      // サービス設定を取得
+      const settingsResult = await getAllAffiliateServiceSettings();
+      if (settingsResult.success && settingsResult.data) {
+        // 有効なサービスのみフィルタ
+        setServiceSettings(settingsResult.data.filter(s => s.enabled));
+      }
+
       // アフィリエイト情報を取得
       const infoResult = await getAffiliateInfo(userId);
       if (infoResult.success && infoResult.data) {
@@ -74,6 +94,12 @@ export default function AffiliateDashboard({ userId, userEmail }: Props) {
         const statsResult = await getAffiliateStats(userId);
         if (statsResult.success && statsResult.data) {
           setStats(statsResult.data);
+        }
+
+        // サービス別統計を取得
+        const serviceStatsResult = await getAffiliateStatsByService(userId);
+        if (serviceStatsResult.success && serviceStatsResult.data) {
+          setServiceStats(serviceStatsResult.data);
         }
 
         // 成果履歴を取得
@@ -120,15 +146,20 @@ export default function AffiliateDashboard({ userId, userEmail }: Props) {
     }
   };
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, linkType: string) => {
     navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedLink(linkType);
+    setTimeout(() => setCopiedLink(null), 2000);
   };
 
-  const referralLink = affiliateInfo
-    ? `${baseUrl}/kindle/lp?ref=${affiliateInfo.referral_code}`
-    : '';
+  // サービス別の紹介リンクを生成
+  const getReferralLink = (serviceType: string) => {
+    if (!affiliateInfo) return '';
+    const setting = serviceSettings.find(s => s.service_type === serviceType);
+    const landingPage = setting?.landing_page || '/';
+    const separator = landingPage.includes('?') ? '&' : '?';
+    return `${baseUrl}${landingPage}${separator}ref=${affiliateInfo.referral_code}`;
+  };
 
   if (isLoading) {
     return (
@@ -163,11 +194,16 @@ export default function AffiliateDashboard({ userId, userEmail }: Props) {
           <div className="bg-white/60 rounded-lg p-3 space-y-2">
             <div className="flex items-center gap-2 text-sm">
               <Gift size={14} className="text-emerald-500" />
-              <span className="text-gray-700">報酬率: <span className="font-bold text-emerald-600">10%</span></span>
+              <span className="text-gray-700">報酬率: <span className="font-bold text-emerald-600">20%</span></span>
             </div>
             <p className="text-xs text-gray-500">
-              例: ¥4,980のプランが成約 → ¥498の報酬
+              例: ¥4,980のプランが成約 → ¥996の報酬
             </p>
+            <div className="border-t border-emerald-100 pt-2 mt-2">
+              <p className="text-xs text-gray-600">
+                <span className="font-bold text-emerald-600">メインサイト紹介:</span> 新規登録で500ポイント付与
+              </p>
+            </div>
           </div>
 
           {error && (
@@ -209,61 +245,174 @@ export default function AffiliateDashboard({ userId, userEmail }: Props) {
         </div>
       </div>
 
-      {/* 紹介リンク */}
-      <div className="mb-4">
-        <label className="text-xs text-gray-500 mb-1 block">あなたの紹介リンク</label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={referralLink}
-            readOnly
-            className="flex-1 bg-white border border-emerald-200 rounded-lg px-3 py-2 text-xs font-mono text-gray-700 truncate"
-          />
-          <button
-            onClick={() => copyToClipboard(referralLink)}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-1"
-          >
-            {copied ? <Check size={14} /> : <Copy size={14} />}
-          </button>
-        </div>
+      {/* 紹介リンク（サービス別） */}
+      <div className="mb-4 space-y-3">
+        <label className="text-xs text-gray-500 block">あなたの紹介リンク</label>
+        
+        {/* メインサイト用リンク */}
+        {serviceSettings.some(s => s.service_type === 'main') && (() => {
+          const mainSetting = serviceSettings.find(s => s.service_type === 'main');
+          return (
+            <div className="bg-white/60 rounded-lg p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Globe size={14} className="text-blue-500" />
+                <span className="text-xs font-bold text-gray-700">メインサイト</span>
+              </div>
+              <div className="text-xs text-gray-600 mb-2 space-y-0.5">
+                {mainSetting && mainSetting.signup_points > 0 && (
+                  <p>
+                    <span className="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                      アカウント登録で{mainSetting.signup_points}pt付与（ゲーム利用）
+                    </span>
+                  </p>
+                )}
+                <p>
+                  <span className="text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                    課金で{mainSetting?.commission_rate || 20}%報酬
+                  </span>
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={getReferralLink('main')}
+                  readOnly
+                  className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono text-gray-700 truncate"
+                />
+                <button
+                  onClick={() => copyToClipboard(getReferralLink('main'), 'main')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  {copiedLink === 'main' ? <Check size={14} /> : <Copy size={14} />}
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Kindle用リンク */}
+        {serviceSettings.some(s => s.service_type === 'kdl') && (() => {
+          const kdlSetting = serviceSettings.find(s => s.service_type === 'kdl');
+          return (
+            <div className="bg-white/60 rounded-lg p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <BookOpen size={14} className="text-amber-500" />
+                <span className="text-xs font-bold text-gray-700">Kindle執筆（KDL）</span>
+              </div>
+              <div className="text-xs text-gray-600 mb-2">
+                <span className="text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+                  課金で{kdlSetting?.commission_rate || 20}%報酬
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={getReferralLink('kdl')}
+                  readOnly
+                  className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono text-gray-700 truncate"
+                />
+                <button
+                  onClick={() => copyToClipboard(getReferralLink('kdl'), 'kdl')}
+                  className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  {copiedLink === 'kdl' ? <Check size={14} /> : <Copy size={14} />}
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
-      {/* 統計サマリー */}
+      {/* サービス別統計 */}
+      {Object.keys(serviceStats).length > 0 && (
+        <div className="mb-4 space-y-2">
+          <label className="text-xs text-gray-500 block">サービス別統計（累計）</label>
+          <div className="grid grid-cols-1 gap-2">
+            {/* メインサイト統計 */}
+            {(serviceStats.main || serviceSettings.some(s => s.service_type === 'main')) && (
+              <div className="bg-white/60 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Globe size={12} className="text-blue-500" />
+                  <span className="text-xs font-bold text-gray-700">メインサイト</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-600">
+                    <MousePointer size={10} className="inline mr-1" />
+                    クリック: <span className="font-bold text-blue-600">{serviceStats.main?.clicks || 0}</span>
+                  </span>
+                  <span className="text-gray-600">
+                    <Users size={10} className="inline mr-1" />
+                    成約: <span className="font-bold text-purple-600">{serviceStats.main?.conversions || 0}</span>
+                  </span>
+                  <span className="text-gray-600">
+                    報酬: <span className="font-bold text-emerald-600">¥{(serviceStats.main?.earnings || 0).toLocaleString()}</span>
+                  </span>
+                </div>
+              </div>
+            )}
+            {/* Kindle統計 */}
+            {(serviceStats.kdl || serviceSettings.some(s => s.service_type === 'kdl')) && (
+              <div className="bg-white/60 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <BookOpen size={12} className="text-amber-500" />
+                  <span className="text-xs font-bold text-gray-700">Kindle執筆</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-600">
+                    <MousePointer size={10} className="inline mr-1" />
+                    クリック: <span className="font-bold text-blue-600">{serviceStats.kdl?.clicks || 0}</span>
+                  </span>
+                  <span className="text-gray-600">
+                    <Users size={10} className="inline mr-1" />
+                    成約: <span className="font-bold text-purple-600">{serviceStats.kdl?.conversions || 0}</span>
+                  </span>
+                  <span className="text-gray-600">
+                    報酬: <span className="font-bold text-emerald-600">¥{(serviceStats.kdl?.earnings || 0).toLocaleString()}</span>
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 統計サマリー（今月） */}
       {stats && (
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          <div className="bg-white/60 rounded-lg p-3 text-center">
-            <div className="flex items-center justify-center gap-1 text-gray-500 mb-1">
-              <MousePointer size={12} />
-              <span className="text-xs">クリック</span>
+        <div className="mb-4">
+          <label className="text-xs text-gray-500 block mb-2">今月の成果</label>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-white/60 rounded-lg p-3 text-center">
+              <div className="flex items-center justify-center gap-1 text-gray-500 mb-1">
+                <MousePointer size={12} />
+                <span className="text-xs">クリック</span>
+              </div>
+              <p className="text-lg font-bold text-gray-900">{stats.this_month_clicks}</p>
             </div>
-            <p className="text-lg font-bold text-gray-900">{stats.this_month_clicks}</p>
-            <p className="text-xs text-gray-400">今月</p>
-          </div>
-          <div className="bg-white/60 rounded-lg p-3 text-center">
-            <div className="flex items-center justify-center gap-1 text-gray-500 mb-1">
-              <Users size={12} />
-              <span className="text-xs">成約</span>
+            <div className="bg-white/60 rounded-lg p-3 text-center">
+              <div className="flex items-center justify-center gap-1 text-gray-500 mb-1">
+                <Users size={12} />
+                <span className="text-xs">成約</span>
+              </div>
+              <p className="text-lg font-bold text-emerald-600">{stats.this_month_conversions}</p>
             </div>
-            <p className="text-lg font-bold text-emerald-600">{stats.this_month_conversions}</p>
-            <p className="text-xs text-gray-400">今月</p>
-          </div>
-          <div className="bg-white/60 rounded-lg p-3 text-center">
-            <div className="flex items-center justify-center gap-1 text-gray-500 mb-1">
-              <TrendingUp size={12} />
-              <span className="text-xs">今月報酬</span>
+            <div className="bg-white/60 rounded-lg p-3 text-center">
+              <div className="flex items-center justify-center gap-1 text-gray-500 mb-1">
+                <TrendingUp size={12} />
+                <span className="text-xs">報酬</span>
+              </div>
+              <p className="text-lg font-bold text-emerald-600">
+                ¥{stats.this_month_earnings.toLocaleString()}
+              </p>
             </div>
-            <p className="text-lg font-bold text-emerald-600">
-              ¥{stats.this_month_earnings.toLocaleString()}
-            </p>
-          </div>
-          <div className="bg-white/60 rounded-lg p-3 text-center">
-            <div className="flex items-center justify-center gap-1 text-gray-500 mb-1">
-              <DollarSign size={12} />
-              <span className="text-xs">未払い</span>
+            <div className="bg-white/60 rounded-lg p-3 text-center">
+              <div className="flex items-center justify-center gap-1 text-gray-500 mb-1">
+                <DollarSign size={12} />
+                <span className="text-xs">未払い</span>
+              </div>
+              <p className="text-lg font-bold text-orange-500">
+                ¥{stats.unpaid_earnings.toLocaleString()}
+              </p>
             </div>
-            <p className="text-lg font-bold text-orange-500">
-              ¥{stats.unpaid_earnings.toLocaleString()}
-            </p>
           </div>
         </div>
       )}
@@ -271,10 +420,11 @@ export default function AffiliateDashboard({ userId, userEmail }: Props) {
       {/* 累計 */}
       {stats && (
         <div className="bg-white/40 rounded-lg p-3 mb-4">
+          <div className="text-xs text-gray-500 mb-1">累計</div>
           <div className="flex justify-between text-xs text-gray-600">
-            <span>累計クリック: <span className="font-bold">{stats.total_clicks}</span></span>
-            <span>累計成約: <span className="font-bold">{stats.total_conversions}</span></span>
-            <span>累計報酬: <span className="font-bold text-emerald-600">¥{stats.total_earnings.toLocaleString()}</span></span>
+            <span>クリック: <span className="font-bold">{stats.total_clicks}</span></span>
+            <span>成約: <span className="font-bold">{stats.total_conversions}</span></span>
+            <span>報酬: <span className="font-bold text-emerald-600">¥{stats.total_earnings.toLocaleString()}</span></span>
           </div>
         </div>
       )}
