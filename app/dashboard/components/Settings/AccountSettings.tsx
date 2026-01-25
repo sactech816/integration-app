@@ -17,8 +17,21 @@ import {
   Crown,
   Sparkles,
   ArrowRight,
+  Gamepad2,
+  Calendar,
+  Gift,
+  Stamp,
+  Target,
+  Coins,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react';
 import { fetchSubscriptionStatus, SubscriptionStatus } from '@/lib/subscription';
+import { 
+  getUserGamificationSettings, 
+  updateUserNotificationSettings 
+} from '@/app/actions/gamification';
+import { UserGamificationSettings } from '@/lib/types';
 
 type AccountSettingsProps = {
   user: { id: string; email?: string } | null;
@@ -35,8 +48,19 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
-  // 通知設定
+  // メール通知設定
   const [emailNotifications, setEmailNotifications] = useState(true);
+
+  // ゲーミフィケーション通知設定
+  const [gamificationSettings, setGamificationSettings] = useState<Partial<UserGamificationSettings>>({
+    hide_login_bonus_toast: false,
+    hide_welcome_toast: false,
+    hide_stamp_notifications: false,
+    hide_mission_notifications: false,
+    hide_point_notifications: false,
+  });
+  const [loadingGamificationSettings, setLoadingGamificationSettings] = useState(true);
+  const [savingGamificationSettings, setSavingGamificationSettings] = useState(false);
 
   // サブスクリプション状態
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
@@ -67,6 +91,33 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
       }
     };
     loadSubscriptionStatus();
+  }, [user?.id]);
+
+  // ゲーミフィケーション設定を取得
+  useEffect(() => {
+    const loadGamificationSettings = async () => {
+      if (!user?.id) {
+        setLoadingGamificationSettings(false);
+        return;
+      }
+      try {
+        const settings = await getUserGamificationSettings(user.id);
+        if (settings) {
+          setGamificationSettings({
+            hide_login_bonus_toast: settings.hide_login_bonus_toast,
+            hide_welcome_toast: settings.hide_welcome_toast,
+            hide_stamp_notifications: settings.hide_stamp_notifications,
+            hide_mission_notifications: settings.hide_mission_notifications,
+            hide_point_notifications: settings.hide_point_notifications,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load gamification settings:', error);
+      } finally {
+        setLoadingGamificationSettings(false);
+      }
+    };
+    loadGamificationSettings();
   }, [user?.id]);
 
   // メッセージ
@@ -132,18 +183,48 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
     }
   };
 
-  // 通知設定保存
+  // メール通知設定保存
   const handleNotificationsSave = async () => {
     setSavingNotifications(true);
     try {
-      // TODO: 通知設定をデータベースに保存する処理を実装
+      // TODO: メール通知設定をデータベースに保存する処理を実装
       await new Promise(resolve => setTimeout(resolve, 500)); // 仮の遅延
-      showSuccess('通知設定を保存しました');
+      showSuccess('メール通知設定を保存しました');
     } catch (error) {
-      showError('通知設定の保存に失敗しました');
+      showError('メール通知設定の保存に失敗しました');
     } finally {
       setSavingNotifications(false);
     }
+  };
+
+  // ゲーミフィケーション通知設定保存
+  const handleGamificationSettingsSave = async () => {
+    if (!user?.id) return;
+    
+    setSavingGamificationSettings(true);
+    try {
+      await updateUserNotificationSettings(user.id, gamificationSettings);
+      
+      // ローカルストレージのキャッシュをクリア（ウェルカムボーナス再表示用）
+      if (typeof window !== 'undefined' && !gamificationSettings.hide_welcome_toast) {
+        localStorage.removeItem(`welcome_bonus_checked_${user.id}`);
+      }
+      
+      showSuccess('ゲーミフィケーション通知設定を保存しました');
+    } catch (error) {
+      console.error('Save gamification settings error:', error);
+      showError('ゲーミフィケーション通知設定の保存に失敗しました');
+    } finally {
+      setSavingGamificationSettings(false);
+    }
+  };
+
+  // ゲーミフィケーション通知トグル
+  const handleGamificationToggle = (key: keyof typeof gamificationSettings, value: boolean) => {
+    setGamificationSettings(prev => ({
+      ...prev,
+      [key]: value,
+    }));
   };
 
   // アカウント削除
@@ -445,11 +526,11 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
         </form>
       </div>
 
-      {/* 通知設定 */}
+      {/* メール通知設定 */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
         <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
           <Bell size={20} className="text-amber-600" />
-          通知設定
+          メール通知設定
         </h2>
         <div className="space-y-4">
           <label className="flex items-center justify-between cursor-pointer">
@@ -484,9 +565,170 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
             className="bg-amber-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {savingNotifications ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            通知設定を保存
+            メール通知設定を保存
           </button>
         </div>
+      </div>
+
+      {/* ゲーミフィケーション通知設定 */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <Gamepad2 size={20} className="text-teal-600" />
+          ゲーミフィケーション通知設定
+        </h2>
+        
+        {/* 説明 */}
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+          <p className="text-sm text-blue-800">
+            <strong>💡 ヒント:</strong> 通知を無効にしても、ポイントは通常通り獲得できます。
+            再度通知を受け取りたい場合は、こちらで有効に切り替えてください。
+          </p>
+        </div>
+
+        {loadingGamificationSettings ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 size={24} className="animate-spin text-teal-600" />
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {/* ログインボーナス通知 */}
+            <div className="flex items-center justify-between py-4 border-b border-gray-100">
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${!gamificationSettings.hide_login_bonus_toast ? 'bg-teal-100 text-teal-600' : 'bg-gray-100 text-gray-400'}`}>
+                  <Calendar size={20} />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">ログインボーナス通知</p>
+                  <p className="text-sm text-gray-500">毎日のログインボーナス獲得時のポップアップ</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleGamificationToggle('hide_login_bonus_toast', !gamificationSettings.hide_login_bonus_toast)}
+                className={`p-1 rounded-lg transition-colors ${!gamificationSettings.hide_login_bonus_toast ? 'text-teal-600' : 'text-gray-400'}`}
+              >
+                {!gamificationSettings.hide_login_bonus_toast ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+              </button>
+            </div>
+
+            {/* ウェルカムボーナス通知 */}
+            <div className="flex items-center justify-between py-4 border-b border-gray-100">
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${!gamificationSettings.hide_welcome_toast ? 'bg-teal-100 text-teal-600' : 'bg-gray-100 text-gray-400'}`}>
+                  <Gift size={20} />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">ウェルカムボーナス通知</p>
+                  <p className="text-sm text-gray-500">初回ログイン時のウェルカムボーナスポップアップ</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleGamificationToggle('hide_welcome_toast', !gamificationSettings.hide_welcome_toast)}
+                className={`p-1 rounded-lg transition-colors ${!gamificationSettings.hide_welcome_toast ? 'text-teal-600' : 'text-gray-400'}`}
+              >
+                {!gamificationSettings.hide_welcome_toast ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+              </button>
+            </div>
+
+            {/* スタンプ獲得通知 */}
+            <div className="flex items-center justify-between py-4 border-b border-gray-100">
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${!gamificationSettings.hide_stamp_notifications ? 'bg-teal-100 text-teal-600' : 'bg-gray-100 text-gray-400'}`}>
+                  <Stamp size={20} />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">スタンプ獲得通知</p>
+                  <p className="text-sm text-gray-500">スタンプラリーでスタンプを獲得した時の通知</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleGamificationToggle('hide_stamp_notifications', !gamificationSettings.hide_stamp_notifications)}
+                className={`p-1 rounded-lg transition-colors ${!gamificationSettings.hide_stamp_notifications ? 'text-teal-600' : 'text-gray-400'}`}
+              >
+                {!gamificationSettings.hide_stamp_notifications ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+              </button>
+            </div>
+
+            {/* ミッション達成通知 */}
+            <div className="flex items-center justify-between py-4 border-b border-gray-100">
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${!gamificationSettings.hide_mission_notifications ? 'bg-teal-100 text-teal-600' : 'bg-gray-100 text-gray-400'}`}>
+                  <Target size={20} />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">ミッション達成通知</p>
+                  <p className="text-sm text-gray-500">デイリーミッション達成時の通知</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleGamificationToggle('hide_mission_notifications', !gamificationSettings.hide_mission_notifications)}
+                className={`p-1 rounded-lg transition-colors ${!gamificationSettings.hide_mission_notifications ? 'text-teal-600' : 'text-gray-400'}`}
+              >
+                {!gamificationSettings.hide_mission_notifications ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+              </button>
+            </div>
+
+            {/* ポイント獲得通知 */}
+            <div className="flex items-center justify-between py-4">
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${!gamificationSettings.hide_point_notifications ? 'bg-teal-100 text-teal-600' : 'bg-gray-100 text-gray-400'}`}>
+                  <Coins size={20} />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">ポイント獲得通知</p>
+                  <p className="text-sm text-gray-500">各種ポイント獲得時の通知</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleGamificationToggle('hide_point_notifications', !gamificationSettings.hide_point_notifications)}
+                className={`p-1 rounded-lg transition-colors ${!gamificationSettings.hide_point_notifications ? 'text-teal-600' : 'text-gray-400'}`}
+              >
+                {!gamificationSettings.hide_point_notifications ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+              </button>
+            </div>
+
+            {/* すべて有効/無効ボタン */}
+            <div className="flex gap-3 mt-6 pt-4 border-t border-gray-100">
+              <button
+                onClick={() => {
+                  setGamificationSettings({
+                    hide_login_bonus_toast: false,
+                    hide_welcome_toast: false,
+                    hide_stamp_notifications: false,
+                    hide_mission_notifications: false,
+                    hide_point_notifications: false,
+                  });
+                }}
+                className="flex-1 py-2 text-sm border border-teal-600 text-teal-600 rounded-lg hover:bg-teal-50 transition-colors"
+              >
+                すべて有効
+              </button>
+              <button
+                onClick={() => {
+                  setGamificationSettings({
+                    hide_login_bonus_toast: true,
+                    hide_welcome_toast: true,
+                    hide_stamp_notifications: true,
+                    hide_mission_notifications: true,
+                    hide_point_notifications: true,
+                  });
+                }}
+                className="flex-1 py-2 text-sm border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                すべて無効
+              </button>
+            </div>
+
+            {/* 保存ボタン */}
+            <button
+              onClick={handleGamificationSettingsSave}
+              disabled={savingGamificationSettings}
+              className="w-full mt-4 bg-teal-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {savingGamificationSettings ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+              ゲーミフィケーション通知設定を保存
+            </button>
+          </div>
+        )}
       </div>
 
       {/* アカウント削除 */}
