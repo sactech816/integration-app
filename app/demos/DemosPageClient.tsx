@@ -98,6 +98,12 @@ const profileDemos = [
 // ビジネスLPデモ
 const businessDemos = [
   {
+    name: 'フルセット（15ブロック）',
+    description: 'すべてのブロックを使った完全版ビジネスLP',
+    href: '/business/demo/fullset',
+    color: 'from-slate-500 to-gray-600',
+  },
+  {
     name: '店舗ビジネス（9ブロック）',
     description: '地域密着型店舗向けの集客LP',
     href: '/business/demo/shop',
@@ -126,18 +132,6 @@ const businessDemos = [
     description: '共感から行動喚起まで段階的に誘導',
     href: '/business/demo/quest',
     color: 'from-red-500 to-rose-600',
-  },
-  {
-    name: '診断コンテンツ（11ブロック）',
-    description: '診断を軸にした興味喚起型LP',
-    href: '/business/demo/diagnosis',
-    color: 'from-indigo-500 to-purple-600',
-  },
-  {
-    name: '書籍プロモーション（12ブロック）',
-    description: '本の魅力を最大限に伝える構成',
-    href: '/business/demo/book-promotion',
-    color: 'from-teal-500 to-cyan-600',
   },
 ];
 
