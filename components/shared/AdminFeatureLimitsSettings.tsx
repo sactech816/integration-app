@@ -1,14 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Activity, Loader2, Save, Users } from 'lucide-react';
-import type { PlanTier } from '@/lib/subscription';
+import { Activity, Loader2, Save, Users, BookOpen, Sparkles } from 'lucide-react';
+import type { PlanTier, MakersPlanTier } from '@/lib/subscription';
+
+type ServiceType = 'kdl' | 'makers';
 
 interface FeatureLimits {
   profile: number;
   business: number;
   quiz: number;
   total: number | null;
+  // KDL用
+  kdl_outline?: number;
+  kdl_writing?: number;
 }
 
 interface AdminFeatureLimitsSettingsProps {
@@ -18,23 +23,48 @@ interface AdminFeatureLimitsSettingsProps {
 export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimitsSettingsProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<PlanTier>('standard');
+  const [selectedService, setSelectedService] = useState<ServiceType>('makers');
+  const [selectedPlan, setSelectedPlan] = useState<PlanTier | MakersPlanTier>('pro');
   const [featureLimits, setFeatureLimits] = useState<Record<string, FeatureLimits>>({});
 
-  const plans: PlanTier[] = ['lite', 'standard', 'pro', 'business'];
+  // Kindleプランタイプ
+  type KdlPlanType = 'initial' | 'continuation';
+  const [kdlPlanType, setKdlPlanType] = useState<KdlPlanType>('continuation');
+
+  // サービスごとのプラン
+  const kdlInitialPlans = ['initial_trial', 'initial_standard', 'initial_business'] as const;
+  const kdlContinuationPlans: PlanTier[] = ['lite', 'standard', 'pro', 'business', 'enterprise'];
+  const makersPlans: MakersPlanTier[] = ['guest', 'free', 'pro'];
+  
+  const currentPlans = selectedService === 'kdl' 
+    ? (kdlPlanType === 'initial' ? kdlInitialPlans : kdlContinuationPlans)
+    : makersPlans;
 
   useEffect(() => {
     loadSettings();
-  }, []);
+  }, [selectedService, kdlPlanType]);
+
+  // サービス変更時にプランをリセット
+  useEffect(() => {
+    if (selectedService === 'kdl') {
+      if (kdlPlanType === 'initial') {
+        setSelectedPlan('initial_trial' as any);
+      } else {
+        setSelectedPlan('standard');
+      }
+    } else {
+      setSelectedPlan('pro');
+    }
+  }, [selectedService, kdlPlanType]);
 
   const loadSettings = async () => {
     try {
       setLoading(true);
       const limits: Record<string, FeatureLimits> = {};
       
-      for (const plan of plans) {
+      for (const plan of currentPlans) {
         try {
-          const response = await fetch(`/api/admin/ai-settings?planTier=${plan}`);
+          const response = await fetch(`/api/admin/ai-settings?planTier=${plan}&service=${selectedService}`);
           
           if (!response.ok) {
             console.error(`Failed to fetch settings for ${plan}:`, response.status);
@@ -44,29 +74,16 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
           const data = await response.json();
           
           // 機能制限を読み込み
-          limits[plan] = data.feature_limits || {
-            profile: 5,
-            business: 5,
-            quiz: 5,
-            total: null
-          };
+          limits[plan] = data.feature_limits || getDefaultLimits(plan, selectedService);
         } catch (error) {
           console.error(`Error loading settings for ${plan}:`, error);
         }
       }
 
       // featureLimitsが空のプランにはデフォルト値を設定
-      const allPlans: PlanTier[] = ['lite', 'standard', 'pro', 'business'];
-      const defaultLimits: FeatureLimits = {
-        profile: 5,
-        business: 5,
-        quiz: 5,
-        total: null
-      };
-      
-      allPlans.forEach(plan => {
+      currentPlans.forEach(plan => {
         if (!limits[plan]) {
-          limits[plan] = defaultLimits;
+          limits[plan] = getDefaultLimits(plan, selectedService);
         }
       });
       
@@ -79,7 +96,48 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
     }
   };
 
-  const handleSave = async (planTier: PlanTier) => {
+  // デフォルトの制限値を取得
+  const getDefaultLimits = (plan: string, service: ServiceType): FeatureLimits => {
+    if (service === 'makers') {
+      // 集客メーカーのデフォルト
+      switch (plan) {
+        case 'guest':
+          return { profile: 0, business: 0, quiz: 0, total: 0 };
+        case 'free':
+          return { profile: 0, business: 0, quiz: 0, total: 0 };
+        case 'pro':
+          return { profile: -1, business: -1, quiz: -1, total: null };
+        default:
+          return { profile: 5, business: 5, quiz: 5, total: null };
+      }
+    } else {
+      // KDLのデフォルト
+      switch (plan) {
+        // 初回プラン（一括）
+        case 'initial_trial':
+          return { profile: 5, business: 5, quiz: 5, total: null, kdl_outline: 30, kdl_writing: 30 };
+        case 'initial_standard':
+          return { profile: 10, business: 10, quiz: 10, total: null, kdl_outline: 50, kdl_writing: 50 };
+        case 'initial_business':
+          return { profile: -1, business: -1, quiz: -1, total: null, kdl_outline: 100, kdl_writing: 100 };
+        // 継続プラン（月額）
+        case 'lite':
+          return { profile: 5, business: 5, quiz: 5, total: null, kdl_outline: 20, kdl_writing: 20 };
+        case 'standard':
+          return { profile: 10, business: 10, quiz: 10, total: null, kdl_outline: 30, kdl_writing: 30 };
+        case 'pro':
+          return { profile: -1, business: -1, quiz: -1, total: null, kdl_outline: 100, kdl_writing: 100 };
+        case 'business':
+          return { profile: -1, business: -1, quiz: -1, total: null, kdl_outline: -1, kdl_writing: -1 };
+        case 'enterprise':
+          return { profile: -1, business: -1, quiz: -1, total: null, kdl_outline: -1, kdl_writing: -1 };
+        default:
+          return { profile: 5, business: 5, quiz: 5, total: null };
+      }
+    }
+  };
+
+  const handleSave = async (planTier: PlanTier | MakersPlanTier) => {
     try {
       setSaving(true);
       const response = await fetch('/api/admin/ai-settings', {
@@ -89,6 +147,7 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
           planTier,
           selectedPreset: 'presetB', // ダミー値（必須パラメータのため）
           featureLimits: featureLimits[planTier],
+          service: selectedService,
           userId,
         }),
       });
@@ -106,7 +165,27 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
     }
   };
 
-  const handleLimitChange = (planTier: PlanTier, field: keyof FeatureLimits, value: string) => {
+  // プラン名を取得
+  const getPlanDisplayName = (plan: string): string => {
+    const names: Record<string, string> = {
+      // 集客メーカー
+      guest: 'ゲスト',
+      free: 'フリー',
+      // Kindle初回（一括）
+      initial_trial: 'トライアル',
+      initial_standard: 'スタンダード',
+      initial_business: 'ビジネス',
+      // Kindle継続（月額）
+      lite: 'ライト',
+      standard: 'スタンダード',
+      pro: 'プロ',
+      business: 'ビジネス',
+      enterprise: 'エンタープライズ',
+    };
+    return names[plan] || plan;
+  };
+
+  const handleLimitChange = (planTier: PlanTier | MakersPlanTier, field: keyof FeatureLimits, value: string) => {
     const numValue = value === '' ? 0 : (value === '-1' ? -1 : parseInt(value) || 0);
     setFeatureLimits(prev => ({
       ...prev,
@@ -132,41 +211,105 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
   return (
     <div className="space-y-6">
       {/* ヘッダー */}
-      <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg p-6">
+      <div className={`rounded-lg p-6 ${
+        selectedService === 'kdl' 
+          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+          : 'bg-gradient-to-r from-purple-500 to-pink-600 text-white'
+      }`}>
         <div className="flex items-center gap-3 mb-2">
           <Activity size={32} />
           <h2 className="text-2xl font-bold">AI生成機能の使用制限設定</h2>
         </div>
-        <p className="text-purple-100">
-          プロフィールLP、ビジネスLP、診断クイズのAI生成機能の1日あたりの使用制限を管理します
+        <p className={selectedService === 'kdl' ? 'text-amber-100' : 'text-purple-100'}>
+          {selectedService === 'kdl' 
+            ? 'Kindle執筆のAI生成機能の1日あたりの使用制限を管理します'
+            : 'プロフィールLP、ビジネスLP、診断クイズのAI生成機能の1日あたりの使用制限を管理します'
+          }
         </p>
       </div>
 
+      {/* サービス選択タブ */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setSelectedService('makers')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            selectedService === 'makers'
+              ? 'bg-indigo-100 text-indigo-700'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          <Sparkles size={18} />
+          集客メーカー
+        </button>
+        <button
+          onClick={() => setSelectedService('kdl')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            selectedService === 'kdl'
+              ? 'bg-amber-100 text-amber-700'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          <BookOpen size={18} />
+          Kindle執筆
+        </button>
+      </div>
+
+      {/* Kindleプランタイプ選択（Kindle選択時のみ） */}
+      {selectedService === 'kdl' && (
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setKdlPlanType('initial')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              kdlPlanType === 'initial'
+                ? 'bg-orange-100 text-orange-700 border-2 border-orange-300'
+                : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
+            }`}
+          >
+            初回プラン（一括）
+          </button>
+          <button
+            onClick={() => setKdlPlanType('continuation')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              kdlPlanType === 'continuation'
+                ? 'bg-amber-100 text-amber-700 border-2 border-amber-300'
+                : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
+            }`}
+          >
+            継続プラン（月額）
+          </button>
+        </div>
+      )}
+
       {/* プラン選択タブ */}
       <div className="flex gap-2 overflow-x-auto pb-2">
-        {plans.map((plan) => (
+        {currentPlans.map((plan) => (
           <button
             key={plan}
-            onClick={() => setSelectedPlan(plan)}
+            onClick={() => setSelectedPlan(plan as any)}
             className={`
               px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-all
               ${selectedPlan === plan
-                ? 'bg-purple-600 text-white shadow-lg'
+                ? selectedService === 'kdl' ? 'bg-amber-600 text-white shadow-lg' : 'bg-purple-600 text-white shadow-lg'
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
               }
             `}
           >
-            {plan.charAt(0).toUpperCase() + plan.slice(1)}プラン
+            {getPlanDisplayName(plan)}
           </button>
         ))}
       </div>
 
       {/* 説明 */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-        <p className="text-sm text-amber-800">
-          <strong>プロフィールLP、ビジネスLP、診断クイズ</strong>のAI生成機能の1日あたりの使用制限を設定します
+      <div className={`border rounded-lg p-4 ${
+        selectedService === 'kdl' ? 'bg-amber-50 border-amber-200' : 'bg-purple-50 border-purple-200'
+      }`}>
+        <p className={`text-sm ${selectedService === 'kdl' ? 'text-amber-800' : 'text-purple-800'}`}>
+          {selectedService === 'kdl' 
+            ? <><strong>Kindle執筆</strong>のAI生成機能の1日あたりの使用制限を設定します</>
+            : <><strong>プロフィールLP、ビジネスLP、診断クイズ</strong>のAI生成機能の1日あたりの使用制限を設定します</>
+          }
         </p>
-        <p className="text-xs text-amber-600 mt-1">
+        <p className={`text-xs mt-1 ${selectedService === 'kdl' ? 'text-amber-600' : 'text-purple-600'}`}>
           ※ -1 を入力すると無制限になります。totalを設定すると全機能合計で制限されます。
         </p>
       </div>
@@ -289,7 +432,11 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
         <button
           onClick={() => handleSave(selectedPlan)}
           disabled={saving}
-          className="flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+          className={`flex items-center gap-2 text-white px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg ${
+            selectedService === 'kdl' 
+              ? 'bg-amber-600 hover:bg-amber-700' 
+              : 'bg-purple-600 hover:bg-purple-700'
+          }`}
         >
           {saving ? (
             <>
@@ -299,7 +446,7 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
           ) : (
             <>
               <Save size={20} />
-              {selectedPlan}プランの設定を保存
+              {getPlanDisplayName(selectedPlan)}プランの設定を保存
             </>
           )}
         </button>

@@ -12,6 +12,7 @@ import { Loader2 } from 'lucide-react';
 function QuizEditorContent() {
   const searchParams = useSearchParams();
   const editId = searchParams.get('id');
+  const newParam = searchParams.get('new'); // 新規作成パラメータ
 
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
@@ -25,6 +26,21 @@ function QuizEditorContent() {
 
   useEffect(() => {
     const init = async () => {
+      // newパラメータがある場合は新規作成モード（編集データをリセット）
+      if (newParam) {
+        setEditingQuiz(null);
+        setIsLoading(false);
+        
+        if (supabase) {
+          supabase.auth.onAuthStateChange((event, session) => {
+            setUser(session?.user || null);
+          });
+          const { data: { session } } = await supabase.auth.getSession();
+          setUser(session?.user || null);
+        }
+        return;
+      }
+
       if (supabase) {
         supabase.auth.onAuthStateChange((event, session) => {
           setUser(session?.user || null);
@@ -50,7 +66,7 @@ function QuizEditorContent() {
     };
 
     init();
-  }, [editId]);
+  }, [editId, newParam]);
 
   const handleLogout = async () => {
     if (supabase) {

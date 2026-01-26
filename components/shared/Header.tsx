@@ -89,8 +89,16 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleCreate = (service?: ServiceType) => {
     setIsMenuOpen(false);
+    setIsServiceMenuOpen(false);
     if (service) {
-      router.push(`/${service}/editor`);
+      const targetPath = `/${service}/editor`;
+      // 現在のパスと同じ場合は、新規作成用のタイムスタンプを付けて強制的に新しいエディタを開く
+      if (typeof window !== 'undefined' && window.location.pathname === targetPath) {
+        // 同じエディタを開いている場合は、新規作成として扱う
+        router.push(`${targetPath}?new=${Date.now()}`);
+      } else {
+        router.push(targetPath);
+      }
     } else {
       handleNav('create');
     }
@@ -285,39 +293,37 @@ const Header: React.FC<HeaderProps> = ({
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[120] animate-fade-in">
-                    {/* メールアドレス表示 */}
-                    <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="text-xs text-gray-500">ログイン中</p>
-                      <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
+                  <>
+                    {/* ボタンとメニューの間の透明なブリッジ */}
+                    <div className="absolute top-full right-0 w-full h-2" />
+                    <div className="absolute top-full right-0 pt-2 w-56 z-[120]">
+                      <div className="bg-white rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in">
+                        {/* メールアドレス表示 */}
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <p className="text-xs text-gray-500">ログイン中</p>
+                          <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
+                        </div>
+
+                        <button
+                          onClick={() => handleNav('dashboard')}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                        >
+                          <LayoutDashboard size={18} className="text-gray-500" />
+                          <span className="font-medium text-gray-700">マイページ</span>
+                        </button>
+
+                        <div className="border-t border-gray-100 mt-2 pt-2">
+                          <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-red-50 transition-colors"
+                          >
+                            <LogOut size={18} className="text-red-500" />
+                            <span className="font-medium text-red-600">ログアウト</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-
-                    <button
-                      onClick={() => handleNav('dashboard')}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                    >
-                      <LayoutDashboard size={18} className="text-gray-500" />
-                      <span className="font-medium text-gray-700">マイページ</span>
-                    </button>
-
-                    <button
-                      onClick={() => { setIsUserMenuOpen(false); router.push('/survey'); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                    >
-                      <ClipboardList size={18} className="text-teal-500" />
-                      <span className="font-medium text-gray-700">アンケート（投票）管理</span>
-                    </button>
-
-                    <div className="border-t border-gray-100 mt-2 pt-2">
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-red-50 transition-colors"
-                      >
-                        <LogOut size={18} className="text-red-500" />
-                        <span className="font-medium text-red-600">ログアウト</span>
-                      </button>
-                    </div>
-                  </div>
+                  </>
                 )}
               </div>
             ) : (
@@ -628,13 +634,6 @@ const Header: React.FC<HeaderProps> = ({
                   >
                       <LayoutDashboard size={20} />
                       マイページ
-                    </button>
-                    <button 
-                      onClick={() => { setIsMenuOpen(false); router.push('/survey'); }}
-                      className="w-full flex items-center justify-center gap-2 bg-teal-50 border border-teal-200 text-teal-700 py-3 rounded-xl font-bold hover:bg-teal-100 transition-colors"
-                    >
-                      <ClipboardList size={20} />
-                      アンケート（投票）管理
                     </button>
                     <button 
                       onClick={handleLogout} 

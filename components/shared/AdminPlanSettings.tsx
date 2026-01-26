@@ -53,6 +53,7 @@ export default function AdminPlanSettings({ userId, userEmail }: AdminPlanSettin
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<'makers' | 'kdl'>('makers');
+  const [selectedKdlType, setSelectedKdlType] = useState<'initial' | 'continuation'>('initial');
   const [editingPlan, setEditingPlan] = useState<PlanSetting | null>(null);
   const [requiresMigration, setRequiresMigration] = useState(false);
 
@@ -152,13 +153,22 @@ export default function AdminPlanSettings({ userId, userEmail }: AdminPlanSettin
     return `¥${price.toLocaleString()}`;
   };
 
+  // 現在のサービスのプラン
+  const currentPlans = plans[selectedService] || [];
+
+  // Kindleの場合は初回/継続でフィルタリング
+  const filteredPlans = selectedService === 'kdl'
+    ? currentPlans.filter((plan) => {
+        const isInitialPlan = plan.plan_tier.startsWith('initial_');
+        return selectedKdlType === 'initial' ? isInitialPlan : !isInitialPlan;
+      })
+    : currentPlans;
+
   // 制限値をフォーマット
   const formatLimit = (limit: number): string => {
     if (limit === -1) return '無制限';
     return limit.toString();
   };
-
-  const currentPlans = plans[selectedService] || [];
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
@@ -209,7 +219,7 @@ export default function AdminPlanSettings({ userId, userEmail }: AdminPlanSettin
       )}
 
       {/* サービス選択タブ */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-4">
         {(['makers', 'kdl'] as const).map((service) => (
           <button
             key={service}
@@ -228,6 +238,32 @@ export default function AdminPlanSettings({ userId, userEmail }: AdminPlanSettin
         ))}
       </div>
 
+      {/* Kindle: 初回/継続 サブタブ */}
+      {selectedService === 'kdl' && (
+        <div className="flex gap-2 mb-6 pl-4 border-l-4 border-amber-200">
+          <button
+            onClick={() => setSelectedKdlType('initial')}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              selectedKdlType === 'initial'
+                ? 'bg-amber-500 text-white'
+                : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+            }`}
+          >
+            初回プラン（一括）
+          </button>
+          <button
+            onClick={() => setSelectedKdlType('continuation')}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              selectedKdlType === 'continuation'
+                ? 'bg-amber-500 text-white'
+                : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+            }`}
+          >
+            継続プラン（月額）
+          </button>
+        </div>
+      )}
+
       {/* ローディング */}
       {isLoading && (
         <div className="flex items-center justify-center py-12">
@@ -238,14 +274,14 @@ export default function AdminPlanSettings({ userId, userEmail }: AdminPlanSettin
       {/* プラン一覧 */}
       {!isLoading && (
         <div className="space-y-4">
-          {currentPlans.length === 0 ? (
+          {filteredPlans.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Settings size={48} className="mx-auto mb-3 text-gray-300" />
               <p>プランデータがありません</p>
               <p className="text-sm mt-1">マイグレーションを実行してください</p>
             </div>
           ) : (
-            currentPlans.map((plan) => (
+            filteredPlans.map((plan) => (
               <div
                 key={`${plan.service}-${plan.plan_tier}`}
                 className={`border rounded-xl p-4 transition-colors ${

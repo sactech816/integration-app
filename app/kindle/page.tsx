@@ -10,7 +10,6 @@ import {
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import AIUsageDisplay from '@/components/kindle/AIUsageDisplay';
 import AIModelSelector from '@/components/kindle/AIModelSelector';
-import AdminAISettings from '@/components/shared/AdminAISettings';
 import AdminPlanSwitcher from '@/components/shared/AdminPlanSwitcher';
 import KDLFooter from '@/components/shared/KDLFooter';
 import { getAdminEmails } from '@/lib/constants';
@@ -584,13 +583,6 @@ function KindleListPageContent() {
             currentPlan={adminTestPlan}
             onPlanChange={setAdminTestPlan}
           />
-        )}
-
-        {/* 管理者用: デフォルトAIモデル設定（KDL専用） */}
-        {user && isAdmin && (
-          <div className="mb-8">
-            <AdminAISettings userId={user.id} />
-          </div>
         )}
 
         {/* AI使用量表示（ログインユーザー向け） */}

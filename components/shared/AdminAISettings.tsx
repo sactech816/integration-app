@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Settings, Zap, DollarSign, Check, Loader2, Save } from 'lucide-react';
-import type { PlanTier } from '@/lib/subscription';
+import { Settings, Zap, DollarSign, Check, Loader2, Save, Sparkles, BookOpen, Sliders } from 'lucide-react';
+import type { PlanTier, MakersPlanTier } from '@/lib/subscription';
 
 interface AIPreset {
   name: string;
@@ -19,6 +19,24 @@ interface AIPreset {
   };
 }
 
+// 利用可能なAIモデル一覧
+const AVAILABLE_MODELS = [
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'Google', cost: 0.01 },
+  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', provider: 'Google', cost: 0.05 },
+  { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'OpenAI', cost: 0.02 },
+  { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI', cost: 0.10 },
+  { id: 'claude-3-5-sonnet', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', cost: 0.08 },
+  { id: 'claude-3-5-haiku', name: 'Claude 3.5 Haiku', provider: 'Anthropic', cost: 0.02 },
+];
+
+type PresetType = 'presetA' | 'presetB' | 'custom';
+type ServiceType = 'kdl' | 'makers';
+
+interface CustomModelSettings {
+  outlineModel: string;
+  writingModel: string;
+}
+
 interface AdminAISettingsProps {
   userId: string;
 }
@@ -26,26 +44,53 @@ interface AdminAISettingsProps {
 export default function AdminAISettings({ userId }: AdminAISettingsProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<PlanTier>('standard');
+  const [selectedService, setSelectedService] = useState<ServiceType>('kdl');
+  const [selectedPlan, setSelectedPlan] = useState<PlanTier | MakersPlanTier>('standard');
   const [settings, setSettings] = useState<Record<string, any>>({});
-  const [selectedPresets, setSelectedPresets] = useState<Record<string, 'presetA' | 'presetB'>>({});
+  const [selectedPresets, setSelectedPresets] = useState<Record<string, PresetType>>({});
+  const [customModels, setCustomModels] = useState<Record<string, CustomModelSettings>>({});
 
-  const plans: PlanTier[] = ['lite', 'standard', 'pro', 'business'];
+  // Kindleプランタイプ
+  type KdlPlanType = 'initial' | 'continuation';
+  const [kdlPlanType, setKdlPlanType] = useState<KdlPlanType>('continuation');
+
+  // サービスごとのプラン
+  const kdlInitialPlans = ['initial_trial', 'initial_standard', 'initial_business'] as const;
+  const kdlContinuationPlans: PlanTier[] = ['lite', 'standard', 'pro', 'business', 'enterprise'];
+  const makersPlans: MakersPlanTier[] = ['guest', 'free', 'pro'];
+  
+  const currentPlans = selectedService === 'kdl' 
+    ? (kdlPlanType === 'initial' ? kdlInitialPlans : kdlContinuationPlans)
+    : makersPlans;
 
   useEffect(() => {
     loadSettings();
-  }, []);
+  }, [selectedService, kdlPlanType]);
+
+  // サービス変更時にプランをリセット
+  useEffect(() => {
+    if (selectedService === 'kdl') {
+      if (kdlPlanType === 'initial') {
+        setSelectedPlan('initial_trial' as any);
+      } else {
+        setSelectedPlan('standard');
+      }
+    } else {
+      setSelectedPlan('pro');
+    }
+  }, [selectedService, kdlPlanType]);
 
   const loadSettings = async () => {
     try {
       setLoading(true);
       const results: Record<string, any> = {};
-      const presets: Record<string, 'presetA' | 'presetB'> = {};
+      const presets: Record<string, PresetType> = {};
+      const customs: Record<string, CustomModelSettings> = {};
       let needsMigration = false;
 
-      for (const plan of plans) {
+      for (const plan of currentPlans) {
         try {
-          const response = await fetch(`/api/admin/ai-settings?planTier=${plan}`);
+          const response = await fetch(`/api/admin/ai-settings?planTier=${plan}&service=${selectedService}`);
           
           if (!response.ok) {
             console.error(`Failed to fetch settings for ${plan}:`, response.status);
@@ -67,6 +112,18 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
           
           results[plan] = data;
           presets[plan] = data.selectedPreset || 'presetB';
+          // カスタムモデル設定を復元
+          if (data.customOutlineModel || data.customWritingModel) {
+            customs[plan] = {
+              outlineModel: data.customOutlineModel || 'gemini-1.5-flash',
+              writingModel: data.customWritingModel || 'gemini-1.5-flash',
+            };
+          } else {
+            customs[plan] = {
+              outlineModel: 'gemini-1.5-flash',
+              writingModel: 'gemini-1.5-flash',
+            };
+          }
         } catch (error) {
           console.error(`Error loading settings for ${plan}:`, error);
         }
@@ -74,6 +131,7 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
 
       setSettings(results);
       setSelectedPresets(presets);
+      setCustomModels(customs);
 
       // マイグレーション必要な場合は警告
       if (needsMigration) {
@@ -87,15 +145,21 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
     }
   };
 
-  const handleSave = async (planTier: PlanTier) => {
+  const handleSave = async (planTier: PlanTier | MakersPlanTier) => {
     try {
       setSaving(true);
+      const preset = selectedPresets[planTier];
+      const custom = customModels[planTier];
+      
       const response = await fetch('/api/admin/ai-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           planTier,
-          selectedPreset: selectedPresets[planTier],
+          selectedPreset: preset,
+          customOutlineModel: preset === 'custom' ? custom?.outlineModel : null,
+          customWritingModel: preset === 'custom' ? custom?.writingModel : null,
+          service: selectedService,
           userId,
         }),
       });
@@ -113,8 +177,22 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
     }
   };
 
-  const handlePresetChange = (planTier: PlanTier, preset: 'presetA' | 'presetB') => {
+  const handlePresetChange = (planTier: PlanTier | MakersPlanTier, preset: PresetType) => {
     setSelectedPresets(prev => ({ ...prev, [planTier]: preset }));
+  };
+
+  const handleCustomModelChange = (
+    planTier: PlanTier | MakersPlanTier,
+    field: 'outlineModel' | 'writingModel',
+    value: string
+  ) => {
+    setCustomModels(prev => ({
+      ...prev,
+      [planTier]: {
+        ...prev[planTier],
+        [field]: value,
+      },
+    }));
   };
 
   if (loading) {
@@ -127,67 +205,160 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
 
   const planData = settings[selectedPlan];
   const hasPresets = planData && planData.presets;
+  const currentPreset = selectedPresets[selectedPlan] || 'presetB';
+  const currentCustom = customModels[selectedPlan] || { outlineModel: 'gemini-1.5-flash', writingModel: 'gemini-1.5-flash' };
+
+  // プラン名を取得
+  const getPlanDisplayName = (plan: string): string => {
+    const names: Record<string, string> = {
+      // 集客メーカー
+      guest: 'ゲスト',
+      free: 'フリー',
+      // Kindle初回（一括）
+      initial_trial: 'トライアル',
+      initial_standard: 'スタンダード',
+      initial_business: 'ビジネス',
+      // Kindle継続（月額）
+      lite: 'ライト',
+      standard: 'スタンダード',
+      pro: 'プロ',
+      business: 'ビジネス',
+      enterprise: 'エンタープライズ',
+    };
+    return names[plan] || plan;
+  };
 
   return (
     <div className="space-y-6">
       {/* ヘッダー */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg p-6">
+      <div className={`rounded-lg p-6 ${
+        selectedService === 'kdl' 
+          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+          : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white'
+      }`}>
         <div className="flex items-center gap-3 mb-2">
-          <Settings size={32} />
-          <h2 className="text-2xl font-bold">Kindle執筆 AIモデル設定</h2>
+          {selectedService === 'kdl' ? <BookOpen size={32} /> : <Sparkles size={32} />}
+          <h2 className="text-2xl font-bold">AIモデル設定</h2>
         </div>
-        <p className="text-indigo-100">
-          Kindle執筆機能で使用するデフォルトAIモデルをプラン別に設定します
+        <p className={selectedService === 'kdl' ? 'text-amber-100' : 'text-indigo-100'}>
+          {selectedService === 'kdl' 
+            ? 'Kindle執筆機能で使用するデフォルトAIモデルをプラン別に設定します'
+            : '集客メーカーで使用するデフォルトAIモデルをプラン別に設定します'
+          }
         </p>
       </div>
 
+      {/* サービス選択タブ */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setSelectedService('kdl')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            selectedService === 'kdl'
+              ? 'bg-amber-100 text-amber-700'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          <BookOpen size={18} />
+          Kindle執筆
+        </button>
+        <button
+          onClick={() => setSelectedService('makers')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            selectedService === 'makers'
+              ? 'bg-indigo-100 text-indigo-700'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          <Sparkles size={18} />
+          集客メーカー
+        </button>
+      </div>
+
+      {/* Kindleプランタイプ選択（Kindle選択時のみ） */}
+      {selectedService === 'kdl' && (
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setKdlPlanType('initial')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              kdlPlanType === 'initial'
+                ? 'bg-orange-100 text-orange-700 border-2 border-orange-300'
+                : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
+            }`}
+          >
+            初回プラン（一括）
+          </button>
+          <button
+            onClick={() => setKdlPlanType('continuation')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              kdlPlanType === 'continuation'
+                ? 'bg-amber-100 text-amber-700 border-2 border-amber-300'
+                : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
+            }`}
+          >
+            継続プラン（月額）
+          </button>
+        </div>
+      )}
+
       {/* プラン選択タブ */}
       <div className="flex gap-2 overflow-x-auto pb-2">
-        {plans.map((plan) => (
+        {currentPlans.map((plan) => (
           <button
             key={plan}
-            onClick={() => setSelectedPlan(plan)}
+            onClick={() => setSelectedPlan(plan as any)}
             className={`
               px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-all
               ${selectedPlan === plan
-                ? 'bg-indigo-600 text-white shadow-lg'
+                ? selectedService === 'kdl' ? 'bg-amber-600 text-white shadow-lg' : 'bg-indigo-600 text-white shadow-lg'
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
               }
             `}
           >
-            {plan.charAt(0).toUpperCase() + plan.slice(1)}プラン
+            {getPlanDisplayName(plan)}
           </button>
         ))}
       </div>
 
       {/* 説明 */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
-          <strong>Kindle執筆機能</strong>で使用するデフォルトAIモデルをプラン別に設定します（候補A/B）
+      <div className={`border rounded-lg p-4 ${
+        selectedService === 'kdl' ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-200'
+      }`}>
+        <p className={`text-sm ${selectedService === 'kdl' ? 'text-amber-800' : 'text-blue-800'}`}>
+          <strong>{selectedService === 'kdl' ? 'Kindle執筆' : '集客メーカー'}</strong>で使用するデフォルトAIモデルをプラン別に設定します（候補A/B/カスタム）
         </p>
-        <p className="text-xs text-blue-600 mt-1">
-          ※ユーザーは実行時に「スピードモード」または「ハイクオリティモード」を選択できます
+        <p className={`text-xs mt-1 ${selectedService === 'kdl' ? 'text-amber-600' : 'text-blue-600'}`}>
+          ※カスタムを選択すると、構成用・執筆用のモデルを個別に設定できます
         </p>
       </div>
 
       {/* プリセット選択 */}
       {hasPresets ? (
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Preset A */}
-          <PresetCard
-            preset="presetA"
-            data={planData.presets.presetA}
-            selected={selectedPresets[selectedPlan] === 'presetA'}
-            onSelect={() => handlePresetChange(selectedPlan, 'presetA')}
-          />
+        <div className="space-y-6">
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* Preset A */}
+            <PresetCard
+              preset="presetA"
+              data={planData.presets.presetA}
+              selected={currentPreset === 'presetA'}
+              onSelect={() => handlePresetChange(selectedPlan, 'presetA')}
+            />
 
-          {/* Preset B */}
-          <PresetCard
-            preset="presetB"
-            data={planData.presets.presetB}
-            selected={selectedPresets[selectedPlan] === 'presetB'}
-            onSelect={() => handlePresetChange(selectedPlan, 'presetB')}
-          />
+            {/* Preset B */}
+            <PresetCard
+              preset="presetB"
+              data={planData.presets.presetB}
+              selected={currentPreset === 'presetB'}
+              onSelect={() => handlePresetChange(selectedPlan, 'presetB')}
+            />
+
+            {/* Custom */}
+            <CustomPresetCard
+              selected={currentPreset === 'custom'}
+              onSelect={() => handlePresetChange(selectedPlan, 'custom')}
+              customModels={currentCustom}
+              onModelChange={(field, value) => handleCustomModelChange(selectedPlan, field, value)}
+            />
+          </div>
         </div>
       ) : (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
@@ -205,7 +376,11 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
         <button
           onClick={() => handleSave(selectedPlan)}
           disabled={saving}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+          className={`flex items-center gap-2 text-white px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg ${
+            selectedService === 'kdl' 
+              ? 'bg-amber-600 hover:bg-amber-700' 
+              : 'bg-indigo-600 hover:bg-indigo-700'
+          }`}
         >
           {saving ? (
             <>
@@ -215,11 +390,98 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
           ) : (
             <>
               <Save size={20} />
-              {selectedPlan}プランの設定を保存
+              {getPlanDisplayName(selectedPlan)}プランの設定を保存
             </>
           )}
         </button>
       </div>
+    </div>
+  );
+}
+
+// カスタムプリセットカード
+interface CustomPresetCardProps {
+  selected: boolean;
+  onSelect: () => void;
+  customModels: CustomModelSettings;
+  onModelChange: (field: 'outlineModel' | 'writingModel', value: string) => void;
+}
+
+function CustomPresetCard({ selected, onSelect, customModels, onModelChange }: CustomPresetCardProps) {
+  return (
+    <div
+      onClick={onSelect}
+      className={`
+        relative border-2 rounded-xl p-4 cursor-pointer transition-all
+        ${selected
+          ? 'border-purple-600 bg-purple-50 shadow-lg'
+          : 'border-gray-300 bg-white hover:border-purple-300 hover:shadow-md'
+        }
+      `}
+    >
+      {/* 選択インジケーター */}
+      {selected && (
+        <div className="absolute top-3 right-3 bg-purple-600 text-white rounded-full p-1">
+          <Check size={16} />
+        </div>
+      )}
+
+      {/* タイトル */}
+      <div className="mb-3">
+        <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+          <Sliders size={18} className="text-purple-500" />
+          候補 C: カスタム
+        </h3>
+        <p className="text-xs text-gray-600">モデルを個別に選択</p>
+      </div>
+
+      {/* モデル選択（選択時のみ表示） */}
+      {selected && (
+        <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
+          {/* 構成用モデル */}
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1">
+              構成（脳）用モデル
+            </label>
+            <select
+              value={customModels.outlineModel}
+              onChange={(e) => onModelChange('outlineModel', e.target.value)}
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white text-gray-900"
+            >
+              {AVAILABLE_MODELS.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name} ({model.provider})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 執筆用モデル */}
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1">
+              執筆（手）用モデル
+            </label>
+            <select
+              value={customModels.writingModel}
+              onChange={(e) => onModelChange('writingModel', e.target.value)}
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white text-gray-900"
+            >
+              {AVAILABLE_MODELS.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name} ({model.provider})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* 非選択時の説明 */}
+      {!selected && (
+        <p className="text-xs text-gray-500 mt-2">
+          クリックして構成・執筆用モデルを個別に設定
+        </p>
+      )}
     </div>
   );
 }

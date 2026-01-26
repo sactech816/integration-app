@@ -409,6 +409,82 @@ export const PLAN_AI_PRESETS = {
       description: 'カスタムAI環境（要設定）',
     },
   },
+  // ========================================
+  // 集客メーカー用プラン
+  // ========================================
+  guest: {
+    presetA: {
+      name: 'ゲスト',
+      outline: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
+      writing: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
+      description: 'ゲストユーザー向け。制限あり。',
+    },
+    presetB: {
+      name: 'ゲスト',
+      outline: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
+      writing: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
+      description: 'ゲストユーザー向け。制限あり。',
+    },
+  },
+  free: {
+    presetA: {
+      name: 'フリー',
+      outline: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
+      writing: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
+      description: 'フリーユーザー向け。制限あり。',
+    },
+    presetB: {
+      name: 'フリー',
+      outline: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
+      writing: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
+      description: 'フリーユーザー向け。制限あり。',
+    },
+  },
+  // ========================================
+  // Kindle初回プラン（一括）
+  // ========================================
+  initial_trial: {
+    presetA: {
+      name: 'コスト特化',
+      outline: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
+      writing: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
+      description: 'Flash-Liteで最安値。速度重視の量産向け。',
+    },
+    presetB: {
+      name: 'バランス',
+      outline: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      writing: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      description: 'Flashで統一。指示理解度が高く、実用的。（推奨）',
+    },
+  },
+  initial_standard: {
+    presetA: {
+      name: '利益重視',
+      outline: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      writing: { model: 'claude-3-haiku-20240307', provider: 'anthropic' as const, cost: 1.25 },
+      description: 'Flashで構成、Haikuで執筆。コストを抑えつつ品質向上。',
+    },
+    presetB: {
+      name: '品質重視',
+      outline: { model: 'claude-3-haiku-20240307', provider: 'anthropic' as const, cost: 1.25 },
+      writing: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      description: 'Haikuで人間味のある構成、Flashで大量執筆。（推奨）',
+    },
+  },
+  initial_business: {
+    presetA: {
+      name: '論理重視',
+      outline: { model: 'o3-mini', provider: 'openai' as const, cost: 4.40 },
+      writing: { model: 'o3-mini', provider: 'openai' as const, cost: 4.40 },
+      description: 'o3-miniで統一。売れるロジックと賢い執筆。',
+    },
+    presetB: {
+      name: '情緒重視',
+      outline: { model: 'claude-3-5-sonnet-20240620', provider: 'anthropic' as const, cost: 15.00 },
+      writing: { model: 'claude-3-haiku-20240307', provider: 'anthropic' as const, cost: 1.25 },
+      description: 'Sonnetでエモい構成、Haikuで執筆。※構成のみ高コスト',
+    },
+  },
 } as const;
 
 /**

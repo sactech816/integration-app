@@ -333,15 +333,17 @@ function DashboardContent() {
             onDelete={adminData.handleDeleteAnnouncement}
           />
         ),
+        MonitorManager: user ? (
+          <MonitorUsersManager adminUserId={user.id} adminEmail={user.email} />
+        ) : null,
         ServiceManager: user ? (
           <div className="space-y-6">
             <AdminPlanSettings userId={user.id} userEmail={user.email} />
             <AdminAIUsageStats userId={user.id} />
           </div>
         ) : null,
-        KdlManager: user ? (
+        AIModelManager: user ? (
           <div className="space-y-6">
-            <MonitorUsersManager adminUserId={user.id} adminEmail={user.email} />
             <AdminAISettings userId={user.id} />
             <AdminFeatureLimitsSettings userId={user.id} />
           </div>

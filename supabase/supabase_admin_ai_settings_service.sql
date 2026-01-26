@@ -3,6 +3,20 @@
 -- 集客メーカーとKindleで別々のAI設定を管理可能に
 -- ========================================
 
+-- 0. plan_tierのCHECK制約を更新（guest, free, initial_*を追加）
+-- 既存の制約を削除
+ALTER TABLE admin_ai_settings 
+DROP CONSTRAINT IF EXISTS admin_ai_settings_plan_tier_check;
+
+-- 新しい制約を追加（集客メーカーのguest, free、Kindleの初回プランを含む）
+ALTER TABLE admin_ai_settings 
+ADD CONSTRAINT admin_ai_settings_plan_tier_check 
+CHECK (plan_tier IN (
+  'none', 'lite', 'standard', 'pro', 'business', 'enterprise',  -- KDL継続
+  'guest', 'free',  -- 集客メーカー
+  'initial_trial', 'initial_standard', 'initial_business'  -- KDL初回
+));
+
 -- 1. serviceカラムを追加（存在しない場合）
 DO $$ 
 BEGIN
@@ -28,14 +42,28 @@ BEGIN
   END IF;
 END $$;
 
--- 2. 集客メーカー用のデフォルト設定を挿入
+-- 2. 集客メーカー用のデフォルト設定を挿入（guest, free, pro）
 INSERT INTO admin_ai_settings (service, plan_tier, selected_preset) VALUES
-  ('makers', 'none', 'presetB'),
-  ('makers', 'lite', 'presetB'),
-  ('makers', 'standard', 'presetB'),
-  ('makers', 'pro', 'presetA'),
-  ('makers', 'business', 'presetA'),
-  ('makers', 'enterprise', 'presetA')
+  ('makers', 'guest', 'presetB'),
+  ('makers', 'free', 'presetB'),
+  ('makers', 'pro', 'presetA')
+ON CONFLICT (service, plan_tier) DO NOTHING;
+
+-- 既存のKDL継続プラン用設定も確認（なければ追加）
+INSERT INTO admin_ai_settings (service, plan_tier, selected_preset) VALUES
+  ('kdl', 'none', 'presetB'),
+  ('kdl', 'lite', 'presetB'),
+  ('kdl', 'standard', 'presetB'),
+  ('kdl', 'pro', 'presetA'),
+  ('kdl', 'business', 'presetA'),
+  ('kdl', 'enterprise', 'presetA')
+ON CONFLICT (service, plan_tier) DO NOTHING;
+
+-- KDL初回プラン用設定を追加
+INSERT INTO admin_ai_settings (service, plan_tier, selected_preset) VALUES
+  ('kdl', 'initial_trial', 'presetB'),
+  ('kdl', 'initial_standard', 'presetB'),
+  ('kdl', 'initial_business', 'presetA')
 ON CONFLICT (service, plan_tier) DO NOTHING;
 
 -- 3. RPC関数を更新: サービス別AI設定取得

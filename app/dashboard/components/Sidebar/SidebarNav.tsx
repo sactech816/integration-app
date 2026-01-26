@@ -17,6 +17,8 @@ import {
   Bell,
   Star,
   LucideIcon,
+  Shield,
+  Cpu,
 } from 'lucide-react';
 
 export type MenuSection = 'main' | 'settings' | 'admin';
@@ -88,8 +90,9 @@ export default function SidebarNav({
     // 管理者メニュー
     { id: 'admin-users', label: 'ユーザー管理', icon: Users, section: 'admin', adminOnly: true },
     { id: 'admin-announcements', label: 'お知らせ管理', icon: Bell, section: 'admin', adminOnly: true },
+    { id: 'admin-monitor', label: 'モニター管理', icon: Shield, section: 'admin', adminOnly: true },
     { id: 'admin-service', label: 'サービス管理', icon: Settings, section: 'admin', adminOnly: true },
-    { id: 'admin-kdl', label: 'KDL管理', icon: BookOpen, section: 'admin', adminOnly: true },
+    { id: 'admin-ai-model', label: 'AIモデル選択', icon: Cpu, section: 'admin', adminOnly: true },
     { id: 'admin-affiliate', label: 'アフィリエイト管理', icon: Share2, section: 'admin', adminOnly: true },
     { id: 'admin-featured', label: 'ピックアップ管理', icon: Star, section: 'admin', adminOnly: true },
     { id: 'admin-gamification', label: 'ゲーミフィケーション管理', icon: Gamepad2, section: 'admin', adminOnly: true },

@@ -14,6 +14,9 @@ interface Announcement {
   content: string;
   created_at: string;
   type: 'update' | 'feature' | 'maintenance' | 'info';
+  link_url?: string;
+  link_text?: string;
+  announcement_date?: string;
 }
 
 const categoryLabels = {
@@ -106,8 +109,10 @@ export default function AnnouncementsPageClient() {
           ) : (
             announcements.map((announcement) => {
               const category = categoryLabels[announcement.type] || categoryLabels.info;
-              const date = announcement.created_at 
-                ? new Date(announcement.created_at).toLocaleDateString('ja-JP')
+              // announcement_dateがあればそれを使用、なければcreated_atを使用
+              const displayDate = announcement.announcement_date || announcement.created_at;
+              const date = displayDate
+                ? new Date(displayDate).toLocaleDateString('ja-JP')
                 : '';
               
               return (
@@ -134,6 +139,21 @@ export default function AnnouncementsPageClient() {
                   <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
                     {announcement.content}
                   </p>
+
+                  {/* リンクがある場合は表示 */}
+                  {announcement.link_url && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <a
+                        href={announcement.link_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium transition-colors"
+                      >
+                        <ExternalLink size={16} />
+                        {announcement.link_text || '詳細を見る'}
+                      </a>
+                    </div>
+                  )}
                 </article>
               );
             })

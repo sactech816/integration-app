@@ -1,22 +1,27 @@
 /**
  * モニターユーザー管理コンポーネント
  * 管理者が特定ユーザーに期間限定で有料プラン機能を開放
+ * Kindle/集客メーカー両対応
  */
 
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { User, Clock, Shield, Trash2, PlusCircle, AlertCircle, Loader2, Search, CheckCircle } from 'lucide-react';
-import { PlanTier, PLAN_DEFINITIONS } from '@/lib/subscription';
+import { User, Clock, Shield, Trash2, PlusCircle, AlertCircle, Loader2, Search, CheckCircle, BookOpen, Sparkles } from 'lucide-react';
+import { PlanTier, PLAN_DEFINITIONS, MakersPlanTier, MAKERS_PLAN_DEFINITIONS } from '@/lib/subscription';
+
+// サービス種別
+type ServiceType = 'kdl' | 'makers';
 
 interface MonitorUser {
   id: string;
   user_id: string;
   admin_user_id: string;
-  monitor_plan_type: PlanTier;
+  monitor_plan_type: PlanTier | MakersPlanTier;
   monitor_start_at: string;
   monitor_expires_at: string;
   notes: string | null;
+  service?: ServiceType; // サービス種別（新規追加）
   created_at: string;
   updated_at: string;
   user?: {
@@ -31,30 +36,42 @@ interface MonitorUser {
 
 interface MonitorUsersManagerProps {
   adminUserId: string;
-  adminEmail: string;
+  adminEmail?: string;
+  defaultService?: ServiceType; // デフォルトで表示するサービス
 }
 
-export default function MonitorUsersManager({ adminUserId, adminEmail }: MonitorUsersManagerProps) {
+export default function MonitorUsersManager({ adminUserId, adminEmail, defaultService = 'kdl' }: MonitorUsersManagerProps) {
   const [monitors, setMonitors] = useState<MonitorUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showExpired, setShowExpired] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedService, setSelectedService] = useState<ServiceType>(defaultService);
 
   // フォーム入力
   const [formEmail, setFormEmail] = useState('');
-  const [formPlan, setFormPlan] = useState<PlanTier>('pro');
+  const [formPlan, setFormPlan] = useState<PlanTier | MakersPlanTier>('pro');
+  const [formService, setFormService] = useState<ServiceType>(defaultService);
   const [formDuration, setFormDuration] = useState(30); // デフォルト30日
   const [formNotes, setFormNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // サービス変更時にプランをリセット
+  useEffect(() => {
+    if (formService === 'makers') {
+      setFormPlan('pro');
+    } else {
+      setFormPlan('pro');
+    }
+  }, [formService]);
 
   // モニター一覧を取得
   const fetchMonitors = async () => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `/api/admin/monitor-users?adminUserId=${adminUserId}&showExpired=${showExpired}`
+        `/api/admin/monitor-users?adminUserId=${adminUserId}&showExpired=${showExpired}&service=${selectedService}`
       );
       const data = await response.json();
 
@@ -73,7 +90,7 @@ export default function MonitorUsersManager({ adminUserId, adminEmail }: Monitor
 
   useEffect(() => {
     fetchMonitors();
-  }, [showExpired, adminUserId]);
+  }, [showExpired, adminUserId, selectedService]);
 
   // モニターユーザーを追加
   const handleAddMonitor = async (e: React.FormEvent) => {
@@ -91,6 +108,7 @@ export default function MonitorUsersManager({ adminUserId, adminEmail }: Monitor
           monitorPlanType: formPlan,
           durationDays: formDuration,
           notes: formNotes || null,
+          service: formService,
         }),
       });
 
@@ -100,6 +118,7 @@ export default function MonitorUsersManager({ adminUserId, adminEmail }: Monitor
         setMessage({ type: 'success', text: data.message });
         setFormEmail('');
         setFormPlan('pro');
+        setFormService(selectedService);
         setFormDuration(30);
         setFormNotes('');
         setShowAddForm(false);
@@ -165,6 +184,16 @@ export default function MonitorUsersManager({ adminUserId, adminEmail }: Monitor
     monitor.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // プラン名を取得
+  const getPlanName = (planType: string, service: ServiceType = 'kdl'): string => {
+    if (service === 'makers') {
+      const plan = MAKERS_PLAN_DEFINITIONS[planType as MakersPlanTier];
+      return plan?.nameJa || planType;
+    }
+    const plan = PLAN_DEFINITIONS[planType as PlanTier];
+    return plan?.nameJa || planType;
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       {/* ヘッダー */}
@@ -174,16 +203,45 @@ export default function MonitorUsersManager({ adminUserId, adminEmail }: Monitor
             <Shield className="text-purple-600" size={24} />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">モニターユーザー管理</h2>
+            <h2 className="text-xl font-bold text-gray-900">モニターユーザー管理</h2>
             <p className="text-sm text-gray-600">期間限定で有料プラン機能を開放</p>
           </div>
         </div>
         <button
-          onClick={() => setShowAddForm(!showAddForm)}
+          onClick={() => {
+            setFormService(selectedService);
+            setShowAddForm(!showAddForm);
+          }}
           className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors font-bold"
         >
           <PlusCircle size={20} />
           モニター追加
+        </button>
+      </div>
+
+      {/* サービス選択タブ */}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => setSelectedService('kdl')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            selectedService === 'kdl'
+              ? 'bg-amber-100 text-amber-700'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          <BookOpen size={18} />
+          Kindle執筆
+        </button>
+        <button
+          onClick={() => setSelectedService('makers')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            selectedService === 'makers'
+              ? 'bg-indigo-100 text-indigo-700'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          <Sparkles size={18} />
+          集客メーカー
         </button>
       </div>
 
@@ -226,20 +284,79 @@ export default function MonitorUsersManager({ adminUserId, adminEmail }: Monitor
 
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
+                対象サービス *
+              </label>
+              <div className="flex gap-3 mb-4">
+                <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer border-2 transition-colors ${
+                  formService === 'kdl' ? 'border-amber-500 bg-amber-50' : 'border-gray-200 hover:border-gray-300'
+                }`}>
+                  <input
+                    type="radio"
+                    name="formService"
+                    value="kdl"
+                    checked={formService === 'kdl'}
+                    onChange={() => setFormService('kdl')}
+                    className="sr-only"
+                  />
+                  <BookOpen size={18} className={formService === 'kdl' ? 'text-amber-600' : 'text-gray-400'} />
+                  <span className={formService === 'kdl' ? 'text-amber-700 font-bold' : 'text-gray-600'}>Kindle執筆</span>
+                </label>
+                <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer border-2 transition-colors ${
+                  formService === 'makers' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300'
+                }`}>
+                  <input
+                    type="radio"
+                    name="formService"
+                    value="makers"
+                    checked={formService === 'makers'}
+                    onChange={() => setFormService('makers')}
+                    className="sr-only"
+                  />
+                  <Sparkles size={18} className={formService === 'makers' ? 'text-indigo-600' : 'text-gray-400'} />
+                  <span className={formService === 'makers' ? 'text-indigo-700 font-bold' : 'text-gray-600'}>集客メーカー</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
                 付与するプラン *
               </label>
-              <select
-                value={formPlan}
-                onChange={(e) => setFormPlan(e.target.value as PlanTier)}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-900"
-              >
-                <option value="lite">Lite - {PLAN_DEFINITIONS.lite.nameJa}</option>
-                <option value="standard">Standard - {PLAN_DEFINITIONS.standard.nameJa}</option>
-                <option value="pro">Pro - {PLAN_DEFINITIONS.pro.nameJa}</option>
-                <option value="business">Business - {PLAN_DEFINITIONS.business.nameJa}</option>
-                <option value="enterprise">Enterprise - {PLAN_DEFINITIONS.enterprise.nameJa}</option>
-              </select>
+              {formService === 'kdl' ? (
+                <select
+                  value={formPlan}
+                  onChange={(e) => setFormPlan(e.target.value as PlanTier)}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white text-gray-900"
+                >
+                  <optgroup label="初回プラン（一括）">
+                    <option value="initial_trial">トライアル（¥49,800相当）</option>
+                    <option value="initial_standard">スタンダード（¥99,800相当）</option>
+                    <option value="initial_business">ビジネス（¥198,000相当）</option>
+                  </optgroup>
+                  <optgroup label="継続プラン（月額）">
+                    <option value="lite">ライト（¥2,980/月相当）</option>
+                    <option value="standard">スタンダード（¥4,980/月相当）</option>
+                    <option value="pro">プロ（¥9,800/月相当）</option>
+                    <option value="business">ビジネス（¥29,800/月相当）</option>
+                    <option value="enterprise">エンタープライズ（カスタム）</option>
+                  </optgroup>
+                </select>
+              ) : (
+                <select
+                  value={formPlan}
+                  onChange={(e) => setFormPlan(e.target.value as MakersPlanTier)}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-900"
+                >
+                  <option value="pro">Pro - {MAKERS_PLAN_DEFINITIONS.pro.nameJa}（¥3,980相当）</option>
+                </select>
+              )}
+              {formService === 'makers' && (
+                <p className="text-xs text-gray-500 mt-1">
+                  集客メーカーのモニターは有料プラン（¥3,980/月）相当の機能が利用可能になります
+                </p>
+              )}
             </div>
 
             <div>
@@ -368,10 +485,20 @@ export default function MonitorUsersManager({ adminUserId, adminEmail }: Monitor
                         <div className="font-bold text-gray-900">
                           {monitor.user?.email || 'Unknown'}
                         </div>
-                        <div className="text-sm text-gray-600">
-                          プラン: <span className="font-bold text-purple-600">
-                            {PLAN_DEFINITIONS[monitor.monitor_plan_type as PlanTier].nameJa}
+                        <div className="text-sm text-gray-600 flex items-center gap-2">
+                          <span>プラン:</span>
+                          <span className="font-bold text-purple-600">
+                            {getPlanName(monitor.monitor_plan_type, monitor.service || selectedService)}
                           </span>
+                          {monitor.service && (
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              monitor.service === 'kdl' 
+                                ? 'bg-amber-100 text-amber-700' 
+                                : 'bg-indigo-100 text-indigo-700'
+                            }`}>
+                              {monitor.service === 'kdl' ? 'Kindle' : '集客メーカー'}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

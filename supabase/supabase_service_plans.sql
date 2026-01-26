@@ -55,7 +55,10 @@ CREATE INDEX IF NOT EXISTS idx_service_plans_active ON service_plans(service, is
 -- 3. RLS (Row Level Security) の有効化
 ALTER TABLE service_plans ENABLE ROW LEVEL SECURITY;
 
--- 4. RLSポリシーの作成
+-- 4. RLSポリシーの作成（既存があれば削除してから作成）
+DROP POLICY IF EXISTS "Anyone can read active plans" ON service_plans;
+DROP POLICY IF EXISTS "Service role can manage plans" ON service_plans;
+
 -- 誰でも読み取り可能（フロントエンドで使用）
 CREATE POLICY "Anyone can read active plans"
   ON service_plans FOR SELECT
@@ -76,6 +79,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_service_plans_updated_at ON service_plans;
 CREATE TRIGGER trigger_update_service_plans_updated_at
   BEFORE UPDATE ON service_plans
   FOR EACH ROW
@@ -127,7 +131,54 @@ ON CONFLICT (service, plan_tier) DO UPDATE SET
   updated_at = NOW();
 
 -- ========================================
--- Kindle（KDL）継続プラン
+-- Kindle（KDL）初回プラン（一括払い）
+-- ========================================
+INSERT INTO service_plans (
+  service, plan_tier, display_name, description, price, price_type,
+  can_create, can_edit, can_use_ai, can_use_analytics, can_use_gamification,
+  can_download_html, can_embed, can_hide_copyright, can_use_affiliate,
+  ai_daily_limit, ai_monthly_limit, book_limit,
+  premium_credits_daily, standard_credits_daily,
+  sort_order, is_visible
+) VALUES
+-- トライアルプラン（初回）
+(
+  'kdl', 'initial_trial', 'トライアル', '初めての方向け。基本機能をお試し。',
+  49800, 'one_time',
+  true, true, true, false, false,
+  true, false, false, false,
+  20, 300, 3,
+  0, 20,
+  1, true
+),
+-- スタンダードプラン（初回）
+(
+  'kdl', 'initial_standard', 'スタンダード', '本格的に執筆を始めたい方に。',
+  99800, 'one_time',
+  true, true, true, true, false,
+  true, false, false, false,
+  50, 1000, 10,
+  10, 50,
+  2, true
+),
+-- ビジネスプラン（初回）
+(
+  'kdl', 'initial_business', 'ビジネス', 'プロの執筆者向け。フル機能解放。',
+  198000, 'one_time',
+  true, true, true, true, true,
+  true, true, true, true,
+  -1, -1, -1,
+  50, -1,
+  3, true
+)
+ON CONFLICT (service, plan_tier) DO UPDATE SET
+  display_name = EXCLUDED.display_name,
+  description = EXCLUDED.description,
+  price = EXCLUDED.price,
+  updated_at = NOW();
+
+-- ========================================
+-- Kindle（KDL）継続プラン（月額）
 -- ========================================
 INSERT INTO service_plans (
   service, plan_tier, display_name, description, price, price_type,
@@ -145,9 +196,9 @@ INSERT INTO service_plans (
   false, false, false, false,
   3, 10, 1,
   0, 3,
-  0, false
+  10, false
 ),
--- ライトプラン
+-- ライトプラン（継続）
 (
   'kdl', 'lite', 'ライト', 'AI執筆サポート（20回/日）、書籍数無制限',
   2980, 'monthly',
@@ -155,9 +206,9 @@ INSERT INTO service_plans (
   true, false, false, false,
   20, 300, -1,
   0, 20,
-  1, true
+  11, true
 ),
--- スタンダードプラン
+-- スタンダードプラン（継続）
 (
   'kdl', 'standard', 'スタンダード', 'AI執筆サポート（30回/日）、メール優先サポート',
   4980, 'monthly',
@@ -165,9 +216,9 @@ INSERT INTO service_plans (
   true, false, false, false,
   30, 900, -1,
   0, 30,
-  2, true
+  12, true
 ),
--- プロプラン
+-- プロプラン（継続）
 (
   'kdl', 'pro', 'プロ', '高品質AI 20回/日、高速AI 80回/日、チャットサポート',
   9800, 'monthly',
@@ -175,9 +226,9 @@ INSERT INTO service_plans (
   true, false, false, false,
   100, 1000, -1,
   20, 80,
-  3, true
+  13, true
 ),
--- ビジネスプラン
+-- ビジネスプラン（継続）
 (
   'kdl', 'business', 'ビジネス', '高品質AI 50回/日、高速AI無制限、グループコンサル月1回',
   29800, 'monthly',
@@ -185,9 +236,9 @@ INSERT INTO service_plans (
   true, true, true, true,
   -1, -1, -1,
   50, -1,
-  4, true
+  14, true
 ),
--- エンタープライズプラン
+-- エンタープライズプラン（継続）
 (
   'kdl', 'enterprise', 'エンタープライズ', 'カスタムAI環境、専任サポート、API連携',
   -1, 'monthly',  -- -1 = 要相談
@@ -195,7 +246,7 @@ INSERT INTO service_plans (
   true, true, true, true,
   -1, -1, -1,
   -1, -1,
-  5, false
+  15, false
 )
 ON CONFLICT (service, plan_tier) DO UPDATE SET
   display_name = EXCLUDED.display_name,
