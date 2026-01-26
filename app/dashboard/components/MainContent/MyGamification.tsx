@@ -17,16 +17,31 @@ import {
 import { getCampaigns, updateCampaign, deleteCampaign } from '@/app/actions/gamification';
 import type { GamificationCampaign, CampaignType } from '@/lib/types';
 import { CAMPAIGN_TYPE_LABELS } from '@/lib/types';
-import { PlanTier } from '@/lib/subscription';
+import { 
+  PlanTier, 
+  MakersPlanTier,
+  MAKERS_GAMIFICATION_LIMITS,
+  getMakersPlanTier
+} from '@/lib/subscription';
 
-// ゲーム作成数制限
-export const GAMIFICATION_LIMITS: Record<PlanTier, number> = {
-  none: 1,        // 無料: 1件まで
-  lite: 3,        // ライト: 3件まで
-  standard: 5,    // スタンダード: 5件まで
-  pro: 10,        // プロ: 10件まで
-  business: 50,   // ビジネス: 50件まで
-  enterprise: 999, // エンタープライズ: 無制限
+// 集客メーカー用のゲーム作成数制限を使用
+// guest/freeは0（作成不可）、proは10（または-1で無制限）
+const getGamificationLimitForMakers = (planTier: PlanTier): number => {
+  // PlanTierをMakersPlanTierにマッピング
+  // none → free（ログイン済みだがKDL未課金）
+  // lite/standard/pro/business/enterprise → pro（集客メーカーのプロプラン相当）
+  let makersPlan: MakersPlanTier;
+  
+  if (planTier === 'none') {
+    // KDL未課金 = 集客メーカーのfreeプラン相当
+    makersPlan = 'free';
+  } else {
+    // KDL課金済み = 集客メーカーのproプラン相当
+    makersPlan = 'pro';
+  }
+  
+  const limit = MAKERS_GAMIFICATION_LIMITS[makersPlan];
+  return limit === -1 ? 999 : limit; // -1（無制限）は999として扱う
 };
 
 type MyGamificationProps = {
@@ -38,9 +53,11 @@ export default function MyGamification({ userId, planTier }: MyGamificationProps
   const [loading, setLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<GamificationCampaign[]>([]);
 
-  const limit = GAMIFICATION_LIMITS[planTier] || 1;
-  const isLimitReached = campaigns.length >= limit;
+  // 集客メーカー用の制限を取得
+  const limit = getGamificationLimitForMakers(planTier);
+  const isLimitReached = limit === 0 || campaigns.length >= limit;
   const isPaidUser = planTier !== 'none';
+  const canCreate = limit > 0; // 作成可能かどうか（guest/freeは不可）
 
   useEffect(() => {
     fetchCampaigns();
@@ -81,6 +98,10 @@ export default function MyGamification({ userId, planTier }: MyGamificationProps
   };
 
   const handleCreateNew = () => {
+    if (!canCreate) {
+      alert('ゲーム作成機能を利用するには、有料プランへのアップグレードが必要です。');
+      return;
+    }
     if (isLimitReached) {
       alert(`現在のプランでは${limit}件までしか作成できません。\nアップグレードをご検討ください。`);
       return;
@@ -128,10 +149,21 @@ export default function MyGamification({ userId, planTier }: MyGamificationProps
             ガチャ、スロット、スクラッチなどのゲームを作成して、あなたのサイトや顧客に提供できます
           </p>
           <div className="flex items-center gap-2 mt-2">
-            <span className="text-sm text-gray-600">
-              作成数: <span className="font-bold">{campaigns.length}</span> / {limit}件
-            </span>
-            {!isPaidUser && (
+            {canCreate ? (
+              <span className="text-sm text-gray-600">
+                作成数: <span className="font-bold">{campaigns.length}</span> / {limit}件
+              </span>
+            ) : (
+              <span className="text-sm text-gray-600">
+                作成数: <span className="font-bold">{campaigns.length}</span>件
+              </span>
+            )}
+            {!canCreate && (
+              <span className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full font-bold">
+                有料プラン限定
+              </span>
+            )}
+            {canCreate && !isPaidUser && (
               <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold">
                 無料プラン
               </span>
@@ -140,20 +172,43 @@ export default function MyGamification({ userId, planTier }: MyGamificationProps
         </div>
         <button
           onClick={handleCreateNew}
-          disabled={isLimitReached}
+          disabled={!canCreate || isLimitReached}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-            isLimitReached
+            !canCreate || isLimitReached
               ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
               : 'bg-indigo-600 text-white hover:bg-indigo-700'
           }`}
         >
-          {isLimitReached ? <Lock size={16} /> : <Plus size={16} />}
+          {!canCreate || isLimitReached ? <Lock size={16} /> : <Plus size={16} />}
           新規ゲーム作成
         </button>
       </div>
 
+      {/* 無料ユーザー向けアップグレード案内 */}
+      {!canCreate && (
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <Crown className="text-purple-500 flex-shrink-0 mt-0.5" size={20} />
+            <div className="flex-1">
+              <h3 className="font-bold text-purple-800">有料プランで利用可能</h3>
+              <p className="text-sm text-purple-700 mt-1">
+                ゲーム作成機能は有料プラン（プロプラン）でご利用いただけます。
+                ガチャ、スロット、スクラッチなどのゲームを作成して、顧客エンゲージメントを高めましょう。
+              </p>
+              <button
+                onClick={() => window.location.href = '/dashboard?view=settings'}
+                className="mt-3 text-sm font-bold text-purple-700 hover:text-purple-800 flex items-center gap-1"
+              >
+                プランを確認する
+                <ExternalLink size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 制限到達時のアップグレード案内 */}
-      {isLimitReached && (
+      {canCreate && isLimitReached && (
         <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4">
           <div className="flex items-start gap-3">
             <Crown className="text-amber-500 flex-shrink-0 mt-0.5" size={20} />

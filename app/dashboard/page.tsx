@@ -12,6 +12,9 @@ import LoginBonusToast from '@/components/gamification/LoginBonusToast';
 import MonitorUsersManager from '@/components/shared/MonitorUsersManager';
 import AdminAISettings from '@/components/shared/AdminAISettings';
 import AdminFeatureLimitsSettings from '@/components/shared/AdminFeatureLimitsSettings';
+import AdminAIUsageStats from '@/components/shared/AdminAIUsageStats';
+import AdminPlanSettings from '@/components/shared/AdminPlanSettings';
+import KdlAccessModal from '@/components/shared/KdlAccessModal';
 import AffiliateManager from './components/Admin/AffiliateManager';
 import FeaturedManager from './components/Admin/FeaturedManager';
 import GamificationManager from './components/Admin/GamificationManager';
@@ -98,6 +101,9 @@ function DashboardContent() {
   // 右側パネル状態
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [rightPanelContent, setRightPanelContent] = useState<React.ReactNode>(null);
+  
+  // KDLアクセスモーダル状態
+  const [showKdlModal, setShowKdlModal] = useState(false);
   const [rightPanelTitle, setRightPanelTitle] = useState<string>('');
   
   // KDLサブスクリプション状態
@@ -215,8 +221,14 @@ function DashboardContent() {
 
     // Kindle執筆への遷移
     if (itemId === 'kindle') {
-      const adminKey = isAdmin ? `?admin_key=${process.env.NEXT_PUBLIC_ADMIN_KEY || ''}` : '';
-      router.push(`/kindle${adminKey}`);
+      // 管理者または課金済みユーザーは直接遷移
+      if (isAdmin || kdlSubscription?.hasActiveSubscription) {
+        const adminKey = isAdmin ? `?admin_key=${process.env.NEXT_PUBLIC_ADMIN_KEY || ''}` : '';
+        router.push(`/kindle${adminKey}`);
+      } else {
+        // 未課金ユーザーにはモーダルを表示
+        setShowKdlModal(true);
+      }
       return;
     }
   };
@@ -321,6 +333,12 @@ function DashboardContent() {
             onDelete={adminData.handleDeleteAnnouncement}
           />
         ),
+        ServiceManager: user ? (
+          <div className="space-y-6">
+            <AdminPlanSettings userId={user.id} userEmail={user.email} />
+            <AdminAIUsageStats userId={user.id} />
+          </div>
+        ) : null,
         KdlManager: user ? (
           <div className="space-y-6">
             <MonitorUsersManager adminUserId={user.id} adminEmail={user.email} />
@@ -390,6 +408,9 @@ function DashboardContent() {
 
       {/* モーダル */}
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
+      
+      {/* KDLアクセス案内モーダル */}
+      <KdlAccessModal isOpen={showKdlModal} onClose={() => setShowKdlModal(false)} />
       
       {/* ゲーミフィケーション */}
       {user && <WelcomeBonus userId={user.id} />}

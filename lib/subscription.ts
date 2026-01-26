@@ -6,10 +6,17 @@
 import { createClient } from '@supabase/supabase-js';
 
 // ========================================
-// プラン定義
+// サービス別プラン定義
 // ========================================
 
+// Kindle（KDL）のプランTier
 export type PlanTier = 'none' | 'lite' | 'standard' | 'pro' | 'business' | 'enterprise';
+
+// 集客メーカーのプランTier
+export type MakersPlanTier = 'guest' | 'free' | 'pro';
+
+// サービス種別
+export type ServiceType = 'makers' | 'kdl';
 
 export interface PlanDefinition {
   id: PlanTier;
@@ -430,11 +437,11 @@ export function getAICreditsForPlan(planTier: PlanTier): {
 }
 
 // ========================================
-// ゲーミフィケーション作成数制限
+// ゲーミフィケーション作成数制限（フォールバック用）
 // ========================================
 
 /**
- * プランごとのゲーム作成数制限
+ * KDLプランごとのゲーム作成数制限（フォールバック）
  */
 export const GAMIFICATION_LIMITS: Record<PlanTier, number> = {
   none: 1,        // 無料: 1件まで
@@ -446,10 +453,26 @@ export const GAMIFICATION_LIMITS: Record<PlanTier, number> = {
 };
 
 /**
- * ゲーム作成数制限を取得
+ * 集客メーカープランごとのゲーム作成数制限（フォールバック）
+ */
+export const MAKERS_GAMIFICATION_LIMITS: Record<MakersPlanTier, number> = {
+  guest: 0,       // ゲスト: 作成不可
+  free: 0,        // フリー: 作成不可
+  pro: 10,        // プロ: 10件まで（DBから取得可能）
+};
+
+/**
+ * ゲーム作成数制限を取得（KDL用）
  */
 export function getGamificationLimit(planTier: PlanTier): number {
   return GAMIFICATION_LIMITS[planTier] || 1;
+}
+
+/**
+ * ゲーム作成数制限を取得（集客メーカー用）
+ */
+export function getMakersGamificationLimit(planTier: MakersPlanTier): number {
+  return MAKERS_GAMIFICATION_LIMITS[planTier] || 0;
 }
 
 /**
@@ -458,6 +481,149 @@ export function getGamificationLimit(planTier: PlanTier): number {
 export function canCreateGamification(planTier: PlanTier, currentCount: number): boolean {
   const limit = getGamificationLimit(planTier);
   return currentCount < limit;
+}
+
+/**
+ * ゲーム作成が可能かチェック（集客メーカー用）
+ */
+export function canCreateMakersGamification(planTier: MakersPlanTier, currentCount: number): boolean {
+  const limit = getMakersGamificationLimit(planTier);
+  if (limit === -1) return true; // 無制限
+  return currentCount < limit;
+}
+
+// ========================================
+// 集客メーカープラン定義（フォールバック用）
+// ========================================
+
+export interface MakersPlanDefinition {
+  id: MakersPlanTier;
+  name: string;
+  nameJa: string;
+  price: number;
+  priceType: 'monthly' | 'one_time';
+  canCreate: boolean;
+  canEdit: boolean;
+  canUseAI: boolean;
+  canUseAnalytics: boolean;
+  canUseGamification: boolean;
+  canDownloadHtml: boolean;
+  canEmbed: boolean;
+  canHideCopyright: boolean;
+  canUseAffiliate: boolean;
+  aiDailyLimit: number;
+  gamificationLimit: number;
+  features: string[];
+}
+
+export const MAKERS_PLAN_DEFINITIONS: Record<MakersPlanTier, MakersPlanDefinition> = {
+  guest: {
+    id: 'guest',
+    name: 'Guest',
+    nameJa: 'ゲスト',
+    price: 0,
+    priceType: 'one_time',
+    canCreate: true,
+    canEdit: false,
+    canUseAI: false,
+    canUseAnalytics: false,
+    canUseGamification: false,
+    canDownloadHtml: false,
+    canEmbed: false,
+    canHideCopyright: false,
+    canUseAffiliate: false,
+    aiDailyLimit: 0,
+    gamificationLimit: 0,
+    features: ['新規作成', 'ポータル掲載', 'URL発行'],
+  },
+  free: {
+    id: 'free',
+    name: 'Free',
+    nameJa: 'フリープラン',
+    price: 0,
+    priceType: 'monthly',
+    canCreate: true,
+    canEdit: true,
+    canUseAI: false,
+    canUseAnalytics: false,
+    canUseGamification: false,
+    canDownloadHtml: false,
+    canEmbed: false,
+    canHideCopyright: false,
+    canUseAffiliate: false,
+    aiDailyLimit: 0,
+    gamificationLimit: 0,
+    features: ['新規作成', 'ポータル掲載', 'URL発行', '編集・更新', 'アフィリエイト機能'],
+  },
+  pro: {
+    id: 'pro',
+    name: 'Pro',
+    nameJa: 'プロプラン',
+    price: 3980,
+    priceType: 'monthly',
+    canCreate: true,
+    canEdit: true,
+    canUseAI: true,
+    canUseAnalytics: true,
+    canUseGamification: true,
+    canDownloadHtml: true,
+    canEmbed: true,
+    canHideCopyright: true,
+    canUseAffiliate: true,
+    aiDailyLimit: -1, // 無制限
+    gamificationLimit: -1, // 無制限
+    features: [
+      '新規作成', 'ポータル掲載', 'URL発行', '編集・更新',
+      'アフィリエイト機能', 'アクセス解析', 'AI利用（優先）',
+      'ゲーミフィケーション（無制限）', 'HTMLダウンロード',
+      '埋め込みコード発行', 'コピーライト非表示',
+      'お問い合わせ', '各種セミナー参加', 'グループコンサル',
+    ],
+  },
+};
+
+// ========================================
+// DB連携関数
+// ========================================
+
+/**
+ * サービス別プラン設定をDBから取得（クライアントサイド用）
+ */
+export async function fetchServicePlans(service: ServiceType): Promise<any[]> {
+  try {
+    const response = await fetch(`/api/settings/plans?service=${service}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch plans');
+    }
+    const data = await response.json();
+    return data.plans?.[service] || [];
+  } catch (err) {
+    console.error('Error fetching service plans:', err);
+    // フォールバック
+    if (service === 'makers') {
+      return Object.values(MAKERS_PLAN_DEFINITIONS);
+    }
+    return Object.values(PLAN_DEFINITIONS);
+  }
+}
+
+/**
+ * 集客メーカーのユーザープランを判定
+ */
+export function getMakersPlanTier(
+  isLoggedIn: boolean,
+  hasProSubscription: boolean
+): MakersPlanTier {
+  if (!isLoggedIn) return 'guest';
+  if (hasProSubscription) return 'pro';
+  return 'free';
+}
+
+/**
+ * 集客メーカーの機能制限を取得
+ */
+export function getMakersFeatureLimits(planTier: MakersPlanTier): MakersPlanDefinition {
+  return MAKERS_PLAN_DEFINITIONS[planTier] || MAKERS_PLAN_DEFINITIONS.guest;
 }
 
 
