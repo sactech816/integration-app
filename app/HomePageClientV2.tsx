@@ -6,6 +6,7 @@ import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
 import ServiceSelector from '@/components/shared/ServiceSelector';
+import AnnouncementBanner from '@/components/shared/AnnouncementBanner';
 import { 
   Sparkles, 
   UserCircle, 
@@ -262,6 +263,8 @@ export default function HomePageClientV2() {
 
   return (
     <div className="min-h-screen bg-white">
+      <AnnouncementBanner serviceType="all" />
+      
       <style>{`
         @keyframes scroll {
           0% { transform: translateX(0); }
