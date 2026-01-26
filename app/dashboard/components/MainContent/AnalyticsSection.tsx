@@ -80,11 +80,11 @@ export default function AnalyticsSection({
               プロフィールLP・ビジネスLPの詳細なアクセス解析（閲覧数、クリック率、精読率、滞在時間など）は、有料プランでご利用いただけます。
             </p>
             <button
-              onClick={() => onNavigate?.('kindle/lp')}
+              onClick={() => onNavigate?.('/#create-section')}
               className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-2.5 px-6 rounded-lg text-sm flex items-center gap-2 mx-auto transition-all shadow-md"
             >
               <Sparkles size={16} />
-              Pro機能を見る
+              料金プランを見る
             </button>
           </div>
         </div>

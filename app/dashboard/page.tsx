@@ -25,7 +25,7 @@ import { Loader2 } from 'lucide-react';
 import DashboardLayout from './components/DashboardLayout';
 import Sidebar from './components/Sidebar';
 import MainContent, { ActiveView } from './components/MainContent';
-import { UserManager, AnnouncementManager, UserExport } from './components/Admin';
+import { UserManager, AnnouncementManager, UserExport, CleanupManager } from './components/Admin';
 
 // カスタムフック
 import { useDashboardData } from './hooks/useDashboardData';
@@ -351,6 +351,7 @@ function DashboardContent() {
         GamificationManager: <GamificationManager />,
         AffiliateManager: <AffiliateManager user={user} />,
         FeaturedManager: <FeaturedManager />,
+        CleanupManager: <CleanupManager userId={user?.id} />,
       }
     : undefined;
 

@@ -19,6 +19,7 @@ import {
   LucideIcon,
   Shield,
   Cpu,
+  Trash2,
 } from 'lucide-react';
 
 export type MenuSection = 'main' | 'settings' | 'admin';
@@ -96,6 +97,7 @@ export default function SidebarNav({
     { id: 'admin-affiliate', label: 'アフィリエイト管理', icon: Share2, section: 'admin', adminOnly: true },
     { id: 'admin-featured', label: 'ピックアップ管理', icon: Star, section: 'admin', adminOnly: true },
     { id: 'admin-gamification', label: 'ゲーミフィケーション管理', icon: Gamepad2, section: 'admin', adminOnly: true },
+    { id: 'admin-cleanup', label: 'データクリーンアップ', icon: Trash2, section: 'admin', adminOnly: true },
   ];
 
   const renderMenuItem = (item: MenuItem) => {

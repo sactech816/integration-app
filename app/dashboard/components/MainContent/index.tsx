@@ -30,7 +30,8 @@ export type ActiveView =
   | 'admin-ai-model'
   | 'admin-affiliate'
   | 'admin-featured'
-  | 'admin-gamification';
+  | 'admin-gamification'
+  | 'admin-cleanup';
 
 type KdlSubscription = {
   hasActiveSubscription: boolean;
@@ -90,6 +91,7 @@ type MainContentProps = {
     GamificationManager?: React.ReactNode;
     AffiliateManager?: React.ReactNode;
     FeaturedManager?: React.ReactNode;
+    CleanupManager?: React.ReactNode;
   };
 };
 
@@ -250,8 +252,12 @@ export default function MainContent({
         <>{adminComponents.FeaturedManager}</>
       )}
 
+      {activeView === 'admin-cleanup' && adminComponents?.CleanupManager && (
+        <>{adminComponents.CleanupManager}</>
+      )}
+
       {/* デフォルト */}
-      {!['dashboard', 'quiz', 'profile', 'business', 'booking', 'survey', 'my-games', 'affiliate', 'settings', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification'].includes(activeView) && (
+      {!['dashboard', 'quiz', 'profile', 'business', 'booking', 'survey', 'my-games', 'affiliate', 'settings', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-cleanup'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>
