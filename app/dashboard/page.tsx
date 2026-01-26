@@ -350,7 +350,7 @@ function DashboardContent() {
         ) : null,
         GamificationManager: <GamificationManager />,
         AffiliateManager: <AffiliateManager user={user} />,
-        FeaturedManager: <FeaturedManager contents={contents} />,
+        FeaturedManager: <FeaturedManager />,
       }
     : undefined;
 
