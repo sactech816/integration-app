@@ -14,8 +14,6 @@ import {
   GamificationCampaign, 
   LoginBonusSettings
 } from '@/lib/types';
-import Header from '@/components/shared/Header';
-import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
 import ContentFooter from '@/components/shared/ContentFooter';
 import PointDisplay from '@/components/gamification/PointDisplay';
@@ -139,12 +137,8 @@ export default function LoginBonusPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-50">
-        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
-        <main className="container mx-auto px-4 py-20 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        </main>
-        <Footer />
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
       </div>
     );
@@ -152,16 +146,12 @@ export default function LoginBonusPage() {
 
   if (!campaign) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-50">
-        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
-        <main className="container mx-auto px-4 py-20">
-          <div className="max-w-md mx-auto text-center">
-            <AlertCircle className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">キャンペーンが見つかりません</h1>
-            <p className="text-gray-600">指定されたログインボーナスは存在しないか、終了しています。</p>
-          </div>
-        </main>
-        <Footer />
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center px-4">
+          <AlertCircle className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">キャンペーンが見つかりません</h1>
+          <p className="text-gray-600">指定されたログインボーナスは存在しないか、終了しています。</p>
+        </div>
         {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
       </div>
     );
@@ -184,7 +174,6 @@ export default function LoginBonusPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-50">
-      <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-lg mx-auto">
           {/* ヘッダー */}
@@ -317,7 +306,6 @@ export default function LoginBonusPage() {
         </div>
       </main>
       <ContentFooter toolType="gamification" variant="light" />
-      <Footer />
       {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
     </div>
   );

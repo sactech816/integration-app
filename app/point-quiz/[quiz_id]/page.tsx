@@ -10,8 +10,6 @@ import {
   getAdminGamificationSetting 
 } from '@/app/actions/gamification';
 import { Quiz } from '@/lib/types';
-import Header from '@/components/shared/Header';
-import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
 import ContentFooter from '@/components/shared/ContentFooter';
 import PointDisplay from '@/components/gamification/PointDisplay';
@@ -212,12 +210,8 @@ export default function PointQuizPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
-        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
-        <main className="container mx-auto px-4 py-20 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-white" />
-        </main>
-        <Footer />
+      <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-white" />
         {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
       </div>
     );
@@ -225,16 +219,12 @@ export default function PointQuizPage() {
 
   if (!quiz) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
-        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
-        <main className="container mx-auto px-4 py-20">
-          <div className="max-w-md mx-auto text-center">
-            <AlertCircle className="w-16 h-16 mx-auto text-white/50 mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-2">クイズが見つかりません</h1>
-            <p className="text-white/70">指定されたクイズは存在しないか、削除されています。</p>
-          </div>
-        </main>
-        <Footer />
+      <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center px-4">
+          <AlertCircle className="w-16 h-16 mx-auto text-white/50 mb-4" />
+          <h1 className="text-2xl font-bold text-white mb-2">クイズが見つかりません</h1>
+          <p className="text-white/70">指定されたクイズは存在しないか、削除されています。</p>
+        </div>
         {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
       </div>
     );
@@ -242,25 +232,21 @@ export default function PointQuizPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
-        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
-        <main className="container mx-auto px-4 py-20">
-          <div className="max-w-md mx-auto text-center">
-            <Coins className="w-16 h-16 mx-auto text-yellow-300 mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-2">{quiz.title}</h1>
-            <p className="text-white/80 mb-6">
-              クイズに答えてポイントをGET！<br />
-              1問正解につき <span className="font-bold text-yellow-300">{pointsPerCorrect}pt</span> 獲得できます。
-            </p>
-            <button
-              onClick={() => setShowAuth(true)}
-              className="bg-white text-purple-600 px-8 py-3 rounded-xl font-bold hover:bg-purple-50 transition-colors"
-            >
-              ログインして挑戦
-            </button>
-          </div>
-        </main>
-        <Footer />
+      <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center px-4">
+          <Coins className="w-16 h-16 mx-auto text-yellow-300 mb-4" />
+          <h1 className="text-2xl font-bold text-white mb-2">{quiz.title}</h1>
+          <p className="text-white/80 mb-6">
+            クイズに答えてポイントをGET！<br />
+            1問正解につき <span className="font-bold text-yellow-300">{pointsPerCorrect}pt</span> 獲得できます。
+          </p>
+          <button
+            onClick={() => setShowAuth(true)}
+            className="bg-white text-purple-600 px-8 py-3 rounded-xl font-bold hover:bg-purple-50 transition-colors"
+          >
+            ログインして挑戦
+          </button>
+        </div>
         {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
       </div>
     );
@@ -270,7 +256,6 @@ export default function PointQuizPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
-      <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* ヘッダー */}
@@ -428,7 +413,6 @@ export default function PointQuizPage() {
         </div>
       </main>
       <ContentFooter toolType="gamification" variant="transparent" />
-      <Footer />
       {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
     </div>
   );

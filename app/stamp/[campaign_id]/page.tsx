@@ -6,8 +6,6 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { getCampaign, getUserStamps, acquireStamp, getPointBalance } from '@/app/actions/gamification';
 import { GamificationCampaign, UserStamp, StampRallySettings } from '@/lib/types';
-import Header from '@/components/shared/Header';
-import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
 import ContentFooter from '@/components/shared/ContentFooter';
 import StampCard from '@/components/gamification/StampCard';
@@ -144,12 +142,8 @@ export default function StampPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
-        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
-        <main className="container mx-auto px-4 py-20 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
-        </main>
-        <Footer />
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
         {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
       </div>
     );
@@ -157,16 +151,12 @@ export default function StampPage() {
 
   if (!campaign) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
-        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
-        <main className="container mx-auto px-4 py-20">
-          <div className="max-w-md mx-auto text-center">
-            <AlertCircle className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">キャンペーンが見つかりません</h1>
-            <p className="text-gray-600">指定されたキャンペーンは存在しないか、終了しています。</p>
-          </div>
-        </main>
-        <Footer />
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center px-4">
+          <AlertCircle className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">キャンペーンが見つかりません</h1>
+          <p className="text-gray-600">指定されたキャンペーンは存在しないか、終了しています。</p>
+        </div>
         {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
       </div>
     );
@@ -179,7 +169,6 @@ export default function StampPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
-      <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* ヘッダー */}
@@ -260,7 +249,6 @@ export default function StampPage() {
         </div>
       </main>
       <ContentFooter toolType="gamification" variant="light" />
-      <Footer />
       {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
     </div>
   );

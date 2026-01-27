@@ -18,8 +18,6 @@ import {
   UserPrize,
   GachaSettings 
 } from '@/lib/types';
-import Header from '@/components/shared/Header';
-import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
 import ContentFooter from '@/components/shared/ContentFooter';
 import FukubikiAnimation from '@/components/gamification/gacha/FukubikiAnimation';
@@ -181,12 +179,8 @@ export default function FukubikiPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-900 via-pink-900 to-purple-900">
-        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
-        <main className="container mx-auto px-4 py-20 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-white" />
-        </main>
-        <Footer />
+      <div className="min-h-screen bg-gradient-to-br from-red-900 via-pink-900 to-purple-900 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-white" />
         {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
       </div>
     );
@@ -194,16 +188,12 @@ export default function FukubikiPage() {
 
   if (!campaign) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-900 via-pink-900 to-purple-900">
-        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
-        <main className="container mx-auto px-4 py-20">
-          <div className="max-w-md mx-auto text-center">
-            <AlertCircle className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-2">キャンペーンが見つかりません</h1>
-            <p className="text-gray-300">指定された福引きは存在しないか、終了しています。</p>
-          </div>
-        </main>
-        <Footer />
+      <div className="min-h-screen bg-gradient-to-br from-red-900 via-pink-900 to-purple-900 flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center px-4">
+          <AlertCircle className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <h1 className="text-2xl font-bold text-white mb-2">キャンペーンが見つかりません</h1>
+          <p className="text-gray-300">指定された福引きは存在しないか、終了しています。</p>
+        </div>
         {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
       </div>
     );
@@ -215,7 +205,6 @@ export default function FukubikiPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-900 via-pink-900 to-purple-900">
-      <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           {/* ヘッダー */}
@@ -372,7 +361,6 @@ export default function FukubikiPage() {
         </div>
       </main>
       <ContentFooter toolType="gamification" variant="transparent" />
-      <Footer />
       {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
     </div>
   );
