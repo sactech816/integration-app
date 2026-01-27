@@ -95,6 +95,53 @@ const gradientPresets = [
 // 画像アップロードサイズ制限（2MB）
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 
+// 画像をsRGBカラースペースに変換する関数
+// Display P3などの広色域画像をアップロードすると色味が変わる問題を解決
+const convertToSRGB = (file: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    // sRGBカラースペースを明示的に指定
+    const ctx = canvas.getContext('2d', { colorSpace: 'srgb' });
+    
+    if (!ctx) {
+      // Canvas非対応の場合は元のファイルをそのまま返す
+      resolve(file);
+      return;
+    }
+    
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      
+      // 元のファイル形式を維持（JPEG/PNG/WebP）
+      const mimeType = file.type || 'image/jpeg';
+      const quality = mimeType === 'image/png' ? undefined : 0.95; // PNGは品質指定不要
+      
+      canvas.toBlob(
+        (blob) => {
+          URL.revokeObjectURL(img.src); // メモリリーク防止
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('画像の変換に失敗しました'));
+          }
+        },
+        mimeType,
+        quality
+      );
+    };
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error('画像の読み込みに失敗しました'));
+    };
+    
+    img.src = URL.createObjectURL(file);
+  });
+};
+
 // お客様の声用プリセット画像
 const testimonialPresetImages = [
   { label: '男性A', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces' },
@@ -1108,11 +1155,14 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
     setIsUploading(true);
     try {
+      // sRGBカラースペースに変換（Display P3等の広色域画像の色味変化を防止）
+      const convertedBlob = await convertToSRGB(file);
+      
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
       const filePath = `${user?.id || 'anonymous'}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
+      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, convertedBlob);
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
@@ -1138,11 +1188,14 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
     setIsUploading(true);
     try {
+      // sRGBカラースペースに変換（Display P3等の広色域画像の色味変化を防止）
+      const convertedBlob = await convertToSRGB(file);
+      
       const fileExt = file.name.split('.').pop();
       const fileName = `bg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
       const filePath = `${user?.id || 'anonymous'}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
+      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, convertedBlob);
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
@@ -1576,10 +1629,12 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                           if (!supabase) return;
                           setIsUploading(true);
                           try {
+                            // sRGBカラースペースに変換
+                            const convertedBlob = await convertToSRGB(file);
                             const fileExt = file.name.split('.').pop();
                             const fileName = `testimonial_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
                             const filePath = `${user?.id || 'anonymous'}/${fileName}`;
-                            const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
+                            const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, convertedBlob);
                             if (uploadError) throw uploadError;
                             const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
                             const newItems = [...block.data.items];
@@ -1830,10 +1885,12 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                             if (!supabase) return;
                             setIsUploading(true);
                             try {
+                              // sRGBカラースペースに変換
+                              const convertedBlob = await convertToSRGB(file);
                               const fileExt = file.name.split('.').pop();
                               const fileName = `gallery_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
                               const filePath = `${user?.id || 'anonymous'}/${fileName}`;
-                              const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
+                              const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, convertedBlob);
                               if (uploadError) throw uploadError;
                               const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
                               const newItems = [...block.data.items];
