@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Settings, Zap, DollarSign, Check, Loader2, Save, Sparkles, BookOpen, Sliders } from 'lucide-react';
 import type { PlanTier, MakersPlanTier } from '@/lib/subscription';
+import { PLAN_AI_PRESETS } from '@/lib/ai-provider';
 
 interface AIPreset {
   name: string;
@@ -112,16 +113,21 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
           
           results[plan] = data;
           presets[plan] = data.selectedPreset || 'presetB';
-          // カスタムモデル設定を復元
+          // カスタムモデル設定を復元（プリセットのcustomDefaultがあればそれを使用）
+          const planPresets = PLAN_AI_PRESETS[plan as keyof typeof PLAN_AI_PRESETS];
+          const customDefault = planPresets && 'customDefault' in planPresets 
+            ? (planPresets as any).customDefault 
+            : { outlineModel: 'gemini-1.5-flash', writingModel: 'gemini-1.5-flash' };
+          
           if (data.customOutlineModel || data.customWritingModel) {
             customs[plan] = {
-              outlineModel: data.customOutlineModel || 'gemini-1.5-flash',
-              writingModel: data.customWritingModel || 'gemini-1.5-flash',
+              outlineModel: data.customOutlineModel || customDefault.outlineModel,
+              writingModel: data.customWritingModel || customDefault.writingModel,
             };
           } else {
             customs[plan] = {
-              outlineModel: 'gemini-1.5-flash',
-              writingModel: 'gemini-1.5-flash',
+              outlineModel: customDefault.outlineModel,
+              writingModel: customDefault.writingModel,
             };
           }
         } catch (error) {
@@ -206,7 +212,16 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
   const planData = settings[selectedPlan];
   const hasPresets = planData && planData.presets;
   const currentPreset = selectedPresets[selectedPlan] || 'presetB';
-  const currentCustom = customModels[selectedPlan] || { outlineModel: 'gemini-1.5-flash', writingModel: 'gemini-1.5-flash' };
+  
+  // カスタムモデルのデフォルト値をプリセットから取得
+  const getCustomDefault = (plan: string) => {
+    const planPresets = PLAN_AI_PRESETS[plan as keyof typeof PLAN_AI_PRESETS];
+    if (planPresets && 'customDefault' in planPresets) {
+      return (planPresets as any).customDefault;
+    }
+    return { outlineModel: 'gemini-1.5-flash', writingModel: 'gemini-1.5-flash' };
+  };
+  const currentCustom = customModels[selectedPlan] || getCustomDefault(selectedPlan);
 
   // プラン名を取得
   const getPlanDisplayName = (plan: string): string => {

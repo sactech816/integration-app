@@ -159,9 +159,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!['presetA', 'presetB'].includes(selectedPreset)) {
+    if (!['presetA', 'presetB', 'custom'].includes(selectedPreset)) {
       return NextResponse.json(
-        { error: 'selectedPreset must be presetA or presetB' },
+        { error: 'selectedPreset must be presetA, presetB, or custom' },
         { status: 400 }
       );
     }

@@ -1,6 +1,7 @@
 -- ========================================
 -- 管理者用AIモデル設定テーブル
--- プラン別のデフォルトAIモデル（プリセットA/B）を管理
+-- プラン別のデフォルトAIモデル（プリセットA/B/カスタム）を管理
+-- サービス別（kdl/makers）に設定可能
 -- ========================================
 
 -- 0. user_rolesテーブルにis_adminカラムを追加（存在しない場合）
@@ -16,38 +17,62 @@ BEGIN
   END IF;
 END $$;
 
--- 1. admin_ai_settingsテーブル作成
+-- 1. admin_ai_settingsテーブル作成（serviceカラム含む）
 CREATE TABLE IF NOT EXISTS admin_ai_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  plan_tier TEXT NOT NULL CHECK (plan_tier IN ('none', 'lite', 'standard', 'pro', 'business', 'enterprise')),
-  selected_preset TEXT NOT NULL DEFAULT 'presetB' CHECK (selected_preset IN ('presetA', 'presetB')),
+  service TEXT NOT NULL DEFAULT 'kdl' CHECK (service IN ('makers', 'kdl')),
+  plan_tier TEXT NOT NULL CHECK (plan_tier IN (
+    'none', 'lite', 'standard', 'pro', 'business', 'enterprise',  -- KDL継続
+    'guest', 'free',  -- 集客メーカー
+    'initial_trial', 'initial_standard', 'initial_business'  -- KDL初回
+  )),
+  selected_preset TEXT NOT NULL DEFAULT 'presetB' CHECK (selected_preset IN ('presetA', 'presetB', 'custom')),
   custom_outline_model TEXT,  -- カスタムモデル指定（オプション）
   custom_writing_model TEXT,  -- カスタムモデル指定（オプション）
   updated_by UUID REFERENCES auth.users(id),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(plan_tier)  -- プランごとに1つの設定のみ
+  UNIQUE(service, plan_tier)  -- サービス×プランごとに1つの設定のみ
 );
 
--- 2. デフォルト設定を挿入
-INSERT INTO admin_ai_settings (plan_tier, selected_preset) VALUES
-  ('none', 'presetB'),
-  ('lite', 'presetB'),
-  ('standard', 'presetB'),
-  ('pro', 'presetA'),
-  ('business', 'presetA'),
-  ('enterprise', 'presetA')
-ON CONFLICT (plan_tier) DO NOTHING;
+-- 2. デフォルト設定を挿入（KDL継続プラン）
+INSERT INTO admin_ai_settings (service, plan_tier, selected_preset) VALUES
+  ('kdl', 'none', 'presetB'),
+  ('kdl', 'lite', 'presetB'),
+  ('kdl', 'standard', 'presetB'),
+  ('kdl', 'pro', 'presetA'),
+  ('kdl', 'business', 'presetA'),
+  ('kdl', 'enterprise', 'presetA')
+ON CONFLICT (service, plan_tier) DO NOTHING;
+
+-- KDL初回プラン用設定
+INSERT INTO admin_ai_settings (service, plan_tier, selected_preset) VALUES
+  ('kdl', 'initial_trial', 'presetB'),
+  ('kdl', 'initial_standard', 'presetB'),
+  ('kdl', 'initial_business', 'presetA')
+ON CONFLICT (service, plan_tier) DO NOTHING;
+
+-- 集客メーカー用設定
+INSERT INTO admin_ai_settings (service, plan_tier, selected_preset) VALUES
+  ('makers', 'guest', 'presetB'),
+  ('makers', 'free', 'presetB'),
+  ('makers', 'pro', 'presetA')
+ON CONFLICT (service, plan_tier) DO NOTHING;
 
 -- 3. インデックス作成
 CREATE INDEX IF NOT EXISTS idx_admin_ai_settings_plan_tier 
 ON admin_ai_settings(plan_tier);
 
--- 4. RPC関数: プラン別AI設定取得
+CREATE INDEX IF NOT EXISTS idx_admin_ai_settings_service 
+ON admin_ai_settings(service);
+
+-- 4. RPC関数: サービス別AI設定取得
 CREATE OR REPLACE FUNCTION get_ai_setting_for_plan(
-  check_plan_tier TEXT
+  check_plan_tier TEXT,
+  check_service TEXT DEFAULT 'kdl'
 )
 RETURNS TABLE (
+  service TEXT,
   plan_tier TEXT,
   selected_preset TEXT,
   custom_outline_model TEXT,
@@ -56,12 +81,14 @@ RETURNS TABLE (
 BEGIN
   RETURN QUERY
   SELECT 
+    s.service,
     s.plan_tier,
     s.selected_preset,
     s.custom_outline_model,
     s.custom_writing_model
   FROM admin_ai_settings s
   WHERE s.plan_tier = check_plan_tier
+    AND s.service = check_service
   LIMIT 1;
 END;
 $$;
@@ -72,16 +99,13 @@ CREATE OR REPLACE FUNCTION update_ai_setting(
   p_selected_preset TEXT,
   p_custom_outline_model TEXT DEFAULT NULL,
   p_custom_writing_model TEXT DEFAULT NULL,
-  p_updated_by UUID DEFAULT NULL
+  p_updated_by UUID DEFAULT NULL,
+  p_service TEXT DEFAULT 'kdl'
 )
 RETURNS BOOLEAN LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
-  -- 管理者チェック（オプション）
-  -- IF NOT is_admin(p_updated_by) THEN
-  --   RAISE EXCEPTION 'Unauthorized';
-  -- END IF;
-
   INSERT INTO admin_ai_settings (
+    service,
     plan_tier,
     selected_preset,
     custom_outline_model,
@@ -89,6 +113,7 @@ BEGIN
     updated_by,
     updated_at
   ) VALUES (
+    p_service,
     p_plan_tier,
     p_selected_preset,
     p_custom_outline_model,
@@ -96,7 +121,7 @@ BEGIN
     p_updated_by,
     NOW()
   )
-  ON CONFLICT (plan_tier) 
+  ON CONFLICT (service, plan_tier) 
   DO UPDATE SET
     selected_preset = EXCLUDED.selected_preset,
     custom_outline_model = EXCLUDED.custom_outline_model,
@@ -150,9 +175,10 @@ CREATE TRIGGER trigger_admin_ai_settings_updated_at
   EXECUTE FUNCTION update_admin_ai_settings_updated_at();
 
 -- 8. コメント追加
-COMMENT ON TABLE admin_ai_settings IS '管理者用AIモデル設定（プラン別デフォルト）';
-COMMENT ON COLUMN admin_ai_settings.plan_tier IS 'プランTier（none/lite/standard/pro/business/enterprise）';
-COMMENT ON COLUMN admin_ai_settings.selected_preset IS '選択されたプリセット（presetA/presetB）';
+COMMENT ON TABLE admin_ai_settings IS '管理者用AIモデル設定（サービス×プラン別デフォルト）';
+COMMENT ON COLUMN admin_ai_settings.service IS 'サービス識別子: makers（集客メーカー）, kdl（Kindle）';
+COMMENT ON COLUMN admin_ai_settings.plan_tier IS 'プランTier（KDL: none/lite/standard/pro/business/enterprise/initial_*, Makers: guest/free/pro）';
+COMMENT ON COLUMN admin_ai_settings.selected_preset IS '選択されたプリセット（presetA/presetB/custom）';
 COMMENT ON COLUMN admin_ai_settings.custom_outline_model IS 'カスタム構成用モデル（オプション）';
 COMMENT ON COLUMN admin_ai_settings.custom_writing_model IS 'カスタム執筆用モデル（オプション）';
 

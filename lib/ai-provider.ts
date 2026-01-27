@@ -338,6 +338,11 @@ export const PLAN_AI_PRESETS = {
       writing: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
       description: 'Flashで統一。指示理解度が高く、実用的。（推奨）',
     },
+    // カスタム用おすすめ設定
+    customDefault: {
+      outlineModel: 'gemini-2.0-flash-exp',
+      writingModel: 'claude-3-haiku-20240307',
+    },
   },
   standard: {
     presetA: {
@@ -351,6 +356,11 @@ export const PLAN_AI_PRESETS = {
       outline: { model: 'claude-3-haiku-20240307', provider: 'anthropic' as const, cost: 1.25 },
       writing: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
       description: 'Haikuで人間味のある構成、Flashで大量執筆。（推奨）',
+    },
+    // カスタム用おすすめ設定
+    customDefault: {
+      outlineModel: 'gpt-4o-mini',
+      writingModel: 'claude-3-haiku-20240307',
     },
   },
   pro: {
@@ -366,6 +376,11 @@ export const PLAN_AI_PRESETS = {
       writing: { model: 'claude-3-haiku-20240307', provider: 'anthropic' as const, cost: 1.25 },
       description: 'Sonnetでエモい構成、Haikuで執筆。※構成のみ高コスト',
     },
+    // カスタム用おすすめ設定
+    customDefault: {
+      outlineModel: 'claude-3-5-sonnet-20240620',
+      writingModel: 'gpt-4o-mini',
+    },
   },
   business: {
     presetA: {
@@ -379,6 +394,11 @@ export const PLAN_AI_PRESETS = {
       outline: { model: 'claude-3-5-sonnet-20240620', provider: 'anthropic' as const, cost: 15.00 },
       writing: { model: 'o1', provider: 'openai' as const, cost: 60.00 },
       description: 'Sonnetで構成、o1で深い推論執筆。※執筆が遅い',
+    },
+    // カスタム用おすすめ設定
+    customDefault: {
+      outlineModel: 'o3-mini',
+      writingModel: 'claude-3-5-sonnet-20240620',
     },
   },
   none: {
@@ -394,6 +414,11 @@ export const PLAN_AI_PRESETS = {
       writing: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
       description: 'Gemini Flashでお試し利用。',
     },
+    // カスタム用おすすめ設定
+    customDefault: {
+      outlineModel: 'gemini-2.0-flash-exp',
+      writingModel: 'gemini-2.0-flash-exp',
+    },
   },
   enterprise: {
     presetA: {
@@ -408,36 +433,72 @@ export const PLAN_AI_PRESETS = {
       writing: { model: 'custom', provider: 'openai' as const, cost: 0 },
       description: 'カスタムAI環境（要設定）',
     },
+    // カスタム用おすすめ設定
+    customDefault: {
+      outlineModel: 'gpt-4o',
+      writingModel: 'claude-3-5-sonnet-20240620',
+    },
   },
   // ========================================
-  // 集客メーカー用プラン
+  // 集客メーカー用プラン（診断・LP生成など、執筆ではない用途）
+  // 候補A: 論理重視（1つのAI）、候補B: 情緒重視（1つのAI）
   // ========================================
   guest: {
     presetA: {
-      name: 'ゲスト',
-      outline: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
-      writing: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
-      description: 'ゲストユーザー向け。制限あり。',
+      name: '論理重視',
+      outline: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      writing: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      description: 'Gemini Flash。論理的で分かりやすい出力。',
     },
     presetB: {
-      name: 'ゲスト',
-      outline: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
-      writing: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
-      description: 'ゲストユーザー向け。制限あり。',
+      name: '情緒重視',
+      outline: { model: 'claude-3-haiku-20240307', provider: 'anthropic' as const, cost: 1.25 },
+      writing: { model: 'claude-3-haiku-20240307', provider: 'anthropic' as const, cost: 1.25 },
+      description: 'Claude Haiku。人間味のある温かい出力。',
+    },
+    // カスタム用おすすめ設定
+    customDefault: {
+      outlineModel: 'gemini-2.0-flash-exp',
+      writingModel: 'gemini-2.0-flash-exp',
     },
   },
   free: {
     presetA: {
-      name: 'フリー',
-      outline: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
-      writing: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
-      description: 'フリーユーザー向け。制限あり。',
+      name: '論理重視',
+      outline: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      writing: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
+      description: 'Gemini Flash。論理的で分かりやすい出力。',
     },
     presetB: {
-      name: 'フリー',
-      outline: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
-      writing: { model: 'gemini-2.0-flash-lite', provider: 'gemini' as const, cost: 0.30 },
-      description: 'フリーユーザー向け。制限あり。',
+      name: '情緒重視',
+      outline: { model: 'claude-3-haiku-20240307', provider: 'anthropic' as const, cost: 1.25 },
+      writing: { model: 'claude-3-haiku-20240307', provider: 'anthropic' as const, cost: 1.25 },
+      description: 'Claude Haiku。人間味のある温かい出力。',
+    },
+    // カスタム用おすすめ設定
+    customDefault: {
+      outlineModel: 'gpt-4o-mini',
+      writingModel: 'gpt-4o-mini',
+    },
+  },
+  // 集客メーカー Pro（有料）
+  makers_pro: {
+    presetA: {
+      name: '論理重視',
+      outline: { model: 'gpt-4o-mini', provider: 'openai' as const, cost: 0.60 },
+      writing: { model: 'gpt-4o-mini', provider: 'openai' as const, cost: 0.60 },
+      description: 'GPT-4o Mini。論理的で高品質な出力。',
+    },
+    presetB: {
+      name: '情緒重視',
+      outline: { model: 'claude-3-5-sonnet-20240620', provider: 'anthropic' as const, cost: 15.00 },
+      writing: { model: 'claude-3-5-sonnet-20240620', provider: 'anthropic' as const, cost: 15.00 },
+      description: 'Claude Sonnet。情緒豊かで共感を呼ぶ出力。',
+    },
+    // カスタム用おすすめ設定
+    customDefault: {
+      outlineModel: 'claude-3-5-sonnet-20240620',
+      writingModel: 'claude-3-5-sonnet-20240620',
     },
   },
   // ========================================
@@ -456,6 +517,11 @@ export const PLAN_AI_PRESETS = {
       writing: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
       description: 'Flashで統一。指示理解度が高く、実用的。（推奨）',
     },
+    // カスタム用おすすめ設定
+    customDefault: {
+      outlineModel: 'gemini-2.0-flash-exp',
+      writingModel: 'claude-3-haiku-20240307',
+    },
   },
   initial_standard: {
     presetA: {
@@ -470,6 +536,11 @@ export const PLAN_AI_PRESETS = {
       writing: { model: 'gemini-2.0-flash-exp', provider: 'gemini' as const, cost: 0.40 },
       description: 'Haikuで人間味のある構成、Flashで大量執筆。（推奨）',
     },
+    // カスタム用おすすめ設定
+    customDefault: {
+      outlineModel: 'gpt-4o-mini',
+      writingModel: 'claude-3-haiku-20240307',
+    },
   },
   initial_business: {
     presetA: {
@@ -483,6 +554,11 @@ export const PLAN_AI_PRESETS = {
       outline: { model: 'claude-3-5-sonnet-20240620', provider: 'anthropic' as const, cost: 15.00 },
       writing: { model: 'claude-3-haiku-20240307', provider: 'anthropic' as const, cost: 1.25 },
       description: 'Sonnetでエモい構成、Haikuで執筆。※構成のみ高コスト',
+    },
+    // カスタム用おすすめ設定
+    customDefault: {
+      outlineModel: 'claude-3-5-sonnet-20240620',
+      writingModel: 'gpt-4o-mini',
     },
   },
 } as const;

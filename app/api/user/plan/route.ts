@@ -130,16 +130,17 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    const permissions = planSettings || defaultPermissions[planTier];
+    // DBから取得した場合はその値を使用、なければフォールバック
+    const defaults = defaultPermissions[planTier];
 
     return NextResponse.json<UserPlanResponse>({
       planTier,
-      canHideCopyright: permissions.can_hide_copyright ?? defaultPermissions[planTier].canHideCopyright,
-      canUseAI: permissions.can_use_ai ?? defaultPermissions[planTier].canUseAI,
-      canUseAnalytics: permissions.can_use_analytics ?? defaultPermissions[planTier].canUseAnalytics,
-      canUseGamification: permissions.can_use_gamification ?? defaultPermissions[planTier].canUseGamification,
-      canDownloadHtml: permissions.can_download_html ?? defaultPermissions[planTier].canDownloadHtml,
-      canEmbed: permissions.can_embed ?? defaultPermissions[planTier].canEmbed,
+      canHideCopyright: planSettings?.can_hide_copyright ?? defaults.canHideCopyright,
+      canUseAI: planSettings?.can_use_ai ?? defaults.canUseAI,
+      canUseAnalytics: planSettings?.can_use_analytics ?? defaults.canUseAnalytics,
+      canUseGamification: planSettings?.can_use_gamification ?? defaults.canUseGamification,
+      canDownloadHtml: planSettings?.can_download_html ?? defaults.canDownloadHtml,
+      canEmbed: planSettings?.can_embed ?? defaults.canEmbed,
       isProUser: planTier === 'pro',
     });
   } catch (error: any) {
