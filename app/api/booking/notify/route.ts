@@ -78,9 +78,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Slot or menu not found' }, { status: 404 });
     }
 
-    // メニュー所有者のメールアドレスを取得（ログインユーザーが作成した場合のみ）
-    let ownerEmail = null;
-    if (menu.user_id) {
+    // メニュー所有者のメールアドレスを取得
+    // 1. notification_emailが設定されていればそれを優先
+    // 2. なければuser_idからログインユーザーのメールを取得
+    let ownerEmail = menu.notification_email || null;
+    if (!ownerEmail && menu.user_id) {
       const { data: ownerData } = await supabase.auth.admin.getUserById(menu.user_id);
       ownerEmail = ownerData?.user?.email;
     }

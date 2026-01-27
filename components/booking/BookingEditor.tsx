@@ -66,6 +66,7 @@ export default function BookingEditor({
     duration_min: 60,
     type: 'reservation',
     is_active: true,
+    notification_email: '',
   });
   
   // カレンダー状態
@@ -101,6 +102,7 @@ export default function BookingEditor({
         duration_min: existingMenu.duration_min,
         type: existingMenu.type,
         is_active: existingMenu.is_active,
+        notification_email: existingMenu.notification_email || '',
       });
     }
   }, [mode, existingMenu]);
@@ -245,6 +247,7 @@ export default function BookingEditor({
           duration_min: formData.duration_min,
           type: formData.type,
           is_active: formData.is_active,
+          notification_email: formData.notification_email,
         },
         localSlots,
         deletedSlotIds
@@ -586,6 +589,24 @@ export default function BookingEditor({
                       <option value={90}>90分</option>
                       <option value={120}>120分</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      通知先メールアドレス（任意）
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.notification_email || ''}
+                      onChange={(e) => setFormData({ ...formData, notification_email: e.target.value })}
+                      placeholder="予約通知を受け取るメールアドレス"
+                      className={`w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all text-gray-900 placeholder:text-gray-400 ${
+                        formData.type === 'adjustment' ? 'focus:ring-purple-500' : 'focus:ring-blue-500'
+                      }`}
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      予約が入った際に通知メールを受け取るアドレスを指定できます
+                    </p>
                   </div>
 
                   {/* 公開設定（編集モード時のみ表示） */}

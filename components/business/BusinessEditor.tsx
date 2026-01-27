@@ -992,7 +992,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       case 'kindle':
         return { id, type: 'kindle', data: { asin: '', imageUrl: '', title: '', description: '' } };
       case 'google_map':
-        return { id, type: 'google_map', data: { address: '', title: '所在地', showDirections: true } };
+        return { id, type: 'google_map', data: { address: '', title: '所在地', embedUrl: '', height: '400px' } };
       case 'quiz':
         return { id, type: 'quiz', data: { quizId: '', quizSlug: '', title: '' } };
       case 'countdown':
@@ -1628,10 +1628,8 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
           <div className="space-y-4">
             <Input label="タイトル" val={block.data.title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="所在地" />
             <Input label="住所" val={block.data.address || ''} onChange={(v) => updateBlock(block.id, { address: v })} ph="東京都渋谷区..." />
-            <div className="flex items-center gap-2">
-              <input type="checkbox" checked={block.data.showDirections || false} onChange={(e) => updateBlock(block.id, { showDirections: e.target.checked })} />
-              <label className="text-sm text-gray-700">経路案内ボタンを表示</label>
-            </div>
+            <Textarea label="埋め込みURL" val={block.data.embedUrl || ''} onChange={(v) => updateBlock(block.id, { embedUrl: v })} />
+            <p className="text-xs text-gray-500">Googleマップ→共有→地図を埋め込む→HTMLをコピーして、src=&quot;...&quot;の部分を貼り付けてください</p>
           </div>
         );
 

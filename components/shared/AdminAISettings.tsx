@@ -20,14 +20,21 @@ interface AIPreset {
   };
 }
 
-// 利用可能なAIモデル一覧
+// 利用可能なAIモデル一覧（PLAN_AI_PRESETSで使用しているモデルIDと一致させる）
 const AVAILABLE_MODELS = [
-  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'Google', cost: 0.01 },
-  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', provider: 'Google', cost: 0.05 },
-  { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'OpenAI', cost: 0.02 },
-  { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI', cost: 0.10 },
-  { id: 'claude-3-5-sonnet', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', cost: 0.08 },
-  { id: 'claude-3-5-haiku', name: 'Claude 3.5 Haiku', provider: 'Anthropic', cost: 0.02 },
+  // Google Gemini
+  { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite', provider: 'Google', cost: 0.30 },
+  { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash', provider: 'Google', cost: 0.40 },
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'Google', cost: 0.35 },
+  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', provider: 'Google', cost: 1.25 },
+  // OpenAI
+  { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'OpenAI', cost: 0.60 },
+  { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI', cost: 5.00 },
+  { id: 'o3-mini', name: 'o3-mini', provider: 'OpenAI', cost: 4.40 },
+  { id: 'o1', name: 'o1', provider: 'OpenAI', cost: 60.00 },
+  // Anthropic Claude
+  { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', provider: 'Anthropic', cost: 1.25 },
+  { id: 'claude-3-5-sonnet-20240620', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', cost: 15.00 },
 ];
 
 type PresetType = 'presetA' | 'presetB' | 'custom';

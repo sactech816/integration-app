@@ -21,6 +21,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const planTier = searchParams.get('planTier') as PlanTier;
+    const service = searchParams.get('service') || 'kdl';
 
     if (!planTier) {
       return NextResponse.json({ error: 'planTier is required' }, { status: 400 });
@@ -31,18 +32,21 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
-    // プリセット情報を取得（データベースが無くても返す）
-    const presets = PLAN_AI_PRESETS[planTier];
+    // プリセット情報を取得（サービスとプランに応じて）
+    // 集客メーカーのproはmakers_proを参照
+    const presetKey = (service === 'makers' && planTier === 'pro') ? 'makers_pro' : planTier;
+    const presets = PLAN_AI_PRESETS[presetKey as keyof typeof PLAN_AI_PRESETS];
     
     if (!presets) {
-      return NextResponse.json({ error: `Invalid plan tier: ${planTier}` }, { status: 400 });
+      return NextResponse.json({ error: `Invalid plan tier: ${planTier} for service: ${service}` }, { status: 400 });
     }
 
-    // データベースから設定取得
+    // データベースから設定取得（サービス別）
     const { data, error } = await supabase
       .from('admin_ai_settings')
       .select('*')
       .eq('plan_tier', planTier)
+      .eq('service', service)
       .single();
 
     // テーブルが存在しない場合もプリセット情報は返す
@@ -150,7 +154,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { planTier, selectedPreset, customOutlineModel, customWritingModel, featureLimits, userId } = body;
+    const { planTier, selectedPreset, customOutlineModel, customWritingModel, featureLimits, userId, service = 'kdl' } = body;
 
     if (!planTier || !selectedPreset) {
       return NextResponse.json(
@@ -171,13 +175,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
-    // RPC関数で更新
+    // RPC関数で更新（サービス別）
     const { data, error } = await supabase.rpc('update_ai_setting', {
       p_plan_tier: planTier,
       p_selected_preset: selectedPreset,
       p_custom_outline_model: customOutlineModel || null,
       p_custom_writing_model: customWritingModel || null,
       p_updated_by: userId || null,
+      p_service: service,
     });
 
     if (error) {
@@ -193,7 +198,8 @@ export async function POST(request: Request) {
       const { error: limitsError } = await supabase
         .from('admin_ai_settings')
         .update({ feature_limits: featureLimits })
-        .eq('plan_tier', planTier);
+        .eq('plan_tier', planTier)
+        .eq('service', service);
 
       if (limitsError) {
         console.error('Failed to update feature limits:', limitsError);

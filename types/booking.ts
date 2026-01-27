@@ -24,6 +24,7 @@ export interface BookingMenu {
   duration_min: number;
   type: BookingMenuType;
   is_active: boolean;
+  notification_email?: string | null;
   created_at?: string;
 }
 
@@ -34,6 +35,7 @@ export interface CreateBookingMenuInput {
   duration_min?: number;
   type?: BookingMenuType;
   is_active?: boolean;
+  notification_email?: string;
 }
 
 // 予約メニュー更新用の入力型
@@ -43,6 +45,7 @@ export interface UpdateBookingMenuInput {
   duration_min?: number;
   type?: BookingMenuType;
   is_active?: boolean;
+  notification_email?: string;
 }
 
 // -------------------------------------------

@@ -83,6 +83,7 @@ export async function createBookingMenu(
       duration_min: input.duration_min ?? DEFAULT_DURATION_MIN,
       type: input.type ?? 'reservation',
       is_active: input.is_active ?? true,
+      notification_email: input.notification_email?.trim() || null,
     })
     .select()
     .single();
@@ -199,6 +200,7 @@ export async function updateBookingMenu(
   if (input.duration_min !== undefined) updateData.duration_min = input.duration_min;
   if (input.type !== undefined) updateData.type = input.type;
   if (input.is_active !== undefined) updateData.is_active = input.is_active;
+  if (input.notification_email !== undefined) updateData.notification_email = input.notification_email?.trim() || null;
 
   const { data, error } = await supabase
     .from('booking_menus')
