@@ -15,6 +15,9 @@ const ProfileViewer: React.FC<ProfileViewerProps> = ({ profile }) => {
   const backgroundImage = theme?.backgroundImage;
   const gradient = theme?.gradient || 'linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab)';
   const isAnimated = theme?.animated !== false; // デフォルトはアニメーション有効
+  
+  // 単色かグラデーションかを判定（#で始まる場合は単色）
+  const isSolidColor = gradient.startsWith('#');
 
   // 背景スタイルの決定
   const backgroundStyle: React.CSSProperties = backgroundImage
@@ -23,6 +26,10 @@ const ProfileViewer: React.FC<ProfileViewerProps> = ({ profile }) => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
+      }
+    : isSolidColor
+    ? {
+        backgroundColor: gradient,
       }
     : { 
         background: gradient,
@@ -52,7 +59,7 @@ const ProfileViewer: React.FC<ProfileViewerProps> = ({ profile }) => {
       <TrackingScripts settings={profile.settings?.tracking} />
 
       <div 
-        className={`min-h-screen py-8 px-4 ${!backgroundImage && isAnimated ? 'animate-gradient-xy' : ''}`}
+        className={`min-h-screen py-8 px-4 ${!backgroundImage && !isSolidColor && isAnimated ? 'animate-gradient-xy' : ''}`}
         style={backgroundStyle}
       >
         <div className="max-w-md mx-auto">

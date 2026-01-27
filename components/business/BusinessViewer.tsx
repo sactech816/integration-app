@@ -22,6 +22,10 @@ const BusinessViewer: React.FC<BusinessViewerProps> = ({ lp }) => {
   const theme = lp.settings?.theme;
   const backgroundImage = theme?.backgroundImage;
   const gradient = theme?.gradient;
+  const isAnimated = theme?.animated !== false; // デフォルトはアニメーション有効
+  
+  // 単色かグラデーションかを判定（#で始まる場合は単色）
+  const isSolidColor = gradient?.startsWith('#');
   
   const backgroundStyle: React.CSSProperties = backgroundImage
     ? {
@@ -30,15 +34,19 @@ const BusinessViewer: React.FC<BusinessViewerProps> = ({ lp }) => {
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
       }
+    : gradient && isSolidColor
+    ? {
+        backgroundColor: gradient,
+      }
     : gradient
     ? {
         background: gradient,
-        backgroundSize: '400% 400%',
+        backgroundSize: isAnimated ? '400% 400%' : 'auto',
       }
     : {};
 
-  // グラデーションアニメーションのクラス
-  const animationClass = gradient && !backgroundImage ? 'animate-gradient-xy' : '';
+  // グラデーションアニメーションのクラス（単色の場合はアニメーションなし）
+  const animationClass = gradient && !backgroundImage && !isSolidColor && isAnimated ? 'animate-gradient-xy' : '';
 
   return (
     <>

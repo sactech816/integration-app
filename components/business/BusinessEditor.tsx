@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { generateSlug } from '@/lib/utils';
 import { BusinessLP, Block, generateBlockId } from '@/lib/types';
 import { templates } from '@/constants/templates/business';
+import CustomColorPicker from '@/components/shared/CustomColorPicker';
 import {
   Save,
   Eye,
@@ -112,53 +113,6 @@ const gradientPresets = [
 
 // 画像アップロードサイズ制限（2MB）
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
-
-// 画像をsRGBカラースペースに変換する関数
-// Display P3などの広色域画像をアップロードすると色味が変わる問題を解決
-const convertToSRGB = (file: File): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const canvas = document.createElement('canvas');
-    // sRGBカラースペースを明示的に指定
-    const ctx = canvas.getContext('2d', { colorSpace: 'srgb' });
-    
-    if (!ctx) {
-      // Canvas非対応の場合は元のファイルをそのまま返す
-      resolve(file);
-      return;
-    }
-    
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      
-      // 元のファイル形式を維持（JPEG/PNG/WebP）
-      const mimeType = file.type || 'image/jpeg';
-      const quality = mimeType === 'image/png' ? undefined : 0.95; // PNGは品質指定不要
-      
-      canvas.toBlob(
-        (blob) => {
-          URL.revokeObjectURL(img.src); // メモリリーク防止
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('画像の変換に失敗しました'));
-          }
-        },
-        mimeType,
-        quality
-      );
-    };
-    
-    img.onerror = () => {
-      URL.revokeObjectURL(img.src);
-      reject(new Error('画像の読み込みに失敗しました'));
-    };
-    
-    img.src = URL.createObjectURL(file);
-  });
-};
 
 // リンクスタイルオプション
 const linkStyleOptions = [
@@ -444,6 +398,10 @@ const BusinessPreview = ({ lp }: { lp: BusinessLP }) => {
   const theme = lp.settings?.theme;
   const backgroundImage = theme?.backgroundImage;
   const gradient = theme?.gradient || 'linear-gradient(-45deg, #f59e0b, #fbbf24, #fcd34d, #fbbf24)';
+  const isAnimated = theme?.animated !== false; // デフォルトはアニメーション有効
+  
+  // 単色かグラデーションかを判定（#で始まる場合は単色）
+  const isSolidColor = gradient.startsWith('#');
 
   const backgroundStyle: React.CSSProperties = backgroundImage
     ? {
@@ -452,14 +410,18 @@ const BusinessPreview = ({ lp }: { lp: BusinessLP }) => {
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
       }
+    : isSolidColor
+    ? {
+        backgroundColor: gradient,
+      }
     : {
         backgroundImage: gradient,
-        backgroundSize: '400% 400%',
+        backgroundSize: isAnimated ? '400% 400%' : 'auto',
       };
 
   return (
     <div 
-      className={`min-h-screen ${!backgroundImage ? 'animate-gradient-xy' : ''}`}
+      className={`min-h-screen ${!backgroundImage && !isSolidColor && isAnimated ? 'animate-gradient-xy' : ''}`}
       style={backgroundStyle}
     >
       {lp.content?.map(block => {
@@ -537,7 +499,6 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   const [isUploading, setIsUploading] = useState(false);
   const [savedSlug, setSavedSlug] = useState<string | null>(null);
-  const [savedProjectId, setSavedProjectId] = useState<string | null>(initialData?.id || null); // 保存後のプロジェクトID
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [previewMode, setPreviewMode] = useState<'pc' | 'mobile'>('pc');
@@ -545,6 +506,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   const mobileIframeRef = React.useRef<HTMLIFrameElement>(null);
   const [customSlug, setCustomSlug] = useState('');
   const [justSavedSlug, setJustSavedSlug] = useState<string | null>(null);
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   // セクションの開閉状態
   const [openSections, setOpenSections] = useState({
@@ -606,7 +568,6 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
     if (initialData) {
       setLp(initialData);
       setSavedSlug(initialData.slug);
-      setSavedProjectId(initialData.id); // プロジェクトIDも設定
       setCustomSlug(initialData.slug || '');
       setJustSavedSlug(initialData.slug);
       setOpenSections({
@@ -661,25 +622,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
         body: JSON.stringify({ prompt: generatePrompt }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        
-        // 未ログインエラー
-        if (errorData.error === 'LOGIN_REQUIRED') {
-          if (confirm('AI機能を利用するにはログインが必要です。ログイン画面を開きますか？')) {
-            setShowAuth?.(true);
-          }
-          return;
-        }
-        
-        // 使用制限エラー
-        if (errorData.error === 'LIMIT_EXCEEDED') {
-          alert(`${errorData.message}\n\nプランをアップグレードすると、より多くのAI機能をご利用いただけます。`);
-          return;
-        }
-        
-        throw new Error(errorData.message || '生成に失敗しました');
-      }
+      if (!response.ok) throw new Error('生成に失敗しました');
 
       const data = await response.json();
       
@@ -698,64 +641,50 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       alert('AI生成が完了しました！');
     } catch (error) {
       console.error('Generate error:', error);
-      alert('AI生成中にエラーが発生しました: ' + (error instanceof Error ? error.message : '不明なエラー'));
+      alert('AI生成中にエラーが発生しました');
     } finally {
       setIsGenerating(false);
     }
   };
 
   const handleSave = async () => {
-    // Supabaseが設定されているか確認
-    if (!supabase) {
-      alert('データベース接続が設定されていません');
-      return;
-    }
-
-    // 既存IDの判定（savedProjectIdまたはinitialData.id）
-    const existingId = savedProjectId || initialData?.id;
-    
-    // 編集にはログインが必要
-    if (existingId && !user) {
-      if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
-        setShowAuth?.(true);
-      }
+    if (!user) {
+      setShowAuth(true);
       return;
     }
 
     setIsSaving(true);
     try {
+      // カスタムURL or 既存 or 自動生成
+      const newSlug = customSlug.trim() || savedSlug || generateSlug();
+      
       // タイトルが未入力の場合はデフォルト名を使用
       const finalTitle = lp.title?.trim() || '無題のビジネスLP';
       
-      // UPDATE用のペイロード（slugは変更しない、user_idも含めない）
-      const updatePayload = {
+      // business_projectsテーブルの構造に合わせる
+      // title, descriptionはsettingsに含める
+      const payload = {
         content: lp.content,
         settings: {
           ...lp.settings,
           title: finalTitle,
           description: lp.description,
         },
+        slug: newSlug,
       };
 
       let result;
-      if (existingId) {
-        // 更新（slugは変更しない、user_idも変更しない）
+      if (initialData?.id) {
         result = await supabase
-          .from('business_projects')
-          .update(updatePayload)
-          .eq('id', existingId)
+          ?.from('business_projects')
+          .update(payload)
+          .eq('id', initialData.id)
           .select()
           .single();
       } else {
-        // 新規作成（slugを生成、user_idを設定）
-        const newSlug = customSlug.trim() || generateSlug();
         result = await supabase
-          .from('business_projects')
-          .insert({ 
-            ...updatePayload, 
-            slug: newSlug,
-            user_id: user?.id || null, // INSERT時のみuser_idを設定
-          })
+          ?.from('business_projects')
+          .insert({ ...payload, user_id: user.id })
           .select()
           .single();
       }
@@ -766,13 +695,9 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       }
 
       if (result?.data) {
-        const wasNewCreation = !existingId; // 保存前の状態で判定
-        
         setSavedSlug(result.data.slug);
         setJustSavedSlug(result.data.slug);
-        setSavedProjectId(result.data.id); // プロジェクトIDを保持（2回目以降の保存でUPDATEになる）
-        
-        if (wasNewCreation) {
+        if (!initialData) {
           setShowSuccessModal(true);
         } else {
           alert('保存しました！');
@@ -865,20 +790,23 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
 
     setIsUploading(true);
     try {
-      // sRGBカラースペースに変換（Display P3等の広色域画像の色味変化を防止）
-      const convertedBlob = await convertToSRGB(file);
-      
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
       const filePath = `${user?.id || 'anonymous'}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, convertedBlob);
+      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
       updateBlock(blockId, { [field]: data.publicUrl });
     } catch (error: unknown) {
-      alert('アップロードエラー: ' + (error instanceof Error ? error.message : '不明なエラー'));
+      const message = error instanceof Error ? error.message : '不明なエラー';
+      // RLSエラーの場合はログインを促すメッセージに変換
+      if (message.includes('row-level security policy')) {
+        alert('画像をアップロードするにはログインが必要です。');
+      } else {
+        alert('アップロードエラー: ' + message);
+      }
     } finally {
       setIsUploading(false);
     }
@@ -1208,7 +1136,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
             {block.data.items?.map((item: { id: string; icon?: string; title: string; description: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <IconPicker 
                     value={item.icon || ''} 
@@ -1235,7 +1163,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
             {block.data.items?.map((item: { id: string; icon?: string; title: string; description: string; borderColor?: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <IconPicker 
                     value={item.icon || ''} 
@@ -1498,19 +1426,22 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                           if (!supabase) return;
                           setIsUploading(true);
                           try {
-                            // sRGBカラースペースに変換
-                            const convertedBlob = await convertToSRGB(file);
                             const fileExt = file.name.split('.').pop();
                             const fileName = `testimonial_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
                             const filePath = `${user?.id || 'anonymous'}/${fileName}`;
-                            const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, convertedBlob);
+                            const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
                             if (uploadError) throw uploadError;
                             const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
                             const newItems = [...block.data.items];
                             newItems[i].imageUrl = data.publicUrl;
                             updateBlock(block.id, { items: newItems });
                           } catch (err) {
-                            alert('アップロードに失敗しました');
+                            const message = err instanceof Error ? err.message : '不明なエラー';
+                            if (message.includes('row-level security policy')) {
+                              alert('画像をアップロードするにはログインが必要です。');
+                            } else {
+                              alert('アップロードに失敗しました');
+                            }
                           } finally {
                             setIsUploading(false);
                           }
@@ -1556,7 +1487,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
           <div className="space-y-4">
             {block.data.plans?.map((plan: { id: string; title: string; price: string; features: string[]; isRecommended: boolean }, i: number) => (
               <div key={plan.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newPlans = block.data.plans.filter((p: { id: string }) => p.id !== plan.id); updateBlock(block.id, { plans: newPlans }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
+                <button onClick={() => { const newPlans = block.data.plans.filter((p: { id: string }) => p.id !== plan.id); updateBlock(block.id, { plans: newPlans }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="font-bold text-amber-600">プラン {i + 1}</span>
                   <label className="flex items-center gap-1 text-sm">
@@ -1578,7 +1509,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
           <div className="space-y-4">
             {block.data.items?.map((item: { id: string; question: string; answer: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
                 <div className="font-bold text-amber-600 mb-2 text-sm">Q{i + 1}</div>
                 <Input label="質問" val={item.question} onChange={(v) => { const newItems = [...block.data.items]; newItems[i].question = v; updateBlock(block.id, { items: newItems }); }} ph="よくある質問" />
                 <Textarea label="回答" val={item.answer} onChange={(v) => { const newItems = [...block.data.items]; newItems[i].answer = v; updateBlock(block.id, { items: newItems }); }} />
@@ -1710,7 +1641,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
             {block.data.items?.map((item: { id: string; icon?: string; title: string; description: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
                 <div className="mb-3">
                   <IconPicker 
                     value={item.icon || ''} 
@@ -1737,7 +1668,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
             {block.data.items?.map((item: { id: string; icon?: string; title: string; description: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
                 <div className="mb-3">
                   <IconPicker 
                     value={item.icon || ''} 
@@ -1771,7 +1702,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
             {block.data.items?.map((item: { id: string; icon?: string; title: string; description?: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <IconPicker 
                     value={item.icon || ''} 
@@ -1837,7 +1768,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
             {block.data.items?.map((item: { id: string; imageUrl?: string; category?: string; title: string; description: string; categoryColor?: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
                 <div className="mb-3">
                   <label className="text-sm font-bold text-gray-900 block mb-2">事例画像</label>
                   <div className="flex gap-2">
@@ -1849,13 +1780,18 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                         const file = e.target.files?.[0];
                         if (!file || !supabase) return;
                         if (file.size > MAX_IMAGE_SIZE) { alert('画像サイズが大きすぎます。最大2MBまで対応しています。'); return; }
-                        // sRGBカラースペースに変換
-                        const convertedBlob = await convertToSRGB(file);
                         const fileExt = file.name.split('.').pop();
                         const fileName = `casestudy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
                         const filePath = `${user?.id || 'anonymous'}/${fileName}`;
-                        const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, convertedBlob);
-                        if (uploadError) { alert('アップロードエラー: ' + uploadError.message); return; }
+                        const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
+                        if (uploadError) {
+                          if (uploadError.message.includes('row-level security policy')) {
+                            alert('画像をアップロードするにはログインが必要です。');
+                          } else {
+                            alert('アップロードエラー: ' + uploadError.message);
+                          }
+                          return;
+                        }
                         const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
                         const newItems = [...block.data.items]; newItems[i].imageUrl = data.publicUrl; updateBlock(block.id, { items: newItems });
                       }} />
@@ -1912,7 +1848,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
             {block.data.items?.map((item: { id: string; imageUrl: string; caption?: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
-                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"><Trash2 size={18} /></button>
+                <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm font-medium text-gray-500">画像 {i + 1}</span>
                   {item.imageUrl && <img src={item.imageUrl} alt="" className="w-12 h-12 rounded object-cover" />}
@@ -1926,13 +1862,18 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                       const file = e.target.files?.[0];
                       if (!file || !supabase) return;
                       if (file.size > MAX_IMAGE_SIZE) { alert('画像サイズが大きすぎます。最大2MBまで対応しています。'); return; }
-                      // sRGBカラースペースに変換
-                      const convertedBlob = await convertToSRGB(file);
                       const fileExt = file.name.split('.').pop();
                       const fileName = `gallery_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
                       const filePath = `${user?.id || 'anonymous'}/${fileName}`;
-                      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, convertedBlob);
-                      if (uploadError) { alert('アップロードエラー: ' + uploadError.message); return; }
+                      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
+                      if (uploadError) {
+                        if (uploadError.message.includes('row-level security policy')) {
+                          alert('画像をアップロードするにはログインが必要です。');
+                        } else {
+                          alert('アップロードエラー: ' + uploadError.message);
+                        }
+                        return;
+                      }
                       const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
                       const newItems = [...block.data.items]; newItems[i].imageUrl = data.publicUrl; updateBlock(block.id, { items: newItems });
                     }} />
@@ -2082,9 +2023,20 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                   <span className="text-xs text-gray-600 block mt-1 text-center">{preset.name}</span>
                 </button>
               ))}
+            </div>
+
+            {/* カスタムカラー作成ボタン */}
+            <div className="mt-4">
+              <button
+                onClick={() => setShowColorPicker(true)}
+                className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-amber-500 hover:text-amber-600 transition-colors flex items-center justify-center gap-2 font-medium"
+              >
+                <Palette size={18} />
+                カスタムカラーを作成
+              </button>
+            </div>
           </div>
         </div>
-      </div>
       </Section>
 
       {/* ステップ3: ブロック編集セクション */}
@@ -2129,7 +2081,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                   <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     <button onClick={() => moveBlock(block.id, 'up')} disabled={index === 0} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ArrowUp size={16} /></button>
                     <button onClick={() => moveBlock(block.id, 'down')} disabled={index === (lp.content?.length || 0) - 1} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ArrowDown size={16} /></button>
-                    <button onClick={() => removeBlock(block.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"><Trash2 size={18} /></button>
+                    <button onClick={() => removeBlock(block.id)} className="p-1 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
                     <button onClick={() => setExpandedBlock(expandedBlock === block.id ? null : block.id)} className="p-1 text-gray-400">
                   {expandedBlock === block.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               </button>
@@ -2438,7 +2390,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             <ArrowLeft size={20} />
           </button>
           <h2 className="font-bold text-lg text-gray-900 line-clamp-1">
-            {initialData ? 'ビジネスLP編集' : 'ビジネスLP作成'}
+            {initialData ? 'ビジネスLP編集' : '新規作成'}
           </h2>
         </div>
         <div className="flex gap-2">
@@ -2620,6 +2572,27 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
         {/* PC用：右側のfixed領域分のスペーサー（背景色を左側と揃える） */}
         <div className="hidden lg:block lg:w-1/2 lg:flex-shrink-0 bg-gray-50"></div>
         </div>
+
+        {/* カスタムカラーピッカーモーダル */}
+        <CustomColorPicker
+          isOpen={showColorPicker}
+          onClose={() => setShowColorPicker(false)}
+          onApply={(value, isAnimated) => {
+            setLp(prev => ({
+              ...prev,
+              settings: {
+                ...prev.settings,
+                theme: {
+                  gradient: value,
+                  animated: isAnimated ?? false,
+                  backgroundImage: undefined,
+                },
+              },
+            }));
+          }}
+          accentColor="amber"
+          userId={user?.id}
+        />
         </div>
       );
 };

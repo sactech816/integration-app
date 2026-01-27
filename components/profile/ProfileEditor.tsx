@@ -6,6 +6,7 @@ import { generateSlug } from '@/lib/utils';
 import { Profile, Block, generateBlockId } from '@/lib/types';
 import { profileTemplates } from '@/constants/templates';
 import { triggerGamificationEvent } from '@/lib/gamification/events';
+import CustomColorPicker from '@/components/shared/CustomColorPicker';
 import {
   Save,
   Eye,
@@ -94,53 +95,6 @@ const gradientPresets = [
 
 // 画像アップロードサイズ制限（2MB）
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
-
-// 画像をsRGBカラースペースに変換する関数
-// Display P3などの広色域画像をアップロードすると色味が変わる問題を解決
-const convertToSRGB = (file: File): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const canvas = document.createElement('canvas');
-    // sRGBカラースペースを明示的に指定
-    const ctx = canvas.getContext('2d', { colorSpace: 'srgb' });
-    
-    if (!ctx) {
-      // Canvas非対応の場合は元のファイルをそのまま返す
-      resolve(file);
-      return;
-    }
-    
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      
-      // 元のファイル形式を維持（JPEG/PNG/WebP）
-      const mimeType = file.type || 'image/jpeg';
-      const quality = mimeType === 'image/png' ? undefined : 0.95; // PNGは品質指定不要
-      
-      canvas.toBlob(
-        (blob) => {
-          URL.revokeObjectURL(img.src); // メモリリーク防止
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('画像の変換に失敗しました'));
-          }
-        },
-        mimeType,
-        quality
-      );
-    };
-    
-    img.onerror = () => {
-      URL.revokeObjectURL(img.src);
-      reject(new Error('画像の読み込みに失敗しました'));
-    };
-    
-    img.src = URL.createObjectURL(file);
-  });
-};
 
 // お客様の声用プリセット画像
 const testimonialPresetImages = [
@@ -293,6 +247,9 @@ const ProfilePreview = ({ profile }: { profile: Profile }) => {
   const backgroundImage = theme?.backgroundImage;
   const gradient = theme?.gradient || 'linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab)';
   const isAnimated = theme?.animated !== false; // デフォルトはアニメーション有効
+  
+  // 単色かグラデーションかを判定（#で始まる場合は単色）
+  const isSolidColor = gradient.startsWith('#');
 
   // 背景スタイルの決定（アニメーション時はbackgroundImageプロパティを使用）
   const backgroundStyle: React.CSSProperties = backgroundImage
@@ -302,6 +259,10 @@ const ProfilePreview = ({ profile }: { profile: Profile }) => {
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
       }
+    : isSolidColor
+    ? {
+        backgroundColor: gradient,
+      }
     : {
         backgroundImage: gradient,
         backgroundSize: isAnimated ? '400% 400%' : 'auto',
@@ -309,7 +270,7 @@ const ProfilePreview = ({ profile }: { profile: Profile }) => {
 
   return (
     <div 
-      className={`min-h-screen py-8 px-4 ${!backgroundImage && isAnimated ? 'animate-gradient-xy' : ''}`}
+      className={`min-h-screen py-8 px-4 ${!backgroundImage && !isSolidColor && isAnimated ? 'animate-gradient-xy' : ''}`}
       style={backgroundStyle}
     >
       <div className="max-w-md mx-auto">
@@ -789,12 +750,12 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiTheme, setAiTheme] = useState('');
   const [isUploading, setIsUploading] = useState(false);
-  const [savedId, setSavedId] = useState<string | null>(initialData?.id || null);
-  const [savedSlug, setSavedSlug] = useState<string | null>(initialData?.slug || null);
+  const [savedSlug, setSavedSlug] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [customSlug, setCustomSlug] = useState('');
   const [slugError, setSlugError] = useState('');
+  const [showColorPicker, setShowColorPicker] = useState(false);
   
   // セクションの開閉状態 - 初期では template と blocks を開く
   const [openSections, setOpenSections] = useState({
@@ -809,8 +770,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
   useEffect(() => {
     if (initialData) {
       setProfile(initialData);
-      setSavedId(initialData.id || null);
-      setSavedSlug(initialData.slug || null);
+      setSavedSlug(initialData.slug);
       setCustomSlug(initialData.nickname || '');
       // 編集時はtemplateを閉じてblocksを開く
       setOpenSections({
@@ -867,6 +827,11 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
   };
 
   const handleSave = async () => {
+    if (!user) {
+      setShowAuth(true);
+      return;
+    }
+
     // Supabaseが設定されているか確認
     if (!supabase) {
       alert('データベース接続が設定されていません');
@@ -878,23 +843,12 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       return;
     }
 
-    // 既存IDの判定（savedIdまたはinitialData.id）
-    const existingId = savedId || initialData?.id;
-    
-    // 編集にはログインが必要
-    if (existingId && !user) {
-      if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
-        setShowAuth?.(true);
-      }
-      return;
-    }
-
     setIsSaving(true);
     try {
       let result;
       
-      if (existingId) {
-        // 更新の場合：既存のslugを維持（user_idは変更しない）
+      if (initialData?.id) {
+        // 更新の場合：既存のslugを維持
         const updatePayload = {
           nickname: customSlug || null,
           content: profile.content,
@@ -904,7 +858,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         result = await supabase
           .from('profiles')
           .update(updatePayload)
-          .eq('id', existingId)
+          .eq('id', initialData.id)
           .select()
           .single();
       } else {
@@ -919,7 +873,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
             content: profile.content,
             settings: profile.settings,
             slug: newSlug,
-            user_id: user?.id || null, // INSERT時のみuser_idを設定
+            user_id: user.id,
           };
           
           result = await supabase
@@ -950,13 +904,8 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       }
 
       if (result?.data) {
-        // 新規作成かどうかを判定（保存前の状態で判定）
-        const wasNewCreation = !existingId;
-        
-        setSavedId(result.data.id);
         setSavedSlug(result.data.slug);
-        
-        if (wasNewCreation) {
+        if (!initialData) {
           setShowSuccessModal(true);
           
           // ゲーミフィケーションイベント発火（プロフィール作成）
@@ -1098,22 +1047,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       
       if (!res.ok) {
         const errorData = await res.json();
-        
-        // 未ログインエラー
-        if (errorData.error === 'LOGIN_REQUIRED') {
-          if (confirm('AI機能を利用するにはログインが必要です。ログイン画面を開きますか？')) {
-            setShowAuth?.(true);
-          }
-          return;
-        }
-        
-        // 使用制限エラー
-        if (errorData.error === 'LIMIT_EXCEEDED') {
-          alert(`${errorData.message}\n\nプランをアップグレードすると、より多くのAI機能をご利用いただけます。`);
-          return;
-        }
-        
-        throw new Error(errorData.message || errorData.error || 'API request failed');
+        throw new Error(errorData.error || 'API request failed');
       }
       
       const { data } = await res.json();
@@ -1155,20 +1089,23 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
     setIsUploading(true);
     try {
-      // sRGBカラースペースに変換（Display P3等の広色域画像の色味変化を防止）
-      const convertedBlob = await convertToSRGB(file);
-      
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
       const filePath = `${user?.id || 'anonymous'}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, convertedBlob);
+      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
       updateBlock(blockId, { [field]: data.publicUrl });
     } catch (error: unknown) {
-      alert('アップロードエラー: ' + (error instanceof Error ? error.message : '不明なエラー'));
+      const message = error instanceof Error ? error.message : '不明なエラー';
+      // RLSエラーの場合はログインを促すメッセージに変換
+      if (message.includes('row-level security policy')) {
+        alert('画像をアップロードするにはログインが必要です。');
+      } else {
+        alert('アップロードエラー: ' + message);
+      }
     } finally {
       setIsUploading(false);
     }
@@ -1188,14 +1125,11 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
     setIsUploading(true);
     try {
-      // sRGBカラースペースに変換（Display P3等の広色域画像の色味変化を防止）
-      const convertedBlob = await convertToSRGB(file);
-      
       const fileExt = file.name.split('.').pop();
       const fileName = `bg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
       const filePath = `${user?.id || 'anonymous'}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, convertedBlob);
+      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
@@ -1213,7 +1147,13 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       }));
       resetPreview();
     } catch (error: unknown) {
-      alert('アップロードエラー: ' + (error instanceof Error ? error.message : '不明なエラー'));
+      const message = error instanceof Error ? error.message : '不明なエラー';
+      // RLSエラーの場合はログインを促すメッセージに変換
+      if (message.includes('row-level security policy')) {
+        alert('画像をアップロードするにはログインが必要です。');
+      } else {
+        alert('アップロードエラー: ' + message);
+      }
     } finally {
       setIsUploading(false);
     }
@@ -1360,9 +1300,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     const newLinks = block.data.links.filter((_: unknown, idx: number) => idx !== i);
                     updateBlock(block.id, { links: newLinks });
                   }}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"
+                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={16} />
                 </button>
                 <Input label="ラベル" val={link.label} onChange={(v) => {
                   const newLinks = [...block.data.links];
@@ -1471,9 +1411,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id);
                     updateBlock(block.id, { items: newItems });
                   }}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"
+                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={16} />
                 </button>
                 <div className="font-bold text-emerald-600 mb-2 text-sm">Q{i + 1}</div>
                 <Input label="質問" val={item.question} onChange={(v) => {
@@ -1511,9 +1451,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     const newPlans = block.data.plans.filter((p: { id: string }) => p.id !== plan.id);
                     updateBlock(block.id, { plans: newPlans });
                   }}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"
+                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={16} />
                 </button>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="font-bold text-emerald-600">プラン {i + 1}</span>
@@ -1570,9 +1510,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id);
                     updateBlock(block.id, { items: newItems });
                   }}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded transition-colors"
+                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={16} />
                 </button>
                 <div className="font-bold text-emerald-600 mb-2 text-sm">お客様 {i + 1}</div>
                 
@@ -1629,19 +1569,22 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                           if (!supabase) return;
                           setIsUploading(true);
                           try {
-                            // sRGBカラースペースに変換
-                            const convertedBlob = await convertToSRGB(file);
                             const fileExt = file.name.split('.').pop();
                             const fileName = `testimonial_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
                             const filePath = `${user?.id || 'anonymous'}/${fileName}`;
-                            const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, convertedBlob);
+                            const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
                             if (uploadError) throw uploadError;
                             const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
                             const newItems = [...block.data.items];
                             newItems[i].imageUrl = data.publicUrl;
                             updateBlock(block.id, { items: newItems });
                           } catch (err) {
-                            alert('アップロードに失敗しました');
+                            const message = err instanceof Error ? err.message : '不明なエラー';
+                            if (message.includes('row-level security policy')) {
+                              alert('画像をアップロードするにはログインが必要です。');
+                            } else {
+                              alert('アップロードに失敗しました');
+                            }
                           } finally {
                             setIsUploading(false);
                           }
@@ -1861,9 +1804,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                         const newItems = block.data.items.filter((_, idx) => idx !== i);
                         updateBlock(block.id, { items: newItems });
                       }}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
+                      className="text-red-500 hover:text-red-700"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                   <div className="flex gap-2">
@@ -1885,19 +1828,22 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                             if (!supabase) return;
                             setIsUploading(true);
                             try {
-                              // sRGBカラースペースに変換
-                              const convertedBlob = await convertToSRGB(file);
                               const fileExt = file.name.split('.').pop();
                               const fileName = `gallery_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
                               const filePath = `${user?.id || 'anonymous'}/${fileName}`;
-                              const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, convertedBlob);
+                              const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
                               if (uploadError) throw uploadError;
                               const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
                               const newItems = [...block.data.items];
                               newItems[i].imageUrl = data.publicUrl;
                               updateBlock(block.id, { items: newItems });
                             } catch (err) {
-                              alert('アップロードに失敗しました');
+                              const message = err instanceof Error ? err.message : '不明なエラー';
+                              if (message.includes('row-level security policy')) {
+                                alert('画像をアップロードするにはログインが必要です。');
+                              } else {
+                                alert('アップロードに失敗しました');
+                              }
                             } finally {
                               setIsUploading(false);
                             }
@@ -2096,6 +2042,17 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 ))}
               </div>
             </div>
+
+            {/* カスタムカラー作成ボタン */}
+            <div className="mt-4">
+              <button
+                onClick={() => setShowColorPicker(true)}
+                className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-emerald-500 hover:text-emerald-600 transition-colors flex items-center justify-center gap-2 font-medium"
+              >
+                <Palette size={18} />
+                カスタムカラーを作成
+              </button>
+            </div>
           </div>
 
           {/* 背景画像アップロード */}
@@ -2224,9 +2181,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                     </button>
                     <button
                       onClick={() => removeBlock(block.id)}
-                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                      className="p-1 text-gray-400 hover:text-red-500"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={16} />
                     </button>
                     <button
                       onClick={() => setExpandedBlock(expandedBlock === block.id ? null : block.id)}
@@ -2596,7 +2553,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
             <ArrowLeft size={20} />
           </button>
           <h2 className="font-bold text-lg text-gray-900 line-clamp-1">
-            {initialData ? 'プロフィール編集' : 'プロフィールLP作成'}
+            {initialData ? 'プロフィール編集' : '新規作成'}
           </h2>
         </div>
         <div className="flex gap-2">
@@ -2704,6 +2661,28 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         {/* PC用：右側のfixed領域分のスペーサー（背景色を左側と揃える） */}
         <div className="hidden lg:block lg:w-1/2 lg:flex-shrink-0 bg-gray-50"></div>
       </div>
+
+      {/* カスタムカラーピッカーモーダル */}
+      <CustomColorPicker
+        isOpen={showColorPicker}
+        onClose={() => setShowColorPicker(false)}
+        onApply={(value, isAnimated) => {
+          setProfile(prev => ({
+            ...prev,
+            settings: {
+              ...prev.settings,
+              theme: {
+                gradient: value,
+                animated: isAnimated ?? false,
+                backgroundImage: undefined,
+              },
+            },
+          }));
+          resetPreview();
+        }}
+        accentColor="emerald"
+        userId={user?.id}
+      />
     </div>
   );
 };
