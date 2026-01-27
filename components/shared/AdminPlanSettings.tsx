@@ -504,11 +504,34 @@ function PlanEditForm({
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
+            checked={plan.can_hide_copyright}
+            onChange={(e) => handleChange('can_hide_copyright', e.target.checked)}
+            className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+          />
+          <span className="text-sm text-gray-700">コピーライト非表示</span>
+        </label>
+      </div>
+
+      {/* 表示・有効フラグ */}
+      <div className="grid grid-cols-3 gap-4">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
             checked={plan.is_active}
             onChange={(e) => handleChange('is_active', e.target.checked)}
             className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
           />
           <span className="text-sm text-gray-700">有効</span>
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={plan.is_visible}
+            onChange={(e) => handleChange('is_visible', e.target.checked)}
+            className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+          />
+          <span className="text-sm text-gray-700">料金表に表示</span>
         </label>
       </div>
 

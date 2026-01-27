@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data: profile } = await supabase
     .from('profiles')
     .select('nickname, content')
-    .eq('slug', slug)
+    .or(`slug.eq.${slug},nickname.eq.${slug}`)
     .single();
 
   if (!profile) {
@@ -96,7 +96,7 @@ export default async function ProfilePage({ params }: Props) {
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
-    .eq('slug', slug)
+    .or(`slug.eq.${slug},nickname.eq.${slug}`)
     .single();
 
   if (!profile) {
