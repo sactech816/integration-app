@@ -9,6 +9,7 @@ import { GamificationCampaign, UserStamp, StampRallySettings } from '@/lib/types
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
+import ContentFooter from '@/components/shared/ContentFooter';
 import StampCard from '@/components/gamification/StampCard';
 import { Loader2, Gift, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -258,6 +259,7 @@ export default function StampPage() {
           )}
         </div>
       </main>
+      <ContentFooter toolType="gamification" variant="light" />
       <Footer />
       {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
     </div>

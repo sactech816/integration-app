@@ -3,6 +3,7 @@
 import React from 'react';
 import { BusinessLP } from '@/lib/types';
 import { ViewTracker, trackClick } from '@/components/shared/ViewTracker';
+import ContentFooter from '@/components/shared/ContentFooter';
 import TrackingScripts from '@/components/shared/TrackingScripts';
 import BlockRenderer from '@/components/shared/BlockRenderer';
 
@@ -77,16 +78,7 @@ const BusinessViewer: React.FC<BusinessViewerProps> = ({ lp }) => {
         ))}
 
         {/* フッター */}
-        <footer className="py-8 bg-gray-900 text-center">
-          <a 
-            href="https://makers.tokyo/" 
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-500 text-xs hover:text-gray-400 transition-colors"
-          >
-            &copy; 2025 ビジネスLPメーカー
-          </a>
-        </footer>
+        <ContentFooter toolType="business" variant="dark" hideFooter={lp.settings?.hideFooter} />
       </div>
     </>
   );

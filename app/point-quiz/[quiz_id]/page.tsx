@@ -13,6 +13,7 @@ import { Quiz } from '@/lib/types';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
+import ContentFooter from '@/components/shared/ContentFooter';
 import PointDisplay from '@/components/gamification/PointDisplay';
 import { 
   Loader2, 
@@ -426,6 +427,7 @@ export default function PointQuizPage() {
           )}
         </div>
       </main>
+      <ContentFooter toolType="gamification" variant="transparent" />
       <Footer />
       {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
     </div>

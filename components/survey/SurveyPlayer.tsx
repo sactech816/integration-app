@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Survey, SurveyQuestion } from "@/lib/types";
 import { CheckCircle, Send, Loader2 } from "lucide-react";
+import ContentFooter from "@/components/shared/ContentFooter";
 import SurveyResults from "./SurveyResults";
 
 interface SurveyPlayerProps {
@@ -192,6 +193,9 @@ export default function SurveyPlayer({ survey, isPreview = false }: SurveyPlayer
             </p>
           )}
         </div>
+
+        {/* フッター */}
+        <ContentFooter toolType="survey" variant="light" className="mt-8 rounded-b-xl" hideFooter={survey.settings?.hideFooter} />
       </div>
     </div>
   );

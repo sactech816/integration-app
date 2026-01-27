@@ -2174,6 +2174,33 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
           </div>
 
+          {/* フッター非表示（Proプラン特典） */}
+          <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h4 className="font-bold text-orange-900 flex items-center gap-2 mb-1">
+                  <Eye size={18} className="text-orange-600"/> フッターを非表示にする
+                  <span className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded-full">Pro</span>
+                </h4>
+                <p className="text-xs text-orange-700">
+                  コンテンツ下部に表示される「ビジネスLPメーカーで作成しました」のフッターを非表示にします。
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer ml-4 flex-shrink-0">
+                <input 
+                  type="checkbox" 
+                  className="sr-only peer" 
+                  checked={lp.settings?.hideFooter || false} 
+                  onChange={e => setLp(prev => ({
+                    ...prev,
+                    settings: { ...prev.settings, hideFooter: e.target.checked }
+                  }))} 
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+              </label>
+            </div>
+          </div>
+
           <hr className="border-gray-200" />
 
           {/* カスタムURL */}

@@ -42,6 +42,7 @@ import {
   submitScheduleAdjustment,
 } from '@/app/actions/booking';
 import WeeklyCalendar from '@/components/booking/WeeklyCalendar';
+import ContentFooter from '@/components/shared/ContentFooter';
 
 type CalendarViewMode = 'month' | 'week';
 
@@ -334,19 +335,7 @@ export default function PublicBookingPage() {
           </div>
         </div>
         {/* フッター */}
-        <footer className="py-4 text-center">
-          <p className="text-xs text-gray-400">
-            予約・出欠表作成{' '}
-            <a 
-              href="https://makers.tokyo/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="hover:text-gray-500 transition-colors"
-            >
-              https://makers.tokyo/
-            </a>
-          </p>
-        </footer>
+        <ContentFooter toolType="booking" variant="light" />
       </div>
     );
   }
@@ -1051,19 +1040,7 @@ export default function PublicBookingPage() {
       </main>
 
       {/* フッター */}
-      <footer className="py-4 text-center">
-        <p className="text-xs text-gray-400">
-          予約・出欠表作成{' '}
-          <a 
-            href="https://makers.tokyo/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="hover:text-gray-500 transition-colors"
-          >
-            https://makers.tokyo/
-          </a>
-        </p>
-      </footer>
+      <ContentFooter toolType="booking" variant="light" />
     </div>
   );
 }

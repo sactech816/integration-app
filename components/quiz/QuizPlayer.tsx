@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Loader2, Trophy, ExternalLink, MessageCircle, QrCode, RefreshCw, Home, Twitter, Share2, CheckCircle, XCircle, Sparkles, Mail } from 'lucide-react';
 import SEO from './SEO';
 import { supabase } from '../../lib/supabase';
+import ContentFooter from '../shared/ContentFooter';
 import { calculateResult } from '../../lib/utils';
 import confetti from 'canvas-confetti';
 import { getQuizTheme } from '../../constants/quizThemes';
@@ -62,9 +63,6 @@ const ResultView = ({ quiz, result, onRetry, onBack, playableQuestions, answers,
               style={{ color: theme.textPrimary }}
             >
                 {result.description}
-            </div>
-            <div className="text-center mb-8 pb-6 border-b border-gray-100">
-                <p className="text-xs text-gray-400">診断クイズメーカーで作成しました</p>
             </div>
             
             {/* 診断履歴セクション */}
@@ -172,11 +170,7 @@ const ResultView = ({ quiz, result, onRetry, onBack, playableQuestions, answers,
                 </button>
             </div>
         </div>
-        <div className="bg-gray-50 p-6 text-center border-t">
-            <a href="https://makers.tokyo/" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-indigo-600 font-bold">
-                &copy; 2025 診断クイズメーカー
-            </a>
-        </div>
+        <ContentFooter toolType="quiz" variant="light" hideFooter={quiz.hideFooter} />
     </div>
   );
 };

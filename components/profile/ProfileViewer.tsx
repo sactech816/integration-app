@@ -3,6 +3,7 @@
 import React from 'react';
 import { Profile } from '@/lib/types';
 import { ViewTracker, trackClick } from '@/components/shared/ViewTracker';
+import ContentFooter from '@/components/shared/ContentFooter';
 import TrackingScripts from '@/components/shared/TrackingScripts';
 import BlockRenderer from '@/components/shared/BlockRenderer';
 
@@ -73,16 +74,7 @@ const ProfileViewer: React.FC<ProfileViewerProps> = ({ profile }) => {
           ))}
 
           {/* フッター */}
-          <div className="text-center py-8">
-            <a 
-              href="https://makers.tokyo/" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white/60 text-xs hover:text-white/80 transition-colors"
-            >
-              &copy; 2025 プロフィールメーカー
-            </a>
-          </div>
+          <ContentFooter toolType="profile" variant="transparent" hideFooter={profile.settings?.hideFooter} />
         </div>
       </div>
     </>

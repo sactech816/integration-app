@@ -61,7 +61,8 @@ export const generateQuizHTML = (quiz: Quiz): string => {
     </div>
     
     <div class="footer">
-      <a href="https://makers.tokyo/" target="_blank" rel="noopener noreferrer">&copy; 2025 診断クイズメーカー</a>
+      <a href="https://makers.tokyo/tools" target="_blank" rel="noopener noreferrer">診断クイズメーカーで作成しました</a>
+      <div style="margin-top: 4px;"><a href="https://makers.tokyo/" target="_blank" rel="noopener noreferrer" style="opacity: 0.7;">@2026 集客メーカー</a></div>
     </div>
   </div>
   

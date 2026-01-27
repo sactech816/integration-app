@@ -64,6 +64,7 @@ export interface Quiz {
   mode?: 'diagnosis' | 'test' | 'fortune';
   collect_email?: boolean;
   theme?: 'standard' | 'cyberpunk' | 'japanese' | 'pastel' | 'monochrome';
+  hideFooter?: boolean; // フッター非表示（Proプラン特典）
   // アナリティクス関連（データベースから取得時に含まれる可能性あり）
   views_count?: number;
   completions_count?: number;
@@ -395,6 +396,7 @@ export type ProfileSettings = {
   fbPixelId?: string;
   lineTagId?: string;
   showInPortal?: boolean;
+  hideFooter?: boolean; // フッター非表示（Proプラン特典）
   theme?: {
     gradient?: string;
     backgroundImage?: string;
@@ -544,6 +546,7 @@ export interface SurveyQuestion {
 // アンケート設定
 export interface SurveySettings {
   showInPortal?: boolean;
+  hideFooter?: boolean; // フッター非表示（Proプラン特典）
   theme?: 'light' | 'dark' | 'colorful';
   primaryColor?: string;
 }

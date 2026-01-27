@@ -21,6 +21,7 @@ import {
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
+import ContentFooter from '@/components/shared/ContentFooter';
 import CapsuleAnimation from '@/components/gamification/gacha/CapsuleAnimation';
 import RouletteAnimation from '@/components/gamification/gacha/RouletteAnimation';
 import OmikujiAnimation from '@/components/gamification/gacha/OmikujiAnimation';
@@ -401,6 +402,7 @@ export default function GachaPage() {
           )}
         </div>
       </main>
+      <ContentFooter toolType="gamification" variant="transparent" />
       <Footer />
       {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
     </div>
