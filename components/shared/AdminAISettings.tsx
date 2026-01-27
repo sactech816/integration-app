@@ -121,10 +121,12 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
           results[plan] = data;
           presets[plan] = data.selectedPreset || 'presetB';
           // カスタムモデル設定を復元（プリセットのcustomDefaultがあればそれを使用）
-          const planPresets = PLAN_AI_PRESETS[plan as keyof typeof PLAN_AI_PRESETS];
+          // 集客メーカーのproはmakers_proを参照
+          const presetKey = (selectedService === 'makers' && plan === 'pro') ? 'makers_pro' : plan;
+          const planPresets = PLAN_AI_PRESETS[presetKey as keyof typeof PLAN_AI_PRESETS];
           const customDefault = planPresets && 'customDefault' in planPresets 
             ? (planPresets as any).customDefault 
-            : { outlineModel: 'gemini-1.5-flash', writingModel: 'gemini-1.5-flash' };
+            : { outlineModel: 'gemini-2.0-flash-exp', writingModel: 'gemini-2.0-flash-exp' };
           
           if (data.customOutlineModel || data.customWritingModel) {
             customs[plan] = {
@@ -222,11 +224,13 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
   
   // カスタムモデルのデフォルト値をプリセットから取得
   const getCustomDefault = (plan: string) => {
-    const planPresets = PLAN_AI_PRESETS[plan as keyof typeof PLAN_AI_PRESETS];
+    // 集客メーカーのproはmakers_proを参照
+    const presetKey = (selectedService === 'makers' && plan === 'pro') ? 'makers_pro' : plan;
+    const planPresets = PLAN_AI_PRESETS[presetKey as keyof typeof PLAN_AI_PRESETS];
     if (planPresets && 'customDefault' in planPresets) {
       return (planPresets as any).customDefault;
     }
-    return { outlineModel: 'gemini-1.5-flash', writingModel: 'gemini-1.5-flash' };
+    return { outlineModel: 'gemini-2.0-flash-exp', writingModel: 'gemini-2.0-flash-exp' };
   };
   const currentCustom = customModels[selectedPlan] || getCustomDefault(selectedPlan);
 
