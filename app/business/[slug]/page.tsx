@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { Metadata } from 'next';
 import BusinessViewer from '@/components/business/BusinessViewer';
 import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
+import { shouldHideFooter } from '@/lib/utils/checkCreatorPlanPermission';
 
 // 動的レンダリングを強制（常に最新のデータを取得）
 export const dynamic = 'force-dynamic';
@@ -112,6 +113,9 @@ export default async function BusinessPage({ params }: Props) {
     );
   }
 
+  // 作成者のプラン権限をチェックしてフッター非表示を決定
+  const canHideFooter = await shouldHideFooter(lp.settings?.hideFooter, lp.user_id);
+
   // business_projectsのデータをBusinessLPの形式に変換
   // 後方互換性: themeが直接カラムにある場合とsettings内にある場合の両方をサポート
   const theme = lp.theme || lp.settings?.theme;
@@ -125,6 +129,7 @@ export default async function BusinessPage({ params }: Props) {
     settings: {
       ...lp.settings,
       theme: theme, // themeを確実に含める
+      hideFooter: canHideFooter, // プラン権限チェック済みの値
     },
     user_id: lp.user_id,
     created_at: lp.created_at,

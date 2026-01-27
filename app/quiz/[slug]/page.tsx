@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { Metadata } from 'next';
 import QuizPlayerWrapper from '@/components/quiz/QuizPlayerWrapper';
 import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
+import { shouldHideFooter } from '@/lib/utils/checkCreatorPlanPermission';
 
 // 動的レンダリングを強制（常に最新のデータを取得）
 export const dynamic = 'force-dynamic';
@@ -112,6 +113,10 @@ export default async function QuizPage({ params }: Props) {
     );
   }
 
+  // 作成者のプラン権限をチェックしてフッター非表示を決定
+  const canHideFooter = await shouldHideFooter(quiz.hideFooter, quiz.user_id);
+  const quizWithPermission = { ...quiz, hideFooter: canHideFooter };
+
   // 構造化データ - Quiz
   const questions = typeof quiz.questions === 'string' ? JSON.parse(quiz.questions) : quiz.questions;
   const quizSchema = {
@@ -148,7 +153,7 @@ export default async function QuizPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <QuizPlayerWrapper quiz={quiz} />
+      <QuizPlayerWrapper quiz={quizWithPermission} />
     </>
   );
 }

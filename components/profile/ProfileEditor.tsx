@@ -46,8 +46,10 @@ import {
   Brain,
   Timer,
   Images,
-  CheckCircle
+  CheckCircle,
+  Lock
 } from 'lucide-react';
+import { useUserPlan } from '@/lib/hooks/useUserPlan';
 
 interface ProfileEditorProps {
   user: { id: string; email?: string } | null;
@@ -699,6 +701,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
   onBack,
   setShowAuth,
 }) => {
+  // ユーザープラン権限を取得
+  const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
+  
   // 初期ブロック（ヘッダー、テキスト、リンク集）
   const initialBlocks: Block[] = [
     {
@@ -2273,28 +2278,58 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
           </div>
 
           {/* フッター非表示（Proプラン特典） */}
-          <div className="p-4 bg-orange-50 border border-orange-200 rounded-xl">
+          <div className={`p-4 rounded-xl border ${
+            userPlan.canHideCopyright 
+              ? 'bg-orange-50 border-orange-200' 
+              : 'bg-gray-100 border-gray-200'
+          }`}>
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h4 className="font-bold text-orange-900 flex items-center gap-2 mb-1">
-                  <Eye size={18} className="text-orange-600"/> フッターを非表示にする
-                  <span className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded-full">Pro</span>
+                <h4 className={`font-bold flex items-center gap-2 mb-1 ${
+                  userPlan.canHideCopyright ? 'text-orange-900' : 'text-gray-500'
+                }`}>
+                  {userPlan.canHideCopyright 
+                    ? <Eye size={18} className="text-orange-600"/> 
+                    : <Lock size={18} className="text-gray-400"/>
+                  }
+                  フッターを非表示にする
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    userPlan.canHideCopyright 
+                      ? 'bg-orange-500 text-white' 
+                      : 'bg-gray-400 text-white'
+                  }`}>Pro</span>
                 </h4>
-                <p className="text-xs text-orange-700">
+                <p className={`text-xs ${userPlan.canHideCopyright ? 'text-orange-700' : 'text-gray-500'}`}>
                   コンテンツ下部に表示される「プロフィールメーカーで作成しました」のフッターを非表示にします。
                 </p>
+                {!userPlan.canHideCopyright && (
+                  <p className="text-xs text-emerald-600 mt-2 font-medium">
+                    ※ Proプランにアップグレードすると利用可能になります
+                  </p>
+                )}
               </div>
-              <label className="relative inline-flex items-center cursor-pointer ml-4 flex-shrink-0">
+              <label className={`relative inline-flex items-center ml-4 flex-shrink-0 ${
+                userPlan.canHideCopyright ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+              }`}>
                 <input 
                   type="checkbox" 
                   className="sr-only peer" 
-                  checked={profile.settings?.hideFooter || false} 
-                  onChange={e => setProfile(prev => ({
-                    ...prev,
-                    settings: { ...prev.settings, hideFooter: e.target.checked }
-                  }))} 
+                  checked={userPlan.canHideCopyright && (profile.settings?.hideFooter || false)} 
+                  onChange={e => {
+                    if (userPlan.canHideCopyright) {
+                      setProfile(prev => ({
+                        ...prev,
+                        settings: { ...prev.settings, hideFooter: e.target.checked }
+                      }));
+                    }
+                  }}
+                  disabled={!userPlan.canHideCopyright}
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                <div className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                  userPlan.canHideCopyright 
+                    ? 'bg-gray-200 peer-focus:outline-none peer-checked:bg-orange-600' 
+                    : 'bg-gray-300'
+                }`}></div>
               </label>
             </div>
           </div>

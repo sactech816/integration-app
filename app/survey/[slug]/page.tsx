@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Survey } from "@/lib/types";
 import SurveyPlayer from "@/components/survey/SurveyPlayer";
 import { generateBreadcrumbSchema } from "@/components/shared/Breadcrumb";
+import { shouldHideFooter } from "@/lib/utils/checkCreatorPlanPermission";
 
 // 動的レンダリングを強制（常に最新のデータを取得）
 export const dynamic = 'force-dynamic';
@@ -126,6 +127,13 @@ export default async function SurveyPage({ params }: { params: Promise<{ slug: s
     notFound();
   }
 
+  // 作成者のプラン権限をチェックしてフッター非表示を決定
+  const canHideFooter = await shouldHideFooter(survey.settings?.hideFooter, survey.user_id);
+  const surveyWithPermission = {
+    ...survey,
+    settings: { ...survey.settings, hideFooter: canHideFooter }
+  };
+
   // 構造化データ - Survey
   const surveySchema = {
     '@context': 'https://schema.org',
@@ -160,7 +168,7 @@ export default async function SurveyPage({ params }: { params: Promise<{ slug: s
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <main className="min-h-screen bg-gradient-to-br from-gray-50 to-teal-50 py-10 px-4">
-        <SurveyPlayer survey={survey as Survey} />
+        <SurveyPlayer survey={surveyWithPermission as Survey} />
       </main>
     </>
   );

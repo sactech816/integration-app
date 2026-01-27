@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { Metadata } from 'next';
 import ProfileViewer from '@/components/profile/ProfileViewer';
 import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
+import { shouldHideFooter } from '@/lib/utils/checkCreatorPlanPermission';
 
 // 動的レンダリングを強制（常に最新のデータを取得）
 export const dynamic = 'force-dynamic';
@@ -112,6 +113,13 @@ export default async function ProfilePage({ params }: Props) {
     );
   }
 
+  // 作成者のプラン権限をチェックしてフッター非表示を決定
+  const canHideFooter = await shouldHideFooter(profile.settings?.hideFooter, profile.user_id);
+  const profileWithPermission = {
+    ...profile,
+    settings: { ...profile.settings, hideFooter: canHideFooter }
+  };
+
   // 構造化データ - ProfilePage
   const headerBlock = profile.content?.find((b: { type: string }) => b.type === 'header');
   const name = headerBlock?.data?.name || profile.nickname || 'プロフィール';
@@ -151,7 +159,7 @@ export default async function ProfilePage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <ProfileViewer profile={profile} />
+      <ProfileViewer profile={profileWithPermission} />
     </>
   );
 }

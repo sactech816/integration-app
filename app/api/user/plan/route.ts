@@ -1,0 +1,159 @@
+/**
+ * ユーザープラン権限API
+ * ログインユーザーの集客メーカープラン権限を取得
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+// サービスロールクライアント
+const getServiceClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceKey) {
+    return null;
+  }
+
+  return createClient(supabaseUrl, serviceKey);
+};
+
+export interface UserPlanResponse {
+  planTier: 'guest' | 'free' | 'pro';
+  canHideCopyright: boolean;
+  canUseAI: boolean;
+  canUseAnalytics: boolean;
+  canUseGamification: boolean;
+  canDownloadHtml: boolean;
+  canEmbed: boolean;
+  isProUser: boolean;
+}
+
+/**
+ * GET: ユーザーのプラン権限を取得
+ * クエリパラメータ: userId
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const userId = searchParams.get('userId');
+
+    // ゲストユーザー（未ログイン）
+    if (!userId) {
+      return NextResponse.json<UserPlanResponse>({
+        planTier: 'guest',
+        canHideCopyright: false,
+        canUseAI: false,
+        canUseAnalytics: false,
+        canUseGamification: false,
+        canDownloadHtml: false,
+        canEmbed: false,
+        isProUser: false,
+      });
+    }
+
+    const supabase = getServiceClient();
+    if (!supabase) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+    }
+
+    // 1. ユーザーのサブスクリプション状態を確認
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('status, plan_tier, plan_name')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    // 2. モニターユーザーかどうかも確認
+    const { data: monitor } = await supabase
+      .from('monitor_users')
+      .select('monitor_plan_type')
+      .eq('user_id', userId)
+      .lte('monitor_start_at', new Date().toISOString())
+      .gt('monitor_expires_at', new Date().toISOString())
+      .single();
+
+    // プランTierを判定
+    let planTier: 'guest' | 'free' | 'pro' = 'free';
+    
+    // モニターユーザーはProとして扱う
+    if (monitor?.monitor_plan_type === 'pro') {
+      planTier = 'pro';
+    }
+    // アクティブなサブスクリプションがある場合
+    else if (subscription?.status === 'active') {
+      // plan_tierがproの場合、またはplan_nameにproが含まれる場合
+      if (subscription.plan_tier === 'pro' || 
+          subscription.plan_name?.toLowerCase().includes('pro') ||
+          subscription.plan_name?.toLowerCase().includes('プロ')) {
+        planTier = 'pro';
+      }
+    }
+
+    // 3. service_plansテーブルからプラン権限を取得
+    const { data: planSettings } = await supabase
+      .from('service_plans')
+      .select('can_hide_copyright, can_use_ai, can_use_analytics, can_use_gamification, can_download_html, can_embed')
+      .eq('service', 'makers')
+      .eq('plan_tier', planTier)
+      .eq('is_active', true)
+      .single();
+
+    // フォールバック値（service_plansテーブルがない場合）
+    const defaultPermissions = {
+      guest: {
+        canHideCopyright: false,
+        canUseAI: false,
+        canUseAnalytics: false,
+        canUseGamification: false,
+        canDownloadHtml: false,
+        canEmbed: false,
+      },
+      free: {
+        canHideCopyright: false,
+        canUseAI: false,
+        canUseAnalytics: false,
+        canUseGamification: false,
+        canDownloadHtml: false,
+        canEmbed: false,
+      },
+      pro: {
+        canHideCopyright: true,
+        canUseAI: true,
+        canUseAnalytics: true,
+        canUseGamification: true,
+        canDownloadHtml: true,
+        canEmbed: true,
+      },
+    };
+
+    const permissions = planSettings || defaultPermissions[planTier];
+
+    return NextResponse.json<UserPlanResponse>({
+      planTier,
+      canHideCopyright: permissions.can_hide_copyright ?? defaultPermissions[planTier].canHideCopyright,
+      canUseAI: permissions.can_use_ai ?? defaultPermissions[planTier].canUseAI,
+      canUseAnalytics: permissions.can_use_analytics ?? defaultPermissions[planTier].canUseAnalytics,
+      canUseGamification: permissions.can_use_gamification ?? defaultPermissions[planTier].canUseGamification,
+      canDownloadHtml: permissions.can_download_html ?? defaultPermissions[planTier].canDownloadHtml,
+      canEmbed: permissions.can_embed ?? defaultPermissions[planTier].canEmbed,
+      isProUser: planTier === 'pro',
+    });
+  } catch (error: any) {
+    console.error('User plan API error:', error);
+    // エラー時はフリープランとして返す
+    return NextResponse.json<UserPlanResponse>({
+      planTier: 'free',
+      canHideCopyright: false,
+      canUseAI: false,
+      canUseAnalytics: false,
+      canUseGamification: false,
+      canDownloadHtml: false,
+      canEmbed: false,
+      isProUser: false,
+    });
+  }
+}
