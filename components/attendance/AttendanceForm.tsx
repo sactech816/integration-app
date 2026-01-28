@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { User, Mail, Check, Loader2, AlertCircle } from 'lucide-react';
+import { User, Check, Loader2, AlertCircle } from 'lucide-react';
 import {
   SlotSummary,
   AttendanceStatus,
@@ -30,7 +30,6 @@ interface AttendanceFormProps {
   slots: SlotSummary[];
   onSubmit: (data: {
     participant_name: string;
-    participant_email?: string;
     responses: Record<number, AttendanceStatus>;
   }) => Promise<boolean>;
 }
@@ -41,7 +40,6 @@ interface AttendanceFormProps {
  */
 export default function AttendanceForm({ slots, onSubmit }: AttendanceFormProps) {
   const [participantName, setParticipantName] = useState('');
-  const [participantEmail, setParticipantEmail] = useState('');
   const [responses, setResponses] = useState<Record<number, AttendanceStatus>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,14 +71,12 @@ export default function AttendanceForm({ slots, onSubmit }: AttendanceFormProps)
 
     const success = await onSubmit({
       participant_name: participantName.trim(),
-      participant_email: participantEmail.trim() || undefined,
       responses,
     });
 
     if (success) {
       // フォームをリセット
       setParticipantName('');
-      setParticipantEmail('');
       setResponses({});
     }
 
@@ -106,20 +102,6 @@ export default function AttendanceForm({ slots, onSubmit }: AttendanceFormProps)
             placeholder="山田 太郎"
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 placeholder:text-gray-400"
             required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            <Mail size={16} className="inline mr-1" />
-            メールアドレス（任意）
-          </label>
-          <input
-            type="email"
-            value={participantEmail}
-            onChange={(e) => setParticipantEmail(e.target.value)}
-            placeholder="example@email.com"
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 placeholder:text-gray-400"
           />
         </div>
 

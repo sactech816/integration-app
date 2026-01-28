@@ -16,14 +16,24 @@ CREATE TABLE IF NOT EXISTS attendance_events (
   slots JSONB NOT NULL DEFAULT '[]'::jsonb,
   -- オプション: 作成者のuser_id（ログイン時のみ）
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  -- スパム対策: 作成者のIPアドレス
+  creator_ip TEXT,
+  -- 定期削除用: 最終アクセス日時
+  last_accessed_at TIMESTAMPTZ DEFAULT now(),
   -- メタデータ
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- 既存テーブルへのカラム追加（マイグレーション用）
+-- ALTER TABLE attendance_events ADD COLUMN IF NOT EXISTS creator_ip TEXT;
+-- ALTER TABLE attendance_events ADD COLUMN IF NOT EXISTS last_accessed_at TIMESTAMPTZ DEFAULT now();
+
 -- インデックス
 CREATE INDEX IF NOT EXISTS idx_attendance_events_created_at ON attendance_events(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_attendance_events_user_id ON attendance_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_events_creator_ip ON attendance_events(creator_ip);
+CREATE INDEX IF NOT EXISTS idx_attendance_events_last_accessed_at ON attendance_events(last_accessed_at DESC);
 
 -- -------------------------------------------
 -- 2. 出欠回答テーブル
@@ -126,4 +136,15 @@ CREATE TRIGGER trigger_attendance_responses_updated_at
 COMMENT ON TABLE attendance_events IS '出欠表メーカー: イベント情報（無制限作成対応）';
 COMMENT ON TABLE attendance_responses IS '出欠表メーカー: 参加者の回答';
 COMMENT ON COLUMN attendance_events.slots IS '候補日程の配列 [{date, start_time, end_time, label}]';
+COMMENT ON COLUMN attendance_events.creator_ip IS 'スパム対策用: 作成者のIPアドレス';
+COMMENT ON COLUMN attendance_events.last_accessed_at IS '定期削除用: 最終アクセス日時';
 COMMENT ON COLUMN attendance_responses.responses IS '各候補への回答 {slot_index: yes|no|maybe}';
+
+-- -------------------------------------------
+-- 6. クリーンアップ機能統合（マイグレーション用）
+-- -------------------------------------------
+-- admin_cleanup_settings テーブルに出欠表用カラムを追加
+-- ALTER TABLE admin_cleanup_settings ADD COLUMN IF NOT EXISTS cleanup_attendance_events BOOLEAN DEFAULT true;
+
+-- preview_cleanup_targets 関数を更新して出欠表を含める
+-- （既存のRPC関数に attendance_events を追加する必要があります）

@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { headers } from 'next/headers';
 import {
   AttendanceEvent,
   AttendanceResponse,
@@ -11,6 +12,9 @@ import {
   AttendanceApiResponse,
   AttendanceStatus,
 } from '@/types/attendance';
+
+// レート制限: 1日あたりの最大作成数
+const DAILY_CREATE_LIMIT = 10;
 
 // サーバーサイド用Supabaseクライアント
 const getSupabaseClient = () => {
@@ -25,6 +29,28 @@ const getSupabaseClient = () => {
 };
 
 // -------------------------------------------
+// IPアドレス取得
+// -------------------------------------------
+async function getClientIp(): Promise<string | null> {
+  try {
+    const headersList = await headers();
+    // プロキシ経由の場合
+    const forwardedFor = headersList.get('x-forwarded-for');
+    if (forwardedFor) {
+      return forwardedFor.split(',')[0].trim();
+    }
+    // Vercel等のプラットフォーム
+    const realIp = headersList.get('x-real-ip');
+    if (realIp) {
+      return realIp;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// -------------------------------------------
 // 出欠表イベント作成
 // -------------------------------------------
 export async function createAttendanceEvent(
@@ -37,6 +63,27 @@ export async function createAttendanceEvent(
   }
 
   try {
+    // IPアドレスを取得
+    const clientIp = await getClientIp();
+
+    // レート制限チェック（IPアドレスがある場合のみ）
+    if (clientIp) {
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      
+      const { count, error: countError } = await supabase
+        .from('attendance_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('creator_ip', clientIp)
+        .gte('created_at', twentyFourHoursAgo);
+
+      if (!countError && count !== null && count >= DAILY_CREATE_LIMIT) {
+        return { 
+          success: false, 
+          error: `1日の作成上限（${DAILY_CREATE_LIMIT}件）に達しました。24時間後に再度お試しください。` 
+        };
+      }
+    }
+
     const { data, error } = await supabase
       .from('attendance_events')
       .insert({
@@ -44,6 +91,7 @@ export async function createAttendanceEvent(
         description: input.description || null,
         slots: input.slots,
         user_id: userId || null,
+        creator_ip: clientIp,
       })
       .select()
       .single();
@@ -150,6 +198,24 @@ export async function submitAttendanceResponse(
 }
 
 // -------------------------------------------
+// 最終アクセス日時を更新
+// -------------------------------------------
+export async function updateLastAccessedAt(eventId: string): Promise<void> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+
+  try {
+    await supabase
+      .from('attendance_events')
+      .update({ last_accessed_at: new Date().toISOString() })
+      .eq('id', eventId);
+  } catch (err) {
+    // エラーは無視（アクセス追跡の失敗はユーザー体験に影響しない）
+    console.error('Failed to update last_accessed_at:', err);
+  }
+}
+
+// -------------------------------------------
 // 出欠表データ取得（集計付き）
 // -------------------------------------------
 export async function getAttendanceTableData(
@@ -167,6 +233,9 @@ export async function getAttendanceTableData(
       .single();
 
     if (eventError || !eventData) return null;
+
+    // 最終アクセス日時を更新（非同期で実行、待機しない）
+    updateLastAccessedAt(eventId);
 
     const event = eventData as AttendanceEvent;
 

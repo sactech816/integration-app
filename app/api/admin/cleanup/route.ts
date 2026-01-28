@@ -25,6 +25,7 @@ interface CleanupSettings {
   cleanup_business_projects: boolean;
   cleanup_surveys: boolean;
   cleanup_booking_menus: boolean;
+  cleanup_attendance_events: boolean;
   run_time: string;
   dry_run_mode: boolean;
   notify_before_delete: boolean;
@@ -94,6 +95,7 @@ export async function GET(request: Request) {
           cleanup_business_projects: true,
           cleanup_surveys: true,
           cleanup_booking_menus: true,
+          cleanup_attendance_events: true,
           run_time: '03:00',
           dry_run_mode: true,
           notify_before_delete: false,
@@ -124,6 +126,7 @@ export async function GET(request: Request) {
             business_projects: targets.filter(t => t.table_name === 'business_projects').length,
             surveys: targets.filter(t => t.table_name === 'surveys').length,
             booking_menus: targets.filter(t => t.table_name === 'booking_menus').length,
+            attendance_events: targets.filter(t => t.table_name === 'attendance_events').length,
           },
           byPlan: {
             guest: targets.filter(t => t.user_plan === 'guest').length,
@@ -220,6 +223,7 @@ export async function POST(request: Request) {
               cleanup_business_projects: settings.cleanup_business_projects,
               cleanup_surveys: settings.cleanup_surveys,
               cleanup_booking_menus: settings.cleanup_booking_menus,
+              cleanup_attendance_events: settings.cleanup_attendance_events,
               run_time: settings.run_time,
               dry_run_mode: settings.dry_run_mode,
               notify_before_delete: settings.notify_before_delete,
@@ -246,6 +250,7 @@ export async function POST(request: Request) {
               cleanup_business_projects: settings.cleanup_business_projects,
               cleanup_surveys: settings.cleanup_surveys,
               cleanup_booking_menus: settings.cleanup_booking_menus,
+              cleanup_attendance_events: settings.cleanup_attendance_events,
               run_time: settings.run_time,
               dry_run_mode: settings.dry_run_mode,
               notify_before_delete: settings.notify_before_delete,

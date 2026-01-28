@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -39,6 +39,18 @@ export default function NewAttendancePage() {
   const [showTimeInput, setShowTimeInput] = useState(false);
   const [defaultStartTime, setDefaultStartTime] = useState('19:00');
   const [defaultEndTime, setDefaultEndTime] = useState('21:00');
+
+  // showTimeInputが変更されたら既存スロットを更新
+  useEffect(() => {
+    if (slots.length === 0) return;
+    
+    setSlots(prevSlots => prevSlots.map(slot => ({
+      ...slot,
+      start_time: showTimeInput ? (slot.start_time || defaultStartTime) : undefined,
+      end_time: showTimeInput ? (slot.end_time || defaultEndTime) : undefined,
+    })));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showTimeInput]);
 
   // 送信状態
   const [submitting, setSubmitting] = useState(false);
@@ -206,7 +218,7 @@ export default function NewAttendancePage() {
       {showCompleteModal && createdEventId && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4"
-          onClick={() => router.push(`/attendance/${createdEventId}`)}
+          onClick={() => window.open(`/attendance/${createdEventId}`, '_blank')}
         >
           <div
             className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 animate-fade-in"
@@ -218,14 +230,14 @@ export default function NewAttendancePage() {
               </div>
               <h2 className="text-2xl font-bold text-gray-900">作成完了！</h2>
               <p className="text-gray-600 mt-2">
-                出欠表を作成しました。URLを共有して参加者に回答してもらいましょう。
+                出欠表を作成しました
               </p>
             </div>
 
             {/* 公開URL */}
             <div className="mb-6">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                共有URL
+                公開URL
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -250,13 +262,21 @@ export default function NewAttendancePage() {
                 className="w-full py-3 px-6 bg-purple-600 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 hover:bg-purple-700"
               >
                 <ExternalLink size={18} />
-                出欠表を開く
+                公開ページを開く
               </button>
               <button
-                onClick={() => router.push('/attendance/new')}
+                onClick={() => {
+                  // フォームをリセットして続けて作成
+                  setShowCompleteModal(false);
+                  setCreatedEventId(null);
+                  setTitle('');
+                  setDescription('');
+                  setSlots([]);
+                  setCopied(false);
+                }}
                 className="w-full py-3 px-6 border-2 border-purple-300 text-purple-700 rounded-xl font-semibold hover:bg-purple-50 transition-colors flex items-center justify-center gap-2"
               >
-                <Plus size={18} />
+                <Calendar size={18} />
                 続けて作成する
               </button>
               <button

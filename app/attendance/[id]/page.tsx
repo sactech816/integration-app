@@ -13,7 +13,6 @@ import {
   ArrowLeft,
   AlertCircle,
   User,
-  Mail,
   Calendar,
 } from 'lucide-react';
 import ContentFooter from '@/components/shared/ContentFooter';
@@ -53,7 +52,6 @@ export default function AttendancePublicPage() {
 
   // 入力フォーム状態
   const [participantName, setParticipantName] = useState('');
-  const [participantEmail, setParticipantEmail] = useState('');
   const [responses, setResponses] = useState<Record<number, AttendanceStatus>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -105,7 +103,6 @@ export default function AttendancePublicPage() {
     const result = await submitAttendanceResponse({
       event_id: eventId,
       participant_name: participantName.trim(),
-      participant_email: participantEmail.trim() || undefined,
       responses,
     });
 
@@ -118,7 +115,6 @@ export default function AttendancePublicPage() {
       }
       // フォームをリセット
       setParticipantName('');
-      setParticipantEmail('');
       setResponses({});
     } else {
       setSubmitError('error' in result ? result.error : '送信に失敗しました');
@@ -363,20 +359,6 @@ export default function AttendancePublicPage() {
                   placeholder="山田 太郎"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 placeholder:text-gray-400"
                   required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  <Mail size={16} className="inline mr-1" />
-                  メールアドレス（任意）
-                </label>
-                <input
-                  type="email"
-                  value={participantEmail}
-                  onChange={(e) => setParticipantEmail(e.target.value)}
-                  placeholder="example@email.com"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 placeholder:text-gray-400"
                 />
               </div>
 

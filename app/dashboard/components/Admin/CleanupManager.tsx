@@ -28,6 +28,7 @@ interface CleanupSettings {
   cleanup_business_projects: boolean;
   cleanup_surveys: boolean;
   cleanup_booking_menus: boolean;
+  cleanup_attendance_events: boolean;
   run_time: string;
   dry_run_mode: boolean;
   notify_before_delete: boolean;
@@ -64,6 +65,7 @@ interface CleanupStats {
     business_projects: number;
     surveys: number;
     booking_menus: number;
+    attendance_events: number;
   };
   byPlan: {
     guest: number;
@@ -84,6 +86,7 @@ const TABLE_NAME_JA: Record<string, string> = {
   business_projects: 'ビジネスLP',
   surveys: 'アンケート',
   booking_menus: '予約メニュー',
+  attendance_events: '出欠表',
 };
 
 // プラン名の日本語変換
@@ -427,13 +430,14 @@ export default function CleanupManager({ userId }: CleanupManagerProps) {
         <div className="space-y-4">
           <h3 className="font-bold text-gray-900">対象テーブル</h3>
           
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
             {[
               { key: 'cleanup_quizzes', label: '診断クイズ' },
               { key: 'cleanup_profiles', label: 'プロフィールLP' },
               { key: 'cleanup_business_projects', label: 'ビジネスLP' },
               { key: 'cleanup_surveys', label: 'アンケート' },
               { key: 'cleanup_booking_menus', label: '予約メニュー' },
+              { key: 'cleanup_attendance_events', label: '出欠表' },
             ].map(({ key, label }) => (
               <label key={key} className="flex items-center gap-2 bg-white rounded-lg p-3 border border-gray-200 cursor-pointer hover:bg-gray-50">
                 <input
@@ -504,6 +508,7 @@ export default function CleanupManager({ userId }: CleanupManagerProps) {
             <option value="business_projects">ビジネスLP</option>
             <option value="surveys">アンケート</option>
             <option value="booking_menus">予約メニュー</option>
+            <option value="attendance_events">出欠表</option>
           </select>
 
           <select
