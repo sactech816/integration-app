@@ -504,6 +504,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   const [isUploading, setIsUploading] = useState(false);
   const [savedSlug, setSavedSlug] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [previewMode, setPreviewMode] = useState<'pc' | 'mobile'>('pc');
@@ -573,6 +574,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
     if (initialData) {
       setLp(initialData);
       setSavedSlug(initialData.slug);
+      setSavedId(initialData.id);
       setCustomSlug(initialData.slug || '');
       setJustSavedSlug(initialData.slug);
       setOpenSections({
@@ -679,14 +681,18 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       };
 
       let result;
-      if (initialData?.id) {
+      const existingId = initialData?.id || savedId;
+      
+      if (existingId) {
+        // 更新（initialDataがある場合、または新規作成後の再保存）
         result = await supabase
           ?.from('business_projects')
           .update(payload)
-          .eq('id', initialData.id)
+          .eq('id', existingId)
           .select()
           .single();
       } else {
+        // 新規作成
         result = await supabase
           ?.from('business_projects')
           .insert({ ...payload, user_id: user.id })
@@ -701,8 +707,10 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
 
       if (result?.data) {
         setSavedSlug(result.data.slug);
+        setSavedId(result.data.id);
         setJustSavedSlug(result.data.slug);
-        if (!initialData) {
+        if (!initialData && !savedId) {
+          // 完全な新規作成の場合のみ成功モーダルを表示
           setShowSuccessModal(true);
         } else {
           alert('保存しました！');

@@ -756,6 +756,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
   const [aiTheme, setAiTheme] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [savedSlug, setSavedSlug] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [customSlug, setCustomSlug] = useState('');
@@ -776,6 +777,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
     if (initialData) {
       setProfile(initialData);
       setSavedSlug(initialData.slug);
+      setSavedId(initialData.id);
       setCustomSlug(initialData.nickname || '');
       // 編集時はtemplateを閉じてblocksを開く
       setOpenSections({
@@ -851,9 +853,10 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
     setIsSaving(true);
     try {
       let result;
+      const existingId = initialData?.id || savedId;
       
-      if (initialData?.id) {
-        // 更新の場合：既存のslugを維持
+      if (existingId) {
+        // 更新の場合：既存のslugを維持（initialDataがある場合、または新規作成後の再保存）
         const updatePayload = {
           nickname: customSlug || null,
           content: profile.content,
@@ -863,7 +866,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         result = await supabase
           .from('profiles')
           .update(updatePayload)
-          .eq('id', initialData.id)
+          .eq('id', existingId)
           .select()
           .single();
       } else {
@@ -910,7 +913,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
       if (result?.data) {
         setSavedSlug(result.data.slug);
-        if (!initialData) {
+        setSavedId(result.data.id);
+        if (!initialData && !savedId) {
+          // 完全な新規作成の場合のみ成功モーダルを表示
           setShowSuccessModal(true);
           
           // ゲーミフィケーションイベント発火（プロフィール作成）

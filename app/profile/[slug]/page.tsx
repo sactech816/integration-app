@@ -42,11 +42,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'プロフィール' };
   }
 
-  const { data: profile } = await supabase
+  // slugを優先して検索、見つからなければnicknameで検索
+  let { data: profile } = await supabase
     .from('profiles')
     .select('nickname, content')
-    .or(`slug.eq.${slug},nickname.eq.${slug}`)
+    .eq('slug', slug)
     .single();
+
+  if (!profile) {
+    const { data: profileByNickname } = await supabase
+      .from('profiles')
+      .select('nickname, content')
+      .eq('nickname', slug)
+      .single();
+    profile = profileByNickname;
+  }
 
   if (!profile) {
     return { title: 'プロフィールが見つかりません' };
@@ -93,11 +103,21 @@ export default async function ProfilePage({ params }: Props) {
     );
   }
 
-  const { data: profile } = await supabase
+  // slugを優先して検索、見つからなければnicknameで検索
+  let { data: profile } = await supabase
     .from('profiles')
     .select('*')
-    .or(`slug.eq.${slug},nickname.eq.${slug}`)
+    .eq('slug', slug)
     .single();
+
+  if (!profile) {
+    const { data: profileByNickname } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('nickname', slug)
+      .single();
+    profile = profileByNickname;
+  }
 
   if (!profile) {
     return (
