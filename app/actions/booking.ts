@@ -1508,7 +1508,7 @@ export async function deleteSpreadsheetSettings(
  * スプレッドシートIDをURLから抽出
  * 例: https://docs.google.com/spreadsheets/d/xxxxx/edit -> xxxxx
  */
-export function extractSpreadsheetId(url: string): string | null {
+export async function extractSpreadsheetId(url: string): Promise<string | null> {
   const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
   return match ? match[1] : null;
 }

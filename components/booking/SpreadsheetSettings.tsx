@@ -68,7 +68,7 @@ export default function SpreadsheetSettings({
   // 保存
   const handleSave = async () => {
     // スプレッドシートIDを抽出
-    const spreadsheetId = extractSpreadsheetId(spreadsheetUrl);
+    const spreadsheetId = await extractSpreadsheetId(spreadsheetUrl);
     if (!spreadsheetId) {
       setError('有効なスプレッドシートURLを入力してください');
       return;
