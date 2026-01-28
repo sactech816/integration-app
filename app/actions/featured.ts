@@ -160,6 +160,9 @@ export async function removeFeaturedContent(
 
 /**
  * ランダムでピックアップコンテンツを取得（詳細情報付き）
+ * 
+ * ピックアップがlimit件以上登録されている場合は常にlimit件を返す
+ * limit件未満の場合は登録件数分だけ返す
  */
 export async function getRandomFeaturedContents(
   limit: number = 3
@@ -191,12 +194,17 @@ export async function getRandomFeaturedContents(
 
     // ランダムにシャッフル（Fisher-Yates）
     const shuffled = [...featuredList].sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, Math.min(limit, shuffled.length));
 
-    // コンテンツ詳細を取得
+    // コンテンツ詳細を取得（有効なコンテンツがlimit件になるまで処理）
     const contentsWithDetails: FeaturedContentWithDetails[] = [];
 
-    for (const featured of selected) {
+    // シャッフルされた全ピックアップを順に処理し、limit件に達するか全て処理するまで続ける
+    for (const featured of shuffled) {
+      // 既にlimit件取得できたら終了
+      if (contentsWithDetails.length >= limit) {
+        break;
+      }
+
       try {
         let contentDetails: any = null;
 
@@ -268,7 +276,7 @@ export async function getRandomFeaturedContents(
         }
       } catch (err) {
         console.error(`[Featured] Error fetching details for ${featured.content_type}:${featured.content_id}`, err);
-        // エラーが出てもスキップして続行
+        // エラーが出てもスキップして次のピックアップを処理
       }
     }
 
