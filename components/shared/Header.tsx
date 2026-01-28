@@ -127,9 +127,9 @@ const Header: React.FC<HeaderProps> = ({
     <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-[100]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
         {/* 左側: ロゴ */}
-        <div 
+        <Link 
+          href="/"
           className="font-bold text-xl flex items-center gap-2 cursor-pointer group shrink-0"
-          onClick={() => handleNav('/')}
         >
           <div className="w-8 h-8 bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg">
             <Magnet className="text-white" size={18} />
@@ -137,7 +137,7 @@ const Header: React.FC<HeaderProps> = ({
           <span className="bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent group-hover:from-red-600 group-hover:to-pink-600 transition-all font-black text-base sm:text-xl">
             集客メーカー
           </span>
-        </div>
+        </Link>
 
         {/* 中央のスペーサー */}
         <div className="flex-1" />

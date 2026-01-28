@@ -50,6 +50,7 @@ import {
   Lock
 } from 'lucide-react';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
+import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 
 interface ProfileEditorProps {
   user: { id: string; email?: string } | null;
@@ -2424,194 +2425,14 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col font-sans text-gray-900">
       {/* 成功モーダル */}
-      {showSuccessModal && savedSlug && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-fade-in" onClick={e => e.stopPropagation()}>
-            <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-6 flex justify-between items-center z-10 rounded-t-2xl">
-              <div>
-                <h3 className="font-bold text-xl flex items-center gap-2">
-                  <Trophy size={24} /> プロフィールを作成しました！
-                </h3>
-                <p className="text-sm text-emerald-100 mt-1">公開URLをコピーしてシェアできます</p>
-              </div>
-              <button onClick={() => setShowSuccessModal(false)} className="text-white hover:bg-white/20 p-2 rounded-full transition-colors">
-                <Plus size={24} className="rotate-45" />
-              </button>
-            </div>
-            
-            <div className="p-6 space-y-6">
-              {/* 公開URL */}
-              <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-4">
-                <p className="text-sm font-bold text-gray-700 mb-2">公開URL</p>
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="text" 
-                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/profile/${customSlug || savedSlug}`}
-                    readOnly
-                    className="flex-1 text-xs bg-white border border-emerald-300 p-2 rounded-lg text-gray-900 font-bold"
-                  />
-                  <button 
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/profile/${customSlug || savedSlug}`);
-                      alert('URLをコピーしました！');
-                    }}
-                    className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-emerald-700 transition-colors whitespace-nowrap"
-                  >
-                    <Copy size={16} className="inline mr-1" /> コピー
-                  </button>
-                </div>
-              </div>
-
-              {/* アクセスボタン */}
-              <button 
-                onClick={() => {
-                  setShowSuccessModal(false);
-                  window.open(`/profile/${customSlug || savedSlug}`, '_blank');
-                }}
-                className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 text-lg shadow-lg"
-              >
-                <ExternalLink size={20} /> プロフィールにアクセス
-              </button>
-
-              {/* SNSでシェア */}
-              <div>
-                <p className="text-sm font-bold text-gray-700 mb-3">SNSでシェア</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button 
-                    onClick={() => {
-                      const url = `${window.location.origin}/profile/${customSlug || savedSlug}`;
-                      window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent('プロフィールページを作りました！')}`, '_blank');
-                    }}
-                    className="flex items-center justify-center gap-2 bg-[#1DA1F2] text-white py-3 rounded-xl font-bold hover:opacity-90 transition-opacity"
-                  >
-                    X (Twitter)
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const url = `${window.location.origin}/profile/${customSlug || savedSlug}`;
-                      window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`, '_blank');
-                    }}
-                    className="flex items-center justify-center gap-2 bg-[#06C755] text-white py-3 rounded-xl font-bold hover:opacity-90 transition-opacity"
-                  >
-                    LINE
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const url = `${window.location.origin}/profile/${customSlug || savedSlug}`;
-                      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
-                    }}
-                    className="flex items-center justify-center gap-2 bg-[#1877F2] text-white py-3 rounded-xl font-bold hover:opacity-90 transition-opacity"
-                  >
-                    Facebook
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const url = `${window.location.origin}/profile/${customSlug || savedSlug}`;
-                      if (navigator.share) {
-                        navigator.share({ title: 'プロフィールLP', url });
-                      } else {
-                        navigator.clipboard.writeText(url);
-                        alert('URLをコピーしました！');
-                      }
-                    }}
-                    className="flex items-center justify-center gap-2 bg-gray-600 text-white py-3 rounded-xl font-bold hover:opacity-90 transition-opacity"
-                  >
-                    <ExternalLink size={18} /> その他
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500 text-center mt-2">作成したプロフィールLPをSNSでシェアして、多くの人に見てもらいましょう！</p>
-              </div>
-
-              {/* QRコード表示ボタン */}
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => {
-                    const url = `${window.location.origin}/profile/${customSlug || savedSlug}`;
-                    window.open(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`, '_blank');
-                  }}
-                  className="flex-1 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
-                >
-                  QRコード表示
-                </button>
-              </div>
-
-              {/* 開発支援エリア */}
-              <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-xl p-5">
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="bg-orange-500 p-2 rounded-full">
-                    <Star size={20} className="text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-bold text-base text-gray-900 mb-1 flex items-center gap-2">
-                      応援・開発支援でPro機能を開放
-                      <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">オプション</span>
-                    </h4>
-                    <p className="text-sm text-gray-600">
-                      50円〜100,000円で、以下の追加機能が使えるようになります
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="bg-white rounded-lg p-3 border border-orange-200">
-                    <div className="flex items-center gap-2 mb-1">
-                      <UploadCloud className="text-emerald-600" size={16} />
-                      <span className="font-bold text-sm text-gray-900">HTMLダウンロード</span>
-                    </div>
-                    <p className="text-xs text-gray-600">自分のサーバーにアップロード可能</p>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 border border-orange-200">
-                    <div className="flex items-center gap-2 mb-1">
-                      <LinkIcon className="text-emerald-600" size={16} />
-                      <span className="font-bold text-sm text-gray-900">埋め込みコード</span>
-                    </div>
-                    <p className="text-xs text-gray-600">WordPressなどに埋め込み可能</p>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 border border-orange-200">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Star className="text-emerald-600" size={16} />
-                      <span className="font-bold text-sm text-gray-900">優先サポート</span>
-                    </div>
-                    <p className="text-xs text-gray-600">機能改善の優先対応</p>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 border border-orange-200">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Plus className="text-emerald-600" size={16} />
-                      <span className="font-bold text-sm text-gray-900">その他の機能</span>
-                    </div>
-                    <p className="text-xs text-gray-600">今後追加される機能も利用可能</p>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={() => {
-                    setShowSuccessModal(false);
-                    if (user) {
-                      setPage('dashboard');
-                    } else {
-                      setShowAuth(true);
-                    }
-                  }}
-                  className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 text-white font-bold py-3 rounded-xl hover:from-orange-600 hover:to-yellow-600 transition-all shadow-lg flex items-center justify-center gap-2"
-                >
-                  <Layout size={18} /> マイページで開発支援・機能開放する
-                </button>
-                <p className="text-xs text-center text-gray-500 mt-2">
-                  ※開発支援は任意です。無料でもLPの公開・シェアは可能です
-                </p>
-              </div>
-
-              {/* 閉じるボタン */}
-              <button 
-                onClick={() => setShowSuccessModal(false)}
-                className="w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors"
-              >
-                閉じる
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreationCompleteModal
+        isOpen={showSuccessModal && !!savedSlug}
+        onClose={() => setShowSuccessModal(false)}
+        title="プロフィールLP"
+        publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/profile/${customSlug || savedSlug}`}
+        contentTitle="プロフィールページを作りました！"
+        theme="emerald"
+      />
 
       {/* ヘッダー - 共通ヘッダー(64px)の下に配置 */}
       <div className="bg-white border-b px-4 md:px-6 py-4 flex items-center justify-between sticky top-16 z-40 shadow-sm">

@@ -23,6 +23,7 @@ import { CreateBookingMenuInput, BookingMenuType, BookingSlotWithAvailability, B
 import WeeklyCalendar, { LocalSlot } from './WeeklyCalendar';
 import MonthlyCalendar from './MonthlyCalendar';
 import SlotModal, { SlotFormData } from './SlotModal';
+import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 
 interface BookingEditorProps {
   userId?: string | null;

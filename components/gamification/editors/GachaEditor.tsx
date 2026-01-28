@@ -27,6 +27,7 @@ import {
   CreditCard,
   Zap,
 } from 'lucide-react';
+import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 
 // ゲームタイプ設定
 type GameType = 'gacha' | 'scratch' | 'fukubiki' | 'slot';
@@ -666,56 +667,14 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth, ga
       />
 
       {/* 保存成功モーダル */}
-      {showSuccessModal && savedId && (
-        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full animate-fade-in">
-            <div className={`bg-gradient-to-r from-${config.color}-600 to-${config.color}-700 text-white px-6 py-6 flex justify-between items-center rounded-t-2xl`}>
-              <div>
-                <h3 className="font-bold text-xl flex items-center gap-2">
-                  <Trophy size={24} /> {config.title}を{savedId ? '更新' : '作成'}しました！
-                </h3>
-              </div>
-              <button onClick={() => setShowSuccessModal(false)} className="text-white hover:bg-white/20 p-2 rounded-full">
-                <X size={24} />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className={`bg-${config.color}-50 border border-${config.color}-200 rounded-xl p-4`}>
-                <p className="text-sm font-bold text-gray-700 mb-2">公開URL</p>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/${config.urlPath}/${savedId}`}
-                    readOnly
-                    className={`flex-1 text-xs bg-white border border-${config.color}-300 p-2 rounded-lg text-gray-900 font-bold`}
-                  />
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/${config.urlPath}/${savedId}`);
-                      alert('URLをコピーしました！');
-                    }}
-                    className={`bg-${config.color}-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-${config.color}-700`}
-                  >
-                    <Copy size={16} />
-                  </button>
-                </div>
-              </div>
-              <button
-                onClick={() => window.open(`/${config.urlPath}/${savedId}`, '_blank')}
-                className={`w-full bg-${config.color}-600 text-white font-bold py-3 rounded-xl hover:bg-${config.color}-700 flex items-center justify-center gap-2`}
-              >
-                <Share2 size={18} /> {config.title}ページを開く
-              </button>
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                className="w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200"
-              >
-                閉じる
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreationCompleteModal
+        isOpen={showSuccessModal && !!savedId}
+        onClose={() => setShowSuccessModal(false)}
+        title={config.title}
+        publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/${config.urlPath}/${savedId}`}
+        contentTitle={`${form.title || config.title}で遊んでみよう！`}
+        theme="purple"
+      />
     </>
   );
 }

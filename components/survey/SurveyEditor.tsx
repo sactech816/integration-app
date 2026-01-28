@@ -37,6 +37,7 @@ import { supabase } from "@/lib/supabase";
 import { generateSlug } from "@/lib/utils";
 import SurveyPlayer from "./SurveyPlayer";
 import { useUserPlan } from "@/lib/hooks/useUserPlan";
+import CreationCompleteModal from "@/components/shared/CreationCompleteModal";
 
 // セクションコンポーネント
 const Section = ({
@@ -513,65 +514,14 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
   return (
     <div className="bg-gray-100 flex flex-col font-sans text-gray-900" style={{ minHeight: 'calc(100vh - 64px)' }}>
       {/* 成功モーダル */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
-            <div className="bg-gradient-to-r from-teal-600 to-cyan-600 text-white px-6 py-6 flex justify-between items-center">
-              <div>
-                <h3 className="font-bold text-xl flex items-center gap-2">
-                  <Trophy size={24} /> アンケートを作成しました！
-                </h3>
-                <p className="text-sm text-teal-100 mt-1">公開URLをコピーしてシェアできます</p>
-              </div>
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                className="text-white hover:bg-white/20 p-2 rounded-full transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              {/* 公開URL */}
-              <div className="bg-teal-50 border-2 border-teal-200 rounded-xl p-4">
-                <p className="text-sm font-bold text-gray-700 mb-2">公開URL</p>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={`${typeof window !== "undefined" ? window.location.origin : ""}/survey/${savedSlug}`}
-                    readOnly
-                    className="flex-1 text-xs bg-white border border-teal-300 p-2 rounded-lg text-gray-900 font-bold"
-                  />
-                  <button
-                    onClick={handleCopyUrl}
-                    className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-teal-700 transition-colors whitespace-nowrap"
-                  >
-                    <Copy size={16} className="inline mr-1" /> コピー
-                  </button>
-                </div>
-              </div>
-
-              {/* アクセスボタン */}
-              <button
-                onClick={() => {
-                  setShowSuccessModal(false);
-                  window.open(`/survey/${savedSlug}`, "_blank");
-                }}
-                className="w-full bg-teal-600 text-white font-bold py-4 rounded-xl hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 text-lg shadow-lg"
-              >
-                <ExternalLink size={20} /> アンケートを開く
-              </button>
-
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                className="w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors"
-              >
-                閉じる
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreationCompleteModal
+        isOpen={showSuccessModal && !!savedSlug}
+        onClose={() => setShowSuccessModal(false)}
+        title="アンケート"
+        publicUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/survey/${savedSlug}`}
+        contentTitle={form.title || "アンケートを作成しました！"}
+        theme="teal"
+      />
 
       {/* ヘッダー */}
       <div className="bg-white border-b px-4 md:px-6 py-4 flex justify-between sticky top-0 z-40 shadow-sm">

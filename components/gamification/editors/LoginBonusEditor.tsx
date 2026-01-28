@@ -20,6 +20,7 @@ import {
   X,
   Sparkles,
 } from 'lucide-react';
+import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 
 interface LoginBonusEditorProps {
   user: User | null;
@@ -296,56 +297,14 @@ export default function LoginBonusEditor({ user, initialData, onBack, setShowAut
       />
 
       {/* 保存成功モーダル */}
-      {showSuccessModal && savedId && (
-        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full animate-fade-in">
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-6 flex justify-between items-center rounded-t-2xl">
-              <div>
-                <h3 className="font-bold text-xl flex items-center gap-2">
-                  <Trophy size={24} /> ログインボーナスを{savedId ? '更新' : '作成'}しました！
-                </h3>
-              </div>
-              <button onClick={() => setShowSuccessModal(false)} className="text-white hover:bg-white/20 p-2 rounded-full">
-                <X size={24} />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <p className="text-sm font-bold text-gray-700 mb-2">公開URL</p>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/login-bonus/${savedId}`}
-                    readOnly
-                    className="flex-1 text-xs bg-white border border-blue-300 p-2 rounded-lg text-gray-900 font-bold"
-                  />
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/login-bonus/${savedId}`);
-                      alert('URLをコピーしました！');
-                    }}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700"
-                  >
-                    <Copy size={16} />
-                  </button>
-                </div>
-              </div>
-              <button
-                onClick={() => window.open(`/login-bonus/${savedId}`, '_blank')}
-                className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 flex items-center justify-center gap-2"
-              >
-                <Share2 size={18} /> ログインボーナスページを開く
-              </button>
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                className="w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200"
-              >
-                閉じる
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreationCompleteModal
+        isOpen={showSuccessModal && !!savedId}
+        onClose={() => setShowSuccessModal(false)}
+        title="ログインボーナス"
+        publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/login-bonus/${savedId}`}
+        contentTitle={`${form.title || 'ログインボーナス'}をチェックしよう！`}
+        theme="blue"
+      />
     </>
   );
 }

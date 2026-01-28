@@ -59,6 +59,7 @@ import {
 } from 'lucide-react';
 import { BlockRenderer } from '@/components/shared/BlockRenderer';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
+import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 
 interface BusinessEditorProps {
   user: { id: string; email?: string } | null;
@@ -2308,148 +2309,14 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col font-sans text-gray-900">
       {/* 成功モーダル */}
-      {showSuccessModal && savedSlug && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-fade-in">
-            <div className="sticky top-0 bg-gradient-to-r from-amber-600 to-orange-600 text-white px-6 py-6 flex justify-between items-center z-10 rounded-t-2xl">
-              <div>
-                <h3 className="font-bold text-xl flex items-center gap-2">
-                  <Trophy size={24} /> ビジネスLPを作成しました！
-                </h3>
-                <p className="text-sm text-amber-100 mt-1">公開URLをコピーしてシェアできます</p>
-              </div>
-              <button onClick={() => setShowSuccessModal(false)} className="text-white hover:bg-white/20 p-2 rounded-full">
-                <Plus size={24} className="rotate-45" />
-              </button>
-            </div>
-            
-            <div className="p-6 space-y-6">
-              {/* 1. 公開URL */}
-              <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4">
-                <p className="text-sm font-bold text-gray-700 mb-2">公開URL</p>
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="text" 
-                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/business/${savedSlug}`}
-                    readOnly
-                    className="flex-1 text-xs bg-white border border-amber-300 p-2 rounded-lg text-gray-900 font-bold"
-                  />
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/business/${savedSlug}`);
-                      alert('URLをコピーしました！');
-                    }}
-                    className="bg-amber-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-amber-700"
-                  >
-                    <Copy size={16} className="inline mr-1" /> コピー
-                  </button>
-                </div>
-              </div>
-
-              {/* 2. アクセスボタン */}
-              <button
-                onClick={() => {
-                  window.open(`/business/${savedSlug}`, '_blank');
-                }}
-                className="w-full bg-amber-600 text-white font-bold py-4 rounded-xl hover:bg-amber-700 transition-colors flex items-center justify-center gap-2 text-lg shadow-lg"
-              >
-                <ExternalLink size={20} /> ビジネスLPにアクセス
-              </button>
-
-              {/* 3. SNSでシェア */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <p className="text-sm font-bold text-gray-700 mb-3 text-center">SNSでシェア</p>
-                <div className="flex justify-center gap-3">
-                  <button
-                    onClick={() => {
-                      const url = `${window.location.origin}/business/${savedSlug}`;
-                      const text = encodeURIComponent(lp.title || 'ビジネスLP');
-                      window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`, '_blank');
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg font-bold text-sm hover:bg-gray-800"
-                  >
-                    𝕏 ポスト
-                  </button>
-                  <button
-                    onClick={() => {
-                      const url = `${window.location.origin}/business/${savedSlug}`;
-                      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700"
-                  >
-                    Facebook
-                  </button>
-                  <button
-                    onClick={() => {
-                      const url = `${window.location.origin}/business/${savedSlug}`;
-                      const text = encodeURIComponent(lp.title || 'ビジネスLP');
-                      window.open(`https://line.me/R/msg/text/?${text}%0A${encodeURIComponent(url)}`, '_blank');
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg font-bold text-sm hover:bg-green-600"
-                  >
-                    LINE
-                  </button>
-                </div>
-              </div>
-
-              {/* 4. QRコード表示・保存 */}
-              <div className="bg-gray-50 rounded-xl p-4 text-center">
-                <p className="text-sm font-bold text-gray-700 mb-3">QRコード</p>
-                <div className="inline-block bg-white p-3 rounded-lg border border-gray-200 mb-3">
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${typeof window !== 'undefined' ? window.location.origin : ''}/business/${savedSlug}`)}`}
-                    alt="QRコード"
-                    className="w-36 h-36"
-                  />
-                </div>
-                <div>
-                  <a
-                    href={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${typeof window !== 'undefined' ? window.location.origin : ''}/business/${savedSlug}`)}&format=png`}
-                    download={`business-lp-${savedSlug}-qr.png`}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-300"
-                  >
-                    <ImageIcon size={16} /> QRコードを保存
-                  </a>
-                </div>
-              </div>
-
-              {/* 5. 開発支援エリア */}
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
-                <p className="text-sm font-bold text-amber-700 mb-2 text-center">💝 開発を応援する</p>
-                <p className="text-xs text-gray-600 text-center mb-3">
-                  サービスを気に入っていただけたら、開発継続のためのサポートをお願いします
-                </p>
-                <div className="flex justify-center gap-2">
-                  <a
-                    href="https://buy.stripe.com/test_xxx"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-amber-600 text-white rounded-lg font-bold text-sm hover:bg-amber-700"
-                  >
-                    ☕ コーヒー1杯分
-                  </a>
-                  <a
-                    href="https://buy.stripe.com/test_yyy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg font-bold text-sm hover:from-amber-700 hover:to-orange-700"
-                  >
-                    🍰 ランチ1回分
-                  </a>
-                </div>
-              </div>
-
-              {/* 6. 閉じる */}
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                className="w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200"
-              >
-                閉じる
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreationCompleteModal
+        isOpen={showSuccessModal && !!savedSlug}
+        onClose={() => setShowSuccessModal(false)}
+        title="ビジネスLP"
+        publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/business/${savedSlug}`}
+        contentTitle={lp.title || 'ビジネスLPを作成しました！'}
+        theme="amber"
+      />
 
       {/* ヘッダー - 共通ヘッダー(64px)の下に配置 */}
       <div className="bg-white border-b px-4 md:px-6 py-4 flex justify-between sticky top-16 z-40 shadow-sm">
