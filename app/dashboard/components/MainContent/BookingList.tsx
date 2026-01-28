@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FolderOpen,
+  Download,
 } from 'lucide-react';
 import {
   BookingMenu,
@@ -95,6 +96,9 @@ export default function BookingList({ userId, isAdmin }: BookingListProps) {
   // 日程調整用の状態
   const [adjustmentData, setAdjustmentData] = useState<Record<string, AttendanceTableData>>({});
   const [loadingAdjustments, setLoadingAdjustments] = useState(false);
+
+  // エクスポート状態
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const loadMenus = async () => {
@@ -207,6 +211,32 @@ export default function BookingList({ userId, isAdmin }: BookingListProps) {
     }
 
     setCancellingId(null);
+  };
+
+  // Excelエクスポート
+  const handleExportBookings = async () => {
+    setExporting(true);
+    try {
+      const response = await fetch(`/api/booking/export?userId=${userId}`);
+      if (!response.ok) {
+        throw new Error('エクスポートに失敗しました');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `予約一覧_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('エクスポートに失敗しました');
+    } finally {
+      setExporting(false);
+    }
   };
 
   const getMenuTypeLabel = (type: string) => {
@@ -426,34 +456,50 @@ export default function BookingList({ userId, isAdmin }: BookingListProps) {
       {/* 予約一覧タブ */}
       {mainTab === 'bookings' && (
         <>
-          {/* 表示モード切り替え */}
+          {/* 表示モード切り替え & エクスポート */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-700">表示:</span>
-              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setBookingViewMode('list')}
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
-                    bookingViewMode === 'list'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <List size={14} />
-                  リスト
-                </button>
-                <button
-                  onClick={() => setBookingViewMode('calendar')}
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
-                    bookingViewMode === 'calendar'
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <LayoutGrid size={14} />
-                  カレンダー
-                </button>
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-700">表示:</span>
+                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setBookingViewMode('list')}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+                      bookingViewMode === 'list'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <List size={14} />
+                    リスト
+                  </button>
+                  <button
+                    onClick={() => setBookingViewMode('calendar')}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
+                      bookingViewMode === 'calendar'
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <LayoutGrid size={14} />
+                    カレンダー
+                  </button>
+                </div>
               </div>
+
+              {/* Excelエクスポートボタン */}
+              <button
+                onClick={handleExportBookings}
+                disabled={exporting || bookings.length === 0}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {exporting ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Download size={14} />
+                )}
+                Excel出力
+              </button>
             </div>
           </div>
 

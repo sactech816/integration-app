@@ -4,6 +4,7 @@ export { default as MonthlyCalendar } from './MonthlyCalendar';
 export { default as SlotModal } from './SlotModal';
 export { default as BookingEditor } from './BookingEditor';
 export { default as BookingCalendarView } from './BookingCalendarView';
+export { default as SpreadsheetSettings } from './SpreadsheetSettings';
 
 // 型エクスポート
 export type { LocalSlot } from './WeeklyCalendar';

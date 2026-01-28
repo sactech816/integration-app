@@ -256,3 +256,35 @@ export const ATTENDANCE_STATUS_COLORS: Record<AttendanceStatus, { bg: string; te
 export const DEFAULT_DURATION_MIN = 60;
 export const DEFAULT_MAX_CAPACITY = 1;
 
+// -------------------------------------------
+// スプレッドシート連携関連の型定義
+// -------------------------------------------
+
+// スプレッドシート連携設定
+export interface BookingSpreadsheetSettings {
+  id: string;
+  user_id: string;
+  menu_id: string;
+  spreadsheet_id: string;
+  sheet_name: string;
+  is_enabled: boolean;
+  last_synced_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// スプレッドシート設定の入力型
+export interface CreateSpreadsheetSettingsInput {
+  menu_id: string;
+  spreadsheet_id: string;
+  sheet_name?: string;
+  is_enabled?: boolean;
+}
+
+// スプレッドシート設定の更新型
+export interface UpdateSpreadsheetSettingsInput {
+  spreadsheet_id?: string;
+  sheet_name?: string;
+  is_enabled?: boolean;
+}
+

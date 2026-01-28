@@ -9,6 +9,7 @@ export type ContentToolType =
   | 'business'       // ビジネスLP
   | 'survey'         // アンケート
   | 'booking'        // 予約・日程調整
+  | 'attendance'     // 出欠表メーカー
   | 'gamification';  // ゲーミフィケーション（ガチャ、スロット、スクラッチ、福引き、スタンプラリー、ログインボーナス、ポイントクイズ）
 
 // ツール名のマッピング
@@ -17,7 +18,8 @@ const TOOL_NAMES: Record<ContentToolType, string> = {
   profile: 'プロフィールメーカー',
   business: 'ビジネスLPメーカー',
   survey: 'アンケートメーカー',
-  booking: '予約システム',
+  booking: '予約メーカー',
+  attendance: '出欠表メーカー',
   gamification: 'ゲーミフィケーションツール',
 };
 

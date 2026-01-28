@@ -1377,3 +1377,139 @@ export async function getAllAdjustmentsForUser(
   return result;
 }
 
+// ===========================================
+// スプレッドシート連携設定
+// ===========================================
+
+import {
+  BookingSpreadsheetSettings,
+  CreateSpreadsheetSettingsInput,
+  UpdateSpreadsheetSettingsInput,
+} from '@/types/booking';
+
+/**
+ * スプレッドシート連携設定を取得
+ */
+export async function getSpreadsheetSettings(
+  userId: string,
+  menuId: string
+): Promise<BookingSpreadsheetSettings | null> {
+  const supabase = getSupabaseServer();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from('booking_spreadsheet_settings')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('menu_id', menuId)
+    .single();
+
+  if (error) {
+    if (error.code !== 'PGRST116') { // Not found error is ok
+      console.error('[Spreadsheet] Get settings error:', error);
+    }
+    return null;
+  }
+
+  return data as BookingSpreadsheetSettings;
+}
+
+/**
+ * スプレッドシート連携設定を作成
+ */
+export async function createSpreadsheetSettings(
+  userId: string,
+  input: CreateSpreadsheetSettingsInput
+): Promise<BookingResponse<BookingSpreadsheetSettings>> {
+  const supabase = getSupabaseServer();
+  if (!supabase) {
+    return { success: false, error: 'データベースが設定されていません' };
+  }
+
+  const { data, error } = await supabase
+    .from('booking_spreadsheet_settings')
+    .insert({
+      user_id: userId,
+      menu_id: input.menu_id,
+      spreadsheet_id: input.spreadsheet_id,
+      sheet_name: input.sheet_name || 'Sheet1',
+      is_enabled: input.is_enabled ?? true,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('[Spreadsheet] Create settings error:', error);
+    return { success: false, error: '設定の保存に失敗しました' };
+  }
+
+  return { success: true, data: data as BookingSpreadsheetSettings };
+}
+
+/**
+ * スプレッドシート連携設定を更新
+ */
+export async function updateSpreadsheetSettings(
+  userId: string,
+  menuId: string,
+  input: UpdateSpreadsheetSettingsInput
+): Promise<BookingResponse<BookingSpreadsheetSettings>> {
+  const supabase = getSupabaseServer();
+  if (!supabase) {
+    return { success: false, error: 'データベースが設定されていません' };
+  }
+
+  const { data, error } = await supabase
+    .from('booking_spreadsheet_settings')
+    .update({
+      ...input,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .eq('menu_id', menuId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('[Spreadsheet] Update settings error:', error);
+    return { success: false, error: '設定の更新に失敗しました' };
+  }
+
+  return { success: true, data: data as BookingSpreadsheetSettings };
+}
+
+/**
+ * スプレッドシート連携設定を削除
+ */
+export async function deleteSpreadsheetSettings(
+  userId: string,
+  menuId: string
+): Promise<BookingResponse<null>> {
+  const supabase = getSupabaseServer();
+  if (!supabase) {
+    return { success: false, error: 'データベースが設定されていません' };
+  }
+
+  const { error } = await supabase
+    .from('booking_spreadsheet_settings')
+    .delete()
+    .eq('user_id', userId)
+    .eq('menu_id', menuId);
+
+  if (error) {
+    console.error('[Spreadsheet] Delete settings error:', error);
+    return { success: false, error: '設定の削除に失敗しました' };
+  }
+
+  return { success: true, data: null };
+}
+
+/**
+ * スプレッドシートIDをURLから抽出
+ * 例: https://docs.google.com/spreadsheets/d/xxxxx/edit -> xxxxx
+ */
+export function extractSpreadsheetId(url: string): string | null {
+  const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  return match ? match[1] : null;
+}
+
