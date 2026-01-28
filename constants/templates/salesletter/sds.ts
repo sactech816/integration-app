@@ -1,0 +1,113 @@
+// =============================================
+// SDS法テンプレート（ニュース・速報向け）
+// =============================================
+
+import { SalesLetterTemplate } from '@/lib/types';
+import {
+  createHeadline,
+  createParagraph,
+  createCtaButton,
+  createSpacer,
+  createDivider,
+  defaultSettings,
+} from './helpers';
+
+export const sdsTemplate: SalesLetterTemplate = {
+  id: 'sds',
+  name: 'SDS法',
+  description: '要約して伝える。ニュースや速報向け',
+  category: 'blog_short',
+  icon: '📰',
+  longDescription: 'シンプルに要点を伝える構成法です。ニュースや速報、要約文など、短時間で情報を伝える必要がある場合に適しています。',
+  structure: ['Summary（要約）', 'Details（詳細）', 'Summary（要約）'],
+  useCases: ['ニュース', 'プレスリリース', '要約文', '速報'],
+  settings: {
+    ...defaultSettings,
+    contentWidth: 700,
+  },
+  content: [
+    // S: Summary（要約）
+    createHeadline('【速報】〇〇が△△を発表', {
+      level: 'h1',
+      fontSize: 28,
+    }),
+    
+    createSpacer(16),
+    
+    createParagraph(`<p style="text-align: center; font-size: 18px; font-weight: bold; background: #fef3c7; padding: 16px; border-radius: 8px;">
+〇〇社は本日、△△を正式に発表しました。<br>
+これにより、□□が大きく変わる見込みです。
+</p>`, {
+      align: 'center',
+    }),
+
+    createSpacer(32),
+    createDivider({ variant: 'full' }),
+    createSpacer(32),
+
+    // D: Details（詳細）
+    createHeadline('詳細', {
+      level: 'h2',
+      fontSize: 24,
+    }),
+    
+    createSpacer(16),
+    
+    createParagraph(`<p><strong>発表の背景</strong></p>
+<p>〇〇社は、かねてより△△の開発を進めてきました。今回の発表は、その集大成となるものです。</p>`, {
+    }),
+    
+    createSpacer(16),
+    
+    createParagraph(`<p><strong>主な内容</strong></p>
+<ul>
+<li>〇〇の新機能が追加</li>
+<li>△△の価格が改定（従来比20%ダウン）</li>
+<li>□□との連携が可能に</li>
+</ul>`, {
+    }),
+    
+    createSpacer(16),
+    
+    createParagraph(`<p><strong>今後の展開</strong></p>
+<p>〇〇社の担当者によると、今後も継続的なアップデートを予定しているとのことです。「ユーザーの皆様のフィードバックを元に、さらなる改善を進めていく」とコメントしています。</p>`, {
+    }),
+    
+    createSpacer(16),
+    
+    createParagraph(`<p><strong>業界への影響</strong></p>
+<p>今回の発表は、業界全体に大きな影響を与えると予想されます。競合他社の動向にも注目が集まっています。</p>`, {
+    }),
+
+    createSpacer(32),
+    createDivider({ variant: 'full' }),
+    createSpacer(32),
+
+    // S: Summary（まとめ）
+    createHeadline('まとめ', {
+      level: 'h2',
+      fontSize: 24,
+    }),
+    
+    createSpacer(16),
+    
+    createParagraph(`<p style="text-align: center; font-size: 16px; background: #f3f4f6; padding: 20px; border-radius: 8px;">
+<strong>〇〇社が△△を発表。</strong><br>
+主な変更点は、①〇〇の新機能、②価格改定、③□□連携の3点。<br>
+今後の展開に注目です。
+</p>`, {
+      align: 'center',
+    }),
+
+    createSpacer(32),
+    
+    createCtaButton('公式サイトで詳細を見る', '#official', {
+      size: 'lg',
+      fullWidth: false,
+      backgroundColor: '#374151',
+      hoverBackgroundColor: '#1f2937',
+    }),
+    
+    createSpacer(48),
+  ],
+};

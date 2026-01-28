@@ -14,6 +14,7 @@ type SidebarProps = {
     quiz: number;
     profile: number;
     business: number;
+    salesletter: number;
     booking: number;
     survey: number;
     gamification: number;

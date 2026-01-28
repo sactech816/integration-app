@@ -145,6 +145,7 @@ export default function FeaturedManager() {
       quiz: '診断クイズ',
       profile: 'プロフィールLP',
       business: 'ビジネスLP',
+      salesletter: 'セールスレター',
     };
     return labels[type] || type;
   };

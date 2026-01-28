@@ -28,7 +28,7 @@ const QuizPlayer = dynamic(() => import('@/components/quiz/QuizPlayer'), {
 
 interface BlockRendererProps {
   block: Block;
-  variant?: 'profile' | 'business';
+  variant?: 'profile' | 'business' | 'salesletter';
   onLinkClick?: (url: string) => void;
 }
 
@@ -803,6 +803,199 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
         </section>
       );
 
+    // --- セールスレター専用ブロック ---
+    case 'sales_headline':
+      const HeadlineTag = block.data.level as 'h1' | 'h2' | 'h3' | 'h4';
+      const headlineStyle: React.CSSProperties = {
+        color: block.data.color || '#1f2937',
+        fontSize: `${block.data.fontSize || 32}px`,
+        fontWeight: block.data.fontWeight === 'normal' ? 400 :
+                    block.data.fontWeight === 'medium' ? 500 :
+                    block.data.fontWeight === 'semibold' ? 600 :
+                    block.data.fontWeight === 'bold' ? 700 : 800,
+        letterSpacing: block.data.letterSpacing ? `${block.data.letterSpacing}em` : undefined,
+        lineHeight: block.data.lineHeight || 1.4,
+        textAlign: block.data.align,
+        backgroundColor: block.data.backgroundColor || 'transparent',
+        padding: block.data.padding ? `${block.data.padding}px` : undefined,
+        textDecoration: block.data.underline ? 'underline' : 'none',
+        textDecorationColor: block.data.underlineColor || block.data.color || '#1f2937',
+      };
+      return (
+        <div className="mb-6">
+          <HeadlineTag style={headlineStyle}>{block.data.text}</HeadlineTag>
+        </div>
+      );
+
+    case 'sales_paragraph':
+      const paragraphStyle: React.CSSProperties = {
+        textAlign: block.data.align,
+        color: block.data.defaultColor || '#374151',
+        fontSize: `${block.data.defaultFontSize || 16}px`,
+        lineHeight: block.data.lineHeight || 1.8,
+        backgroundColor: block.data.backgroundColor || 'transparent',
+        padding: block.data.padding ? `${block.data.padding}px` : undefined,
+      };
+      return (
+        <div className="mb-6">
+          <div
+            style={paragraphStyle}
+            className="prose prose-lg max-w-none"
+            dangerouslySetInnerHTML={{ __html: block.data.htmlContent }}
+          />
+        </div>
+      );
+
+    case 'sales_image':
+      if (!block.data.src) {
+        return (
+          <div className="mb-6 bg-gray-100 rounded-lg p-12 text-center">
+            <p className="text-gray-500">画像URLを設定してください</p>
+          </div>
+        );
+      }
+      const imageWidthClass = {
+        full: 'w-full',
+        large: 'max-w-4xl mx-auto',
+        medium: 'max-w-2xl mx-auto',
+        small: 'max-w-md mx-auto',
+      }[block.data.width || 'full'];
+      const imageRadiusClass = {
+        none: 'rounded-none',
+        sm: 'rounded',
+        md: 'rounded-lg',
+        lg: 'rounded-xl',
+        xl: 'rounded-2xl',
+      }[block.data.borderRadius || 'md'];
+      const imageShadowClass = {
+        none: '',
+        sm: 'shadow-sm',
+        md: 'shadow-md',
+        lg: 'shadow-lg',
+      }[block.data.shadow || 'none'];
+      const imageAlignClass = {
+        left: 'mr-auto',
+        center: 'mx-auto',
+        right: 'ml-auto',
+      }[block.data.align || 'center'];
+
+      const salesImageElement = (
+        <img
+          src={block.data.src}
+          alt={block.data.alt}
+          className={`${imageWidthClass} ${imageRadiusClass} ${imageShadowClass} ${imageAlignClass}`}
+        />
+      );
+      return (
+        <figure className="mb-6">
+          {block.data.link ? (
+            <a href={block.data.link} target="_blank" rel="noopener noreferrer" onClick={() => handleLinkClick(block.data.link!)}>
+              {salesImageElement}
+            </a>
+          ) : (
+            salesImageElement
+          )}
+          {block.data.caption && (
+            <figcaption className={`text-${block.data.align || 'center'} text-sm text-gray-500 mt-2`}>
+              {block.data.caption}
+            </figcaption>
+          )}
+        </figure>
+      );
+
+    case 'sales_cta':
+      const ctaSizeClasses = {
+        sm: 'px-4 py-2 text-sm',
+        md: 'px-6 py-3 text-base',
+        lg: 'px-8 py-4 text-lg',
+        xl: 'px-10 py-5 text-xl',
+      }[block.data.size];
+      const ctaRadiusMap = {
+        none: '0px',
+        sm: '4px',
+        md: '8px',
+        lg: '16px',
+        full: '9999px',
+      }[block.data.borderRadius];
+      const ctaShadowMap = {
+        none: 'none',
+        sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        md: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+        lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+      }[block.data.shadow || 'none'];
+
+      const iconElement = block.data.icon !== 'none' && block.data.icon && (
+        block.data.icon === 'arrow' ? <ArrowRight size={20} /> :
+        block.data.icon === 'external' ? <ExternalLink size={20} /> : null
+      );
+
+      return (
+        <div className={`mb-6 ${block.data.fullWidth ? '' : 'text-center'}`}>
+          <a
+            href={block.data.url}
+            target={block.data.url.startsWith('http') ? '_blank' : undefined}
+            rel={block.data.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+            onClick={() => handleLinkClick(block.data.url)}
+            className={`
+              inline-flex items-center justify-center gap-2 font-bold transition-all hover:opacity-90
+              ${ctaSizeClasses}
+              ${block.data.fullWidth ? 'w-full' : ''}
+            `}
+            style={{
+              backgroundColor: block.data.backgroundColor,
+              color: block.data.textColor,
+              borderRadius: ctaRadiusMap,
+              boxShadow: ctaShadowMap,
+            }}
+          >
+            {block.data.iconPosition === 'left' && iconElement}
+            {block.data.text}
+            {block.data.iconPosition === 'right' && iconElement}
+          </a>
+        </div>
+      );
+
+    case 'sales_spacer':
+      return (
+        <div
+          style={{ height: `${block.data.height}px` }}
+          className="md:block"
+        />
+      );
+
+    case 'sales_divider':
+      if (block.data.variant === 'dots') {
+        return (
+          <div className="flex justify-center gap-2 my-6">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: block.data.lineColor }}
+              />
+            ))}
+          </div>
+        );
+      }
+      if (block.data.variant === 'wave') {
+        return (
+          <div className="text-center my-6" style={{ color: block.data.lineColor }}>
+            <span className="text-2xl">〜〜〜</span>
+          </div>
+        );
+      }
+      const dividerLineStyle: React.CSSProperties = {
+        borderTopWidth: `${block.data.lineWidth}px`,
+        borderTopStyle: block.data.lineStyle as 'solid' | 'dashed' | 'dotted',
+        borderTopColor: block.data.lineColor,
+      };
+      if (block.data.variant === 'short') {
+        dividerLineStyle.width = `${block.data.shortWidth || 30}%`;
+        dividerLineStyle.marginLeft = 'auto';
+        dividerLineStyle.marginRight = 'auto';
+      }
+      return <hr style={dividerLineStyle} className="border-0 my-6" />;
+
     default:
       return null;
   }
@@ -890,7 +1083,7 @@ function CountdownBlockRenderer({ block }: { block: Extract<Block, { type: 'coun
 }
 
 // Gallery Block Renderer Component
-function GalleryBlockRenderer({ block, variant }: { block: Extract<Block, { type: 'gallery' }>; variant?: 'profile' | 'business' }) {
+function GalleryBlockRenderer({ block, variant }: { block: Extract<Block, { type: 'gallery' }>; variant?: 'profile' | 'business' | 'salesletter' }) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   if (!block.data.items || block.data.items.length === 0) {
@@ -1061,7 +1254,7 @@ function QuizBlockRenderer({ block }: { block: Extract<Block, { type: 'quiz' }> 
 }
 
 // Lead Form Block Renderer Component
-function LeadFormBlockRenderer({ block, variant }: { block: Extract<Block, { type: 'lead_form' }>; variant?: 'profile' | 'business' }) {
+function LeadFormBlockRenderer({ block, variant }: { block: Extract<Block, { type: 'lead_form' }>; variant?: 'profile' | 'business' | 'salesletter' }) {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');

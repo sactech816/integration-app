@@ -17,6 +17,7 @@ export type ActiveView =
   | 'quiz'
   | 'profile'
   | 'business'
+  | 'salesletter'
   | 'booking'
   | 'survey'
   | 'my-games'
@@ -59,6 +60,7 @@ type MainContentProps = {
     quiz: number;
     profile: number;
     business: number;
+    salesletter: number;
     booking: number;
     survey: number;
     gamification: number;
@@ -169,7 +171,7 @@ export default function MainContent({
       />
       )}
 
-      {['quiz', 'profile', 'business'].includes(activeView) && (
+      {['quiz', 'profile', 'business', 'salesletter'].includes(activeView) && (
       <ContentList
         contents={contents}
         selectedService={activeView as ServiceType}
@@ -257,7 +259,7 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'quiz', 'profile', 'business', 'booking', 'survey', 'my-games', 'affiliate', 'settings', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-cleanup'].includes(activeView) && (
+      {!['dashboard', 'quiz', 'profile', 'business', 'salesletter', 'booking', 'survey', 'my-games', 'affiliate', 'settings', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-cleanup'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>

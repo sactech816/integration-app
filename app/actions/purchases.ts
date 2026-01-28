@@ -223,7 +223,7 @@ export async function getPurchaseStats(
     return {
       totalAmount: 0,
       totalPurchases: 0,
-      byContentType: { quiz: 0, profile: 0, business: 0 }
+      byContentType: { quiz: 0, profile: 0, business: 0, salesletter: 0 }
     };
   }
 }

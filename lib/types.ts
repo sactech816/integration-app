@@ -5,18 +5,20 @@
 // -------------------------------------------
 // サービスタイプ
 // -------------------------------------------
-export type ServiceType = 'quiz' | 'profile' | 'business';
+export type ServiceType = 'quiz' | 'profile' | 'business' | 'salesletter';
 
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   quiz: '診断クイズ',
   profile: 'プロフィールLP',
-  business: 'ビジネスLP'
+  business: 'ビジネスLP',
+  salesletter: 'セールスレター'
 };
 
 export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; text: string }> = {
   quiz: { primary: 'indigo', bg: 'bg-indigo-50', text: 'text-indigo-600' },
   profile: { primary: 'emerald', bg: 'bg-emerald-50', text: 'text-emerald-600' },
-  business: { primary: 'amber', bg: 'bg-amber-50', text: 'text-amber-600' }
+  business: { primary: 'amber', bg: 'bg-amber-50', text: 'text-amber-600' },
+  salesletter: { primary: 'rose', bg: 'bg-rose-50', text: 'text-rose-600' }
 };
 
 // -------------------------------------------
@@ -333,6 +335,77 @@ export type ChecklistSectionBlockData = {
   isFullWidth?: boolean;
 };
 
+// --- セールスレター専用ブロック型定義 ---
+
+// セールス用見出しブロック
+export type SalesHeadlineBlockData = {
+  text: string;
+  level: 'h1' | 'h2' | 'h3' | 'h4';
+  align: 'left' | 'center' | 'right';
+  fontSize?: number;
+  color?: string;
+  fontWeight?: 'normal' | 'medium' | 'semibold' | 'bold' | 'extrabold';
+  underline?: boolean;
+  underlineColor?: string;
+  letterSpacing?: number;
+  lineHeight?: number;
+  backgroundColor?: string;
+  padding?: number;
+};
+
+// セールス用本文ブロック（リッチテキスト）
+export type SalesParagraphBlockData = {
+  htmlContent: string;
+  align: 'left' | 'center' | 'right';
+  defaultFontSize?: number;
+  defaultColor?: string;
+  lineHeight?: number;
+  backgroundColor?: string;
+  padding?: number;
+};
+
+// セールス用画像ブロック
+export type SalesImageBlockData = {
+  src: string;
+  alt: string;
+  caption?: string;
+  link?: string;
+  width?: 'full' | 'large' | 'medium' | 'small';
+  align?: 'left' | 'center' | 'right';
+  borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  shadow?: 'none' | 'sm' | 'md' | 'lg';
+};
+
+// セールス用CTAボタンブロック
+export type SalesCtaBlockData = {
+  text: string;
+  url: string;
+  size: 'sm' | 'md' | 'lg' | 'xl';
+  backgroundColor: string;
+  textColor: string;
+  hoverBackgroundColor?: string;
+  borderRadius: 'none' | 'sm' | 'md' | 'lg' | 'full';
+  shadow?: 'none' | 'sm' | 'md' | 'lg';
+  fullWidth?: boolean;
+  icon?: 'none' | 'arrow' | 'external' | 'download';
+  iconPosition?: 'left' | 'right';
+};
+
+// セールス用余白ブロック
+export type SalesSpacerBlockData = {
+  height: number;
+  mobileHeight?: number;
+};
+
+// セールス用区切り線ブロック
+export type SalesDividerBlockData = {
+  variant: 'full' | 'short' | 'dots' | 'wave';
+  lineStyle: 'solid' | 'dashed' | 'dotted';
+  lineColor: string;
+  lineWidth: number;
+  shortWidth?: number;
+};
+
 // プロフィールLP追加ブロック型定義
 export type CountdownBlockData = {
   title?: string;
@@ -381,7 +454,14 @@ export type Block =
   | { id: string; type: 'dark_section'; data: DarkSectionBlockData }
   | { id: string; type: 'case_study_cards'; data: CaseStudyCardsBlockData }
   | { id: string; type: 'bonus_section'; data: BonusSectionBlockData }
-  | { id: string; type: 'checklist_section'; data: ChecklistSectionBlockData };
+  | { id: string; type: 'checklist_section'; data: ChecklistSectionBlockData }
+  // セールスレター専用ブロック
+  | { id: string; type: 'sales_headline'; data: SalesHeadlineBlockData }
+  | { id: string; type: 'sales_paragraph'; data: SalesParagraphBlockData }
+  | { id: string; type: 'sales_image'; data: SalesImageBlockData }
+  | { id: string; type: 'sales_cta'; data: SalesCtaBlockData }
+  | { id: string; type: 'sales_spacer'; data: SalesSpacerBlockData }
+  | { id: string; type: 'sales_divider'; data: SalesDividerBlockData };
 
 // トラッキング設定の型定義
 export type TrackingSettings = {
@@ -433,6 +513,75 @@ export interface BusinessLP {
   settings?: ProfileSettings;
   template_id?: string;
 }
+
+// -------------------------------------------
+// セールスレター関連の型定義
+// -------------------------------------------
+export interface SalesLetterSettings {
+  contentWidth?: number;
+  contentWidthUnit?: 'px' | '%';
+  pageBackground?: {
+    type: 'none' | 'color' | 'gradient' | 'image';
+    value: string;
+    opacity?: number;
+    animated?: boolean;
+  };
+  hideFooter?: boolean;
+  tracking?: TrackingSettings;
+}
+
+export interface SalesLetter {
+  id: string;
+  slug: string;
+  title: string;
+  content: Block[];
+  user_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  settings?: SalesLetterSettings;
+  template_id?: string;
+  views_count?: number;
+}
+
+// セールスレターテンプレート関連
+export type SalesLetterTemplateCategory = 
+  | 'sales_letter'    // 王道のセールスレター型
+  | 'ec_catalog'      // EC・物販・カタログ型
+  | 'blog_short'      // ブログ・メルマガ・短文構成型
+  | 'marketing';      // マーケティング思考・全体設計型
+
+export interface SalesLetterTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: SalesLetterTemplateCategory;
+  icon: string;
+  content: Block[];
+  settings: SalesLetterSettings;
+  // オプション: 詳細説明（ガイドモーダル用）
+  longDescription?: string;
+  structure?: string[];
+  useCases?: string[];
+}
+
+export const salesLetterTemplateCategories: Record<SalesLetterTemplateCategory, { name: string; description: string }> = {
+  sales_letter: {
+    name: '王道のセールスレター型',
+    description: '商品をしっかり売り込みたい場合に最適。LP・長い手紙向け。',
+  },
+  ec_catalog: {
+    name: 'EC・物販・カタログ型',
+    description: '商品の魅力やスペックを端的に伝えたい場合に最適。',
+  },
+  blog_short: {
+    name: 'ブログ・メルマガ・短文構成型',
+    description: 'セクションやコラムなど短いコンテンツに最適。',
+  },
+  marketing: {
+    name: 'マーケティング思考・全体設計型',
+    description: '執筆前の構成案（プロット）作成に活用。',
+  },
+};
 
 // -------------------------------------------
 // ユーティリティ関数

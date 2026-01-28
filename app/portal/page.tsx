@@ -108,7 +108,8 @@ function PortalPageContent() {
     all: 0,
     quiz: 0,
     profile: 0,
-    business: 0
+    business: 0,
+    salesletter: 0,
   });
   const [featuredContents, setFeaturedContents] = useState<FeaturedContentWithDetails[]>([]);
   const [popularContents, setPopularContents] = useState<PopularContent[]>([]);
@@ -150,7 +151,8 @@ function PortalPageContent() {
         all: quiz + profile + business,
         quiz,
         profile,
-        business
+        business,
+        salesletter: 0,
       });
     } catch (error) {
       console.error('Count fetch error:', error);

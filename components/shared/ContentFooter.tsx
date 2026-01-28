@@ -7,6 +7,7 @@ export type ContentToolType =
   | 'quiz'           // 診断クイズ
   | 'profile'        // プロフィールLP
   | 'business'       // ビジネスLP
+  | 'salesletter'    // セールスレター
   | 'survey'         // アンケート
   | 'booking'        // 予約・日程調整
   | 'attendance'     // 出欠表メーカー
@@ -17,6 +18,7 @@ const TOOL_NAMES: Record<ContentToolType, string> = {
   quiz: '診断クイズメーカー',
   profile: 'プロフィールメーカー',
   business: 'ビジネスLPメーカー',
+  salesletter: 'セールスレターメーカー',
   survey: 'アンケートメーカー',
   booking: '予約メーカー',
   attendance: '出欠表メーカー',

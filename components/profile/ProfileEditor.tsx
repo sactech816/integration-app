@@ -80,6 +80,16 @@ const blockTypes = [
   { type: 'gallery', label: 'ギャラリー', icon: Images, description: '複数画像スライドショー' },
 ];
 
+// セールスレター用ブロックタイプの定義
+export const salesLetterBlockTypes = [
+  { type: 'sales_headline', label: '見出し', icon: Type, description: 'セールス用見出しテキスト' },
+  { type: 'sales_paragraph', label: '本文', icon: Type, description: 'リッチテキスト本文' },
+  { type: 'sales_image', label: '画像', icon: ImageIcon, description: '画像とキャプション' },
+  { type: 'sales_cta', label: 'CTAボタン', icon: ExternalLink, description: '行動喚起ボタン' },
+  { type: 'sales_spacer', label: '余白', icon: ArrowDown, description: '縦方向のスペース' },
+  { type: 'sales_divider', label: '区切り線', icon: Shuffle, description: 'セクション区切り' },
+];
+
 // グラデーションプリセット（animated: trueのものは動くグラデーション）
 const gradientPresets = [
   // 動くグラデーション（元のプロフィールLPから参照）

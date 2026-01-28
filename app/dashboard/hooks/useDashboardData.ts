@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase, TABLES } from '@/lib/supabase';
 import { getAdminEmails } from '@/lib/constants';
-import { ServiceType, Quiz, Profile, BusinessLP, Block } from '@/lib/types';
+import { ServiceType, Quiz, Profile, BusinessLP, SalesLetter, Block } from '@/lib/types';
 import { generateSlug } from '@/lib/utils';
 import { getMultipleAnalytics } from '@/app/actions/analytics';
 import { getUserPurchases, checkIsPartner } from '@/app/actions/purchases';
@@ -34,6 +34,7 @@ type UseDashboardDataReturn = {
     quiz: number;
     profile: number;
     business: number;
+    salesletter: number;
     booking: number;
     survey: number;
     gamification: number;
@@ -80,6 +81,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     quiz: 0,
     profile: 0,
     business: 0,
+    salesletter: 0,
     booking: 0,
     survey: 0,
     gamification: 0,
@@ -261,6 +263,35 @@ export function useDashboardData(): UseDashboardDataReturn {
           }
         }
 
+        // セールスレター取得
+        if (selectedService === 'salesletter') {
+          const query = isAdmin
+            ? supabase.from('sales_letters').select('*').order('created_at', { ascending: false })
+            : supabase.from('sales_letters').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+
+          const { data: salesLetters } = await query;
+          if (salesLetters) {
+            allContents.push(
+              ...salesLetters.map((s: SalesLetter) => ({
+                id: s.id,
+                slug: s.slug,
+                title: s.title || 'セールスレター',
+                created_at: s.created_at,
+                updated_at: s.updated_at,
+                type: 'salesletter' as ServiceType,
+                user_id: s.user_id,
+                content: s.content,
+                settings: s.settings as Record<string, unknown>,
+                views_count: s.views_count || 0,
+                clicks_count: 0,
+                readRate: 0,
+                avgTimeSpent: 0,
+                clickRate: 0,
+              }))
+            );
+          }
+        }
+
         // 作成日時でソート
         allContents.sort((a, b) => {
           const dateA = new Date(a.created_at || 0);
@@ -339,7 +370,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, profileResult, businessResult, bookingResult, surveyResult, gamificationResult] = await Promise.all([
+      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, surveyResult, gamificationResult] = await Promise.all([
         // 診断クイズ数
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true })
@@ -352,6 +383,10 @@ export function useDashboardData(): UseDashboardDataReturn {
         isAdmin
           ? supabase.from(TABLES.BUSINESS_LPS).select('id', { count: 'exact', head: true })
           : supabase.from(TABLES.BUSINESS_LPS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // セールスレター数
+        isAdmin
+          ? supabase.from('sales_letters').select('id', { count: 'exact', head: true })
+          : supabase.from('sales_letters').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         // 予約メニュー数
         isAdmin
           ? supabase.from('booking_menus').select('id', { count: 'exact', head: true })
@@ -368,6 +403,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         quiz: quizResult.count || 0,
         profile: profileResult.count || 0,
         business: businessResult.count || 0,
+        salesletter: salesletterResult.count || 0,
         booking: bookingResult.count || 0,
         survey: surveyResult.count || 0,
         gamification: gamificationResult.count || 0,
@@ -400,10 +436,11 @@ export function useDashboardData(): UseDashboardDataReturn {
   const handleDelete = async (item: ContentItem) => {
     if (!supabase) return;
 
-    const tableMap = {
+    const tableMap: Record<string, string> = {
       quiz: TABLES.QUIZZES,
       profile: TABLES.PROFILES,
       business: TABLES.BUSINESS_LPS,
+      salesletter: 'sales_letters',
     };
 
     try {
@@ -428,10 +465,11 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       const newSlug = generateSlug();
-      const tableMap = {
+      const tableMap: Record<string, string> = {
         quiz: TABLES.QUIZZES,
         profile: TABLES.PROFILES,
         business: TABLES.BUSINESS_LPS,
+        salesletter: 'sales_letters',
       };
 
       if (item.type === 'quiz') {
@@ -456,6 +494,27 @@ export function useDashboardData(): UseDashboardDataReturn {
               image_url: originalQuiz.image_url,
               collect_email: originalQuiz.collect_email,
               slug: newSlug,
+            },
+          ]);
+          if (error) throw error;
+        }
+      } else if (item.type === 'salesletter') {
+        // セールスレターの複製
+        const { data: original } = await supabase
+          .from('sales_letters')
+          .select('*')
+          .eq('id', item.id)
+          .single();
+
+        if (original) {
+          const { error } = await supabase.from('sales_letters').insert([
+            {
+              user_id: user.id,
+              title: `${original.title || 'セールスレター'} のコピー`,
+              content: original.content,
+              slug: newSlug,
+              settings: original.settings,
+              template_id: original.template_id,
             },
           ]);
           if (error) throw error;
