@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { Resend } from 'resend';
 import {
   BookingMenu,
   BookingSlot,
@@ -51,6 +52,198 @@ function getSupabaseServer() {
       persistSession: false,
     },
   });
+}
+
+// ===========================================
+// メール送信ヘルパー
+// ===========================================
+
+const FROM_EMAIL = 'Makers Support <support@makers.tokyo>';
+
+/**
+ * 日時フォーマット
+ */
+function formatDateTime(dateStr: string) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+/**
+ * 予約完了メールを直接送信
+ */
+async function sendBookingNotificationEmail(
+  bookingId: string,
+  type: 'confirm' | 'cancel' = 'confirm'
+): Promise<void> {
+  try {
+    // 環境変数チェック
+    if (!process.env.RESEND_API_KEY) {
+      console.error('[Booking Email] RESEND_API_KEY is not configured');
+      return;
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const supabase = getSupabaseServer();
+    if (!supabase) {
+      console.error('[Booking Email] Database not configured');
+      return;
+    }
+
+    // 予約情報を取得
+    const { data: booking, error: bookingError } = await supabase
+      .from('bookings')
+      .select(`
+        *,
+        slot:booking_slots(
+          *,
+          menu:booking_menus(*)
+        )
+      `)
+      .eq('id', bookingId)
+      .single();
+
+    if (bookingError || !booking) {
+      console.error('[Booking Email] Booking not found:', bookingId);
+      return;
+    }
+
+    const slot = booking.slot;
+    const menu = slot?.menu;
+
+    if (!slot || !menu) {
+      console.error('[Booking Email] Slot or menu not found');
+      return;
+    }
+
+    // メニュー所有者のメールアドレスを取得
+    let ownerEmail = menu.notification_email || null;
+    if (!ownerEmail && menu.user_id) {
+      const { data: ownerData } = await supabase.auth.admin.getUserById(menu.user_id);
+      ownerEmail = ownerData?.user?.email || null;
+    }
+
+    // 予約者のメールアドレス
+    let customerEmail = booking.guest_email;
+    let customerName = booking.guest_name;
+
+    // ログインユーザーの場合
+    if (booking.customer_id) {
+      const { data: customerData } = await supabase.auth.admin.getUserById(booking.customer_id);
+      customerEmail = customerData?.user?.email;
+      customerName = customerData?.user?.user_metadata?.name || customerEmail?.split('@')[0] || 'お客様';
+    }
+
+    const startTime = formatDateTime(slot.start_time);
+    const endTime = new Date(slot.end_time).toLocaleTimeString('ja-JP', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    console.log('[Booking Email] Sending emails to:', { customerEmail, ownerEmail });
+
+    const emailPromises = [];
+
+    // 予約者へのメール
+    if (customerEmail) {
+      const customerHtml = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #3b82f6, #6366f1); padding: 30px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">予約${type === 'cancel' ? 'キャンセル' : '完了'}のお知らせ</h1>
+          </div>
+          <div style="padding: 30px; background: #f9fafb;">
+            <p style="font-size: 16px; color: #374151;">
+              ${customerName}様<br><br>
+              ${type === 'cancel' 
+                ? 'ご予約がキャンセルされました。' 
+                : 'ご予約ありがとうございます。以下の内容で予約を承りました。'}
+            </p>
+            <div style="background: white; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
+              <h2 style="color: #1f2937; font-size: 18px; margin-top: 0;">${menu.title}</h2>
+              ${menu.description ? `<p style="color: #6b7280; margin: 10px 0;">${menu.description}</p>` : ''}
+              <div style="border-top: 1px solid #e5e7eb; margin-top: 15px; padding-top: 15px;">
+                <p style="margin: 8px 0; color: #374151;"><strong>📅 日時:</strong> ${startTime} 〜 ${endTime}</p>
+                <p style="margin: 8px 0; color: #374151;"><strong>⏱ 所要時間:</strong> ${menu.duration_min}分</p>
+                ${booking.guest_comment ? `<p style="margin: 8px 0; color: #374151;"><strong>💬 コメント:</strong> ${booking.guest_comment}</p>` : ''}
+              </div>
+            </div>
+            <p style="font-size: 14px; color: #6b7280;">ご不明な点がございましたら、お気軽にお問い合わせください。</p>
+          </div>
+          <div style="background: #1f2937; padding: 20px; text-align: center;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">このメールは予約システムから自動送信されています。</p>
+          </div>
+        </div>
+      `;
+
+      emailPromises.push(
+        resend.emails.send({
+          from: FROM_EMAIL,
+          to: customerEmail,
+          subject: `【予約${type === 'cancel' ? 'キャンセル' : '完了'}】${menu.title}`,
+          html: customerHtml,
+        })
+      );
+    }
+
+    // 管理者へのメール
+    if (ownerEmail) {
+      const ownerHtml = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 30px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">新規予約${type === 'cancel' ? 'キャンセル' : ''}のお知らせ</h1>
+          </div>
+          <div style="padding: 30px; background: #f9fafb;">
+            <p style="font-size: 16px; color: #374151;">
+              ${type === 'cancel' ? '以下の予約がキャンセルされました。' : '新しい予約が入りました。'}
+            </p>
+            <div style="background: white; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
+              <h2 style="color: #1f2937; font-size: 18px; margin-top: 0;">${menu.title}</h2>
+              <div style="border-top: 1px solid #e5e7eb; margin-top: 15px; padding-top: 15px;">
+                <p style="margin: 8px 0; color: #374151;"><strong>👤 予約者:</strong> ${customerName || '(名前なし)'}</p>
+                <p style="margin: 8px 0; color: #374151;"><strong>📧 メール:</strong> ${customerEmail || '(メールなし)'}</p>
+                <p style="margin: 8px 0; color: #374151;"><strong>📅 日時:</strong> ${startTime} 〜 ${endTime}</p>
+                ${booking.guest_comment ? `<p style="margin: 8px 0; color: #374151;"><strong>💬 コメント:</strong> ${booking.guest_comment}</p>` : ''}
+              </div>
+            </div>
+          </div>
+          <div style="background: #1f2937; padding: 20px; text-align: center;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">このメールは予約システムから自動送信されています。</p>
+          </div>
+        </div>
+      `;
+
+      emailPromises.push(
+        resend.emails.send({
+          from: FROM_EMAIL,
+          to: ownerEmail,
+          subject: `【新規予約${type === 'cancel' ? 'キャンセル' : ''}】${menu.title} - ${customerName || '(名前なし)'}様`,
+          html: ownerHtml,
+        })
+      );
+    }
+
+    // メール送信実行
+    if (emailPromises.length > 0) {
+      const results = await Promise.allSettled(emailPromises);
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          console.log(`[Booking Email] Email ${index + 1} sent successfully`);
+        } else {
+          console.error(`[Booking Email] Email ${index + 1} failed:`, result.reason);
+        }
+      });
+    } else {
+      console.log('[Booking Email] No email addresses to send to');
+    }
+  } catch (error) {
+    console.error('[Booking Email] Error sending notification:', error);
+  }
 }
 
 // ===========================================
@@ -582,31 +775,8 @@ export async function submitBooking(
     return { success: false, error: error.message, code: 'UNKNOWN_ERROR' };
   }
 
-  // 予約完了メール送信
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000');
-    
-    console.log('[Booking] Sending notification email to:', `${baseUrl}/api/booking/notify`);
-    
-    const response = await fetch(`${baseUrl}/api/booking/notify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bookingId: data.id, type: 'confirm' }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('[Booking] Email notification failed:', response.status, errorData);
-    } else {
-      const result = await response.json();
-      console.log('[Booking] Email notification sent:', result);
-    }
-  } catch (emailError) {
-    // メール送信エラーは予約成功に影響させない
-    console.error('[Booking] Email notification error:', emailError);
-  }
+  // 予約完了メール送信（直接Resendを呼び出す）
+  await sendBookingNotificationEmail(data.id, 'confirm');
 
   return { success: true, data };
 }
