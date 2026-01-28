@@ -535,17 +535,25 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
         </div>
         <div className="flex gap-2">
           {savedSlug && (
-            <button
-              onClick={handleCopyUrl}
-              className="hidden sm:flex bg-teal-50 border border-teal-200 text-teal-700 px-4 py-2 rounded-lg font-bold items-center gap-2"
-            >
-              <Share2 size={16} /> URL
-            </button>
+            <>
+              <button
+                onClick={() => setShowSuccessModal(true)}
+                className="hidden sm:flex bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3 sm:px-4 py-2 rounded-lg font-bold items-center gap-2 hover:from-orange-600 hover:to-amber-600 shadow-md text-sm sm:text-base"
+              >
+                <Trophy size={16} className="sm:w-[18px] sm:h-[18px]" /> <span className="hidden md:inline">作成完了画面</span><span className="md:hidden">完了</span>
+              </button>
+              <button
+                onClick={handleCopyUrl}
+                className="hidden sm:flex bg-amber-50 border-2 border-amber-400 text-amber-700 px-4 py-2 rounded-lg font-bold items-center gap-2 hover:bg-amber-100 text-sm sm:text-base"
+              >
+                <ExternalLink size={16} /> 公開URL
+              </button>
+            </>
           )}
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="bg-teal-600 text-white px-4 md:px-6 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-teal-700 shadow-md transition-all"
+            className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 md:px-6 py-2 rounded-lg font-bold flex items-center gap-2 hover:from-orange-600 hover:to-amber-600 shadow-md transition-all"
           >
             {isSaving ? <Loader2 className="animate-spin" /> : <Save />}{" "}
             <span className="hidden sm:inline">保存</span>

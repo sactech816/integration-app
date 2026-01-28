@@ -302,126 +302,73 @@ export default function BookingEditor({
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* 完了モーダル（新規作成時のみ） */}
-      {showCompleteModal && createdMenuId && mode === 'create' && (
-        <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4"
-          onClick={() => {
-            // モーダル外クリックで編集ページへ遷移
-            const editUrl = createdEditKey 
-              ? `/booking/edit/${createdMenuId}?key=${createdEditKey}`
-              : `/booking/edit/${createdMenuId}`;
-            router.push(editUrl);
-          }}
-        >
-          <div 
-            className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 animate-fade-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-center mb-6">
-              <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                formData.type === 'adjustment' ? 'bg-purple-100' : 'bg-green-100'
-              }`}>
-                <Check size={32} className={formData.type === 'adjustment' ? 'text-purple-600' : 'text-green-600'} />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">作成完了！</h2>
-              <p className="text-gray-600 mt-2">
-                {formData.type === 'adjustment' ? '日程調整' : '予約メニュー'}を作成しました
+      <CreationCompleteModal
+        isOpen={showCompleteModal && !!createdMenuId && mode === 'create'}
+        onClose={() => {
+          const editUrl = createdEditKey 
+            ? `/booking/edit/${createdMenuId}?key=${createdEditKey}`
+            : `/booking/edit/${createdMenuId}`;
+          router.push(editUrl);
+        }}
+        title={formData.type === 'adjustment' ? '日程調整' : '予約メニュー'}
+        publicUrl={typeof window !== 'undefined' && createdMenuId ? `${window.location.origin}/booking/${createdMenuId}` : ''}
+        contentTitle={formData.title ? `「${formData.title}」を作りました！` : undefined}
+        theme={formData.type === 'adjustment' ? 'purple' : 'blue'}
+        extraContent={
+          !userId && createdEditKey ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <p className="text-sm text-amber-800 font-semibold mb-2">
+                ⚠️ 重要：この編集キーを必ず保存してください
               </p>
-            </div>
-
-            {/* 非ログインユーザーの場合、編集キーを表示 */}
-            {!userId && createdEditKey && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
-                <p className="text-sm text-amber-800 font-semibold mb-2">
-                  ⚠️ 重要：この編集キーを必ず保存してください
-                </p>
-                <p className="text-xs text-amber-700 mb-3">
-                  ログインしていないため、このキーを使って編集できます。
-                </p>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={createdEditKey}
-                    readOnly
-                    className="flex-1 px-3 py-2 border border-amber-300 rounded-lg bg-white text-gray-900 font-mono text-sm"
-                  />
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(createdEditKey);
-                    }}
-                    className="p-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
-                  >
-                    <Copy size={18} />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* 公開URL */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                公開URL
-              </label>
+              <p className="text-xs text-amber-700 mb-3">
+                ログインしていないため、このキーを使って編集できます。
+              </p>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/booking/${createdMenuId}`}
+                  value={createdEditKey}
                   readOnly
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 text-sm"
+                  className="flex-1 px-3 py-2 border border-amber-300 rounded-lg bg-white text-gray-900 font-mono text-sm"
                 />
                 <button
-                  onClick={copyUrl}
-                  className={`p-2 text-white rounded-lg transition-colors ${
-                    formData.type === 'adjustment'
-                      ? 'bg-purple-600 hover:bg-purple-700'
-                      : 'bg-blue-600 hover:bg-blue-700'
-                  }`}
+                  onClick={() => {
+                    navigator.clipboard.writeText(createdEditKey);
+                  }}
+                  className="p-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                 >
-                  {copied ? <Check size={18} /> : <Copy size={18} />}
+                  <Copy size={18} />
                 </button>
               </div>
             </div>
-
-            {/* アクションボタン */}
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => window.open(`/booking/${createdMenuId}`, '_blank')}
-                className={`w-full py-3 px-6 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 ${
-                  formData.type === 'adjustment'
-                    ? 'bg-purple-600 hover:bg-purple-700'
-                    : 'bg-blue-600 hover:bg-blue-700'
-                }`}
-              >
-                <ExternalLink size={18} />
-                公開ページを開く
-              </button>
-              <button
-                onClick={() => {
-                  // 編集ページへ遷移（編集キーがある場合はURLパラメータに含める）
-                  const editUrl = createdEditKey 
-                    ? `/booking/edit/${createdMenuId}?key=${createdEditKey}`
-                    : `/booking/edit/${createdMenuId}`;
-                  router.push(editUrl);
-                }}
-                className={`w-full py-3 px-6 border-2 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 ${
-                  formData.type === 'adjustment'
-                    ? 'border-purple-300 text-purple-700 hover:bg-purple-50'
-                    : 'border-blue-300 text-blue-700 hover:bg-blue-50'
-                }`}
-              >
-                <Calendar size={18} />
-                予約枠を修正する
-              </button>
-              <button
-                onClick={() => router.push('/dashboard?view=booking')}
-                className="w-full py-3 px-6 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
-              >
-                ダッシュボードへ戻る
-              </button>
-            </div>
+          ) : undefined
+        }
+        customButtons={
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => {
+                const editUrl = createdEditKey 
+                  ? `/booking/edit/${createdMenuId}?key=${createdEditKey}`
+                  : `/booking/edit/${createdMenuId}`;
+                router.push(editUrl);
+              }}
+              className={`w-full py-3 px-6 border-2 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 ${
+                formData.type === 'adjustment'
+                  ? 'border-purple-300 text-purple-700 hover:bg-purple-50'
+                  : 'border-blue-300 text-blue-700 hover:bg-blue-50'
+              }`}
+            >
+              <Calendar size={18} />
+              予約枠を修正する
+            </button>
+            <button
+              onClick={() => router.push('/dashboard?view=booking')}
+              className="w-full py-3 px-6 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+            >
+              ダッシュボードへ戻る
+            </button>
           </div>
-        </div>
-      )}
+        }
+      />
 
       {/* 枠追加モーダル */}
       <SlotModal

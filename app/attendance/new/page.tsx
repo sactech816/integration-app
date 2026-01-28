@@ -8,8 +8,6 @@ import {
   Plus,
   Trash2,
   Check,
-  Copy,
-  ExternalLink,
   Loader2,
   ArrowLeft,
   Clock,
@@ -20,6 +18,7 @@ import {
 } from 'lucide-react';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
+import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import { supabase } from '@/lib/supabase';
 import { createAttendanceEvent } from '@/app/actions/attendance';
 import { AttendanceSlot } from '@/types/attendance';
@@ -59,7 +58,6 @@ export default function NewAttendancePage() {
   // 完了モーダル
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
   // ナビゲーション
   const navigateTo = (page: string) => {
@@ -192,14 +190,13 @@ export default function NewAttendancePage() {
     }
   };
 
-  // URLコピー
-  const copyUrl = () => {
-    if (createdEventId) {
-      const url = `${window.location.origin}/attendance/${createdEventId}`;
-      navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+  // 完了モーダルを閉じてフォームリセット
+  const handleCloseCompleteModal = () => {
+    setShowCompleteModal(false);
+    setCreatedEventId(null);
+    setTitle('');
+    setDescription('');
+    setSlots([]);
   };
 
   const today = new Date();
@@ -215,80 +212,14 @@ export default function NewAttendancePage() {
       />
 
       {/* 完了モーダル */}
-      {showCompleteModal && createdEventId && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4"
-          onClick={() => window.open(`/attendance/${createdEventId}`, '_blank')}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 animate-fade-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-purple-100">
-                <Check size={32} className="text-purple-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">作成完了！</h2>
-              <p className="text-gray-600 mt-2">
-                出欠表を作成しました
-              </p>
-            </div>
-
-            {/* 公開URL */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                公開URL
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/attendance/${createdEventId}`}
-                  readOnly
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 text-sm"
-                />
-                <button
-                  onClick={copyUrl}
-                  className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  {copied ? <Check size={18} /> : <Copy size={18} />}
-                </button>
-              </div>
-            </div>
-
-            {/* アクションボタン */}
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => window.open(`/attendance/${createdEventId}`, '_blank')}
-                className="w-full py-3 px-6 bg-purple-600 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 hover:bg-purple-700"
-              >
-                <ExternalLink size={18} />
-                公開ページを開く
-              </button>
-              <button
-                onClick={() => {
-                  // フォームをリセットして続けて作成
-                  setShowCompleteModal(false);
-                  setCreatedEventId(null);
-                  setTitle('');
-                  setDescription('');
-                  setSlots([]);
-                  setCopied(false);
-                }}
-                className="w-full py-3 px-6 border-2 border-purple-300 text-purple-700 rounded-xl font-semibold hover:bg-purple-50 transition-colors flex items-center justify-center gap-2"
-              >
-                <Calendar size={18} />
-                続けて作成する
-              </button>
-              <button
-                onClick={() => router.push('/tools')}
-                className="w-full py-3 px-6 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
-              >
-                ツール一覧へ戻る
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreationCompleteModal
+        isOpen={showCompleteModal && !!createdEventId}
+        onClose={handleCloseCompleteModal}
+        title="出欠表"
+        publicUrl={typeof window !== 'undefined' && createdEventId ? `${window.location.origin}/attendance/${createdEventId}` : ''}
+        contentTitle={title ? `「${title}」の出欠表を作りました！` : '出欠表を作りました！'}
+        theme="purple"
+      />
 
       {/* メインコンテンツ */}
       <main className="flex-1 max-w-5xl mx-auto px-4 py-8 w-full">

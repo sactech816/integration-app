@@ -54,6 +54,11 @@ interface CreationCompleteModalProps {
   publicUrl: string;       // 公開URL（フルパス）
   contentTitle?: string;   // SNSシェア時のテキスト
   theme?: GradientTheme;   // テーマカラー
+  extraContent?: React.ReactNode;  // URL欄の上に追加コンテンツ（編集キーなど）
+  customButtons?: React.ReactNode; // カスタムボタン（アクセスボタンの下に表示）
+  showSocialShare?: boolean;       // SNSシェアを表示するか（デフォルト: true）
+  showQrCode?: boolean;            // QRコードを表示するか（デフォルト: true）
+  showSupport?: boolean;           // 応援・開発支援エリアを表示するか（デフォルト: true）
 }
 
 /**
@@ -78,6 +83,11 @@ const CreationCompleteModal: React.FC<CreationCompleteModalProps> = ({
   publicUrl,
   contentTitle,
   theme = 'indigo',
+  extraContent,
+  customButtons,
+  showSocialShare = true,
+  showQrCode = true,
+  showSupport = true,
 }) => {
   if (!isOpen) return null;
 
@@ -155,6 +165,9 @@ const CreationCompleteModal: React.FC<CreationCompleteModalProps> = ({
         </div>
         
         <div className="p-6 space-y-6">
+          {/* 追加コンテンツ（編集キーなど） */}
+          {extraContent}
+
           {/* 1. 公開URL */}
           <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-4">
             <p className="text-sm font-bold text-gray-700 mb-2">公開URL</p>
@@ -182,98 +195,107 @@ const CreationCompleteModal: React.FC<CreationCompleteModalProps> = ({
             <ExternalLink size={20} /> {title}にアクセス
           </button>
 
+          {/* カスタムボタン */}
+          {customButtons}
+
           {/* 3. SNSでシェア */}
-          <div>
-            <p className="text-sm font-bold text-gray-700 mb-3">SNSでシェア</p>
-            <div className="grid grid-cols-2 gap-2">
-              <button 
-                onClick={handleShareTwitter}
-                className="flex items-center justify-center gap-2 bg-black text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors"
-              >
-                𝕏 (Twitter)
-              </button>
-              <button 
-                onClick={handleShareLine}
-                className="flex items-center justify-center gap-2 bg-[#06C755] text-white py-3 rounded-xl font-bold hover:opacity-90 transition-opacity"
-              >
-                LINE
-              </button>
-              <button 
-                onClick={handleShareFacebook}
-                className="flex items-center justify-center gap-2 bg-[#1877F2] text-white py-3 rounded-xl font-bold hover:opacity-90 transition-opacity"
-              >
-                Facebook
-              </button>
-              <button 
-                onClick={handleShareOther}
-                className="flex items-center justify-center gap-2 bg-gray-600 text-white py-3 rounded-xl font-bold hover:bg-gray-700 transition-colors"
-              >
-                <Share2 size={18} /> その他
-              </button>
+          {showSocialShare && (
+            <div>
+              <p className="text-sm font-bold text-gray-700 mb-3">SNSでシェア</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button 
+                  onClick={handleShareTwitter}
+                  className="flex items-center justify-center gap-2 bg-black text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors"
+                >
+                  𝕏 (Twitter)
+                </button>
+                <button 
+                  onClick={handleShareLine}
+                  className="flex items-center justify-center gap-2 bg-[#06C755] text-white py-3 rounded-xl font-bold hover:opacity-90 transition-opacity"
+                >
+                  LINE
+                </button>
+                <button 
+                  onClick={handleShareFacebook}
+                  className="flex items-center justify-center gap-2 bg-[#1877F2] text-white py-3 rounded-xl font-bold hover:opacity-90 transition-opacity"
+                >
+                  Facebook
+                </button>
+                <button 
+                  onClick={handleShareOther}
+                  className="flex items-center justify-center gap-2 bg-gray-600 text-white py-3 rounded-xl font-bold hover:bg-gray-700 transition-colors"
+                >
+                  <Share2 size={18} /> その他
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 text-center mt-2">作成した{title}をSNSでシェアして、多くの人に見てもらいましょう！</p>
             </div>
-            <p className="text-xs text-gray-500 text-center mt-2">作成した{title}をSNSでシェアして、多くの人に見てもらいましょう！</p>
-          </div>
+          )}
 
           {/* 4. QRコード（直接表示） */}
-          <div className="bg-gray-50 rounded-xl p-4 text-center">
-            <p className="text-sm font-bold text-gray-700 mb-3 flex items-center justify-center gap-2">
-              <QrCode size={18} /> QRコード
-            </p>
-            <div className="inline-block bg-white p-3 rounded-lg border border-gray-200 mb-3">
-              <img
-                src={qrCodeUrl}
-                alt="QRコード"
-                className="w-40 h-40"
-              />
+          {showQrCode && (
+            <div className="bg-gray-50 rounded-xl p-4 text-center">
+              <p className="text-sm font-bold text-gray-700 mb-3 flex items-center justify-center gap-2">
+                <QrCode size={18} /> QRコード
+              </p>
+              <div className="inline-block bg-white p-3 rounded-lg border border-gray-200 mb-3">
+                <img
+                  src={qrCodeUrl}
+                  alt="QRコード"
+                  className="w-40 h-40"
+                />
+              </div>
+              {/* 5. QRコード保存ボタン */}
+              <div>
+                <button
+                  onClick={handleQrDownload}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-300 transition-colors"
+                >
+                  <Download size={16} /> QRコードを保存
+                </button>
+              </div>
             </div>
-            {/* 5. QRコード保存ボタン */}
-            <div>
-              <button
-                onClick={handleQrDownload}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-300 transition-colors"
-              >
-                <Download size={16} /> QRコードを保存
-              </button>
-            </div>
-          </div>
+          )}
 
           {/* 6. 応援・開発支援エリア（枠で囲む） */}
-          <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-xl p-5">
-            <div className="text-center mb-4">
-              <h4 className="font-bold text-base text-gray-900 flex items-center justify-center gap-2">
-                <Heart size={18} className="text-rose-500" />
-                応援・開発支援
-              </h4>
-              <p className="text-sm text-gray-600 mt-1">
-                サービスの継続・発展にご協力ください
+          {showSupport && (
+            <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-xl p-5">
+              <div className="text-center mb-4">
+                <h4 className="font-bold text-base text-gray-900 flex items-center justify-center gap-2">
+                  <Heart size={18} className="text-rose-500" />
+                  応援・開発支援
+                </h4>
+                <p className="text-sm text-gray-600 mt-1">
+                  サービスの継続・発展にご協力ください
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {/* 開発を支援するボタン */}
+                <a
+                  href="https://makers.tokyo/donation"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 text-white py-3 rounded-xl font-bold hover:from-rose-600 hover:to-pink-600 transition-all shadow-md text-sm"
+                >
+                  <Heart size={16} /> 開発を支援する
+                </a>
+                {/* プロプランに申し込みボタン */}
+                <a
+                  href="https://makers.tokyo/pricing"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 rounded-xl font-bold hover:from-amber-600 hover:to-orange-600 transition-all shadow-md text-sm"
+                >
+                  <Crown size={16} /> プロプランに申込
+                </a>
+              </div>
+
+              <p className="text-xs text-center text-gray-500">
+                ※開発支援は任意です。無料でもLPの公開・シェアは可能です。
               </p>
             </div>
-            
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {/* 開発を支援するボタン */}
-              <a
-                href="https://makers.tokyo/donation"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 text-white py-3 rounded-xl font-bold hover:from-rose-600 hover:to-pink-600 transition-all shadow-md text-sm"
-              >
-                <Heart size={16} /> 開発を支援する
-              </a>
-              {/* プロプランに申し込みボタン */}
-              <a
-                href="https://makers.tokyo/pricing"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 rounded-xl font-bold hover:from-amber-600 hover:to-orange-600 transition-all shadow-md text-sm"
-              >
-                <Crown size={16} /> プロプランに申込
-              </a>
-            </div>
-
-            <p className="text-xs text-center text-gray-500">
-              ※開発支援は任意です。無料でもLPの公開・シェアは可能です。
-            </p>
-          </div>
+          )}
 
           {/* 7. 閉じるボタン */}
           <button 
