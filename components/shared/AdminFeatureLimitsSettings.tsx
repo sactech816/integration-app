@@ -26,22 +26,18 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
   const [selectedService, setSelectedService] = useState<ServiceType>('makers');
   const [featureLimits, setFeatureLimits] = useState<Record<string, FeatureLimits>>({});
 
-  // Kindleプランタイプ
-  type KdlPlanType = 'initial' | 'continuation';
-  const [kdlPlanType, setKdlPlanType] = useState<KdlPlanType>('continuation');
-
-  // サービスごとのプラン
-  const kdlInitialPlans = ['initial_trial', 'initial_standard', 'initial_business'] as const;
-  const kdlContinuationPlans: PlanTier[] = ['lite', 'standard', 'pro', 'business', 'enterprise'];
+  // サービスごとのプラン（Kindleは初回と継続を統合して表示）
+  const kdlAllPlans = [
+    'initial_trial', 'initial_standard', 'initial_business',  // 初回（一括）
+    'lite', 'standard', 'pro', 'business', 'enterprise'       // 継続（月額）
+  ] as const;
   const makersPlans: MakersPlanTier[] = ['guest', 'free', 'pro'];
   
-  const currentPlans = selectedService === 'kdl' 
-    ? (kdlPlanType === 'initial' ? [...kdlInitialPlans] : kdlContinuationPlans)
-    : makersPlans;
+  const currentPlans = selectedService === 'kdl' ? [...kdlAllPlans] : makersPlans;
 
   useEffect(() => {
     loadSettings();
-  }, [selectedService, kdlPlanType]);
+  }, [selectedService]);
 
   const loadSettings = async () => {
     try {
@@ -158,9 +154,9 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
       guest: 'ゲスト',
       free: 'フリー',
       // Kindle初回（一括）
-      initial_trial: 'トライアル',
-      initial_standard: 'スタンダード',
-      initial_business: 'ビジネス',
+      initial_trial: 'トライアル（初回）',
+      initial_standard: 'スタンダード（初回）',
+      initial_business: 'ビジネス（初回）',
       // Kindle継続（月額）
       lite: 'ライト',
       standard: 'スタンダード',
@@ -170,6 +166,7 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
     };
     return names[plan] || plan;
   };
+
 
   const handleLimitChange = (planTier: string, field: keyof FeatureLimits, value: string) => {
     const numValue = value === '' ? 0 : (value === '-1' ? -1 : parseInt(value) || 0);
@@ -250,32 +247,6 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
         </button>
       </div>
 
-      {/* Kindleプランタイプ選択（Kindle選択時のみ） */}
-      {selectedService === 'kdl' && (
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setKdlPlanType('initial')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              kdlPlanType === 'initial'
-                ? 'bg-orange-100 text-orange-700 border-2 border-orange-300'
-                : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
-            }`}
-          >
-            初回プラン（一括）
-          </button>
-          <button
-            onClick={() => setKdlPlanType('continuation')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              kdlPlanType === 'continuation'
-                ? 'bg-amber-100 text-amber-700 border-2 border-amber-300'
-                : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
-            }`}
-          >
-            継続プラン（月額）
-          </button>
-        </div>
-      )}
-
       {/* 説明 */}
       <div className={`border rounded-lg p-4 ${
         selectedService === 'kdl' ? 'bg-amber-50 border-amber-200' : 'bg-purple-50 border-purple-200'
@@ -324,14 +295,34 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
               {currentPlans.map((plan) => {
                 const limits = featureLimits[plan] || getDefaultLimits(plan, selectedService);
 
+                // Kindleのセクションヘッダー表示
+                const showInitialHeader = selectedService === 'kdl' && plan === 'initial_trial';
+                const showContinuationHeader = selectedService === 'kdl' && plan === 'lite';
+                const colSpan = selectedService === 'kdl' ? 8 : 6;
+
                 return (
-                  <tr key={plan} className="hover:bg-gray-50">
-                    {/* プラン名 */}
-                    <td className="px-4 py-3">
-                      <span className={`font-bold ${
-                        selectedService === 'kdl' ? 'text-amber-700' : 'text-purple-700'
-                      }`}>
-                        {getPlanDisplayName(plan)}
+                  <>
+                    {showInitialHeader && (
+                      <tr key="header-initial" className="bg-orange-100">
+                        <td colSpan={colSpan} className="px-4 py-2 text-sm font-bold text-orange-800">
+                          初回プラン（一括購入）
+                        </td>
+                      </tr>
+                    )}
+                    {showContinuationHeader && (
+                      <tr key="header-continuation" className="bg-amber-100">
+                        <td colSpan={colSpan} className="px-4 py-2 text-sm font-bold text-amber-800">
+                          継続プラン（月額）
+                        </td>
+                      </tr>
+                    )}
+                    <tr key={plan} className="hover:bg-gray-50">
+                      {/* プラン名 */}
+                      <td className="px-4 py-3">
+                        <span className={`font-bold ${
+                          selectedService === 'kdl' ? 'text-amber-700' : 'text-purple-700'
+                        }`}>
+                          {getPlanDisplayName(plan)}
                       </span>
                     </td>
 
@@ -411,6 +402,7 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
                       </button>
                     </td>
                   </tr>
+                  </>
                 );
               })}
             </tbody>

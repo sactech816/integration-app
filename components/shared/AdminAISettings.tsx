@@ -21,28 +21,24 @@ interface AdminAISettingsProps {
 export default function AdminAISettings({ userId }: AdminAISettingsProps) {
   const [loading, setLoading] = useState(true);
   const [savingPlan, setSavingPlan] = useState<string | null>(null);
-  const [selectedService, setSelectedService] = useState<ServiceType>('kdl');
+  const [selectedService, setSelectedService] = useState<ServiceType>('makers');
   const [settings, setSettings] = useState<Record<string, PlanModelSettings>>({});
 
-  // Kindleプランタイプ
-  type KdlPlanType = 'initial' | 'continuation';
-  const [kdlPlanType, setKdlPlanType] = useState<KdlPlanType>('continuation');
-
-  // サービスごとのプラン
-  const kdlInitialPlans = ['initial_trial', 'initial_standard', 'initial_business'] as const;
-  const kdlContinuationPlans: PlanTier[] = ['lite', 'standard', 'pro', 'business', 'enterprise'];
+  // サービスごとのプラン（Kindleは初回と継続を統合して表示）
+  const kdlAllPlans = [
+    'initial_trial', 'initial_standard', 'initial_business',  // 初回（一括）
+    'lite', 'standard', 'pro', 'business', 'enterprise'       // 継続（月額）
+  ] as const;
   const makersPlans: MakersPlanTier[] = ['guest', 'free', 'pro'];
   
-  const currentPlans = selectedService === 'kdl' 
-    ? (kdlPlanType === 'initial' ? [...kdlInitialPlans] : kdlContinuationPlans)
-    : makersPlans;
+  const currentPlans = selectedService === 'kdl' ? [...kdlAllPlans] : makersPlans;
 
   // プロバイダー別モデル
   const modelsByProvider = useMemo(() => getModelsByProvider(), []);
 
   useEffect(() => {
     loadSettings();
-  }, [selectedService, kdlPlanType]);
+  }, [selectedService]);
 
   const loadSettings = async () => {
     try {
@@ -139,9 +135,9 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
       guest: 'ゲスト',
       free: 'フリー',
       // Kindle初回（一括）
-      initial_trial: 'トライアル',
-      initial_standard: 'スタンダード',
-      initial_business: 'ビジネス',
+      initial_trial: 'トライアル（初回）',
+      initial_standard: 'スタンダード（初回）',
+      initial_business: 'ビジネス（初回）',
       // Kindle継続（月額）
       lite: 'ライト',
       standard: 'スタンダード',
@@ -151,6 +147,7 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
     };
     return names[plan] || plan;
   };
+
 
   // モデル情報を取得
   const getModelInfo = (modelId: string): AIModelInfo | undefined => {
@@ -188,17 +185,6 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
       {/* サービス選択タブ */}
       <div className="flex gap-2 mb-4">
         <button
-          onClick={() => setSelectedService('kdl')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-            selectedService === 'kdl'
-              ? 'bg-amber-100 text-amber-700'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
-          <BookOpen size={18} />
-          Kindle執筆
-        </button>
-        <button
           onClick={() => setSelectedService('makers')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
             selectedService === 'makers'
@@ -209,33 +195,18 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
           <Sparkles size={18} />
           集客メーカー
         </button>
+        <button
+          onClick={() => setSelectedService('kdl')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+            selectedService === 'kdl'
+              ? 'bg-amber-100 text-amber-700'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          <BookOpen size={18} />
+          Kindle執筆
+        </button>
       </div>
-
-      {/* Kindleプランタイプ選択（Kindle選択時のみ） */}
-      {selectedService === 'kdl' && (
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setKdlPlanType('initial')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              kdlPlanType === 'initial'
-                ? 'bg-orange-100 text-orange-700 border-2 border-orange-300'
-                : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
-            }`}
-          >
-            初回プラン（一括）
-          </button>
-          <button
-            onClick={() => setKdlPlanType('continuation')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              kdlPlanType === 'continuation'
-                ? 'bg-amber-100 text-amber-700 border-2 border-amber-300'
-                : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
-            }`}
-          >
-            継続プラン（月額）
-          </button>
-        </div>
-      )}
 
       {/* 説明 */}
       <div className={`border rounded-lg p-4 ${
@@ -291,7 +262,7 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {currentPlans.map((plan) => {
+              {currentPlans.map((plan, index) => {
                 const planSettings = settings[plan] || {
                   outlineModel: DEFAULT_AI_MODELS.primary.outline,
                   writingModel: DEFAULT_AI_MODELS.primary.writing,
@@ -303,8 +274,27 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
                 const backupOutlineInfo = getModelInfo(planSettings.backupOutlineModel);
                 const backupWritingInfo = getModelInfo(planSettings.backupWritingModel);
 
+                // Kindleのセクションヘッダー表示
+                const showInitialHeader = selectedService === 'kdl' && plan === 'initial_trial';
+                const showContinuationHeader = selectedService === 'kdl' && plan === 'lite';
+
                 return (
-                  <tr key={plan} className="hover:bg-gray-50">
+                  <>
+                    {showInitialHeader && (
+                      <tr key="header-initial" className="bg-orange-100">
+                        <td colSpan={4} className="px-4 py-2 text-sm font-bold text-orange-800">
+                          初回プラン（一括購入）
+                        </td>
+                      </tr>
+                    )}
+                    {showContinuationHeader && (
+                      <tr key="header-continuation" className="bg-amber-100">
+                        <td colSpan={4} className="px-4 py-2 text-sm font-bold text-amber-800">
+                          継続プラン（月額）
+                        </td>
+                      </tr>
+                    )}
+                    <tr key={plan} className="hover:bg-gray-50">
                     {/* プラン名 */}
                     <td className="px-4 py-4">
                       <span className={`font-bold ${
@@ -428,6 +418,7 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
                       </button>
                     </td>
                   </tr>
+                  </>
                 );
               })}
             </tbody>
