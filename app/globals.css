@@ -154,3 +154,13 @@ button:disabled {
 .animate-fade-in-up {
   animation: fade-in-up 0.3s ease-out forwards;
 }
+
+/* スクロールバー非表示 */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE, Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}

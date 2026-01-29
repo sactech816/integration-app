@@ -32,6 +32,13 @@ import {
   Crown,
   ExternalLink,
   ArrowUp,
+  Users,
+  FileText,
+  Gift,
+  Star,
+  Ticket,
+  Stamp,
+  PenTool,
 } from 'lucide-react';
 
 interface PopularContent {
@@ -454,21 +461,35 @@ export default function HomePageClientV2() {
         </div>
         <div className="relative">
           <div className="marquee-content inline-flex py-2">
-            {/* Set 1 */}
+            {/* Set 1 - 主要ツール7種 + ゲーミフィケーション6種 = 13種 */}
             {[
-              { icon: Sparkles, text: "診断クイズ", color: "text-pink-500" },
-              { icon: UserCircle, text: "プロフィールLP", color: "text-indigo-500" },
-              { icon: Building2, text: "ビジネスLP", color: "text-blue-500" },
-              { icon: Calendar, text: "予約・日程調整", color: "text-green-500" },
-              { icon: ClipboardList, text: "アンケート", color: "text-yellow-500" },
-              { icon: Gamepad2, text: "ゲーム作成", color: "text-purple-500" }
+              { icon: Sparkles, text: "診断クイズメーカー", color: "text-pink-500" },
+              { icon: FileText, text: "アンケートメーカー", color: "text-teal-500" },
+              { icon: Users, text: "出欠表メーカー", color: "text-purple-500" },
+              { icon: Calendar, text: "予約メーカー", color: "text-blue-500" },
+              { icon: UserCircle, text: "プロフィールメーカー", color: "text-emerald-500" },
+              { icon: Building2, text: "LPメーカー", color: "text-amber-500" },
+              { icon: PenTool, text: "セールスライター", color: "text-rose-500" },
+              { icon: Gift, text: "福引き", color: "text-pink-500" },
+              { icon: Gamepad2, text: "ガチャ", color: "text-purple-500" },
+              { icon: Star, text: "スロット", color: "text-yellow-500" },
+              { icon: Ticket, text: "スクラッチ", color: "text-cyan-500" },
+              { icon: Stamp, text: "スタンプラリー", color: "text-green-500" },
+              { icon: TrendingUp, text: "ログインボーナス", color: "text-indigo-500" },
             ].concat([
-              { icon: Sparkles, text: "診断クイズ", color: "text-pink-500" },
-              { icon: UserCircle, text: "プロフィールLP", color: "text-indigo-500" },
-              { icon: Building2, text: "ビジネスLP", color: "text-blue-500" },
-              { icon: Calendar, text: "予約・日程調整", color: "text-green-500" },
-              { icon: ClipboardList, text: "アンケート", color: "text-yellow-500" },
-              { icon: Gamepad2, text: "ゲーム作成", color: "text-purple-500" }
+              { icon: Sparkles, text: "診断クイズメーカー", color: "text-pink-500" },
+              { icon: FileText, text: "アンケートメーカー", color: "text-teal-500" },
+              { icon: Users, text: "出欠表メーカー", color: "text-purple-500" },
+              { icon: Calendar, text: "予約メーカー", color: "text-blue-500" },
+              { icon: UserCircle, text: "プロフィールメーカー", color: "text-emerald-500" },
+              { icon: Building2, text: "LPメーカー", color: "text-amber-500" },
+              { icon: PenTool, text: "セールスライター", color: "text-rose-500" },
+              { icon: Gift, text: "福引き", color: "text-pink-500" },
+              { icon: Gamepad2, text: "ガチャ", color: "text-purple-500" },
+              { icon: Star, text: "スロット", color: "text-yellow-500" },
+              { icon: Ticket, text: "スクラッチ", color: "text-cyan-500" },
+              { icon: Stamp, text: "スタンプラリー", color: "text-green-500" },
+              { icon: TrendingUp, text: "ログインボーナス", color: "text-indigo-500" },
             ]).map((tool, idx) => (
               <div key={idx} className="w-[200px] flex-shrink-0 bg-white border border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300 mx-3">
                 <div className={`${tool.color} text-3xl mb-2`}>
@@ -680,7 +701,7 @@ export default function HomePageClientV2() {
                 <TrendingUp size={28} />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">【集客】知ってもらう</h3>
-              <p className="text-sm text-gray-900 font-bold mb-4 uppercase tracking-wider">プロフィールLP / ビジネスLP</p>
+              <p className="text-sm text-gray-900 font-bold mb-4 uppercase tracking-wider">プロフィールメーカー / LPメーカー</p>
               <p className="text-gray-600 text-sm">テンプレートを選ぶだけで、名刺代わりのWebページが完成。あなたの魅力やサービス内容を、スマホで見やすく伝えます。</p>
             </div>
             <div className="bg-indigo-50 p-8 rounded-2xl border border-indigo-100 shadow-lg transform md:-translate-y-4 relative group">
@@ -689,7 +710,7 @@ export default function HomePageClientV2() {
                 <Gamepad2 size={28} />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">【接客】ファンにする</h3>
-              <p className="text-sm text-gray-900 font-bold mb-4 uppercase tracking-wider">診断クイズ / ゲーム作成</p>
+              <p className="text-sm text-gray-900 font-bold mb-4 uppercase tracking-wider">診断クイズメーカー / ゲーミフィケーション</p>
               <p className="text-gray-600 text-sm">ただ読ませるだけじゃない。「あなたは何タイプ？」「検定クイズ」などの遊べるコンテンツで、お客様との距離を縮めます。</p>
             </div>
             <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 hover:border-green-200 transition group">
@@ -697,7 +718,7 @@ export default function HomePageClientV2() {
                 <Calendar size={28} />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">【成約】スムーズに繋がる</h3>
-              <p className="text-sm text-gray-900 font-bold mb-4 uppercase tracking-wider">予約・日程調整 / アンケート</p>
+              <p className="text-sm text-gray-900 font-bold mb-4 uppercase tracking-wider">予約メーカー / アンケートメーカー</p>
               <p className="text-gray-600 text-sm">面倒な日程調整の往復メールは不要。予約受付から顧客の声の収集まで自動化し、チャンスを逃しません。</p>
             </div>
            </div>
@@ -952,6 +973,9 @@ export default function HomePageClientV2() {
                   <span>新規作成</span>
                   <Check size={16} className="text-green-500" />
                 </li>
+                <li className="pl-3 text-xs text-gray-500 leading-relaxed">
+                  診断クイズメーカー / アンケートメーカー / 出欠表メーカー / 予約メーカー / プロフィールメーカー / LPメーカー / セールスライター / 福引き / ガチャ / スロット / スクラッチ / スタンプラリー / ログインボーナス
+                </li>
                 <li className="flex items-center justify-between text-sm font-bold text-gray-800">
                   <span>ポータル掲載</span>
                   <Check size={16} className="text-green-500" />
@@ -1034,6 +1058,9 @@ export default function HomePageClientV2() {
                   <span>新規作成</span>
                   <Check size={16} className="text-indigo-600" />
                 </li>
+                <li className="pl-3 text-xs text-gray-500 leading-relaxed">
+                  診断クイズメーカー / アンケートメーカー / 出欠表メーカー / 予約メーカー / プロフィールメーカー / LPメーカー / セールスライター / 福引き / ガチャ / スロット / スクラッチ / スタンプラリー / ログインボーナス
+                </li>
                 <li className="flex items-center justify-between text-sm font-bold text-gray-800">
                   <span>ポータル掲載</span>
                   <Check size={16} className="text-indigo-600" />
@@ -1114,6 +1141,9 @@ export default function HomePageClientV2() {
                 <li className="flex items-center justify-between text-sm font-bold text-gray-800">
                   <span>新規作成</span>
                   <Check size={16} className="text-orange-500" />
+                </li>
+                <li className="pl-3 text-xs text-gray-500 leading-relaxed">
+                  診断クイズメーカー / アンケートメーカー / 出欠表メーカー / 予約メーカー / プロフィールメーカー / LPメーカー / セールスライター / 福引き / ガチャ / スロット / スクラッチ / スタンプラリー / ログインボーナス
                 </li>
                 <li className="flex items-center justify-between text-sm font-bold text-gray-800">
                   <span>ポータル掲載</span>

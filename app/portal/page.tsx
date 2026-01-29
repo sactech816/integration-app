@@ -29,7 +29,7 @@ import { getRandomFeaturedContents, FeaturedContentWithDetails } from '@/app/act
 import { getPopularContents, PopularContent } from '@/app/actions/ranking';
 
 // 1ページあたりの表示数
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 20;
 
 // コンテンツアイテムの型
 type PortalItem = {
@@ -661,7 +661,7 @@ function PortalPageContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* クイックナビゲーション */}
           <div className="py-3 border-b border-gray-100">
-            <div className="flex items-center gap-3 overflow-x-auto">
+            <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide pb-1 -mb-1">
               <span className="text-sm font-semibold text-gray-600 flex-shrink-0">クイックリンク:</span>
               <Link
                 href="/tools"
@@ -670,21 +670,21 @@ function PortalPageContent() {
                 <LayoutGrid size={14} />
                 全ツール一覧
               </Link>
-              <span className="text-gray-300">|</span>
+              <span className="text-gray-300 flex-shrink-0">|</span>
               <Link
                 href="/howto"
                 className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline flex-shrink-0"
               >
                 使い方ガイド
               </Link>
-              <span className="text-gray-300">|</span>
+              <span className="text-gray-300 flex-shrink-0">|</span>
               <Link
                 href="/faq"
                 className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline flex-shrink-0"
               >
                 よくある質問
               </Link>
-              <span className="text-gray-300">|</span>
+              <span className="text-gray-300 flex-shrink-0">|</span>
               <Link
                 href="/effective-use"
                 className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline flex-shrink-0"

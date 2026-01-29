@@ -209,20 +209,28 @@ export async function getRandomFeaturedContents(
         let contentDetails: any = null;
 
         if (featured.content_type === 'quiz') {
+          // 公開フラグ(show_in_portal)をチェック
           const { data } = await supabase
             .from('quizzes')
-            .select('id, slug, title, description, image_url, views_count')
+            .select('id, slug, title, description, image_url, views_count, show_in_portal')
             .eq('id', parseInt(featured.content_id))
+            .eq('show_in_portal', true)
             .single();
           contentDetails = data;
         } else if (featured.content_type === 'profile') {
+          // 公開フラグ(featured_on_top)をチェック
           const { data } = await supabase
             .from('profiles')
-            .select('id, slug, nickname, content, views_count')
+            .select('id, slug, nickname, content, views_count, featured_on_top, settings')
             .eq('id', featured.content_id)
+            .eq('featured_on_top', true)
             .single();
           
           if (data) {
+            // settings.showInPortalがfalseの場合はスキップ
+            if (data.settings?.showInPortal === false) {
+              continue;
+            }
             // ヘッダーブロックから名前を取得
             const headerBlock = data.content?.find((b: any) => b.type === 'header');
             contentDetails = {
@@ -240,6 +248,10 @@ export async function getRandomFeaturedContents(
             .single();
           
           if (data) {
+            // settings.showInPortalがfalseの場合はスキップ
+            if (data.settings?.showInPortal === false) {
+              continue;
+            }
             // ヘッダーブロックから情報を取得
             const headerBlock = data.content?.find((b: any) => b.type === 'header');
             const heroBlock = data.content?.find((b: any) => 

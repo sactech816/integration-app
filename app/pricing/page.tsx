@@ -50,6 +50,9 @@ export default function PricingPage() {
                 <span className="text-gray-600">新規作成</span>
                 <Check size={16} className="text-green-500" />
               </li>
+              <li className="pl-3 text-xs text-gray-500 leading-relaxed">
+                診断クイズメーカー / アンケートメーカー / 出欠表メーカー / 予約メーカー / プロフィールメーカー / LPメーカー / セールスライター / 福引き / ガチャ / スロット / スクラッチ / スタンプラリー / ログインボーナス
+              </li>
               <li className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">ポータル掲載</span>
                 <Check size={16} className="text-green-500" />
@@ -110,6 +113,9 @@ export default function PricingPage() {
                 <span>新規作成</span>
                 <Check size={16} className="text-indigo-600" />
               </li>
+              <li className="pl-3 text-xs text-gray-500 leading-relaxed">
+                診断クイズメーカー / アンケートメーカー / 出欠表メーカー / 予約メーカー / プロフィールメーカー / LPメーカー / セールスライター / 福引き / ガチャ / スロット / スクラッチ / スタンプラリー / ログインボーナス
+              </li>
               <li className="flex items-center justify-between text-sm text-gray-700">
                 <span>ポータル掲載</span>
                 <Check size={16} className="text-indigo-600" />
@@ -165,6 +171,9 @@ export default function PricingPage() {
               <li className="flex items-center justify-between text-sm text-gray-700">
                 <span>新規作成</span>
                 <Check size={16} className="text-amber-600" />
+              </li>
+              <li className="pl-3 text-xs text-gray-500 leading-relaxed">
+                診断クイズメーカー / アンケートメーカー / 出欠表メーカー / 予約メーカー / プロフィールメーカー / LPメーカー / セールスライター / 福引き / ガチャ / スロット / スクラッチ / スタンプラリー / ログインボーナス
               </li>
               <li className="flex items-center justify-between text-sm text-gray-700">
                 <span>ポータル掲載</span>
