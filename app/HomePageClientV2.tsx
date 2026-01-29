@@ -187,20 +187,20 @@ export default function HomePageClientV2() {
 
   const results = {
     freelance: {
-      title: "プロフィールLP ＋ 予約機能",
-      desc: "事務作業を自動化したいあなたに最適。名刺代わりのプロフィールページに予約機能をつけ、日程調整の手間をゼロにしましょう。"
+      title: "プロフィールメーカー ＋ 予約メーカー ＋ アンケートメーカー",
+      desc: "事務作業を自動化したいあなたに最適。名刺代わりのプロフィールページに予約機能をつけ、日程調整の手間をゼロに。アンケートで顧客の声を自動収集しましょう。"
     },
     shop: {
-      title: "診断クイズ ＋ クーポンLP",
-      desc: "お店の集客には「エンタメ」が効きます。診断クイズでお客様を楽しませ、結果画面でクーポンを配布して来店を促しましょう。"
+      title: "診断クイズメーカー ＋ ガチャ/スタンプラリー ＋ LPメーカー",
+      desc: "お店の集客には「エンタメ」が効きます。診断クイズやガチャでお客様を楽しませ、スタンプラリーでリピーターを育成。結果画面でクーポンを配布して来店を促しましょう。"
     },
     influencer: {
-      title: "診断ゲーム ＋ プロフィール",
-      desc: "フォロワーとの距離を縮める「遊べるプロフィール」がおすすめ。診断結果に合わせて、おすすめの商品を紹介すると収益化も加速します。"
+      title: "診断クイズメーカー ＋ プロフィールメーカー ＋ 福引き/スクラッチ",
+      desc: "フォロワーとの距離を縮める「遊べるプロフィール」がおすすめ。福引きやスクラッチでキャンペーンを盛り上げ、診断結果に合わせておすすめ商品を紹介すると収益化も加速します。"
     },
     marketer: {
-      title: "ビジネスLP ＋ アクセス解析",
-      desc: "スピーディーな検証が必要なあなたには、テンプレートで即作成できるビジネスLPが最適。診断コンテンツをLPに埋め込むのもCVR向上に効果的です。"
+      title: "LPメーカー ＋ セールスライター ＋ 診断クイズメーカー",
+      desc: "スピーディーな検証が必要なあなたには、テンプレートで即作成できるLPとAI文章生成のセールスライターが最適。診断コンテンツをLPに埋め込むのもCVR向上に効果的です。"
     }
   };
 
@@ -701,8 +701,8 @@ export default function HomePageClientV2() {
                 <TrendingUp size={28} />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">【集客】知ってもらう</h3>
-              <p className="text-sm text-gray-900 font-bold mb-4 uppercase tracking-wider">プロフィールメーカー / LPメーカー</p>
-              <p className="text-gray-600 text-sm">テンプレートを選ぶだけで、名刺代わりのWebページが完成。あなたの魅力やサービス内容を、スマホで見やすく伝えます。</p>
+              <p className="text-sm text-gray-900 font-bold mb-4 uppercase tracking-wider">プロフィールメーカー / LPメーカー / セールスライター</p>
+              <p className="text-gray-600 text-sm">テンプレートを選ぶだけで、名刺代わりのWebページが完成。AIが売れる文章を自動生成。あなたの魅力やサービス内容を、スマホで見やすく伝えます。</p>
             </div>
             <div className="bg-indigo-50 p-8 rounded-2xl border border-indigo-100 shadow-lg transform md:-translate-y-4 relative group">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">差別化ポイント！</div>
@@ -710,16 +710,16 @@ export default function HomePageClientV2() {
                 <Gamepad2 size={28} />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">【接客】ファンにする</h3>
-              <p className="text-sm text-gray-900 font-bold mb-4 uppercase tracking-wider">診断クイズメーカー / ゲーミフィケーション</p>
-              <p className="text-gray-600 text-sm">ただ読ませるだけじゃない。「あなたは何タイプ？」「検定クイズ」などの遊べるコンテンツで、お客様との距離を縮めます。</p>
+              <p className="text-sm text-gray-900 font-bold mb-4 uppercase tracking-wider">診断クイズメーカー / ガチャ・福引き・スクラッチ等</p>
+              <p className="text-gray-600 text-sm">ただ読ませるだけじゃない。「あなたは何タイプ？」診断クイズやガチャ、スタンプラリーなどの遊べるコンテンツで、お客様との距離を縮めます。</p>
             </div>
             <div className="bg-gray-50 p-8 rounded-2xl border border-gray-100 hover:border-green-200 transition group">
               <div className="w-14 h-14 bg-green-100 text-green-600 rounded-xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
                 <Calendar size={28} />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">【成約】スムーズに繋がる</h3>
-              <p className="text-sm text-gray-900 font-bold mb-4 uppercase tracking-wider">予約メーカー / アンケートメーカー</p>
-              <p className="text-gray-600 text-sm">面倒な日程調整の往復メールは不要。予約受付から顧客の声の収集まで自動化し、チャンスを逃しません。</p>
+              <p className="text-sm text-gray-900 font-bold mb-4 uppercase tracking-wider">予約メーカー / アンケートメーカー / 出欠表メーカー</p>
+              <p className="text-gray-600 text-sm">面倒な日程調整の往復メールは不要。予約受付から顧客の声の収集、イベントの出欠管理まで自動化し、チャンスを逃しません。</p>
             </div>
            </div>
          </div>
@@ -782,13 +782,14 @@ export default function HomePageClientV2() {
                 <div className="animate-fade-in">
                   <h3 className="text-2xl font-bold text-indigo-600 mb-4">👤 フリーランス（コーチ・ヨガ講師・コンサル等）</h3>
                   <p className="text-gray-600 mb-6 leading-relaxed">
-                    「プロフィールLP」で実績・経歴を魅力的に紹介し、「予約機能」で日程調整の手間をゼロに。無駄な問い合わせ対応をなくし、集客に専念できます。
+                    「プロフィールメーカー」で実績・経歴を魅力的に紹介し、「予約メーカー」で日程調整の手間をゼロに。「セールスライター」でAIが売れる文章を自動生成。無駄な問い合わせ対応をなくし、集客に専念できます。
                   </p>
                   <div className="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded">
                     <p className="text-sm font-bold text-indigo-900">✅ こんな使い方も：</p>
                     <p className="text-sm text-indigo-700 mt-1">
                       ・オンライン相談の事前ヒアリングをアンケートで自動化<br />
-                      ・セミナー後のフォローアップクイズでエンゲージメント向上
+                      ・セミナー後のフォローアップクイズでエンゲージメント向上<br />
+                      ・セールスライターでサービス紹介文を簡単作成
                     </p>
                   </div>
                 </div>
@@ -798,12 +799,14 @@ export default function HomePageClientV2() {
                 <div className="animate-fade-in">
                   <h3 className="text-2xl font-bold text-indigo-600 mb-4">🏪 店舗・教室（飲食店・美容室・スクール等）</h3>
                   <p className="text-gray-600 mb-6 leading-relaxed">
-                    「診断クイズ」でお客様を楽しませながら、結果ページに「おすすめメニュー」や「クーポン」を表示。SNS映えするコンテンツで拡散を狙えます。
+                    「診断クイズメーカー」でお客様を楽しませながら、結果ページに「おすすめメニュー」や「クーポン」を表示。「ガチャ」「福引き」「スクラッチ」でキャンペーンを盛り上げ、SNS映えするコンテンツで拡散を狙えます。
                   </p>
                   <div className="bg-pink-50 border-l-4 border-pink-500 p-4 rounded">
                     <p className="text-sm font-bold text-pink-900">✅ こんな使い方も：</p>
                     <p className="text-sm text-pink-700 mt-1">
                       ・来店スタンプラリーで「リピーター特典」を自動配布<br />
+                      ・ログインボーナスで毎日アプリを開く習慣を作る<br />
+                      ・ガチャやスロットで景品抽選イベントを開催<br />
                       ・お客様の声をアンケートで収集してGoogleレビュー誘導
                     </p>
                   </div>
@@ -814,12 +817,13 @@ export default function HomePageClientV2() {
                 <div className="animate-fade-in">
                   <h3 className="text-2xl font-bold text-indigo-600 mb-4">📱 インフルエンサー（SNS発信者・アフィリエイター）</h3>
                   <p className="text-gray-600 mb-6 leading-relaxed">
-                    「プロフィールLP」に全SNSのリンクを集約し、「診断ゲーム」でフォロワーとの距離を縮める。結果画面で商品リンクを掲載すれば収益化も加速します。
+                    「プロフィールメーカー」に全SNSのリンクを集約し、「診断クイズメーカー」でフォロワーとの距離を縮める。「福引き」「スクラッチ」でキャンペーンを盛り上げ、結果画面で商品リンクを掲載すれば収益化も加速します。
                   </p>
                   <div className="bg-purple-50 border-l-4 border-purple-500 p-4 rounded">
                     <p className="text-sm font-bold text-purple-900">✅ こんな使い方も：</p>
                     <p className="text-sm text-purple-700 mt-1">
                       ・「あなたは何タイプ？」診断でエンゲージメント率アップ<br />
+                      ・福引きやスクラッチでプレゼント企画を開催<br />
                       ・診断結果に応じてアフィリエイト商品をレコメンド
                     </p>
                   </div>
@@ -830,11 +834,12 @@ export default function HomePageClientV2() {
                 <div className="animate-fade-in">
                   <h3 className="text-2xl font-bold text-indigo-600 mb-4">💼 マーケター（Web制作・広告運用者）</h3>
                   <p className="text-gray-600 mb-6 leading-relaxed">
-                    「ビジネスLP」をテンプレートで即作成、A/Bテストも簡単。「診断コンテンツ」をLPに埋め込めば、滞在時間とCVRを同時に改善できます。
+                    「LPメーカー」をテンプレートで即作成、A/Bテストも簡単。「セールスライター」でAIが売れるコピーを自動生成。「診断コンテンツ」をLPに埋め込めば、滞在時間とCVRを同時に改善できます。
                   </p>
                   <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
                     <p className="text-sm font-bold text-blue-900">✅ こんな使い方も：</p>
                     <p className="text-sm text-blue-700 mt-1">
+                      ・セールスライターでLP文章を自動生成<br />
                       ・クライアント向けにアンケートフォームを一元管理<br />
                       ・リード獲得用の診断LPを量産してテストマーケティング
                     </p>
@@ -1338,7 +1343,7 @@ export default function HomePageClientV2() {
               その他の便利な機能
             </h2>
             <p className="text-gray-600 text-sm">
-              予約管理・アンケート収集など、ビジネスに役立つツール
+              予約管理・アンケート収集・出欠表・AI文章生成など、ビジネスに役立つツール
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1382,6 +1387,52 @@ export default function HomePageClientV2() {
                   >
                     <ClipboardList size={16} />
                     アンケートを作成
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 出欠表・イベント管理 */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-purple-100 hover:shadow-xl transition-all hover:scale-[1.02]">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                  <Users size={24} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900 text-lg mb-2">出欠表・イベント管理</h3>
+                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+                    飲み会・イベントの日程調整を簡単に。調整さん風の出欠表を無料で何度でも作成できます。
+                  </p>
+                  <button
+                    onClick={() => navigateTo('attendance/new')}
+                    className="inline-flex items-center gap-2 bg-purple-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-purple-700 transition-colors text-sm"
+                  >
+                    <Users size={16} />
+                    出欠表を作成
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* セールスライター */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-rose-100 hover:shadow-xl transition-all hover:scale-[1.02]">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                  <PenTool size={24} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900 text-lg mb-2">セールスライター（AI文章生成）</h3>
+                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+                    セールスレター・LP文章をAIで自動生成。売れるコピーライティングを誰でも簡単に作成できます。
+                  </p>
+                  <button
+                    onClick={() => navigateTo('salesletter/editor')}
+                    className="inline-flex items-center gap-2 bg-rose-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-rose-700 transition-colors text-sm"
+                  >
+                    <PenTool size={16} />
+                    文章を作成
                     <ArrowRight size={14} />
                   </button>
                 </div>

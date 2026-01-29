@@ -5,20 +5,28 @@
 // -------------------------------------------
 // サービスタイプ
 // -------------------------------------------
-export type ServiceType = 'quiz' | 'profile' | 'business' | 'salesletter';
+export type ServiceType = 'quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking';
 
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   quiz: '診断クイズ',
   profile: 'プロフィールLP',
   business: 'ビジネスLP',
-  salesletter: 'セールスレター'
+  salesletter: 'セールスレター',
+  survey: 'アンケート',
+  gamification: 'ゲーミフィケーション',
+  attendance: '出欠表',
+  booking: '予約'
 };
 
 export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; text: string }> = {
   quiz: { primary: 'indigo', bg: 'bg-indigo-50', text: 'text-indigo-600' },
   profile: { primary: 'emerald', bg: 'bg-emerald-50', text: 'text-emerald-600' },
   business: { primary: 'amber', bg: 'bg-amber-50', text: 'text-amber-600' },
-  salesletter: { primary: 'rose', bg: 'bg-rose-50', text: 'text-rose-600' }
+  salesletter: { primary: 'rose', bg: 'bg-rose-50', text: 'text-rose-600' },
+  survey: { primary: 'teal', bg: 'bg-teal-50', text: 'text-teal-600' },
+  gamification: { primary: 'purple', bg: 'bg-purple-50', text: 'text-purple-600' },
+  attendance: { primary: 'purple', bg: 'bg-purple-50', text: 'text-purple-600' },
+  booking: { primary: 'blue', bg: 'bg-blue-50', text: 'text-blue-600' }
 };
 
 // -------------------------------------------

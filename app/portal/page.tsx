@@ -21,7 +21,10 @@ import {
   Users,
   Star,
   Award,
-  MousePointerClick
+  MousePointerClick,
+  FileText,
+  PenTool,
+  Gamepad2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -41,6 +44,21 @@ type PortalItem = {
   created_at?: string;
   type: ServiceType;
   views_count?: number;
+  campaign_type?: string; // ゲーミフィケーション用
+};
+
+// ゲーミフィケーションのURLパス取得
+const getGamificationPath = (campaignType: string, campaignId: string): string => {
+  const pathMap: Record<string, string> = {
+    'gacha': 'gacha',
+    'fukubiki': 'fukubiki',
+    'scratch': 'scratch',
+    'slot': 'slot',
+    'stamp_rally': 'stamp-rally',
+    'login_bonus': 'login-bonus',
+  };
+  const path = pathMap[campaignType] || 'gacha';
+  return `/${path}/${campaignId}`;
 };
 
 // タブの定義
@@ -49,11 +67,14 @@ const TABS: { type: ServiceType | 'all'; label: string; icon: React.ComponentTyp
   { type: 'quiz', label: '診断クイズ', icon: Sparkles },
   { type: 'profile', label: 'プロフィールLP', icon: UserCircle },
   { type: 'business', label: 'ビジネスLP', icon: Building2 },
+  { type: 'survey', label: 'アンケート', icon: FileText },
+  { type: 'salesletter', label: 'セールスレター', icon: PenTool },
+  { type: 'gamification', label: 'ゲーミフィケーション', icon: Gamepad2 },
 ];
 
 // サービスカラー取得
 const getServiceColor = (type: ServiceType) => {
-  const colors = {
+  const colors: Record<string, { bg: string; text: string; border: string; gradient: string; hoverText: string }> = {
     quiz: { 
       bg: 'bg-indigo-50', 
       text: 'text-indigo-600', 
@@ -74,19 +95,43 @@ const getServiceColor = (type: ServiceType) => {
       border: 'border-amber-200', 
       gradient: 'from-amber-400 via-orange-500 to-red-500',
       hoverText: 'group-hover:text-amber-600'
+    },
+    survey: { 
+      bg: 'bg-teal-50', 
+      text: 'text-teal-600', 
+      border: 'border-teal-200', 
+      gradient: 'from-teal-500 via-cyan-500 to-blue-500',
+      hoverText: 'group-hover:text-teal-600'
+    },
+    salesletter: { 
+      bg: 'bg-rose-50', 
+      text: 'text-rose-600', 
+      border: 'border-rose-200', 
+      gradient: 'from-rose-500 via-pink-500 to-purple-500',
+      hoverText: 'group-hover:text-rose-600'
+    },
+    gamification: { 
+      bg: 'bg-purple-50', 
+      text: 'text-purple-600', 
+      border: 'border-purple-200', 
+      gradient: 'from-purple-500 via-pink-500 to-orange-500',
+      hoverText: 'group-hover:text-purple-600'
     }
   };
-  return colors[type];
+  return colors[type] || colors.quiz;
 };
 
 // サービスアイコン取得
 const getServiceIcon = (type: ServiceType) => {
-  const icons = {
+  const icons: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
     quiz: Sparkles,
     profile: UserCircle,
-    business: Building2
+    business: Building2,
+    survey: FileText,
+    salesletter: PenTool,
+    gamification: Gamepad2
   };
-  return icons[type];
+  return icons[type] || Sparkles;
 };
 
 function PortalPageContent() {
@@ -109,7 +154,9 @@ function PortalPageContent() {
     quiz: 0,
     profile: 0,
     business: 0,
+    survey: 0,
     salesletter: 0,
+    gamification: 0,
   });
   const [featuredContents, setFeaturedContents] = useState<FeaturedContentWithDetails[]>([]);
   const [popularContents, setPopularContents] = useState<PopularContent[]>([]);
@@ -137,22 +184,30 @@ function PortalPageContent() {
     if (!supabase) return;
 
     try {
-      const [quizCount, profileCount, businessCount] = await Promise.all([
+      const [quizCount, profileCount, businessCount, surveyCount, salesletterCount, gamificationCount] = await Promise.all([
         supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).eq('show_in_portal', true),
         supabase.from(TABLES.PROFILES).select('id', { count: 'exact', head: true }).eq('featured_on_top', true),
-        supabase.from('business_projects').select('id', { count: 'exact', head: true })
+        supabase.from('business_projects').select('id', { count: 'exact', head: true }),
+        supabase.from('surveys').select('id', { count: 'exact', head: true }).eq('show_in_portal', true),
+        supabase.from('sales_letters').select('id', { count: 'exact', head: true }),
+        supabase.from('gamification_campaigns').select('id', { count: 'exact', head: true }).eq('status', 'active')
       ]);
 
       const quiz = quizCount.count || 0;
       const profile = profileCount.count || 0;
       const business = businessCount.count || 0;
+      const survey = surveyCount.count || 0;
+      const salesletter = salesletterCount.count || 0;
+      const gamification = gamificationCount.count || 0;
 
       setTotalCounts({
-        all: quiz + profile + business,
+        all: quiz + profile + business + survey + salesletter + gamification,
         quiz,
         profile,
         business,
-        salesletter: 0,
+        survey,
+        salesletter,
+        gamification,
       });
     } catch (error) {
       console.error('Count fetch error:', error);
@@ -277,6 +332,81 @@ function PortalPageContent() {
         }
       }
 
+      // アンケート取得（show_in_portalがtrueのもののみ）
+      if (selectedTab === 'all' || selectedTab === 'survey') {
+        const { data: surveys } = await supabase
+          .from('surveys')
+          .select('id, slug, title, description, created_at')
+          .eq('show_in_portal', true)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + ITEMS_PER_PAGE - 1);
+
+        if (surveys) {
+          allItems.push(...surveys.map((s) => ({
+            id: String(s.id),
+            slug: s.slug,
+            title: s.title,
+            description: s.description,
+            imageUrl: undefined,
+            created_at: s.created_at,
+            type: 'survey' as ServiceType,
+            views_count: 0
+          })));
+        }
+      }
+
+      // セールスレター取得（settings.showInPortalがfalseでないもの）
+      if (selectedTab === 'all' || selectedTab === 'salesletter') {
+        const { data: salesLetters } = await supabase
+          .from('sales_letters')
+          .select('id, slug, title, settings, created_at, views_count')
+          .order('created_at', { ascending: false })
+          .range(offset, offset + ITEMS_PER_PAGE - 1);
+
+        if (salesLetters) {
+          // settings.showInPortalがfalseでないものだけをフィルタリング
+          const filteredSalesLetters = salesLetters.filter(s => s.settings?.showInPortal !== false);
+          
+          allItems.push(...filteredSalesLetters.map((s) => ({
+            id: s.id,
+            slug: s.slug,
+            title: s.title || 'セールスレター',
+            description: s.settings?.description || '',
+            imageUrl: undefined,
+            created_at: s.created_at,
+            type: 'salesletter' as ServiceType,
+            views_count: s.views_count
+          })));
+        }
+      }
+
+      // ゲーミフィケーション取得（statusがactiveのもの）
+      if (selectedTab === 'all' || selectedTab === 'gamification') {
+        const { data: gamifications } = await supabase
+          .from('gamification_campaigns')
+          .select('id, title, description, campaign_type, settings, created_at')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .range(offset, offset + ITEMS_PER_PAGE - 1);
+
+        if (gamifications) {
+          // settings.showInPortalがfalseでないものだけをフィルタリング
+          const filteredGamifications = gamifications.filter(g => g.settings?.showInPortal !== false);
+          
+          allItems.push(...filteredGamifications.map((g) => ({
+            id: g.id,
+            slug: g.id, // ゲーミフィケーションはIDをslugとして使用
+            title: g.title,
+            description: g.description || '',
+            imageUrl: undefined,
+            created_at: g.created_at,
+            type: 'gamification' as ServiceType,
+            views_count: 0,
+            campaign_type: g.campaign_type
+          })));
+        }
+      }
+
       // 作成日時でソート
       allItems.sort((a, b) => {
         const dateA = new Date(a.created_at || 0);
@@ -315,26 +445,30 @@ function PortalPageContent() {
     router.replace(newUrl, { scroll: false });
   }, [selectedTab, fetchTotalCounts, router]);
 
+  // ピックアップコンテンツを取得
+  const loadFeaturedContents = useCallback(async () => {
+    setLoadingFeatured(true);
+    try {
+      const result = await getRandomFeaturedContents(3);
+      console.log('[Portal] Featured contents API result:', result);
+      if (result.success && result.data) {
+        setFeaturedContents(result.data);
+      } else {
+        setFeaturedContents([]);
+      }
+    } catch (error) {
+      console.error('[Portal] Featured contents fetch error:', error);
+      setFeaturedContents([]);
+    } finally {
+      setLoadingFeatured(false);
+    }
+  }, []);
+
   // 初回読み込み
   useEffect(() => {
     fetchTotalCounts();
     loadFeaturedContents();
-  }, [fetchTotalCounts]);
-
-  // ピックアップコンテンツを取得
-  const loadFeaturedContents = async () => {
-    setLoadingFeatured(true);
-    try {
-      const result = await getRandomFeaturedContents(3);
-      if (result.success && result.data) {
-        setFeaturedContents(result.data);
-      }
-    } catch (error) {
-      console.error('Featured contents fetch error:', error);
-    } finally {
-      setLoadingFeatured(false);
-    }
-  };
+  }, [fetchTotalCounts, loadFeaturedContents]);
 
   // 人気ランキングを取得（タブ変更時）
   const loadPopularContents = async (type: ServiceType) => {
@@ -772,11 +906,15 @@ function PortalPageContent() {
               {filteredItems.map((item) => {
                 const Icon = getServiceIcon(item.type);
                 const colors = getServiceColor(item.type);
+                // ゲーミフィケーションの場合はcampaign_typeに基づいてURLを生成
+                const itemHref = item.type === 'gamification' && item.campaign_type
+                  ? getGamificationPath(item.campaign_type, item.id)
+                  : `/${item.type}/${item.slug}`;
 
                 return (
                   <Link
                     key={`${item.type}-${item.id}`}
-                    href={`/${item.type}/${item.slug}`}
+                    href={itemHref}
                     className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-gray-200"
                   >
                     {/* サムネイル */}

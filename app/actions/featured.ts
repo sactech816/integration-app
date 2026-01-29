@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { unstable_noStore as noStore, revalidatePath } from 'next/cache';
 import { ContentType } from './analytics';
 
 // サーバーサイド用Supabaseクライアント
@@ -50,6 +51,9 @@ export async function getFeaturedContents(): Promise<{
   data?: FeaturedContent[]; 
   error?: string 
 }> {
+  // キャッシュを無効化
+  noStore();
+  
   try {
     const supabase = getSupabaseServer();
     if (!supabase) {
@@ -122,6 +126,9 @@ export async function addFeaturedContent(
       return { success: false, error: error.message };
     }
 
+    // ポータルページのキャッシュを再検証
+    revalidatePath('/portal');
+    
     return { success: true };
   } catch (error) {
     console.error('[Featured] Unexpected error:', error);
@@ -151,6 +158,9 @@ export async function removeFeaturedContent(
       return { success: false, error: error.message };
     }
 
+    // ポータルページのキャッシュを再検証
+    revalidatePath('/portal');
+    
     return { success: true };
   } catch (error) {
     console.error('[Featured] Unexpected error:', error);
@@ -171,6 +181,9 @@ export async function getRandomFeaturedContents(
   data?: FeaturedContentWithDetails[]; 
   error?: string 
 }> {
+  // キャッシュを無効化して常に最新データを取得
+  noStore();
+  
   try {
     const supabase = getSupabaseServer();
     if (!supabase) {
@@ -189,7 +202,34 @@ export async function getRandomFeaturedContents(
     }
 
     if (!featuredList || featuredList.length === 0) {
-      return { success: true, data: [] };
+      // フォールバック: featured_contentsが空の場合は人気のクイズを表示
+      const { data: popularQuizzes, error: quizError } = await supabase
+        .from('quizzes')
+        .select('id, slug, title, description, image_url, views_count')
+        .eq('show_in_portal', true)
+        .order('views_count', { ascending: false, nullsFirst: false })
+        .limit(limit);
+      
+      if (quizError || !popularQuizzes || popularQuizzes.length === 0) {
+        return { success: true, data: [] };
+      }
+      
+      // 人気クイズをFeaturedContentWithDetails形式に変換
+      const fallbackContents: FeaturedContentWithDetails[] = popularQuizzes.map((quiz, index) => ({
+        id: `fallback-${quiz.id}`,
+        content_id: String(quiz.id),
+        content_type: 'quiz' as ContentType,
+        featured_at: new Date().toISOString(),
+        display_order: index,
+        created_at: new Date().toISOString(),
+        title: quiz.title,
+        slug: quiz.slug,
+        description: quiz.description,
+        imageUrl: quiz.image_url,
+        views_count: quiz.views_count
+      }));
+      
+      return { success: true, data: fallbackContents };
     }
 
     // ランダムにシャッフル（Fisher-Yates）
@@ -209,49 +249,47 @@ export async function getRandomFeaturedContents(
         let contentDetails: any = null;
 
         if (featured.content_type === 'quiz') {
-          // 公開フラグ(show_in_portal)をチェック
-          const { data } = await supabase
+          // content_idが数値文字列の場合のみparseInt、UUIDの場合はそのまま
+          const quizId = /^\d+$/.test(featured.content_id) 
+            ? parseInt(featured.content_id) 
+            : featured.content_id;
+          
+          const { data, error } = await supabase
             .from('quizzes')
-            .select('id, slug, title, description, image_url, views_count, show_in_portal')
-            .eq('id', parseInt(featured.content_id))
-            .eq('show_in_portal', true)
-            .single();
-          contentDetails = data;
-        } else if (featured.content_type === 'profile') {
-          // 公開フラグ(featured_on_top)をチェック
-          const { data } = await supabase
-            .from('profiles')
-            .select('id, slug, nickname, content, views_count, featured_on_top, settings')
-            .eq('id', featured.content_id)
-            .eq('featured_on_top', true)
+            .select('id, slug, title, description, image_url, views_count')
+            .eq('id', quizId)
             .single();
           
-          if (data) {
-            // settings.showInPortalがfalseの場合はスキップ
-            if (data.settings?.showInPortal === false) {
-              continue;
-            }
+          if (!error) {
+            contentDetails = data;
+          }
+        } else if (featured.content_type === 'profile') {
+          // profilesテーブルにはviews_countカラムがないので除外
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, slug, nickname, content, settings')
+            .eq('id', featured.content_id)
+            .single();
+          
+          if (!error && data) {
             // ヘッダーブロックから名前を取得
             const headerBlock = data.content?.find((b: any) => b.type === 'header');
             contentDetails = {
               ...data,
               title: headerBlock?.data?.name || data.nickname || 'プロフィール',
               description: headerBlock?.data?.title || '',
-              image_url: headerBlock?.data?.avatar
+              image_url: headerBlock?.data?.avatar,
+              views_count: 0
             };
           }
         } else if (featured.content_type === 'business') {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from('business_projects')
             .select('id, slug, settings, content')
             .eq('id', featured.content_id)
             .single();
           
-          if (data) {
-            // settings.showInPortalがfalseの場合はスキップ
-            if (data.settings?.showInPortal === false) {
-              continue;
-            }
+          if (!error && data) {
             // ヘッダーブロックから情報を取得
             const headerBlock = data.content?.find((b: any) => b.type === 'header');
             const heroBlock = data.content?.find((b: any) => 
@@ -271,7 +309,8 @@ export async function getRandomFeaturedContents(
                 || '',
               image_url: headerBlock?.data?.avatar 
                 || heroBlock?.data?.backgroundImage 
-                || heroBlock?.data?.imageUrl
+                || heroBlock?.data?.imageUrl,
+              views_count: 0
             };
           }
         }
@@ -287,7 +326,6 @@ export async function getRandomFeaturedContents(
           });
         }
       } catch (err) {
-        console.error(`[Featured] Error fetching details for ${featured.content_type}:${featured.content_id}`, err);
         // エラーが出てもスキップして次のピックアップを処理
       }
     }
