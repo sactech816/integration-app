@@ -10,6 +10,7 @@ interface FeatureLimits {
   profile: number;
   business: number;
   quiz: number;
+  salesletter: number;
   total: number | null;
   // KDL用
   kdl_outline?: number;
@@ -84,37 +85,37 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
       // 集客メーカーのデフォルト
       switch (plan) {
         case 'guest':
-          return { profile: 0, business: 0, quiz: 0, total: 0 };
+          return { profile: 0, business: 0, quiz: 0, salesletter: 0, total: 0 };
         case 'free':
-          return { profile: 0, business: 0, quiz: 0, total: 0 };
+          return { profile: 0, business: 0, quiz: 0, salesletter: 0, total: 0 };
         case 'pro':
-          return { profile: -1, business: -1, quiz: -1, total: null };
+          return { profile: -1, business: -1, quiz: -1, salesletter: -1, total: null };
         default:
-          return { profile: 5, business: 5, quiz: 5, total: null };
+          return { profile: 5, business: 5, quiz: 5, salesletter: 5, total: null };
       }
     } else {
       // KDLのデフォルト
       switch (plan) {
         // 初回プラン（一括）
         case 'initial_trial':
-          return { profile: 5, business: 5, quiz: 5, total: null, kdl_outline: 30, kdl_writing: 30 };
+          return { profile: 5, business: 5, quiz: 5, salesletter: 5, total: null, kdl_outline: 30, kdl_writing: 30 };
         case 'initial_standard':
-          return { profile: 10, business: 10, quiz: 10, total: null, kdl_outline: 50, kdl_writing: 50 };
+          return { profile: 10, business: 10, quiz: 10, salesletter: 10, total: null, kdl_outline: 50, kdl_writing: 50 };
         case 'initial_business':
-          return { profile: -1, business: -1, quiz: -1, total: null, kdl_outline: 100, kdl_writing: 100 };
+          return { profile: -1, business: -1, quiz: -1, salesletter: -1, total: null, kdl_outline: 100, kdl_writing: 100 };
         // 継続プラン（月額）
         case 'lite':
-          return { profile: 5, business: 5, quiz: 5, total: null, kdl_outline: 20, kdl_writing: 20 };
+          return { profile: 5, business: 5, quiz: 5, salesletter: 5, total: null, kdl_outline: 20, kdl_writing: 20 };
         case 'standard':
-          return { profile: 10, business: 10, quiz: 10, total: null, kdl_outline: 30, kdl_writing: 30 };
+          return { profile: 10, business: 10, quiz: 10, salesletter: 10, total: null, kdl_outline: 30, kdl_writing: 30 };
         case 'pro':
-          return { profile: -1, business: -1, quiz: -1, total: null, kdl_outline: 100, kdl_writing: 100 };
+          return { profile: -1, business: -1, quiz: -1, salesletter: -1, total: null, kdl_outline: 100, kdl_writing: 100 };
         case 'business':
-          return { profile: -1, business: -1, quiz: -1, total: null, kdl_outline: -1, kdl_writing: -1 };
+          return { profile: -1, business: -1, quiz: -1, salesletter: -1, total: null, kdl_outline: -1, kdl_writing: -1 };
         case 'enterprise':
-          return { profile: -1, business: -1, quiz: -1, total: null, kdl_outline: -1, kdl_writing: -1 };
+          return { profile: -1, business: -1, quiz: -1, salesletter: -1, total: null, kdl_outline: -1, kdl_writing: -1 };
         default:
-          return { profile: 5, business: 5, quiz: 5, total: null };
+          return { profile: 5, business: 5, quiz: 5, salesletter: 5, total: null };
       }
     }
   };
@@ -216,7 +217,7 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
         <p className={selectedService === 'kdl' ? 'text-amber-100' : 'text-purple-100'}>
           {selectedService === 'kdl' 
             ? 'Kindle執筆のAI生成機能の1日あたりの使用制限を管理します'
-            : 'プロフィールLP、ビジネスLP、診断クイズのAI生成機能の1日あたりの使用制限を管理します'
+            : 'プロフィールLP、ビジネスLP、診断クイズ、セールスレターのAI生成機能の1日あたりの使用制限を管理します'
           }
         </p>
       </div>
@@ -275,6 +276,9 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
                 <th className="px-3 py-3 text-center text-sm font-bold text-gray-900 w-24">
                   Quiz<br /><span className="text-xs font-normal text-gray-500">生成</span>
                 </th>
+                <th className="px-3 py-3 text-center text-sm font-bold text-gray-900 w-24">
+                  Sales<br /><span className="text-xs font-normal text-gray-500">レター生成</span>
+                </th>
                 {selectedService === 'kdl' && (
                   <>
                     <th className="px-3 py-3 text-center text-sm font-bold text-gray-900 w-24">
@@ -298,7 +302,7 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
                 // Kindleのセクションヘッダー表示
                 const showInitialHeader = selectedService === 'kdl' && plan === 'initial_trial';
                 const showContinuationHeader = selectedService === 'kdl' && plan === 'lite';
-                const colSpan = selectedService === 'kdl' ? 8 : 6;
+                const colSpan = selectedService === 'kdl' ? 9 : 7;
 
                 return (
                   <>
@@ -349,6 +353,15 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
                       <LimitInput
                         value={limits.quiz}
                         onChange={(v) => handleLimitChange(plan, 'quiz', v)}
+                        service={selectedService}
+                      />
+                    </td>
+
+                    {/* Sales Letter */}
+                    <td className="px-3 py-3">
+                      <LimitInput
+                        value={limits.salesletter}
+                        onChange={(v) => handleLimitChange(plan, 'salesletter', v)}
                         service={selectedService}
                       />
                     </td>

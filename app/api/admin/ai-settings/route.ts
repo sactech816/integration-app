@@ -152,6 +152,7 @@ export async function GET(request: Request) {
         profile: 5,
         business: 5,
         quiz: 5,
+        salesletter: 5,
         total: null
       },
       requiresMigration: false,

@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS admin_ai_settings (
   custom_writing_model TEXT DEFAULT 'gpt-5-nano',  -- 執筆用モデル（デフォルト: 最安値）
   backup_outline_model TEXT DEFAULT 'gemini-2.5-flash-lite',  -- バックアップ構成用モデル
   backup_writing_model TEXT DEFAULT 'gemini-2.5-flash-lite',  -- バックアップ執筆用モデル
+  feature_limits JSONB DEFAULT '{"profile": 5, "business": 5, "quiz": 5, "salesletter": 5, "total": null}'::jsonb,  -- AI生成機能の使用制限
   updated_by UUID REFERENCES auth.users(id),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -52,6 +53,15 @@ BEGIN
     WHERE table_name = 'admin_ai_settings' AND column_name = 'backup_writing_model'
   ) THEN
     ALTER TABLE admin_ai_settings ADD COLUMN backup_writing_model TEXT DEFAULT 'gemini-2.5-flash-lite';
+  END IF;
+  
+  -- feature_limits (JSONB) カラムを追加（AI生成機能の使用制限）
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'admin_ai_settings' AND column_name = 'feature_limits'
+  ) THEN
+    ALTER TABLE admin_ai_settings ADD COLUMN feature_limits JSONB DEFAULT '{"profile": 5, "business": 5, "quiz": 5, "salesletter": 5, "total": null}'::jsonb;
+    COMMENT ON COLUMN admin_ai_settings.feature_limits IS 'AI生成機能の1日あたりの使用制限 (profile, business, quiz, salesletter, kdl_outline, kdl_writing, total)';
   END IF;
 END $$;
 
