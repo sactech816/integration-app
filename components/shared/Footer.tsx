@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Magnet, Sparkles, Building2, UserCircle, TrendingUp, Lightbulb, Heart, Calendar, ClipboardList, Gamepad2, BookOpen, Monitor } from 'lucide-react';
+import { Magnet, Sparkles, Building2, UserCircle, TrendingUp, Lightbulb, Heart, Calendar, ClipboardList, Gamepad2, BookOpen, Monitor, CalendarCheck, PenTool } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
 interface FooterProps {
@@ -25,9 +25,9 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
   };
 
   const services = [
-    { id: 'quiz' as ServiceType, label: '診断クイズ', icon: Sparkles },
-    { id: 'profile' as ServiceType, label: 'プロフィールLP', icon: UserCircle },
-    { id: 'business' as ServiceType, label: 'ビジネスLP', icon: Building2 },
+    { id: 'quiz' as ServiceType, label: '診断クイズメーカー', icon: Sparkles },
+    { id: 'profile' as ServiceType, label: 'プロフィールメーカー', icon: UserCircle },
+    { id: 'business' as ServiceType, label: 'LPメーカー', icon: Building2 },
   ];
 
   return (
@@ -67,13 +67,25 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
               <li>
                 <Link href="/booking/new" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Calendar size={16} className="opacity-60 group-hover:opacity-100" />
-                  予約・日程調整
+                  予約メーカー
+                </Link>
+              </li>
+              <li>
+                <Link href="/attendance/new" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <CalendarCheck size={16} className="opacity-60 group-hover:opacity-100" />
+                  出欠メーカー
                 </Link>
               </li>
               <li>
                 <Link href="/survey/new" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <ClipboardList size={16} className="opacity-60 group-hover:opacity-100" />
-                  アンケート（投票）
+                  アンケートメーカー
+                </Link>
+              </li>
+              <li>
+                <Link href="/salesletter/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <PenTool size={16} className="opacity-60 group-hover:opacity-100" />
+                  セールスライター
                 </Link>
               </li>
               <li>

@@ -30,7 +30,9 @@ import {
   ClipboardList,
   Gamepad2,
   Calendar,
-  Monitor
+  Monitor,
+  CalendarCheck,
+  PenTool
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -111,16 +113,22 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const services = [
-    { id: 'quiz' as ServiceType, label: '診断クイズ', icon: Sparkles, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-    { id: 'profile' as ServiceType, label: 'プロフィールLP', icon: UserCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { id: 'business' as ServiceType, label: 'ビジネスLP', icon: Building2, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { id: 'quiz' as ServiceType, label: '診断クイズメーカー', icon: Sparkles, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { id: 'profile' as ServiceType, label: 'プロフィールメーカー', icon: UserCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { id: 'business' as ServiceType, label: 'LPメーカー', icon: Building2, color: 'text-amber-600', bg: 'bg-amber-50' },
   ];
 
   // アンケート専用（ServiceTypeに含まれない）
-  const surveyService = { id: 'survey', label: 'アンケート（投票）', icon: ClipboardList, color: 'text-teal-600', bg: 'bg-teal-50' };
+  const surveyService = { id: 'survey', label: 'アンケートメーカー', icon: ClipboardList, color: 'text-teal-600', bg: 'bg-teal-50' };
 
   // ゲーミフィケーション
   const gamificationService = { id: 'gamification', label: 'ゲーミフィケーション', icon: Gamepad2, color: 'text-purple-600', bg: 'bg-purple-50' };
+
+  // 出欠表メーカー
+  const attendanceService = { id: 'attendance', label: '出欠メーカー', icon: CalendarCheck, color: 'text-cyan-600', bg: 'bg-cyan-50' };
+
+  // セールスライター
+  const salesletterService = { id: 'salesletter', label: 'セールスライター', icon: PenTool, color: 'text-rose-600', bg: 'bg-rose-50' };
 
   return (
     <>
@@ -164,7 +172,7 @@ const Header: React.FC<HeaderProps> = ({
                 <>
                   {/* ボタンとメニューの間の透明なブリッジ */}
                   <div className="absolute top-full left-0 w-full h-2" />
-                  <div className="absolute top-full left-0 pt-2 w-56 z-[120]">
+                  <div className="absolute top-full left-0 pt-2 w-64 z-[120]">
                     <div className="bg-white rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in">
                     {services.map((service) => (
                       <button
@@ -176,12 +184,12 @@ const Header: React.FC<HeaderProps> = ({
                           <service.icon size={18} className={service.color} />
                         </div>
                         <div>
-                          <div className="font-semibold text-gray-900">{service.label}</div>
+                          <div className="font-semibold text-gray-900 text-sm whitespace-nowrap">{service.label}</div>
                           <div className="text-xs text-gray-500">新規作成</div>
                         </div>
                       </button>
                     ))}
-                    {/* 予約・日程調整 */}
+                    {/* 予約メーカー */}
                     <button
                       onClick={() => { setIsServiceMenuOpen(false); router.push('/booking/new'); }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors border-t border-gray-100"
@@ -190,11 +198,24 @@ const Header: React.FC<HeaderProps> = ({
                         <Calendar size={18} className="text-blue-600" />
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-900">予約・日程調整</div>
+                        <div className="font-semibold text-gray-900 text-sm whitespace-nowrap">予約メーカー</div>
                         <div className="text-xs text-gray-500">新規作成</div>
                       </div>
                     </button>
-                    {/* アンケート */}
+                    {/* 出欠メーカー */}
+                    <button
+                      onClick={() => { setIsServiceMenuOpen(false); router.push('/attendance/new'); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                    >
+                      <div className={`p-2 rounded-lg ${attendanceService.bg}`}>
+                        <attendanceService.icon size={18} className={attendanceService.color} />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900 text-sm whitespace-nowrap">{attendanceService.label}</div>
+                        <div className="text-xs text-gray-500">新規作成</div>
+                      </div>
+                    </button>
+                    {/* アンケートメーカー */}
                     <button
                       onClick={() => { setIsServiceMenuOpen(false); router.push('/survey/new'); }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
@@ -203,7 +224,20 @@ const Header: React.FC<HeaderProps> = ({
                         <surveyService.icon size={18} className={surveyService.color} />
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-900">{surveyService.label}</div>
+                        <div className="font-semibold text-gray-900 text-sm whitespace-nowrap">{surveyService.label}</div>
+                        <div className="text-xs text-gray-500">新規作成</div>
+                      </div>
+                    </button>
+                    {/* セールスライター */}
+                    <button
+                      onClick={() => { setIsServiceMenuOpen(false); router.push('/salesletter/editor'); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                    >
+                      <div className={`p-2 rounded-lg ${salesletterService.bg}`}>
+                        <salesletterService.icon size={18} className={salesletterService.color} />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900 text-sm whitespace-nowrap">{salesletterService.label}</div>
                         <div className="text-xs text-gray-500">新規作成</div>
                       </div>
                     </button>
@@ -216,7 +250,7 @@ const Header: React.FC<HeaderProps> = ({
                         <gamificationService.icon size={18} className={gamificationService.color} />
                       </div>
                       <div>
-                        <div className="font-semibold text-gray-900">{gamificationService.label}</div>
+                        <div className="font-semibold text-gray-900 text-sm whitespace-nowrap">{gamificationService.label}</div>
                         <div className="text-xs text-gray-500">ガチャ・スタンプラリー等</div>
                       </div>
                     </button>
@@ -378,18 +412,29 @@ const Header: React.FC<HeaderProps> = ({
                       </div>
                     </button>
                   ))}
-                  {/* 予約・日程調整 */}
+                  {/* 予約メーカー */}
                   <button
                     onClick={() => { setIsMenuOpen(false); router.push('/booking/new'); }}
                     className="flex items-center gap-3 p-4 rounded-xl bg-blue-50 transition-all hover:scale-[1.02]"
                   >
                     <Calendar size={24} className="text-blue-600" />
                     <div className="text-left">
-                      <div className="font-bold text-blue-600">予約・日程調整</div>
+                      <div className="font-bold text-blue-600">予約メーカー</div>
                       <div className="text-xs text-gray-500">新規作成</div>
                     </div>
                   </button>
-                  {/* アンケート */}
+                  {/* 出欠メーカー */}
+                  <button
+                    onClick={() => { setIsMenuOpen(false); router.push('/attendance/new'); }}
+                    className={`flex items-center gap-3 p-4 rounded-xl ${attendanceService.bg} transition-all hover:scale-[1.02]`}
+                  >
+                    <attendanceService.icon size={24} className={attendanceService.color} />
+                    <div className="text-left">
+                      <div className={`font-bold ${attendanceService.color}`}>{attendanceService.label}</div>
+                      <div className="text-xs text-gray-500">新規作成</div>
+                    </div>
+                  </button>
+                  {/* アンケートメーカー */}
                   <button
                     onClick={() => { setIsMenuOpen(false); router.push('/survey/new'); }}
                     className={`flex items-center gap-3 p-4 rounded-xl ${surveyService.bg} transition-all hover:scale-[1.02]`}
@@ -397,6 +442,17 @@ const Header: React.FC<HeaderProps> = ({
                     <surveyService.icon size={24} className={surveyService.color} />
                     <div className="text-left">
                       <div className={`font-bold ${surveyService.color}`}>{surveyService.label}</div>
+                      <div className="text-xs text-gray-500">新規作成</div>
+                    </div>
+                  </button>
+                  {/* セールスライター */}
+                  <button
+                    onClick={() => { setIsMenuOpen(false); router.push('/salesletter/editor'); }}
+                    className={`flex items-center gap-3 p-4 rounded-xl ${salesletterService.bg} transition-all hover:scale-[1.02]`}
+                  >
+                    <salesletterService.icon size={24} className={salesletterService.color} />
+                    <div className="text-left">
+                      <div className={`font-bold ${salesletterService.color}`}>{salesletterService.label}</div>
                       <div className="text-xs text-gray-500">新規作成</div>
                     </div>
                   </button>
