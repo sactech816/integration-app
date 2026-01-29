@@ -601,6 +601,7 @@ export interface SalesLetterSettings {
   // 角丸設定
   contentBorderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   hideFooter?: boolean;
+  showInPortal?: boolean; // ポータルに掲載
   tracking?: TrackingSettings;
 }
 

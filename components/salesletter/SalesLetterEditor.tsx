@@ -41,6 +41,7 @@ import {
   Trophy,
   Share2,
   Lock,
+  Star,
 } from 'lucide-react';
 
 // セールスレター用ブロックタイプ
@@ -121,6 +122,9 @@ export default function SalesLetterEditor({
   
   // ユーザープラン権限
   const { userPlan } = useUserPlan(user?.id);
+  
+  // セクション開閉状態
+  const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(true);
   
   // モーダル状態
   const [showTemplateModal, setShowTemplateModal] = useState(!initialData);
@@ -527,6 +531,22 @@ export default function SalesLetterEditor({
               </p>
             </div>
 
+            {/* 基本設定（各種オプション・背景・幅設定） - 一番上に配置 */}
+            <ContentSettingsPanel
+              settings={settings}
+              onUpdate={(updates) => setSettings(prev => ({ ...prev, ...updates }))}
+              onOpenColorPicker={() => setShowColorPicker(true)}
+              userId={user?.id}
+              userPlan={userPlan}
+              isOpen={isBasicSettingsOpen}
+              onToggle={() => setIsBasicSettingsOpen(prev => !prev)}
+              customSlug={customSlug}
+              setCustomSlug={setCustomSlug}
+              slugError={slugError}
+              setSlugError={setSlugError}
+              isNewContent={!initialData?.slug && !slug}
+            />
+
             {/* テンプレート選択リンク */}
             <div className="mb-4">
               <button
@@ -555,45 +575,6 @@ export default function SalesLetterEditor({
                 ))}
               </div>
             </div>
-
-            {/* カスタムURL設定（新規作成時のみ） */}
-            {!initialData?.slug && !slug && (
-              <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
-                <h3 className="text-sm font-bold text-gray-700 mb-3">カスタムURL（任意）</h3>
-                <input 
-                  className={`w-full border p-3 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-rose-500 outline-none bg-white placeholder-gray-400 transition-shadow text-sm ${slugError ? 'border-red-400' : 'border-gray-300'}`}
-                  value={customSlug} 
-                  onChange={e => {
-                    const val = e.target.value;
-                    setCustomSlug(val);
-                    if (val && !/^[a-z0-9-]{3,20}$/.test(val)) {
-                      setSlugError('英小文字、数字、ハイフンのみ（3〜20文字）');
-                    } else {
-                      setSlugError('');
-                    }
-                  }}
-                  placeholder="例: my-sales-page"
-                />
-                {slugError && <p className="text-red-500 text-xs mt-1">{slugError}</p>}
-                <p className="text-xs text-gray-500 mt-1">
-                  ※空欄の場合は自動生成されます。一度設定すると変更できません。
-                </p>
-                {customSlug && !slugError && (
-                  <p className="text-xs text-rose-600 mt-1 font-medium">
-                    公開URL: {typeof window !== 'undefined' ? window.location.origin : ''}/s/{customSlug}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* コンテンツ幅・背景設定 */}
-            <ContentSettingsPanel
-              settings={settings}
-              onUpdate={(updates) => setSettings(prev => ({ ...prev, ...updates }))}
-              onOpenColorPicker={() => setShowColorPicker(true)}
-              userId={user?.id}
-              userPlan={userPlan}
-            />
 
             {/* 編集エリアのスクロールトップボタン */}
             {blocks.length > 3 && (
@@ -1612,12 +1593,26 @@ function ContentSettingsPanel({
   onOpenColorPicker,
   userId,
   userPlan,
+  isOpen,
+  onToggle,
+  customSlug,
+  setCustomSlug,
+  slugError,
+  setSlugError,
+  isNewContent,
 }: {
   settings: SalesLetterSettings;
   onUpdate: (updates: Partial<SalesLetterSettings>) => void;
   onOpenColorPicker: () => void;
   userId?: string;
   userPlan: { canHideCopyright: boolean };
+  isOpen: boolean;
+  onToggle: () => void;
+  customSlug: string;
+  setCustomSlug: (val: string) => void;
+  slugError: string;
+  setSlugError: (val: string) => void;
+  isNewContent: boolean;
 }) {
   const [isUploading, setIsUploading] = useState(false);
 
@@ -1667,8 +1662,76 @@ function ContentSettingsPanel({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
-      <h3 className="text-sm font-bold text-white bg-rose-500 px-3 py-2 rounded-lg mb-3">コンテンツ幅・背景設定</h3>
+    <div className="bg-white rounded-xl shadow-sm mb-4 overflow-hidden">
+      {/* 開閉可能なヘッダー */}
+      <button 
+        onClick={onToggle}
+        className="w-full px-4 py-3 flex items-center justify-between bg-rose-500 hover:bg-rose-600 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Settings size={18} className="text-white" />
+          <h3 className="text-sm font-bold text-white">基本設定（各種オプション・背景・幅設定）</h3>
+        </div>
+        {isOpen ? (
+          <ChevronUp size={18} className="text-white" />
+        ) : (
+          <ChevronDown size={18} className="text-white" />
+        )}
+      </button>
+      
+      {/* 折りたたみコンテンツ */}
+      {isOpen && (
+        <div className="p-4">
+          {/* カスタムURL設定（新規作成時のみ） */}
+          {isNewContent && (
+            <div className="mb-4 pb-4 border-b border-gray-200">
+              <label className="block text-xs font-bold text-gray-700 mb-2">カスタムURL（任意）</label>
+              <input 
+                className={`w-full border p-3 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-rose-500 outline-none bg-white placeholder-gray-400 transition-shadow text-sm ${slugError ? 'border-red-400' : 'border-gray-300'}`}
+                value={customSlug} 
+                onChange={e => {
+                  const val = e.target.value;
+                  setCustomSlug(val);
+                  if (val && !/^[a-z0-9-]{3,20}$/.test(val)) {
+                    setSlugError('英小文字、数字、ハイフンのみ（3〜20文字）');
+                  } else {
+                    setSlugError('');
+                  }
+                }}
+                placeholder="例: my-sales-page"
+              />
+              {slugError && <p className="text-red-500 text-xs mt-1">{slugError}</p>}
+              <p className="text-xs text-gray-500 mt-1">
+                ※空欄の場合は自動生成されます。一度設定すると変更できません。
+              </p>
+              {customSlug && !slugError && (
+                <p className="text-xs text-rose-600 mt-1 font-medium">
+                  公開URL: {typeof window !== 'undefined' ? window.location.origin : ''}/s/{customSlug}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* ポータル掲載 */}
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <h4 className="font-bold text-rose-900 flex items-center gap-2 mb-1 text-xs">
+                <Star size={14} className="text-rose-600"/> ポータルに掲載する
+              </h4>
+              <p className="text-[10px] text-rose-700">
+                ポータルに掲載することで、サービスの紹介およびSEO対策、AI対策として効果的となります。より多くの方にあなたのセールスレターを見てもらえます。
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer ml-3 flex-shrink-0">
+              <input 
+                type="checkbox" 
+                className="sr-only peer" 
+                checked={settings.showInPortal === undefined ? true : settings.showInPortal} 
+                onChange={e => onUpdate({ showInPortal: e.target.checked })} 
+              />
+              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-600"></div>
+            </label>
+          </div>
       
       {/* コンテンツ幅 */}
       <div className="mb-4">
@@ -1883,7 +1946,7 @@ function ContentSettingsPanel({
               }`}>Pro</span>
             </h4>
             <p className={`text-[10px] ${userPlan.canHideCopyright ? 'text-orange-700' : 'text-gray-500'}`}>
-              「セールスレターメーカーで作成しました」のフッターを非表示にします。
+              「セールスライターで作成しました」のフッターを非表示にします。
             </p>
             {!userPlan.canHideCopyright && (
               <p className="text-[10px] text-rose-600 mt-1 font-medium">
