@@ -536,22 +536,42 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                 if (error) throw error;
                 result = data;
             } else {
-                // 新規作成（カスタムスラッグがあればそれを使用、なければ自動生成）
-                const newSlug = customSlug || generateSlug();
-                const insertData = {
-                    ...updateData,
-                    slug: newSlug,
-                    user_id: user?.id || null, // INSERT時のみuser_idを設定
-                };
+                // 新規作成の場合：ユニークなslugを生成（リトライ付き）
+                let attempts = 0;
+                const maxAttempts = 5;
+                let insertError: any = null;
                 
-                const { data, error } = await supabase
-                    .from('quizzes')
-                    .insert(insertData)
-                    .select()
-                    .single();
+                while (attempts < maxAttempts) {
+                    const newSlug = customSlug || generateSlug();
+                    const insertData = {
+                        ...updateData,
+                        slug: newSlug,
+                        user_id: user?.id || null, // INSERT時のみuser_idを設定
+                    };
                     
-                if (error) throw error;
-                result = data;
+                    const { data, error } = await supabase
+                        .from('quizzes')
+                        .insert(insertData)
+                        .select()
+                        .single();
+                    
+                    // slug重複エラー（23505）の場合はリトライ（カスタムslugの場合はリトライしない）
+                    if (error?.code === '23505' && error?.message?.includes('slug') && !customSlug) {
+                        attempts++;
+                        console.log(`Slug collision, retrying... (attempt ${attempts}/${maxAttempts})`);
+                        continue;
+                    }
+                    
+                    insertError = error;
+                    result = data;
+                    break;
+                }
+                
+                if (attempts >= maxAttempts) {
+                    throw new Error('ユニークなURLの生成に失敗しました。もう一度お試しください。');
+                }
+                
+                if (insertError) throw insertError;
                 if (customSlug) setCustomSlug(''); // 保存後はクリア
             }
             
@@ -579,7 +599,12 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
             }
         } catch (error: any) {
             console.error('保存エラー:', error);
-            alert('保存に失敗しました: ' + (error.message || '不明なエラー'));
+            // カスタムURL（slug）の重複エラーを分かりやすいメッセージに変換
+            if (error.code === '23505' && error.message?.includes('slug')) {
+                alert('このカスタムURLは既に使用されています。別のURLを指定してください。');
+            } else {
+                alert('保存に失敗しました: ' + (error.message || '不明なエラー'));
+            }
         } finally {
             setIsSaving(false);
         }

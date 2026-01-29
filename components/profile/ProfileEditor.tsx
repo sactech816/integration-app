@@ -919,6 +919,10 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
       if (result?.error) {
         console.error('Supabase error:', result.error);
+        // ニックネーム（カスタムURL）の重複エラーを分かりやすいメッセージに変換
+        if (result.error.code === '23505' && result.error.message?.includes('profiles_nickname_key')) {
+          throw new Error('このカスタムURLは既に使用されています。別のURLを指定してください。');
+        }
         throw new Error(result.error.message || 'データベースエラー');
       }
 

@@ -512,8 +512,24 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   const pcIframeRef = React.useRef<HTMLIFrameElement>(null);
   const mobileIframeRef = React.useRef<HTMLIFrameElement>(null);
   const [customSlug, setCustomSlug] = useState('');
+  const [slugError, setSlugError] = useState('');
   const [justSavedSlug, setJustSavedSlug] = useState<string | null>(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
+
+  // カスタムスラッグのバリデーション
+  const validateCustomSlug = (slug: string): boolean => {
+    if (!slug) {
+      setSlugError('');
+      return true; // 空は許可（自動生成される）
+    }
+    const regex = /^[a-z0-9-]{3,20}$/;
+    if (!regex.test(slug)) {
+      setSlugError('英小文字、数字、ハイフンのみ（3〜20文字）');
+      return false;
+    }
+    setSlugError('');
+    return true;
+  };
 
   // セクションの開閉状態
   const [openSections, setOpenSections] = useState({
@@ -661,49 +677,88 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       return;
     }
 
+    // カスタムスラッグのバリデーション
+    if (customSlug && !validateCustomSlug(customSlug)) {
+      return;
+    }
+
     setIsSaving(true);
     try {
-      // カスタムURL or 既存 or 自動生成
-      const newSlug = customSlug.trim() || savedSlug || generateSlug();
-      
       // タイトルが未入力の場合はデフォルト名を使用
       const finalTitle = lp.title?.trim() || '無題のビジネスLP';
       
-      // business_projectsテーブルの構造に合わせる
-      // title, descriptionはsettingsに含める
-      const payload = {
-        content: lp.content,
-        settings: {
-          ...lp.settings,
-          title: finalTitle,
-          description: lp.description,
-        },
-        slug: newSlug,
-      };
-
       let result;
       const existingId = initialData?.id || savedId;
       
       if (existingId) {
-        // 更新（initialDataがある場合、または新規作成後の再保存）
+        // 更新の場合：既存のslugを維持（slugは変更しない）
+        const updatePayload = {
+          content: lp.content,
+          settings: {
+            ...lp.settings,
+            title: finalTitle,
+            description: lp.description,
+          },
+        };
+        
         result = await supabase
           ?.from('business_projects')
-          .update(payload)
+          .update(updatePayload)
           .eq('id', existingId)
           .select()
           .single();
+          
+        if (result?.error) {
+          console.error('Business LP update error:', result.error);
+          throw result.error;
+        }
       } else {
-        // 新規作成
-        result = await supabase
-          ?.from('business_projects')
-          .insert({ ...payload, user_id: user.id })
-          .select()
-          .single();
-      }
-
-      if (result?.error) {
-        console.error('Business LP save error:', result.error);
-        throw result.error;
+        // 新規作成の場合：ユニークなslugを生成（リトライ付き）
+        let attempts = 0;
+        const maxAttempts = 5;
+        
+        while (attempts < maxAttempts) {
+          const newSlug = customSlug.trim() || generateSlug();
+          const insertPayload = {
+            content: lp.content,
+            settings: {
+              ...lp.settings,
+              title: finalTitle,
+              description: lp.description,
+            },
+            slug: newSlug,
+            user_id: user.id,
+          };
+          
+          result = await supabase
+            ?.from('business_projects')
+            .insert(insertPayload)
+            .select()
+            .single();
+          
+          // slug重複エラー（23505）の場合はリトライ（カスタムslugの場合はリトライしない）
+          if (result?.error?.code === '23505' && result?.error?.message?.includes('slug') && !customSlug.trim()) {
+            attempts++;
+            console.log(`Slug collision, retrying... (attempt ${attempts}/${maxAttempts})`);
+            continue;
+          }
+          
+          // その他のエラーまたは成功の場合はループを抜ける
+          break;
+        }
+        
+        if (attempts >= maxAttempts) {
+          throw new Error('ユニークなURLの生成に失敗しました。もう一度お試しください。');
+        }
+        
+        if (result?.error) {
+          console.error('Business LP save error:', result.error);
+          // カスタムURL（slug）の重複エラーを分かりやすいメッセージに変換
+          if (result.error.code === '23505' && result.error.message?.includes('slug')) {
+            throw new Error('このカスタムURLは既に使用されています。別のURLを指定してください。');
+          }
+          throw result.error;
+        }
       }
 
       if (result?.data) {
@@ -719,7 +774,8 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       }
     } catch (error) {
       console.error('Save error:', error);
-      alert('保存中にエラーが発生しました');
+      const errorMessage = error instanceof Error ? error.message : '不明なエラー';
+      alert(`保存中にエラーが発生しました: ${errorMessage}`);
     } finally {
       setIsSaving(false);
     }
@@ -2247,16 +2303,26 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
 
           {/* カスタムURL */}
           <div>
-            <Input 
-              label="カスタムURL（任意）" 
-              val={customSlug} 
-              onChange={(v) => setCustomSlug(v.replace(/[^a-zA-Z0-9-_]/g, ''))} 
-              ph="my-business-page" 
+            <label className="text-sm font-bold text-gray-900 block mb-2">
+              カスタムURL（任意）
+            </label>
+            <input 
+              className={`w-full border p-3 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-amber-500 outline-none bg-white placeholder-gray-400 transition-shadow ${slugError ? 'border-red-400' : 'border-gray-300'} ${initialData?.slug ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+              value={customSlug} 
+              onChange={e => {
+                const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                setCustomSlug(val);
+                validateCustomSlug(val);
+              }} 
+              placeholder="my-business-page"
+              disabled={!!initialData?.slug}
             />
+            {slugError && <p className="text-red-500 text-xs mt-1">{slugError}</p>}
             <p className="text-xs text-gray-500 mt-1">
-              ※ 英数字とハイフン、アンダースコアのみ使用可能。空欄の場合は自動生成されます。
+              例: my-business, landing-page-01<br/>
+              ※英小文字、数字、ハイフンのみ（3〜20文字）。一度設定すると変更できません。
             </p>
-            {customSlug && (
+            {customSlug && !slugError && (
               <p className="text-xs text-amber-600 mt-1">
                 公開URL: {typeof window !== 'undefined' ? window.location.origin : ''}/business/{customSlug}
               </p>
