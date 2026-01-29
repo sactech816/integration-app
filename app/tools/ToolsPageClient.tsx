@@ -16,6 +16,7 @@ import {
   Stamp,
   ArrowRight,
   TrendingUp,
+  PenTool,
 } from 'lucide-react';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
@@ -35,7 +36,7 @@ const tools = [
     features: ['AI自動生成', 'SNSシェア', '分析機能', '無制限作成'],
   },
   {
-    name: 'アンケート作成ツール',
+    name: 'アンケートメーカー',
     description: 'オンラインアンケート・投票・フィードバック収集を無料で作成。Googleフォームの代替として使えます。',
     icon: FileText,
     href: '/survey/new',
@@ -75,7 +76,7 @@ const tools = [
     features: ['リンクまとめ', 'デザインテンプレート', 'アクセス解析', '無料'],
   },
   {
-    name: 'ビジネスLPメーカー',
+    name: 'LPメーカー',
     description: '商品・サービスのランディングページを無料で作成。CV最適化されたテンプレートで簡単にLPを作れます。',
     icon: Building2,
     href: '/business/editor',
@@ -83,6 +84,16 @@ const tools = [
     bgColor: 'bg-amber-50',
     textColor: 'text-amber-600',
     features: ['テンプレート豊富', 'CV最適化', 'レスポンシブ', '無料'],
+  },
+  {
+    name: 'セールスライター',
+    description: 'セールスレター・LP文章をAIで自動生成。売れるコピーライティングを誰でも簡単に作成できます。',
+    icon: PenTool,
+    href: '/salesletter/editor',
+    color: 'from-rose-500 to-pink-600',
+    bgColor: 'bg-rose-50',
+    textColor: 'text-rose-600',
+    features: ['AI自動生成', '売れる文章', 'テンプレート', '無料'],
   },
 ];
 
@@ -182,7 +193,7 @@ export default function ToolsPageClient() {
       {
         '@type': 'ListItem',
         position: 2,
-        name: 'アンケート作成ツール',
+        name: 'アンケートメーカー',
         description: 'オンラインアンケート・投票・フィードバック収集を無料で作成',
         url: `${siteUrl}/survey/new`,
       },
@@ -210,9 +221,16 @@ export default function ToolsPageClient() {
       {
         '@type': 'ListItem',
         position: 6,
-        name: 'ビジネスLPメーカー',
+        name: 'LPメーカー',
         description: '商品・サービスのランディングページを無料で作成',
         url: `${siteUrl}/business/editor`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 7,
+        name: 'セールスライター',
+        description: 'セールスレター・LP文章をAIで自動生成',
+        url: `${siteUrl}/salesletter/editor`,
       },
     ],
   };

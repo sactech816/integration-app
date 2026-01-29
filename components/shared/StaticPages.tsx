@@ -8,7 +8,8 @@ import {
     QrCode, Users, Repeat, Smartphone, Eye, Zap, Lock, Unlock,
     Download, Code, FileText, Image as ImageIcon, BarChart2,
     Mail, Shield, Scale, ExternalLink, Smile, MessageCircle,
-    Magnet, Building2, UserCircle, Crown, Flame, Rocket
+    Magnet, Building2, UserCircle, Crown, Flame, Rocket,
+    Calendar, ClipboardList, Gamepad2, PenTool, CalendarCheck
 } from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
@@ -394,50 +395,109 @@ export const HowToPage = ({
                     集客メーカー 機能一覧・使い方ガイド
                 </h1>
                 
-                {/* 3つのサービス紹介 */}
-                <div className="grid md:grid-cols-3 gap-6 mb-12">
-                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
-                        <div className="flex items-center gap-2 mb-4 text-indigo-700 font-bold text-xl">
-                            <Sparkles size={24} className="text-indigo-500"/> 診断クイズ
+                {/* 全ツール紹介 */}
+                <div className="grid md:grid-cols-4 gap-4 mb-12">
+                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 border border-indigo-100">
+                        <div className="flex items-center gap-2 mb-3 text-indigo-700 font-bold text-lg">
+                            <Sparkles size={20} className="text-indigo-500"/> 診断クイズメーカー
                         </div>
-                        <p className="text-sm text-gray-600 mb-4">
-                            性格診断・適職診断・心理テスト・検定クイズ・占いなど、様々なタイプの診断コンテンツを作成できます。
+                        <p className="text-sm text-gray-600 mb-3">
+                            性格診断・適職診断・心理テスト・検定クイズなど様々な診断コンテンツを作成。
                         </p>
-                        <ul className="space-y-2 text-sm text-gray-700">
-                            <li className="flex gap-2"><CheckCircle size={16} className="text-indigo-500 flex-shrink-0"/> AI自動生成</li>
-                            <li className="flex gap-2"><CheckCircle size={16} className="text-indigo-500 flex-shrink-0"/> 3モード（診断・検定・占い）</li>
-                            <li className="flex gap-2"><CheckCircle size={16} className="text-indigo-500 flex-shrink-0"/> アクセス解析</li>
-                            <li className="flex gap-2"><CheckCircle size={16} className="text-indigo-500 flex-shrink-0"/> リード獲得機能</li>
+                        <ul className="space-y-1 text-xs text-gray-700">
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-indigo-500 flex-shrink-0"/> AI自動生成</li>
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-indigo-500 flex-shrink-0"/> アクセス解析</li>
                         </ul>
                     </div>
                     
-                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-100">
-                        <div className="flex items-center gap-2 mb-4 text-emerald-700 font-bold text-xl">
-                            <UserCircle size={24} className="text-emerald-500"/> プロフィールLP
+                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 border border-emerald-100">
+                        <div className="flex items-center gap-2 mb-3 text-emerald-700 font-bold text-lg">
+                            <UserCircle size={20} className="text-emerald-500"/> プロフィールメーカー
                         </div>
-                        <p className="text-sm text-gray-600 mb-4">
-                            SNSプロフィールに最適なリンクまとめページを作成。ブロック形式で自由にレイアウトをカスタマイズ。
+                        <p className="text-sm text-gray-600 mb-3">
+                            SNSプロフィールに最適なリンクまとめページを作成。
                         </p>
-                        <ul className="space-y-2 text-sm text-gray-700">
-                            <li className="flex gap-2"><CheckCircle size={16} className="text-emerald-500 flex-shrink-0"/> ブロック形式エディタ</li>
-                            <li className="flex gap-2"><CheckCircle size={16} className="text-emerald-500 flex-shrink-0"/> おしゃれな背景</li>
-                            <li className="flex gap-2"><CheckCircle size={16} className="text-emerald-500 flex-shrink-0"/> YouTube埋め込み</li>
-                            <li className="flex gap-2"><CheckCircle size={16} className="text-emerald-500 flex-shrink-0"/> リンク集</li>
+                        <ul className="space-y-1 text-xs text-gray-700">
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-emerald-500 flex-shrink-0"/> ブロック形式エディタ</li>
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-emerald-500 flex-shrink-0"/> おしゃれな背景</li>
                         </ul>
                     </div>
                     
-                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-100">
-                        <div className="flex items-center gap-2 mb-4 text-amber-700 font-bold text-xl">
-                            <Building2 size={24} className="text-amber-500"/> ビジネスLP
+                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-5 border border-amber-100">
+                        <div className="flex items-center gap-2 mb-3 text-amber-700 font-bold text-lg">
+                            <Building2 size={20} className="text-amber-500"/> LPメーカー
                         </div>
-                        <p className="text-sm text-gray-600 mb-4">
-                            商品・サービスの魅力を効果的にアピール。CV最適化されたテンプレートでプロ品質のLPを作成。
+                        <p className="text-sm text-gray-600 mb-3">
+                            商品・サービスのランディングページを作成。CV最適化テンプレート付き。
                         </p>
-                        <ul className="space-y-2 text-sm text-gray-700">
-                            <li className="flex gap-2"><CheckCircle size={16} className="text-amber-500 flex-shrink-0"/> AI Flyer機能</li>
-                            <li className="flex gap-2"><CheckCircle size={16} className="text-amber-500 flex-shrink-0"/> CV最適化テンプレート</li>
-                            <li className="flex gap-2"><CheckCircle size={16} className="text-amber-500 flex-shrink-0"/> 料金表・FAQ対応</li>
-                            <li className="flex gap-2"><CheckCircle size={16} className="text-amber-500 flex-shrink-0"/> CTAボタン</li>
+                        <ul className="space-y-1 text-xs text-gray-700">
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-amber-500 flex-shrink-0"/> AI Flyer機能</li>
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-amber-500 flex-shrink-0"/> CTAボタン</li>
+                        </ul>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100">
+                        <div className="flex items-center gap-2 mb-3 text-blue-700 font-bold text-lg">
+                            <Calendar size={20} className="text-blue-500"/> 予約メーカー
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                            ビジネス向け予約管理システム。スプレッドシート連動も可能。
+                        </p>
+                        <ul className="space-y-1 text-xs text-gray-700">
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-blue-500 flex-shrink-0"/> カレンダー連携</li>
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-blue-500 flex-shrink-0"/> Excel出力</li>
+                        </ul>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-cyan-50 to-sky-50 rounded-2xl p-5 border border-cyan-100">
+                        <div className="flex items-center gap-2 mb-3 text-cyan-700 font-bold text-lg">
+                            <CalendarCheck size={20} className="text-cyan-500"/> 出欠メーカー
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                            飲み会・イベントの日程調整を簡単に。無料で何度でも作成可能。
+                        </p>
+                        <ul className="space-y-1 text-xs text-gray-700">
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-cyan-500 flex-shrink-0"/> ログイン不要</li>
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-cyan-500 flex-shrink-0"/> リアルタイム集計</li>
+                        </ul>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-5 border border-teal-100">
+                        <div className="flex items-center gap-2 mb-3 text-teal-700 font-bold text-lg">
+                            <ClipboardList size={20} className="text-teal-500"/> アンケートメーカー
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                            アンケート・投票・フィードバック収集を無料で作成。
+                        </p>
+                        <ul className="space-y-1 text-xs text-gray-700">
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-teal-500 flex-shrink-0"/> 簡単作成</li>
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-teal-500 flex-shrink-0"/> 集計機能</li>
+                        </ul>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-2xl p-5 border border-rose-100">
+                        <div className="flex items-center gap-2 mb-3 text-rose-700 font-bold text-lg">
+                            <PenTool size={20} className="text-rose-500"/> セールスライター
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                            セールスレター・LP文章をAIで自動生成。売れるコピーを簡単作成。
+                        </p>
+                        <ul className="space-y-1 text-xs text-gray-700">
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-rose-500 flex-shrink-0"/> AI自動生成</li>
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-rose-500 flex-shrink-0"/> テンプレート</li>
+                        </ul>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-5 border border-purple-100">
+                        <div className="flex items-center gap-2 mb-3 text-purple-700 font-bold text-lg">
+                            <Gamepad2 size={20} className="text-purple-500"/> ゲーミフィケーション
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                            福引き・ガチャ・スロット・スクラッチ・スタンプラリー等。
+                        </p>
+                        <ul className="space-y-1 text-xs text-gray-700">
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-purple-500 flex-shrink-0"/> 6種類のゲーム</li>
+                            <li className="flex gap-2"><CheckCircle size={14} className="text-purple-500 flex-shrink-0"/> エンゲージメント向上</li>
                         </ul>
                     </div>
                 </div>
