@@ -20,6 +20,9 @@ import {
   UserCircle,
   Building2,
   FileText,
+  PenTool,
+  Gamepad2,
+  Calendar,
 } from 'lucide-react';
 import { ServiceType, SERVICE_LABELS, Block } from '@/lib/types';
 
@@ -72,7 +75,11 @@ const getServiceIcon = (type: ServiceType) => {
     quiz: Sparkles,
     profile: UserCircle,
     business: Building2,
-    salesletter: FileText,
+    salesletter: PenTool,
+    survey: FileText,
+    gamification: Gamepad2,
+    attendance: Users,
+    booking: Calendar,
   };
   return icons[type] || Sparkles; // フォールバック
 };
@@ -83,6 +90,10 @@ const getServiceColor = (type: ServiceType) => {
     profile: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', gradient: 'from-emerald-500 to-teal-600' },
     business: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200', gradient: 'from-amber-500 to-orange-600' },
     salesletter: { bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-200', gradient: 'from-rose-500 to-pink-600' },
+    survey: { bg: 'bg-teal-50', text: 'text-teal-600', border: 'border-teal-200', gradient: 'from-teal-500 to-cyan-600' },
+    gamification: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200', gradient: 'from-purple-500 to-pink-600' },
+    attendance: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200', gradient: 'from-purple-500 to-indigo-600' },
+    booking: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200', gradient: 'from-blue-500 to-indigo-600' },
   };
   return colors[type] || colors.quiz; // フォールバック
 };
