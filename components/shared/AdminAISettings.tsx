@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Settings, Loader2, Save, BookOpen, Sparkles, DollarSign, Shield, ChevronDown } from 'lucide-react';
+import { Settings, Loader2, Save, BookOpen, Sparkles, Shield, ChevronDown } from 'lucide-react';
 import type { PlanTier, MakersPlanTier } from '@/lib/subscription';
 import { AVAILABLE_AI_MODELS, DEFAULT_AI_MODELS, getModelsByProvider, type AIModelInfo } from '@/lib/ai-provider';
 
@@ -264,7 +264,7 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
           </>
         )}
         <p className={`text-xs mt-1 ${selectedService === 'kdl' ? 'text-amber-600' : 'text-blue-600'}`}>
-          ※ 価格は1Mトークンあたりの入力コストです
+          ※ 価格は1Mトークンあたり: <span className="text-blue-600 font-medium">入=入力コスト</span>、<span className="text-orange-600 font-medium">出=出力コスト</span>（出力の方が高い）
         </p>
       </div>
 
@@ -326,10 +326,12 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
                             modelsByProvider={modelsByProvider}
                           />
                           {outlineInfo && (
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs text-green-600 font-medium flex items-center">
-                                <DollarSign size={12} />
-                                {outlineInfo.inputCost.toFixed(3)}
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              <span className="text-xs text-blue-600 font-medium" title="入力コスト/1M tokens">
+                                入${outlineInfo.inputCost.toFixed(2)}
+                              </span>
+                              <span className="text-xs text-orange-600 font-medium" title="出力コスト/1M tokens">
+                                出${outlineInfo.outputCost.toFixed(2)}
                               </span>
                               <span className="text-xs text-gray-400">|</span>
                               <span className="text-xs text-gray-500">{outlineInfo.provider}</span>
@@ -350,9 +352,8 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
                           />
                           {backupOutlineInfo && (
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs text-gray-500 font-medium flex items-center">
-                                <DollarSign size={12} />
-                                {backupOutlineInfo.inputCost.toFixed(3)}
+                              <span className="text-xs text-gray-500 font-medium" title="入力/出力コスト">
+                                ${backupOutlineInfo.inputCost.toFixed(2)}/${backupOutlineInfo.outputCost.toFixed(2)}
                               </span>
                             </div>
                           )}
@@ -372,10 +373,12 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
                             modelsByProvider={modelsByProvider}
                           />
                           {writingInfo && (
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs text-green-600 font-medium flex items-center">
-                                <DollarSign size={12} />
-                                {writingInfo.inputCost.toFixed(3)}
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              <span className="text-xs text-blue-600 font-medium" title="入力コスト/1M tokens">
+                                入${writingInfo.inputCost.toFixed(2)}
+                              </span>
+                              <span className="text-xs text-orange-600 font-medium" title="出力コスト/1M tokens">
+                                出${writingInfo.outputCost.toFixed(2)}
                               </span>
                               <span className="text-xs text-gray-400">|</span>
                               <span className="text-xs text-gray-500">{writingInfo.provider}</span>
@@ -396,9 +399,8 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
                           />
                           {backupWritingInfo && (
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-xs text-gray-500 font-medium flex items-center">
-                                <DollarSign size={12} />
-                                {backupWritingInfo.inputCost.toFixed(3)}
+                              <span className="text-xs text-gray-500 font-medium" title="入力/出力コスト">
+                                ${backupWritingInfo.inputCost.toFixed(2)}/${backupWritingInfo.outputCost.toFixed(2)}
                               </span>
                             </div>
                           )}
@@ -435,19 +437,28 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
 
       {/* モデル一覧（参考） */}
       <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
-        <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-          <Settings size={18} />
-          利用可能なAIモデル一覧
-        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold text-gray-900 flex items-center gap-2">
+            <Settings size={18} />
+            利用可能なAIモデル一覧
+          </h3>
+          <span className="text-xs text-gray-500">
+            <span className="text-blue-600">入力</span>/<span className="text-orange-600">出力</span> ($/1M tokens)
+          </span>
+        </div>
         <div className="grid md:grid-cols-3 gap-4">
           {Object.entries(modelsByProvider).map(([provider, models]) => (
             <div key={provider} className="bg-white rounded-lg p-3 border border-gray-200">
               <h4 className="font-bold text-sm mb-2 text-gray-900">{provider}</h4>
               <div className="space-y-1">
                 {models.map((model) => (
-                  <div key={model.id} className="flex justify-between items-center text-xs">
-                    <span className="text-gray-700">{model.name}</span>
-                    <span className="text-green-600 font-mono">${model.inputCost.toFixed(3)}</span>
+                  <div key={model.id} className="flex justify-between items-center text-xs gap-2">
+                    <span className="text-gray-700 truncate">{model.name}</span>
+                    <span className="font-mono whitespace-nowrap">
+                      <span className="text-blue-600">${model.inputCost.toFixed(2)}</span>
+                      <span className="text-gray-400">/</span>
+                      <span className="text-orange-600">${model.outputCost.toFixed(2)}</span>
+                    </span>
                   </div>
                 ))}
               </div>
@@ -483,7 +494,7 @@ function ModelSelector({ value, onChange, modelsByProvider, isBackup }: ModelSel
           <optgroup key={provider} label={`── ${provider} ──`}>
             {models.map((model) => (
               <option key={model.id} value={model.id}>
-                {model.name} (${model.inputCost.toFixed(3)})
+                {model.name} (入${model.inputCost.toFixed(2)}/出${model.outputCost.toFixed(2)})
               </option>
             ))}
           </optgroup>
