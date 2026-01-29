@@ -8,6 +8,7 @@ import { salesLetterTemplates, getTemplatesByCategory, templateGuides } from '@/
 import CustomColorPicker from '@/components/shared/CustomColorPicker';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import BlockRenderer from '@/components/shared/BlockRenderer';
+import SalesTextEditor from './SalesTextEditor';
 import {
   Save,
   Eye,
@@ -31,16 +32,34 @@ import {
   MousePointer,
   Monitor,
   Smartphone,
+  Timer,
+  Youtube,
+  MessageCircleQuestion,
+  UploadCloud,
+  FileText,
 } from 'lucide-react';
 
 // セールスレター用ブロックタイプ
 const blockTypes = [
-  { type: 'sales_headline', label: '見出し', icon: Type, description: 'セールス用見出しテキスト' },
-  { type: 'sales_paragraph', label: '本文', icon: Type, description: 'リッチテキスト本文' },
-  { type: 'sales_image', label: '画像', icon: ImageIcon, description: '画像とキャプション' },
-  { type: 'sales_cta', label: 'CTAボタン', icon: MousePointer, description: '行動喚起ボタン' },
-  { type: 'sales_spacer', label: '余白', icon: ArrowDown, description: '縦方向のスペース' },
-  { type: 'sales_divider', label: '区切り線', icon: Shuffle, description: 'セクション区切り' },
+  { type: 'sales_headline', label: '見出し', icon: Type, description: 'セールス用見出しテキスト', color: 'bg-blue-50 border-blue-200' },
+  { type: 'sales_paragraph', label: '本文', icon: FileText, description: 'リッチテキスト本文', color: 'bg-green-50 border-green-200' },
+  { type: 'sales_image', label: '画像', icon: ImageIcon, description: '画像とキャプション', color: 'bg-purple-50 border-purple-200' },
+  { type: 'sales_cta', label: 'CTAボタン', icon: MousePointer, description: '行動喚起ボタン', color: 'bg-red-50 border-red-200' },
+  { type: 'sales_spacer', label: '余白', icon: ArrowDown, description: '縦方向のスペース', color: 'bg-gray-50 border-gray-200' },
+  { type: 'sales_divider', label: '区切り線', icon: Shuffle, description: 'セクション区切り', color: 'bg-orange-50 border-orange-200' },
+  { type: 'sales_countdown', label: 'タイマー', icon: Timer, description: 'カウントダウンタイマー', color: 'bg-pink-50 border-pink-200' },
+  { type: 'sales_youtube', label: 'YouTube', icon: Youtube, description: 'YouTube動画埋め込み', color: 'bg-red-50 border-red-200' },
+  { type: 'sales_faq', label: 'FAQ', icon: MessageCircleQuestion, description: 'よくある質問', color: 'bg-cyan-50 border-cyan-200' },
+];
+
+// フリー画像リスト
+const curatedImages = [
+  "https://images.unsplash.com/photo-1664575602276-acd073f104c1?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1606857521015-7f9fcf423740?auto=format&fit=crop&w=800&q=80",
 ];
 
 // デフォルト設定
@@ -167,6 +186,38 @@ export default function SalesLetterEditor({
           lineColor: '#e5e7eb',
           lineWidth: 1,
           shortWidth: 30,
+        };
+        break;
+      case 'sales_countdown':
+        data = {
+          targetDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          title: '期間限定キャンペーン',
+          expiredAction: 'text',
+          expiredText: 'このキャンペーンは終了しました',
+          backgroundColor: '#1f2937',
+          textColor: '#ffffff',
+          showDays: true,
+          showHours: true,
+          showMinutes: true,
+          showSeconds: true,
+        };
+        break;
+      case 'sales_youtube':
+        data = {
+          url: '',
+          title: '',
+          aspectRatio: '16:9',
+          autoplay: false,
+          muted: false,
+        };
+        break;
+      case 'sales_faq':
+        data = {
+          items: [
+            { id: generateBlockId(), question: '質問1を入力してください', answer: '回答1を入力してください' },
+          ],
+          style: 'accordion',
+          backgroundColor: '#ffffff',
         };
         break;
       default:
@@ -340,6 +391,24 @@ export default function SalesLetterEditor({
         <div className="flex flex-col lg:flex-row">
           {/* 左パネル: エディタ */}
           <div className="w-full lg:w-1/2 p-4">
+            {/* プロ向け説明文 */}
+            <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-rose-700">
+                ※文章を中心としたセールスレターを書くためのプロ向けツールです。
+              </p>
+            </div>
+
+            {/* テンプレート選択リンク */}
+            <div className="mb-4">
+              <button
+                onClick={() => setShowTemplateModal(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-xl hover:border-rose-300 hover:bg-rose-50 transition-colors"
+              >
+                <FileText size={18} className="text-rose-500" />
+                <span className="font-medium text-gray-700">テンプレートを選択</span>
+              </button>
+            </div>
+
             {/* ブロック追加 */}
             <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
               <h3 className="text-sm font-bold text-gray-700 mb-3">ブロックを追加</h3>
@@ -357,6 +426,14 @@ export default function SalesLetterEditor({
                 ))}
               </div>
             </div>
+
+            {/* コンテンツ幅・背景設定 */}
+            <ContentSettingsPanel
+              settings={settings}
+              onUpdate={(updates) => setSettings(prev => ({ ...prev, ...updates }))}
+              onOpenColorPicker={() => setShowColorPicker(true)}
+              userId={user?.id}
+            />
 
             {/* ブロックリスト */}
             <div className="space-y-3">
@@ -594,11 +671,11 @@ function BlockEditorItem({
       onClick={onSelect}
     >
       {/* ヘッダー */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-100">
+      <div className={`flex items-center justify-between px-4 py-2 border-b ${blockType?.color || 'bg-gray-50 border-gray-100'}`}>
         <div className="flex items-center gap-2">
           <GripVertical className="text-gray-400 cursor-move" size={16} />
-          <Icon size={16} className="text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">{blockType?.label}</span>
+          <Icon size={16} className="text-gray-600" />
+          <span className="text-sm font-bold text-gray-700">{blockType?.label}</span>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -634,61 +711,21 @@ function BlockEditorItem({
       {isExpanded && (
         <div className="p-4 space-y-3">
           {block.type === 'sales_headline' && (
-            <>
-              <input
-                type="text"
-                value={(block.data as any).text || ''}
-                onChange={(e) => onUpdate({ text: e.target.value })}
-                className="w-full text-lg font-bold text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
-                placeholder="見出しテキスト"
-              />
-              <div className="flex flex-wrap gap-2">
-                <select
-                  value={(block.data as any).level || 'h2'}
-                  onChange={(e) => onUpdate({ level: e.target.value })}
-                  className="text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
-                >
-                  <option value="h1">H1</option>
-                  <option value="h2">H2</option>
-                  <option value="h3">H3</option>
-                  <option value="h4">H4</option>
-                </select>
-                <select
-                  value={(block.data as any).align || 'center'}
-                  onChange={(e) => onUpdate({ align: e.target.value })}
-                  className="text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
-                >
-                  <option value="left">左寄せ</option>
-                  <option value="center">中央</option>
-                  <option value="right">右寄せ</option>
-                </select>
-                <input
-                  type="number"
-                  value={(block.data as any).fontSize || 32}
-                  onChange={(e) => onUpdate({ fontSize: Number(e.target.value) })}
-                  className="w-20 text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
-                  placeholder="サイズ"
-                />
-                <span className="text-sm text-gray-500 self-center">px</span>
-                <input
-                  type="color"
-                  value={(block.data as any).color || '#1f2937'}
-                  onChange={(e) => onUpdate({ color: e.target.value })}
-                  className="w-10 h-10 rounded cursor-pointer"
-                />
-              </div>
-            </>
+            <HeadlineBlockEditor
+              data={block.data as any}
+              onUpdate={onUpdate}
+              userId={userId}
+            />
           )}
 
           {block.type === 'sales_paragraph' && (
             <>
-              <textarea
-                value={(block.data as any).htmlContent?.replace(/<[^>]*>/g, '') || ''}
-                onChange={(e) => onUpdate({ htmlContent: `<p>${e.target.value}</p>` })}
-                className="w-full min-h-[150px] text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
-                placeholder="本文を入力..."
+              <SalesTextEditor
+                content={(block.data as any).htmlContent || ''}
+                onChange={(html) => onUpdate({ htmlContent: html })}
+                placeholder="本文を入力してください..."
               />
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-2">
                 <select
                   value={(block.data as any).align || 'left'}
                   onChange={(e) => onUpdate({ align: e.target.value })}
@@ -853,8 +890,506 @@ function BlockEditorItem({
               />
             </div>
           )}
+
+          {block.type === 'sales_countdown' && (
+            <>
+              <input
+                type="text"
+                value={(block.data as any).title || ''}
+                onChange={(e) => onUpdate({ title: e.target.value })}
+                className="w-full text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-500"
+                placeholder="タイトル（例: 期間限定キャンペーン）"
+              />
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-gray-700">終了日時</label>
+                <input
+                  type="datetime-local"
+                  value={(block.data as any).targetDate?.slice(0, 16) || ''}
+                  onChange={(e) => onUpdate({ targetDate: new Date(e.target.value).toISOString() })}
+                  className="w-full text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-gray-700">期限切れ時の動作</label>
+                <select
+                  value={(block.data as any).expiredAction || 'text'}
+                  onChange={(e) => onUpdate({ expiredAction: e.target.value })}
+                  className="text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
+                >
+                  <option value="text">テキストを表示</option>
+                  <option value="redirect">別ページへ移動</option>
+                </select>
+              </div>
+              {(block.data as any).expiredAction === 'text' && (
+                <input
+                  type="text"
+                  value={(block.data as any).expiredText || ''}
+                  onChange={(e) => onUpdate({ expiredText: e.target.value })}
+                  className="w-full text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-500"
+                  placeholder="期限切れ時のメッセージ"
+                />
+              )}
+              {(block.data as any).expiredAction === 'redirect' && (
+                <input
+                  type="text"
+                  value={(block.data as any).expiredUrl || ''}
+                  onChange={(e) => onUpdate({ expiredUrl: e.target.value })}
+                  className="w-full text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-500"
+                  placeholder="リダイレクト先URL"
+                />
+              )}
+              <div className="flex gap-2">
+                <div className="flex items-center gap-1">
+                  <span className="text-sm text-gray-600">背景:</span>
+                  <input
+                    type="color"
+                    value={(block.data as any).backgroundColor || '#1f2937'}
+                    onChange={(e) => onUpdate({ backgroundColor: e.target.value })}
+                    className="w-8 h-8 rounded cursor-pointer"
+                  />
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm text-gray-600">文字:</span>
+                  <input
+                    type="color"
+                    value={(block.data as any).textColor || '#ffffff'}
+                    onChange={(e) => onUpdate({ textColor: e.target.value })}
+                    className="w-8 h-8 rounded cursor-pointer"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {block.type === 'sales_youtube' && (
+            <>
+              <input
+                type="text"
+                value={(block.data as any).url || ''}
+                onChange={(e) => onUpdate({ url: e.target.value })}
+                className="w-full text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-500"
+                placeholder="YouTube URL（例: https://www.youtube.com/watch?v=xxx）"
+              />
+              <input
+                type="text"
+                value={(block.data as any).title || ''}
+                onChange={(e) => onUpdate({ title: e.target.value })}
+                className="w-full text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-500"
+                placeholder="タイトル（任意）"
+              />
+              <div className="flex gap-2">
+                <select
+                  value={(block.data as any).aspectRatio || '16:9'}
+                  onChange={(e) => onUpdate({ aspectRatio: e.target.value })}
+                  className="text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
+                >
+                  <option value="16:9">16:9（横長）</option>
+                  <option value="4:3">4:3</option>
+                  <option value="1:1">1:1（正方形）</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          {block.type === 'sales_faq' && (
+            <FaqBlockEditor
+              items={(block.data as any).items || []}
+              onUpdate={(items) => onUpdate({ items })}
+            />
+          )}
         </div>
       )}
+    </div>
+  );
+}
+
+// 見出しブロック編集コンポーネント
+function HeadlineBlockEditor({
+  data,
+  onUpdate,
+  userId,
+}: {
+  data: any;
+  onUpdate: (updates: Record<string, unknown>) => void;
+  userId?: string;
+}) {
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleBackgroundImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !supabase) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('画像は2MB以下にしてください');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileName = `${Date.now()}_${file.name}`;
+      const filePath = `${userId || 'anonymous'}/${fileName}`;
+      
+      await supabase.storage.from('profile-uploads').upload(filePath, file);
+      const { data: urlData } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
+      
+      onUpdate({ backgroundType: 'image', backgroundImage: urlData.publicUrl });
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('アップロードに失敗しました');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRandomImage = () => {
+    const selected = curatedImages[Math.floor(Math.random() * curatedImages.length)];
+    onUpdate({ backgroundType: 'image', backgroundImage: selected });
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* テキスト入力 */}
+      <input
+        type="text"
+        value={data.text || ''}
+        onChange={(e) => onUpdate({ text: e.target.value })}
+        className="w-full text-lg font-bold text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+        placeholder="見出しテキスト"
+      />
+
+      {/* 基本設定 */}
+      <div className="flex flex-wrap gap-2">
+        <select
+          value={data.level || 'h2'}
+          onChange={(e) => onUpdate({ level: e.target.value })}
+          className="text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
+        >
+          <option value="h1">H1</option>
+          <option value="h2">H2</option>
+          <option value="h3">H3</option>
+          <option value="h4">H4</option>
+        </select>
+        <select
+          value={data.align || 'center'}
+          onChange={(e) => onUpdate({ align: e.target.value })}
+          className="text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
+        >
+          <option value="left">左寄せ</option>
+          <option value="center">中央</option>
+          <option value="right">右寄せ</option>
+        </select>
+        <input
+          type="number"
+          value={data.fontSize || 32}
+          onChange={(e) => onUpdate({ fontSize: Number(e.target.value) })}
+          className="w-20 text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
+          placeholder="サイズ"
+        />
+        <span className="text-sm text-gray-500 self-center">px</span>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-gray-600">文字:</span>
+          <input
+            type="color"
+            value={data.color || '#1f2937'}
+            onChange={(e) => onUpdate({ color: e.target.value })}
+            className="w-8 h-8 rounded cursor-pointer"
+          />
+        </div>
+      </div>
+
+      {/* 背景設定 */}
+      <div className="border-t border-gray-200 pt-3">
+        <label className="block text-xs font-medium text-gray-600 mb-2">背景設定</label>
+        
+        <div className="flex flex-wrap gap-2 mb-2">
+          <select
+            value={data.backgroundType || 'none'}
+            onChange={(e) => onUpdate({ backgroundType: e.target.value })}
+            className="text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
+          >
+            <option value="none">なし</option>
+            <option value="color">背景色</option>
+            <option value="image">背景画像</option>
+          </select>
+
+          {data.backgroundType === 'color' && (
+            <input
+              type="color"
+              value={data.backgroundColor || '#f3f4f6'}
+              onChange={(e) => onUpdate({ backgroundColor: e.target.value })}
+              className="w-10 h-10 rounded cursor-pointer"
+            />
+          )}
+
+          {(data.backgroundType === 'color' || data.backgroundType === 'image') && (
+            <select
+              value={data.backgroundWidth || 'content'}
+              onChange={(e) => onUpdate({ backgroundWidth: e.target.value })}
+              className="text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
+            >
+              <option value="full">全幅</option>
+              <option value="content">コンテンツ幅</option>
+              <option value="custom">カスタム幅</option>
+            </select>
+          )}
+        </div>
+
+        {data.backgroundType === 'image' && (
+          <div className="flex gap-2 mb-2">
+            <label className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg font-medium text-xs hover:bg-indigo-100 cursor-pointer">
+              {isUploading ? <Loader2 className="animate-spin" size={14} /> : <UploadCloud size={14} />}
+              <span>アップロード</span>
+              <input type="file" className="hidden" accept="image/*" onChange={handleBackgroundImageUpload} disabled={isUploading} />
+            </label>
+            <button
+              onClick={handleRandomImage}
+              className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-100 rounded-lg text-xs font-medium hover:bg-gray-200"
+            >
+              <ImageIcon size={14} /> 自動
+            </button>
+          </div>
+        )}
+
+        {data.backgroundImage && data.backgroundType === 'image' && (
+          <div className="relative mb-2">
+            <img src={data.backgroundImage} alt="背景プレビュー" className="w-full h-16 object-cover rounded-lg" />
+            <button
+              onClick={() => onUpdate({ backgroundImage: undefined, backgroundType: 'none' })}
+              className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full hover:bg-black/70"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        )}
+
+        {(data.backgroundType === 'color' || data.backgroundType === 'image') && (
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-600">透明度:</label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={data.backgroundOpacity ?? 100}
+              onChange={(e) => onUpdate({ backgroundOpacity: Number(e.target.value) })}
+              className="flex-1"
+            />
+            <span className="text-xs text-gray-500 w-8">{data.backgroundOpacity ?? 100}%</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// FAQブロック編集コンポーネント
+function FaqBlockEditor({
+  items,
+  onUpdate,
+}: {
+  items: Array<{ id: string; question: string; answer: string }>;
+  onUpdate: (items: Array<{ id: string; question: string; answer: string }>) => void;
+}) {
+  const addItem = () => {
+    onUpdate([...items, { id: generateBlockId(), question: '', answer: '' }]);
+  };
+
+  const updateItem = (id: string, field: 'question' | 'answer', value: string) => {
+    onUpdate(items.map(item => item.id === id ? { ...item, [field]: value } : item));
+  };
+
+  const removeItem = (id: string) => {
+    if (items.length > 1) {
+      onUpdate(items.filter(item => item.id !== id));
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {items.map((item, index) => (
+        <div key={item.id} className="p-3 border border-gray-200 rounded-lg space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-gray-500">Q{index + 1}</span>
+            <button
+              onClick={() => removeItem(item.id)}
+              className="p-1 text-gray-400 hover:text-red-500"
+              disabled={items.length <= 1}
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+          <input
+            type="text"
+            value={item.question}
+            onChange={(e) => updateItem(item.id, 'question', e.target.value)}
+            className="w-full text-sm text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-500"
+            placeholder="質問を入力"
+          />
+          <textarea
+            value={item.answer}
+            onChange={(e) => updateItem(item.id, 'answer', e.target.value)}
+            className="w-full text-sm text-gray-900 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-rose-500 min-h-[60px]"
+            placeholder="回答を入力"
+          />
+        </div>
+      ))}
+      <button
+        onClick={addItem}
+        className="w-full py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-rose-300 hover:text-rose-500"
+      >
+        + 質問を追加
+      </button>
+    </div>
+  );
+}
+
+// コンテンツ設定パネル（左パネル内）
+function ContentSettingsPanel({
+  settings,
+  onUpdate,
+  onOpenColorPicker,
+  userId,
+}: {
+  settings: SalesLetterSettings;
+  onUpdate: (updates: Partial<SalesLetterSettings>) => void;
+  onOpenColorPicker: () => void;
+  userId?: string;
+}) {
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleBackgroundImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !supabase) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('画像は2MB以下にしてください');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileName = `${Date.now()}_${file.name}`;
+      const filePath = `${userId || 'anonymous'}/${fileName}`;
+      
+      await supabase.storage.from('profile-uploads').upload(filePath, file);
+      const { data: urlData } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
+      
+      onUpdate({
+        pageBackground: {
+          ...settings.pageBackground,
+          type: 'image',
+          value: urlData.publicUrl,
+          imageUrl: urlData.publicUrl,
+        } as any,
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('アップロードに失敗しました');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRandomImage = () => {
+    const selected = curatedImages[Math.floor(Math.random() * curatedImages.length)];
+    onUpdate({
+      pageBackground: {
+        ...settings.pageBackground,
+        type: 'image',
+        value: selected,
+        imageUrl: selected,
+      } as any,
+    });
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
+      <h3 className="text-sm font-bold text-gray-700 mb-3">コンテンツ幅・背景設定</h3>
+      
+      {/* コンテンツ幅 */}
+      <div className="mb-4">
+        <label className="block text-xs font-medium text-gray-600 mb-2">コンテンツ幅</label>
+        <select
+          value={settings.contentWidth}
+          onChange={(e) => onUpdate({ contentWidth: Number(e.target.value) })}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-rose-500"
+        >
+          {widthPresets.map((preset) => (
+            <option key={preset.value} value={preset.value}>{preset.label}</option>
+          ))}
+        </select>
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            type="number"
+            value={settings.contentWidth}
+            onChange={(e) => onUpdate({ contentWidth: Number(e.target.value) })}
+            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-rose-500"
+          />
+          <span className="text-xs text-gray-500">px</span>
+        </div>
+      </div>
+
+      {/* 背景色 */}
+      <div className="mb-4">
+        <label className="block text-xs font-medium text-gray-600 mb-2">背景色</label>
+        <button
+          onClick={onOpenColorPicker}
+          className="w-full flex items-center gap-3 px-3 py-2 border border-gray-300 rounded-lg hover:border-rose-300"
+        >
+          <div
+            className="w-8 h-8 rounded border border-gray-200"
+            style={{ background: settings.pageBackground?.value || '#ffffff' }}
+          />
+          <span className="text-sm text-gray-700">背景色を選択</span>
+        </button>
+      </div>
+
+      {/* 背景画像 */}
+      <div className="mb-4">
+        <label className="block text-xs font-medium text-gray-600 mb-2">背景画像</label>
+        <div className="flex gap-2">
+          <label className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg font-medium text-sm hover:bg-indigo-100 cursor-pointer">
+            {isUploading ? <Loader2 className="animate-spin" size={16} /> : <UploadCloud size={16} />}
+            <span>アップロード</span>
+            <input type="file" className="hidden" accept="image/*" onChange={handleBackgroundImageUpload} disabled={isUploading} />
+          </label>
+          <button
+            onClick={handleRandomImage}
+            className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200"
+          >
+            <ImageIcon size={16} /> 自動
+          </button>
+        </div>
+        {settings.pageBackground?.imageUrl && (
+          <div className="mt-2 relative">
+            <img src={settings.pageBackground.imageUrl} alt="背景プレビュー" className="w-full h-20 object-cover rounded-lg" />
+            <button
+              onClick={() => onUpdate({ pageBackground: { ...settings.pageBackground, type: 'color', imageUrl: undefined } as any })}
+              className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full hover:bg-black/70"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* 背景適用範囲 */}
+      <div>
+        <label className="block text-xs font-medium text-gray-600 mb-2">背景の適用範囲</label>
+        <select
+          value={settings.pageBackground?.scope || 'all'}
+          onChange={(e) => onUpdate({
+            pageBackground: {
+              ...settings.pageBackground,
+              scope: e.target.value as 'all' | 'inside' | 'outside',
+            } as any,
+          })}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-rose-500"
+        >
+          <option value="all">全体</option>
+          <option value="inside">コンテンツ幅内のみ</option>
+          <option value="outside">コンテンツ幅外のみ</option>
+        </select>
+      </div>
     </div>
   );
 }

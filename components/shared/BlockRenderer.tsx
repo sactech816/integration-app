@@ -996,6 +996,77 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
       }
       return <hr style={dividerLineStyle} className="border-0 my-6" />;
 
+    case 'sales_countdown':
+      return (
+        <SalesCountdownBlock
+          targetDate={block.data.targetDate}
+          title={block.data.title}
+          expiredAction={block.data.expiredAction}
+          expiredText={block.data.expiredText}
+          expiredUrl={block.data.expiredUrl}
+          backgroundColor={block.data.backgroundColor}
+          textColor={block.data.textColor}
+        />
+      );
+
+    case 'sales_youtube':
+      if (!block.data.url) {
+        return (
+          <div className="mb-6 bg-gray-100 rounded-lg p-12 text-center">
+            <p className="text-gray-500">YouTube URLを設定してください</p>
+          </div>
+        );
+      }
+      const getYouTubeId = (url: string) => {
+        const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+        return match ? match[1] : null;
+      };
+      const ytVideoId = getYouTubeId(block.data.url);
+      const ytAspectRatio = block.data.aspectRatio === '4:3' ? 'aspect-[4/3]' : 
+                          block.data.aspectRatio === '1:1' ? 'aspect-square' : 'aspect-video';
+      return (
+        <div className="mb-6">
+          {block.data.title && (
+            <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">{block.data.title}</h3>
+          )}
+          {ytVideoId ? (
+            <div className={`relative ${ytAspectRatio} rounded-lg overflow-hidden`}>
+              <iframe
+                src={`https://www.youtube.com/embed/${ytVideoId}${block.data.autoplay ? '?autoplay=1' : ''}${block.data.muted ? '&mute=1' : ''}`}
+                className="absolute inset-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          ) : (
+            <div className="bg-gray-100 rounded-lg p-12 text-center">
+              <p className="text-gray-500">無効なYouTube URLです</p>
+            </div>
+          )}
+        </div>
+      );
+
+    case 'sales_faq':
+      return (
+        <div className="mb-6">
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{ backgroundColor: block.data.backgroundColor || '#ffffff' }}
+          >
+            {block.data.items?.map((item: { id: string; question: string; answer: string }, index: number) => (
+              <SalesFaqItem
+                key={item.id}
+                question={item.question}
+                answer={item.answer}
+                isLast={index === block.data.items.length - 1}
+                questionColor={block.data.questionColor}
+                answerColor={block.data.answerColor}
+              />
+            ))}
+          </div>
+        </div>
+      );
+
     default:
       return null;
   }
@@ -1399,9 +1470,146 @@ function LeadFormBlockRenderer({ block, variant }: { block: Extract<Block, { typ
 
 export default BlockRenderer;
 
+// セールスレター用カウントダウンブロック
+function SalesCountdownBlock({
+  targetDate,
+  title,
+  expiredAction,
+  expiredText,
+  expiredUrl,
+  backgroundColor,
+  textColor,
+}: {
+  targetDate: string;
+  title?: string;
+  expiredAction: 'text' | 'redirect';
+  expiredText?: string;
+  expiredUrl?: string;
+  backgroundColor?: string;
+  textColor?: string;
+}) {
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+  const [isExpired, setIsExpired] = useState(false);
 
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      const target = new Date(targetDate).getTime();
+      const difference = target - now;
 
+      if (difference <= 0) {
+        setIsExpired(true);
+        if (expiredAction === 'redirect' && expiredUrl) {
+          window.location.href = expiredUrl;
+        }
+        return;
+      }
 
+      setTimeLeft({
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((difference % (1000 * 60)) / 1000),
+      });
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(timer);
+  }, [targetDate, expiredAction, expiredUrl]);
+
+  if (isExpired && expiredAction === 'text') {
+    return (
+      <div
+        className="mb-6 py-6 px-4 rounded-xl text-center"
+        style={{ backgroundColor: backgroundColor || '#1f2937', color: textColor || '#ffffff' }}
+      >
+        <p className="text-lg font-bold">{expiredText || 'このキャンペーンは終了しました'}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="mb-6 py-6 px-4 rounded-xl"
+      style={{ backgroundColor: backgroundColor || '#1f2937', color: textColor || '#ffffff' }}
+    >
+      {title && <p className="text-center text-lg font-bold mb-4">{title}</p>}
+      <div className="flex justify-center gap-4">
+        <div className="text-center">
+          <div className="text-3xl md:text-5xl font-bold">{String(timeLeft.days).padStart(2, '0')}</div>
+          <div className="text-xs md:text-sm opacity-80 mt-1">日</div>
+        </div>
+        <div className="text-3xl md:text-5xl font-bold opacity-50">:</div>
+        <div className="text-center">
+          <div className="text-3xl md:text-5xl font-bold">{String(timeLeft.hours).padStart(2, '0')}</div>
+          <div className="text-xs md:text-sm opacity-80 mt-1">時間</div>
+        </div>
+        <div className="text-3xl md:text-5xl font-bold opacity-50">:</div>
+        <div className="text-center">
+          <div className="text-3xl md:text-5xl font-bold">{String(timeLeft.minutes).padStart(2, '0')}</div>
+          <div className="text-xs md:text-sm opacity-80 mt-1">分</div>
+        </div>
+        <div className="text-3xl md:text-5xl font-bold opacity-50">:</div>
+        <div className="text-center">
+          <div className="text-3xl md:text-5xl font-bold">{String(timeLeft.seconds).padStart(2, '0')}</div>
+          <div className="text-xs md:text-sm opacity-80 mt-1">秒</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// セールスレター用FAQアイテム
+function SalesFaqItem({
+  question,
+  answer,
+  isLast,
+  questionColor,
+  answerColor,
+}: {
+  question: string;
+  answer: string;
+  isLast: boolean;
+  questionColor?: string;
+  answerColor?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className={!isLast ? 'border-b border-gray-200' : ''}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
+      >
+        <span
+          className="font-bold pr-4"
+          style={{ color: questionColor || '#1f2937' }}
+        >
+          Q. {question}
+        </span>
+        {isOpen ? (
+          <ChevronUp className="flex-shrink-0 text-gray-400" size={20} />
+        ) : (
+          <ChevronDown className="flex-shrink-0 text-gray-400" size={20} />
+        )}
+      </button>
+      {isOpen && (
+        <div
+          className="px-4 pb-4"
+          style={{ color: answerColor || '#4b5563' }}
+        >
+          <p className="whitespace-pre-wrap">A. {answer}</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 
 

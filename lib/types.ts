@@ -349,7 +349,13 @@ export type SalesHeadlineBlockData = {
   underlineColor?: string;
   letterSpacing?: number;
   lineHeight?: number;
+  // 背景設定
+  backgroundType?: 'none' | 'color' | 'image';
   backgroundColor?: string;
+  backgroundImage?: string;
+  backgroundOpacity?: number;
+  backgroundWidth?: 'full' | 'content' | 'custom';
+  customBackgroundWidth?: number;
   padding?: number;
 };
 
@@ -360,7 +366,13 @@ export type SalesParagraphBlockData = {
   defaultFontSize?: number;
   defaultColor?: string;
   lineHeight?: number;
+  // 背景設定
+  backgroundType?: 'none' | 'color' | 'image';
   backgroundColor?: string;
+  backgroundImage?: string;
+  backgroundOpacity?: number;
+  backgroundWidth?: 'full' | 'content' | 'custom';
+  customBackgroundWidth?: number;
   padding?: number;
 };
 
@@ -404,6 +416,45 @@ export type SalesDividerBlockData = {
   lineColor: string;
   lineWidth: number;
   shortWidth?: number;
+};
+
+// セールス用カウントダウンタイマーブロック
+export type SalesCountdownBlockData = {
+  targetDate: string; // ISO形式の日時
+  title?: string;
+  expiredAction: 'text' | 'redirect';
+  expiredText?: string;
+  expiredUrl?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  showDays?: boolean;
+  showHours?: boolean;
+  showMinutes?: boolean;
+  showSeconds?: boolean;
+};
+
+// セールス用YouTube埋め込みブロック
+export type SalesYoutubeBlockData = {
+  url: string;
+  title?: string;
+  aspectRatio?: '16:9' | '4:3' | '1:1';
+  autoplay?: boolean;
+  muted?: boolean;
+};
+
+// セールス用FAQブロック
+export type SalesFaqItem = {
+  id: string;
+  question: string;
+  answer: string;
+};
+
+export type SalesFaqBlockData = {
+  items: SalesFaqItem[];
+  style?: 'accordion' | 'list';
+  backgroundColor?: string;
+  questionColor?: string;
+  answerColor?: string;
 };
 
 // プロフィールLP追加ブロック型定義
@@ -461,7 +512,10 @@ export type Block =
   | { id: string; type: 'sales_image'; data: SalesImageBlockData }
   | { id: string; type: 'sales_cta'; data: SalesCtaBlockData }
   | { id: string; type: 'sales_spacer'; data: SalesSpacerBlockData }
-  | { id: string; type: 'sales_divider'; data: SalesDividerBlockData };
+  | { id: string; type: 'sales_divider'; data: SalesDividerBlockData }
+  | { id: string; type: 'sales_countdown'; data: SalesCountdownBlockData }
+  | { id: string; type: 'sales_youtube'; data: SalesYoutubeBlockData }
+  | { id: string; type: 'sales_faq'; data: SalesFaqBlockData };
 
 // トラッキング設定の型定義
 export type TrackingSettings = {
@@ -525,6 +579,8 @@ export interface SalesLetterSettings {
     value: string;
     opacity?: number;
     animated?: boolean;
+    scope?: 'all' | 'inside' | 'outside'; // 全体 / コンテンツ幅内 / コンテンツ幅外
+    imageUrl?: string; // 背景画像URL
   };
   hideFooter?: boolean;
   tracking?: TrackingSettings;
