@@ -173,6 +173,7 @@ export default function CustomColorPicker({
       button: 'bg-emerald-600 hover:bg-emerald-700',
       ring: 'ring-emerald-500',
       border: 'border-emerald-500',
+      text: 'text-emerald-800',
     },
     amber: {
       tabActive: 'bg-amber-100 text-amber-700',
@@ -180,6 +181,7 @@ export default function CustomColorPicker({
       button: 'bg-amber-600 hover:bg-amber-700',
       ring: 'ring-amber-500',
       border: 'border-amber-500',
+      text: 'text-amber-800',
     },
   };
   const styles = accentStyles[accentColor];
@@ -396,8 +398,8 @@ export default function CustomColorPicker({
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <span className="text-xl block">{dir.label}</span>
-                      <span className="text-xs text-gray-500">{dir.name}</span>
+                      <span className={`text-xl block font-bold ${direction === dir.value ? styles.text : 'text-gray-700'}`}>{dir.label}</span>
+                      <span className="text-xs text-gray-600">{dir.name}</span>
                     </button>
                   ))}
                 </div>

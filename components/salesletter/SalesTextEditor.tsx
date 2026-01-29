@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -12,13 +12,35 @@ import {
   Italic,
   Underline as UnderlineIcon,
   Strikethrough,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
   List,
   ListOrdered,
   Palette,
+  Smile,
 } from 'lucide-react';
+
+// アイコンプリセット（カテゴリ別）
+const iconPresets = {
+  features: {
+    label: '特徴・メリット',
+    icons: ['🏆', '🤝', '📊', '💡', '✨', '🎯', '🚀', '⭐', '💪', '🔥', '✓', '💎', '🌟', '📈', '🎁', '🛡️', '⚡', '🔑', '💼', '🌈']
+  },
+  problems: {
+    label: 'お悩み・課題',
+    icons: ['😰', '😓', '🤔', '😢', '💭', '❓', '😟', '😩', '⚠️', '💔', '😥', '😤', '🤷', '😔', '💦', '❌', '😵', '🆘', '😫', '🥺']
+  },
+  bonus: {
+    label: '特典・プレゼント',
+    icons: ['🎁', '📚', '🎉', '✨', '💝', '🏅', '🎊', '💰', '📖', '🎬', '📝', '🎮', '🎵', '📱', '💻', '🎨', '📦', '🌸', '👑', '🍀']
+  },
+  check: {
+    label: 'チェック・確認',
+    icons: ['✓', '✔️', '☑️', '👍', '👌', '💯', '⭕', '🔵', '🟢', '✅']
+  },
+  general: {
+    label: 'その他',
+    icons: ['📌', '💬', '🗓️', '📞', '✉️', '🔔', '⏰', '📍', '🏠', '💳', '🎓', '🏋️', '🍽️', '☕', '🧘', '💼', '🌍', '🎤', '📸', '🛒']
+  }
+};
 
 interface SalesTextEditorProps {
   content: string;
@@ -31,6 +53,9 @@ export default function SalesTextEditor({
   onChange,
   placeholder = 'ここに本文を入力してください...',
 }: SalesTextEditorProps) {
+  const [showIconPicker, setShowIconPicker] = useState(false);
+  const [activeIconCategory, setActiveIconCategory] = useState<keyof typeof iconPresets>('features');
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -149,7 +174,7 @@ export default function SalesTextEditor({
         </div>
 
         {/* 文字色 */}
-        <div className="flex items-center gap-1 px-2">
+        <div className="flex items-center gap-1 px-2 border-r border-gray-200">
           <Palette size={14} className="text-gray-400" />
           <input
             type="color"
@@ -166,26 +191,54 @@ export default function SalesTextEditor({
           </button>
         </div>
 
-        {/* 文字サイズ */}
-        <div className="flex items-center gap-1 px-2">
-          <span className="text-xs text-gray-500">サイズ:</span>
-          <select
-            onChange={(e) => {
-              const size = e.target.value;
-              if (size === 'default') {
-                editor.chain().focus().unsetAllMarks().run();
-              } else {
-                // Note: StarterKitにはFontSizeがないので、spanでラップして対応
-                // 本番環境では@tiptap/extension-font-sizeを追加することを推奨
-              }
-            }}
-            className="text-xs border border-gray-300 rounded px-1 py-0.5 text-gray-700"
+        {/* アイコン挿入 */}
+        <div className="relative px-2">
+          <ToolButton
+            onClick={() => setShowIconPicker(!showIconPicker)}
+            isActive={showIconPicker}
+            title="アイコンを挿入"
           >
-            <option value="default">標準</option>
-            <option value="small">小</option>
-            <option value="large">大</option>
-            <option value="xlarge">特大</option>
-          </select>
+            <Smile size={16} />
+          </ToolButton>
+
+          {showIconPicker && (
+            <div className="absolute z-50 top-full left-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-200 p-3 w-72">
+              {/* カテゴリタブ */}
+              <div className="flex flex-wrap gap-1 mb-3 border-b border-gray-100 pb-2">
+                {Object.entries(iconPresets).map(([key, preset]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setActiveIconCategory(key as keyof typeof iconPresets)}
+                    className={`text-xs px-2 py-1 rounded-full transition-colors ${
+                      activeIconCategory === key 
+                        ? 'bg-rose-100 text-rose-700 font-bold' 
+                        : 'text-gray-500 hover:bg-gray-100'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+              
+              {/* アイコングリッド */}
+              <div className="grid grid-cols-8 gap-1">
+                {iconPresets[activeIconCategory].icons.map((icon, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => {
+                      editor.chain().focus().insertContent(icon).run();
+                      setShowIconPicker(false);
+                    }}
+                    className="w-8 h-8 text-lg rounded hover:bg-rose-50 flex items-center justify-center transition-colors"
+                  >
+                    {icon}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -216,14 +269,35 @@ export default function SalesTextEditor({
           color: #374151;
         }
         
-        .ProseMirror ul, .ProseMirror ol {
+        .ProseMirror ul {
           margin: 0.5rem 0;
-          padding-left: 1.25rem;
+          padding-left: 1.5rem;
+          list-style-type: disc;
+          color: #1f2937;
+        }
+        
+        .ProseMirror ol {
+          margin: 0.5rem 0;
+          padding-left: 1.5rem;
+          list-style-type: decimal;
+          color: #1f2937;
         }
         
         .ProseMirror li {
           margin: 0.25rem 0;
           line-height: 1.6;
+          display: list-item;
+          color: #1f2937;
+        }
+        
+        .ProseMirror ul li {
+          list-style-type: disc;
+          color: #1f2937;
+        }
+        
+        .ProseMirror ol li {
+          list-style-type: decimal;
+          color: #1f2937;
         }
         
         .ProseMirror strong {

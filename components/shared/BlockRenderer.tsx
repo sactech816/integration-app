@@ -806,7 +806,7 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
     // --- セールスレター専用ブロック ---
     case 'sales_headline':
       const HeadlineTag = block.data.level as 'h1' | 'h2' | 'h3' | 'h4';
-      const headlineStyle: React.CSSProperties = {
+      const headlineTextStyle: React.CSSProperties = {
         color: block.data.color || '#1f2937',
         fontSize: `${block.data.fontSize || 32}px`,
         fontWeight: block.data.fontWeight === 'normal' ? 400 :
@@ -816,33 +816,131 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
         letterSpacing: block.data.letterSpacing ? `${block.data.letterSpacing}em` : undefined,
         lineHeight: block.data.lineHeight || 1.4,
         textAlign: block.data.align,
-        backgroundColor: block.data.backgroundColor || 'transparent',
-        padding: block.data.padding ? `${block.data.padding}px` : undefined,
+        padding: block.data.padding ? `${block.data.padding}px` : '16px 0',
         textDecoration: block.data.underline ? 'underline' : 'none',
         textDecorationColor: block.data.underlineColor || block.data.color || '#1f2937',
       };
+      
+      // 背景スタイル
+      const headlineBgStyle: React.CSSProperties = {};
+      const headlineOpacity = (block.data.backgroundOpacity ?? 100) / 100;
+      
+      if (block.data.backgroundType === 'image' && block.data.backgroundImage) {
+        headlineBgStyle.backgroundImage = `linear-gradient(rgba(255,255,255,${1-headlineOpacity}), rgba(255,255,255,${1-headlineOpacity})), url(${block.data.backgroundImage})`;
+        headlineBgStyle.backgroundSize = 'cover';
+        headlineBgStyle.backgroundPosition = 'center';
+      } else if (block.data.backgroundType === 'color' && block.data.backgroundColor) {
+        headlineBgStyle.backgroundColor = block.data.backgroundColor;
+        headlineBgStyle.opacity = headlineOpacity;
+      }
+      
+      // 幅設定
+      const headlineWidth = block.data.backgroundWidth === 'full' ? '100vw' :
+                           block.data.backgroundWidth === 'custom' ? `${block.data.customBackgroundWidth || 600}px` :
+                           '100%';
+      const headlineMargin = block.data.backgroundWidth === 'full' ? 'calc(-50vw + 50%)' : '0';
+      
       return (
-        <div className="mb-6">
-          <HeadlineTag style={headlineStyle}>{block.data.text}</HeadlineTag>
+        <div 
+          className="mb-6" 
+          style={{
+            ...(block.data.backgroundType && block.data.backgroundType !== 'none' ? {
+              ...headlineBgStyle,
+              width: headlineWidth,
+              marginLeft: headlineMargin,
+              marginRight: headlineMargin,
+            } : {}),
+          }}
+        >
+          <HeadlineTag style={headlineTextStyle}>{block.data.text}</HeadlineTag>
         </div>
       );
 
     case 'sales_paragraph':
-      const paragraphStyle: React.CSSProperties = {
+      // 背景スタイル
+      const paragraphBgStyle: React.CSSProperties = {};
+      const paragraphOpacity = (block.data.backgroundOpacity ?? 100) / 100;
+      
+      if (block.data.backgroundType === 'image' && block.data.backgroundImage) {
+        paragraphBgStyle.backgroundImage = `linear-gradient(rgba(255,255,255,${1-paragraphOpacity}), rgba(255,255,255,${1-paragraphOpacity})), url(${block.data.backgroundImage})`;
+        paragraphBgStyle.backgroundSize = 'cover';
+        paragraphBgStyle.backgroundPosition = 'center';
+      } else if (block.data.backgroundType === 'color' && block.data.backgroundColor) {
+        paragraphBgStyle.backgroundColor = block.data.backgroundColor;
+        if (paragraphOpacity < 1) {
+          const hexToRgba = (hex: string, alpha: number) => {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+          };
+          paragraphBgStyle.backgroundColor = hexToRgba(block.data.backgroundColor, paragraphOpacity);
+        }
+      }
+      
+      // 幅設定
+      const paragraphWidth = block.data.backgroundWidth === 'full' ? '100vw' :
+                            block.data.backgroundWidth === 'custom' ? `${block.data.customBackgroundWidth || 600}px` :
+                            '100%';
+      const paragraphMargin = block.data.backgroundWidth === 'full' ? 'calc(-50vw + 50%)' : '0';
+      
+      const paragraphContentStyle: React.CSSProperties = {
         textAlign: block.data.align,
-        color: block.data.defaultColor || '#374151',
         fontSize: `${block.data.defaultFontSize || 16}px`,
         lineHeight: block.data.lineHeight || 1.8,
-        backgroundColor: block.data.backgroundColor || 'transparent',
-        padding: block.data.padding ? `${block.data.padding}px` : undefined,
+        padding: block.data.padding ? `${block.data.padding}px` : '8px 0',
       };
+      
       return (
-        <div className="mb-6">
+        <div 
+          className="mb-6"
+          style={{
+            ...(block.data.backgroundType && block.data.backgroundType !== 'none' ? {
+              ...paragraphBgStyle,
+              width: paragraphWidth,
+              marginLeft: paragraphMargin,
+              marginRight: paragraphMargin,
+            } : {}),
+          }}
+        >
           <div
-            style={paragraphStyle}
-            className="prose prose-lg max-w-none"
+            style={paragraphContentStyle}
+            className="sales-paragraph-content"
             dangerouslySetInnerHTML={{ __html: block.data.htmlContent }}
           />
+          <style jsx>{`
+            .sales-paragraph-content {
+              color: ${block.data.defaultColor || '#374151'};
+            }
+            .sales-paragraph-content p {
+              margin: 0.5rem 0;
+            }
+            .sales-paragraph-content ul {
+              list-style-type: disc;
+              padding-left: 1.5rem;
+              margin: 0.5rem 0;
+            }
+            .sales-paragraph-content ol {
+              list-style-type: decimal;
+              padding-left: 1.5rem;
+              margin: 0.5rem 0;
+            }
+            .sales-paragraph-content li {
+              margin: 0.25rem 0;
+            }
+            .sales-paragraph-content strong {
+              font-weight: 700;
+            }
+            .sales-paragraph-content em {
+              font-style: italic;
+            }
+            .sales-paragraph-content u {
+              text-decoration: underline;
+            }
+            .sales-paragraph-content s {
+              text-decoration: line-through;
+            }
+          `}</style>
         </div>
       );
 

@@ -37,6 +37,8 @@ import {
   MessageCircleQuestion,
   UploadCloud,
   FileText,
+  Trophy,
+  Share2,
 } from 'lucide-react';
 
 // セールスレター用ブロックタイプ
@@ -105,6 +107,7 @@ export default function SalesLetterEditor({
   const [blocks, setBlocks] = useState<Block[]>(initialData?.content || []);
   const [settings, setSettings] = useState<SalesLetterSettings>(initialData?.settings || defaultSettings);
   const [slug, setSlug] = useState(initialData?.slug || '');
+  const [savedId, setSavedId] = useState<string | null>(initialData?.id || null); // 保存後のIDを保持
   const [isSaving, setIsSaving] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState<'pc' | 'mobile'>('pc');
@@ -280,11 +283,14 @@ export default function SalesLetterEditor({
       };
 
       let result;
-      if (initialData?.id) {
+      // initialData?.id または savedId があれば更新、なければ新規作成
+      const existingId = initialData?.id || savedId;
+      
+      if (existingId) {
         result = await supabase
           .from('sales_letters')
           .update(payload)
-          .eq('id', initialData.id)
+          .eq('id', existingId)
           .select()
           .single();
       } else {
@@ -297,9 +303,19 @@ export default function SalesLetterEditor({
 
       if (result.error) throw result.error;
 
-      setSlug(newSlug);
-      setCompletedSlug(newSlug);
-      setShowCompleteModal(true);
+      // 新規作成時のみ完了モーダルを表示、更新時は「保存しました」
+      const wasNewCreation = !existingId;
+      
+      if (wasNewCreation && result.data?.id) {
+        setSavedId(result.data.id);
+        setSlug(newSlug);
+        setCompletedSlug(newSlug);
+        setShowCompleteModal(true);
+      } else {
+        setSlug(newSlug);
+        setCompletedSlug(newSlug);
+        alert('保存しました！');
+      }
     } catch (error) {
       console.error('Save error:', error);
       alert('保存に失敗しました');
@@ -330,19 +346,67 @@ export default function SalesLetterEditor({
   // 選択中のブロック
   const selectedBlock = blocks.find(b => b.id === selectedBlockId);
 
-  // 背景スタイル
-  const getBackgroundStyle = (): React.CSSProperties => {
+  // 背景スタイル（外側用）
+  const getOuterBackgroundStyle = (): React.CSSProperties => {
+    const bg = settings.pageBackground;
+    if (!bg || bg.type === 'none') return { backgroundColor: '#f3f4f6' };
+
+    const scope = bg.scope || 'all';
+    
+    // 全体または外側のみの場合
+    if (scope === 'all' || scope === 'outside') {
+      // 背景画像が設定されている場合は画像優先
+      if (bg.imageUrl) {
+        return {
+          backgroundImage: `url(${bg.imageUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+        };
+      }
+      if (bg.type === 'gradient') {
+        return {
+          backgroundImage: bg.value,
+          backgroundSize: bg.animated ? '400% 400%' : 'auto',
+        };
+      }
+      if (bg.type === 'color') {
+        return { backgroundColor: bg.value };
+      }
+    }
+
+    return { backgroundColor: '#f3f4f6' };
+  };
+
+  // 背景スタイル（内側用）
+  const getInnerBackgroundStyle = (): React.CSSProperties => {
     const bg = settings.pageBackground;
     if (!bg || bg.type === 'none') return { backgroundColor: '#ffffff' };
 
-    if (bg.type === 'gradient') {
-      return {
-        backgroundImage: bg.value,
-        backgroundSize: bg.animated ? '400% 400%' : 'auto',
-      };
+    const scope = bg.scope || 'all';
+    
+    // 全体または内側のみの場合
+    if (scope === 'all' || scope === 'inside') {
+      // 背景画像が設定されている場合は画像優先
+      if (bg.imageUrl) {
+        return {
+          backgroundImage: `url(${bg.imageUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        };
+      }
+      if (bg.type === 'gradient') {
+        return {
+          backgroundImage: bg.value,
+          backgroundSize: bg.animated ? '400% 400%' : 'auto',
+        };
+      }
+      if (bg.type === 'color') {
+        return { backgroundColor: bg.value };
+      }
     }
 
-    return { backgroundColor: bg.value };
+    return { backgroundColor: '#ffffff' };
   };
 
   return (
@@ -366,20 +430,37 @@ export default function SalesLetterEditor({
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowSettingsPanel(!showSettingsPanel)}
-                className={`p-2 rounded-lg transition-colors ${showSettingsPanel ? 'bg-rose-100 text-rose-600' : 'text-gray-500 hover:bg-gray-100'}`}
-                title="設定"
-              >
-                <Settings size={20} />
-              </button>
+              {/* 作成完了画面ボタン（保存済みの場合のみ表示） */}
+              {(savedId || initialData?.id) && (
+                <button
+                  onClick={() => setShowCompleteModal(true)}
+                  className="hidden sm:flex bg-gradient-to-r from-rose-500 to-pink-500 text-white px-3 py-2 rounded-lg font-bold items-center gap-2 hover:from-rose-600 hover:to-pink-600 whitespace-nowrap transition-all shadow-md text-sm"
+                >
+                  <Trophy size={16} />
+                  <span className="hidden md:inline">作成完了画面</span>
+                  <span className="md:hidden">完了</span>
+                </button>
+              )}
+              {/* 公開URLボタン（slugがある場合のみ表示） */}
+              {(slug || initialData?.slug) && (
+                <button
+                  onClick={() => window.open(`${window.location.origin}/salesletter/${slug || initialData?.slug}`, '_blank')}
+                  className="hidden sm:flex bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-lg font-bold items-center gap-2 whitespace-nowrap text-sm"
+                >
+                  <Share2 size={16} />
+                  <span className="hidden md:inline">公開URL</span>
+                  <span className="md:hidden">URL</span>
+                </button>
+              )}
+              {/* 保存ボタン */}
               <button
                 onClick={handleSave}
                 disabled={isSaving}
                 className="flex items-center gap-2 px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 disabled:opacity-50 font-bold"
               >
                 {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-                保存
+                <span className="hidden sm:inline">{savedId || initialData?.id ? '保存' : '保存して公開'}</span>
+                <span className="sm:hidden">保存</span>
               </button>
             </div>
           </div>
@@ -434,6 +515,16 @@ export default function SalesLetterEditor({
               onOpenColorPicker={() => setShowColorPicker(true)}
               userId={user?.id}
             />
+
+            {/* 編集エリアのスクロールトップボタン */}
+            {blocks.length > 3 && (
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="w-full py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 text-sm font-medium flex items-center justify-center gap-1 mb-4"
+              >
+                <ChevronUp size={16} /> 一番上へ戻る
+              </button>
+            )}
 
             {/* ブロックリスト */}
             <div className="space-y-3">
@@ -494,14 +585,17 @@ export default function SalesLetterEditor({
             </div>
 
             {/* プレビュー表示 */}
-            <div className="p-4 flex justify-center">
+            <div
+              className={`p-4 flex justify-center min-h-[400px] ${settings.pageBackground?.animated ? 'animate-gradient-xy' : ''}`}
+              style={getOuterBackgroundStyle()}
+            >
               <div
                 ref={previewRef}
                 key={previewKey}
-                className={`bg-white shadow-lg rounded-lg overflow-hidden ${
+                className={`shadow-lg rounded-lg overflow-hidden ${
                   previewMode === 'mobile' ? 'w-[375px]' : 'w-full max-w-4xl'
-                } ${settings.pageBackground?.animated ? 'animate-gradient-xy' : ''}`}
-                style={getBackgroundStyle()}
+                }`}
+                style={getInnerBackgroundStyle()}
               >
                 <div
                   className="mx-auto py-8 px-4"
@@ -520,6 +614,18 @@ export default function SalesLetterEditor({
                 </div>
               </div>
             </div>
+
+            {/* スクロールトップボタン */}
+            <button
+              onClick={() => {
+                const previewContainer = document.querySelector('.lg\\:max-h-\\[calc\\(100vh-8rem\\)\\]');
+                if (previewContainer) previewContainer.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="fixed bottom-4 right-4 lg:right-[calc(50%-2rem)] z-20 p-3 bg-rose-500 text-white rounded-full shadow-lg hover:bg-rose-600 transition-colors"
+              title="一番上へ"
+            >
+              <ChevronUp size={24} />
+            </button>
           </div>
         </div>
       </div>
@@ -578,24 +684,8 @@ export default function SalesLetterEditor({
         title="セールスレター"
         publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/salesletter/${completedSlug}`}
         contentTitle={title}
-        theme="indigo"
-        showSupport={false}
-        customButtons={
-          <div className="space-y-2">
-            <button
-              onClick={() => setShowCompleteModal(false)}
-              className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-            >
-              編集を続ける
-            </button>
-            <button
-              onClick={() => setPage('dashboard?view=salesletter')}
-              className="w-full px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600"
-            >
-              ダッシュボードへ
-            </button>
-          </div>
-        }
+        theme="rose"
+        showSupport={true}
       />
 
       {/* アニメーションスタイル */}
@@ -719,31 +809,11 @@ function BlockEditorItem({
           )}
 
           {block.type === 'sales_paragraph' && (
-            <>
-              <SalesTextEditor
-                content={(block.data as any).htmlContent || ''}
-                onChange={(html) => onUpdate({ htmlContent: html })}
-                placeholder="本文を入力してください..."
-              />
-              <div className="flex gap-2 mt-2">
-                <select
-                  value={(block.data as any).align || 'left'}
-                  onChange={(e) => onUpdate({ align: e.target.value })}
-                  className="text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
-                >
-                  <option value="left">左寄せ</option>
-                  <option value="center">中央</option>
-                  <option value="right">右寄せ</option>
-                </select>
-                <input
-                  type="number"
-                  value={(block.data as any).defaultFontSize || 16}
-                  onChange={(e) => onUpdate({ defaultFontSize: Number(e.target.value) })}
-                  className="w-20 text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
-                />
-                <span className="text-sm text-gray-500 self-center">px</span>
-              </div>
-            </>
+            <ParagraphBlockEditor
+              data={block.data as any}
+              onUpdate={onUpdate}
+              userId={userId}
+            />
           )}
 
           {block.type === 'sales_image' && (
@@ -1099,7 +1169,7 @@ function HeadlineBlockEditor({
 
       {/* 背景設定 */}
       <div className="border-t border-gray-200 pt-3">
-        <label className="block text-xs font-medium text-gray-600 mb-2">背景設定</label>
+        <label className="block text-xs font-bold text-gray-700 mb-2">背景設定</label>
         
         <div className="flex flex-wrap gap-2 mb-2">
           <select
@@ -1122,28 +1192,224 @@ function HeadlineBlockEditor({
           )}
 
           {(data.backgroundType === 'color' || data.backgroundType === 'image') && (
-            <select
-              value={data.backgroundWidth || 'content'}
-              onChange={(e) => onUpdate({ backgroundWidth: e.target.value })}
-              className="text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
-            >
-              <option value="full">全幅</option>
-              <option value="content">コンテンツ幅</option>
-              <option value="custom">カスタム幅</option>
-            </select>
+            <>
+              <select
+                value={data.backgroundWidth || 'content'}
+                onChange={(e) => onUpdate({ backgroundWidth: e.target.value })}
+                className="text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
+              >
+                <option value="full">全幅</option>
+                <option value="content">コンテンツ幅</option>
+                <option value="custom">カスタム幅</option>
+              </select>
+              {data.backgroundWidth === 'custom' && (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    value={data.customBackgroundWidth || 600}
+                    onChange={(e) => onUpdate({ customBackgroundWidth: Number(e.target.value) })}
+                    className="w-20 text-sm border border-gray-300 rounded-lg px-2 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
+                    placeholder="幅"
+                  />
+                  <span className="text-xs text-gray-500">px</span>
+                </div>
+              )}
+            </>
           )}
         </div>
 
         {data.backgroundType === 'image' && (
           <div className="flex gap-2 mb-2">
-            <label className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg font-medium text-xs hover:bg-indigo-100 cursor-pointer">
+            <label className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-bold text-xs hover:bg-indigo-200 cursor-pointer border border-indigo-300">
               {isUploading ? <Loader2 className="animate-spin" size={14} /> : <UploadCloud size={14} />}
               <span>アップロード</span>
               <input type="file" className="hidden" accept="image/*" onChange={handleBackgroundImageUpload} disabled={isUploading} />
             </label>
             <button
               onClick={handleRandomImage}
-              className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-100 rounded-lg text-xs font-medium hover:bg-gray-200"
+              className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-200 rounded-lg text-xs font-bold hover:bg-gray-300 border border-gray-300"
+            >
+              <ImageIcon size={14} /> 自動
+            </button>
+          </div>
+        )}
+
+        {data.backgroundImage && data.backgroundType === 'image' && (
+          <div className="relative mb-2">
+            <img src={data.backgroundImage} alt="背景プレビュー" className="w-full h-16 object-cover rounded-lg" />
+            <button
+              onClick={() => onUpdate({ backgroundImage: undefined, backgroundType: 'none' })}
+              className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full hover:bg-black/70"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        )}
+
+        {(data.backgroundType === 'color' || data.backgroundType === 'image') && (
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-gray-600">透明度:</label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={data.backgroundOpacity ?? 100}
+              onChange={(e) => onUpdate({ backgroundOpacity: Number(e.target.value) })}
+              className="flex-1"
+            />
+            <span className="text-xs text-gray-500 w-8">{data.backgroundOpacity ?? 100}%</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 本文ブロック編集コンポーネント
+function ParagraphBlockEditor({
+  data,
+  onUpdate,
+  userId,
+}: {
+  data: any;
+  onUpdate: (updates: Record<string, unknown>) => void;
+  userId?: string;
+}) {
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleBackgroundImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !supabase) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('画像は2MB以下にしてください');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileName = `${Date.now()}_${file.name}`;
+      const filePath = `${userId || 'anonymous'}/${fileName}`;
+      
+      await supabase.storage.from('profile-uploads').upload(filePath, file);
+      const { data: urlData } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
+      
+      onUpdate({ backgroundType: 'image', backgroundImage: urlData.publicUrl });
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('アップロードに失敗しました');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRandomImage = () => {
+    const selected = curatedImages[Math.floor(Math.random() * curatedImages.length)];
+    onUpdate({ backgroundType: 'image', backgroundImage: selected });
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* テキストエディタ */}
+      <SalesTextEditor
+        content={data.htmlContent || ''}
+        onChange={(html) => onUpdate({ htmlContent: html })}
+        placeholder="本文を入力してください..."
+      />
+
+      {/* 基本設定 */}
+      <div className="flex flex-wrap gap-2">
+        <select
+          value={data.align || 'left'}
+          onChange={(e) => onUpdate({ align: e.target.value })}
+          className="text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
+        >
+          <option value="left">左寄せ</option>
+          <option value="center">中央</option>
+          <option value="right">右寄せ</option>
+        </select>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-gray-600">文字サイズ:</span>
+          <input
+            type="number"
+            value={data.defaultFontSize || 16}
+            onChange={(e) => onUpdate({ defaultFontSize: Number(e.target.value) })}
+            className="w-16 text-sm border border-gray-300 rounded-lg px-2 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
+          />
+          <span className="text-xs text-gray-500">px</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-gray-600">文字:</span>
+          <input
+            type="color"
+            value={data.defaultColor || '#374151'}
+            onChange={(e) => onUpdate({ defaultColor: e.target.value })}
+            className="w-8 h-8 rounded cursor-pointer"
+          />
+        </div>
+      </div>
+
+      {/* 背景設定 */}
+      <div className="border-t border-gray-200 pt-3">
+        <label className="block text-xs font-bold text-gray-700 mb-2">背景設定</label>
+        
+        <div className="flex flex-wrap gap-2 mb-2">
+          <select
+            value={data.backgroundType || 'none'}
+            onChange={(e) => onUpdate({ backgroundType: e.target.value })}
+            className="text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
+          >
+            <option value="none">なし</option>
+            <option value="color">背景色</option>
+            <option value="image">背景画像</option>
+          </select>
+
+          {data.backgroundType === 'color' && (
+            <input
+              type="color"
+              value={data.backgroundColor || '#f3f4f6'}
+              onChange={(e) => onUpdate({ backgroundColor: e.target.value })}
+              className="w-10 h-10 rounded cursor-pointer"
+            />
+          )}
+
+          {(data.backgroundType === 'color' || data.backgroundType === 'image') && (
+            <>
+              <select
+                value={data.backgroundWidth || 'content'}
+                onChange={(e) => onUpdate({ backgroundWidth: e.target.value })}
+                className="text-sm border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
+              >
+                <option value="full">全幅</option>
+                <option value="content">コンテンツ幅</option>
+                <option value="custom">カスタム幅</option>
+              </select>
+              {data.backgroundWidth === 'custom' && (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    value={data.customBackgroundWidth || 600}
+                    onChange={(e) => onUpdate({ customBackgroundWidth: Number(e.target.value) })}
+                    className="w-20 text-sm border border-gray-300 rounded-lg px-2 py-2 text-gray-900 focus:ring-2 focus:ring-rose-500"
+                    placeholder="幅"
+                  />
+                  <span className="text-xs text-gray-500">px</span>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {data.backgroundType === 'image' && (
+          <div className="flex gap-2 mb-2">
+            <label className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-bold text-xs hover:bg-indigo-200 cursor-pointer border border-indigo-300">
+              {isUploading ? <Loader2 className="animate-spin" size={14} /> : <UploadCloud size={14} />}
+              <span>アップロード</span>
+              <input type="file" className="hidden" accept="image/*" onChange={handleBackgroundImageUpload} disabled={isUploading} />
+            </label>
+            <button
+              onClick={handleRandomImage}
+              className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-200 rounded-lg text-xs font-bold hover:bg-gray-300 border border-gray-300"
             >
               <ImageIcon size={14} /> 自動
             </button>
@@ -1303,11 +1569,11 @@ function ContentSettingsPanel({
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
-      <h3 className="text-sm font-bold text-gray-700 mb-3">コンテンツ幅・背景設定</h3>
+      <h3 className="text-sm font-bold text-white bg-rose-500 px-3 py-2 rounded-lg mb-3">コンテンツ幅・背景設定</h3>
       
       {/* コンテンツ幅 */}
       <div className="mb-4">
-        <label className="block text-xs font-medium text-gray-600 mb-2">コンテンツ幅</label>
+        <label className="block text-xs font-bold text-gray-700 mb-2">コンテンツ幅</label>
         <select
           value={settings.contentWidth}
           onChange={(e) => onUpdate({ contentWidth: Number(e.target.value) })}
@@ -1330,31 +1596,32 @@ function ContentSettingsPanel({
 
       {/* 背景色 */}
       <div className="mb-4">
-        <label className="block text-xs font-medium text-gray-600 mb-2">背景色</label>
+        <label className="block text-xs font-bold text-gray-700 mb-2">背景色</label>
         <button
           onClick={onOpenColorPicker}
           className="w-full flex items-center gap-3 px-3 py-2 border border-gray-300 rounded-lg hover:border-rose-300"
         >
           <div
             className="w-8 h-8 rounded border border-gray-200"
-            style={{ background: settings.pageBackground?.value || '#ffffff' }}
+            style={{ background: settings.pageBackground?.type !== 'image' ? (settings.pageBackground?.value || '#ffffff') : '#ffffff' }}
           />
           <span className="text-sm text-gray-700">背景色を選択</span>
         </button>
+        <p className="text-xs text-gray-500 mt-1">※背景画像が設定されている場合は画像が優先されます</p>
       </div>
 
       {/* 背景画像 */}
       <div className="mb-4">
-        <label className="block text-xs font-medium text-gray-600 mb-2">背景画像</label>
+        <label className="block text-xs font-bold text-gray-700 mb-2">背景画像（優先）</label>
         <div className="flex gap-2">
-          <label className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg font-medium text-sm hover:bg-indigo-100 cursor-pointer">
+          <label className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-bold text-sm hover:bg-indigo-200 cursor-pointer border border-indigo-300">
             {isUploading ? <Loader2 className="animate-spin" size={16} /> : <UploadCloud size={16} />}
             <span>アップロード</span>
             <input type="file" className="hidden" accept="image/*" onChange={handleBackgroundImageUpload} disabled={isUploading} />
           </label>
           <button
             onClick={handleRandomImage}
-            className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200"
+            className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-200 rounded-lg text-sm font-bold hover:bg-gray-300 border border-gray-300"
           >
             <ImageIcon size={16} /> 自動
           </button>
