@@ -322,6 +322,239 @@ export const AI_MODELS = {
 } as const;
 
 /**
+ * 利用可能なAIモデル一覧（管理者設定用）
+ * 価格は1Mトークンあたりのドル
+ */
+export interface AIModelInfo {
+  id: string;
+  name: string;
+  provider: 'OpenAI' | 'Google' | 'Anthropic';
+  inputCost: number;      // 入力コスト（$/1M tokens）
+  outputCost: number;     // 出力コスト（$/1M tokens）
+  cachedInputCost?: number; // キャッシュ入力コスト（$/1M tokens）
+  contextLength: string;  // コンテキスト長
+  performance: number;    // 性能レベル（1-6）
+  status: 'recommended' | 'available' | 'preview';
+  description: string;
+}
+
+export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
+  // ========================================
+  // OpenAI GPT Models
+  // ========================================
+  {
+    id: 'gpt-5.1',
+    name: 'GPT-5.1',
+    provider: 'OpenAI',
+    inputCost: 1.25,
+    outputCost: 10.00,
+    cachedInputCost: 0.125,
+    contextLength: '128K tokens',
+    performance: 6,
+    status: 'available',
+    description: '最新フラッグシップモデル',
+  },
+  {
+    id: 'gpt-5',
+    name: 'GPT-5',
+    provider: 'OpenAI',
+    inputCost: 1.25,
+    outputCost: 10.00,
+    cachedInputCost: 0.125,
+    contextLength: '128K tokens',
+    performance: 6,
+    status: 'available',
+    description: 'フラッグシップモデル',
+  },
+  {
+    id: 'gpt-5-mini',
+    name: 'GPT-5 Mini',
+    provider: 'OpenAI',
+    inputCost: 0.25,
+    outputCost: 2.00,
+    cachedInputCost: 0.025,
+    contextLength: '128K tokens',
+    performance: 4,
+    status: 'available',
+    description: '高性能・コスパ良好',
+  },
+  {
+    id: 'gpt-5-nano',
+    name: 'GPT-5 Nano',
+    provider: 'OpenAI',
+    inputCost: 0.05,
+    outputCost: 0.40,
+    cachedInputCost: 0.005,
+    contextLength: '128K tokens',
+    performance: 3,
+    status: 'recommended',
+    description: '最安値・大量処理向け',
+  },
+  {
+    id: 'gpt-4o-mini',
+    name: 'GPT-4o Mini',
+    provider: 'OpenAI',
+    inputCost: 0.15,
+    outputCost: 0.60,
+    cachedInputCost: 0.075,
+    contextLength: '128K tokens',
+    performance: 4,
+    status: 'available',
+    description: '安定・実績あり',
+  },
+  // ========================================
+  // Google Gemini Models
+  // ========================================
+  {
+    id: 'gemini-2.5-flash-lite',
+    name: 'Gemini 2.5 Flash Lite',
+    provider: 'Google',
+    inputCost: 0.075,
+    outputCost: 0.30,
+    contextLength: '1M tokens',
+    performance: 3,
+    status: 'recommended',
+    description: '最安・大量処理向け',
+  },
+  {
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    provider: 'Google',
+    inputCost: 0.10,
+    outputCost: 0.40,
+    contextLength: '1M tokens',
+    performance: 4,
+    status: 'recommended',
+    description: 'コスパ最強・万能',
+  },
+  {
+    id: 'gemini-3-flash-preview',
+    name: 'Gemini 3 Flash Preview',
+    provider: 'Google',
+    inputCost: 0.50,
+    outputCost: 3.00,
+    contextLength: '1M tokens',
+    performance: 4,
+    status: 'preview',
+    description: '次世代プレビュー',
+  },
+  {
+    id: 'gemini-2.5-pro',
+    name: 'Gemini 2.5 Pro',
+    provider: 'Google',
+    inputCost: 1.25,
+    outputCost: 10.00,
+    contextLength: '2M tokens',
+    performance: 5,
+    status: 'available',
+    description: '高精度・長文分析',
+  },
+  {
+    id: 'gemini-3-pro-preview',
+    name: 'Gemini 3 Pro Preview',
+    provider: 'Google',
+    inputCost: 2.00,
+    outputCost: 12.00,
+    contextLength: '2M tokens',
+    performance: 6,
+    status: 'preview',
+    description: '最高性能（プレビュー）',
+  },
+  // ========================================
+  // Anthropic Claude Models
+  // ========================================
+  {
+    id: 'claude-4.5-sonnet',
+    name: 'Claude 4.5 Sonnet',
+    provider: 'Anthropic',
+    inputCost: 3.00,
+    outputCost: 15.00,
+    contextLength: '500K tokens',
+    performance: 5,
+    status: 'recommended',
+    description: 'Sonnet改良版・推奨',
+  },
+  {
+    id: 'claude-4-haiku',
+    name: 'Claude 4 Haiku',
+    provider: 'Anthropic',
+    inputCost: 1.00,
+    outputCost: 5.00,
+    contextLength: '200K tokens',
+    performance: 4,
+    status: 'recommended',
+    description: '高品質軽量・現行主力',
+  },
+  {
+    id: 'claude-4.5-haiku',
+    name: 'Claude 4.5 Haiku',
+    provider: 'Anthropic',
+    inputCost: 1.00,
+    outputCost: 5.00,
+    contextLength: '200K tokens',
+    performance: 4,
+    status: 'available',
+    description: 'Haiku改良版',
+  },
+  {
+    id: 'claude-3.5-haiku',
+    name: 'Claude 3.5 Haiku',
+    provider: 'Anthropic',
+    inputCost: 0.80,
+    outputCost: 4.00,
+    contextLength: '200K tokens',
+    performance: 3,
+    status: 'available',
+    description: '旧軽量モデル',
+  },
+  {
+    id: 'claude-3-haiku',
+    name: 'Claude 3 Haiku',
+    provider: 'Anthropic',
+    inputCost: 0.25,
+    outputCost: 1.25,
+    contextLength: '200K tokens',
+    performance: 3,
+    status: 'available',
+    description: '最安旧世代',
+  },
+];
+
+/**
+ * デフォルトのAIモデル設定（最安値）
+ */
+export const DEFAULT_AI_MODELS = {
+  primary: {
+    outline: 'gpt-5-nano',    // 構成用: $0.05/入力
+    writing: 'gpt-5-nano',    // 執筆用: $0.05/入力
+  },
+  backup: {
+    outline: 'gemini-2.5-flash-lite',  // バックアップ構成用: $0.075/入力
+    writing: 'gemini-2.5-flash-lite',  // バックアップ執筆用: $0.075/入力
+  },
+} as const;
+
+/**
+ * モデルIDからモデル情報を取得
+ */
+export function getModelInfo(modelId: string): AIModelInfo | undefined {
+  return AVAILABLE_AI_MODELS.find(m => m.id === modelId);
+}
+
+/**
+ * プロバイダー別にモデルをグループ化
+ */
+export function getModelsByProvider(): Record<string, AIModelInfo[]> {
+  return AVAILABLE_AI_MODELS.reduce((acc, model) => {
+    if (!acc[model.provider]) {
+      acc[model.provider] = [];
+    }
+    acc[model.provider].push(model);
+    return acc;
+  }, {} as Record<string, AIModelInfo[]>);
+}
+
+/**
  * プラン別AIモデルプリセット設定
  */
 export const PLAN_AI_PRESETS = {

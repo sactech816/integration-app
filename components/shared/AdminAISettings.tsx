@@ -1,48 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Settings, Zap, DollarSign, Check, Loader2, Save, Sparkles, BookOpen, Sliders } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Settings, Loader2, Save, BookOpen, Sparkles, DollarSign, Shield, ChevronDown } from 'lucide-react';
 import type { PlanTier, MakersPlanTier } from '@/lib/subscription';
-import { PLAN_AI_PRESETS } from '@/lib/ai-provider';
+import { AVAILABLE_AI_MODELS, DEFAULT_AI_MODELS, getModelsByProvider, type AIModelInfo } from '@/lib/ai-provider';
 
-interface AIPreset {
-  name: string;
-  description: string;
-  outline: {
-    model: string;
-    provider: string;
-    cost: number;
-  };
-  writing: {
-    model: string;
-    provider: string;
-    cost: number;
-  };
-}
-
-// 利用可能なAIモデル一覧（PLAN_AI_PRESETSで使用しているモデルIDと一致させる）
-const AVAILABLE_MODELS = [
-  // Google Gemini
-  { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite', provider: 'Google', cost: 0.30 },
-  { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash', provider: 'Google', cost: 0.40 },
-  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'Google', cost: 0.35 },
-  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', provider: 'Google', cost: 1.25 },
-  // OpenAI
-  { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'OpenAI', cost: 0.60 },
-  { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI', cost: 5.00 },
-  { id: 'o3-mini', name: 'o3-mini', provider: 'OpenAI', cost: 4.40 },
-  { id: 'o1', name: 'o1', provider: 'OpenAI', cost: 60.00 },
-  // Anthropic Claude
-  { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', provider: 'Anthropic', cost: 1.25 },
-  { id: 'claude-3-5-sonnet-20240620', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', cost: 15.00 },
-];
-
-type PresetType = 'presetA' | 'presetB' | 'custom';
 type ServiceType = 'kdl' | 'makers';
 
-interface CustomModelSettings {
+interface PlanModelSettings {
   outlineModel: string;
   writingModel: string;
+  backupOutlineModel: string;
+  backupWritingModel: string;
 }
 
 interface AdminAISettingsProps {
@@ -51,12 +20,9 @@ interface AdminAISettingsProps {
 
 export default function AdminAISettings({ userId }: AdminAISettingsProps) {
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [savingPlan, setSavingPlan] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<ServiceType>('kdl');
-  const [selectedPlan, setSelectedPlan] = useState<PlanTier | MakersPlanTier>('standard');
-  const [settings, setSettings] = useState<Record<string, any>>({});
-  const [selectedPresets, setSelectedPresets] = useState<Record<string, PresetType>>({});
-  const [customModels, setCustomModels] = useState<Record<string, CustomModelSettings>>({});
+  const [settings, setSettings] = useState<Record<string, PlanModelSettings>>({});
 
   // Kindleプランタイプ
   type KdlPlanType = 'initial' | 'continuation';
@@ -68,33 +34,20 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
   const makersPlans: MakersPlanTier[] = ['guest', 'free', 'pro'];
   
   const currentPlans = selectedService === 'kdl' 
-    ? (kdlPlanType === 'initial' ? kdlInitialPlans : kdlContinuationPlans)
+    ? (kdlPlanType === 'initial' ? [...kdlInitialPlans] : kdlContinuationPlans)
     : makersPlans;
+
+  // プロバイダー別モデル
+  const modelsByProvider = useMemo(() => getModelsByProvider(), []);
 
   useEffect(() => {
     loadSettings();
   }, [selectedService, kdlPlanType]);
 
-  // サービス変更時にプランをリセット
-  useEffect(() => {
-    if (selectedService === 'kdl') {
-      if (kdlPlanType === 'initial') {
-        setSelectedPlan('initial_trial' as any);
-      } else {
-        setSelectedPlan('standard');
-      }
-    } else {
-      setSelectedPlan('pro');
-    }
-  }, [selectedService, kdlPlanType]);
-
   const loadSettings = async () => {
     try {
       setLoading(true);
-      const results: Record<string, any> = {};
-      const presets: Record<string, PresetType> = {};
-      const customs: Record<string, CustomModelSettings> = {};
-      let needsMigration = false;
+      const newSettings: Record<string, PlanModelSettings> = {};
 
       for (const plan of currentPlans) {
         try {
@@ -107,73 +60,46 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
           
           const data = await response.json();
           
-          // エラーレスポンスの場合
-          if (data.error) {
-            console.error(`API error for ${plan}:`, data.error);
-            continue;
-          }
-          
-          // マイグレーション必要フラグをチェック
-          if (data.requiresMigration) {
-            needsMigration = true;
-          }
-          
-          results[plan] = data;
-          presets[plan] = data.selectedPreset || 'presetB';
-          // カスタムモデル設定を復元（プリセットのcustomDefaultがあればそれを使用）
-          // 集客メーカーのproはmakers_proを参照
-          const presetKey = (selectedService === 'makers' && plan === 'pro') ? 'makers_pro' : plan;
-          const planPresets = PLAN_AI_PRESETS[presetKey as keyof typeof PLAN_AI_PRESETS];
-          const customDefault = planPresets && 'customDefault' in planPresets 
-            ? (planPresets as any).customDefault 
-            : { outlineModel: 'gemini-2.0-flash-exp', writingModel: 'gemini-2.0-flash-exp' };
-          
-          if (data.customOutlineModel || data.customWritingModel) {
-            customs[plan] = {
-              outlineModel: data.customOutlineModel || customDefault.outlineModel,
-              writingModel: data.customWritingModel || customDefault.writingModel,
-            };
-          } else {
-            customs[plan] = {
-              outlineModel: customDefault.outlineModel,
-              writingModel: customDefault.writingModel,
-            };
-          }
+          newSettings[plan] = {
+            outlineModel: data.outlineModel || data.customOutlineModel || DEFAULT_AI_MODELS.primary.outline,
+            writingModel: data.writingModel || data.customWritingModel || DEFAULT_AI_MODELS.primary.writing,
+            backupOutlineModel: data.backupOutlineModel || DEFAULT_AI_MODELS.backup.outline,
+            backupWritingModel: data.backupWritingModel || DEFAULT_AI_MODELS.backup.writing,
+          };
         } catch (error) {
           console.error(`Error loading settings for ${plan}:`, error);
+          // デフォルト値を設定
+          newSettings[plan] = {
+            outlineModel: DEFAULT_AI_MODELS.primary.outline,
+            writingModel: DEFAULT_AI_MODELS.primary.writing,
+            backupOutlineModel: DEFAULT_AI_MODELS.backup.outline,
+            backupWritingModel: DEFAULT_AI_MODELS.backup.writing,
+          };
         }
       }
 
-      setSettings(results);
-      setSelectedPresets(presets);
-      setCustomModels(customs);
-
-      // マイグレーション必要な場合は警告
-      if (needsMigration) {
-        alert('⚠️ データベースマイグレーションが必要です\n\nSupabase Studioで以下のSQLファイルを実行してください:\n- supabase_admin_ai_settings.sql\n\n設定の保存機能を有効化するために必要です。');
-      }
+      setSettings(newSettings);
     } catch (error) {
       console.error('Failed to load settings:', error);
-      alert('AI設定の読み込みに失敗しました。データベースマイグレーションを実行してください。');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSave = async (planTier: PlanTier | MakersPlanTier) => {
+  const handleSave = async (planTier: string) => {
     try {
-      setSaving(true);
-      const preset = selectedPresets[planTier];
-      const custom = customModels[planTier];
+      setSavingPlan(planTier);
+      const planSettings = settings[planTier];
       
       const response = await fetch('/api/admin/ai-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           planTier,
-          selectedPreset: preset,
-          customOutlineModel: preset === 'custom' ? custom?.outlineModel : null,
-          customWritingModel: preset === 'custom' ? custom?.writingModel : null,
+          outlineModel: planSettings.outlineModel,
+          writingModel: planSettings.writingModel,
+          backupOutlineModel: planSettings.backupOutlineModel,
+          backupWritingModel: planSettings.backupWritingModel,
           service: selectedService,
           userId,
         }),
@@ -188,20 +114,16 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
       console.error('Failed to save settings:', error);
       alert('設定の保存に失敗しました');
     } finally {
-      setSaving(false);
+      setSavingPlan(null);
     }
   };
 
-  const handlePresetChange = (planTier: PlanTier | MakersPlanTier, preset: PresetType) => {
-    setSelectedPresets(prev => ({ ...prev, [planTier]: preset }));
-  };
-
-  const handleCustomModelChange = (
-    planTier: PlanTier | MakersPlanTier,
-    field: 'outlineModel' | 'writingModel',
+  const handleModelChange = (
+    planTier: string,
+    field: keyof PlanModelSettings,
     value: string
   ) => {
-    setCustomModels(prev => ({
+    setSettings(prev => ({
       ...prev,
       [planTier]: {
         ...prev[planTier],
@@ -209,30 +131,6 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
       },
     }));
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="animate-spin text-indigo-600" size={48} />
-      </div>
-    );
-  }
-
-  const planData = settings[selectedPlan];
-  const hasPresets = planData && planData.presets;
-  const currentPreset = selectedPresets[selectedPlan] || 'presetB';
-  
-  // カスタムモデルのデフォルト値をプリセットから取得
-  const getCustomDefault = (plan: string) => {
-    // 集客メーカーのproはmakers_proを参照
-    const presetKey = (selectedService === 'makers' && plan === 'pro') ? 'makers_pro' : plan;
-    const planPresets = PLAN_AI_PRESETS[presetKey as keyof typeof PLAN_AI_PRESETS];
-    if (planPresets && 'customDefault' in planPresets) {
-      return (planPresets as any).customDefault;
-    }
-    return { outlineModel: 'gemini-2.0-flash-exp', writingModel: 'gemini-2.0-flash-exp' };
-  };
-  const currentCustom = customModels[selectedPlan] || getCustomDefault(selectedPlan);
 
   // プラン名を取得
   const getPlanDisplayName = (plan: string): string => {
@@ -254,6 +152,19 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
     return names[plan] || plan;
   };
 
+  // モデル情報を取得
+  const getModelInfo = (modelId: string): AIModelInfo | undefined => {
+    return AVAILABLE_AI_MODELS.find(m => m.id === modelId);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="animate-spin text-indigo-600" size={48} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* ヘッダー */}
@@ -268,8 +179,8 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
         </div>
         <p className={selectedService === 'kdl' ? 'text-amber-100' : 'text-indigo-100'}>
           {selectedService === 'kdl' 
-            ? 'Kindle執筆機能で使用するデフォルトAIモデルをプラン別に設定します'
-            : '集客メーカーで使用するデフォルトAIモデルをプラン別に設定します'
+            ? 'Kindle執筆機能で使用するAIモデルをプラン別に設定します'
+            : '集客メーカーで使用するAIモデルをプラン別に設定します'
           }
         </p>
       </div>
@@ -326,283 +237,244 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
         </div>
       )}
 
-      {/* プラン選択タブ */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {currentPlans.map((plan) => (
-          <button
-            key={plan}
-            onClick={() => setSelectedPlan(plan as any)}
-            className={`
-              px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-all
-              ${selectedPlan === plan
-                ? selectedService === 'kdl' ? 'bg-amber-600 text-white shadow-lg' : 'bg-indigo-600 text-white shadow-lg'
-                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }
-            `}
-          >
-            {getPlanDisplayName(plan)}
-          </button>
-        ))}
-      </div>
-
       {/* 説明 */}
       <div className={`border rounded-lg p-4 ${
         selectedService === 'kdl' ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-200'
       }`}>
         <p className={`text-sm ${selectedService === 'kdl' ? 'text-amber-800' : 'text-blue-800'}`}>
-          <strong>{selectedService === 'kdl' ? 'Kindle執筆' : '集客メーカー'}</strong>で使用するデフォルトAIモデルをプラン別に設定します（候補A/B/カスタム）
+          各プランの<strong>構成用（脳）</strong>と<strong>執筆用（手）</strong>のAIモデルを設定します。
+          バックアップモデルはメインモデルが利用できない場合に自動で切り替わります。
         </p>
         <p className={`text-xs mt-1 ${selectedService === 'kdl' ? 'text-amber-600' : 'text-blue-600'}`}>
-          ※カスタムを選択すると、構成用・執筆用のモデルを個別に設定できます
+          ※ 価格は1Mトークンあたりの入力コストです
         </p>
       </div>
 
-      {/* プリセット選択 */}
-      {hasPresets ? (
-        <div className="space-y-6">
-          <div className="grid md:grid-cols-3 gap-4">
-            {/* Preset A */}
-            <PresetCard
-              preset="presetA"
-              data={planData.presets.presetA}
-              selected={currentPreset === 'presetA'}
-              onSelect={() => handlePresetChange(selectedPlan, 'presetA')}
-            />
+      {/* プラン別設定テーブル */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className={selectedService === 'kdl' ? 'bg-amber-50' : 'bg-indigo-50'}>
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-bold text-gray-900 w-28">プラン</th>
+                <th className="px-4 py-3 text-left text-sm font-bold text-gray-900">
+                  <div className="flex items-center gap-1">
+                    <Settings size={14} />
+                    構成用モデル
+                  </div>
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-bold text-gray-900">
+                  <div className="flex items-center gap-1">
+                    <Settings size={14} />
+                    執筆用モデル
+                  </div>
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-bold text-gray-900 w-24">操作</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {currentPlans.map((plan) => {
+                const planSettings = settings[plan] || {
+                  outlineModel: DEFAULT_AI_MODELS.primary.outline,
+                  writingModel: DEFAULT_AI_MODELS.primary.writing,
+                  backupOutlineModel: DEFAULT_AI_MODELS.backup.outline,
+                  backupWritingModel: DEFAULT_AI_MODELS.backup.writing,
+                };
+                const outlineInfo = getModelInfo(planSettings.outlineModel);
+                const writingInfo = getModelInfo(planSettings.writingModel);
+                const backupOutlineInfo = getModelInfo(planSettings.backupOutlineModel);
+                const backupWritingInfo = getModelInfo(planSettings.backupWritingModel);
 
-            {/* Preset B */}
-            <PresetCard
-              preset="presetB"
-              data={planData.presets.presetB}
-              selected={currentPreset === 'presetB'}
-              onSelect={() => handlePresetChange(selectedPlan, 'presetB')}
-            />
+                return (
+                  <tr key={plan} className="hover:bg-gray-50">
+                    {/* プラン名 */}
+                    <td className="px-4 py-4">
+                      <span className={`font-bold ${
+                        selectedService === 'kdl' ? 'text-amber-700' : 'text-indigo-700'
+                      }`}>
+                        {getPlanDisplayName(plan)}
+                      </span>
+                    </td>
 
-            {/* Custom */}
-            <CustomPresetCard
-              selected={currentPreset === 'custom'}
-              onSelect={() => handlePresetChange(selectedPlan, 'custom')}
-              customModels={currentCustom}
-              onModelChange={(field, value) => handleCustomModelChange(selectedPlan, field, value)}
-            />
-          </div>
+                    {/* 構成用モデル */}
+                    <td className="px-4 py-3">
+                      <div className="space-y-2">
+                        {/* メインモデル */}
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">メイン</label>
+                          <ModelSelector
+                            value={planSettings.outlineModel}
+                            onChange={(v) => handleModelChange(plan, 'outlineModel', v)}
+                            modelsByProvider={modelsByProvider}
+                          />
+                          {outlineInfo && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-green-600 font-medium flex items-center">
+                                <DollarSign size={12} />
+                                {outlineInfo.inputCost.toFixed(3)}
+                              </span>
+                              <span className="text-xs text-gray-400">|</span>
+                              <span className="text-xs text-gray-500">{outlineInfo.provider}</span>
+                            </div>
+                          )}
+                        </div>
+                        {/* バックアップモデル */}
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block flex items-center gap-1">
+                            <Shield size={10} />
+                            バックアップ
+                          </label>
+                          <ModelSelector
+                            value={planSettings.backupOutlineModel}
+                            onChange={(v) => handleModelChange(plan, 'backupOutlineModel', v)}
+                            modelsByProvider={modelsByProvider}
+                            isBackup
+                          />
+                          {backupOutlineInfo && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-gray-500 font-medium flex items-center">
+                                <DollarSign size={12} />
+                                {backupOutlineInfo.inputCost.toFixed(3)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* 執筆用モデル */}
+                    <td className="px-4 py-3">
+                      <div className="space-y-2">
+                        {/* メインモデル */}
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">メイン</label>
+                          <ModelSelector
+                            value={planSettings.writingModel}
+                            onChange={(v) => handleModelChange(plan, 'writingModel', v)}
+                            modelsByProvider={modelsByProvider}
+                          />
+                          {writingInfo && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-green-600 font-medium flex items-center">
+                                <DollarSign size={12} />
+                                {writingInfo.inputCost.toFixed(3)}
+                              </span>
+                              <span className="text-xs text-gray-400">|</span>
+                              <span className="text-xs text-gray-500">{writingInfo.provider}</span>
+                            </div>
+                          )}
+                        </div>
+                        {/* バックアップモデル */}
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block flex items-center gap-1">
+                            <Shield size={10} />
+                            バックアップ
+                          </label>
+                          <ModelSelector
+                            value={planSettings.backupWritingModel}
+                            onChange={(v) => handleModelChange(plan, 'backupWritingModel', v)}
+                            modelsByProvider={modelsByProvider}
+                            isBackup
+                          />
+                          {backupWritingInfo && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-gray-500 font-medium flex items-center">
+                                <DollarSign size={12} />
+                                {backupWritingInfo.inputCost.toFixed(3)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* 保存ボタン */}
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => handleSave(plan)}
+                        disabled={savingPlan === plan}
+                        className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg font-medium text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all ${
+                          selectedService === 'kdl' 
+                            ? 'bg-amber-600 hover:bg-amber-700' 
+                            : 'bg-indigo-600 hover:bg-indigo-700'
+                        }`}
+                      >
+                        {savingPlan === plan ? (
+                          <Loader2 className="animate-spin" size={16} />
+                        ) : (
+                          <Save size={16} />
+                        )}
+                        保存
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      ) : (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-          <p className="text-yellow-800">
-            プリセットデータを読み込めませんでした。データベースマイグレーションを実行してください。
-          </p>
-          <p className="text-sm text-yellow-600 mt-2">
-            実行: <code className="bg-yellow-100 px-2 py-1 rounded">supabase_admin_ai_settings.sql</code>
-          </p>
-        </div>
-      )}
-
-      {/* 保存ボタン */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => handleSave(selectedPlan)}
-          disabled={saving}
-          className={`flex items-center gap-2 text-white px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg ${
-            selectedService === 'kdl' 
-              ? 'bg-amber-600 hover:bg-amber-700' 
-              : 'bg-indigo-600 hover:bg-indigo-700'
-          }`}
-        >
-          {saving ? (
-            <>
-              <Loader2 className="animate-spin" size={20} />
-              保存中...
-            </>
-          ) : (
-            <>
-              <Save size={20} />
-              {getPlanDisplayName(selectedPlan)}プランの設定を保存
-            </>
-          )}
-        </button>
       </div>
-    </div>
-  );
-}
 
-// カスタムプリセットカード
-interface CustomPresetCardProps {
-  selected: boolean;
-  onSelect: () => void;
-  customModels: CustomModelSettings;
-  onModelChange: (field: 'outlineModel' | 'writingModel', value: string) => void;
-}
-
-function CustomPresetCard({ selected, onSelect, customModels, onModelChange }: CustomPresetCardProps) {
-  return (
-    <div
-      onClick={onSelect}
-      className={`
-        relative border-2 rounded-xl p-4 cursor-pointer transition-all
-        ${selected
-          ? 'border-purple-600 bg-purple-50 shadow-lg'
-          : 'border-gray-300 bg-white hover:border-purple-300 hover:shadow-md'
-        }
-      `}
-    >
-      {/* 選択インジケーター */}
-      {selected && (
-        <div className="absolute top-3 right-3 bg-purple-600 text-white rounded-full p-1">
-          <Check size={16} />
-        </div>
-      )}
-
-      {/* タイトル */}
-      <div className="mb-3">
-        <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-          <Sliders size={18} className="text-purple-500" />
-          候補 C: カスタム
+      {/* モデル一覧（参考） */}
+      <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+        <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+          <Settings size={18} />
+          利用可能なAIモデル一覧
         </h3>
-        <p className="text-xs text-gray-600">モデルを個別に選択</p>
-      </div>
-
-      {/* モデル選択（選択時のみ表示） */}
-      {selected && (
-        <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
-          {/* 構成用モデル */}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
-              構成（脳）用モデル
-            </label>
-            <select
-              value={customModels.outlineModel}
-              onChange={(e) => onModelChange('outlineModel', e.target.value)}
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white text-gray-900"
-            >
-              {AVAILABLE_MODELS.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name} ({model.provider})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 執筆用モデル */}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">
-              執筆（手）用モデル
-            </label>
-            <select
-              value={customModels.writingModel}
-              onChange={(e) => onModelChange('writingModel', e.target.value)}
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white text-gray-900"
-            >
-              {AVAILABLE_MODELS.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name} ({model.provider})
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="grid md:grid-cols-3 gap-4">
+          {Object.entries(modelsByProvider).map(([provider, models]) => (
+            <div key={provider} className="bg-white rounded-lg p-3 border border-gray-200">
+              <h4 className="font-bold text-sm mb-2 text-gray-900">{provider}</h4>
+              <div className="space-y-1">
+                {models.map((model) => (
+                  <div key={model.id} className="flex justify-between items-center text-xs">
+                    <span className="text-gray-700">{model.name}</span>
+                    <span className="text-green-600 font-mono">${model.inputCost.toFixed(3)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
-      )}
-
-      {/* 非選択時の説明 */}
-      {!selected && (
-        <p className="text-xs text-gray-500 mt-2">
-          クリックして構成・執筆用モデルを個別に設定
-        </p>
-      )}
+      </div>
     </div>
   );
 }
 
-interface PresetCardProps {
-  preset: 'presetA' | 'presetB';
-  data: AIPreset;
-  selected: boolean;
-  onSelect: () => void;
+// モデル選択コンポーネント
+interface ModelSelectorProps {
+  value: string;
+  onChange: (value: string) => void;
+  modelsByProvider: Record<string, AIModelInfo[]>;
+  isBackup?: boolean;
 }
 
-function PresetCard({ preset, data, selected, onSelect }: PresetCardProps) {
+function ModelSelector({ value, onChange, modelsByProvider, isBackup }: ModelSelectorProps) {
   return (
-    <div
-      onClick={onSelect}
-      className={`
-        relative border-2 rounded-xl p-6 cursor-pointer transition-all
-        ${selected
-          ? 'border-indigo-600 bg-indigo-50 shadow-lg'
-          : 'border-gray-300 bg-white hover:border-indigo-300 hover:shadow-md'
-        }
-      `}
-    >
-      {/* 選択インジケーター */}
-      {selected && (
-        <div className="absolute top-4 right-4 bg-indigo-600 text-white rounded-full p-1">
-          <Check size={20} />
-        </div>
-      )}
-
-      {/* タイトル */}
-      <div className="mb-4">
-        <h3 className="text-xl font-bold text-gray-900 mb-1">
-          候補 {preset === 'presetA' ? 'A' : 'B'}: {data.name}
-        </h3>
-        <p className="text-sm text-gray-600">{data.description}</p>
-      </div>
-
-      {/* 構成（Outline） */}
-      <div className="bg-white rounded-lg p-4 mb-3 border border-gray-200">
-        <div className="flex items-center gap-2 mb-2">
-          <Zap size={16} className="text-amber-500" />
-          <span className="font-semibold text-gray-900">構成（脳）</span>
-        </div>
-        <div className="space-y-1 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-600">モデル:</span>
-            <span className="font-mono text-gray-900">{data.outline.model}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">プロバイダー:</span>
-            <span className="font-semibold">{data.outline.provider}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">コスト:</span>
-            <span className="flex items-center gap-1 font-bold text-green-600">
-              <DollarSign size={14} />
-              {data.outline.cost.toFixed(2)}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 執筆（Writing） */}
-      <div className="bg-white rounded-lg p-4 border border-gray-200">
-        <div className="flex items-center gap-2 mb-2">
-          <Zap size={16} className="text-blue-500" />
-          <span className="font-semibold text-gray-900">執筆（手）</span>
-        </div>
-        <div className="space-y-1 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-600">モデル:</span>
-            <span className="font-mono text-gray-900">{data.writing.model}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">プロバイダー:</span>
-            <span className="font-semibold">{data.writing.provider}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">コスト:</span>
-            <span className="flex items-center gap-1 font-bold text-green-600">
-              <DollarSign size={14} />
-              {data.writing.cost.toFixed(2)}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 推奨バッジ */}
-      {data.description.includes('推奨') && (
-        <div className="mt-3 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-center py-2 rounded-lg font-semibold text-sm">
-          ⭐ 推奨設定
-        </div>
-      )}
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full px-3 py-2 pr-8 text-sm border rounded-lg appearance-none cursor-pointer focus:ring-2 focus:outline-none bg-white text-gray-900 ${
+          isBackup 
+            ? 'border-gray-200 focus:ring-gray-300' 
+            : 'border-gray-300 focus:ring-indigo-500'
+        }`}
+      >
+        {Object.entries(modelsByProvider).map(([provider, models]) => (
+          <optgroup key={provider} label={`── ${provider} ──`}>
+            {models.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.name} (${model.inputCost.toFixed(3)})
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+      <ChevronDown 
+        size={16} 
+        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" 
+      />
     </div>
   );
 }
-

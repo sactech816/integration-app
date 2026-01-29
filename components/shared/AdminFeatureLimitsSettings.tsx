@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Activity, Loader2, Save, Users, BookOpen, Sparkles } from 'lucide-react';
+import { Activity, Loader2, Save, BookOpen, Sparkles, Infinity } from 'lucide-react';
 import type { PlanTier, MakersPlanTier } from '@/lib/subscription';
 
 type ServiceType = 'kdl' | 'makers';
@@ -22,9 +22,8 @@ interface AdminFeatureLimitsSettingsProps {
 
 export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimitsSettingsProps) {
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [savingPlan, setSavingPlan] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<ServiceType>('makers');
-  const [selectedPlan, setSelectedPlan] = useState<PlanTier | MakersPlanTier>('pro');
   const [featureLimits, setFeatureLimits] = useState<Record<string, FeatureLimits>>({});
 
   // Kindleプランタイプ
@@ -37,24 +36,11 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
   const makersPlans: MakersPlanTier[] = ['guest', 'free', 'pro'];
   
   const currentPlans = selectedService === 'kdl' 
-    ? (kdlPlanType === 'initial' ? kdlInitialPlans : kdlContinuationPlans)
+    ? (kdlPlanType === 'initial' ? [...kdlInitialPlans] : kdlContinuationPlans)
     : makersPlans;
 
   useEffect(() => {
     loadSettings();
-  }, [selectedService, kdlPlanType]);
-
-  // サービス変更時にプランをリセット
-  useEffect(() => {
-    if (selectedService === 'kdl') {
-      if (kdlPlanType === 'initial') {
-        setSelectedPlan('initial_trial' as any);
-      } else {
-        setSelectedPlan('standard');
-      }
-    } else {
-      setSelectedPlan('pro');
-    }
   }, [selectedService, kdlPlanType]);
 
   const loadSettings = async () => {
@@ -137,15 +123,15 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
     }
   };
 
-  const handleSave = async (planTier: PlanTier | MakersPlanTier) => {
+  const handleSave = async (planTier: string) => {
     try {
-      setSaving(true);
+      setSavingPlan(planTier);
       const response = await fetch('/api/admin/ai-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           planTier,
-          selectedPreset: 'presetB', // ダミー値（必須パラメータのため）
+          selectedPreset: 'custom',
           featureLimits: featureLimits[planTier],
           service: selectedService,
           userId,
@@ -161,7 +147,7 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
       console.error('Failed to save settings:', error);
       alert('設定の保存に失敗しました');
     } finally {
-      setSaving(false);
+      setSavingPlan(null);
     }
   };
 
@@ -185,19 +171,29 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
     return names[plan] || plan;
   };
 
-  const handleLimitChange = (planTier: PlanTier | MakersPlanTier, field: keyof FeatureLimits, value: string) => {
+  const handleLimitChange = (planTier: string, field: keyof FeatureLimits, value: string) => {
     const numValue = value === '' ? 0 : (value === '-1' ? -1 : parseInt(value) || 0);
     setFeatureLimits(prev => ({
       ...prev,
       [planTier]: {
-        profile: prev[planTier]?.profile ?? 5,
-        business: prev[planTier]?.business ?? 5,
-        quiz: prev[planTier]?.quiz ?? 5,
-        total: prev[planTier]?.total ?? null,
+        ...getDefaultLimits(planTier, selectedService),
         ...prev[planTier],
         [field]: field === 'total' && value === '' ? null : numValue
       }
     }));
+  };
+
+  // 値を表示用にフォーマット
+  const formatLimitValue = (value: number | null | undefined): string => {
+    if (value === null || value === undefined) return '';
+    if (value === -1) return '∞';
+    return value.toString();
+  };
+
+  // 入力値を取得
+  const getInputValue = (value: number | null | undefined): string => {
+    if (value === null || value === undefined) return '';
+    return value.toString();
   };
 
   if (loading) {
@@ -280,177 +276,213 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
         </div>
       )}
 
-      {/* プラン選択タブ */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {currentPlans.map((plan) => (
-          <button
-            key={plan}
-            onClick={() => setSelectedPlan(plan as any)}
-            className={`
-              px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-all
-              ${selectedPlan === plan
-                ? selectedService === 'kdl' ? 'bg-amber-600 text-white shadow-lg' : 'bg-purple-600 text-white shadow-lg'
-                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }
-            `}
-          >
-            {getPlanDisplayName(plan)}
-          </button>
-        ))}
-      </div>
-
       {/* 説明 */}
       <div className={`border rounded-lg p-4 ${
         selectedService === 'kdl' ? 'bg-amber-50 border-amber-200' : 'bg-purple-50 border-purple-200'
       }`}>
         <p className={`text-sm ${selectedService === 'kdl' ? 'text-amber-800' : 'text-purple-800'}`}>
-          {selectedService === 'kdl' 
-            ? <><strong>Kindle執筆</strong>のAI生成機能の1日あたりの使用制限を設定します</>
-            : <><strong>プロフィールLP、ビジネスLP、診断クイズ</strong>のAI生成機能の1日あたりの使用制限を設定します</>
-          }
+          各プランの1日あたりのAI生成回数上限を設定します。
         </p>
         <p className={`text-xs mt-1 ${selectedService === 'kdl' ? 'text-amber-600' : 'text-purple-600'}`}>
-          ※ -1 を入力すると無制限になります。totalを設定すると全機能合計で制限されます。
+          ※ <strong>-1</strong> = 無制限、<strong>空欄</strong> = 個別制限の合計
         </p>
       </div>
 
-      {/* 使用制限設定 */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="grid gap-6">
-          {/* プロフィールLP */}
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <label className="text-sm font-bold text-gray-900 block mb-1">
-                プロフィールLP生成
-              </label>
-              <p className="text-xs text-gray-600">
-                1日あたりの生成回数上限
-              </p>
-            </div>
-            <div className="w-32">
-              <input
-                type="number"
-                value={featureLimits[selectedPlan]?.profile ?? 5}
-                onChange={(e) => handleLimitChange(selectedPlan, 'profile', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-center font-bold text-gray-900 focus:ring-2 focus:ring-purple-500 outline-none"
-                placeholder="5"
-              />
-              <p className="text-xs text-center text-gray-500 mt-1">回/日</p>
-            </div>
-          </div>
+      {/* プラン別制限テーブル */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className={selectedService === 'kdl' ? 'bg-amber-50' : 'bg-purple-50'}>
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-bold text-gray-900 w-28">プラン</th>
+                <th className="px-3 py-3 text-center text-sm font-bold text-gray-900 w-24">
+                  Profile<br /><span className="text-xs font-normal text-gray-500">LP生成</span>
+                </th>
+                <th className="px-3 py-3 text-center text-sm font-bold text-gray-900 w-24">
+                  Business<br /><span className="text-xs font-normal text-gray-500">LP生成</span>
+                </th>
+                <th className="px-3 py-3 text-center text-sm font-bold text-gray-900 w-24">
+                  Quiz<br /><span className="text-xs font-normal text-gray-500">生成</span>
+                </th>
+                {selectedService === 'kdl' && (
+                  <>
+                    <th className="px-3 py-3 text-center text-sm font-bold text-gray-900 w-24">
+                      構成<br /><span className="text-xs font-normal text-gray-500">生成</span>
+                    </th>
+                    <th className="px-3 py-3 text-center text-sm font-bold text-gray-900 w-24">
+                      執筆<br /><span className="text-xs font-normal text-gray-500">生成</span>
+                    </th>
+                  </>
+                )}
+                <th className="px-3 py-3 text-center text-sm font-bold text-gray-900 w-24">
+                  合計<br /><span className="text-xs font-normal text-gray-500">上限</span>
+                </th>
+                <th className="px-4 py-3 text-center text-sm font-bold text-gray-900 w-20">操作</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {currentPlans.map((plan) => {
+                const limits = featureLimits[plan] || getDefaultLimits(plan, selectedService);
 
-          {/* ビジネスLP */}
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <label className="text-sm font-bold text-gray-900 block mb-1">
-                ビジネスLP生成
-              </label>
-              <p className="text-xs text-gray-600">
-                1日あたりの生成回数上限
-              </p>
-            </div>
-            <div className="w-32">
-              <input
-                type="number"
-                value={featureLimits[selectedPlan]?.business ?? 5}
-                onChange={(e) => handleLimitChange(selectedPlan, 'business', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-center font-bold text-gray-900 focus:ring-2 focus:ring-purple-500 outline-none"
-                placeholder="5"
-              />
-              <p className="text-xs text-center text-gray-500 mt-1">回/日</p>
-            </div>
-          </div>
+                return (
+                  <tr key={plan} className="hover:bg-gray-50">
+                    {/* プラン名 */}
+                    <td className="px-4 py-3">
+                      <span className={`font-bold ${
+                        selectedService === 'kdl' ? 'text-amber-700' : 'text-purple-700'
+                      }`}>
+                        {getPlanDisplayName(plan)}
+                      </span>
+                    </td>
 
-          {/* 診断クイズ */}
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <label className="text-sm font-bold text-gray-900 block mb-1">
-                診断クイズ生成
-              </label>
-              <p className="text-xs text-gray-600">
-                1日あたりの生成回数上限
-              </p>
-            </div>
-            <div className="w-32">
-              <input
-                type="number"
-                value={featureLimits[selectedPlan]?.quiz ?? 5}
-                onChange={(e) => handleLimitChange(selectedPlan, 'quiz', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-center font-bold text-gray-900 focus:ring-2 focus:ring-purple-500 outline-none"
-                placeholder="5"
-              />
-              <p className="text-xs text-center text-gray-500 mt-1">回/日</p>
-            </div>
-          </div>
+                    {/* Profile LP */}
+                    <td className="px-3 py-3">
+                      <LimitInput
+                        value={limits.profile}
+                        onChange={(v) => handleLimitChange(plan, 'profile', v)}
+                        service={selectedService}
+                      />
+                    </td>
 
-          {/* 全機能合計 */}
-          <div className="border-t border-gray-200 pt-6">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <label className="text-sm font-bold text-gray-900 block mb-1">
-                  全機能合計の上限（オプション）
-                </label>
-                <p className="text-xs text-gray-600">
-                  空欄の場合は個別の合計値。設定すると全機能合計で制限されます
-                </p>
-              </div>
-              <div className="w-32">
-                <input
-                  type="number"
-                  value={featureLimits[selectedPlan]?.total === null ? '' : featureLimits[selectedPlan]?.total ?? ''}
-                  onChange={(e) => handleLimitChange(selectedPlan, 'total', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-center font-bold text-gray-900 focus:ring-2 focus:ring-purple-500 outline-none"
-                  placeholder="空欄"
-                />
-                <p className="text-xs text-center text-gray-500 mt-1">回/日</p>
-              </div>
-            </div>
-          </div>
+                    {/* Business LP */}
+                    <td className="px-3 py-3">
+                      <LimitInput
+                        value={limits.business}
+                        onChange={(v) => handleLimitChange(plan, 'business', v)}
+                        service={selectedService}
+                      />
+                    </td>
 
-          {/* 使用例 */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-sm font-semibold text-gray-900 mb-2">
-              <Users size={16} className="inline mr-1" />
-              現在の設定
-            </p>
-            <div className="space-y-1 text-sm text-gray-700">
-              <p>• プロフィールLP: <strong>{featureLimits[selectedPlan]?.profile === -1 ? '無制限' : `${featureLimits[selectedPlan]?.profile ?? 5}回/日`}</strong></p>
-              <p>• ビジネスLP: <strong>{featureLimits[selectedPlan]?.business === -1 ? '無制限' : `${featureLimits[selectedPlan]?.business ?? 5}回/日`}</strong></p>
-              <p>• 診断クイズ: <strong>{featureLimits[selectedPlan]?.quiz === -1 ? '無制限' : `${featureLimits[selectedPlan]?.quiz ?? 5}回/日`}</strong></p>
-              {featureLimits[selectedPlan]?.total !== null && (
-                <p className="text-amber-700 font-semibold">
-                  ⚠️ 全機能合計: <strong>{featureLimits[selectedPlan]?.total === -1 ? '無制限' : `${featureLimits[selectedPlan]?.total}回/日`}</strong>（こちらが優先）
-                </p>
-              )}
-            </div>
-          </div>
+                    {/* Quiz */}
+                    <td className="px-3 py-3">
+                      <LimitInput
+                        value={limits.quiz}
+                        onChange={(v) => handleLimitChange(plan, 'quiz', v)}
+                        service={selectedService}
+                      />
+                    </td>
+
+                    {/* KDL用: 構成・執筆 */}
+                    {selectedService === 'kdl' && (
+                      <>
+                        <td className="px-3 py-3">
+                          <LimitInput
+                            value={limits.kdl_outline ?? 0}
+                            onChange={(v) => handleLimitChange(plan, 'kdl_outline', v)}
+                            service={selectedService}
+                          />
+                        </td>
+                        <td className="px-3 py-3">
+                          <LimitInput
+                            value={limits.kdl_writing ?? 0}
+                            onChange={(v) => handleLimitChange(plan, 'kdl_writing', v)}
+                            service={selectedService}
+                          />
+                        </td>
+                      </>
+                    )}
+
+                    {/* 合計上限 */}
+                    <td className="px-3 py-3">
+                      <LimitInput
+                        value={limits.total}
+                        onChange={(v) => handleLimitChange(plan, 'total', v)}
+                        service={selectedService}
+                        isTotal
+                      />
+                    </td>
+
+                    {/* 保存ボタン */}
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => handleSave(plan)}
+                        disabled={savingPlan === plan}
+                        className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg font-medium text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all ${
+                          selectedService === 'kdl' 
+                            ? 'bg-amber-600 hover:bg-amber-700' 
+                            : 'bg-purple-600 hover:bg-purple-700'
+                        }`}
+                      >
+                        {savingPlan === plan ? (
+                          <Loader2 className="animate-spin" size={16} />
+                        ) : (
+                          <Save size={16} />
+                        )}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* 保存ボタン */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => handleSave(selectedPlan)}
-          disabled={saving}
-          className={`flex items-center gap-2 text-white px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg ${
-            selectedService === 'kdl' 
-              ? 'bg-amber-600 hover:bg-amber-700' 
-              : 'bg-purple-600 hover:bg-purple-700'
-          }`}
-        >
-          {saving ? (
-            <>
-              <Loader2 className="animate-spin" size={20} />
-              保存中...
-            </>
-          ) : (
-            <>
-              <Save size={20} />
-              {getPlanDisplayName(selectedPlan)}プランの設定を保存
-            </>
-          )}
-        </button>
+      {/* 凡例 */}
+      <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+        <h3 className="font-bold text-gray-900 mb-2">設定値の説明</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="w-10 h-8 flex items-center justify-center bg-white border border-gray-300 rounded text-gray-900 font-mono">0</span>
+            <span className="text-gray-600">利用不可</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-10 h-8 flex items-center justify-center bg-white border border-gray-300 rounded text-gray-900 font-mono">5</span>
+            <span className="text-gray-600">5回/日</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-10 h-8 flex items-center justify-center bg-white border border-gray-300 rounded text-gray-900 font-mono">-1</span>
+            <span className="text-gray-600">無制限</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-10 h-8 flex items-center justify-center bg-white border border-gray-300 rounded text-gray-400 font-mono">--</span>
+            <span className="text-gray-600">個別の合計</span>
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
+
+// 制限値入力コンポーネント
+interface LimitInputProps {
+  value: number | null | undefined;
+  onChange: (value: string) => void;
+  service: ServiceType;
+  isTotal?: boolean;
+}
+
+function LimitInput({ value, onChange, service, isTotal }: LimitInputProps) {
+  const displayValue = value === null || value === undefined ? '' : value.toString();
+  const isUnlimited = value === -1;
+
+  return (
+    <div className="relative">
+      {isUnlimited ? (
+        <div 
+          className={`w-full h-9 flex items-center justify-center rounded-lg border cursor-pointer ${
+            service === 'kdl' 
+              ? 'bg-amber-50 border-amber-200 text-amber-600' 
+              : 'bg-purple-50 border-purple-200 text-purple-600'
+          }`}
+          onClick={() => onChange('0')}
+          title="クリックで変更"
+        >
+          <Infinity size={18} />
+        </div>
+      ) : (
+        <input
+          type="number"
+          value={displayValue}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={isTotal ? '--' : '0'}
+          className={`w-full h-9 px-2 text-center text-sm border rounded-lg focus:ring-2 focus:outline-none bg-white text-gray-900 ${
+            service === 'kdl' 
+              ? 'border-amber-200 focus:ring-amber-300' 
+              : 'border-purple-200 focus:ring-purple-300'
+          } ${isTotal && displayValue === '' ? 'text-gray-400' : ''}`}
+        />
+      )}
     </div>
   );
 }
