@@ -241,10 +241,28 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
       <div className={`border rounded-lg p-4 ${
         selectedService === 'kdl' ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-200'
       }`}>
-        <p className={`text-sm ${selectedService === 'kdl' ? 'text-amber-800' : 'text-blue-800'}`}>
-          各プランの<strong>構成用（脳）</strong>と<strong>執筆用（手）</strong>のAIモデルを設定します。
-          バックアップモデルはメインモデルが利用できない場合に自動で切り替わります。
-        </p>
+        {selectedService === 'kdl' ? (
+          <>
+            <p className="text-sm text-amber-800">
+              各プランの<strong>構成用（脳）</strong>と<strong>執筆用（手）</strong>のAIモデルを設定します。
+              バックアップモデルはメインモデルが利用できない場合に自動で切り替わります。
+            </p>
+            <p className="text-xs mt-1 text-amber-600">
+              ※ 構成用 = 章立て・アウトライン作成、執筆用 = 本文の文章生成
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-blue-800">
+              各プランの<strong>メインAI</strong>と<strong>サブAI</strong>を設定します。
+              診断クイズ・LP生成では<strong>メインAI（構成用）</strong>が使用されます。
+              サブAI（執筆用）はバックアップとして機能します。
+            </p>
+            <p className="text-xs mt-1 text-blue-600">
+              ※ 集客メーカーの機能はメインAIモデルを使用します
+            </p>
+          </>
+        )}
         <p className={`text-xs mt-1 ${selectedService === 'kdl' ? 'text-amber-600' : 'text-blue-600'}`}>
           ※ 価格は1Mトークンあたりの入力コストです
         </p>
@@ -260,13 +278,13 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
                 <th className="px-4 py-3 text-left text-sm font-bold text-gray-900">
                   <div className="flex items-center gap-1">
                     <Settings size={14} />
-                    構成用モデル
+                    {selectedService === 'kdl' ? '構成用モデル' : 'メインAI（診断・LP生成）'}
                   </div>
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-bold text-gray-900">
                   <div className="flex items-center gap-1">
                     <Settings size={14} />
-                    執筆用モデル
+                    {selectedService === 'kdl' ? '執筆用モデル' : 'サブAI（予備）'}
                   </div>
                 </th>
                 <th className="px-4 py-3 text-center text-sm font-bold text-gray-900 w-24">操作</th>
