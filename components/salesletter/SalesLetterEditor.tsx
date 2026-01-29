@@ -42,7 +42,9 @@ import {
   Share2,
   Lock,
   Star,
+  Sparkles,
 } from 'lucide-react';
+import AIGenerateModal, { AIGenerateInput } from './AIGenerateModal';
 
 // セールスレター用ブロックタイプ
 const blockTypes = [
@@ -133,6 +135,11 @@ export default function SalesLetterEditor({
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [completedSlug, setCompletedSlug] = useState('');
+  
+  // AI生成モーダル状態
+  const [showAIGenerateModal, setShowAIGenerateModal] = useState(false);
+  const [aiSelectedTemplateId, setAiSelectedTemplateId] = useState<string>('');
+  const [isAIGenerating, setIsAIGenerating] = useState(false);
 
   // Ref
   const previewRef = useRef<HTMLDivElement>(null);
@@ -393,6 +400,54 @@ export default function SalesLetterEditor({
       setSettings(template.settings);
     }
     setShowTemplateModal(false);
+  };
+
+  // AI生成でテンプレート選択
+  const handleSelectTemplateForAI = (templateId: string) => {
+    setAiSelectedTemplateId(templateId);
+    setShowTemplateModal(false);
+    setShowAIGenerateModal(true);
+  };
+
+  // AI生成実行
+  const handleAIGenerate = async (input: AIGenerateInput) => {
+    if (!aiSelectedTemplateId) return;
+    
+    setIsAIGenerating(true);
+    try {
+      const response = await fetch('/api/salesletter/ai-generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          templateId: aiSelectedTemplateId,
+          input,
+          userId: user?.id,
+          userPlan: userPlan.planId || 'free',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'AI生成に失敗しました');
+      }
+
+      // テンプレートの設定を取得
+      const template = salesLetterTemplates.find(t => t.id === aiSelectedTemplateId);
+      if (template) {
+        setSettings(template.settings);
+      }
+
+      // 生成されたブロックをセット
+      setTitle(input.productName + ' - セールスレター');
+      setBlocks(data.blocks);
+      setShowAIGenerateModal(false);
+      setAiSelectedTemplateId('');
+    } catch (error: any) {
+      alert(error.message || 'AI生成に失敗しました');
+    } finally {
+      setIsAIGenerating(false);
+    }
   };
 
   // 選択中のブロック
@@ -724,10 +779,23 @@ export default function SalesLetterEditor({
       {showTemplateModal && (
         <TemplateModal
           onSelect={handleSelectTemplate}
+          onSelectForAI={handleSelectTemplateForAI}
           onClose={() => setShowTemplateModal(false)}
           onShowGuide={(id) => setShowGuideModal(id)}
         />
       )}
+
+      {/* AI生成モーダル */}
+      <AIGenerateModal
+        isOpen={showAIGenerateModal}
+        onClose={() => {
+          setShowAIGenerateModal(false);
+          setAiSelectedTemplateId('');
+        }}
+        onGenerate={handleAIGenerate}
+        templateName={salesLetterTemplates.find(t => t.id === aiSelectedTemplateId)?.name || ''}
+        isGenerating={isAIGenerating}
+      />
 
       {/* ガイドモーダル */}
       {showGuideModal && (
@@ -1682,57 +1750,6 @@ function ContentSettingsPanel({
       {/* 折りたたみコンテンツ */}
       {isOpen && (
         <div className="p-4">
-          {/* カスタムURL設定（新規作成時のみ） */}
-          {isNewContent && (
-            <div className="mb-4 pb-4 border-b border-gray-200">
-              <label className="block text-xs font-bold text-gray-700 mb-2">カスタムURL（任意）</label>
-              <input 
-                className={`w-full border p-3 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-rose-500 outline-none bg-white placeholder-gray-400 transition-shadow text-sm ${slugError ? 'border-red-400' : 'border-gray-300'}`}
-                value={customSlug} 
-                onChange={e => {
-                  const val = e.target.value;
-                  setCustomSlug(val);
-                  if (val && !/^[a-z0-9-]{3,20}$/.test(val)) {
-                    setSlugError('英小文字、数字、ハイフンのみ（3〜20文字）');
-                  } else {
-                    setSlugError('');
-                  }
-                }}
-                placeholder="例: my-sales-page"
-              />
-              {slugError && <p className="text-red-500 text-xs mt-1">{slugError}</p>}
-              <p className="text-xs text-gray-500 mt-1">
-                ※空欄の場合は自動生成されます。一度設定すると変更できません。
-              </p>
-              {customSlug && !slugError && (
-                <p className="text-xs text-rose-600 mt-1 font-medium">
-                  公開URL: {typeof window !== 'undefined' ? window.location.origin : ''}/s/{customSlug}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* ポータル掲載 */}
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <h4 className="font-bold text-rose-900 flex items-center gap-2 mb-1 text-xs">
-                <Star size={14} className="text-rose-600"/> ポータルに掲載する
-              </h4>
-              <p className="text-[10px] text-rose-700">
-                ポータルに掲載することで、サービスの紹介およびSEO対策、AI対策として効果的となります。より多くの方にあなたのセールスレターを見てもらえます。
-              </p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer ml-3 flex-shrink-0">
-              <input 
-                type="checkbox" 
-                className="sr-only peer" 
-                checked={settings.showInPortal === undefined ? true : settings.showInPortal} 
-                onChange={e => onUpdate({ showInPortal: e.target.checked })} 
-              />
-              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-600"></div>
-            </label>
-          </div>
-
           {/* コンテンツ幅 */}
       <div className="mb-4">
         <label className="block text-xs font-bold text-gray-700 mb-2">コンテンツ幅</label>
@@ -1923,6 +1940,57 @@ function ContentSettingsPanel({
         </select>
       </div>
 
+      {/* カスタムURL設定（新規作成時のみ） */}
+      {isNewContent && (
+        <div className="mb-4 pb-4 border-b border-gray-200">
+          <label className="block text-xs font-bold text-gray-700 mb-2">カスタムURL（任意）</label>
+          <input 
+            className={`w-full border p-3 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-rose-500 outline-none bg-white placeholder-gray-400 transition-shadow text-sm ${slugError ? 'border-red-400' : 'border-gray-300'}`}
+            value={customSlug} 
+            onChange={e => {
+              const val = e.target.value;
+              setCustomSlug(val);
+              if (val && !/^[a-z0-9-]{3,20}$/.test(val)) {
+                setSlugError('英小文字、数字、ハイフンのみ（3〜20文字）');
+              } else {
+                setSlugError('');
+              }
+            }}
+            placeholder="例: my-sales-page"
+          />
+          {slugError && <p className="text-red-500 text-xs mt-1">{slugError}</p>}
+          <p className="text-xs text-gray-500 mt-1">
+            ※空欄の場合は自動生成されます。一度設定すると変更できません。
+          </p>
+          {customSlug && !slugError && (
+            <p className="text-xs text-rose-600 mt-1 font-medium">
+              公開URL: {typeof window !== 'undefined' ? window.location.origin : ''}/s/{customSlug}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* ポータル掲載 */}
+      <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start justify-between mb-4">
+        <div className="flex-1">
+          <h4 className="font-bold text-rose-900 flex items-center gap-2 mb-1 text-xs">
+            <Star size={14} className="text-rose-600"/> ポータルに掲載する
+          </h4>
+          <p className="text-[10px] text-rose-700">
+            ポータルに掲載することで、サービスの紹介およびSEO対策、AI対策として効果的となります。より多くの方にあなたのセールスレターを見てもらえます。
+          </p>
+        </div>
+        <label className="relative inline-flex items-center cursor-pointer ml-3 flex-shrink-0">
+          <input 
+            type="checkbox" 
+            className="sr-only peer" 
+            checked={settings.showInPortal === undefined ? true : settings.showInPortal} 
+            onChange={e => onUpdate({ showInPortal: e.target.checked })} 
+          />
+          <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-600"></div>
+        </label>
+      </div>
+
       {/* フッター非表示（Proプラン特典） */}
       <div className={`p-3 rounded-xl border mt-4 ${
         userPlan.canHideCopyright 
@@ -2049,10 +2117,12 @@ function SettingsPanel({
 // テンプレート選択モーダル
 function TemplateModal({
   onSelect,
+  onSelectForAI,
   onClose,
   onShowGuide,
 }: {
   onSelect: (id: string) => void;
+  onSelectForAI: (id: string) => void;
   onClose: () => void;
   onShowGuide: (id: string) => void;
 }) {
@@ -2087,8 +2157,7 @@ function TemplateModal({
                   {templates.map((template) => (
                     <div
                       key={template.id}
-                      className="border border-gray-200 rounded-xl p-4 hover:border-rose-300 cursor-pointer transition-colors"
-                      onClick={() => onSelect(template.id)}
+                      className="border border-gray-200 rounded-xl p-4 hover:border-rose-300 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
@@ -2103,7 +2172,24 @@ function TemplateModal({
                           <HelpCircle size={18} />
                         </button>
                       </div>
-                      <p className="text-sm text-gray-600">{template.description}</p>
+                      <p className="text-sm text-gray-600 mb-3">{template.description}</p>
+                      
+                      {/* 選択ボタン */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => onSelect(template.id)}
+                          className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                        >
+                          手動で編集
+                        </button>
+                        <button
+                          onClick={() => onSelectForAI(template.id)}
+                          className="flex-1 px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 rounded-lg transition-colors flex items-center justify-center gap-1"
+                        >
+                          <Sparkles size={14} />
+                          AI生成
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
