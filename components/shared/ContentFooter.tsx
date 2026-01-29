@@ -18,7 +18,7 @@ const TOOL_NAMES: Record<ContentToolType, string> = {
   quiz: '診断クイズメーカー',
   profile: 'プロフィールメーカー',
   business: 'ビジネスLPメーカー',
-  salesletter: 'セールスレターメーカー',
+  salesletter: 'セールスライター',
   survey: 'アンケートメーカー',
   booking: '予約メーカー',
   attendance: '出欠表メーカー',
@@ -73,8 +73,8 @@ const ContentFooter: React.FC<ContentFooterProps> = ({
     },
     transparent: {
       container: '',
-      toolLink: 'text-white/60 hover:text-white/80',
-      copyright: 'text-white/40 hover:text-white/60',
+      toolLink: 'text-gray-400 hover:text-gray-600',
+      copyright: 'text-gray-300 hover:text-gray-500',
     },
   };
 
