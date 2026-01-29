@@ -146,6 +146,10 @@ export default function FeaturedManager() {
       profile: 'プロフィールLP',
       business: 'ビジネスLP',
       salesletter: 'セールスレター',
+      survey: 'アンケート',
+      gamification: 'ゲーミフィケーション',
+      attendance: '出欠表',
+      booking: '予約',
     };
     return labels[type] || type;
   };
