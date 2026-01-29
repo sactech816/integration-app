@@ -9,6 +9,7 @@ import CustomColorPicker from '@/components/shared/CustomColorPicker';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import BlockRenderer from '@/components/shared/BlockRenderer';
 import SalesTextEditor from './SalesTextEditor';
+import { useUserPlan } from '@/lib/hooks/useUserPlan';
 import {
   Save,
   Eye,
@@ -39,6 +40,7 @@ import {
   FileText,
   Trophy,
   Share2,
+  Lock,
 } from 'lucide-react';
 
 // セールスレター用ブロックタイプ
@@ -112,6 +114,13 @@ export default function SalesLetterEditor({
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState<'pc' | 'mobile'>('pc');
   const [previewKey, setPreviewKey] = useState(0);
+  
+  // カスタムslug管理
+  const [customSlug, setCustomSlug] = useState('');
+  const [slugError, setSlugError] = useState('');
+  
+  // ユーザープラン権限
+  const { userPlan } = useUserPlan(user?.id);
   
   // モーダル状態
   const [showTemplateModal, setShowTemplateModal] = useState(!initialData);
@@ -270,55 +279,94 @@ export default function SalesLetterEditor({
       return;
     }
 
+    // カスタムslugのバリデーション
+    if (customSlug && !/^[a-z0-9-]{3,20}$/.test(customSlug)) {
+      alert('カスタムURLの形式が正しくありません（英小文字、数字、ハイフンのみ、3〜20文字）');
+      return;
+    }
+
     setIsSaving(true);
     try {
-      const newSlug = slug || generateSlug();
-
-      const payload = {
-        user_id: user?.id || null,
-        title,
-        slug: newSlug,
-        content: blocks,
-        settings,
-      };
-
-      let result;
       // initialData?.id または savedId があれば更新、なければ新規作成
       const existingId = initialData?.id || savedId;
       
       if (existingId) {
-        result = await supabase
+        // 更新（slugは変更しない）
+        const payload = {
+          user_id: user?.id || null,
+          title,
+          content: blocks,
+          settings,
+        };
+
+        const result = await supabase
           .from('sales_letters')
           .update(payload)
           .eq('id', existingId)
           .select()
           .single();
-      } else {
-        result = await supabase
-          .from('sales_letters')
-          .insert(payload)
-          .select()
-          .single();
-      }
 
-      if (result.error) throw result.error;
+        if (result.error) throw result.error;
 
-      // 新規作成時のみ完了モーダルを表示、更新時は「保存しました」
-      const wasNewCreation = !existingId;
-      
-      if (wasNewCreation && result.data?.id) {
-        setSavedId(result.data.id);
-        setSlug(newSlug);
-        setCompletedSlug(newSlug);
-        setShowCompleteModal(true);
-      } else {
-        setSlug(newSlug);
-        setCompletedSlug(newSlug);
+        setCompletedSlug(result.data.slug);
         alert('保存しました！');
+      } else {
+        // 新規作成：カスタムslugまたは自動生成（リトライ付き）
+        let attempts = 0;
+        const maxAttempts = 5;
+        let insertError: any = null;
+
+        while (attempts < maxAttempts) {
+          const newSlug = customSlug || generateSlug();
+          const payload = {
+            user_id: user?.id || null,
+            title,
+            slug: newSlug,
+            content: blocks,
+            settings,
+          };
+
+          const { data, error } = await supabase
+            .from('sales_letters')
+            .insert(payload)
+            .select()
+            .single();
+
+          // slug重複エラー（23505）の場合はリトライ（カスタムslugの場合はリトライしない）
+          if (error?.code === '23505' && error?.message?.includes('slug') && !customSlug) {
+            attempts++;
+            console.log(`Slug collision, retrying... (attempt ${attempts}/${maxAttempts})`);
+            continue;
+          }
+
+          if (error) {
+            insertError = error;
+            break;
+          }
+
+          // 成功
+          setSavedId(data.id);
+          setSlug(data.slug);
+          setCompletedSlug(data.slug);
+          if (customSlug) setCustomSlug(''); // カスタムslugをクリア
+          setShowCompleteModal(true);
+          return;
+        }
+
+        // エラーハンドリング
+        if (insertError) {
+          throw insertError;
+        }
+        throw new Error('保存に失敗しました（リトライ上限到達）');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Save error:', error);
-      alert('保存に失敗しました');
+      // カスタムURL（slug）の重複エラーを分かりやすいメッセージに変換
+      if (error.code === '23505' && error.message?.includes('slug')) {
+        alert('このカスタムURLは既に使用されています。別のURLを指定してください。');
+      } else {
+        alert('保存に失敗しました: ' + (error.message || '不明なエラー'));
+      }
     } finally {
       setIsSaving(false);
     }
@@ -444,7 +492,7 @@ export default function SalesLetterEditor({
               {/* 公開URLボタン（slugがある場合のみ表示） */}
               {(slug || initialData?.slug) && (
                 <button
-                  onClick={() => window.open(`${window.location.origin}/salesletter/${slug || initialData?.slug}`, '_blank')}
+                  onClick={() => window.open(`${window.location.origin}/s/${slug || initialData?.slug}`, '_blank')}
                   className="hidden sm:flex bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-lg font-bold items-center gap-2 whitespace-nowrap text-sm"
                 >
                   <Share2 size={16} />
@@ -508,12 +556,43 @@ export default function SalesLetterEditor({
               </div>
             </div>
 
+            {/* カスタムURL設定（新規作成時のみ） */}
+            {!initialData?.slug && !slug && (
+              <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
+                <h3 className="text-sm font-bold text-gray-700 mb-3">カスタムURL（任意）</h3>
+                <input 
+                  className={`w-full border p-3 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-rose-500 outline-none bg-white placeholder-gray-400 transition-shadow text-sm ${slugError ? 'border-red-400' : 'border-gray-300'}`}
+                  value={customSlug} 
+                  onChange={e => {
+                    const val = e.target.value;
+                    setCustomSlug(val);
+                    if (val && !/^[a-z0-9-]{3,20}$/.test(val)) {
+                      setSlugError('英小文字、数字、ハイフンのみ（3〜20文字）');
+                    } else {
+                      setSlugError('');
+                    }
+                  }}
+                  placeholder="例: my-sales-page"
+                />
+                {slugError && <p className="text-red-500 text-xs mt-1">{slugError}</p>}
+                <p className="text-xs text-gray-500 mt-1">
+                  ※空欄の場合は自動生成されます。一度設定すると変更できません。
+                </p>
+                {customSlug && !slugError && (
+                  <p className="text-xs text-rose-600 mt-1 font-medium">
+                    公開URL: {typeof window !== 'undefined' ? window.location.origin : ''}/s/{customSlug}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* コンテンツ幅・背景設定 */}
             <ContentSettingsPanel
               settings={settings}
               onUpdate={(updates) => setSettings(prev => ({ ...prev, ...updates }))}
               onOpenColorPicker={() => setShowColorPicker(true)}
               userId={user?.id}
+              userPlan={userPlan}
             />
 
             {/* 編集エリアのスクロールトップボタン */}
@@ -682,7 +761,7 @@ export default function SalesLetterEditor({
         isOpen={showCompleteModal}
         onClose={() => setShowCompleteModal(false)}
         title="セールスレター"
-        publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/salesletter/${completedSlug}`}
+        publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/s/${completedSlug}`}
         contentTitle={title}
         theme="rose"
         showSupport={true}
@@ -1508,17 +1587,37 @@ function FaqBlockEditor({
   );
 }
 
+// 影のマッピング
+const shadowMap: Record<string, string> = {
+  none: 'none',
+  sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+  md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+  lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+  xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+};
+
+// 角丸のマッピング
+const radiusMap: Record<string, string> = {
+  none: '0',
+  sm: '0.125rem',
+  md: '0.375rem',
+  lg: '0.5rem',
+  xl: '0.75rem',
+};
+
 // コンテンツ設定パネル（左パネル内）
 function ContentSettingsPanel({
   settings,
   onUpdate,
   onOpenColorPicker,
   userId,
+  userPlan,
 }: {
   settings: SalesLetterSettings;
   onUpdate: (updates: Partial<SalesLetterSettings>) => void;
   onOpenColorPicker: () => void;
   userId?: string;
+  userPlan: { canHideCopyright: boolean };
 }) {
   const [isUploading, setIsUploading] = useState(false);
 
@@ -1640,7 +1739,7 @@ function ContentSettingsPanel({
       </div>
 
       {/* 背景適用範囲 */}
-      <div>
+      <div className="mb-4">
         <label className="block text-xs font-medium text-gray-600 mb-2">背景の適用範囲</label>
         <select
           value={settings.pageBackground?.scope || 'all'}
@@ -1656,6 +1755,163 @@ function ContentSettingsPanel({
           <option value="inside">コンテンツ幅内のみ</option>
           <option value="outside">コンテンツ幅外のみ</option>
         </select>
+      </div>
+
+      {/* 枠線設定 */}
+      <div className="mb-4 pt-4 border-t border-gray-200">
+        <label className="block text-xs font-bold text-gray-700 mb-2">コンテンツ枠線</label>
+        <div className="flex items-center gap-3 mb-2">
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={settings.contentBorder?.enabled || false}
+              onChange={(e) => onUpdate({
+                contentBorder: {
+                  enabled: e.target.checked,
+                  width: settings.contentBorder?.width || 1,
+                  color: settings.contentBorder?.color || '#e5e7eb',
+                },
+              })}
+            />
+            <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-500"></div>
+          </label>
+          <span className="text-xs text-gray-600">枠線を表示</span>
+        </div>
+        {settings.contentBorder?.enabled && (
+          <div className="space-y-2 pl-2">
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-600 w-12">太さ</label>
+              <select
+                value={settings.contentBorder?.width || 1}
+                onChange={(e) => onUpdate({
+                  contentBorder: {
+                    ...settings.contentBorder!,
+                    width: Number(e.target.value),
+                  },
+                })}
+                className="flex-1 border border-gray-300 rounded px-2 py-1 text-xs text-gray-900"
+              >
+                <option value={1}>1px</option>
+                <option value={2}>2px</option>
+                <option value={3}>3px</option>
+                <option value={4}>4px</option>
+                <option value={5}>5px</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-600 w-12">色</label>
+              <input
+                type="color"
+                value={settings.contentBorder?.color || '#e5e7eb'}
+                onChange={(e) => onUpdate({
+                  contentBorder: {
+                    ...settings.contentBorder!,
+                    color: e.target.value,
+                  },
+                })}
+                className="w-8 h-8 rounded border border-gray-200 cursor-pointer"
+              />
+              <input
+                type="text"
+                value={settings.contentBorder?.color || '#e5e7eb'}
+                onChange={(e) => onUpdate({
+                  contentBorder: {
+                    ...settings.contentBorder!,
+                    color: e.target.value,
+                  },
+                })}
+                className="flex-1 border border-gray-300 rounded px-2 py-1 text-xs text-gray-900"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 影設定 */}
+      <div className="mb-4">
+        <label className="block text-xs font-bold text-gray-700 mb-2">コンテンツ影</label>
+        <select
+          value={settings.contentShadow || 'none'}
+          onChange={(e) => onUpdate({ contentShadow: e.target.value as 'none' | 'sm' | 'md' | 'lg' | 'xl' })}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-rose-500"
+        >
+          <option value="none">なし</option>
+          <option value="sm">小</option>
+          <option value="md">中</option>
+          <option value="lg">大</option>
+          <option value="xl">特大</option>
+        </select>
+      </div>
+
+      {/* 角丸設定 */}
+      <div className="mb-4">
+        <label className="block text-xs font-bold text-gray-700 mb-2">コンテンツ角丸</label>
+        <select
+          value={settings.contentBorderRadius || 'none'}
+          onChange={(e) => onUpdate({ contentBorderRadius: e.target.value as 'none' | 'sm' | 'md' | 'lg' | 'xl' })}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-rose-500"
+        >
+          <option value="none">なし</option>
+          <option value="sm">小</option>
+          <option value="md">中</option>
+          <option value="lg">大</option>
+          <option value="xl">特大</option>
+        </select>
+      </div>
+
+      {/* フッター非表示（Proプラン特典） */}
+      <div className={`p-3 rounded-xl border mt-4 ${
+        userPlan.canHideCopyright 
+          ? 'bg-orange-50 border-orange-200' 
+          : 'bg-gray-100 border-gray-200'
+      }`}>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <h4 className={`font-bold flex items-center gap-2 mb-1 text-xs ${
+              userPlan.canHideCopyright ? 'text-orange-900' : 'text-gray-500'
+            }`}>
+              {userPlan.canHideCopyright 
+                ? <Eye size={14} className="text-orange-600"/> 
+                : <Lock size={14} className="text-gray-400"/>
+              }
+              フッターを非表示にする
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                userPlan.canHideCopyright 
+                  ? 'bg-orange-500 text-white' 
+                  : 'bg-gray-400 text-white'
+              }`}>Pro</span>
+            </h4>
+            <p className={`text-[10px] ${userPlan.canHideCopyright ? 'text-orange-700' : 'text-gray-500'}`}>
+              「セールスレターメーカーで作成しました」のフッターを非表示にします。
+            </p>
+            {!userPlan.canHideCopyright && (
+              <p className="text-[10px] text-rose-600 mt-1 font-medium">
+                ※ Proプランで利用可能
+              </p>
+            )}
+          </div>
+          <label className={`relative inline-flex items-center ml-2 flex-shrink-0 ${
+            userPlan.canHideCopyright ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+          }`}>
+            <input 
+              type="checkbox" 
+              className="sr-only peer" 
+              checked={userPlan.canHideCopyright && (settings.hideFooter || false)} 
+              onChange={e => {
+                if (userPlan.canHideCopyright) {
+                  onUpdate({ hideFooter: e.target.checked });
+                }
+              }}
+              disabled={!userPlan.canHideCopyright}
+            />
+            <div className={`w-9 h-5 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all ${
+              userPlan.canHideCopyright 
+                ? 'bg-gray-200 peer-focus:outline-none peer-checked:bg-orange-600' 
+                : 'bg-gray-300'
+            }`}></div>
+          </label>
+        </div>
       </div>
     </div>
   );

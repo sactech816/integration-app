@@ -590,6 +590,16 @@ export interface SalesLetterSettings {
     scope?: 'all' | 'inside' | 'outside'; // 全体 / コンテンツ幅内 / コンテンツ幅外
     imageUrl?: string; // 背景画像URL
   };
+  // 枠線設定
+  contentBorder?: {
+    enabled: boolean;
+    width: number;       // 1-5 px
+    color: string;       // 例: '#e5e7eb'
+  };
+  // 影設定
+  contentShadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  // 角丸設定
+  contentBorderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   hideFooter?: boolean;
   tracking?: TrackingSettings;
 }
