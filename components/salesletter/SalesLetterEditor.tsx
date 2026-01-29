@@ -422,7 +422,7 @@ export default function SalesLetterEditor({
           templateId: aiSelectedTemplateId,
           input,
           userId: user?.id,
-          userPlan: userPlan.planId || 'free',
+          userPlan: userPlan.planTier || 'free',
         }),
       });
 
