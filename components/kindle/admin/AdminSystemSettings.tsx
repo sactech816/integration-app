@@ -250,7 +250,7 @@ export default function AdminSystemSettings({ userId, accessToken }: AdminSystem
                           className="w-24 px-2 py-1 border border-gray-300 rounded text-right text-gray-900"
                         />
                       ) : (
-                        <span className="font-medium">{formatCurrency(plan?.monthly_price || 0)}</span>
+                        <span className="font-medium text-gray-900">{formatCurrency(plan?.monthly_price || 0)}</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -262,7 +262,7 @@ export default function AdminSystemSettings({ userId, accessToken }: AdminSystem
                           className="w-24 px-2 py-1 border border-gray-300 rounded text-right text-gray-900"
                         />
                       ) : (
-                        <span className="font-medium">{formatCurrency(plan?.yearly_price || 0)}</span>
+                        <span className="font-medium text-gray-900">{formatCurrency(plan?.yearly_price || 0)}</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -275,7 +275,7 @@ export default function AdminSystemSettings({ userId, accessToken }: AdminSystem
                           placeholder="-1 = 無制限"
                         />
                       ) : (
-                        <span className={plan?.daily_ai_limit === -1 ? 'text-green-600 font-bold' : ''}>
+                        <span className={plan?.daily_ai_limit === -1 ? 'text-green-600 font-bold' : 'text-gray-900'}>
                           {formatLimit(plan?.daily_ai_limit || 0)}
                         </span>
                       )}
@@ -290,7 +290,7 @@ export default function AdminSystemSettings({ userId, accessToken }: AdminSystem
                           placeholder="-1 = 無制限"
                         />
                       ) : (
-                        <span className={plan?.monthly_ai_limit === -1 ? 'text-green-600 font-bold' : ''}>
+                        <span className={plan?.monthly_ai_limit === -1 ? 'text-green-600 font-bold' : 'text-gray-900'}>
                           {formatLimit(plan?.monthly_ai_limit || 0)}
                         </span>
                       )}
