@@ -114,7 +114,6 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     setChaptersData(chapters);
   }, [chapters]);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isSavingAndBack, setIsSavingAndBack] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog | null>(null);
   const [batchProgress, setBatchProgress] = useState<BatchWriteProgress>({
@@ -329,32 +328,6 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     });
 
     showToast('success', '一括執筆が完了しました！');
-  };
-
-  // 保存して戻る
-  const handleSaveAndBack = async () => {
-    if (isSavingAndBack) return;
-    
-    setIsSavingAndBack(true);
-    try {
-      // エディタの現在の内容を即座に保存
-      if (editorRef.current) {
-        await editorRef.current.forceSave();
-      }
-      
-      // トースト表示
-      showToast('success', '保存しました！');
-      
-      // 少し待ってから遷移（トーストを見せるため）
-      setTimeout(() => {
-        router.push('/kindle');
-      }, 800);
-      
-    } catch (error: any) {
-      console.error('Save and back error:', error);
-      showToast('error', '保存に失敗しました: ' + error.message);
-      setIsSavingAndBack(false);
-    }
   };
 
   // 途中保存（画面に留まる）
@@ -928,31 +901,13 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             <BookOpen size={20} />
           </button>
           
-          <Link
-            href={readOnly ? "/kindle/lp" : `/kindle${adminKeyParam}`}
-            className="flex items-center gap-1 text-white/90 hover:text-white text-sm transition-colors flex-shrink-0"
-            title={readOnly ? "LPに戻る" : "一覧に戻る"}
-          >
-            <ArrowLeft size={16} />
-            <span className="hidden sm:inline">{readOnly ? "LPに戻る" : "一覧に戻る"}</span>
-          </Link>
-          <div className="text-white/30 hidden sm:block">|</div>
-          <h1 className="font-bold text-xs sm:text-sm truncate max-w-[120px] sm:max-w-xs">{book.title}</h1>
+          <h1 className="font-bold text-xs sm:text-sm truncate max-w-[150px] sm:max-w-xs">{book.title}</h1>
           {readOnly && (
             <div className="flex items-center gap-1 bg-blue-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0">
               <PlayCircle size={12} />
               <span className="hidden sm:inline">デモ</span>
             </div>
           )}
-          {/* まずお読みくださいリンク */}
-          <Link
-            href="/kindle/guide"
-            target="_blank"
-            className="hidden md:flex items-center gap-1 text-white/80 hover:text-white text-xs transition-colors ml-2 bg-white/10 px-2 py-1 rounded-lg"
-          >
-            <FileText size={12} />
-            <span>まずお読みください</span>
-          </Link>
         </div>
         
         {/* デスクトップ用ボタン群 */}
@@ -1064,28 +1019,15 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
               
               <div className="w-px h-6 bg-white/30" />
               
-              <button
-                onClick={handleSaveAndBack}
-                disabled={isSavingAndBack}
-                title="保存して戻る"
-                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                  isSavingAndBack
-                    ? 'bg-green-400 cursor-not-allowed'
-                    : 'bg-white text-amber-600 hover:bg-amber-50 active:bg-amber-100'
-                }`}
+              {/* まずお読みください */}
+              <Link
+                href="/kindle/guide"
+                target="_blank"
+                className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all bg-white/20 hover:bg-white/30 active:bg-white/40"
               >
-                {isSavingAndBack ? (
-                  <>
-                    <Check size={16} className="text-white" />
-                    <span className="text-white">保存しました</span>
-                  </>
-                ) : (
-                  <>
-                    <ArrowLeft size={16} />
-                    <span>保存して戻る</span>
-                  </>
-                )}
-              </button>
+                <FileText size={16} />
+                <span>まずお読みください</span>
+              </Link>
             </>
           )}
         </div>
@@ -1131,24 +1073,6 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                   <Loader2 className="animate-spin" size={18} />
                 ) : (
                   <Check size={18} />
-                )}
-              </button>
-              
-              {/* 保存して戻るボタン */}
-              <button
-                onClick={handleSaveAndBack}
-                disabled={isSavingAndBack}
-                title="保存して戻る"
-                className={`flex items-center justify-center p-2 rounded-lg font-medium text-sm transition-all ${
-                  isSavingAndBack
-                    ? 'bg-green-400 cursor-not-allowed'
-                    : 'bg-white text-amber-600 hover:bg-amber-50 active:bg-amber-100'
-                }`}
-              >
-                {isSavingAndBack ? (
-                  <Check size={18} className="text-white" />
-                ) : (
-                  <ArrowLeft size={18} />
                 )}
               </button>
             </>

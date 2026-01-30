@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -24,7 +25,13 @@ export default function KdlHamburgerMenu({
 }: KdlHamburgerMenuProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const adminKeyParam = adminKey ? `?admin_key=${adminKey}` : '';
+
+  // クライアントサイドでのみマウント
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -39,28 +46,20 @@ export default function KdlHamburgerMenu({
     { id: 'plan', label: 'プラン情報', href: `/kindle${adminKeyParam}#plan-info`, icon: CreditCard },
   ];
 
-  return (
+  // メニューコンテンツ（Portalでレンダリング）
+  const menuContent = (
     <>
-      {/* ハンバーガーボタン */}
-      <button
-        onClick={() => setIsMenuOpen(true)}
-        className={buttonClassName}
-        aria-label="メニューを開く"
-      >
-        <Menu size={24} className={iconColor} />
-      </button>
-
       {/* オーバーレイ */}
       {isMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-[60] transition-opacity"
+          className="fixed inset-0 bg-black/50 z-[9998] transition-opacity"
           onClick={() => setIsMenuOpen(false)}
         />
       )}
 
       {/* スライドパネル */}
       <div 
-        className={`fixed top-0 left-0 h-full w-72 bg-white z-[70] transform transition-transform duration-300 ease-in-out shadow-xl ${
+        className={`fixed top-0 left-0 h-full w-72 bg-white z-[9999] transform transition-transform duration-300 ease-in-out shadow-xl ${
           isMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -114,6 +113,22 @@ export default function KdlHamburgerMenu({
           </button>
         </nav>
       </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* ハンバーガーボタン */}
+      <button
+        onClick={() => setIsMenuOpen(true)}
+        className={buttonClassName}
+        aria-label="メニューを開く"
+      >
+        <Menu size={24} className={iconColor} />
+      </button>
+
+      {/* メニューをPortalでdocument.bodyにレンダリング */}
+      {mounted && createPortal(menuContent, document.body)}
     </>
   );
 }
