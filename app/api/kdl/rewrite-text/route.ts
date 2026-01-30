@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getProviderForPhase } from '@/lib/ai-provider';
+import { 
+  getProviderFromAdminSettings, 
+  generateWithFallback 
+} from '@/lib/ai-provider';
+import { getSubscriptionStatus } from '@/lib/subscription';
 
 // 執筆スタイルの定義
 const WRITING_STYLES = {
@@ -82,6 +86,7 @@ interface RequestBody {
   text: string;
   writing_style: WritingStyleId;
   instruction?: string; // ユーザーからの追加要望
+  user_id?: string; // プラン取得用
 }
 
 // AIレスポンスからコードブロック記法を除去する
@@ -96,7 +101,7 @@ function cleanAIResponse(content: string): string {
 export async function POST(request: Request) {
   try {
     const body: RequestBody = await request.json();
-    const { text, writing_style, instruction } = body;
+    const { text, writing_style, instruction, user_id } = body;
 
     // バリデーション
     if (!text || text.trim() === '') {
@@ -117,6 +122,13 @@ export async function POST(request: Request) {
       });
     }
 
+    // ユーザーのプランTierを取得
+    let planTier = 'none';
+    if (user_id) {
+      const subscriptionStatus = await getSubscriptionStatus(user_id);
+      planTier = subscriptionStatus.planTier;
+    }
+
     // ユーザーからの追加要望
     const userInstruction = instruction ? `
 
@@ -133,17 +145,32 @@ ${text}${userInstruction}
 【出力】
 HTMLタグで構造化した書き換え後のテキストを出力してください。`;
 
-    // AIプロバイダーを取得（本文執筆なので writing フェーズ）
-    const provider = getProviderForPhase('writing');
+    // 管理者設定からAIプロバイダーを取得（本文執筆なので writing フェーズ）
+    const aiSettings = await getProviderFromAdminSettings('kdl', planTier, 'writing');
+    
+    console.log(`[KDL rewrite-text] Using model=${aiSettings.model}, backup=${aiSettings.backupModel}, plan=${planTier}`);
 
-    const response = await provider.generate({
+    const aiRequest = {
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT + stylePrompt },
-        { role: 'user', content: userMessage },
+        { role: 'system' as const, content: SYSTEM_PROMPT + stylePrompt },
+        { role: 'user' as const, content: userMessage },
       ],
       temperature: 0.8,
       maxTokens: 4000,
-    });
+    };
+
+    // フォールバック付きでAI生成を実行
+    const response = await generateWithFallback(
+      aiSettings.provider,
+      aiSettings.backupProvider,
+      aiRequest,
+      {
+        service: 'kdl',
+        phase: 'writing',
+        model: aiSettings.model,
+        backupModel: aiSettings.backupModel,
+      }
+    );
 
     let content = response.content;
     if (!content) {
@@ -153,7 +180,7 @@ HTMLタグで構造化した書き換え後のテキストを出力してくだ�
     // コードブロック記法を除去
     content = cleanAIResponse(content);
 
-    return NextResponse.json({ content });
+    return NextResponse.json({ content, model: response.model });
   } catch (error: any) {
     console.error('Rewrite text error:', error);
     return NextResponse.json(

@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getProviderForPhase } from '@/lib/ai-provider';
+import { 
+  getProviderFromAdminSettings, 
+  generateWithFallback 
+} from '@/lib/ai-provider';
+import { getSubscriptionStatus } from '@/lib/subscription';
 
 // レスポンスの型定義
 interface TitleSuggestion {
@@ -14,7 +18,7 @@ interface GeneratedTitles {
 
 export async function POST(request: Request) {
   try {
-    const { theme, instruction } = await request.json();
+    const { theme, instruction, user_id } = await request.json();
 
     if (!theme) {
       return NextResponse.json(
@@ -108,17 +112,39 @@ Amazon SEOとKindleマーケティングに精通した出版プロデューサ�
 -scoreは1〜100の整数で設定すること（titleフィールドには含めない）
 -descriptionは100文字以内で簡潔に${instructionAddition}`;
 
-    // AIプロバイダーを取得（思考・構成フェーズなので planning）
-    const provider = getProviderForPhase('planning');
+    // ユーザーのプランTierを取得
+    let planTier = 'none';
+    if (user_id) {
+      const subscriptionStatus = await getSubscriptionStatus(user_id);
+      planTier = subscriptionStatus.planTier;
+    }
 
-    const response = await provider.generate({
+    // 管理者設定からAIプロバイダーを取得（思考・構成フェーズなので outline）
+    const aiSettings = await getProviderFromAdminSettings('kdl', planTier, 'outline');
+    
+    console.log(`[KDL generate-title] Using model=${aiSettings.model}, backup=${aiSettings.backupModel}, plan=${planTier}`);
+
+    const aiRequest = {
       messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `以下のテーマで売れる書籍タイトルを10個提案してください：\n\n${theme}` },
+        { role: 'system' as const, content: systemPrompt },
+        { role: 'user' as const, content: `以下のテーマで売れる書籍タイトルを10個提案してください：\n\n${theme}` },
       ],
-      responseFormat: 'json',
+      responseFormat: 'json' as const,
       temperature: 0.8,
-    });
+    };
+
+    // フォールバック付きでAI生成を実行
+    const response = await generateWithFallback(
+      aiSettings.provider,
+      aiSettings.backupProvider,
+      aiRequest,
+      {
+        service: 'kdl',
+        phase: 'outline',
+        model: aiSettings.model,
+        backupModel: aiSettings.backupModel,
+      }
+    );
 
     const content = response.content;
     if (!content) {

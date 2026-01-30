@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getProviderForPhase } from '@/lib/ai-provider';
+import { 
+  getProviderFromAdminSettings, 
+  generateWithFallback,
+  DEFAULT_AI_MODELS,
+  getProviderFromModelId,
+  createAIProvider
+} from '@/lib/ai-provider';
 import { checkAIUsageLimit, logAIUsage } from '@/lib/ai-usage';
+import { getSubscriptionStatus } from '@/lib/subscription';
 
 // 執筆スタイルの定義
 export const WRITING_STYLES = {
@@ -232,17 +239,39 @@ ${targetInfo}
 【執筆スタイル】
 ${WRITING_STYLES[styleId].name}（${WRITING_STYLES[styleId].description}）`;
 
-    // AIプロバイダーを取得（本文執筆なので writing フェーズ）
-    const provider = getProviderForPhase('writing');
+    // ユーザーのプランTierを取得
+    let planTier = 'none';
+    if (user_id) {
+      const subscriptionStatus = await getSubscriptionStatus(user_id);
+      planTier = subscriptionStatus.planTier;
+    }
 
-    const response = await provider.generate({
+    // 管理者設定からAIプロバイダーを取得（本文執筆なので writing フェーズ）
+    const aiSettings = await getProviderFromAdminSettings('kdl', planTier, 'writing');
+    
+    console.log(`[KDL generate-section] Using model=${aiSettings.model}, backup=${aiSettings.backupModel}, plan=${planTier}`);
+
+    const request = {
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT + sectionInstruction },
-        { role: 'user', content: userMessage },
+        { role: 'system' as const, content: SYSTEM_PROMPT + sectionInstruction },
+        { role: 'user' as const, content: userMessage },
       ],
       temperature: 0.8,
       maxTokens: 4000,
-    });
+    };
+
+    // フォールバック付きでAI生成を実行
+    const response = await generateWithFallback(
+      aiSettings.provider,
+      aiSettings.backupProvider,
+      request,
+      {
+        service: 'kdl',
+        phase: 'writing',
+        model: aiSettings.model,
+        backupModel: aiSettings.backupModel,
+      }
+    );
 
     let content = response.content;
     if (!content) {
@@ -259,11 +288,11 @@ ${WRITING_STYLES[styleId].name}（${WRITING_STYLES[styleId].description}）`;
         actionType: 'generate_section',
         service: 'kdl',
         modelUsed: response.model,
-        metadata: { book_id, section_title },
+        metadata: { book_id, section_title, plan_tier: planTier },
       }).catch(console.error);
     }
 
-    return NextResponse.json({ content });
+    return NextResponse.json({ content, model: response.model });
   } catch (error: any) {
     console.error('Generate section error:', error);
     return NextResponse.json(

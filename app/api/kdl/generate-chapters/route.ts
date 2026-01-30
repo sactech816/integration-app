@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getProviderForPhase } from '@/lib/ai-provider';
+import { 
+  getProviderFromAdminSettings, 
+  generateWithFallback 
+} from '@/lib/ai-provider';
 import { checkAIUsageLimit, logAIUsage } from '@/lib/ai-usage';
+import { getSubscriptionStatus } from '@/lib/subscription';
 
 // パターン定義
 export const CHAPTER_PATTERNS = {
@@ -197,6 +201,13 @@ export async function POST(request: Request) {
         return NextResponse.json(mockRecommendations);
       }
 
+      // ユーザーのプランTierを取得
+      let planTier = 'none';
+      if (user_id) {
+        const subscriptionStatus = await getSubscriptionStatus(user_id);
+        planTier = subscriptionStatus.planTier;
+      }
+
       // AIによるおすすめパターン分析
       const recommendPrompt = `以下の本について、最適な章立てパターンを3つ推薦してください。
 
@@ -220,17 +231,32 @@ ${target ? `ターゲット読者: ${target.profile}` : ''}
   ]
 }`;
 
-      // AIプロバイダーを取得（思考・構成フェーズなので planning）
-      const provider = getProviderForPhase('planning');
+      // 管理者設定からAIプロバイダーを取得（思考・構成フェーズなので outline）
+      const aiSettings = await getProviderFromAdminSettings('kdl', planTier, 'outline');
       
-      const response = await provider.generate({
+      console.log(`[KDL generate-chapters recommend] Using model=${aiSettings.model}, backup=${aiSettings.backupModel}, plan=${planTier}`);
+
+      const aiRequest = {
         messages: [
-          { role: 'system', content: 'あなたは出版マーケティングの専門家です。本の内容に最適な章立てパターンを分析してください。結果は必ずJSON形式で出力してください。' },
-          { role: 'user', content: recommendPrompt },
+          { role: 'system' as const, content: 'あなたは出版マーケティングの専門家です。本の内容に最適な章立てパターンを分析してください。結果は必ずJSON形式で出力してください。' },
+          { role: 'user' as const, content: recommendPrompt },
         ],
-        responseFormat: 'json',
+        responseFormat: 'json' as const,
         temperature: 0.7,
-      });
+      };
+      
+      // フォールバック付きでAI生成を実行
+      const response = await generateWithFallback(
+        aiSettings.provider,
+        aiSettings.backupProvider,
+        aiRequest,
+        {
+          service: 'kdl',
+          phase: 'outline',
+          model: aiSettings.model,
+          backupModel: aiSettings.backupModel,
+        }
+      );
 
       const content = response.content;
       if (!content) throw new Error('AIからの応答が空です');
@@ -314,17 +340,39 @@ ${instruction}
 ${subtitle ? `サブタイトル：${subtitle}` : ''}
 ${targetInfo}`;
 
-    // AIプロバイダーを取得（思考・構成フェーズなので planning）
-    const provider = getProviderForPhase('planning');
+    // ユーザーのプランTierを取得（目次生成アクション用）
+    let planTier = 'none';
+    if (user_id) {
+      const subscriptionStatus = await getSubscriptionStatus(user_id);
+      planTier = subscriptionStatus.planTier;
+    }
 
-    const response = await provider.generate({
+    // 管理者設定からAIプロバイダーを取得（思考・構成フェーズなので outline）
+    const aiSettings = await getProviderFromAdminSettings('kdl', planTier, 'outline');
+    
+    console.log(`[KDL generate-chapters] Using model=${aiSettings.model}, backup=${aiSettings.backupModel}, plan=${planTier}`);
+
+    const aiRequest = {
       messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
+        { role: 'system' as const, content: systemPrompt },
+        { role: 'user' as const, content: userMessage },
       ],
-      responseFormat: 'json',
+      responseFormat: 'json' as const,
       temperature: 0.8,
-    });
+    };
+
+    // フォールバック付きでAI生成を実行
+    const response = await generateWithFallback(
+      aiSettings.provider,
+      aiSettings.backupProvider,
+      aiRequest,
+      {
+        service: 'kdl',
+        phase: 'outline',
+        model: aiSettings.model,
+        backupModel: aiSettings.backupModel,
+      }
+    );
 
     const content = response.content;
     if (!content) throw new Error('AIからの応答が空です');
@@ -341,11 +389,11 @@ ${targetInfo}`;
         actionType: action === 'recommend' ? 'recommend_pattern' : 'generate_chapters',
         service: 'kdl',
         modelUsed: response.model,
-        metadata: { title, patternId: selectedPattern },
+        metadata: { title, patternId: selectedPattern, plan_tier: planTier },
       }).catch(console.error);
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json({ ...result, model: response.model });
   } catch (error: any) {
     console.error('Generate chapters error:', error);
     return NextResponse.json(

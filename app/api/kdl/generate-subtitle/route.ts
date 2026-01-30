@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getProviderForPhase } from '@/lib/ai-provider';
+import { 
+  getProviderFromAdminSettings, 
+  generateWithFallback 
+} from '@/lib/ai-provider';
+import { getSubscriptionStatus } from '@/lib/subscription';
 
 // レスポンスの型定義
 interface SubtitleSuggestion {
@@ -16,7 +20,7 @@ interface GeneratedSubtitles {
 
 export async function POST(request: Request) {
   try {
-    const { title, instruction } = await request.json();
+    const { title, instruction, user_id } = await request.json();
 
     if (!title) {
       return NextResponse.json(
@@ -113,17 +117,39 @@ Kindle出版を成功させたい著者（タイトルは決まっているがSE
 - score: 1〜100の整数
 - reason: 100文字以内で簡潔に${instructionAddition}`;
 
-    // AIプロバイダーを取得（思考・構成フェーズなので planning）
-    const provider = getProviderForPhase('planning');
+    // ユーザーのプランTierを取得
+    let planTier = 'none';
+    if (user_id) {
+      const subscriptionStatus = await getSubscriptionStatus(user_id);
+      planTier = subscriptionStatus.planTier;
+    }
 
-    const response = await provider.generate({
+    // 管理者設定からAIプロバイダーを取得（思考・構成フェーズなので outline）
+    const aiSettings = await getProviderFromAdminSettings('kdl', planTier, 'outline');
+    
+    console.log(`[KDL generate-subtitle] Using model=${aiSettings.model}, backup=${aiSettings.backupModel}, plan=${planTier}`);
+
+    const aiRequest = {
       messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `以下のタイトルに対して、SEOを最大化するサブタイトル案を10個提案してください：\n\n${title}` },
+        { role: 'system' as const, content: systemPrompt },
+        { role: 'user' as const, content: `以下のタイトルに対して、SEOを最大化するサブタイトル案を10個提案してください：\n\n${title}` },
       ],
-      responseFormat: 'json',
+      responseFormat: 'json' as const,
       temperature: 0.8,
-    });
+    };
+
+    // フォールバック付きでAI生成を実行
+    const response = await generateWithFallback(
+      aiSettings.provider,
+      aiSettings.backupProvider,
+      aiRequest,
+      {
+        service: 'kdl',
+        phase: 'outline',
+        model: aiSettings.model,
+        backupModel: aiSettings.backupModel,
+      }
+    );
 
     const content = response.content;
     if (!content) {

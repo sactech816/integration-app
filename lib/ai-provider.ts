@@ -6,7 +6,20 @@
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Anthropic from '@anthropic-ai/sdk';
+import { createClient } from '@supabase/supabase-js';
 import { PlanTier, getAIModelForPlan, getAIProviderForPlan } from './subscription';
+
+// Supabase Service Client（サーバーサイド用）
+function getServiceClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceKey) {
+    return null;
+  }
+
+  return createClient(supabaseUrl, serviceKey);
+}
 
 // 共通のメッセージ型
 export interface AIMessage {
@@ -535,6 +548,86 @@ export const DEFAULT_AI_MODELS = {
 } as const;
 
 /**
+ * モデルIDからプロバイダーを推測
+ */
+export function getProviderFromModelId(modelId: string): 'openai' | 'gemini' | 'anthropic' {
+  if (modelId.startsWith('gpt') || modelId.startsWith('o1') || modelId.startsWith('o3')) {
+    return 'openai';
+  }
+  if (modelId.startsWith('gemini')) {
+    return 'gemini';
+  }
+  if (modelId.startsWith('claude')) {
+    return 'anthropic';
+  }
+  return 'gemini'; // デフォルト
+}
+
+/**
+ * admin_ai_settingsの設定型
+ */
+export interface AdminAISettingsResult {
+  model: string;
+  backupModel: string;
+}
+
+/**
+ * admin_ai_settingsからAI設定を取得（共通関数）
+ * 
+ * @param service - サービス識別子（'kdl' | 'makers'）
+ * @param planTier - プランTier
+ * @param phase - フェーズ（'outline' | 'writing'）
+ * @returns モデルとバックアップモデルの設定
+ */
+export async function getAISettingsFromAdmin(
+  service: 'kdl' | 'makers',
+  planTier: string,
+  phase: 'outline' | 'writing'
+): Promise<AdminAISettingsResult> {
+  const supabase = getServiceClient();
+  
+  const defaultSettings: AdminAISettingsResult = {
+    model: DEFAULT_AI_MODELS.primary[phase],
+    backupModel: DEFAULT_AI_MODELS.backup[phase],
+  };
+
+  if (!supabase) {
+    console.warn('[AI Settings] Supabase client not available, using defaults');
+    return defaultSettings;
+  }
+
+  try {
+    const modelColumn = phase === 'outline' ? 'custom_outline_model' : 'custom_writing_model';
+    const backupColumn = phase === 'outline' ? 'backup_outline_model' : 'backup_writing_model';
+
+    const { data, error } = await supabase
+      .from('admin_ai_settings')
+      .select(`${modelColumn}, ${backupColumn}`)
+      .eq('service', service)
+      .eq('plan_tier', planTier)
+      .single();
+
+    if (error || !data) {
+      console.warn(`[AI Settings] No settings found for service=${service}, plan=${planTier}, phase=${phase}, using defaults`);
+      return defaultSettings;
+    }
+
+    const model = data[modelColumn as keyof typeof data] as string;
+    const backupModel = data[backupColumn as keyof typeof data] as string;
+
+    console.log(`[AI Settings] Loaded: service=${service}, plan=${planTier}, phase=${phase}, model=${model}, backup=${backupModel}`);
+
+    return {
+      model: model || defaultSettings.model,
+      backupModel: backupModel || defaultSettings.backupModel,
+    };
+  } catch (err) {
+    console.error('[AI Settings] Failed to get AI settings:', err);
+    return defaultSettings;
+  }
+}
+
+/**
  * モデルIDからモデル情報を取得
  */
 export function getModelInfo(modelId: string): AIModelInfo | undefined {
@@ -833,15 +926,78 @@ export function getProviderForPlanAndPreset(
 }
 
 /**
- * 管理者設定からAIプロバイダーを取得
+ * 管理者設定からAIプロバイダーとモデル情報を取得
  * admin_ai_settingsテーブルに保存された設定を使用
+ * 
+ * @param service - サービス識別子（'kdl' | 'makers'）
+ * @param planTier - プランTier（'none', 'lite', 'standard', 'pro', 'business', 'enterprise', etc.）
+ * @param phase - フェーズ（'outline' = 構成用, 'writing' = 執筆用）
+ * @returns プロバイダー、モデル、バックアップモデルの情報
  */
 export async function getProviderFromAdminSettings(
+  service: 'kdl' | 'makers',
+  planTier: string,
   phase: 'outline' | 'writing'
-): Promise<AIProvider> {
-  // TODO: admin_ai_settingsから設定を取得
-  // 現在はデフォルトでpresetBを使用
-  return getProviderForPlanAndPreset('standard', 'presetB', phase);
+): Promise<{
+  provider: AIProvider;
+  model: string;
+  backupModel: string;
+  backupProvider: AIProvider;
+}> {
+  const settings = await getAISettingsFromAdmin(service, planTier, phase);
+  
+  const provider = createAIProvider({
+    preferProvider: getProviderFromModelId(settings.model),
+    model: settings.model,
+  });
+
+  const backupProvider = createAIProvider({
+    preferProvider: getProviderFromModelId(settings.backupModel),
+    model: settings.backupModel,
+  });
+
+  return {
+    provider,
+    model: settings.model,
+    backupModel: settings.backupModel,
+    backupProvider,
+  };
+}
+
+/**
+ * フォールバック付きでAI生成を実行
+ * メインモデルが失敗した場合、バックアップモデルで再試行
+ * 
+ * @param mainProvider - メインのAIプロバイダー
+ * @param backupProvider - バックアップのAIプロバイダー
+ * @param request - AI生成リクエスト
+ * @param context - ログ用のコンテキスト情報
+ * @returns AI生成レスポンス
+ */
+export async function generateWithFallback(
+  mainProvider: AIProvider,
+  backupProvider: AIProvider,
+  request: AIGenerateRequest,
+  context: { service: string; phase: string; model: string; backupModel: string }
+): Promise<AIGenerateResponse> {
+  try {
+    console.log(`[AI Generate] Starting with model=${context.model}, service=${context.service}, phase=${context.phase}`);
+    const response = await mainProvider.generate(request);
+    console.log(`[AI Generate] Success with model=${context.model}`);
+    return response;
+  } catch (mainError) {
+    console.warn(`[AI Generate] Main model failed (${context.model}):`, mainError);
+    console.log(`[AI Generate] Falling back to backup model=${context.backupModel}`);
+    
+    try {
+      const backupResponse = await backupProvider.generate(request);
+      console.log(`[AI Generate] Success with backup model=${context.backupModel}`);
+      return backupResponse;
+    } catch (backupError) {
+      console.error(`[AI Generate] Backup model also failed (${context.backupModel}):`, backupError);
+      throw new Error(`AI generation failed. Main: ${mainError}, Backup: ${backupError}`);
+    }
+  }
 }
 
 /**
