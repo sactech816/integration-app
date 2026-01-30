@@ -247,7 +247,7 @@ export default function AdminSystemSettings({ userId, accessToken }: AdminSystem
                           type="number"
                           value={editedPlan.monthly_price || 0}
                           onChange={(e) => setEditedPlan(prev => ({ ...prev, monthly_price: Number(e.target.value) }))}
-                          className="w-24 px-2 py-1 border border-gray-300 rounded text-right"
+                          className="w-24 px-2 py-1 border border-gray-300 rounded text-right text-gray-900"
                         />
                       ) : (
                         <span className="font-medium">{formatCurrency(plan?.monthly_price || 0)}</span>
@@ -259,7 +259,7 @@ export default function AdminSystemSettings({ userId, accessToken }: AdminSystem
                           type="number"
                           value={editedPlan.yearly_price || 0}
                           onChange={(e) => setEditedPlan(prev => ({ ...prev, yearly_price: Number(e.target.value) }))}
-                          className="w-24 px-2 py-1 border border-gray-300 rounded text-right"
+                          className="w-24 px-2 py-1 border border-gray-300 rounded text-right text-gray-900"
                         />
                       ) : (
                         <span className="font-medium">{formatCurrency(plan?.yearly_price || 0)}</span>
@@ -271,7 +271,7 @@ export default function AdminSystemSettings({ userId, accessToken }: AdminSystem
                           type="number"
                           value={editedPlan.daily_ai_limit || 0}
                           onChange={(e) => setEditedPlan(prev => ({ ...prev, daily_ai_limit: Number(e.target.value) }))}
-                          className="w-20 px-2 py-1 border border-gray-300 rounded text-center"
+                          className="w-20 px-2 py-1 border border-gray-300 rounded text-center text-gray-900"
                           placeholder="-1 = 無制限"
                         />
                       ) : (
@@ -286,7 +286,7 @@ export default function AdminSystemSettings({ userId, accessToken }: AdminSystem
                           type="number"
                           value={editedPlan.monthly_ai_limit || 0}
                           onChange={(e) => setEditedPlan(prev => ({ ...prev, monthly_ai_limit: Number(e.target.value) }))}
-                          className="w-20 px-2 py-1 border border-gray-300 rounded text-center"
+                          className="w-20 px-2 py-1 border border-gray-300 rounded text-center text-gray-900"
                           placeholder="-1 = 無制限"
                         />
                       ) : (
@@ -301,10 +301,10 @@ export default function AdminSystemSettings({ userId, accessToken }: AdminSystem
                           type="text"
                           value={editedPlan.ai_model || ''}
                           onChange={(e) => setEditedPlan(prev => ({ ...prev, ai_model: e.target.value }))}
-                          className="w-32 px-2 py-1 border border-gray-300 rounded"
+                          className="w-32 px-2 py-1 border border-gray-300 rounded text-gray-900"
                         />
                       ) : (
-                        <span className="text-sm font-mono bg-gray-100 px-2 py-0.5 rounded">
+                        <span className="text-sm font-mono text-gray-900 bg-gray-100 px-2 py-0.5 rounded">
                           {plan?.ai_model || '-'}
                         </span>
                       )}
@@ -366,7 +366,7 @@ export default function AdminSystemSettings({ userId, accessToken }: AdminSystem
                 {setting.description && (
                   <div className="text-xs text-gray-500 mb-2">{setting.description}</div>
                 )}
-                <div className="font-mono text-sm bg-white p-2 rounded border border-gray-200 overflow-auto max-h-32">
+                <div className="font-mono text-sm text-gray-900 bg-white p-2 rounded border border-gray-200 overflow-auto max-h-32">
                   {typeof setting.value === 'object' 
                     ? JSON.stringify(setting.value, null, 2)
                     : String(setting.value)

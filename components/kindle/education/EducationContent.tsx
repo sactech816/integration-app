@@ -152,7 +152,7 @@ export default function EducationContent({ userId }: EducationContentProps) {
 
             {/* タイトル */}
             <h1 className="text-2xl font-bold text-gray-900 mb-2">{selectedContent.title}</h1>
-            <p className="text-gray-600 mb-6">{selectedContent.description}</p>
+            <p className="text-gray-700 mb-6">{selectedContent.description}</p>
 
             {/* 本文 */}
             {loadingContent ? (
@@ -161,7 +161,7 @@ export default function EducationContent({ userId }: EducationContentProps) {
               </div>
             ) : (
               <div 
-                className="prose prose-amber max-w-none"
+                className="prose prose-gray prose-lg max-w-none text-gray-800"
                 dangerouslySetInnerHTML={{ __html: contentBody.replace(/\n/g, '<br />') }}
               />
             )}
@@ -265,7 +265,7 @@ export default function EducationContent({ userId }: EducationContentProps) {
 
                 {/* タイトル */}
                 <h3 className="font-bold text-gray-900 mb-1 line-clamp-2">{content.title}</h3>
-                <p className="text-sm text-gray-500 line-clamp-2 mb-3">{content.description}</p>
+                <p className="text-sm text-gray-700 line-clamp-2 mb-3">{content.description}</p>
 
                 {/* フッター */}
                 <div className="flex items-center justify-between text-xs text-gray-400">

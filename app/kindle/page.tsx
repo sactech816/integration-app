@@ -399,7 +399,7 @@ function KindleListPageContent() {
         // 管理者機能: setActiveMenuItemで画面切り替え（すでに上で設定済み）
         break;
       case 'settings':
-        router.push('/dashboard?tab=settings');
+        // KDL専用のアカウント設定（集客メーカーには飛ばない）
         break;
       default:
         break;
@@ -597,22 +597,12 @@ function KindleListPageContent() {
           <AdminAISettings userId={user.id} />
         </div>
       ) : activeMenuItem === 'admin-subscriptions' && user && isAdmin ? (
-        /* サブスクリプション・モニター管理画面（管理者のみ） */
-        <div className="space-y-6">
-          <div className="flex items-center gap-3 mb-6">
-            <button
-              onClick={() => setActiveMenuItem('dashboard')}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              ← ダッシュボードに戻る
-            </button>
-          </div>
-          <MonitorUsersManager 
-            adminUserId={user.id} 
-            adminEmail={user.email}
-            defaultService="kdl"
-          />
-        </div>
+        /* サブスクリプション・モニター管理・AI設定画面（管理者のみ） */
+        <SubscriptionManagementView 
+          user={user} 
+          onBack={() => setActiveMenuItem('dashboard')} 
+        />
+      )
       ) : activeMenuItem === 'admin-users' && user && isAdmin && accessToken ? (
         /* 全ユーザー管理画面（管理者のみ） */
         <div className="space-y-6">
@@ -681,6 +671,42 @@ function KindleListPageContent() {
             </button>
           </div>
           <AnnouncementList userId={user?.id} accessToken={accessToken || undefined} />
+        </div>
+      ) : activeMenuItem === 'settings' && user ? (
+        /* アカウント設定画面 */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('dashboard')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">アカウント設定</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
+                <div className="text-gray-900 bg-gray-50 px-4 py-2 rounded-lg">{user.email}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ユーザーID</label>
+                <div className="text-gray-600 bg-gray-50 px-4 py-2 rounded-lg text-sm font-mono">{user.id}</div>
+              </div>
+              {subscriptionStatus && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">プラン</label>
+                  <div className="text-gray-900 bg-gray-50 px-4 py-2 rounded-lg">
+                    {subscriptionStatus.planTier || 'なし'}
+                    {subscriptionStatus.hasActiveSubscription && (
+                      <span className="ml-2 text-green-600 text-sm">（有効）</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       ) : (
         <>
@@ -1082,6 +1108,66 @@ function KindleListPageContent() {
         </div>
       )}
     </KdlDashboardLayout>
+  );
+}
+
+// サブスクリプション管理ビュー（タブ形式）
+interface SubscriptionManagementViewProps {
+  user: { id: string; email?: string };
+  onBack: () => void;
+}
+
+function SubscriptionManagementView({ user, onBack }: SubscriptionManagementViewProps) {
+  const [activeTab, setActiveTab] = useState<'monitor' | 'ai-settings'>('monitor');
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          onClick={onBack}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          ← ダッシュボードに戻る
+        </button>
+      </div>
+
+      {/* タブ切り替え */}
+      <div className="flex gap-2 border-b border-gray-200 pb-2">
+        <button
+          onClick={() => setActiveTab('monitor')}
+          className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
+            activeTab === 'monitor'
+              ? 'bg-purple-100 text-purple-700 border-b-2 border-purple-600'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          <Users size={18} className="inline mr-2" />
+          モニター管理
+        </button>
+        <button
+          onClick={() => setActiveTab('ai-settings')}
+          className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
+            activeTab === 'ai-settings'
+              ? 'bg-purple-100 text-purple-700 border-b-2 border-purple-600'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          <Sparkles size={18} className="inline mr-2" />
+          AIモデル設定
+        </button>
+      </div>
+
+      {/* タブコンテンツ */}
+      {activeTab === 'monitor' ? (
+        <MonitorUsersManager 
+          adminUserId={user.id} 
+          adminEmail={user.email}
+          defaultService="kdl"
+        />
+      ) : (
+        <AdminAISettings userId={user.id} />
+      )}
+    </div>
   );
 }
 

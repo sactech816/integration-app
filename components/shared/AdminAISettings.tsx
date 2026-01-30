@@ -102,13 +102,16 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save settings');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to save settings');
       }
 
       alert('設定を保存しました');
+      // 保存後に再読み込み
+      await loadSettings();
     } catch (error) {
       console.error('Failed to save settings:', error);
-      alert('設定の保存に失敗しました');
+      alert('設定の保存に失敗しました: ' + (error instanceof Error ? error.message : ''));
     } finally {
       setSavingPlan(null);
     }
