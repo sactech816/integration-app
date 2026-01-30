@@ -14,6 +14,12 @@ import AdminPlanSwitcher from '@/components/shared/AdminPlanSwitcher';
 import { KdlDashboardLayout, KdlSidebar, PublishGuideContent } from '@/components/kindle/dashboard';
 import type { KdlUserRole } from '@/components/kindle/dashboard';
 import { getAdminEmails } from '@/lib/constants';
+// 管理者機能コンポーネント
+import AdminAISettings from '@/components/shared/AdminAISettings';
+import MonitorUsersManager from '@/components/shared/MonitorUsersManager';
+import { AdminUserList, AdminSystemSettings } from '@/components/kindle/admin';
+import { EducationContent } from '@/components/kindle/education';
+import { AnnouncementList } from '@/components/kindle/announcements';
 
 interface Book {
   id: string;
@@ -98,6 +104,7 @@ function KindleListPageContent() {
   // 管理者かどうかを判定
   const adminEmails = getAdminEmails();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   // ユーザーロールを決定
   const getUserRole = (): KdlUserRole => {
@@ -107,7 +114,9 @@ function KindleListPageContent() {
   };
 
   // 管理者用: プラン体験モード（LocalStorageから復元）
-  const [adminTestPlan, setAdminTestPlan] = useState<'none' | 'lite' | 'standard' | 'pro' | 'business' | 'enterprise'>('pro');
+  // 初回プラン（initial_*）と継続プラン（lite, standard, pro, business）の両方に対応
+  type ExtendedPlanTier = 'none' | 'lite' | 'standard' | 'pro' | 'business' | 'enterprise' | 'initial_trial' | 'initial_standard' | 'initial_business';
+  const [adminTestPlan, setAdminTestPlan] = useState<ExtendedPlanTier>('pro');
 
   // ユーザーが読み込まれたら管理者判定
   useEffect(() => {
@@ -125,8 +134,12 @@ function KindleListPageContent() {
   useEffect(() => {
     if (isAdmin && typeof window !== 'undefined') {
       const savedPlan = localStorage.getItem('adminTestPlan');
-      if (savedPlan && ['lite', 'standard', 'pro', 'business'].includes(savedPlan)) {
-        setAdminTestPlan(savedPlan as 'lite' | 'standard' | 'pro' | 'business');
+      const validPlans = [
+        'lite', 'standard', 'pro', 'business',  // 継続プラン
+        'initial_trial', 'initial_standard', 'initial_business'  // 初回プラン
+      ];
+      if (savedPlan && validPlans.includes(savedPlan)) {
+        setAdminTestPlan(savedPlan as ExtendedPlanTier);
       }
     }
   }, [isAdmin]);
@@ -142,6 +155,7 @@ function KindleListPageContent() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user || null);
+        setAccessToken(session?.access_token || null);
 
         if (session?.user) {
           const response = await fetch(`/api/subscription/status?userId=${session.user.id}`);
@@ -362,15 +376,13 @@ function KindleListPageContent() {
         router.push('/kindle/guide');
         break;
       case 'education':
-        // TODO: 教育コンテンツページを作成
-        alert('教育コンテンツは準備中です');
+        // 教育コンテンツ画面を表示
         break;
       case 'publish-guide':
         // 右側コンテンツエリアに出版準備ガイドを表示（別ページに遷移しない）
         break;
       case 'announcements':
-        // TODO: お知らせページを作成
-        alert('お知らせは準備中です');
+        // お知らせ画面を表示
         break;
       case 'agency-users':
       case 'agency-progress':
@@ -384,8 +396,7 @@ function KindleListPageContent() {
       case 'admin-subscriptions':
       case 'admin-ai-settings':
       case 'admin-system':
-        // TODO: 管理者機能を実装
-        alert('管理者機能は準備中です');
+        // 管理者機能: setActiveMenuItemで画面切り替え（すでに上で設定済み）
         break;
       case 'settings':
         router.push('/dashboard?tab=settings');
@@ -572,6 +583,105 @@ function KindleListPageContent() {
       {/* 出版準備ガイド表示（サイドバーから選択時） */}
       {activeMenuItem === 'publish-guide' ? (
         <PublishGuideContent />
+      ) : activeMenuItem === 'admin-ai-settings' && user && isAdmin ? (
+        /* AI設定画面（管理者のみ） */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('dashboard')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <AdminAISettings userId={user.id} />
+        </div>
+      ) : activeMenuItem === 'admin-subscriptions' && user && isAdmin ? (
+        /* サブスクリプション・モニター管理画面（管理者のみ） */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('dashboard')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <MonitorUsersManager 
+            adminUserId={user.id} 
+            adminEmail={user.email}
+            defaultService="kdl"
+          />
+        </div>
+      ) : activeMenuItem === 'admin-users' && user && isAdmin && accessToken ? (
+        /* 全ユーザー管理画面（管理者のみ） */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('dashboard')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <AdminUserList userId={user.id} accessToken={accessToken} />
+        </div>
+      ) : activeMenuItem === 'admin-system' && user && isAdmin && accessToken ? (
+        /* システム設定画面（管理者のみ） */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('dashboard')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <AdminSystemSettings userId={user.id} accessToken={accessToken} />
+        </div>
+      ) : activeMenuItem === 'admin-agencies' && user && isAdmin ? (
+        /* 代理店管理画面（管理者のみ） - 後回し */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('dashboard')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <User className="mx-auto text-gray-400 mb-4" size={48} />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">代理店管理</h2>
+            <p className="text-gray-500">代理店機能は後日実装予定です</p>
+          </div>
+        </div>
+      ) : activeMenuItem === 'education' ? (
+        /* 教育コンテンツ画面 */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('dashboard')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <EducationContent userId={user?.id} />
+        </div>
+      ) : activeMenuItem === 'announcements' ? (
+        /* お知らせ画面 */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('dashboard')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <AnnouncementList userId={user?.id} accessToken={accessToken || undefined} />
+        </div>
       ) : (
         <>
       {/* 未加入者向けサブスク促進バナー */}
