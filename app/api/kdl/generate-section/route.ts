@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
 import { 
   getProviderFromAdminSettings, 
-  generateWithFallback,
-  DEFAULT_AI_MODELS,
-  getProviderFromModelId,
-  createAIProvider
+  generateWithFallback
 } from '@/lib/ai-provider';
 import { checkAIUsageLimit, logAIUsage } from '@/lib/ai-usage';
 import { getSubscriptionStatus } from '@/lib/subscription';
@@ -251,7 +248,7 @@ ${WRITING_STYLES[styleId].name}（${WRITING_STYLES[styleId].description}）`;
     
     console.log(`[KDL generate-section] Using model=${aiSettings.model}, backup=${aiSettings.backupModel}, plan=${planTier}`);
 
-    const request = {
+    const aiRequest = {
       messages: [
         { role: 'system' as const, content: SYSTEM_PROMPT + sectionInstruction },
         { role: 'user' as const, content: userMessage },
@@ -264,7 +261,7 @@ ${WRITING_STYLES[styleId].name}（${WRITING_STYLES[styleId].description}）`;
     const response = await generateWithFallback(
       aiSettings.provider,
       aiSettings.backupProvider,
-      request,
+      aiRequest,
       {
         service: 'kdl',
         phase: 'writing',
