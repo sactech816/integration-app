@@ -299,12 +299,81 @@ ${sampleContent ? `\n【本文サンプル（抜粋）】\n${sampleContent}` : '
       result.catch_copy = '';
     }
 
+    // 生成したKDP情報をデータベースに保存
+    const { error: updateError } = await supabase
+      .from('kdl_books')
+      .update({ kdp_info: result })
+      .eq('id', book_id);
+
+    if (updateError) {
+      console.warn('KDP情報の保存に失敗:', updateError.message);
+      // 保存に失敗しても生成結果は返す
+    }
+
     return NextResponse.json(result);
 
   } catch (error: any) {
     console.error('Generate KDP info error:', error);
     return NextResponse.json(
       { error: 'KDP情報の生成に失敗しました: ' + (error.message || '不明なエラー') },
+      { status: 500 }
+    );
+  }
+}
+
+// GETメソッド: 保存済みKDP情報を取得
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const book_id = searchParams.get('book_id');
+
+    if (!book_id) {
+      return NextResponse.json(
+        { error: 'book_idを指定してください' },
+        { status: 400 }
+      );
+    }
+
+    // デモモード判定
+    if (book_id.startsWith('demo-book-') || !supabaseUrl || !supabaseServiceKey) {
+      return NextResponse.json(
+        { error: 'KDP情報はまだ生成されていません', notGenerated: true },
+        { status: 404 }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+
+    // kdp_infoを取得
+    const { data, error } = await supabase
+      .from('kdl_books')
+      .select('kdp_info')
+      .eq('id', book_id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return NextResponse.json(
+          { error: '本が見つかりません' },
+          { status: 404 }
+        );
+      }
+      throw new Error('本の取得に失敗しました: ' + error.message);
+    }
+
+    if (!data?.kdp_info) {
+      return NextResponse.json(
+        { error: 'KDP情報はまだ生成されていません', notGenerated: true },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(data.kdp_info);
+
+  } catch (error: any) {
+    console.error('Get KDP info error:', error);
+    return NextResponse.json(
+      { error: 'KDP情報の取得に失敗しました: ' + (error.message || '不明なエラー') },
       { status: 500 }
     );
   }

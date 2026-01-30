@@ -149,7 +149,7 @@ export default function AIUsageDisplay({ userId, planType }: AIUsageDisplayProps
               ? 'bg-blue-100 text-blue-700'
               : 'bg-gray-100 text-gray-600'
           }`}>
-            {planType === 'yearly' ? '年間プラン' : planType === 'monthly' ? '月額プラン' : 'お試し'}
+            {planType === 'yearly' ? '初回プラン（一括）' : planType === 'monthly' ? '継続プラン（月額）' : 'お試し'}
           </span>
         </div>
       </div>

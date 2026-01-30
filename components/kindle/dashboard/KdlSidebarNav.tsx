@@ -76,6 +76,13 @@ export default function KdlSidebarNav({
       roles: ['user', 'agency', 'admin'],
     },
     { 
+      id: 'publish-guide', 
+      label: '出版準備ガイド', 
+      icon: Rocket, 
+      section: 'main',
+      roles: ['user', 'agency', 'admin'],
+    },
+    { 
       id: 'guide', 
       label: 'ガイド・マニュアル', 
       icon: FileText, 
@@ -86,13 +93,6 @@ export default function KdlSidebarNav({
       id: 'education', 
       label: '教育コンテンツ', 
       icon: GraduationCap, 
-      section: 'main',
-      roles: ['user', 'agency', 'admin'],
-    },
-    { 
-      id: 'publish-guide', 
-      label: '出版準備ガイド', 
-      icon: Rocket, 
       section: 'main',
       roles: ['user', 'agency', 'admin'],
     },

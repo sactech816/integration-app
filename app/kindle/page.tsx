@@ -5,15 +5,16 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   BookOpen, Plus, Loader2, Edit3, Trash2, Calendar, FileText,
-  Crown, Sparkles, Zap, ArrowRight, X, Users, ChevronDown, ChevronUp, BarChart3, User
+  Crown, Sparkles, Zap, ArrowRight, X, Users, ChevronDown, ChevronUp, BarChart3, User,
+  Copy, AlertCircle, Tag, FolderTree
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import AIUsageDisplay from '@/components/kindle/AIUsageDisplay';
-import AIModelSelector from '@/components/kindle/AIModelSelector';
 import AdminPlanSwitcher from '@/components/shared/AdminPlanSwitcher';
-import { KdlDashboardLayout, KdlSidebar } from '@/components/kindle/dashboard';
+import { KdlDashboardLayout, KdlSidebar, PublishGuideContent } from '@/components/kindle/dashboard';
 import type { KdlUserRole } from '@/components/kindle/dashboard';
 import { getAdminEmails } from '@/lib/constants';
+import KdlCommonHeader from '@/components/kindle/shared/KdlCommonHeader';
 
 interface Book {
   id: string;
@@ -83,6 +84,17 @@ function KindleListPageContent() {
 
   // サイドバー関連の状態
   const [activeMenuItem, setActiveMenuItem] = useState('dashboard');
+
+  // KDP情報モーダル関連の状態
+  const [kdpModalBookId, setKdpModalBookId] = useState<string | null>(null);
+  const [kdpInfo, setKdpInfo] = useState<{
+    keywords: string[];
+    description: string;
+    categories: string[];
+    catch_copy: string;
+  } | null>(null);
+  const [kdpLoading, setKdpLoading] = useState(false);
+  const [kdpError, setKdpError] = useState<string>('');
 
   // 管理者かどうかを判定
   const adminEmails = getAdminEmails();
@@ -355,7 +367,7 @@ function KindleListPageContent() {
         alert('教育コンテンツは準備中です');
         break;
       case 'publish-guide':
-        router.push('/kindle/publish-guide');
+        // 右側コンテンツエリアに出版準備ガイドを表示（別ページに遷移しない）
         break;
       case 'announcements':
         // TODO: お知らせページを作成
@@ -394,6 +406,47 @@ function KindleListPageContent() {
       router.push('/');
     }
   }, [router]);
+
+  // KDP情報モーダルを開く
+  const handleOpenKdpModal = useCallback(async (bookId: string) => {
+    setKdpModalBookId(bookId);
+    setKdpLoading(true);
+    setKdpError('');
+    setKdpInfo(null);
+
+    try {
+      // 保存済みKDP情報を取得
+      const response = await fetch(`/api/kdl/generate-kdp-info?book_id=${bookId}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setKdpInfo(data);
+      } else {
+        const errorData = await response.json();
+        if (errorData.notGenerated) {
+          setKdpError('KDP情報はまだ生成されていません。執筆画面の「KDP情報」ボタンから生成してください。');
+        } else {
+          setKdpError(errorData.error || 'KDP情報の取得に失敗しました');
+        }
+      }
+    } catch (error: any) {
+      console.error('Fetch KDP info error:', error);
+      setKdpError('KDP情報の取得に失敗しました');
+    } finally {
+      setKdpLoading(false);
+    }
+  }, []);
+
+  // クリップボードにコピー
+  const handleCopyToClipboard = useCallback(async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert(`${label}をコピーしました`);
+    } catch (error) {
+      console.error('Copy error:', error);
+      alert('コピーに失敗しました');
+    }
+  }, []);
 
   // アクセス権チェック中、または未課金ユーザーがリダイレクト中はローディング表示
   if (loadingSubscription) {
@@ -482,6 +535,13 @@ function KindleListPageContent() {
               <Edit3 size={20} />
             </Link>
             <button
+              onClick={() => handleOpenKdpModal(book.id)}
+              className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+              title="KDP情報"
+            >
+              <Sparkles size={20} />
+            </button>
+            <button
               onClick={() => handleDelete(book.id)}
               className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
               title="削除"
@@ -509,7 +569,15 @@ function KindleListPageContent() {
   );
 
   return (
-    <KdlDashboardLayout sidebar={sidebar}>
+    <KdlDashboardLayout 
+      sidebar={sidebar} 
+      header={<KdlCommonHeader currentPage="dashboard" adminKey={adminKey} />}
+    >
+      {/* 出版準備ガイド表示（サイドバーから選択時） */}
+      {activeMenuItem === 'publish-guide' ? (
+        <PublishGuideContent />
+      ) : (
+        <>
       {/* 未加入者向けサブスク促進バナー */}
       {showBanner && !loadingSubscription && !subscriptionStatus?.hasActiveSubscription && !isAdmin && (
         <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white rounded-xl mb-6">
@@ -560,7 +628,7 @@ function KindleListPageContent() {
                   <Crown size={18} className="text-green-600" />
                 </div>
                 <span className="text-green-700 font-bold text-sm">
-                  {subscriptionStatus.planType === 'yearly' ? '年間プラン' : '月額プラン'}
+                  {subscriptionStatus.planType === 'yearly' ? '初回プラン（一括）' : '継続プラン（月額）'}
                 </span>
                 <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold">
                   有効
@@ -626,18 +694,6 @@ function KindleListPageContent() {
           <AIUsageDisplay 
             userId={user.id} 
             planType={subscriptionStatus.planType} 
-          />
-        </div>
-      )}
-
-      {/* AIモード選択（管理者・課金ユーザー・モニターユーザのPro以上） */}
-      {user && subscriptionStatus && (
-        <div className="mb-6">
-          <AIModelSelector 
-            userId={user.id}
-            planTier={isAdmin ? adminTestPlan : (subscriptionStatus.planTier || 'none')}
-            isAdmin={isAdmin}
-            isMonitor={subscriptionStatus.isMonitor || false}
           />
         </div>
       )}
@@ -759,6 +815,166 @@ function KindleListPageContent() {
           )
         )}
       </div>
+        </>
+      )}
+
+      {/* KDP情報モーダル */}
+      {kdpModalBookId && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden animate-fade-in">
+            {/* モーダルヘッダー */}
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50">
+              <div className="flex items-center gap-3">
+                <div className="bg-gradient-to-br from-amber-500 to-orange-500 p-2 rounded-xl">
+                  <Sparkles className="text-white" size={20} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">KDP登録情報</h2>
+                  <p className="text-sm text-gray-500">Amazon Kindle Direct Publishing用</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setKdpModalBookId(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+
+            {/* モーダルコンテンツ */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+              {kdpLoading ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="w-12 h-12 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin mb-4"></div>
+                  <p className="text-gray-600 font-medium">KDP情報を読み込み中...</p>
+                </div>
+              ) : kdpError ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <AlertCircle className="text-amber-400 mb-4" size={48} />
+                  <p className="text-gray-700 font-medium text-center mb-4">{kdpError}</p>
+                  <Link
+                    href={`/kindle/${kdpModalBookId}${adminKeyParam}`}
+                    className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-colors font-medium"
+                  >
+                    執筆画面へ
+                  </Link>
+                </div>
+              ) : kdpInfo ? (
+                <div className="space-y-6">
+                  {/* キャッチコピー */}
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={16} className="text-amber-500" />
+                        <h3 className="font-bold text-gray-900">キャッチコピー</h3>
+                      </div>
+                      <button
+                        onClick={() => handleCopyToClipboard(kdpInfo.catch_copy, 'キャッチコピー')}
+                        className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 transition-colors"
+                      >
+                        <Copy size={14} />
+                        コピー
+                      </button>
+                    </div>
+                    <p className="text-lg font-medium text-gray-800">{kdpInfo.catch_copy}</p>
+                  </div>
+
+                  {/* キーワード */}
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Tag size={16} className="text-gray-500" />
+                        <h3 className="font-bold text-gray-900">キーワード（7個）</h3>
+                      </div>
+                      <button
+                        onClick={() => handleCopyToClipboard(kdpInfo.keywords.join(', '), 'キーワード')}
+                        className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 transition-colors"
+                      >
+                        <Copy size={14} />
+                        コピー
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {kdpInfo.keywords.map((keyword, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleCopyToClipboard(keyword, `キーワード${index + 1}`)}
+                          className="px-3 py-1.5 bg-white rounded-lg text-sm text-gray-700 border border-gray-200 hover:border-amber-300 hover:bg-amber-50 transition-colors cursor-pointer"
+                        >
+                          {keyword}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 推奨カテゴリー */}
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <FolderTree size={16} className="text-gray-500" />
+                        <h3 className="font-bold text-gray-900">推奨カテゴリー</h3>
+                      </div>
+                      <button
+                        onClick={() => handleCopyToClipboard(kdpInfo.categories.join('\n'), 'カテゴリー')}
+                        className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 transition-colors"
+                      >
+                        <Copy size={14} />
+                        コピー
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {kdpInfo.categories.map((category, index) => (
+                        <div
+                          key={index}
+                          className="px-4 py-2 bg-white rounded-lg text-sm text-gray-700 border border-gray-200"
+                        >
+                          {category}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 商品紹介文 */}
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <FileText size={16} className="text-gray-500" />
+                        <h3 className="font-bold text-gray-900">商品紹介文</h3>
+                      </div>
+                      <button
+                        onClick={() => handleCopyToClipboard(kdpInfo.description, '紹介文')}
+                        className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 transition-colors"
+                      >
+                        <Copy size={14} />
+                        コピー
+                      </button>
+                    </div>
+                    <div className="bg-white rounded-xl p-4 border border-gray-200">
+                      <div 
+                        className="prose prose-sm max-w-none text-gray-700"
+                        dangerouslySetInnerHTML={{ __html: kdpInfo.description }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">
+                      ※ HTMLタグ付きでコピーされます。KDPの紹介文欄に直接貼り付けてください。
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {/* モーダルフッター */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+              <button
+                onClick={() => setKdpModalBookId(null)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </KdlDashboardLayout>
   );
 }

@@ -78,6 +78,7 @@ interface EditorLayoutProps {
   onUpdateBookStatus?: (status: string) => Promise<void>; // 書籍ステータス更新
   readOnly?: boolean; // 閲覧専用モード（デモ用）
   adminKeyParam?: string; // admin_keyパラメータ（リンクに引き継ぐ用）
+  hasCommonHeader?: boolean; // 共通ヘッダーが上に表示されているかどうか
 }
 
 export const EditorLayout: React.FC<EditorLayoutProps> = ({
@@ -90,6 +91,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   onUpdateBookStatus,
   readOnly = false,
   adminKeyParam = '',
+  hasCommonHeader = false,
 }) => {
   // 初期値: 最初の章の最初の節
   const getInitialSectionId = () => {
@@ -887,7 +889,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-white">
+    <div className={`${hasCommonHeader ? 'h-full' : 'h-screen'} flex flex-col overflow-hidden bg-white`}>
       {/* デモモードバナー */}
       {readOnly && (
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2 sm:px-4 py-2 sm:py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
@@ -936,6 +938,15 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
               <span className="hidden sm:inline">デモ</span>
             </div>
           )}
+          {/* まずお読みくださいリンク */}
+          <Link
+            href="/kindle/guide"
+            target="_blank"
+            className="hidden md:flex items-center gap-1 text-white/80 hover:text-white text-xs transition-colors ml-2 bg-white/10 px-2 py-1 rounded-lg"
+          >
+            <FileText size={12} />
+            <span>まずお読みください</span>
+          </Link>
         </div>
         
         {/* デスクトップ用ボタン群 */}

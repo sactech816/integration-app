@@ -1,0 +1,147 @@
+'use client';
+
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { 
+  Menu, X, BookOpen, Home, Plus, FileText, Rocket, CreditCard, LogOut
+} from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+
+interface KdlCommonHeaderProps {
+  // 現在のページを示す（オプショナル）
+  currentPage?: 'dashboard' | 'new' | 'editor' | 'guide' | 'publish-guide';
+  // 管理者キー（オプショナル）
+  adminKey?: string | null;
+}
+
+export default function KdlCommonHeader({ currentPage, adminKey }: KdlCommonHeaderProps) {
+  const router = useRouter();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const adminKeyParam = adminKey ? `?admin_key=${adminKey}` : '';
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
+  };
+
+  const menuItems = [
+    { id: 'dashboard', label: 'ダッシュボード（マイブック）', href: `/kindle${adminKeyParam}`, icon: Home },
+    { id: 'new', label: '新規作成', href: `/kindle/new${adminKeyParam}`, icon: Plus },
+    { id: 'guide', label: 'まずお読みください', href: '/kindle/guide', icon: FileText, target: '_blank' },
+    { id: 'publish-guide', label: '出版準備ガイド', href: '/kindle/publish-guide', icon: Rocket, target: '_blank' },
+    { id: 'plan', label: 'プラン情報', href: `/kindle${adminKeyParam}#plan-info`, icon: CreditCard },
+  ];
+
+  return (
+    <>
+      {/* ヘッダー */}
+      <header className="bg-gradient-to-r from-amber-500 to-orange-500 text-white sticky top-0 z-50 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          {/* 左側: ハンバーガーメニュー */}
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            aria-label="メニューを開く"
+          >
+            <Menu size={24} />
+          </button>
+
+          {/* 中央: ロゴ + タイトル */}
+          <Link 
+            href={`/kindle${adminKeyParam}`}
+            className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+          >
+            <div className="bg-white/20 p-1.5 rounded-lg">
+              <BookOpen size={20} />
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="font-bold text-lg">KDL</span>
+              <span className="hidden sm:inline text-white/80 text-sm">本づくりの旅</span>
+            </div>
+          </Link>
+
+          {/* 右側: プランステータス（コメントアウト - 継続モード仕様未定のため） */}
+          {/* 
+          <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg">
+            <Crown size={16} />
+            <span className="text-sm font-medium">プレミアム</span>
+          </div>
+          */}
+          {/* プレースホルダー（左右バランス用） */}
+          <div className="w-10" />
+        </div>
+      </header>
+
+      {/* ハンバーガーメニュー オーバーレイ */}
+      {isMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-[60] transition-opacity"
+          onClick={() => setIsMenuOpen(false)}
+        />
+      )}
+
+      {/* ハンバーガーメニュー スライドパネル */}
+      <div 
+        className={`fixed top-0 left-0 h-full w-72 bg-white z-[70] transform transition-transform duration-300 ease-in-out shadow-xl ${
+          isMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {/* メニューヘッダー */}
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <BookOpen size={24} />
+            <span className="font-bold text-lg">KDL メニュー</span>
+          </div>
+          <button
+            onClick={() => setIsMenuOpen(false)}
+            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+            aria-label="メニューを閉じる"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* メニュー項目 */}
+        <nav className="p-4 space-y-1">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = currentPage === item.id;
+            
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                target={item.target}
+                onClick={() => setIsMenuOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                  isActive
+                    ? 'bg-amber-100 text-amber-700 font-bold'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Icon size={20} className={isActive ? 'text-amber-600' : 'text-gray-400'} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+
+          {/* 区切り線 */}
+          <div className="border-t border-gray-200 my-3" />
+
+          {/* ログアウト */}
+          <button
+            onClick={() => {
+              setIsMenuOpen(false);
+              handleLogout();
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all"
+          >
+            <LogOut size={20} />
+            <span>ログアウト</span>
+          </button>
+        </nav>
+      </div>
+    </>
+  );
+}

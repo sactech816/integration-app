@@ -92,9 +92,9 @@ export default function KdlSidebar({
 
       {/* フッターリンク */}
       <div className="p-4 border-t border-amber-100 space-y-2 mt-auto">
-        {/* 集客メーカーに戻る */}
+        {/* 集客メーカーに戻る（別タブで開く） */}
         <button
-          onClick={() => onNavigate('/dashboard')}
+          onClick={() => window.open('/dashboard', '_blank')}
           className="w-full bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 p-3 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center gap-2"
         >
           <div className="bg-gray-300 p-1.5 rounded-full">

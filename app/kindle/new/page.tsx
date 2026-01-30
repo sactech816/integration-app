@@ -24,6 +24,7 @@ import { Step4TOC } from '@/components/kindle/wizard/Step4TOC';
 import AuthModal from '@/components/shared/AuthModal';
 import KDLFooter from '@/components/shared/KDLFooter';
 import { supabase } from '@/lib/supabase';
+import KdlCommonHeader from '@/components/kindle/shared/KdlCommonHeader';
 
 // localStorageのキー
 const STORAGE_KEY = 'kindle-wizard-draft';
@@ -421,45 +422,26 @@ function KindleNewPageContent() {
         setUser={setUser}
       />
       
-      {/* ヘッダー */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-amber-100 sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
-          <Link href={`/kindle${adminKeyParam}`} className="flex items-center gap-1.5 sm:gap-2 text-gray-700 hover:text-amber-600 transition-colors">
-            <ArrowLeft size={18} />
-            <span className="font-medium text-sm sm:text-base">戻る</span>
-          </Link>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <BookOpen className="text-amber-600" size={20} />
-            <div>
-              <span className="font-bold text-gray-900 hidden sm:inline">キンドルダイレクトライト</span>
-              <span className="font-bold text-gray-900 sm:hidden">KDL</span>
-              <span className="text-xs text-gray-500 ml-1 hidden sm:inline">KDL</span>
+      {/* 共通ヘッダー */}
+      <KdlCommonHeader currentPage="new" adminKey={adminKey} />
+
+      {/* サブヘッダー（デモモード・下書き状態表示） */}
+      <div className="bg-white/80 backdrop-blur-md border-b border-amber-100 sticky top-[52px] z-40">
+        <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-center gap-3">
+          {isDemo && (
+            <div className="flex items-center gap-1 bg-blue-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">
+              <PlayCircle size={12} />
+              <span>体験版</span>
             </div>
-            {isDemo && (
-              <div className="flex items-center gap-1 bg-blue-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-bold ml-1 sm:ml-2">
-                <PlayCircle size={12} />
-                <span className="hidden sm:inline">体験版</span>
-              </div>
-            )}
-            {/* 下書き保存状態インジケーター */}
-            {!isDemo && lastSavedAt && (
-              <div className="flex items-center gap-1 bg-green-100 text-green-700 px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-medium ml-1 sm:ml-2" title={`最終保存: ${lastSavedAt.toLocaleTimeString('ja-JP')}`}>
-                <Cloud size={12} />
-                <span className="hidden sm:inline">下書き保存済み</span>
-              </div>
-            )}
-          </div>
-          <Link 
-            href="/kindle/guide" 
-            target="_blank"
-            className="flex items-center justify-center gap-1.5 text-amber-600 hover:text-amber-700 transition-colors bg-amber-50 hover:bg-amber-100 p-2 sm:px-3 sm:py-1.5 rounded-lg text-sm font-medium"
-            title="まずお読みください"
-          >
-            <HelpCircle size={18} />
-            <span className="hidden sm:inline">📖 まずお読みください</span>
-          </Link>
+          )}
+          {!isDemo && lastSavedAt && (
+            <div className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium" title={`最終保存: ${lastSavedAt.toLocaleTimeString('ja-JP')}`}>
+              <Cloud size={12} />
+              <span>下書き保存済み</span>
+            </div>
+          )}
         </div>
-      </header>
+      </div>
 
       {/* プログレスバー */}
       <div className="bg-white border-b border-amber-100">
