@@ -43,6 +43,7 @@ interface Book {
   id: string;
   title: string;
   subtitle: string | null;
+  status?: string;
 }
 
 interface TargetProfile {
@@ -74,6 +75,7 @@ interface EditorLayoutProps {
   tocPatternId?: string; // 目次で選択したパターンID（執筆スタイルのデフォルト決定用）
   onUpdateSectionContent: (sectionId: string, content: string) => Promise<void>;
   onStructureChange?: () => Promise<void>;
+  onUpdateBookStatus?: (status: string) => Promise<void>; // 書籍ステータス更新
   readOnly?: boolean; // 閲覧専用モード（デモ用）
   adminKeyParam?: string; // admin_keyパラメータ（リンクに引き継ぐ用）
 }
@@ -85,6 +87,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   tocPatternId,
   onUpdateSectionContent,
   onStructureChange,
+  onUpdateBookStatus,
   readOnly = false,
   adminKeyParam = '',
 }) => {
@@ -125,6 +128,9 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   const [kdpInfo, setKdpInfo] = useState<KdpInfo | null>(null);
   const [kdpError, setKdpError] = useState<string>('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // スマホ用サイドバー表示状態
+  const [isSaving, setIsSaving] = useState(false); // 途中保存中
+  const [isMarkingComplete, setIsMarkingComplete] = useState(false); // 完成マーク中
+  const [bookStatus, setBookStatus] = useState(book.status || 'draft'); // 書籍ステータス
 
   // 現在選択中の節とその章を取得
   const getActiveInfo = useCallback(() => {
@@ -347,6 +353,68 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
       console.error('Save and back error:', error);
       showToast('error', '保存に失敗しました: ' + error.message);
       setIsSavingAndBack(false);
+    }
+  };
+
+  // 途中保存（画面に留まる）
+  const handleIntermediateSave = async () => {
+    if (isSaving) return;
+    
+    setIsSaving(true);
+    try {
+      // エディタの現在の内容を即座に保存
+      if (editorRef.current) {
+        await editorRef.current.forceSave();
+      }
+      
+      // ステータスを'writing'に更新（まだdraftの場合）
+      if (bookStatus === 'draft' && onUpdateBookStatus) {
+        await onUpdateBookStatus('writing');
+        setBookStatus('writing');
+      }
+      
+      showToast('success', '保存しました！');
+    } catch (error: any) {
+      console.error('Intermediate save error:', error);
+      showToast('error', '保存に失敗しました: ' + error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // 完成マーク
+  const handleMarkComplete = async () => {
+    if (isMarkingComplete) return;
+    
+    // 確認ダイアログ
+    const confirmed = await showConfirm(
+      '執筆完了にしますか？',
+      'この書籍を「完成」としてマークします。\n\n' +
+      '完成後も編集は可能です。\n' +
+      '出版準備が整ったらWord出力してKDPに登録しましょう。'
+    );
+    
+    if (!confirmed) return;
+    
+    setIsMarkingComplete(true);
+    try {
+      // まず現在の内容を保存
+      if (editorRef.current) {
+        await editorRef.current.forceSave();
+      }
+      
+      // ステータスを'completed'に更新
+      if (onUpdateBookStatus) {
+        await onUpdateBookStatus('completed');
+        setBookStatus('completed');
+      }
+      
+      showToast('success', '🎉 執筆完了！おめでとうございます！');
+    } catch (error: any) {
+      console.error('Mark complete error:', error);
+      showToast('error', '完了処理に失敗しました: ' + error.message);
+    } finally {
+      setIsMarkingComplete(false);
     }
   };
 
@@ -872,33 +940,70 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
         
         {/* デスクトップ用ボタン群 */}
         <div className="hidden lg:flex items-center gap-2">
-          <Link
-            href="/kindle/guide"
-            target="_blank"
-            className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all bg-white/20 hover:bg-white/30 active:bg-white/40"
-            title="まずお読みください"
-          >
-            <BookOpen size={16} />
-            <span>📖 まずお読みください</span>
-          </Link>
-          
-          <Link
-            href="/kindle/publish-guide"
-            target="_blank"
-            className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all bg-white/20 hover:bg-white/30 active:bg-white/40"
-            title="出版準備ガイド"
-          >
-            <Rocket size={16} />
-            <span>🚀 出版準備ガイド</span>
-          </Link>
-          
           {!readOnly && (
             <>
+              {/* 途中保存ボタン */}
+              <button
+                onClick={handleIntermediateSave}
+                disabled={isSaving}
+                title="途中保存"
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
+                  isSaving
+                    ? 'bg-white/20 cursor-not-allowed'
+                    : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
+                }`}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                    <span>保存中...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} />
+                    <span>途中保存</span>
+                  </>
+                )}
+              </button>
+              
+              {/* 完成ボタン */}
+              <button
+                onClick={handleMarkComplete}
+                disabled={isMarkingComplete || bookStatus === 'completed'}
+                title={bookStatus === 'completed' ? '完成済み' : '執筆完了'}
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
+                  bookStatus === 'completed'
+                    ? 'bg-green-500/80 cursor-default'
+                    : isMarkingComplete
+                    ? 'bg-white/20 cursor-not-allowed'
+                    : 'bg-green-500 hover:bg-green-600 active:bg-green-700'
+                }`}
+              >
+                {bookStatus === 'completed' ? (
+                  <>
+                    <CheckCircle size={16} />
+                    <span>完成済み</span>
+                  </>
+                ) : isMarkingComplete ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                    <span>処理中...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check size={16} />
+                    <span>完成</span>
+                  </>
+                )}
+              </button>
+              
+              <div className="w-px h-6 bg-white/30" />
+              
               <button
                 onClick={handleGenerateKdpInfo}
                 disabled={isGeneratingKdp}
                 title="KDP情報生成"
-                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
                   isGeneratingKdp
                     ? 'bg-white/20 cursor-not-allowed'
                     : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
@@ -912,7 +1017,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 ) : (
                   <>
                     <Sparkles size={16} />
-                    <span>✨ KDP情報生成</span>
+                    <span>KDP情報</span>
                   </>
                 )}
               </button>
@@ -921,7 +1026,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 onClick={handleDownloadDocx}
                 disabled={isDownloading}
                 title="Word出力"
-                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
                   isDownloading
                     ? 'bg-white/20 cursor-not-allowed'
                     : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
@@ -935,10 +1040,12 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 ) : (
                   <>
                     <FileDown size={16} />
-                    <span>📥 Word出力</span>
+                    <span>Word出力</span>
                   </>
                 )}
               </button>
+              
+              <div className="w-px h-6 bg-white/30" />
               
               <button
                 onClick={handleSaveAndBack}
@@ -957,8 +1064,8 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                   </>
                 ) : (
                   <>
-                    <Save size={16} />
-                    <span>💾 保存して戻る</span>
+                    <ArrowLeft size={16} />
+                    <span>保存して戻る</span>
                   </>
                 )}
               </button>
@@ -970,6 +1077,47 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
         <div className="lg:hidden flex items-center gap-1">
           {!readOnly && (
             <>
+              {/* 途中保存ボタン */}
+              <button
+                onClick={handleIntermediateSave}
+                disabled={isSaving}
+                title="途中保存"
+                className={`flex items-center justify-center p-2 rounded-lg font-medium text-sm transition-all ${
+                  isSaving
+                    ? 'bg-white/20 cursor-not-allowed'
+                    : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
+                }`}
+              >
+                {isSaving ? (
+                  <Loader2 className="animate-spin" size={18} />
+                ) : (
+                  <Save size={18} />
+                )}
+              </button>
+              
+              {/* 完成ボタン */}
+              <button
+                onClick={handleMarkComplete}
+                disabled={isMarkingComplete || bookStatus === 'completed'}
+                title={bookStatus === 'completed' ? '完成済み' : '執筆完了'}
+                className={`flex items-center justify-center p-2 rounded-lg font-medium text-sm transition-all ${
+                  bookStatus === 'completed'
+                    ? 'bg-green-500/80 cursor-default'
+                    : isMarkingComplete
+                    ? 'bg-white/20 cursor-not-allowed'
+                    : 'bg-green-500 hover:bg-green-600 active:bg-green-700'
+                }`}
+              >
+                {bookStatus === 'completed' ? (
+                  <CheckCircle size={18} />
+                ) : isMarkingComplete ? (
+                  <Loader2 className="animate-spin" size={18} />
+                ) : (
+                  <Check size={18} />
+                )}
+              </button>
+              
+              {/* 保存して戻るボタン */}
               <button
                 onClick={handleSaveAndBack}
                 disabled={isSavingAndBack}
@@ -983,7 +1131,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 {isSavingAndBack ? (
                   <Check size={18} className="text-white" />
                 ) : (
-                  <Save size={18} />
+                  <ArrowLeft size={18} />
                 )}
               </button>
             </>

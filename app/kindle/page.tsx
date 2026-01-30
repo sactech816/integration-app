@@ -1,17 +1,18 @@
 'use client';
 
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
-  BookOpen, Plus, Loader2, Edit3, Trash2, Calendar, FileText, HelpCircle, Rocket,
+  BookOpen, Plus, Loader2, Edit3, Trash2, Calendar, FileText,
   Crown, Sparkles, Zap, ArrowRight, X, Users, ChevronDown, ChevronUp, BarChart3, User
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import AIUsageDisplay from '@/components/kindle/AIUsageDisplay';
 import AIModelSelector from '@/components/kindle/AIModelSelector';
 import AdminPlanSwitcher from '@/components/shared/AdminPlanSwitcher';
-import KDLFooter from '@/components/shared/KDLFooter';
+import { KdlDashboardLayout, KdlSidebar } from '@/components/kindle/dashboard';
+import type { KdlUserRole } from '@/components/kindle/dashboard';
 import { getAdminEmails } from '@/lib/constants';
 
 interface Book {
@@ -80,9 +81,19 @@ function KindleListPageContent() {
   const [showBanner, setShowBanner] = useState(true);
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 
+  // サイドバー関連の状態
+  const [activeMenuItem, setActiveMenuItem] = useState('dashboard');
+
   // 管理者かどうかを判定
   const adminEmails = getAdminEmails();
   const [isAdmin, setIsAdmin] = useState(false);
+
+  // ユーザーロールを決定
+  const getUserRole = (): KdlUserRole => {
+    if (isAdmin) return 'admin';
+    // TODO: 代理店判定を追加
+    return 'user';
+  };
 
   // 管理者用: プラン体験モード（LocalStorageから復元）
   const [adminTestPlan, setAdminTestPlan] = useState<'none' | 'lite' | 'standard' | 'pro' | 'business' | 'enterprise'>('pro');
@@ -321,20 +332,76 @@ function KindleListPageContent() {
     return Math.round((completed / total) * 100);
   };
 
+  // サイドバーのメニュークリック処理
+  const handleMenuItemClick = useCallback((itemId: string) => {
+    setActiveMenuItem(itemId);
+    
+    switch (itemId) {
+      case 'dashboard':
+        // 現在のページなので何もしない
+        break;
+      case 'new-book':
+        router.push(`/kindle/new${adminKeyParam}`);
+        break;
+      case 'my-books':
+        // 現在のページで書籍一覧にスクロール
+        document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' });
+        break;
+      case 'guide':
+        router.push('/kindle/guide');
+        break;
+      case 'education':
+        // TODO: 教育コンテンツページを作成
+        alert('教育コンテンツは準備中です');
+        break;
+      case 'publish-guide':
+        router.push('/kindle/publish-guide');
+        break;
+      case 'announcements':
+        // TODO: お知らせページを作成
+        alert('お知らせは準備中です');
+        break;
+      case 'agency-users':
+      case 'agency-progress':
+      case 'agency-feedback':
+      case 'agency-messages':
+        // TODO: 代理店機能を実装
+        alert('代理店機能は準備中です');
+        break;
+      case 'admin-users':
+      case 'admin-agencies':
+      case 'admin-subscriptions':
+      case 'admin-ai-settings':
+      case 'admin-system':
+        // TODO: 管理者機能を実装
+        alert('管理者機能は準備中です');
+        break;
+      case 'settings':
+        router.push('/dashboard?tab=settings');
+        break;
+      default:
+        break;
+    }
+  }, [router, adminKeyParam]);
+
+  const handleNavigate = useCallback((path: string) => {
+    router.push(path);
+  }, [router]);
+
+  const handleLogout = useCallback(async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+      router.push('/');
+    }
+  }, [router]);
+
   // アクセス権チェック中、または未課金ユーザーがリダイレクト中はローディング表示
   if (loadingSubscription) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="animate-spin text-amber-600" size={40} />
-          <p className="text-gray-600 font-medium">読み込み中...</p>
-        </div>
-      </div>
-    );
+    return <LoadingFallback />;
   }
 
   // 書籍カードコンポーネント
-  const BookCard = ({ book, showUserInfo = false }: { book: Book; showUserInfo?: boolean }) => {
+  const BookCard = ({ book }: { book: Book }) => {
     const progress = getProgressPercentage(
       book.completed_sections_count || 0,
       book.sections_count || 0
@@ -427,58 +494,26 @@ function KindleListPageContent() {
     );
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
-      {/* ヘッダー */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-amber-100 sticky top-0 z-50">
-        <div className={`mx-auto px-4 py-3 sm:py-4 flex items-center justify-between ${isAdmin ? 'max-w-6xl' : 'max-w-4xl'}`}>
-          <div className="flex items-center gap-2">
-            <BookOpen className="text-amber-600" size={24} />
-            <div>
-              <span className="font-bold text-base sm:text-xl text-gray-900 hidden sm:inline">キンドルダイレクトライト</span>
-              <span className="font-bold text-base text-gray-900 sm:hidden">KDL</span>
-              <span className="text-xs text-gray-500 ml-1 hidden sm:inline">KDL</span>
-            </div>
-            {isAdmin && (
-              <span className="ml-1 sm:ml-2 bg-purple-100 text-purple-700 text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold">
-                <span className="hidden sm:inline">管理者モード</span>
-                <span className="sm:hidden">管理者</span>
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-3">
-            <Link
-              href="/kindle/guide"
-              className="flex items-center justify-center gap-1.5 text-amber-600 hover:text-amber-700 transition-colors bg-amber-50 hover:bg-amber-100 p-2 sm:px-3 sm:py-2 rounded-lg text-sm font-medium"
-              title="まずお読みください"
-            >
-              <HelpCircle size={18} />
-              <span className="hidden sm:inline">📖 まずお読みください</span>
-            </Link>
-            <Link
-              href="/kindle/publish-guide"
-              className="flex items-center justify-center gap-1.5 text-orange-600 hover:text-orange-700 transition-colors bg-orange-50 hover:bg-orange-100 p-2 sm:px-3 sm:py-2 rounded-lg text-sm font-medium"
-              title="出版準備ガイド"
-            >
-              <Rocket size={18} />
-              <span className="hidden sm:inline">🚀 出版準備ガイド</span>
-            </Link>
-            <Link
-              href={`/kindle/new${adminKeyParam}`}
-              className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl transition-all shadow-lg"
-            >
-              <Plus size={18} />
-              <span className="hidden sm:inline">新しい本を作成</span>
-              <span className="sm:hidden">新規</span>
-            </Link>
-          </div>
-        </div>
-      </header>
+  // サイドバーをレンダリング
+  const sidebar = (
+    <KdlSidebar
+      user={user}
+      userRole={getUserRole()}
+      activeItem={activeMenuItem}
+      onItemClick={handleMenuItemClick}
+      onNavigate={handleNavigate}
+      onLogout={handleLogout}
+      bookCount={isAdmin ? adminStats?.totalBooks : books.length}
+      adminStats={adminStats ? { totalUsers: adminStats.totalUsers, totalBooks: adminStats.totalBooks } : undefined}
+    />
+  );
 
+  return (
+    <KdlDashboardLayout sidebar={sidebar}>
       {/* 未加入者向けサブスク促進バナー */}
       {showBanner && !loadingSubscription && !subscriptionStatus?.hasActiveSubscription && !isAdmin && (
-        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white">
-          <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white rounded-xl mb-6">
+          <div className="px-4 py-4">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="hidden sm:flex bg-white/20 p-2.5 rounded-xl">
@@ -517,8 +552,8 @@ function KindleListPageContent() {
 
       {/* 加入者向けステータス表示 */}
       {!loadingSubscription && subscriptionStatus?.hasActiveSubscription && !isAdmin && (
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
-          <div className="max-w-4xl mx-auto px-4 py-3">
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl mb-6">
+          <div className="px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="bg-green-100 p-1.5 rounded-lg">
@@ -542,8 +577,8 @@ function KindleListPageContent() {
 
       {/* 管理者向け統計バナー */}
       {isAdmin && adminStats && (
-        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-100">
-          <div className="max-w-6xl mx-auto px-4 py-4">
+        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl mb-6">
+          <div className="px-4 py-4">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
                 <div className="bg-purple-100 p-2 rounded-lg">
@@ -575,41 +610,53 @@ function KindleListPageContent() {
         </div>
       )}
 
-      {/* メインコンテンツ */}
-      <main className={`mx-auto px-4 py-8 ${isAdmin ? 'max-w-6xl' : 'max-w-4xl'}`}>
-        {/* 管理者用: プラン体験切り替え */}
-        {user && isAdmin && (
+      {/* 管理者用: プラン体験切り替え */}
+      {user && isAdmin && (
+        <div className="mb-6">
           <AdminPlanSwitcher 
             currentPlan={adminTestPlan}
             onPlanChange={setAdminTestPlan}
           />
-        )}
+        </div>
+      )}
 
-        {/* AI使用量表示（ログインユーザー向け） */}
-        {user && subscriptionStatus && !isAdmin && (
-          <div className="mb-6">
-            <AIUsageDisplay 
-              userId={user.id} 
-              planType={subscriptionStatus.planType} 
-            />
-          </div>
-        )}
+      {/* AI使用量表示（ログインユーザー向け） */}
+      {user && subscriptionStatus && !isAdmin && (
+        <div className="mb-6">
+          <AIUsageDisplay 
+            userId={user.id} 
+            planType={subscriptionStatus.planType} 
+          />
+        </div>
+      )}
 
-        {/* AIモード選択（管理者・課金ユーザー・モニターユーザのPro以上） */}
-        {user && subscriptionStatus && (
-          <div className="mb-6">
-            <AIModelSelector 
-              userId={user.id}
-              planTier={isAdmin ? adminTestPlan : (subscriptionStatus.planTier || 'none')}
-              isAdmin={isAdmin}
-              isMonitor={subscriptionStatus.isMonitor || false}
-            />
-          </div>
-        )}
+      {/* AIモード選択（管理者・課金ユーザー・モニターユーザのPro以上） */}
+      {user && subscriptionStatus && (
+        <div className="mb-6">
+          <AIModelSelector 
+            userId={user.id}
+            planTier={isAdmin ? adminTestPlan : (subscriptionStatus.planTier || 'none')}
+            isAdmin={isAdmin}
+            isMonitor={subscriptionStatus.isMonitor || false}
+          />
+        </div>
+      )}
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-6 mt-8">
-          {isAdmin ? '全ユーザーの書籍' : 'あなたの書籍'}
-        </h1>
+      {/* 書籍セクション */}
+      <div id="books-section">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">
+            {isAdmin ? '全ユーザーの書籍' : 'あなたの書籍'}
+          </h1>
+          <Link
+            href={`/kindle/new${adminKeyParam}`}
+            className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-4 py-2 rounded-xl transition-all shadow-lg"
+          >
+            <Plus size={18} />
+            <span className="hidden sm:inline">新しい本を作成</span>
+            <span className="sm:hidden">新規</span>
+          </Link>
+        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
@@ -680,7 +727,7 @@ function KindleListPageContent() {
                   {expandedUsers.has(userBook.user_id) && (
                     <div className="p-4 space-y-3">
                       {userBook.books.map((book) => (
-                        <BookCard key={book.id} book={book} showUserInfo={false} />
+                        <BookCard key={book.id} book={book} />
                       ))}
                     </div>
                   )}
@@ -711,11 +758,8 @@ function KindleListPageContent() {
             </div>
           )
         )}
-      </main>
-
-      {/* 共通フッター */}
-      <KDLFooter adminKeyParam={adminKeyParam} />
-    </div>
+      </div>
+    </KdlDashboardLayout>
   );
 }
 

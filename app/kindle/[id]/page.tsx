@@ -26,6 +26,7 @@ interface Book {
   id: string;
   title: string;
   subtitle: string | null;
+  status?: string;
 }
 
 interface TargetProfile {
@@ -132,7 +133,7 @@ export default function KindleEditorPage() {
       // 1. 本の情報を取得（まず基本カラムのみで取得）
       const { data: bookData, error: bookError } = await supabase
         .from('kdl_books')
-        .select('id, title, subtitle')
+        .select('id, title, subtitle, status')
         .eq('id', bookId)
         .single();
 
@@ -270,6 +271,33 @@ export default function KindleEditorPage() {
     await fetchBookData();
   }, [fetchBookData]);
 
+  // 書籍ステータスを更新
+  const handleUpdateBookStatus = useCallback(async (status: string) => {
+    // デモモードの場合はスキップ
+    if (bookId.startsWith('demo-book-') || !isSupabaseConfigured() || !supabase) {
+      console.log('Demo mode: status update skipped');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('kdl_books')
+      .update({ 
+        status, 
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', bookId);
+
+    if (error) {
+      console.error('Status update error:', error);
+      throw new Error('ステータスの更新に失敗しました: ' + error.message);
+    }
+
+    // ローカルの状態も更新
+    if (book) {
+      setBook({ ...book, status });
+    }
+  }, [bookId, book]);
+
   // ローディング画面
   if (loadingState === 'loading') {
     return (
@@ -369,6 +397,7 @@ export default function KindleEditorPage() {
       tocPatternId={tocPatternId}
       onUpdateSectionContent={handleUpdateSectionContent}
       onStructureChange={handleStructureChange}
+      onUpdateBookStatus={handleUpdateBookStatus}
       adminKeyParam={adminKeyParam}
     />
   );
