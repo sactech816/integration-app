@@ -4,6 +4,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle, Info, Sparkles, Copy, Tag, FileText, FolderTree, Lightbulb, BookOpen, Rocket, PlayCircle, Crown, Menu } from 'lucide-react';
 import Link from 'next/link';
+import KdlHamburgerMenu from '@/components/kindle/shared/KdlHamburgerMenu';
 import { ChapterSidebar } from './ChapterSidebar';
 import { TiptapEditor, TiptapEditorRef } from './TiptapEditor';
 import { Home } from 'lucide-react';
@@ -78,7 +79,6 @@ interface EditorLayoutProps {
   onUpdateBookStatus?: (status: string) => Promise<void>; // 書籍ステータス更新
   readOnly?: boolean; // 閲覧専用モード（デモ用）
   adminKeyParam?: string; // admin_keyパラメータ（リンクに引き継ぐ用）
-  hasCommonHeader?: boolean; // 共通ヘッダーが上に表示されているかどうか
 }
 
 export const EditorLayout: React.FC<EditorLayoutProps> = ({
@@ -91,7 +91,6 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   onUpdateBookStatus,
   readOnly = false,
   adminKeyParam = '',
-  hasCommonHeader = false,
 }) => {
   // 初期値: 最初の章の最初の節
   const getInitialSectionId = () => {
@@ -889,7 +888,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   }
 
   return (
-    <div className={`${hasCommonHeader ? 'h-full' : 'h-screen'} flex flex-col overflow-hidden bg-white`}>
+    <div className="h-screen flex flex-col overflow-hidden bg-white">
       {/* デモモードバナー */}
       {readOnly && (
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2 sm:px-4 py-2 sm:py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
@@ -913,13 +912,20 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
       {/* ヘッダー */}
       <div className="flex items-center justify-between px-2 sm:px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md relative z-30">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-          {/* スマホ用サイドバートグルボタン */}
+          {/* ハンバーガーメニュー（KDL共通ナビゲーション） */}
+          <KdlHamburgerMenu 
+            adminKey={adminKeyParam.replace('?admin_key=', '') || null}
+            buttonClassName="p-1.5 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0"
+            iconColor="text-white"
+          />
+
+          {/* スマホ用サイドバートグルボタン（目次表示用） */}
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="lg:hidden p-1.5 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0"
             title="目次を表示"
           >
-            <Menu size={20} />
+            <BookOpen size={20} />
           </button>
           
           <Link

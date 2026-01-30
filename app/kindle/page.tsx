@@ -14,7 +14,6 @@ import AdminPlanSwitcher from '@/components/shared/AdminPlanSwitcher';
 import { KdlDashboardLayout, KdlSidebar, PublishGuideContent } from '@/components/kindle/dashboard';
 import type { KdlUserRole } from '@/components/kindle/dashboard';
 import { getAdminEmails } from '@/lib/constants';
-import KdlCommonHeader from '@/components/kindle/shared/KdlCommonHeader';
 
 interface Book {
   id: string;
@@ -569,10 +568,7 @@ function KindleListPageContent() {
   );
 
   return (
-    <KdlDashboardLayout 
-      sidebar={sidebar} 
-      header={<KdlCommonHeader currentPage="dashboard" adminKey={adminKey} />}
-    >
+    <KdlDashboardLayout sidebar={sidebar}>
       {/* 出版準備ガイド表示（サイドバーから選択時） */}
       {activeMenuItem === 'publish-guide' ? (
         <PublishGuideContent />

@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { ArrowLeft, BookOpen, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { EditorLayout } from '@/components/kindle/editor';
-import KdlCommonHeader from '@/components/kindle/shared/KdlCommonHeader';
 
 interface Section {
   id: string;
@@ -391,25 +390,16 @@ export default function KindleEditorPage() {
   }
 
   return (
-    <>
-      {/* 共通ヘッダー */}
-      <KdlCommonHeader currentPage="editor" adminKey={adminKey} />
-      
-      {/* エディタ本体（共通ヘッダー52pxを除いた高さ） */}
-      <div style={{ height: 'calc(100vh - 52px)' }}>
-        <EditorLayout
-          book={book}
-          chapters={chapters}
-          targetProfile={targetProfile}
-          tocPatternId={tocPatternId}
-          onUpdateSectionContent={handleUpdateSectionContent}
-          onStructureChange={handleStructureChange}
-          onUpdateBookStatus={handleUpdateBookStatus}
-          adminKeyParam={adminKeyParam}
-          hasCommonHeader={true}
-        />
-      </div>
-    </>
+    <EditorLayout
+      book={book}
+      chapters={chapters}
+      targetProfile={targetProfile}
+      tocPatternId={tocPatternId}
+      onUpdateSectionContent={handleUpdateSectionContent}
+      onStructureChange={handleStructureChange}
+      onUpdateBookStatus={handleUpdateBookStatus}
+      adminKeyParam={adminKeyParam}
+    />
   );
 }
 

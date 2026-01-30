@@ -8,14 +8,20 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-interface KdlCommonHeaderProps {
-  // 現在のページを示す（オプショナル）
-  currentPage?: 'dashboard' | 'new' | 'editor' | 'guide' | 'publish-guide';
+interface KdlHamburgerMenuProps {
   // 管理者キー（オプショナル）
   adminKey?: string | null;
+  // ボタンのスタイルカスタマイズ用
+  buttonClassName?: string;
+  // アイコンの色
+  iconColor?: string;
 }
 
-export default function KdlCommonHeader({ currentPage, adminKey }: KdlCommonHeaderProps) {
+export default function KdlHamburgerMenu({ 
+  adminKey, 
+  buttonClassName = "p-2 hover:bg-white/10 rounded-lg transition-colors",
+  iconColor = "text-white"
+}: KdlHamburgerMenuProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const adminKeyParam = adminKey ? `?admin_key=${adminKey}` : '';
@@ -35,45 +41,16 @@ export default function KdlCommonHeader({ currentPage, adminKey }: KdlCommonHead
 
   return (
     <>
-      {/* ヘッダー */}
-      <header className="bg-gradient-to-r from-amber-500 to-orange-500 text-white sticky top-0 z-50 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          {/* 左側: ハンバーガーメニュー */}
-          <button
-            onClick={() => setIsMenuOpen(true)}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-            aria-label="メニューを開く"
-          >
-            <Menu size={24} />
-          </button>
+      {/* ハンバーガーボタン */}
+      <button
+        onClick={() => setIsMenuOpen(true)}
+        className={buttonClassName}
+        aria-label="メニューを開く"
+      >
+        <Menu size={24} className={iconColor} />
+      </button>
 
-          {/* 中央: ロゴ + タイトル */}
-          <Link 
-            href={`/kindle${adminKeyParam}`}
-            className="flex items-center gap-2 hover:opacity-90 transition-opacity"
-          >
-            <div className="bg-white/20 p-1.5 rounded-lg">
-              <BookOpen size={20} />
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="font-bold text-lg">KDL</span>
-              <span className="hidden sm:inline text-white/80 text-sm">本づくりの旅</span>
-            </div>
-          </Link>
-
-          {/* 右側: プランステータス（コメントアウト - 継続モード仕様未定のため） */}
-          {/* 
-          <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg">
-            <Crown size={16} />
-            <span className="text-sm font-medium">プレミアム</span>
-          </div>
-          */}
-          {/* プレースホルダー（左右バランス用） */}
-          <div className="w-10" />
-        </div>
-      </header>
-
-      {/* ハンバーガーメニュー オーバーレイ */}
+      {/* オーバーレイ */}
       {isMenuOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-[60] transition-opacity"
@@ -81,7 +58,7 @@ export default function KdlCommonHeader({ currentPage, adminKey }: KdlCommonHead
         />
       )}
 
-      {/* ハンバーガーメニュー スライドパネル */}
+      {/* スライドパネル */}
       <div 
         className={`fixed top-0 left-0 h-full w-72 bg-white z-[70] transform transition-transform duration-300 ease-in-out shadow-xl ${
           isMenuOpen ? 'translate-x-0' : '-translate-x-full'
@@ -106,7 +83,6 @@ export default function KdlCommonHeader({ currentPage, adminKey }: KdlCommonHead
         <nav className="p-4 space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentPage === item.id;
             
             return (
               <Link
@@ -114,13 +90,9 @@ export default function KdlCommonHeader({ currentPage, adminKey }: KdlCommonHead
                 href={item.href}
                 target={item.target}
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                  isActive
-                    ? 'bg-amber-100 text-amber-700 font-bold'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 transition-all"
               >
-                <Icon size={20} className={isActive ? 'text-amber-600' : 'text-gray-400'} />
+                <Icon size={20} className="text-gray-400" />
                 <span>{item.label}</span>
               </Link>
             );

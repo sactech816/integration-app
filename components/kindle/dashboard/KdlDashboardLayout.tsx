@@ -6,23 +6,18 @@ import { Menu, X } from 'lucide-react';
 type KdlDashboardLayoutProps = {
   sidebar: React.ReactNode;
   children: React.ReactNode;
-  header?: React.ReactNode;
 };
 
-export default function KdlDashboardLayout({ sidebar, children, header }: KdlDashboardLayoutProps) {
+export default function KdlDashboardLayout({ sidebar, children }: KdlDashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
-      {/* 共通ヘッダー */}
-      {header}
-
       {/* モバイル用ハンバーガーメニューボタン */}
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-40 p-2 bg-white rounded-lg shadow-md border border-amber-200"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-md border border-amber-200"
         aria-label="メニューを開く"
-        style={{ top: header ? '60px' : '16px' }}
       >
         {isSidebarOpen ? <X size={24} className="text-amber-600" /> : <Menu size={24} className="text-amber-600" />}
       </button>
@@ -38,12 +33,11 @@ export default function KdlDashboardLayout({ sidebar, children, header }: KdlDas
       {/* サイドバー */}
       <aside
         className={`
-          fixed left-0 z-40 h-full w-64 bg-white border-r border-amber-100 shadow-lg
+          fixed top-0 left-0 z-40 h-full w-64 bg-white border-r border-amber-100 shadow-lg
           transform transition-transform duration-300 ease-in-out
           lg:translate-x-0
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
-        style={{ top: header ? '52px' : '0' }}
       >
         <div className="h-full overflow-y-auto">
           {sidebar}
