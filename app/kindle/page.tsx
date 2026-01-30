@@ -602,7 +602,6 @@ function KindleListPageContent() {
           user={user} 
           onBack={() => setActiveMenuItem('dashboard')} 
         />
-      )
       ) : activeMenuItem === 'admin-users' && user && isAdmin && accessToken ? (
         /* 全ユーザー管理画面（管理者のみ） */
         <div className="space-y-6">
