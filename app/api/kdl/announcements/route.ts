@@ -22,7 +22,7 @@ const getServiceClient = () => {
 };
 
 // 管理者チェック
-async function isAdmin(supabase: ReturnType<typeof createClient>, token: string): Promise<boolean> {
+async function isAdmin(supabase: NonNullable<ReturnType<typeof getServiceClient>>, token: string): Promise<boolean> {
   try {
     const { data: { user }, error } = await supabase.auth.getUser(token);
     if (error || !user?.email) return false;
