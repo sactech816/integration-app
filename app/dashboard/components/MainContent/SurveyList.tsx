@@ -172,15 +172,13 @@ export default function SurveyList({ userId, isAdmin, userEmail, isUnlocked = fa
         .in('id', Array.from(selectedIds));
       
       if (error) throw error;
-      // データを再取得して状態を同期
-      await loadSurveys();
+      // ローカルstate更新（診断クイズと同じパターン）
+      setSurveys((prev) => prev.filter((s) => !selectedIds.has(s.id)));
       setSelectedIds(new Set());
       setSelectMode(false);
     } catch (error) {
       console.error('一括削除エラー:', error);
       alert('一括削除に失敗しました');
-      // エラー時もデータを再取得
-      await loadSurveys();
     } finally {
       setBulkDeleting(false);
     }

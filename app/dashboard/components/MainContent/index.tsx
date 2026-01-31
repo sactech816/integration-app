@@ -86,7 +86,6 @@ type MainContentProps = {
   onCreateNew: () => void;
   onNavigate: (path: string, addAdminKey?: boolean) => void;
   onLogout: () => void;
-  onRefresh?: () => Promise<void>;
   // 管理者コンポーネント
   adminComponents?: {
     UserManager?: React.ReactNode;
@@ -128,7 +127,6 @@ export default function MainContent({
   onCreateNew,
   onNavigate,
   onLogout,
-  onRefresh,
   adminComponents,
 }: MainContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
@@ -197,7 +195,6 @@ export default function MainContent({
         onDownloadHtml={onDownloadHtml}
         onPurchase={onPurchase}
         onCreateNew={onCreateNew}
-        onRefresh={onRefresh}
       />
       )}
 

@@ -458,6 +458,54 @@ export async function getBookingCountByMenuId(menuId: string): Promise<number> {
 }
 
 /**
+ * 複数メニューの予約数を一括取得
+ */
+export async function getBookingCountsForMenus(menuIds: string[]): Promise<Record<string, number>> {
+  const supabase = getSupabaseServer();
+  if (!supabase || menuIds.length === 0) return {};
+
+  // 全メニューのスロットを一括取得
+  const { data: slots, error: slotsError } = await supabase
+    .from('booking_slots')
+    .select('id, menu_id')
+    .in('menu_id', menuIds);
+
+  if (slotsError || !slots || slots.length === 0) {
+    // スロットがない場合は全メニュー0件
+    return menuIds.reduce((acc, id) => ({ ...acc, [id]: 0 }), {});
+  }
+
+  const slotIds = slots.map((s) => s.id);
+  const slotMenuMap: Record<string, string> = {};
+  slots.forEach((s) => {
+    slotMenuMap[s.id] = s.menu_id;
+  });
+
+  // 全予約を一括取得（キャンセル以外）
+  const { data: bookings, error: bookingsError } = await supabase
+    .from('bookings')
+    .select('slot_id')
+    .in('slot_id', slotIds)
+    .neq('status', 'cancelled');
+
+  if (bookingsError) {
+    console.error('[Booking] Get booking counts error:', bookingsError);
+    return menuIds.reduce((acc, id) => ({ ...acc, [id]: 0 }), {});
+  }
+
+  // メニューごとにカウント
+  const counts: Record<string, number> = menuIds.reduce((acc, id) => ({ ...acc, [id]: 0 }), {});
+  (bookings || []).forEach((booking) => {
+    const menuId = slotMenuMap[booking.slot_id];
+    if (menuId && counts[menuId] !== undefined) {
+      counts[menuId]++;
+    }
+  });
+
+  return counts;
+}
+
+/**
  * 編集キーで予約メニューを取得
  */
 export async function getBookingMenuByEditKey(editKey: string): Promise<BookingMenu | null> {

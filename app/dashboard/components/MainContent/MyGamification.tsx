@@ -162,15 +162,13 @@ export default function MyGamification({ userId, planTier, isUnlocked = false, i
     try {
       const deletePromises = Array.from(selectedIds).map((id) => deleteCampaign(id));
       await Promise.all(deletePromises);
-      // データを再取得して状態を同期
-      await fetchCampaigns();
+      // ローカルstate更新（診断クイズと同じパターン）
+      setCampaigns((prev) => prev.filter((c) => !selectedIds.has(c.id)));
       setSelectedIds(new Set());
       setSelectMode(false);
     } catch (error) {
       console.error('一括削除エラー:', error);
       alert('一部の削除に失敗しました');
-      // エラー時もデータを再取得
-      await fetchCampaigns();
     } finally {
       setBulkDeleting(false);
     }

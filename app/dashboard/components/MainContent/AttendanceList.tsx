@@ -154,15 +154,13 @@ export default function AttendanceList({ userId, isAdmin, isUnlocked = false }: 
         deleteAttendanceEvent(id, userId)
       );
       await Promise.all(deletePromises);
-      // データを再取得して状態を同期
-      await loadEvents();
+      // ローカルstate更新（診断クイズと同じパターン）
+      setEvents((prev) => prev.filter((e) => !selectedIds.has(e.id)));
       setSelectedIds(new Set());
       setSelectMode(false);
     } catch (error) {
       console.error('一括削除エラー:', error);
       alert('一部の削除に失敗しました');
-      // エラー時もデータを再取得
-      await loadEvents();
     } finally {
       setBulkDeleting(false);
     }

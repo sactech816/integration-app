@@ -20,7 +20,7 @@ import {
   Square,
 } from 'lucide-react';
 import { BookingMenu } from '@/types/booking';
-import { getBookingMenus, getAllBookingMenus, deleteBookingMenu, duplicateBookingMenu, getBookingCountByMenuId } from '@/app/actions/booking';
+import { getBookingMenus, getAllBookingMenus, deleteBookingMenu, duplicateBookingMenu, getBookingCountsForMenus } from '@/app/actions/booking';
 
 type BookingListProps = {
   userId: string;
@@ -52,14 +52,12 @@ export default function BookingList({ userId, isAdmin, isUnlocked = false }: Boo
       const data = isAdmin ? await getAllBookingMenus() : await getBookingMenus(userId);
       setMenus(data);
 
-      // 予約数を取得
-      const counts: Record<string, number> = {};
-      await Promise.all(
-        data.map(async (menu) => {
-          counts[menu.id] = await getBookingCountByMenuId(menu.id);
-        })
-      );
-      setBookingCounts(counts);
+      // 予約数を一括取得（N+1クエリ回避）
+      if (data.length > 0) {
+        const menuIds = data.map((menu) => menu.id);
+        const counts = await getBookingCountsForMenus(menuIds);
+        setBookingCounts(counts);
+      }
     } catch (error) {
       console.error('予約メニュー取得エラー:', error);
     } finally {
@@ -153,15 +151,13 @@ export default function BookingList({ userId, isAdmin, isUnlocked = false }: Boo
         deleteBookingMenu(id, userId)
       );
       await Promise.all(deletePromises);
-      // データを再取得して状態を同期
-      await loadMenus();
+      // ローカルstate更新（診断クイズと同じパターン）
+      setMenus((prev) => prev.filter((m) => !selectedIds.has(m.id)));
       setSelectedIds(new Set());
       setSelectMode(false);
     } catch (error) {
       console.error('一括削除エラー:', error);
       alert('一部の削除に失敗しました');
-      // エラー時もデータを再取得
-      await loadMenus();
     } finally {
       setBulkDeleting(false);
     }
