@@ -22,6 +22,7 @@ import {
   LayoutDashboard,
   Grid3X3,
   LayoutGrid,
+  XCircle,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -90,6 +91,9 @@ export default function PublicBookingPage() {
   const [guestComment, setGuestComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 予約完了後のキャンセルトークン
+  const [completedCancelToken, setCompletedCancelToken] = useState<string | null>(null);
 
   // 日程調整用の状態
   const [attendanceData, setAttendanceData] = useState<AttendanceTableData | null>(null);
@@ -234,7 +238,11 @@ export default function PublicBookingPage() {
         user?.id
       );
 
-      if (result.success) {
+      if (result.success && result.data) {
+        // キャンセルトークンを保存
+        if ('cancel_token' in result.data && result.data.cancel_token) {
+          setCompletedCancelToken(result.data.cancel_token as string);
+        }
         setStep('complete');
       } else {
         setError('error' in result ? result.error : '予約に失敗しました');
@@ -717,6 +725,27 @@ export default function PublicBookingPage() {
                     <p className="text-sm text-gray-700 whitespace-pre-wrap">{menu.contact_method}</p>
                   </div>
                 )}
+              </div>
+            )}
+            {/* キャンセル案内 */}
+            {completedCancelToken && (
+              <div className="bg-red-50 rounded-xl p-4 mb-6 text-left max-w-md mx-auto border border-red-200">
+                <div className="flex items-start gap-3">
+                  <XCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-red-800 mb-2">予約のキャンセル</p>
+                    <p className="text-xs text-red-700 mb-3">
+                      ご都合が悪くなった場合は、確認メールのキャンセルリンク、または下のボタンからキャンセルできます。
+                    </p>
+                    <Link
+                      href={`/booking/cancel?token=${completedCancelToken}`}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
+                    >
+                      <XCircle size={16} />
+                      予約をキャンセル
+                    </Link>
+                  </div>
+                </div>
               </div>
             )}
             <div>

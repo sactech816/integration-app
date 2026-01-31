@@ -957,18 +957,23 @@ export async function submitBooking(
 
   // 予約データを作成
   const guestInput = input as { guest_name?: string; guest_email?: string; guest_comment?: string };
+  
+  // キャンセルトークンを生成（ランダムな文字列）
+  const cancelToken = crypto.randomUUID();
+  
   const insertData: Record<string, unknown> = {
     slot_id,
     status: 'ok',
+    cancel_token: cancelToken,
+    // 名前は常に保存（ログインユーザーでもゲストでも）
+    guest_name: guestInput.guest_name?.trim() || null,
+    guest_comment: guestInput.guest_comment?.trim() || null,
   };
 
   if (customerId) {
     insertData.customer_id = customerId;
-    insertData.guest_comment = guestInput.guest_comment?.trim() || null;
   } else {
-    insertData.guest_name = guestInput.guest_name?.trim();
     insertData.guest_email = guestInput.guest_email?.trim();
-    insertData.guest_comment = guestInput.guest_comment?.trim() || null;
   }
 
   const { data, error } = await supabase

@@ -88,15 +88,24 @@ export async function POST(request: Request) {
       ownerEmail = ownerData?.user?.email;
     }
 
-    // 予約者のメールアドレス
+    // 予約者の情報
+    // guest_nameを優先（ユーザーが予約時に入力した名前）
     let customerEmail = booking.guest_email;
     let customerName = booking.guest_name;
 
-    // ログインユーザーの場合
+    // ログインユーザーの場合、メールアドレスを取得
     if (booking.customer_id) {
       const { data: customerData } = await supabase.auth.admin.getUserById(booking.customer_id);
       customerEmail = customerData?.user?.email;
-      customerName = customerData?.user?.user_metadata?.name || customerEmail?.split('@')[0] || 'お客様';
+      // guest_nameがない場合のみフォールバック
+      if (!customerName) {
+        customerName = customerData?.user?.user_metadata?.name || customerEmail?.split('@')[0] || 'お客様';
+      }
+    }
+    
+    // 名前がない場合のデフォルト
+    if (!customerName) {
+      customerName = 'お客様';
     }
 
     const startTime = formatDateTime(slot.start_time);
@@ -105,6 +114,12 @@ export async function POST(request: Request) {
       minute: '2-digit',
       timeZone: 'Asia/Tokyo',
     });
+
+    // キャンセルリンクを生成
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://makers.tokyo';
+    const cancelUrl = booking.cancel_token 
+      ? `${baseUrl}/booking/cancel?token=${booking.cancel_token}`
+      : null;
 
     const emailPromises = [];
 
@@ -143,6 +158,20 @@ export async function POST(request: Request) {
                 ` : ''}
               </div>
             </div>
+            
+            ${type !== 'cancel' && cancelUrl ? `
+              <div style="background: #fef2f2; border-radius: 12px; padding: 16px; margin: 20px 0; border: 1px solid #fecaca;">
+                <p style="font-size: 14px; color: #991b1b; margin: 0 0 10px 0;">
+                  <strong>予約のキャンセル</strong>
+                </p>
+                <p style="font-size: 13px; color: #7f1d1d; margin: 0 0 12px 0;">
+                  ご都合が悪くなった場合は、以下のリンクからキャンセルできます。
+                </p>
+                <a href="${cancelUrl}" style="display: inline-block; background: #dc2626; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">
+                  予約をキャンセル
+                </a>
+              </div>
+            ` : ''}
             
             <p style="font-size: 14px; color: #6b7280;">
               ご不明な点がございましたら、お気軽にお問い合わせください。
