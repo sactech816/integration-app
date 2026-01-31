@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, Trash2, CheckSquare, Square } from 'lucide-react';
 import { ServiceType, SERVICE_LABELS } from '@/lib/types';
 import ContentCard, { ContentItem } from './ContentCard';
 import Pagination from '../shared/Pagination';
@@ -25,6 +25,7 @@ type ContentListProps = {
   onDownloadHtml: (item: ContentItem) => void;
   onPurchase: (item: ContentItem) => void;
   onCreateNew: () => void;
+  onBulkDelete?: (items: ContentItem[]) => Promise<void>;
 };
 
 export default function ContentList({
@@ -44,9 +45,15 @@ export default function ContentList({
   onDownloadHtml,
   onPurchase,
   onCreateNew,
+  onBulkDelete,
 }: ContentListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+
+  // 一括選択機能
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   // 検索フィルター
   const filteredContents = contents.filter(
@@ -68,6 +75,59 @@ export default function ContentList({
     setCurrentPage(1);
   };
 
+  // 選択モード切り替え
+  const toggleSelectMode = () => {
+    setSelectMode(!selectMode);
+    setSelectedIds(new Set());
+  };
+
+  // アイテム選択/解除
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  // 全選択/全解除（フィルター後のコンテンツに対して）
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredContents.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredContents.map((c) => c.id)));
+    }
+  };
+
+  // 一括削除
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`${selectedIds.size}件の${SERVICE_LABELS[selectedService]}を削除しますか？この操作は取り消せません。`)) return;
+
+    setBulkDeleting(true);
+    try {
+      if (onBulkDelete) {
+        const itemsToDelete = contents.filter((c) => selectedIds.has(c.id));
+        await onBulkDelete(itemsToDelete);
+      } else {
+        // onBulkDeleteが渡されていない場合は個別削除を順次実行
+        const itemsToDelete = contents.filter((c) => selectedIds.has(c.id));
+        for (const item of itemsToDelete) {
+          await onDelete(item);
+        }
+      }
+      setSelectedIds(new Set());
+      setSelectMode(false);
+    } catch (error) {
+      console.error('一括削除エラー:', error);
+      alert('一部の削除に失敗しました');
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
   return (
     <div>
       {/* ヘッダー */}
@@ -80,10 +140,54 @@ export default function ContentList({
             <span className="text-xs bg-red-500 text-white px-2 py-1 rounded-full">ADMIN</span>
           )}
         </h2>
-        {filteredContents.length > 0 && (
-          <span className="text-sm text-gray-500">全 {filteredContents.length} 件</span>
-        )}
+        <div className="flex items-center gap-2">
+          {filteredContents.length > 0 && (
+            <>
+              <span className="text-sm text-gray-500">全 {filteredContents.length} 件</span>
+              <button
+                onClick={toggleSelectMode}
+                className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors ${
+                  selectMode
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {selectMode ? <CheckSquare size={16} /> : <Square size={16} />}
+                {selectMode ? '選択中' : '選択'}
+              </button>
+            </>
+          )}
+        </div>
       </div>
+
+      {/* 選択モードのアクションバー */}
+      {selectMode && filteredContents.length > 0 && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggleSelectAll}
+              className="text-sm font-semibold text-indigo-700 hover:text-indigo-800"
+            >
+              {selectedIds.size === filteredContents.length ? '全て解除' : '全て選択'}
+            </button>
+            <span className="text-sm text-indigo-600">
+              {selectedIds.size}件選択中
+            </span>
+          </div>
+          <button
+            onClick={handleBulkDelete}
+            disabled={selectedIds.size === 0 || bulkDeleting}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {bulkDeleting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Trash2 size={14} />
+            )}
+            一括削除
+          </button>
+        </div>
+      )}
 
       {/* 検索 */}
       <div className="mb-6">
@@ -128,22 +232,42 @@ export default function ContentList({
               const isUnlocked = accessInfo.hasAccess || isAdmin;
 
               return (
-                <ContentCard
+                <div
                   key={item.id}
-                  item={item}
-                  isUnlocked={isUnlocked}
-                  isAdmin={isAdmin}
-                  processingId={processingId}
-                  copiedId={copiedId}
-                  onEdit={onEdit}
-                  onDuplicate={onDuplicate}
-                  onDelete={onDelete}
-                  onView={onView}
-                  onCopyUrl={onCopyUrl}
-                  onEmbed={onEmbed}
-                  onDownloadHtml={onDownloadHtml}
-                  onPurchase={onPurchase}
-                />
+                  className={`relative ${
+                    selectMode && selectedIds.has(item.id)
+                      ? 'ring-2 ring-indigo-500 rounded-xl'
+                      : ''
+                  }`}
+                >
+                  {selectMode && (
+                    <button
+                      onClick={() => toggleSelect(item.id)}
+                      className="absolute top-3 left-3 z-10 p-1 bg-white/90 rounded shadow-sm"
+                    >
+                      {selectedIds.has(item.id) ? (
+                        <CheckSquare size={20} className="text-indigo-600" />
+                      ) : (
+                        <Square size={20} className="text-gray-400" />
+                      )}
+                    </button>
+                  )}
+                  <ContentCard
+                    item={item}
+                    isUnlocked={isUnlocked}
+                    isAdmin={isAdmin}
+                    processingId={processingId}
+                    copiedId={copiedId}
+                    onEdit={onEdit}
+                    onDuplicate={onDuplicate}
+                    onDelete={onDelete}
+                    onView={onView}
+                    onCopyUrl={onCopyUrl}
+                    onEmbed={onEmbed}
+                    onDownloadHtml={onDownloadHtml}
+                    onPurchase={onPurchase}
+                  />
+                </div>
               );
             })}
           </div>

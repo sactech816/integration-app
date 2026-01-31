@@ -51,6 +51,21 @@ export default function NewAttendancePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTimeInput]);
 
+  // ログインセッション取得
+  useEffect(() => {
+    const init = async () => {
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user || null);
+        
+        supabase.auth.onAuthStateChange((event, session) => {
+          setUser(session?.user || null);
+        });
+      }
+    };
+    init();
+  }, []);
+
   // 送信状態
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

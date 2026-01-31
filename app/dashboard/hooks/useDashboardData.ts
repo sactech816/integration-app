@@ -481,6 +481,7 @@ export function useDashboardData(): UseDashboardDataReturn {
       profile: TABLES.PROFILES,
       business: TABLES.BUSINESS_LPS,
       salesletter: 'sales_letters',
+      survey: 'surveys',
     };
 
     try {
@@ -555,6 +556,27 @@ export function useDashboardData(): UseDashboardDataReturn {
               slug: newSlug,
               settings: original.settings,
               template_id: original.template_id,
+            },
+          ]);
+          if (error) throw error;
+        }
+      } else if (item.type === 'survey') {
+        // アンケートの複製
+        const { data: original } = await supabase
+          .from('surveys')
+          .select('*')
+          .eq('id', parseInt(item.id))
+          .single();
+
+        if (original) {
+          const { error } = await supabase.from('surveys').insert([
+            {
+              user_id: user.id,
+              title: `${original.title || 'アンケート'} のコピー`,
+              description: original.description,
+              questions: original.questions,
+              slug: `${original.slug}-copy-${Date.now()}`,
+              show_results_after_submission: original.show_results_after_submission,
             },
           ]);
           if (error) throw error;

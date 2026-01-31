@@ -16,6 +16,8 @@ import {
   Lock,
   Heart,
   BarChart2,
+  CheckSquare,
+  Square,
 } from 'lucide-react';
 import {
   getAttendanceEvents,
@@ -30,9 +32,10 @@ type ViewMode = 'list' | 'results';
 type AttendanceListProps = {
   userId: string;
   isAdmin: boolean;
+  isUnlocked?: boolean;
 };
 
-export default function AttendanceList({ userId, isAdmin }: AttendanceListProps) {
+export default function AttendanceList({ userId, isAdmin, isUnlocked = false }: AttendanceListProps) {
   const router = useRouter();
   const [events, setEvents] = useState<AttendanceEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +49,11 @@ export default function AttendanceList({ userId, isAdmin }: AttendanceListProps)
   const [selectedEvent, setSelectedEvent] = useState<AttendanceEvent | null>(null);
   const [tableData, setTableData] = useState<AttendanceTableData | null>(null);
   const [loadingResults, setLoadingResults] = useState(false);
+
+  // 一括選択機能
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const loadEvents = useCallback(async () => {
     setLoading(true);
@@ -107,13 +115,59 @@ export default function AttendanceList({ userId, isAdmin }: AttendanceListProps)
     }
   };
 
+  // 選択モード切り替え
+  const toggleSelectMode = () => {
+    setSelectMode(!selectMode);
+    setSelectedIds(new Set());
+  };
+
+  // アイテム選択/解除
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  // 全選択/全解除
+  const toggleSelectAll = () => {
+    if (selectedIds.size === events.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(events.map((e) => e.id)));
+    }
+  };
+
+  // 一括削除
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`${selectedIds.size}件の出欠表を削除しますか？この操作は取り消せません。`)) return;
+
+    setBulkDeleting(true);
+    try {
+      const deletePromises = Array.from(selectedIds).map((id) =>
+        deleteAttendanceEvent(id, userId)
+      );
+      await Promise.all(deletePromises);
+      setEvents((prev) => prev.filter((e) => !selectedIds.has(e.id)));
+      setSelectedIds(new Set());
+      setSelectMode(false);
+    } catch (error) {
+      console.error('一括削除エラー:', error);
+      alert('一部の削除に失敗しました');
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
   const handleCreateNew = () => {
     router.push('/attendance/new');
   };
 
   const handleEdit = (event: AttendanceEvent) => {
-    // 出欠表は編集ページがないため、新規作成ページにリダイレクト
-    // 将来的には編集機能を追加する可能性あり
     router.push('/attendance/new');
   };
 
@@ -251,13 +305,57 @@ export default function AttendanceList({ userId, isAdmin }: AttendanceListProps)
             <span className="text-xs bg-red-500 text-white px-2 py-1 rounded-full">ADMIN</span>
           )}
         </h2>
-        <button
-          onClick={handleCreateNew}
-          className="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-purple-700 flex items-center gap-2"
-        >
-          <Plus size={16} /> 新規作成
-        </button>
+        <div className="flex gap-2">
+          {events.length > 0 && (
+            <button
+              onClick={toggleSelectMode}
+              className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors ${
+                selectMode
+                  ? 'bg-indigo-100 text-indigo-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {selectMode ? <CheckSquare size={16} /> : <Square size={16} />}
+              {selectMode ? '選択中' : '選択'}
+            </button>
+          )}
+          <button
+            onClick={handleCreateNew}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-purple-700 flex items-center gap-2"
+          >
+            <Plus size={16} /> 新規作成
+          </button>
+        </div>
       </div>
+
+      {/* 選択モードのアクションバー */}
+      {selectMode && events.length > 0 && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggleSelectAll}
+              className="text-sm font-semibold text-indigo-700 hover:text-indigo-800"
+            >
+              {selectedIds.size === events.length ? '全て解除' : '全て選択'}
+            </button>
+            <span className="text-sm text-indigo-600">
+              {selectedIds.size}件選択中
+            </span>
+          </div>
+          <button
+            onClick={handleBulkDelete}
+            disabled={selectedIds.size === 0 || bulkDeleting}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {bulkDeleting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Trash2 size={14} />
+            )}
+            一括削除
+          </button>
+        </div>
+      )}
 
       {/* 出欠表一覧 */}
       {events.length === 0 ? (
@@ -276,14 +374,39 @@ export default function AttendanceList({ userId, isAdmin }: AttendanceListProps)
           {events.map((event) => (
             <div
               key={event.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+              className={`bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-shadow ${
+                selectMode && selectedIds.has(event.id)
+                  ? 'border-indigo-500 ring-2 ring-indigo-200'
+                  : 'border-gray-200'
+              }`}
             >
               {/* カードヘッダー */}
-              <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-4 h-32 flex items-end">
-                <div className="flex items-center justify-between w-full">
-                  <span className="text-xs px-2 py-1 rounded-full font-bold bg-white/20 text-white">
-                    {event.slots?.length || 0} 候補日
-                  </span>
+              <div
+                className={`bg-gradient-to-r from-purple-500 to-indigo-500 p-4 h-32 flex items-start ${
+                  selectMode ? 'cursor-pointer' : ''
+                }`}
+                onClick={selectMode ? () => toggleSelect(event.id) : undefined}
+              >
+                <div className="flex items-start justify-between w-full">
+                  {selectMode ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSelect(event.id);
+                      }}
+                      className="p-1 bg-white/90 rounded"
+                    >
+                      {selectedIds.has(event.id) ? (
+                        <CheckSquare size={20} className="text-indigo-600" />
+                      ) : (
+                        <Square size={20} className="text-gray-400" />
+                      )}
+                    </button>
+                  ) : (
+                    <span className="text-xs px-2 py-1 rounded-full font-bold bg-white/20 text-white">
+                      {event.slots?.length || 0} 候補日
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -323,105 +446,115 @@ export default function AttendanceList({ userId, isAdmin }: AttendanceListProps)
                   </div>
                 </div>
 
-                {/* 編集・複製ボタン */}
-                <div className="flex gap-2 mb-3">
-                  <button
-                    onClick={() => handleEdit(event)}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors"
-                  >
-                    <Edit size={14} /> 編集
-                  </button>
-                  <button
-                    onClick={() => handleDuplicate(event)}
-                    disabled={duplicatingId === event.id}
-                    className="flex-1 bg-purple-50 hover:bg-purple-100 text-purple-600 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
-                  >
-                    {duplicatingId === event.id ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <Copy size={14} />
-                    )}
-                    複製
-                  </button>
-                </div>
-
-                {/* 埋め込み・削除ボタン */}
-                <div className="flex gap-2 mb-3">
-                  <button
-                    className="flex-1 bg-gray-100 text-gray-400 cursor-not-allowed py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors"
-                    disabled
-                  >
-                    <Lock size={14} /> 埋め込み
-                  </button>
-                  <button
-                    onClick={() => setShowDeleteConfirm(event.id)}
-                    className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors"
-                  >
-                    <Trash2 size={14} /> 削除
-                  </button>
-                </div>
-
-                {/* プレビューボタン */}
-                <button
-                  onClick={() => window.open(`/attendance/${event.id}`, '_blank')}
-                  className="w-full bg-green-500 text-white py-2.5 rounded-lg font-bold text-xs hover:bg-green-600 flex items-center justify-center gap-1 transition-colors"
-                >
-                  <ExternalLink size={14} /> プレビュー
-                </button>
-
-                {/* 結果を見るボタン */}
-                <button
-                  onClick={() => handleViewResults(event)}
-                  disabled={loadingResults}
-                  className="w-full mt-3 bg-indigo-500 text-white py-2.5 rounded-lg font-bold text-xs hover:bg-indigo-600 flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
-                >
-                  {loadingResults && selectedEvent?.id === event.id ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <BarChart2 size={14} />
-                  )}
-                  結果を見る
-                </button>
-
-                {/* Pro機能アンロック（将来用） */}
-                <div className="mt-3 pt-3 border-t border-gray-100">
-                  <button
-                    className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-2.5 rounded-lg font-bold text-xs hover:from-orange-600 hover:to-amber-600 flex items-center justify-center gap-1 transition-all shadow-sm"
-                  >
-                    <Heart size={14} />
-                    Pro機能を開放（開発支援）
-                  </button>
-                  <p className="text-[10px] text-gray-400 text-center mt-1.5">
-                    埋め込み機能などが利用可能に
-                  </p>
-                </div>
-
-                {/* 削除確認 */}
-                {showDeleteConfirm === event.id && (
-                  <div className="mt-4 p-4 bg-red-50 rounded-xl border border-red-200">
-                    <p className="text-sm text-red-800 mb-3">
-                      「{event.title}」を削除しますか？この操作は取り消せません。
-                    </p>
-                    <div className="flex gap-2">
+                {!selectMode && (
+                  <>
+                    {/* 編集・複製ボタン */}
+                    <div className="flex gap-2 mb-3">
                       <button
-                        onClick={() => handleDelete(event.id)}
-                        disabled={deletingId === event.id}
-                        className="flex-1 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-xs disabled:opacity-50"
+                        onClick={() => handleEdit(event)}
+                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors"
                       >
-                        {deletingId === event.id ? (
-                          <Loader2 size={14} className="animate-spin mx-auto" />
-                        ) : (
-                          '削除する'
-                        )}
+                        <Edit size={14} /> 編集
                       </button>
                       <button
-                        onClick={() => setShowDeleteConfirm(null)}
-                        className="flex-1 px-4 py-2 bg-white text-gray-700 font-semibold rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-xs"
+                        onClick={() => handleDuplicate(event)}
+                        disabled={duplicatingId === event.id}
+                        className="flex-1 bg-purple-50 hover:bg-purple-100 text-purple-600 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
                       >
-                        キャンセル
+                        {duplicatingId === event.id ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Copy size={14} />
+                        )}
+                        複製
                       </button>
                     </div>
-                  </div>
+
+                    {/* 埋め込み・削除ボタン */}
+                    <div className="flex gap-2 mb-3">
+                      <button
+                        className={`flex-1 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors ${
+                          isUnlocked
+                            ? 'bg-blue-50 hover:bg-blue-100 text-blue-600'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        }`}
+                        disabled={!isUnlocked}
+                      >
+                        {isUnlocked ? <Code size={14} /> : <Lock size={14} />} 埋め込み
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(event.id)}
+                        className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors"
+                      >
+                        <Trash2 size={14} /> 削除
+                      </button>
+                    </div>
+
+                    {/* プレビューボタン */}
+                    <button
+                      onClick={() => window.open(`/attendance/${event.id}`, '_blank')}
+                      className="w-full bg-green-500 text-white py-2.5 rounded-lg font-bold text-xs hover:bg-green-600 flex items-center justify-center gap-1 transition-colors"
+                    >
+                      <ExternalLink size={14} /> プレビュー
+                    </button>
+
+                    {/* 結果を見るボタン */}
+                    <button
+                      onClick={() => handleViewResults(event)}
+                      disabled={loadingResults}
+                      className="w-full mt-3 bg-indigo-500 text-white py-2.5 rounded-lg font-bold text-xs hover:bg-indigo-600 flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
+                    >
+                      {loadingResults && selectedEvent?.id === event.id ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <BarChart2 size={14} />
+                      )}
+                      結果を見る
+                    </button>
+
+                    {/* Pro機能アンロック - 未解除時のみ表示 */}
+                    {!isUnlocked && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <button
+                          className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-2.5 rounded-lg font-bold text-xs hover:from-orange-600 hover:to-amber-600 flex items-center justify-center gap-1 transition-all shadow-sm"
+                        >
+                          <Heart size={14} />
+                          Pro機能を開放（開発支援）
+                        </button>
+                        <p className="text-[10px] text-gray-400 text-center mt-1.5">
+                          埋め込み機能などが利用可能に
+                        </p>
+                      </div>
+                    )}
+
+                    {/* 削除確認 */}
+                    {showDeleteConfirm === event.id && (
+                      <div className="mt-4 p-4 bg-red-50 rounded-xl border border-red-200">
+                        <p className="text-sm text-red-800 mb-3">
+                          「{event.title}」を削除しますか？この操作は取り消せません。
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleDelete(event.id)}
+                            disabled={deletingId === event.id}
+                            className="flex-1 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-xs disabled:opacity-50"
+                          >
+                            {deletingId === event.id ? (
+                              <Loader2 size={14} className="animate-spin mx-auto" />
+                            ) : (
+                              '削除する'
+                            )}
+                          </button>
+                          <button
+                            onClick={() => setShowDeleteConfirm(null)}
+                            className="flex-1 px-4 py-2 bg-white text-gray-700 font-semibold rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-xs"
+                          >
+                            キャンセル
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>

@@ -16,6 +16,8 @@ import {
   Code,
   Lock,
   Heart,
+  CheckSquare,
+  Square,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Survey } from '@/lib/types';
@@ -28,9 +30,10 @@ type SurveyListProps = {
   userId: string;
   isAdmin: boolean;
   userEmail?: string;
+  isUnlocked?: boolean;
 };
 
-export default function SurveyList({ userId, isAdmin, userEmail }: SurveyListProps) {
+export default function SurveyList({ userId, isAdmin, userEmail, isUnlocked = false }: SurveyListProps) {
   const router = useRouter();
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +45,11 @@ export default function SurveyList({ userId, isAdmin, userEmail }: SurveyListPro
   // 表示モード管理
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null);
+
+  // 一括選択機能
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const loadSurveys = useCallback(async () => {
     if (!supabase) {
@@ -78,7 +86,7 @@ export default function SurveyList({ userId, isAdmin, userEmail }: SurveyListPro
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleDelete = async (id: number, title: string) => {
+  const handleDelete = async (id: number) => {
     if (!supabase) return;
 
     setDeletingId(id);
@@ -125,6 +133,56 @@ export default function SurveyList({ userId, isAdmin, userEmail }: SurveyListPro
     }
   };
 
+  // 選択モード切り替え
+  const toggleSelectMode = () => {
+    setSelectMode(!selectMode);
+    setSelectedIds(new Set());
+  };
+
+  // アイテム選択/解除
+  const toggleSelect = (id: number) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  // 全選択/全解除
+  const toggleSelectAll = () => {
+    if (selectedIds.size === surveys.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(surveys.map((s) => s.id)));
+    }
+  };
+
+  // 一括削除
+  const handleBulkDelete = async () => {
+    if (!supabase || selectedIds.size === 0) return;
+    if (!confirm(`${selectedIds.size}件のアンケートを削除しますか？この操作は取り消せません。`)) return;
+
+    setBulkDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('surveys')
+        .delete()
+        .in('id', Array.from(selectedIds));
+      
+      if (error) throw error;
+      setSurveys((prev) => prev.filter((s) => !selectedIds.has(s.id)));
+      setSelectedIds(new Set());
+      setSelectMode(false);
+    } catch (error) {
+      console.error('一括削除エラー:', error);
+      alert('一括削除に失敗しました');
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
   // 新規作成（別ページに遷移）
   const handleCreateNew = () => {
     router.push('/survey/new');
@@ -145,7 +203,6 @@ export default function SurveyList({ userId, isAdmin, userEmail }: SurveyListPro
   const handleBackToList = () => {
     setViewMode('list');
     setSelectedSurvey(null);
-    // データを再読み込み
     loadSurveys();
   };
 
@@ -180,13 +237,57 @@ export default function SurveyList({ userId, isAdmin, userEmail }: SurveyListPro
             <span className="text-xs bg-red-500 text-white px-2 py-1 rounded-full">ADMIN</span>
           )}
         </h2>
-        <button
-          onClick={handleCreateNew}
-          className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-teal-700 flex items-center gap-2"
-        >
-          <Plus size={16} /> 新規作成
-        </button>
+        <div className="flex gap-2">
+          {surveys.length > 0 && (
+            <button
+              onClick={toggleSelectMode}
+              className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors ${
+                selectMode
+                  ? 'bg-indigo-100 text-indigo-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {selectMode ? <CheckSquare size={16} /> : <Square size={16} />}
+              {selectMode ? '選択中' : '選択'}
+            </button>
+          )}
+          <button
+            onClick={handleCreateNew}
+            className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-teal-700 flex items-center gap-2"
+          >
+            <Plus size={16} /> 新規作成
+          </button>
+        </div>
       </div>
+
+      {/* 選択モードのアクションバー */}
+      {selectMode && surveys.length > 0 && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggleSelectAll}
+              className="text-sm font-semibold text-indigo-700 hover:text-indigo-800"
+            >
+              {selectedIds.size === surveys.length ? '全て解除' : '全て選択'}
+            </button>
+            <span className="text-sm text-indigo-600">
+              {selectedIds.size}件選択中
+            </span>
+          </div>
+          <button
+            onClick={handleBulkDelete}
+            disabled={selectedIds.size === 0 || bulkDeleting}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {bulkDeleting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Trash2 size={14} />
+            )}
+            一括削除
+          </button>
+        </div>
+      )}
 
       {/* アンケート一覧 */}
       {surveys.length === 0 ? (
@@ -208,13 +309,38 @@ export default function SurveyList({ userId, isAdmin, userEmail }: SurveyListPro
             return (
               <div
                 key={survey.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                className={`bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-shadow ${
+                  selectMode && selectedIds.has(survey.id)
+                    ? 'border-indigo-500 ring-2 ring-indigo-200'
+                    : 'border-gray-200'
+                }`}
               >
                 {/* カードヘッダー */}
-                <div className="bg-gradient-to-r from-teal-500 to-cyan-500 p-4 h-32 flex items-start justify-between">
-                  <span className="text-xs px-2 py-1 rounded-full font-bold bg-white/20 text-white">
-                    {survey.questions?.length || 0} 問
-                  </span>
+                <div
+                  className={`bg-gradient-to-r from-teal-500 to-cyan-500 p-4 h-32 flex items-start justify-between ${
+                    selectMode ? 'cursor-pointer' : ''
+                  }`}
+                  onClick={selectMode ? () => toggleSelect(survey.id) : undefined}
+                >
+                  {selectMode ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSelect(survey.id);
+                      }}
+                      className="p-1 bg-white/90 rounded"
+                    >
+                      {selectedIds.has(survey.id) ? (
+                        <CheckSquare size={20} className="text-indigo-600" />
+                      ) : (
+                        <Square size={20} className="text-gray-400" />
+                      )}
+                    </button>
+                  ) : (
+                    <span className="text-xs px-2 py-1 rounded-full font-bold bg-white/20 text-white">
+                      {survey.questions?.length || 0} 問
+                    </span>
+                  )}
                   {isVotingMode && (
                     <span className="text-xs px-2 py-1 rounded-full font-bold bg-purple-100 text-purple-700">
                       投票モード
@@ -258,109 +384,119 @@ export default function SurveyList({ userId, isAdmin, userEmail }: SurveyListPro
                     </div>
                   </div>
 
-                  {/* 編集・複製ボタン */}
-                  <div className="flex gap-2 mb-3">
-                    <button
-                      onClick={() => handleEdit(survey)}
-                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors"
-                    >
-                      <Edit size={14} /> 編集
-                    </button>
-                    <button
-                      onClick={() => handleDuplicate(survey)}
-                      disabled={duplicatingId === survey.id}
-                      className="flex-1 bg-purple-50 hover:bg-purple-100 text-purple-600 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
-                    >
-                      {duplicatingId === survey.id ? (
-                        <Loader2 size={14} className="animate-spin" />
-                      ) : (
-                        <Copy size={14} />
-                      )}
-                      複製
-                    </button>
-                  </div>
-
-                  {/* 埋め込み・削除ボタン */}
-                  <div className="flex gap-2 mb-3">
-                    <button
-                      className="flex-1 bg-gray-100 text-gray-400 cursor-not-allowed py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors"
-                      disabled
-                    >
-                      <Lock size={14} /> 埋め込み
-                    </button>
-                    <button
-                      onClick={() => setShowDeleteConfirm(survey.id)}
-                      className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors"
-                    >
-                      <Trash2 size={14} /> 削除
-                    </button>
-                  </div>
-
-                  {/* プレビューボタン */}
-                  <button
-                    onClick={() => window.open(`/survey/${survey.slug}`, '_blank')}
-                    className="w-full bg-green-500 text-white py-2.5 rounded-lg font-bold text-xs hover:bg-green-600 flex items-center justify-center gap-1 transition-colors"
-                  >
-                    <ExternalLink size={14} /> プレビュー
-                  </button>
-
-                  {/* 結果を見るボタン - 投票モードの時のみ有効 */}
-                  <button
-                    onClick={() => handleViewResults(survey)}
-                    disabled={!isVotingMode}
-                    className={`w-full mt-3 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors ${
-                      isVotingMode
-                        ? 'bg-indigo-500 text-white hover:bg-indigo-600'
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    <BarChart2 size={14} /> 結果を見る
-                  </button>
-                  {!isVotingMode && (
-                    <p className="text-[10px] text-gray-400 text-center mt-1">
-                      投票モードがアクティブのとき確認できます
-                    </p>
-                  )}
-
-                  {/* Pro機能アンロック */}
-                  <div className="mt-3 pt-3 border-t border-gray-100">
-                    <button
-                      className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-2.5 rounded-lg font-bold text-xs hover:from-orange-600 hover:to-amber-600 flex items-center justify-center gap-1 transition-all shadow-sm"
-                    >
-                      <Heart size={14} />
-                      Pro機能を開放（開発支援）
-                    </button>
-                    <p className="text-[10px] text-gray-400 text-center mt-1.5">
-                      埋め込み機能などが利用可能に
-                    </p>
-                  </div>
-
-                  {/* 削除確認 */}
-                  {showDeleteConfirm === survey.id && (
-                    <div className="mt-4 p-4 bg-red-50 rounded-xl border border-red-200">
-                      <p className="text-sm text-red-800 mb-3">
-                        「{survey.title}」を削除しますか？この操作は取り消せません。
-                      </p>
-                      <div className="flex gap-2">
+                  {!selectMode && (
+                    <>
+                      {/* 編集・複製ボタン */}
+                      <div className="flex gap-2 mb-3">
                         <button
-                          onClick={() => handleDelete(survey.id, survey.title)}
-                          disabled={deletingId === survey.id}
-                          className="flex-1 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-xs disabled:opacity-50"
+                          onClick={() => handleEdit(survey)}
+                          className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors"
                         >
-                          {deletingId === survey.id ? (
-                            <Loader2 size={14} className="animate-spin mx-auto" />
-                          ) : (
-                            '削除する'
-                          )}
+                          <Edit size={14} /> 編集
                         </button>
                         <button
-                          onClick={() => setShowDeleteConfirm(null)}
-                          className="flex-1 px-4 py-2 bg-white text-gray-700 font-semibold rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-xs"
+                          onClick={() => handleDuplicate(survey)}
+                          disabled={duplicatingId === survey.id}
+                          className="flex-1 bg-purple-50 hover:bg-purple-100 text-purple-600 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
                         >
-                          キャンセル
+                          {duplicatingId === survey.id ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            <Copy size={14} />
+                          )}
+                          複製
                         </button>
                       </div>
-                    </div>
+
+                      {/* 埋め込み・削除ボタン */}
+                      <div className="flex gap-2 mb-3">
+                        <button
+                          className={`flex-1 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors ${
+                            isUnlocked
+                              ? 'bg-blue-50 hover:bg-blue-100 text-blue-600'
+                              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          }`}
+                          disabled={!isUnlocked}
+                        >
+                          {isUnlocked ? <Code size={14} /> : <Lock size={14} />} 埋め込み
+                        </button>
+                        <button
+                          onClick={() => setShowDeleteConfirm(survey.id)}
+                          className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors"
+                        >
+                          <Trash2 size={14} /> 削除
+                        </button>
+                      </div>
+
+                      {/* プレビューボタン */}
+                      <button
+                        onClick={() => window.open(`/survey/${survey.slug}`, '_blank')}
+                        className="w-full bg-green-500 text-white py-2.5 rounded-lg font-bold text-xs hover:bg-green-600 flex items-center justify-center gap-1 transition-colors"
+                      >
+                        <ExternalLink size={14} /> プレビュー
+                      </button>
+
+                      {/* 結果を見るボタン - 投票モードの時のみ有効 */}
+                      <button
+                        onClick={() => handleViewResults(survey)}
+                        disabled={!isVotingMode}
+                        className={`w-full mt-3 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors ${
+                          isVotingMode
+                            ? 'bg-indigo-500 text-white hover:bg-indigo-600'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        <BarChart2 size={14} /> 結果を見る
+                      </button>
+                      {!isVotingMode && (
+                        <p className="text-[10px] text-gray-400 text-center mt-1">
+                          投票モードがアクティブのとき確認できます
+                        </p>
+                      )}
+
+                      {/* Pro機能アンロック - 未解除時のみ表示 */}
+                      {!isUnlocked && (
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          <button
+                            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-2.5 rounded-lg font-bold text-xs hover:from-orange-600 hover:to-amber-600 flex items-center justify-center gap-1 transition-all shadow-sm"
+                          >
+                            <Heart size={14} />
+                            Pro機能を開放（開発支援）
+                          </button>
+                          <p className="text-[10px] text-gray-400 text-center mt-1.5">
+                            埋め込み機能などが利用可能に
+                          </p>
+                        </div>
+                      )}
+
+                      {/* 削除確認 */}
+                      {showDeleteConfirm === survey.id && (
+                        <div className="mt-4 p-4 bg-red-50 rounded-xl border border-red-200">
+                          <p className="text-sm text-red-800 mb-3">
+                            「{survey.title}」を削除しますか？この操作は取り消せません。
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleDelete(survey.id)}
+                              disabled={deletingId === survey.id}
+                              className="flex-1 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-xs disabled:opacity-50"
+                            >
+                              {deletingId === survey.id ? (
+                                <Loader2 size={14} className="animate-spin mx-auto" />
+                              ) : (
+                                '削除する'
+                              )}
+                            </button>
+                            <button
+                              onClick={() => setShowDeleteConfirm(null)}
+                              className="flex-1 px-4 py-2 bg-white text-gray-700 font-semibold rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-xs"
+                            >
+                              キャンセル
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

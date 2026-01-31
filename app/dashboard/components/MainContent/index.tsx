@@ -131,6 +131,9 @@ export default function MainContent({
 }: MainContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Pro機能のアンロック判定（有料会員、モニター、パートナー、管理者）
+  const isUnlocked = isAdmin || isPartner || kdlSubscription?.hasActiveSubscription || false;
+
   // activeViewが変更されたときにスクロール位置を最上部にリセット
   useEffect(() => {
     if (contentRef.current) {
@@ -197,17 +200,17 @@ export default function MainContent({
 
       {/* 予約メーカー */}
       {activeView === 'booking' && user && (
-        <BookingList userId={user.id} isAdmin={isAdmin} />
+        <BookingList userId={user.id} isAdmin={isAdmin} isUnlocked={isUnlocked} />
       )}
 
       {/* 出欠メーカー */}
       {activeView === 'attendance' && user && (
-        <AttendanceList userId={user.id} isAdmin={isAdmin} />
+        <AttendanceList userId={user.id} isAdmin={isAdmin} isUnlocked={isUnlocked} />
       )}
 
       {/* アンケートメーカー */}
       {activeView === 'survey' && user && (
-        <SurveyList userId={user.id} isAdmin={isAdmin} userEmail={user.email} />
+        <SurveyList userId={user.id} isAdmin={isAdmin} userEmail={user.email} isUnlocked={isUnlocked} />
       )}
 
       {/* ゲーム作成（全ユーザー） */}
@@ -215,6 +218,7 @@ export default function MainContent({
         <MyGamification 
           userId={user.id} 
           planTier={userSubscription?.planTier || 'none'} 
+          isUnlocked={isUnlocked}
         />
       )}
 
