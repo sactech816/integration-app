@@ -61,7 +61,7 @@ function getSupabaseServer() {
 const FROM_EMAIL = 'Makers Support <support@makers.tokyo>';
 
 /**
- * 日時フォーマット
+ * 日時フォーマット（日本時間）
  */
 function formatDateTime(dateStr: string) {
   const date = new Date(dateStr);
@@ -72,6 +72,7 @@ function formatDateTime(dateStr: string) {
     weekday: 'short',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'Asia/Tokyo',
   });
 }
 
@@ -144,6 +145,7 @@ async function sendBookingNotificationEmail(
     const endTime = new Date(slot.end_time).toLocaleTimeString('ja-JP', {
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'Asia/Tokyo',
     });
 
     console.log('[Booking Email] Sending emails to:', { customerEmail, ownerEmail });

@@ -16,7 +16,7 @@ function getSupabase() {
   });
 }
 
-// 日時フォーマット
+// 日時フォーマット（日本時間）
 const formatDateTime = (dateStr: string) => {
   const date = new Date(dateStr);
   return date.toLocaleDateString('ja-JP', {
@@ -26,6 +26,7 @@ const formatDateTime = (dateStr: string) => {
     weekday: 'short',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'Asia/Tokyo',
   });
 };
 
@@ -102,6 +103,7 @@ export async function POST(request: Request) {
     const endTime = new Date(slot.end_time).toLocaleTimeString('ja-JP', {
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'Asia/Tokyo',
     });
 
     const emailPromises = [];

@@ -13,7 +13,7 @@ const getSupabaseClient = () => {
   return createClient(supabaseUrl, supabaseServiceKey);
 };
 
-// 日時フォーマット
+// 日時フォーマット（日本時間）
 const formatDateTime = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('ja-JP', {
     year: 'numeric',
@@ -21,6 +21,7 @@ const formatDateTime = (dateStr: string) => {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'Asia/Tokyo',
   });
 };
 

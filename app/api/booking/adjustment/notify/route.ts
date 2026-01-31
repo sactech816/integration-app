@@ -16,7 +16,7 @@ function getSupabase() {
   });
 }
 
-// 日時フォーマット
+// 日時フォーマット（日本時間）
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr);
   return date.toLocaleDateString('ja-JP', {
@@ -24,6 +24,7 @@ const formatDate = (dateStr: string) => {
     month: 'long',
     day: 'numeric',
     weekday: 'short',
+    timeZone: 'Asia/Tokyo',
   });
 };
 
@@ -31,6 +32,7 @@ const formatTime = (dateStr: string) => {
   return new Date(dateStr).toLocaleTimeString('ja-JP', {
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'Asia/Tokyo',
   });
 };
 
