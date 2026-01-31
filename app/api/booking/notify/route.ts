@@ -94,12 +94,23 @@ export async function POST(request: Request) {
     let customerEmail = booking.guest_email;
     let registeredEmail: string | null = null; // ログインユーザーの登録メール（表示用）
 
+    // デバッグログ: 予約データの内容を確認
+    console.log('[Booking Notify] Booking data:', {
+      id: booking.id,
+      guest_name: booking.guest_name,
+      guest_email: booking.guest_email,
+      customer_id: booking.customer_id,
+      cancel_token: booking.cancel_token,
+    });
+
     // ログインユーザーの場合、メールアドレスを取得
     if (booking.customer_id) {
       const { data: customerData } = await supabase.auth.admin.getUserById(booking.customer_id);
       customerEmail = customerData?.user?.email;
       registeredEmail = customerEmail || null; // ログインユーザーの登録メールを保持
     }
+
+    console.log('[Booking Notify] Customer info:', { customerName, customerEmail, registeredEmail });
 
     const startTime = formatDateTime(slot.start_time);
     const endTime = new Date(slot.end_time).toLocaleTimeString('ja-JP', {
@@ -113,6 +124,8 @@ export async function POST(request: Request) {
     const cancelUrl = booking.cancel_token 
       ? `${baseUrl}/booking/cancel?token=${booking.cancel_token}`
       : null;
+    
+    console.log('[Booking Notify] Cancel URL:', cancelUrl);
 
     const emailPromises = [];
 
