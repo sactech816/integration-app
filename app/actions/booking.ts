@@ -162,56 +162,76 @@ export async function sendBookingNotificationEmail(
     // 予約者へのメール
     if (customerEmail) {
       const customerHtml = `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #3b82f6, #6366f1); padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">予約${type === 'cancel' ? 'キャンセル' : '完了'}のお知らせ</h1>
+        <div style="font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+          <div style="background: #3b82f6; padding: 24px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 20px; font-weight: bold;">予約${type === 'cancel' ? 'キャンセル' : '完了'}のお知らせ</h1>
           </div>
-          <div style="padding: 30px; background: #f9fafb;">
-            <p style="font-size: 16px; color: #374151;">
-              ${customerName}様<br><br>
+          
+          <div style="padding: 24px;">
+            <p style="font-size: 15px; color: #333333; margin: 0 0 20px 0; line-height: 1.6;">
+              ${customerName} 様<br><br>
               ${type === 'cancel' 
                 ? 'ご予約がキャンセルされました。' 
-                : 'ご予約ありがとうございます。以下の内容で予約を承りました。'}
+                : 'ご予約ありがとうございます。<br>以下の内容で予約を承りました。'}
             </p>
+            
             ${registeredEmail ? `
-              <p style="font-size: 14px; color: #6b7280; margin: 10px 0;">
-                <strong>📧 ご登録メール:</strong> ${registeredEmail}
+              <p style="font-size: 14px; color: #666666; margin: 0 0 16px 0;">
+                ■ ご登録メール: ${registeredEmail}
               </p>
             ` : ''}
-            <div style="background: white; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
-              <h2 style="color: #1f2937; font-size: 18px; margin-top: 0;">${menu.title}</h2>
-              ${menu.description ? `<p style="color: #6b7280; margin: 10px 0;">${menu.description}</p>` : ''}
-              ${menu.contact_method ? `<p style="color: #374151; margin: 10px 0;"><strong>📍 コンタクト方法:</strong> ${menu.contact_method}</p>` : ''}
-              <div style="border-top: 1px solid #e5e7eb; margin-top: 15px; padding-top: 15px;">
-                <p style="margin: 8px 0; color: #374151;"><strong>📅 日時:</strong> ${startTime} 〜 ${endTime}</p>
-                <p style="margin: 8px 0; color: #374151;"><strong>⏱ 所要時間:</strong> ${menu.duration_min}分</p>
-                ${booking.guest_comment ? `<p style="margin: 8px 0; color: #374151;"><strong>💬 コメント:</strong> ${booking.guest_comment}</p>` : ''}
-              </div>
+            
+            <div style="background: #f8f9fa; border-left: 4px solid #3b82f6; padding: 16px; margin: 20px 0;">
+              <p style="font-size: 16px; font-weight: bold; color: #333333; margin: 0 0 12px 0;">${menu.title}</p>
+              ${menu.description ? `<p style="color: #666666; margin: 0 0 12px 0; font-size: 14px; white-space: pre-wrap;">${menu.description}</p>` : ''}
             </div>
+            
+            <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+              <tr>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #666666; font-size: 14px; width: 120px;">■ 日時</td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #333333; font-size: 14px;">${startTime} 〜 ${endTime}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #666666; font-size: 14px;">■ 所要時間</td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #333333; font-size: 14px;">${menu.duration_min}分</td>
+              </tr>
+              ${menu.contact_method ? `
+              <tr>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #666666; font-size: 14px; vertical-align: top;">■ コンタクト方法</td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #333333; font-size: 14px; white-space: pre-wrap;">${menu.contact_method}</td>
+              </tr>
+              ` : ''}
+              ${booking.guest_comment ? `
+              <tr>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #666666; font-size: 14px; vertical-align: top;">■ コメント</td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #333333; font-size: 14px; white-space: pre-wrap;">${booking.guest_comment}</td>
+              </tr>
+              ` : ''}
+            </table>
+            
             ${type !== 'cancel' && cancelUrl ? `
-              <div style="background: #fef2f2; border-radius: 12px; padding: 16px; margin: 20px 0; border: 1px solid #fecaca;">
-                <p style="font-size: 14px; color: #991b1b; margin: 0 0 10px 0;">
-                  <strong>予約のキャンセル</strong>
+              <div style="background: #fff5f5; border: 1px solid #fed7d7; padding: 16px; margin: 20px 0;">
+                <p style="font-size: 14px; color: #c53030; margin: 0 0 8px 0; font-weight: bold;">
+                  ▼ 予約のキャンセル
                 </p>
-                <p style="font-size: 13px; color: #7f1d1d; margin: 0 0 8px 0;">
+                <p style="font-size: 13px; color: #742a2a; margin: 0 0 8px 0;">
                   ご都合が悪くなった場合は、以下のリンクからキャンセルできます。
                 </p>
                 <p style="font-size: 12px; margin: 0; word-break: break-all;">
-                  <a href="${cancelUrl}" style="color: #dc2626;">${cancelUrl}</a>
+                  <a href="${cancelUrl}" style="color: #c53030;">${cancelUrl}</a>
                 </p>
               </div>
             ` : ''}
-            <p style="font-size: 14px; color: #6b7280;">ご不明な点がございましたら、お気軽にお問い合わせください。</p>
+            
+            <p style="font-size: 13px; color: #666666; margin: 20px 0 0 0;">
+              ご不明な点がございましたら、お気軽にお問い合わせください。
+            </p>
           </div>
-          <div style="background: #1f2937; padding: 20px; text-align: center;">
-            <p style="color: #9ca3af; font-size: 12px; margin: 0 0 10px 0;">このメールは、予約メーカーから自動送信されています。</p>
-            <p style="color: #9ca3af; font-size: 11px; margin: 0;">-----</p>
-            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">集客に役立つツールが無料で使えるポータルサイト</p>
-            <p style="margin: 5px 0;"><a href="https://makers.tokyo/tools" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/tools</a></p>
-            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">開発支援のお願い</p>
-            <p style="margin: 5px 0;"><a href="https://makers.tokyo/donation" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/donation</a></p>
-            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">@2026 集客メーカー</p>
-            <p style="margin: 5px 0;"><a href="https://makers.tokyo/" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/</a></p>
+          
+          <div style="background: #333333; padding: 20px; text-align: center;">
+            <p style="color: #999999; font-size: 11px; margin: 0 0 8px 0;">このメールは予約メーカーから自動送信されています</p>
+            <p style="color: #666666; font-size: 10px; margin: 8px 0;">―――</p>
+            <p style="color: #999999; font-size: 10px; margin: 4px 0;">集客メーカー <a href="https://makers.tokyo/" style="color: #60a5fa;">https://makers.tokyo/</a></p>
           </div>
         </div>
       `;
@@ -229,48 +249,71 @@ export async function sendBookingNotificationEmail(
     // 管理者へのメール
     if (ownerEmail) {
       const ownerHtml = `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">新規予約${type === 'cancel' ? 'キャンセル' : ''}のお知らせ</h1>
+        <div style="font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+          <div style="background: #10b981; padding: 24px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 20px; font-weight: bold;">新規予約${type === 'cancel' ? 'キャンセル' : ''}のお知らせ</h1>
           </div>
-          <div style="padding: 30px; background: #f9fafb;">
-            <p style="font-size: 16px; color: #374151;">
+          
+          <div style="padding: 24px;">
+            <p style="font-size: 15px; color: #333333; margin: 0 0 20px 0; line-height: 1.6;">
               ${type === 'cancel' ? '以下の予約がキャンセルされました。' : '新しい予約が入りました。'}
             </p>
-            <div style="background: white; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
-              <h2 style="color: #1f2937; font-size: 18px; margin-top: 0;">${menu.title}</h2>
-              ${menu.description ? `<p style="color: #6b7280; margin: 10px 0;">${menu.description}</p>` : ''}
-              ${menu.contact_method ? `<p style="color: #374151; margin: 10px 0;"><strong>📍 コンタクト方法:</strong> ${menu.contact_method}</p>` : ''}
-              <div style="border-top: 1px solid #e5e7eb; margin-top: 15px; padding-top: 15px;">
-                <p style="margin: 8px 0; color: #374151;"><strong>👤 予約者:</strong> ${customerName || '(名前なし)'}</p>
-                <p style="margin: 8px 0; color: #374151;"><strong>📧 メール:</strong> ${customerEmail || '(メールなし)'}</p>
-                <p style="margin: 8px 0; color: #374151;"><strong>📅 日時:</strong> ${startTime} 〜 ${endTime}</p>
-                ${booking.guest_comment ? `<p style="margin: 8px 0; color: #374151;"><strong>💬 コメント:</strong> ${booking.guest_comment}</p>` : ''}
-              </div>
+            
+            <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 16px; margin: 20px 0;">
+              <p style="font-size: 16px; font-weight: bold; color: #333333; margin: 0 0 8px 0;">${menu.title}</p>
+              ${menu.description ? `<p style="color: #666666; margin: 0; font-size: 14px; white-space: pre-wrap;">${menu.description}</p>` : ''}
             </div>
+            
+            <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+              <tr>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #666666; font-size: 14px; width: 120px;">■ 予約者</td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #333333; font-size: 14px; font-weight: bold;">${customerName || '(名前なし)'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #666666; font-size: 14px;">■ メール</td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #333333; font-size: 14px;">${customerEmail || '(メールなし)'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #666666; font-size: 14px;">■ 日時</td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #333333; font-size: 14px;">${startTime} 〜 ${endTime}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #666666; font-size: 14px;">■ 所要時間</td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #333333; font-size: 14px;">${menu.duration_min}分</td>
+              </tr>
+              ${menu.contact_method ? `
+              <tr>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #666666; font-size: 14px; vertical-align: top;">■ コンタクト方法</td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #333333; font-size: 14px; white-space: pre-wrap;">${menu.contact_method}</td>
+              </tr>
+              ` : ''}
+              ${booking.guest_comment ? `
+              <tr>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #666666; font-size: 14px; vertical-align: top;">■ コメント</td>
+                <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #333333; font-size: 14px; white-space: pre-wrap;">${booking.guest_comment}</td>
+              </tr>
+              ` : ''}
+            </table>
+            
             ${type !== 'cancel' && cancelUrl ? `
-              <div style="background: #fef2f2; border-radius: 12px; padding: 16px; margin: 20px 0; border: 1px solid #fecaca;">
-                <p style="font-size: 14px; color: #991b1b; margin: 0 0 10px 0;">
-                  <strong>予約のキャンセル（管理者用）</strong>
+              <div style="background: #fff5f5; border: 1px solid #fed7d7; padding: 16px; margin: 20px 0;">
+                <p style="font-size: 14px; color: #c53030; margin: 0 0 8px 0; font-weight: bold;">
+                  ▼ 予約のキャンセル（管理者用）
                 </p>
-                <p style="font-size: 13px; color: #7f1d1d; margin: 0 0 8px 0;">
+                <p style="font-size: 13px; color: #742a2a; margin: 0 0 8px 0;">
                   この予約をキャンセルする場合は、以下のリンクを使用してください。
                 </p>
                 <p style="font-size: 12px; margin: 0; word-break: break-all;">
-                  <a href="${cancelUrl}" style="color: #dc2626;">${cancelUrl}</a>
+                  <a href="${cancelUrl}" style="color: #c53030;">${cancelUrl}</a>
                 </p>
               </div>
             ` : ''}
           </div>
-          <div style="background: #1f2937; padding: 20px; text-align: center;">
-            <p style="color: #9ca3af; font-size: 12px; margin: 0 0 10px 0;">このメールは、予約メーカーから自動送信されています。</p>
-            <p style="color: #9ca3af; font-size: 11px; margin: 0;">-----</p>
-            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">集客に役立つツールが無料で使えるポータルサイト</p>
-            <p style="margin: 5px 0;"><a href="https://makers.tokyo/tools" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/tools</a></p>
-            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">開発支援のお願い</p>
-            <p style="margin: 5px 0;"><a href="https://makers.tokyo/donation" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/donation</a></p>
-            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">@2026 集客メーカー</p>
-            <p style="margin: 5px 0;"><a href="https://makers.tokyo/" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/</a></p>
+          
+          <div style="background: #333333; padding: 20px; text-align: center;">
+            <p style="color: #999999; font-size: 11px; margin: 0 0 8px 0;">このメールは予約メーカーから自動送信されています</p>
+            <p style="color: #666666; font-size: 10px; margin: 8px 0;">―――</p>
+            <p style="color: #999999; font-size: 10px; margin: 4px 0;">集客メーカー <a href="https://makers.tokyo/" style="color: #60a5fa;">https://makers.tokyo/</a></p>
           </div>
         </div>
       `;

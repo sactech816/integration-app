@@ -525,12 +525,12 @@ export default function BookingEditor({
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       コンタクト方法（任意）
                     </label>
-                    <input
-                      type="text"
+                    <textarea
                       value={formData.contact_method || ''}
                       onChange={(e) => setFormData({ ...formData, contact_method: e.target.value })}
                       placeholder="ZOOM・GoogleMeet／場所・会場など"
-                      className={`w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all text-gray-900 placeholder:text-gray-400 ${
+                      rows={3}
+                      className={`w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all resize-none text-gray-900 placeholder:text-gray-400 ${
                         formData.type === 'adjustment' ? 'focus:ring-purple-500' : 'focus:ring-blue-500'
                       }`}
                     />
