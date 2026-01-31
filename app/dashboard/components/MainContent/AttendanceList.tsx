@@ -79,7 +79,7 @@ export default function AttendanceList({ userId, isAdmin }: AttendanceListProps)
       if (result.success) {
         setEvents((prev) => prev.filter((e) => e.id !== eventId));
       } else {
-        alert(result.error || '削除に失敗しました');
+        alert('error' in result ? result.error : '削除に失敗しました');
       }
     } catch (error) {
       console.error('削除エラー:', error);
