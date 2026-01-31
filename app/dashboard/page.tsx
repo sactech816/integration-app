@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { ServiceType } from '@/lib/types';
@@ -144,13 +144,22 @@ function DashboardContent() {
 
   // 集客メーカーProプランかどうか（アナリティクス表示の条件）
   const hasMakersProAccess = userSubscription?.planTier === 'pro';
+  
+  // アナリティクス取得権限の判定
+  const shouldFetchAnalytics = isAdmin || isPartner || hasMakersProAccess;
+  
+  // 前回のloadingUserSubscription状態を追跡（サブスクロード完了時の再取得判定用）
+  const prevLoadingUserSubscriptionRef = useRef(loadingUserSubscription);
 
-  // 初期データ取得（並列化で高速化）
+  // 初期データ取得（サービス切り替え時も実行）
   useEffect(() => {
     if (user) {
-      // 並列でデータ取得（初回はアナリティクスなしで高速取得）
+      // サブスク情報が確定している場合は権限に応じてアナリティクスを取得
+      // まだロード中の場合はアナリティクスをスキップして高速表示
+      const skipAnalytics = loadingUserSubscription ? true : !shouldFetchAnalytics;
+      
       Promise.all([
-        fetchContents(selectedService, { skipAnalytics: true }),
+        fetchContents(selectedService, { skipAnalytics }),
         fetchPurchases(),
         fetchAllContentCounts(),
         fetchKdlSubscription(),
@@ -159,15 +168,16 @@ function DashboardContent() {
     }
   }, [user, selectedService]);
 
-  // 集客メーカーProプランユーザーのみアナリティクス込みで再取得
+  // サブスク情報ロード完了後、権限がある場合のみアナリティクス込みで再取得
   useEffect(() => {
-    if (user && !loadingUserSubscription) {
-      const shouldFetchAnalytics = isAdmin || isPartner || hasMakersProAccess;
-      if (shouldFetchAnalytics) {
-        fetchContents(selectedService, { skipAnalytics: false });
-      }
+    // loadingUserSubscriptionがtrue→falseに変わった時のみ実行
+    const wasLoading = prevLoadingUserSubscriptionRef.current;
+    prevLoadingUserSubscriptionRef.current = loadingUserSubscription;
+    
+    if (user && wasLoading && !loadingUserSubscription && shouldFetchAnalytics) {
+      fetchContents(selectedService, { skipAnalytics: false });
     }
-  }, [loadingUserSubscription, hasMakersProAccess, isAdmin, isPartner]);
+  }, [loadingUserSubscription, shouldFetchAnalytics, user, selectedService, fetchContents]);
   
   // ユーザーサブスクリプション状態を取得（集客メーカーのProプラン判定用）
   const fetchUserSubscription = async () => {

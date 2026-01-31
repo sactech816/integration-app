@@ -1,0 +1,77 @@
+---
+alwaysApply: true
+---
+
+# Project Rules
+
+## Tech Stack & Environment
+- Framework: Next.js (App Router), React
+- Language: TypeScript (.ts, .tsx)
+- Database: Supabase (PostgreSQL)
+- Style: Tailwind CSS
+- Shell: Windows PowerShell (Use `;` for chain, avoid Linux commands like `export`, `rm -rf`)
+
+## AI Behavior & Cost Saving
+- **No New Docs:** 新機能のために新しいMarkdownファイル(.md)を作成しないでください。計画はチャット内で行ってください。
+- **Code Focused:** 日本語の長文解説よりも、実際のコード変更を優先して提示してください。
+- **Existing Files:** 既存の `PROJECT_ARCHITECTURE_GUIDE.md` は、アーキテクチャに大きな変更がある場合のみ更新してください。
+
+## Error Prevention
+- **Type Safety:** コード変更時は必ず型チェックを意識し、`any`型を避けてください。
+- **Build Verification:** 提案するコードは、ビルドが通る整合性の取れたものであることを確認してください。
+- **PowerShell:** コマンド提案時はPowerShell構文を使用してください。
+
+## Communication
+- すべて日本語で応答してください。
+- コード内のコメントも日本語で記述してください。
+
+## Self-Improvement & Rule Maintenance
+- **Propose Updates:** エラー修正やトラブルシューティングが完了した後、もしその原因が「コンテキスト不足」や「曖昧な指示」にあった場合、今後同じミスを防ぐためにこの `.cursorrules` に追記すべきルールを提案してください。
+- **Format:** 提案がある場合は、回答の最後に「【.cursorrulesへの追加提案】」として別枠で表示してください。
+
+## Verification Strategy
+- **Routine Check:** 通常のコード修正後は `npm run build` を実行せず、`npx tsc --noEmit` で型整合性のみを確認してください。
+- **Pre-Push Check:** 大きなタスクの完了時や、Gitへプッシュする直前のみ、`npm run build` を実行してVercelデプロイ時の失敗を防いでください。
+
+## Error Handling & Debugging
+- **Read Terminal:** ビルドエラーや実行時エラーが発生した場合、ユーザーからのコピペを待たずに、自動的にターミナルの出力を分析して修正案を提示してください。
+- **Root Cause:** エラー修正時は、単にエラーを消すだけでなく「なぜそのエラーが起きたか」の根本原因を日本語で簡潔に説明してください。
+
+## UI Guidelines: Form & Legibility Fixes
+
+**既存のデザインバランスは維持しつつ、「入力フォーム」と「小さな補足テキスト」の視認性のルールを考慮ください。**
+
+1.  **入力フォーム (Input, Textarea, Select) のルール:**
+    * ユーザーが入力する値（Value）は、**必ず `text-gray-900` (ほぼ黒)** を指定する。
+    * プレースホルダーのみ `placeholder-gray-500` を使用する。
+    * **Bad:** `<input className="text-gray-500 ...">`
+    * **Good:** `<input className="text-gray-900 placeholder-gray-400 ...">`
+
+## SEO & AI Optimization (GEO)
+- **Content Pages (Public):**
+  - 公開ページ（`/app/(public)`など）を作成・修正する際は、必ず `export const metadata` を定義してください。
+  - **Structured Data:** AI検索（Perplexity, SearchGPT等）での認識率を高めるため、重要なページには `JSON-LD` (Schema.org) を実装してください。
+  - **Semantic HTML:** `div` だけでなく `<article>`, `<section>`, `<h1>`~`<h6>` を適切に使用し、文書構造を明確にしてください。
+- **Admin Pages (Private):**
+  - 管理画面やログイン必須ページには、必ず `robots: { index: false, follow: false }` をメタデータに設定し、インデックスを拒否してください。
+
+## Database & RLS (Supabase)
+- **RLS First:** テーブル作成・修正時は、セットで必ず **RLS (Row Level Security) ポリシー** も提示してください。「テーブルだけ作ってポリシーがない」状態は禁止です。
+- **Policy Check:** RLSポリシーを提案する際は、`auth.uid()` を適切に使っているか、無限再帰（infinite recursion）が起きないロジックになっているかを確認してください。
+- **SQL Placement:** 生成したSQLはチャットのみで終わらせず、必ず `supabase/` フォルダ内の適切な `.sql` ファイルに保存・追記するよう提案してください。
+
+## Impact Analysis & Safety
+- **Isolated Changes:** 特定のページ内（`page.tsx` やそのページ専用コンポーネント）だけの変更であれば、事前確認なしで積極的にコードを書き換えて構いません。
+- **High Impact Risks:** 共通コンポーネント（`/components/ui/`）、共通ユーティリティ、グローバルな型定義を変更する場合は、**「他の機能への影響」**をまず分析してください。影響が出そうな場合は、コードを書く前に変更案を提案してください。
+
+## Code Maintenance & Refactoring Guidelines
+
+**修正を行う際は、デグレードの危険性がある場合は必ず追加提案をする**
+
+1.  **省略の禁止 (No Lazy Truncation):**
+    * コード全体を出力する際、`// ... existing code` や `// ... rest of the component` のように既存コードを省略してはならない。
+    * 省略されると、前回までの修正が失われる原因となるため、必ず全文を出力するか、変更部分のみを正確に提示する。
+
+2.  **修正の検証 (Verify Changes):**
+    * コードを提示する前に、「この修正によって、既存の機能 A や B が動かなくならないか？」を自問する。
+    * 以前の修正（特にスタイリングやバリデーション）が上書きされていないか確認する。

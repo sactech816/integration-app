@@ -3,31 +3,34 @@
 -- =============================================
 
 -- テーブル作成
+-- 注意: カラム名は歴史的経緯により profile_id だが、全コンテンツタイプのIDを格納する汎用カラム
 CREATE TABLE IF NOT EXISTS analytics (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  content_id TEXT NOT NULL,
-  content_type TEXT NOT NULL CHECK (content_type IN ('quiz', 'profile', 'business')),
+  profile_id TEXT NOT NULL,  -- コンテンツID（プロフィール/ビジネス/クイズ等のID）
+  content_type TEXT NOT NULL CHECK (content_type IN ('quiz', 'profile', 'business', 'salesletter', 'survey', 'gamification', 'attendance', 'booking')),
   event_type TEXT NOT NULL CHECK (event_type IN ('view', 'click', 'scroll', 'time', 'read', 'completion')),
   event_data JSONB DEFAULT '{}'::JSONB,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- インデックス作成
-CREATE INDEX IF NOT EXISTS idx_analytics_content_id ON analytics(content_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_profile_id ON analytics(profile_id);
 CREATE INDEX IF NOT EXISTS idx_analytics_content_type ON analytics(content_type);
 CREATE INDEX IF NOT EXISTS idx_analytics_event_type ON analytics(event_type);
 CREATE INDEX IF NOT EXISTS idx_analytics_created_at ON analytics(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_analytics_content_id_type ON analytics(content_id, content_type);
+CREATE INDEX IF NOT EXISTS idx_analytics_profile_id_type ON analytics(profile_id, content_type);
 
 -- RLSを有効化
 ALTER TABLE analytics ENABLE ROW LEVEL SECURITY;
 
--- ポリシー: 誰でも読み取り可能
+-- ポリシー: 誰でも読み取り可能（既存のポリシーがあれば削除して再作成）
+DROP POLICY IF EXISTS "Anyone can read analytics" ON analytics;
 CREATE POLICY "Anyone can read analytics" ON analytics
   FOR SELECT
   USING (true);
 
 -- ポリシー: 誰でも挿入可能（匿名トラッキングのため）
+DROP POLICY IF EXISTS "Anyone can insert analytics" ON analytics;
 CREATE POLICY "Anyone can insert analytics" ON analytics
   FOR INSERT
   WITH CHECK (true);
@@ -95,12 +98,14 @@ CREATE INDEX IF NOT EXISTS idx_leads_created_at ON leads(created_at DESC);
 ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
 
 -- ポリシー: 誰でも挿入可能（公開フォーム用）
+DROP POLICY IF EXISTS "Anyone can insert leads" ON leads;
 CREATE POLICY "Anyone can insert leads" ON leads
   FOR INSERT
   WITH CHECK (true);
 
 -- ポリシー: 認証済みユーザーは自分のコンテンツのリードを読み取り可能
 -- ※実際の実装ではユーザーIDとコンテンツの関連を確認する必要があります
+DROP POLICY IF EXISTS "Authenticated users can read their leads" ON leads;
 CREATE POLICY "Authenticated users can read their leads" ON leads
   FOR SELECT
   USING (auth.role() = 'authenticated');
@@ -131,11 +136,13 @@ CREATE INDEX IF NOT EXISTS idx_purchases_created_at ON purchases(created_at DESC
 ALTER TABLE purchases ENABLE ROW LEVEL SECURITY;
 
 -- ポリシー: ユーザーは自分の購入履歴のみ読み取り可能
+DROP POLICY IF EXISTS "Users can read own purchases" ON purchases;
 CREATE POLICY "Users can read own purchases" ON purchases
   FOR SELECT
   USING (auth.uid() = user_id);
 
 -- ポリシー: サービスロールのみ挿入可能
+DROP POLICY IF EXISTS "Service role can insert purchases" ON purchases;
 CREATE POLICY "Service role can insert purchases" ON purchases
   FOR INSERT
   WITH CHECK (true);
