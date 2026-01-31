@@ -144,13 +144,6 @@ export async function sendBookingNotificationEmail(
       registeredEmail = customerEmail || null; // ログインユーザーの登録メールを保持
     }
 
-    // デバッグログ
-    console.log('[Booking Email] Booking data:', {
-      id: booking.id,
-      guest_name: booking.guest_name,
-      cancel_token: booking.cancel_token,
-    });
-
     const startTime = formatDateTime(slot.start_time);
     const endTime = new Date(slot.end_time).toLocaleTimeString('ja-JP', {
       hour: '2-digit',
@@ -163,8 +156,6 @@ export async function sendBookingNotificationEmail(
     const cancelUrl = booking.cancel_token 
       ? `${baseUrl}/booking/cancel?token=${booking.cancel_token}`
       : null;
-
-    console.log('[Booking Email] Sending emails to:', { customerEmail, ownerEmail, customerName, cancelUrl });
 
     const emailPromises = [];
 
@@ -202,14 +193,11 @@ export async function sendBookingNotificationEmail(
                 <p style="font-size: 14px; color: #991b1b; margin: 0 0 10px 0;">
                   <strong>予約のキャンセル</strong>
                 </p>
-                <p style="font-size: 13px; color: #7f1d1d; margin: 0 0 12px 0;">
+                <p style="font-size: 13px; color: #7f1d1d; margin: 0 0 8px 0;">
                   ご都合が悪くなった場合は、以下のリンクからキャンセルできます。
                 </p>
-                <a href="${cancelUrl}" style="display: inline-block; background: #dc2626; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">
-                  予約をキャンセル
-                </a>
-                <p style="font-size: 11px; color: #9ca3af; margin: 12px 0 0 0; word-break: break-all;">
-                  キャンセルURL: <a href="${cancelUrl}" style="color: #6b7280;">${cancelUrl}</a>
+                <p style="font-size: 12px; margin: 0; word-break: break-all;">
+                  <a href="${cancelUrl}" style="color: #dc2626;">${cancelUrl}</a>
                 </p>
               </div>
             ` : ''}
@@ -260,6 +248,19 @@ export async function sendBookingNotificationEmail(
                 ${booking.guest_comment ? `<p style="margin: 8px 0; color: #374151;"><strong>💬 コメント:</strong> ${booking.guest_comment}</p>` : ''}
               </div>
             </div>
+            ${type !== 'cancel' && cancelUrl ? `
+              <div style="background: #fef2f2; border-radius: 12px; padding: 16px; margin: 20px 0; border: 1px solid #fecaca;">
+                <p style="font-size: 14px; color: #991b1b; margin: 0 0 10px 0;">
+                  <strong>予約のキャンセル（管理者用）</strong>
+                </p>
+                <p style="font-size: 13px; color: #7f1d1d; margin: 0 0 8px 0;">
+                  この予約をキャンセルする場合は、以下のリンクを使用してください。
+                </p>
+                <p style="font-size: 12px; margin: 0; word-break: break-all;">
+                  <a href="${cancelUrl}" style="color: #dc2626;">${cancelUrl}</a>
+                </p>
+              </div>
+            ` : ''}
           </div>
           <div style="background: #1f2937; padding: 20px; text-align: center;">
             <p style="color: #9ca3af; font-size: 12px; margin: 0 0 10px 0;">このメールは、予約メーカーから自動送信されています。</p>
