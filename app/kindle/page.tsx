@@ -17,9 +17,10 @@ import { getAdminEmails } from '@/lib/constants';
 // 管理者機能コンポーネント
 import AdminAISettings from '@/components/shared/AdminAISettings';
 import MonitorUsersManager from '@/components/shared/MonitorUsersManager';
-import { AdminUserList, AdminSystemSettings } from '@/components/kindle/admin';
+import { AdminUserList, GuideBookManager, AnnouncementManager, KdlServiceManagement } from '@/components/kindle/admin';
 import { EducationContent } from '@/components/kindle/education';
 import { AnnouncementList } from '@/components/kindle/announcements';
+import AffiliateManager from '@/app/dashboard/components/Admin/AffiliateManager';
 
 interface Book {
   id: string;
@@ -374,11 +375,8 @@ function KindleListPageContent() {
         // 現在のページで書籍一覧にスクロール
         document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' });
         break;
-      case 'guide':
-        router.push('/kindle/guide');
-        break;
-      case 'education':
-        // 教育コンテンツ画面を表示
+      case 'guidebook':
+        // ガイドブック（旧：教育コンテンツ）画面を表示
         break;
       case 'publish-guide':
         // 右側コンテンツエリアに出版準備ガイドを表示（別ページに遷移しない）
@@ -394,10 +392,12 @@ function KindleListPageContent() {
         alert('代理店機能は準備中です');
         break;
       case 'admin-users':
-      case 'admin-agencies':
-      case 'admin-subscriptions':
-      case 'admin-ai-settings':
-      case 'admin-system':
+      case 'admin-announcements':
+      case 'admin-guidebook':
+      case 'admin-monitors':
+      case 'admin-service':
+      case 'admin-ai-model':
+      case 'admin-affiliate':
         // 管理者機能: setActiveMenuItemで画面切り替え（すでに上で設定済み）
         break;
       case 'settings':
@@ -585,8 +585,8 @@ function KindleListPageContent() {
       {/* 出版準備ガイド表示（サイドバーから選択時） */}
       {activeMenuItem === 'publish-guide' ? (
         <PublishGuideContent />
-      ) : activeMenuItem === 'admin-ai-settings' && user && isAdmin ? (
-        /* AI設定画面（管理者のみ） */
+      ) : activeMenuItem === 'admin-ai-model' && user && isAdmin ? (
+        /* AIモデル設定画面（管理者のみ） */
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <button
@@ -598,14 +598,25 @@ function KindleListPageContent() {
           </div>
           <AdminAISettings userId={user.id} />
         </div>
-      ) : activeMenuItem === 'admin-subscriptions' && user && isAdmin ? (
-        /* サブスクリプション・モニター管理・AI設定画面（管理者のみ） */
-        <SubscriptionManagementView 
-          user={user} 
-          onBack={() => setActiveMenuItem('dashboard')} 
-        />
+      ) : activeMenuItem === 'admin-monitors' && user && isAdmin ? (
+        /* モニター管理画面（管理者のみ） */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('dashboard')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <MonitorUsersManager 
+            adminUserId={user.id} 
+            adminEmail={user.email}
+            defaultService="kdl"
+          />
+        </div>
       ) : activeMenuItem === 'admin-users' && user && isAdmin && accessToken ? (
-        /* 全ユーザー管理画面（管理者のみ） */
+        /* ユーザー管理画面（管理者のみ） */
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <button
@@ -617,8 +628,8 @@ function KindleListPageContent() {
           </div>
           <AdminUserList userId={user.id} accessToken={accessToken} />
         </div>
-      ) : activeMenuItem === 'admin-system' && user && isAdmin && accessToken ? (
-        /* システム設定画面（管理者のみ） */
+      ) : activeMenuItem === 'admin-announcements' && user && isAdmin && accessToken ? (
+        /* お知らせ管理画面（管理者のみ） */
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <button
@@ -628,10 +639,10 @@ function KindleListPageContent() {
               ← ダッシュボードに戻る
             </button>
           </div>
-          <AdminSystemSettings userId={user.id} accessToken={accessToken} />
+          <AnnouncementManager userId={user.id} accessToken={accessToken} />
         </div>
-      ) : activeMenuItem === 'admin-agencies' && user && isAdmin ? (
-        /* 代理店管理画面（管理者のみ） - 後回し */
+      ) : activeMenuItem === 'admin-guidebook' && user && isAdmin && accessToken ? (
+        /* ガイドブック管理画面（管理者のみ） */
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <button
@@ -641,14 +652,36 @@ function KindleListPageContent() {
               ← ダッシュボードに戻る
             </button>
           </div>
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <User className="mx-auto text-gray-400 mb-4" size={48} />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">代理店管理</h2>
-            <p className="text-gray-500">代理店機能は後日実装予定です</p>
-          </div>
+          <GuideBookManager userId={user.id} accessToken={accessToken} />
         </div>
-      ) : activeMenuItem === 'education' ? (
-        /* 教育コンテンツ画面 */
+      ) : activeMenuItem === 'admin-service' && user && isAdmin && accessToken ? (
+        /* サービス管理画面（管理者のみ） */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('dashboard')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <KdlServiceManagement userId={user.id} accessToken={accessToken} />
+        </div>
+      ) : activeMenuItem === 'admin-affiliate' && user && isAdmin ? (
+        /* アフィリエイト管理画面（管理者のみ） */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('dashboard')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <AffiliateManager user={user} />
+        </div>
+      ) : activeMenuItem === 'guidebook' ? (
+        /* ガイドブック画面（旧：教育コンテンツ） */
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <button
@@ -1124,66 +1157,6 @@ function KindleListPageContent() {
         </div>
       )}
     </KdlDashboardLayout>
-  );
-}
-
-// サブスクリプション管理ビュー（タブ形式）
-interface SubscriptionManagementViewProps {
-  user: { id: string; email?: string };
-  onBack: () => void;
-}
-
-function SubscriptionManagementView({ user, onBack }: SubscriptionManagementViewProps) {
-  const [activeTab, setActiveTab] = useState<'monitor' | 'ai-settings'>('monitor');
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          onClick={onBack}
-          className="text-gray-500 hover:text-gray-700"
-        >
-          ← ダッシュボードに戻る
-        </button>
-      </div>
-
-      {/* タブ切り替え */}
-      <div className="flex gap-2 border-b border-gray-200 pb-2">
-        <button
-          onClick={() => setActiveTab('monitor')}
-          className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
-            activeTab === 'monitor'
-              ? 'bg-purple-100 text-purple-700 border-b-2 border-purple-600'
-              : 'text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          <Users size={18} className="inline mr-2" />
-          モニター管理
-        </button>
-        <button
-          onClick={() => setActiveTab('ai-settings')}
-          className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
-            activeTab === 'ai-settings'
-              ? 'bg-purple-100 text-purple-700 border-b-2 border-purple-600'
-              : 'text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          <Sparkles size={18} className="inline mr-2" />
-          AIモデル設定
-        </button>
-      </div>
-
-      {/* タブコンテンツ */}
-      {activeTab === 'monitor' ? (
-        <MonitorUsersManager 
-          adminUserId={user.id} 
-          adminEmail={user.email}
-          defaultService="kdl"
-        />
-      ) : (
-        <AdminAISettings userId={user.id} />
-      )}
-    </div>
   );
 }
 
