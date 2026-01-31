@@ -7,6 +7,7 @@ import { ServiceType, Quiz, Profile, BusinessLP, SalesLetter, Block } from '@/li
 import { generateSlug } from '@/lib/utils';
 import { getMultipleAnalytics } from '@/app/actions/analytics';
 import { getUserPurchases, checkIsPartner } from '@/app/actions/purchases';
+import { fetchSubscriptionStatus, SubscriptionStatus } from '@/lib/subscription';
 import { ContentItem } from '../components/MainContent/ContentCard';
 
 type AnalyticsData = {
@@ -91,9 +92,11 @@ export function useDashboardData(): UseDashboardDataReturn {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isPartner, setIsPartner] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   
   // パートナーステータスのキャッシュ（重複取得防止）
   const partnerCheckedRef = useRef(false);
+  const subscriptionCheckedRef = useRef(false);
 
   // 管理者判定
   const adminEmails = getAdminEmails();
@@ -110,10 +113,12 @@ export function useDashboardData(): UseDashboardDataReturn {
       if (supabase) {
         supabase.auth.onAuthStateChange((event, session) => {
           setUser(session?.user || null);
-          // ユーザーが変わったらパートナーステータスをリセット
+          // ユーザーが変わったらステータスをリセット
           if (!session?.user) {
             partnerCheckedRef.current = false;
             setIsPartner(false);
+            subscriptionCheckedRef.current = false;
+            setSubscriptionStatus(null);
           }
         });
 
@@ -143,6 +148,23 @@ export function useDashboardData(): UseDashboardDataReturn {
     };
     
     fetchPartnerStatus();
+  }, [user]);
+
+  // サブスクリプション状態を一度だけ取得
+  useEffect(() => {
+    const loadSubscriptionStatus = async () => {
+      if (!user || subscriptionCheckedRef.current) return;
+      subscriptionCheckedRef.current = true;
+      
+      try {
+        const status = await fetchSubscriptionStatus(user.id);
+        setSubscriptionStatus(status);
+      } catch (error) {
+        console.error('Subscription status check error:', error);
+      }
+    };
+    
+    loadSubscriptionStatus();
   }, [user]);
 
   // コンテンツ取得（アナリティクス取得はオプション）
@@ -312,7 +334,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     [user, isAdmin]
   );
 
-  // Pro機能のアクセス権を確認（最適化版：パートナーステータスはキャッシュ使用）
+  // Pro機能のアクセス権を確認（最適化版：パートナーステータス、サブスク状態はキャッシュ使用）
   const fetchProAccessForContents = useCallback(
     async (contentItems: ContentItem[]) => {
       if (!user) return;
@@ -322,6 +344,17 @@ export function useDashboardData(): UseDashboardDataReturn {
         const accessMap: Record<string, { hasAccess: boolean; reason?: string }> = {};
         contentItems.forEach((item) => {
           accessMap[item.id] = { hasAccess: true, reason: 'admin' };
+        });
+        setProAccessMap(accessMap);
+        return;
+      }
+
+      // プロプラン加入者（課金ユーザー・モニターユーザー含む）は全コンテンツにアクセス可能
+      if (subscriptionStatus?.hasActiveSubscription) {
+        const accessMap: Record<string, { hasAccess: boolean; reason?: string }> = {};
+        const reason = subscriptionStatus.isMonitor ? 'monitor' : 'subscription';
+        contentItems.forEach((item) => {
+          accessMap[item.id] = { hasAccess: true, reason };
         });
         setProAccessMap(accessMap);
         return;
@@ -350,7 +383,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
       setProAccessMap(accessMap);
     },
-    [user, isAdmin, isPartner, purchases]
+    [user, isAdmin, isPartner, purchases, subscriptionStatus]
   );
 
   // 購入履歴を取得

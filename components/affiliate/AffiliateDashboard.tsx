@@ -241,7 +241,7 @@ export default function AffiliateDashboard({ userId, userEmail }: Props) {
         </div>
         <div>
           <p className="font-bold text-gray-900 text-sm">アフィリエイト</p>
-          <p className="text-xs text-gray-500">報酬率 {affiliateInfo.commission_rate}%</p>
+          <p className="text-xs text-gray-500">報酬率はサービスごとに設定</p>
         </div>
       </div>
 

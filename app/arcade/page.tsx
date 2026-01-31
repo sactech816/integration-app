@@ -174,8 +174,8 @@ export default function ArcadePage() {
   useEffect(() => {
     async function loadData() {
       try {
-        // ポイント残高を取得
-        const balance = await getPointBalance();
+        // ポイント残高を取得（ユーザーIDがある場合は渡す）
+        const balance = await getPointBalance(user?.id);
         setCurrentPoints(balance?.current_points || 0);
 
         // 利用可能なサンプルキャンペーンを確認
@@ -199,7 +199,7 @@ export default function ArcadePage() {
     }
 
     loadData();
-  }, []);
+  }, [user]);
 
   const handleLogout = async () => {
     if (!supabase) return;
@@ -426,7 +426,11 @@ export default function ArcadePage() {
       {user && (
         <WelcomeBonus 
           userId={user.id} 
-          onPointsEarned={(points) => setCurrentPoints(prev => prev + points)}
+          onPointsEarned={async () => {
+            // ポイント獲得後、DBから最新の残高を再取得
+            const balance = await getPointBalance(user.id);
+            if (balance) setCurrentPoints(balance.current_points);
+          }}
         />
       )}
     </div>

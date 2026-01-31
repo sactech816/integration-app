@@ -8,7 +8,7 @@ import {
   getUserGamificationSettings,
   updateUserNotificationSettings 
 } from '@/app/actions/gamification';
-import { Gift, X, Sparkles, Settings } from 'lucide-react';
+import { Gift, X, Sparkles, Settings, Gamepad2 } from 'lucide-react';
 import Link from 'next/link';
 
 interface LoginBonusToastProps {
@@ -184,6 +184,15 @@ export default function LoginBonusToast({ userId, onPointsEarned }: LoginBonusTo
           <p className="text-xs opacity-75 mt-0.5">毎日ログインでポイントGET!</p>
         </div>
       </div>
+
+      {/* アーケードへのジャンプボタン */}
+      <Link
+        href="/arcade"
+        className="w-full bg-white/20 hover:bg-white/30 text-white font-bold py-2.5 px-4 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors mb-3"
+      >
+        <Gamepad2 className="w-4 h-4" />
+        ゲームで遊ぶ
+      </Link>
 
       {/* 今後表示しないチェックボックス */}
       {userId && (

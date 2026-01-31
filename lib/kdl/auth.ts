@@ -84,7 +84,7 @@ export async function hasKdlAccess(
       .select('monitor_plan_type')
       .eq('user_id', userId)
       .lte('monitor_start_at', now)
-      .gte('monitor_expires_at', now)
+      .gt('monitor_expires_at', now)
       .single();
     
     if (monitor) {
@@ -129,7 +129,7 @@ export async function getKdlPlanTier(
       .select('monitor_plan_type')
       .eq('user_id', userId)
       .lte('monitor_start_at', now)
-      .gte('monitor_expires_at', now)
+      .gt('monitor_expires_at', now)
       .single();
     
     if (monitor?.monitor_plan_type) {
