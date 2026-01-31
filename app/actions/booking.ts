@@ -78,8 +78,9 @@ function formatDateTime(dateStr: string) {
 
 /**
  * 予約完了メールを直接送信
+ * APIエンドポイントからも呼び出せるようにエクスポート
  */
-async function sendBookingNotificationEmail(
+export async function sendBookingNotificationEmail(
   bookingId: string,
   type: 'confirm' | 'cancel' = 'confirm'
 ): Promise<void> {
@@ -130,16 +131,25 @@ async function sendBookingNotificationEmail(
       ownerEmail = ownerData?.user?.email || null;
     }
 
-    // 予約者のメールアドレス
+    // 予約者の情報
+    // 入力された名前を優先、なければ「お客様」
+    const customerName = booking.guest_name || 'お客様';
     let customerEmail = booking.guest_email;
-    let customerName = booking.guest_name;
+    let registeredEmail: string | null = null; // ログインユーザーの登録メール（表示用）
 
-    // ログインユーザーの場合
+    // ログインユーザーの場合、メールアドレスを取得
     if (booking.customer_id) {
       const { data: customerData } = await supabase.auth.admin.getUserById(booking.customer_id);
       customerEmail = customerData?.user?.email;
-      customerName = customerData?.user?.user_metadata?.name || customerEmail?.split('@')[0] || 'お客様';
+      registeredEmail = customerEmail || null; // ログインユーザーの登録メールを保持
     }
+
+    // デバッグログ
+    console.log('[Booking Email] Booking data:', {
+      id: booking.id,
+      guest_name: booking.guest_name,
+      cancel_token: booking.cancel_token,
+    });
 
     const startTime = formatDateTime(slot.start_time);
     const endTime = new Date(slot.end_time).toLocaleTimeString('ja-JP', {
@@ -148,7 +158,13 @@ async function sendBookingNotificationEmail(
       timeZone: 'Asia/Tokyo',
     });
 
-    console.log('[Booking Email] Sending emails to:', { customerEmail, ownerEmail });
+    // キャンセルリンクを生成
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://makers.tokyo';
+    const cancelUrl = booking.cancel_token 
+      ? `${baseUrl}/booking/cancel?token=${booking.cancel_token}`
+      : null;
+
+    console.log('[Booking Email] Sending emails to:', { customerEmail, ownerEmail, customerName, cancelUrl });
 
     const emailPromises = [];
 
@@ -166,6 +182,11 @@ async function sendBookingNotificationEmail(
                 ? 'ご予約がキャンセルされました。' 
                 : 'ご予約ありがとうございます。以下の内容で予約を承りました。'}
             </p>
+            ${registeredEmail ? `
+              <p style="font-size: 14px; color: #6b7280; margin: 10px 0;">
+                <strong>📧 ご登録メール:</strong> ${registeredEmail}
+              </p>
+            ` : ''}
             <div style="background: white; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
               <h2 style="color: #1f2937; font-size: 18px; margin-top: 0;">${menu.title}</h2>
               ${menu.description ? `<p style="color: #6b7280; margin: 10px 0;">${menu.description}</p>` : ''}
@@ -176,6 +197,22 @@ async function sendBookingNotificationEmail(
                 ${booking.guest_comment ? `<p style="margin: 8px 0; color: #374151;"><strong>💬 コメント:</strong> ${booking.guest_comment}</p>` : ''}
               </div>
             </div>
+            ${type !== 'cancel' && cancelUrl ? `
+              <div style="background: #fef2f2; border-radius: 12px; padding: 16px; margin: 20px 0; border: 1px solid #fecaca;">
+                <p style="font-size: 14px; color: #991b1b; margin: 0 0 10px 0;">
+                  <strong>予約のキャンセル</strong>
+                </p>
+                <p style="font-size: 13px; color: #7f1d1d; margin: 0 0 12px 0;">
+                  ご都合が悪くなった場合は、以下のリンクからキャンセルできます。
+                </p>
+                <a href="${cancelUrl}" style="display: inline-block; background: #dc2626; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">
+                  予約をキャンセル
+                </a>
+                <p style="font-size: 11px; color: #9ca3af; margin: 12px 0 0 0; word-break: break-all;">
+                  キャンセルURL: <a href="${cancelUrl}" style="color: #6b7280;">${cancelUrl}</a>
+                </p>
+              </div>
+            ` : ''}
             <p style="font-size: 14px; color: #6b7280;">ご不明な点がございましたら、お気軽にお問い合わせください。</p>
           </div>
           <div style="background: #1f2937; padding: 20px; text-align: center;">
