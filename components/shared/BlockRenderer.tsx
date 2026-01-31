@@ -196,19 +196,31 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
     case 'links':
       return (
         <div className="space-y-3 mb-4">
-          {block.data.links.map((link, i) => (
-            <a
-              key={i}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => handleLinkClick(link.url)}
-              className="flex items-center justify-between w-full px-6 py-4 bg-white/90 backdrop-blur rounded-xl font-medium text-gray-900 hover:bg-white hover:scale-[1.02] transition-all shadow-sm"
-            >
-              <span>{link.label}</span>
-              <ExternalLink size={18} className="text-gray-400" />
-            </a>
-          ))}
+          {block.data.links.map((link, i) => {
+            const styleClasses: Record<string, string> = {
+              '': 'bg-white/90 text-gray-900 hover:bg-white',
+              'orange': 'bg-orange-500 text-white hover:bg-orange-600',
+              'blue': 'bg-blue-500 text-white hover:bg-blue-600',
+              'green': 'bg-green-500 text-white hover:bg-green-600',
+              'purple': 'bg-purple-500 text-white hover:bg-purple-600',
+              'line': 'bg-[#06C755] text-white hover:bg-[#05B34C]',
+            };
+            const styleClass = styleClasses[link.style || ''] || styleClasses[''];
+            
+            return (
+              <a
+                key={i}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => handleLinkClick(link.url)}
+                className={`flex items-center justify-between w-full px-6 py-4 backdrop-blur rounded-xl font-medium hover:scale-[1.02] transition-all shadow-sm ${styleClass}`}
+              >
+                <span>{link.label}</span>
+                <ExternalLink size={18} className={link.style ? 'text-white/70' : 'text-gray-400'} />
+              </a>
+            );
+          })}
         </div>
       );
 
