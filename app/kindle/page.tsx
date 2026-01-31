@@ -82,6 +82,7 @@ function KindleListPageContent() {
     planType: 'monthly' | 'yearly' | 'none';
     planTier?: 'none' | 'lite' | 'standard' | 'pro' | 'business' | 'enterprise';
     isMonitor?: boolean;
+    monitorExpiresAt?: string;
   } | null>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
   const [showBanner, setShowBanner] = useState(true);
@@ -166,6 +167,7 @@ function KindleListPageContent() {
               planType: data.planType,
               planTier: data.planTier,
               isMonitor: data.isMonitor,
+              monitorExpiresAt: data.monitorExpiresAt,
             });
           }
         }
