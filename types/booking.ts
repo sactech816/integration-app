@@ -21,6 +21,7 @@ export interface BookingMenu {
   edit_key?: string | null;
   title: string;
   description?: string | null;
+  contact_method?: string | null;
   duration_min: number;
   type: BookingMenuType;
   is_active: boolean;
@@ -32,6 +33,7 @@ export interface BookingMenu {
 export interface CreateBookingMenuInput {
   title: string;
   description?: string;
+  contact_method?: string;
   duration_min?: number;
   type?: BookingMenuType;
   is_active?: boolean;
@@ -42,6 +44,7 @@ export interface CreateBookingMenuInput {
 export interface UpdateBookingMenuInput {
   title?: string;
   description?: string;
+  contact_method?: string;
   duration_min?: number;
   type?: BookingMenuType;
   is_active?: boolean;

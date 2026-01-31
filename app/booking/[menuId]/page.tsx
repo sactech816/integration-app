@@ -227,7 +227,7 @@ export default function PublicBookingPage() {
       const result = await submitBooking(
         {
           slot_id: selectedSlot.id,
-          guest_name: user ? undefined : guestName,
+          guest_name: guestName, // 常に名前を送信
           guest_email: user ? undefined : guestEmail,
           guest_comment: guestComment || undefined,
         },
@@ -702,6 +702,23 @@ export default function PublicBookingPage() {
                 </div>
               </div>
             )}
+            {/* 説明・コンタクト方法 */}
+            {(menu?.description || menu?.contact_method) && (
+              <div className="bg-blue-50 rounded-xl p-4 mb-6 text-left max-w-md mx-auto">
+                {menu?.description && (
+                  <div className="mb-3">
+                    <p className="text-xs font-semibold text-gray-500 mb-1">説明</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{menu.description}</p>
+                  </div>
+                )}
+                {menu?.contact_method && (
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 mb-1">コンタクト方法</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{menu.contact_method}</p>
+                  </div>
+                )}
+              </div>
+            )}
             <div>
               <Link
                 href="/"
@@ -738,48 +755,47 @@ export default function PublicBookingPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {user ? (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+              {user && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
                   <div className="flex items-center gap-2 text-green-700">
                     <Check size={18} />
                     <span className="font-semibold">ログイン中: {user.email}</span>
                   </div>
-                  <p className="text-sm text-green-600 mt-1">
-                    ログイン情報で予約します
-                  </p>
                 </div>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <User size={16} className="inline mr-1" />
-                      お名前 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={guestName}
-                      onChange={(e) => setGuestName(e.target.value)}
-                      placeholder="山田 太郎"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder:text-gray-400"
-                      required
-                    />
-                  </div>
+              )}
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <Mail size={16} className="inline mr-1" />
-                      メールアドレス <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      value={guestEmail}
-                      onChange={(e) => setGuestEmail(e.target.value)}
-                      placeholder="example@email.com"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder:text-gray-400"
-                      required
-                    />
-                  </div>
-                </>
+              {/* 名前入力（ログイン・非ログイン共通） */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <User size={16} className="inline mr-1" />
+                  名前<span className="text-red-500 font-bold">（必須）</span>
+                </label>
+                <input
+                  type="text"
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  placeholder="山田 太郎"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder:text-gray-400"
+                  required
+                />
+              </div>
+
+              {/* メールアドレス（非ログイン時のみ） */}
+              {!user && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <Mail size={16} className="inline mr-1" />
+                    メールアドレス<span className="text-red-500 font-bold">（必須）</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    placeholder="example@email.com"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder:text-gray-400"
+                    required
+                  />
+                </div>
               )}
 
               <div>
@@ -805,7 +821,7 @@ export default function PublicBookingPage() {
 
               <button
                 type="submit"
-                disabled={submitting || (!user && (!guestName.trim() || !guestEmail.trim()))}
+                disabled={submitting || !guestName.trim() || (!user && !guestEmail.trim())}
                 className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {submitting ? (

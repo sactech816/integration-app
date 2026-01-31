@@ -127,6 +127,7 @@ export async function POST(request: Request) {
             <div style="background: white; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
               <h2 style="color: #1f2937; font-size: 18px; margin-top: 0;">${menu.title}</h2>
               ${menu.description ? `<p style="color: #6b7280; margin: 10px 0;">${menu.description}</p>` : ''}
+              ${menu.contact_method ? `<p style="color: #374151; margin: 10px 0;"><strong>📍 コンタクト方法:</strong> ${menu.contact_method}</p>` : ''}
               
               <div style="border-top: 1px solid #e5e7eb; margin-top: 15px; padding-top: 15px;">
                 <p style="margin: 8px 0; color: #374151;">
@@ -149,9 +150,14 @@ export async function POST(request: Request) {
           </div>
           
           <div style="background: #1f2937; padding: 20px; text-align: center;">
-            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-              このメールは予約システムから自動送信されています。
-            </p>
+            <p style="color: #9ca3af; font-size: 12px; margin: 0 0 10px 0;">このメールは、予約メーカーから自動送信されています。</p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 0;">-----</p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">集客に役立つツールが無料で使えるポータルサイト</p>
+            <p style="margin: 5px 0;"><a href="https://makers.tokyo/tools" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/tools</a></p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">開発支援のお願い</p>
+            <p style="margin: 5px 0;"><a href="https://makers.tokyo/donation" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/donation</a></p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">@2026 集客メーカー</p>
+            <p style="margin: 5px 0;"><a href="https://makers.tokyo/" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/</a></p>
           </div>
         </div>
       `;
@@ -183,6 +189,8 @@ export async function POST(request: Request) {
             
             <div style="background: white; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
               <h2 style="color: #1f2937; font-size: 18px; margin-top: 0;">${menu.title}</h2>
+              ${menu.description ? `<p style="color: #6b7280; margin: 10px 0;">${menu.description}</p>` : ''}
+              ${menu.contact_method ? `<p style="color: #374151; margin: 10px 0;"><strong>📍 コンタクト方法:</strong> ${menu.contact_method}</p>` : ''}
               
               <div style="border-top: 1px solid #e5e7eb; margin-top: 15px; padding-top: 15px;">
                 <p style="margin: 8px 0; color: #374151;">
@@ -204,9 +212,14 @@ export async function POST(request: Request) {
           </div>
           
           <div style="background: #1f2937; padding: 20px; text-align: center;">
-            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-              このメールは予約システムから自動送信されています。
-            </p>
+            <p style="color: #9ca3af; font-size: 12px; margin: 0 0 10px 0;">このメールは、予約メーカーから自動送信されています。</p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 0;">-----</p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">集客に役立つツールが無料で使えるポータルサイト</p>
+            <p style="margin: 5px 0;"><a href="https://makers.tokyo/tools" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/tools</a></p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">開発支援のお願い</p>
+            <p style="margin: 5px 0;"><a href="https://makers.tokyo/donation" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/donation</a></p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">@2026 集客メーカー</p>
+            <p style="margin: 5px 0;"><a href="https://makers.tokyo/" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/</a></p>
           </div>
         </div>
       `;

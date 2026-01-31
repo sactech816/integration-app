@@ -64,6 +64,7 @@ export default function BookingEditor({
   const [formData, setFormData] = useState<CreateBookingMenuInput>({
     title: '',
     description: '',
+    contact_method: '',
     duration_min: 60,
     type: 'reservation',
     is_active: true,
@@ -100,6 +101,7 @@ export default function BookingEditor({
       setFormData({
         title: existingMenu.title,
         description: existingMenu.description || '',
+        contact_method: existingMenu.contact_method || '',
         duration_min: existingMenu.duration_min,
         type: existingMenu.type,
         is_active: existingMenu.is_active,
@@ -245,6 +247,7 @@ export default function BookingEditor({
         {
           title: formData.title,
           description: formData.description,
+          contact_method: formData.contact_method,
           duration_min: formData.duration_min,
           type: formData.type,
           is_active: formData.is_active,
@@ -489,7 +492,7 @@ export default function BookingEditor({
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      タイトル <span className="text-red-500">*</span>
+                      タイトル<span className="text-red-500 font-bold">（必須）</span>
                     </label>
                     <input
                       type="text"
@@ -516,6 +519,24 @@ export default function BookingEditor({
                         formData.type === 'adjustment' ? 'focus:ring-purple-500' : 'focus:ring-blue-500'
                       }`}
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      コンタクト方法（任意）
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.contact_method || ''}
+                      onChange={(e) => setFormData({ ...formData, contact_method: e.target.value })}
+                      placeholder="ZOOM・GoogleMeet／場所・会場など"
+                      className={`w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all text-gray-900 placeholder:text-gray-400 ${
+                        formData.type === 'adjustment' ? 'focus:ring-purple-500' : 'focus:ring-blue-500'
+                      }`}
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      予約完了時に表示されます
+                    </p>
                   </div>
 
                   <div>

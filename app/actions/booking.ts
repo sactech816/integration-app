@@ -169,6 +169,7 @@ async function sendBookingNotificationEmail(
             <div style="background: white; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
               <h2 style="color: #1f2937; font-size: 18px; margin-top: 0;">${menu.title}</h2>
               ${menu.description ? `<p style="color: #6b7280; margin: 10px 0;">${menu.description}</p>` : ''}
+              ${menu.contact_method ? `<p style="color: #374151; margin: 10px 0;"><strong>📍 コンタクト方法:</strong> ${menu.contact_method}</p>` : ''}
               <div style="border-top: 1px solid #e5e7eb; margin-top: 15px; padding-top: 15px;">
                 <p style="margin: 8px 0; color: #374151;"><strong>📅 日時:</strong> ${startTime} 〜 ${endTime}</p>
                 <p style="margin: 8px 0; color: #374151;"><strong>⏱ 所要時間:</strong> ${menu.duration_min}分</p>
@@ -178,7 +179,14 @@ async function sendBookingNotificationEmail(
             <p style="font-size: 14px; color: #6b7280;">ご不明な点がございましたら、お気軽にお問い合わせください。</p>
           </div>
           <div style="background: #1f2937; padding: 20px; text-align: center;">
-            <p style="color: #9ca3af; font-size: 12px; margin: 0;">このメールは予約システムから自動送信されています。</p>
+            <p style="color: #9ca3af; font-size: 12px; margin: 0 0 10px 0;">このメールは、予約メーカーから自動送信されています。</p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 0;">-----</p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">集客に役立つツールが無料で使えるポータルサイト</p>
+            <p style="margin: 5px 0;"><a href="https://makers.tokyo/tools" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/tools</a></p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">開発支援のお願い</p>
+            <p style="margin: 5px 0;"><a href="https://makers.tokyo/donation" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/donation</a></p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">@2026 集客メーカー</p>
+            <p style="margin: 5px 0;"><a href="https://makers.tokyo/" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/</a></p>
           </div>
         </div>
       `;
@@ -206,6 +214,8 @@ async function sendBookingNotificationEmail(
             </p>
             <div style="background: white; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
               <h2 style="color: #1f2937; font-size: 18px; margin-top: 0;">${menu.title}</h2>
+              ${menu.description ? `<p style="color: #6b7280; margin: 10px 0;">${menu.description}</p>` : ''}
+              ${menu.contact_method ? `<p style="color: #374151; margin: 10px 0;"><strong>📍 コンタクト方法:</strong> ${menu.contact_method}</p>` : ''}
               <div style="border-top: 1px solid #e5e7eb; margin-top: 15px; padding-top: 15px;">
                 <p style="margin: 8px 0; color: #374151;"><strong>👤 予約者:</strong> ${customerName || '(名前なし)'}</p>
                 <p style="margin: 8px 0; color: #374151;"><strong>📧 メール:</strong> ${customerEmail || '(メールなし)'}</p>
@@ -215,7 +225,14 @@ async function sendBookingNotificationEmail(
             </div>
           </div>
           <div style="background: #1f2937; padding: 20px; text-align: center;">
-            <p style="color: #9ca3af; font-size: 12px; margin: 0;">このメールは予約システムから自動送信されています。</p>
+            <p style="color: #9ca3af; font-size: 12px; margin: 0 0 10px 0;">このメールは、予約メーカーから自動送信されています。</p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 0;">-----</p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">集客に役立つツールが無料で使えるポータルサイト</p>
+            <p style="margin: 5px 0;"><a href="https://makers.tokyo/tools" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/tools</a></p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">開発支援のお願い</p>
+            <p style="margin: 5px 0;"><a href="https://makers.tokyo/donation" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/donation</a></p>
+            <p style="color: #9ca3af; font-size: 11px; margin: 10px 0 5px 0;">@2026 集客メーカー</p>
+            <p style="margin: 5px 0;"><a href="https://makers.tokyo/" style="color: #60a5fa; font-size: 11px;">https://makers.tokyo/</a></p>
           </div>
         </div>
       `;
@@ -275,6 +292,7 @@ export async function createBookingMenu(
       user_id: userId || null,
       title: input.title.trim(),
       description: input.description?.trim() || null,
+      contact_method: input.contact_method?.trim() || null,
       duration_min: input.duration_min ?? DEFAULT_DURATION_MIN,
       type: input.type ?? 'reservation',
       is_active: input.is_active ?? true,
@@ -380,6 +398,7 @@ export async function duplicateBookingMenu(
       user_id: userId,
       title: `${originalMenu.title} のコピー`,
       description: originalMenu.description,
+      contact_method: originalMenu.contact_method,
       duration_min: originalMenu.duration_min,
       type: originalMenu.type,
       is_active: false, // 複製時は非公開
@@ -564,6 +583,7 @@ export async function updateBookingMenu(
   const updateData: Record<string, unknown> = {};
   if (input.title !== undefined) updateData.title = input.title.trim();
   if (input.description !== undefined) updateData.description = input.description?.trim() || null;
+  if (input.contact_method !== undefined) updateData.contact_method = input.contact_method?.trim() || null;
   if (input.duration_min !== undefined) updateData.duration_min = input.duration_min;
   if (input.type !== undefined) updateData.type = input.type;
   if (input.is_active !== undefined) updateData.is_active = input.is_active;
