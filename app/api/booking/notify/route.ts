@@ -89,23 +89,16 @@ export async function POST(request: Request) {
     }
 
     // 予約者の情報
-    // guest_nameを優先（ユーザーが予約時に入力した名前）
+    // 入力された名前を優先、なければ「お客様」
+    const customerName = booking.guest_name || 'お客様';
     let customerEmail = booking.guest_email;
-    let customerName = booking.guest_name;
+    let registeredEmail: string | null = null; // ログインユーザーの登録メール（表示用）
 
     // ログインユーザーの場合、メールアドレスを取得
     if (booking.customer_id) {
       const { data: customerData } = await supabase.auth.admin.getUserById(booking.customer_id);
       customerEmail = customerData?.user?.email;
-      // guest_nameがない場合のみフォールバック
-      if (!customerName) {
-        customerName = customerData?.user?.user_metadata?.name || customerEmail?.split('@')[0] || 'お客様';
-      }
-    }
-    
-    // 名前がない場合のデフォルト
-    if (!customerName) {
-      customerName = 'お客様';
+      registeredEmail = customerEmail || null; // ログインユーザーの登録メールを保持
     }
 
     const startTime = formatDateTime(slot.start_time);
@@ -138,6 +131,11 @@ export async function POST(request: Request) {
                 ? 'ご予約がキャンセルされました。' 
                 : 'ご予約ありがとうございます。以下の内容で予約を承りました。'}
             </p>
+            ${registeredEmail ? `
+              <p style="font-size: 14px; color: #6b7280; margin: 10px 0;">
+                <strong>📧 ご登録メール:</strong> ${registeredEmail}
+              </p>
+            ` : ''}
             
             <div style="background: white; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
               <h2 style="color: #1f2937; font-size: 18px; margin-top: 0;">${menu.title}</h2>
@@ -170,6 +168,9 @@ export async function POST(request: Request) {
                 <a href="${cancelUrl}" style="display: inline-block; background: #dc2626; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">
                   予約をキャンセル
                 </a>
+                <p style="font-size: 11px; color: #9ca3af; margin: 12px 0 0 0; word-break: break-all;">
+                  キャンセルURL: <a href="${cancelUrl}" style="color: #6b7280;">${cancelUrl}</a>
+                </p>
               </div>
             ` : ''}
             
