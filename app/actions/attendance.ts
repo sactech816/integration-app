@@ -386,30 +386,50 @@ export async function getAllAttendanceEvents(): Promise<AttendanceEvent[]> {
 // -------------------------------------------
 export async function deleteAttendanceEvent(
   eventId: string,
-  userId: string
+  userId: string,
+  isAdmin?: boolean
 ): Promise<AttendanceApiResponse<null>> {
+  console.log('[Attendance] deleteAttendanceEvent called:', { eventId, userId, isAdmin });
+
   const supabase = getSupabaseClient();
   if (!supabase) {
+    console.error('[Attendance] Failed to get Supabase client');
     return { success: false, error: 'データベースが設定されていません' };
   }
 
   try {
-    // 所有者チェック
-    const { data: event } = await supabase
+    // 所有者チェック（管理者はスキップ）
+    const { data: event, error: fetchError } = await supabase
       .from('attendance_events')
       .select('user_id')
       .eq('id', eventId)
       .single();
 
-    if (!event || event.user_id !== userId) {
+    console.log('[Attendance] Fetch result:', { event, fetchError });
+
+    if (fetchError) {
+      console.error('[Attendance] Fetch error:', fetchError);
+      return { success: false, error: 'イベントの取得に失敗しました' };
+    }
+
+    if (!event) {
+      return { success: false, error: 'イベントが見つかりません' };
+    }
+
+    if (!isAdmin && event.user_id !== userId) {
+      console.log('[Attendance] Authorization failed:', { ownerId: event.user_id, userId, isAdmin });
       return { success: false, error: '削除権限がありません' };
     }
 
     // 関連する回答も削除
-    await supabase
+    const { error: responsesError } = await supabase
       .from('attendance_responses')
       .delete()
       .eq('event_id', eventId);
+
+    if (responsesError) {
+      console.log('[Attendance] Responses delete error (may be okay):', responsesError);
+    }
 
     // イベント削除
     const { error } = await supabase
@@ -417,14 +437,17 @@ export async function deleteAttendanceEvent(
       .delete()
       .eq('id', eventId);
 
+    console.log('[Attendance] Delete result:', { error });
+
     if (error) {
-      console.error('Error deleting attendance event:', error);
+      console.error('[Attendance] Delete event error:', error);
       return { success: false, error: '出欠表の削除に失敗しました' };
     }
 
+    console.log('[Attendance] Delete successful:', eventId);
     return { success: true, data: null };
   } catch (err) {
-    console.error('Unexpected error:', err);
+    console.error('[Attendance] Delete exception:', err);
     return { success: false, error: '予期しないエラーが発生しました' };
   }
 }

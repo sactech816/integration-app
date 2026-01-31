@@ -9,6 +9,7 @@ import { getMultipleAnalytics } from '@/app/actions/analytics';
 import { getUserPurchases, checkIsPartner } from '@/app/actions/purchases';
 import { fetchSubscriptionStatus, SubscriptionStatus } from '@/lib/subscription';
 import { ContentItem } from '../components/MainContent/ContentCard';
+import { deleteContent } from '@/app/actions/content';
 
 type AnalyticsData = {
   views: number;
@@ -474,27 +475,36 @@ export function useDashboardData(): UseDashboardDataReturn {
 
   // 削除
   const handleDelete = async (item: ContentItem) => {
-    if (!supabase) return;
+    if (!user) {
+      console.log('[Dashboard] handleDelete: No user');
+      return;
+    }
 
-    const tableMap: Record<string, string> = {
-      quiz: TABLES.QUIZZES,
-      profile: TABLES.PROFILES,
-      business: TABLES.BUSINESS_LPS,
-      salesletter: 'sales_letters',
-      survey: 'surveys',
-    };
+    // サーバーアクションで削除（管理者対応）
+    const contentType = item.type as 'quiz' | 'profile' | 'business' | 'salesletter';
+    const contentId = item.type === 'quiz' ? parseInt(item.id) : item.id;
+
+    console.log('[Dashboard] handleDelete called:', { 
+      itemType: item.type, 
+      contentType, 
+      contentId, 
+      userId: user.id, 
+      isAdmin 
+    });
 
     try {
-      const { error } = await supabase
-        .from(tableMap[item.type])
-        .delete()
-        .eq('id', item.type === 'quiz' ? parseInt(item.id) : item.id);
+      const result = await deleteContent(contentType, contentId, user.id, isAdmin);
 
-      if (error) throw error;
+      console.log('[Dashboard] deleteContent result:', result);
 
-      setContents((prev) => prev.filter((c) => c.id !== item.id));
+      if (result.success) {
+        setContents((prev) => prev.filter((c) => c.id !== item.id));
+        console.log('[Dashboard] Local state updated');
+      } else {
+        alert(result.error || '削除に失敗しました');
+      }
     } catch (error) {
-      console.error('Delete error:', error);
+      console.error('[Dashboard] Delete error:', error);
       alert('削除中にエラーが発生しました');
     }
   };

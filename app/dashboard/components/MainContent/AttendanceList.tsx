@@ -85,7 +85,7 @@ export default function AttendanceList({ userId, isAdmin, isUnlocked = false }: 
   const handleDelete = async (eventId: string) => {
     setDeletingId(eventId);
     try {
-      const result = await deleteAttendanceEvent(eventId, userId);
+      const result = await deleteAttendanceEvent(eventId, userId, isAdmin);
       if (result.success) {
         setEvents((prev) => prev.filter((e) => e.id !== eventId));
       } else {
@@ -151,16 +151,33 @@ export default function AttendanceList({ userId, isAdmin, isUnlocked = false }: 
     setBulkDeleting(true);
     try {
       const deletePromises = Array.from(selectedIds).map((id) =>
-        deleteAttendanceEvent(id, userId)
+        deleteAttendanceEvent(id, userId, isAdmin)
       );
-      await Promise.all(deletePromises);
-      // ローカルstate更新（診断クイズと同じパターン）
-      setEvents((prev) => prev.filter((e) => !selectedIds.has(e.id)));
+      const results = await Promise.all(deletePromises);
+      
+      // 成功したIDのみローカルstateから削除
+      const successIds = new Set<string>();
+      const idsArray = Array.from(selectedIds);
+      results.forEach((result, index) => {
+        if (result.success) {
+          successIds.add(idsArray[index]);
+        }
+      });
+
+      if (successIds.size > 0) {
+        setEvents((prev) => prev.filter((e) => !successIds.has(e.id)));
+      }
+
+      const failedCount = selectedIds.size - successIds.size;
+      if (failedCount > 0) {
+        alert(`${failedCount}件の削除に失敗しました`);
+      }
+
       setSelectedIds(new Set());
       setSelectMode(false);
     } catch (error) {
       console.error('一括削除エラー:', error);
-      alert('一部の削除に失敗しました');
+      alert('削除に失敗しました');
     } finally {
       setBulkDeleting(false);
     }

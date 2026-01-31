@@ -81,7 +81,7 @@ export default function BookingList({ userId, isAdmin, isUnlocked = false }: Boo
   const handleDelete = async (menuId: string) => {
     setDeletingId(menuId);
     try {
-      const result = await deleteBookingMenu(menuId, userId);
+      const result = await deleteBookingMenu(menuId, userId, undefined, isAdmin);
       if (result.success) {
         setMenus((prev) => prev.filter((m) => m.id !== menuId));
       } else {
@@ -148,16 +148,33 @@ export default function BookingList({ userId, isAdmin, isUnlocked = false }: Boo
     setBulkDeleting(true);
     try {
       const deletePromises = Array.from(selectedIds).map((id) =>
-        deleteBookingMenu(id, userId)
+        deleteBookingMenu(id, userId, undefined, isAdmin)
       );
-      await Promise.all(deletePromises);
-      // ローカルstate更新（診断クイズと同じパターン）
-      setMenus((prev) => prev.filter((m) => !selectedIds.has(m.id)));
+      const results = await Promise.all(deletePromises);
+      
+      // 成功したIDのみローカルstateから削除
+      const successIds = new Set<string>();
+      const idsArray = Array.from(selectedIds);
+      results.forEach((result, index) => {
+        if (result.success) {
+          successIds.add(idsArray[index]);
+        }
+      });
+
+      if (successIds.size > 0) {
+        setMenus((prev) => prev.filter((m) => !successIds.has(m.id)));
+      }
+
+      const failedCount = selectedIds.size - successIds.size;
+      if (failedCount > 0) {
+        alert(`${failedCount}件の削除に失敗しました`);
+      }
+
       setSelectedIds(new Set());
       setSelectMode(false);
     } catch (error) {
       console.error('一括削除エラー:', error);
-      alert('一部の削除に失敗しました');
+      alert('削除に失敗しました');
     } finally {
       setBulkDeleting(false);
     }

@@ -613,23 +613,37 @@ export async function updateBookingMenu(
 export async function deleteBookingMenu(
   menuId: string,
   userId: string | null,
-  editKey?: string
+  editKey?: string,
+  isAdmin?: boolean
 ): Promise<BookingResponse<{ deleted: boolean }>> {
+  console.log('[Booking] deleteBookingMenu called:', { menuId, userId, isAdmin });
+
   const supabase = getSupabaseServer();
   if (!supabase) {
+    console.error('[Booking] Failed to get Supabase server client');
     return { success: false, error: 'Database not configured', code: 'DATABASE_NOT_CONFIGURED' };
   }
 
   // 所有者確認
   const existingMenu = await getBookingMenu(menuId);
+  console.log('[Booking] Existing menu:', { existingMenu });
+
   if (!existingMenu) {
     return { success: false, error: 'Menu not found', code: 'MENU_NOT_FOUND' };
   }
 
-  // 認証チェック: ユーザーIDまたは編集キーで認証
+  // 認証チェック: 管理者、ユーザーID、または編集キーで認証
   const isAuthorized = 
+    isAdmin ||
     (userId && existingMenu.user_id === userId) ||
     (editKey && existingMenu.edit_key === editKey);
+
+  console.log('[Booking] Authorization check:', { 
+    isAdmin, 
+    userId, 
+    menuUserId: existingMenu.user_id, 
+    isAuthorized 
+  });
 
   if (!isAuthorized) {
     return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
@@ -640,11 +654,14 @@ export async function deleteBookingMenu(
     .delete()
     .eq('id', menuId);
 
+  console.log('[Booking] Delete result:', { error });
+
   if (error) {
     console.error('[Booking] Delete menu error:', error);
     return { success: false, error: error.message, code: 'UNKNOWN_ERROR' };
   }
 
+  console.log('[Booking] Delete successful:', menuId);
   return { success: true, data: { deleted: true } };
 }
 

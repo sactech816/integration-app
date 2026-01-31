@@ -22,6 +22,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { Survey } from '@/lib/types';
 import SurveyResultsView from './SurveyResultsView';
+import { deleteSurvey } from '@/app/actions/survey';
 
 // 表示モード
 type ViewMode = 'list' | 'results';
@@ -87,13 +88,14 @@ export default function SurveyList({ userId, isAdmin, userEmail, isUnlocked = fa
   };
 
   const handleDelete = async (id: number) => {
-    if (!supabase) return;
-
     setDeletingId(id);
     try {
-      const { error } = await supabase.from('surveys').delete().eq('id', id);
-      if (error) throw error;
-      setSurveys((prev) => prev.filter((s) => s.id !== id));
+      const result = await deleteSurvey(id, userId, isAdmin);
+      if (result.success) {
+        setSurveys((prev) => prev.filter((s) => s.id !== id));
+      } else {
+        alert(result.error || '削除に失敗しました');
+      }
     } catch (error) {
       console.error('削除エラー:', error);
       alert('削除に失敗しました');
@@ -161,24 +163,39 @@ export default function SurveyList({ userId, isAdmin, userEmail, isUnlocked = fa
 
   // 一括削除
   const handleBulkDelete = async () => {
-    if (!supabase || selectedIds.size === 0) return;
+    if (selectedIds.size === 0) return;
     if (!confirm(`${selectedIds.size}件のアンケートを削除しますか？この操作は取り消せません。`)) return;
 
     setBulkDeleting(true);
     try {
-      const { error } = await supabase
-        .from('surveys')
-        .delete()
-        .in('id', Array.from(selectedIds));
+      const deletePromises = Array.from(selectedIds).map((id) =>
+        deleteSurvey(id, userId, isAdmin)
+      );
+      const results = await Promise.all(deletePromises);
       
-      if (error) throw error;
-      // ローカルstate更新（診断クイズと同じパターン）
-      setSurveys((prev) => prev.filter((s) => !selectedIds.has(s.id)));
+      // 成功したIDのみローカルstateから削除
+      const successIds = new Set<number>();
+      const idsArray = Array.from(selectedIds);
+      results.forEach((result, index) => {
+        if (result.success) {
+          successIds.add(idsArray[index]);
+        }
+      });
+
+      if (successIds.size > 0) {
+        setSurveys((prev) => prev.filter((s) => !successIds.has(s.id)));
+      }
+
+      const failedCount = selectedIds.size - successIds.size;
+      if (failedCount > 0) {
+        alert(`${failedCount}件の削除に失敗しました`);
+      }
+
       setSelectedIds(new Set());
       setSelectMode(false);
     } catch (error) {
       console.error('一括削除エラー:', error);
-      alert('一括削除に失敗しました');
+      alert('削除に失敗しました');
     } finally {
       setBulkDeleting(false);
     }

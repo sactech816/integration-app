@@ -176,8 +176,11 @@ export async function updateCampaign(
  * キャンペーンを削除
  */
 export async function deleteCampaign(campaignId: string): Promise<{ success: boolean; error?: string }> {
+  console.log('[Gamification] deleteCampaign called:', { campaignId });
+
   const supabase = getSupabaseServer();
   if (!supabase) {
+    console.error('[Gamification] Failed to get Supabase server client');
     return { success: false, error: 'Database not configured' };
   }
   
@@ -186,11 +189,14 @@ export async function deleteCampaign(campaignId: string): Promise<{ success: boo
     .delete()
     .eq('id', campaignId);
   
+  console.log('[Gamification] Delete result:', { error });
+
   if (error) {
     console.error('[Gamification] Delete campaign error:', error);
     return { success: false, error: error.message };
   }
   
+  console.log('[Gamification] Delete successful:', campaignId);
   return { success: true };
 }
 

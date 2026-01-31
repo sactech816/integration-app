@@ -111,8 +111,12 @@ export default function MyGamification({ userId, planTier, isUnlocked = false, i
   const handleDelete = async (campaignId: string) => {
     setDeletingId(campaignId);
     try {
-      await deleteCampaign(campaignId);
-      setCampaigns((prev) => prev.filter((c) => c.id !== campaignId));
+      const result = await deleteCampaign(campaignId);
+      if (result.success) {
+        setCampaigns((prev) => prev.filter((c) => c.id !== campaignId));
+      } else {
+        alert(result.error || 'ゲームの削除に失敗しました');
+      }
     } catch (error) {
       console.error('Failed to delete campaign:', error);
       alert('ゲームの削除に失敗しました');
@@ -161,14 +165,31 @@ export default function MyGamification({ userId, planTier, isUnlocked = false, i
     setBulkDeleting(true);
     try {
       const deletePromises = Array.from(selectedIds).map((id) => deleteCampaign(id));
-      await Promise.all(deletePromises);
-      // ローカルstate更新（診断クイズと同じパターン）
-      setCampaigns((prev) => prev.filter((c) => !selectedIds.has(c.id)));
+      const results = await Promise.all(deletePromises);
+      
+      // 成功したIDのみローカルstateから削除
+      const successIds = new Set<string>();
+      const idsArray = Array.from(selectedIds);
+      results.forEach((result, index) => {
+        if (result.success) {
+          successIds.add(idsArray[index]);
+        }
+      });
+
+      if (successIds.size > 0) {
+        setCampaigns((prev) => prev.filter((c) => !successIds.has(c.id)));
+      }
+
+      const failedCount = selectedIds.size - successIds.size;
+      if (failedCount > 0) {
+        alert(`${failedCount}件の削除に失敗しました`);
+      }
+
       setSelectedIds(new Set());
       setSelectMode(false);
     } catch (error) {
       console.error('一括削除エラー:', error);
-      alert('一部の削除に失敗しました');
+      alert('削除に失敗しました');
     } finally {
       setBulkDeleting(false);
     }
