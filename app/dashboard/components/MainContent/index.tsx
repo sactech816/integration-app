@@ -8,6 +8,7 @@ import { ContentItem } from './ContentCard';
 import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
 import AccountSettings from '../Settings/AccountSettings';
 import BookingList from './BookingList';
+import AttendanceList from './AttendanceList';
 import SurveyList from './SurveyList';
 import MyGamification from './MyGamification';
 import { PlanTier } from '@/lib/subscription';
@@ -19,6 +20,7 @@ export type ActiveView =
   | 'business'
   | 'salesletter'
   | 'booking'
+  | 'attendance'
   | 'survey'
   | 'my-games'
   | 'kindle'
@@ -62,6 +64,7 @@ type MainContentProps = {
     business: number;
     salesletter: number;
     booking: number;
+    attendance: number;
     survey: number;
     gamification: number;
   };
@@ -192,12 +195,17 @@ export default function MainContent({
       />
       )}
 
-      {/* 予約・日程調整 */}
+      {/* 予約メーカー */}
       {activeView === 'booking' && user && (
         <BookingList userId={user.id} isAdmin={isAdmin} />
       )}
 
-      {/* アンケート */}
+      {/* 出欠メーカー */}
+      {activeView === 'attendance' && user && (
+        <AttendanceList userId={user.id} isAdmin={isAdmin} />
+      )}
+
+      {/* アンケートメーカー */}
       {activeView === 'survey' && user && (
         <SurveyList userId={user.id} isAdmin={isAdmin} userEmail={user.email} />
       )}
@@ -259,7 +267,7 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'quiz', 'profile', 'business', 'salesletter', 'booking', 'survey', 'my-games', 'affiliate', 'settings', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-cleanup'].includes(activeView) && (
+      {!['dashboard', 'quiz', 'profile', 'business', 'salesletter', 'booking', 'attendance', 'survey', 'my-games', 'affiliate', 'settings', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-cleanup'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>

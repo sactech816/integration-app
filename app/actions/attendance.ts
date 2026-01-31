@@ -327,3 +327,154 @@ export async function deleteAttendanceResponse(
     return { success: false, error: '予期しないエラーが発生しました' };
   }
 }
+
+// -------------------------------------------
+// ユーザーの出欠表イベント一覧取得
+// -------------------------------------------
+export async function getAttendanceEvents(
+  userId: string
+): Promise<AttendanceEvent[]> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('attendance_events')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error getting attendance events:', error);
+      return [];
+    }
+
+    return (data || []) as AttendanceEvent[];
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    return [];
+  }
+}
+
+// -------------------------------------------
+// 出欠表イベント削除
+// -------------------------------------------
+export async function deleteAttendanceEvent(
+  eventId: string,
+  userId: string
+): Promise<AttendanceApiResponse<null>> {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return { success: false, error: 'データベースが設定されていません' };
+  }
+
+  try {
+    // 所有者チェック
+    const { data: event } = await supabase
+      .from('attendance_events')
+      .select('user_id')
+      .eq('id', eventId)
+      .single();
+
+    if (!event || event.user_id !== userId) {
+      return { success: false, error: '削除権限がありません' };
+    }
+
+    // 関連する回答も削除
+    await supabase
+      .from('attendance_responses')
+      .delete()
+      .eq('event_id', eventId);
+
+    // イベント削除
+    const { error } = await supabase
+      .from('attendance_events')
+      .delete()
+      .eq('id', eventId);
+
+    if (error) {
+      console.error('Error deleting attendance event:', error);
+      return { success: false, error: '出欠表の削除に失敗しました' };
+    }
+
+    return { success: true, data: null };
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    return { success: false, error: '予期しないエラーが発生しました' };
+  }
+}
+
+// -------------------------------------------
+// 出欠表イベント複製
+// -------------------------------------------
+export async function duplicateAttendanceEvent(
+  eventId: string,
+  userId: string
+): Promise<AttendanceApiResponse<AttendanceEvent>> {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return { success: false, error: 'データベースが設定されていません' };
+  }
+
+  try {
+    // 元のイベントを取得
+    const { data: original, error: fetchError } = await supabase
+      .from('attendance_events')
+      .select('*')
+      .eq('id', eventId)
+      .single();
+
+    if (fetchError || !original) {
+      return { success: false, error: '元の出欠表が見つかりません' };
+    }
+
+    // 複製を作成
+    const { data, error } = await supabase
+      .from('attendance_events')
+      .insert({
+        title: `${original.title} (コピー)`,
+        description: original.description,
+        slots: original.slots,
+        user_id: userId,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error duplicating attendance event:', error);
+      return { success: false, error: '出欠表の複製に失敗しました' };
+    }
+
+    return { success: true, data: data as AttendanceEvent };
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    return { success: false, error: '予期しないエラーが発生しました' };
+  }
+}
+
+// -------------------------------------------
+// 出欠表イベントカウント取得
+// -------------------------------------------
+export async function getAttendanceEventCount(
+  userId: string
+): Promise<number> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return 0;
+
+  try {
+    const { count, error } = await supabase
+      .from('attendance_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error counting attendance events:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    return 0;
+  }
+}

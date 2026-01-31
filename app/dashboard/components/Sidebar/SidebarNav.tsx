@@ -48,6 +48,7 @@ type SidebarNavProps = {
     business: number;
     salesletter: number;
     booking: number;
+    attendance: number;
     survey: number;
     gamification: number;
   };
@@ -70,13 +71,14 @@ export default function SidebarNav({
   const menuItems: MenuItem[] = [
     // メインメニュー
     { id: 'dashboard', label: 'ダッシュボード', icon: Home, section: 'main' },
-    { id: 'quiz', label: '診断クイズ', icon: Sparkles, section: 'main', badge: contentCounts.quiz },
-    { id: 'profile', label: 'プロフィールLP', icon: UserCircle, section: 'main', badge: contentCounts.profile },
-    { id: 'business', label: 'ビジネスLP', icon: Building2, section: 'main', badge: contentCounts.business },
-    { id: 'salesletter', label: 'セールスレター', icon: FileText, section: 'main', badge: contentCounts.salesletter },
-    { id: 'booking', label: '予約・日程調整', icon: Calendar, section: 'main', badge: contentCounts.booking },
-    { id: 'survey', label: 'アンケート（投票）', icon: ClipboardList, section: 'main', badge: contentCounts.survey },
-    { id: 'my-games', label: 'ゲーム作成', icon: Gamepad2, section: 'main', badge: contentCounts.gamification },
+    { id: 'quiz', label: '診断クイズメーカー', icon: Sparkles, section: 'main', badge: contentCounts.quiz },
+    { id: 'profile', label: 'プロフィールメーカー', icon: UserCircle, section: 'main', badge: contentCounts.profile },
+    { id: 'business', label: 'LPメーカー', icon: Building2, section: 'main', badge: contentCounts.business },
+    { id: 'salesletter', label: 'セールスライター', icon: FileText, section: 'main', badge: contentCounts.salesletter },
+    { id: 'booking', label: '予約メーカー', icon: Calendar, section: 'main', badge: contentCounts.booking },
+    { id: 'attendance', label: '出欠メーカー', icon: Users, section: 'main', badge: contentCounts.attendance },
+    { id: 'survey', label: 'アンケートメーカー', icon: ClipboardList, section: 'main', badge: contentCounts.survey },
+    { id: 'my-games', label: 'ゲーミフィケーション', icon: Gamepad2, section: 'main', badge: contentCounts.gamification },
     { 
       id: 'kindle', 
       label: 'Kindle執筆 (KDL)', 
@@ -111,7 +113,7 @@ export default function SidebarNav({
     const isActive = activeItem === item.id;
     const isDisabled = item.isDisabled;
     // 件数が0のコンテンツ系メニューはグレーアウト（ただしクリックは可能）
-    const hasNoContent = item.badge === 0 && ['quiz', 'profile', 'business', 'salesletter', 'booking', 'survey'].includes(item.id);
+    const hasNoContent = item.badge === 0 && ['quiz', 'profile', 'business', 'salesletter', 'booking', 'attendance', 'survey'].includes(item.id);
 
     const handleClick = () => {
       if (item.onClick) {
@@ -155,7 +157,7 @@ export default function SidebarNav({
         `}
       >
         <Icon size={18} className={getIconStyles()} />
-        <span className="flex-1 text-sm">{item.label}</span>
+        <span className="flex-1 text-[13px] leading-tight">{item.label}</span>
         
         {/* 無効化バッジ（KDL未加入など） */}
         {item.disabledBadge && (

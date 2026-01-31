@@ -37,6 +37,7 @@ type UseDashboardDataReturn = {
     business: number;
     salesletter: number;
     booking: number;
+    attendance: number;
     survey: number;
     gamification: number;
   };
@@ -84,6 +85,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     business: 0,
     salesletter: 0,
     booking: 0,
+    attendance: 0,
     survey: 0,
     gamification: 0,
   });
@@ -403,7 +405,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, surveyResult, gamificationResult] = await Promise.all([
+      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult] = await Promise.all([
         // 診断クイズ数
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true })
@@ -424,6 +426,10 @@ export function useDashboardData(): UseDashboardDataReturn {
         isAdmin
           ? supabase.from('booking_menus').select('id', { count: 'exact', head: true })
           : supabase.from('booking_menus').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // 出欠表イベント数
+        isAdmin
+          ? supabase.from('attendance_events').select('id', { count: 'exact', head: true })
+          : supabase.from('attendance_events').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         // アンケート数
         isAdmin
           ? supabase.from('surveys').select('id', { count: 'exact', head: true })
@@ -438,6 +444,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         business: businessResult.count || 0,
         salesletter: salesletterResult.count || 0,
         booking: bookingResult.count || 0,
+        attendance: attendanceResult.count || 0,
         survey: surveyResult.count || 0,
         gamification: gamificationResult.count || 0,
       });
