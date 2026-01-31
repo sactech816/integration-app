@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Calendar,
@@ -52,9 +52,18 @@ const formatTime = (dateStr: string) => {
   });
 };
 
-export default function CancelBookingPage() {
+// ローディング表示
+function LoadingState() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+    </div>
+  );
+}
+
+// メインのキャンセルコンテンツ
+function CancelBookingContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const token = searchParams.get('token');
 
   const [loading, setLoading] = useState(true);
@@ -131,11 +140,7 @@ export default function CancelBookingPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    );
+    return <LoadingState />;
   }
 
   if (error && !booking) {
@@ -293,5 +298,14 @@ export default function CancelBookingPage() {
       {/* フッター */}
       <ContentFooter toolType="booking" variant="light" />
     </div>
+  );
+}
+
+// メインのエクスポート - Suspenseでラップ
+export default function CancelBookingPage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <CancelBookingContent />
+    </Suspense>
   );
 }
