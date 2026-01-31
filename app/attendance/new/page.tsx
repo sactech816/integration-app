@@ -277,7 +277,7 @@ export default function NewAttendancePage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      タイトル <span className="text-red-500">*</span>
+                      タイトル<span className="text-red-500 font-bold">（必須）</span>
                     </label>
                     <input
                       type="text"

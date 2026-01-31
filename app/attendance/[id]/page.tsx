@@ -350,7 +350,7 @@ export default function AttendancePublicPage() {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   <User size={16} className="inline mr-1" />
-                  お名前（ニックネーム） <span className="text-red-500">*</span>
+                  お名前（ニックネーム）<span className="text-red-500 font-bold">（必須）</span>
                 </label>
                 <input
                   type="text"
