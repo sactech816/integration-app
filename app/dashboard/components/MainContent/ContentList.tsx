@@ -26,6 +26,7 @@ type ContentListProps = {
   onPurchase: (item: ContentItem) => void;
   onCreateNew: () => void;
   onBulkDelete?: (items: ContentItem[]) => Promise<void>;
+  onRefresh?: () => Promise<void>;
 };
 
 export default function ContentList({
@@ -46,6 +47,7 @@ export default function ContentList({
   onPurchase,
   onCreateNew,
   onBulkDelete,
+  onRefresh,
 }: ContentListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -118,11 +120,19 @@ export default function ContentList({
           await onDelete(item);
         }
       }
+      // データを再取得して状態を同期
+      if (onRefresh) {
+        await onRefresh();
+      }
       setSelectedIds(new Set());
       setSelectMode(false);
     } catch (error) {
       console.error('一括削除エラー:', error);
       alert('一部の削除に失敗しました');
+      // エラー時もデータを再取得
+      if (onRefresh) {
+        await onRefresh();
+      }
     } finally {
       setBulkDeleting(false);
     }

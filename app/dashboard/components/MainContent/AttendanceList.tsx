@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import {
   getAttendanceEvents,
+  getAllAttendanceEvents,
   deleteAttendanceEvent,
   duplicateAttendanceEvent,
   getAttendanceTableData,
@@ -58,20 +59,21 @@ export default function AttendanceList({ userId, isAdmin, isUnlocked = false }: 
   const loadEvents = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getAttendanceEvents(userId);
+      // 管理者は全件取得、一般ユーザーは自分のみ
+      const data = isAdmin ? await getAllAttendanceEvents() : await getAttendanceEvents(userId);
       setEvents(data);
     } catch (error) {
       console.error('出欠表取得エラー:', error);
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, isAdmin]);
 
   useEffect(() => {
     if (userId) {
       loadEvents();
     }
-  }, [userId, loadEvents]);
+  }, [userId, isAdmin, loadEvents]);
 
   const handleCopyUrl = (eventId: string) => {
     const url = `${window.location.origin}/attendance/${eventId}`;
@@ -152,12 +154,15 @@ export default function AttendanceList({ userId, isAdmin, isUnlocked = false }: 
         deleteAttendanceEvent(id, userId)
       );
       await Promise.all(deletePromises);
-      setEvents((prev) => prev.filter((e) => !selectedIds.has(e.id)));
+      // データを再取得して状態を同期
+      await loadEvents();
       setSelectedIds(new Set());
       setSelectMode(false);
     } catch (error) {
       console.error('一括削除エラー:', error);
       alert('一部の削除に失敗しました');
+      // エラー時もデータを再取得
+      await loadEvents();
     } finally {
       setBulkDeleting(false);
     }
@@ -300,24 +305,27 @@ export default function AttendanceList({ userId, isAdmin, isUnlocked = false }: 
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-900 border-l-4 border-purple-600 pl-4 flex items-center gap-2">
           <Users size={20} className="text-purple-600" />
-          出欠メーカー
+          {isAdmin ? '全出欠メーカーリスト（管理者）' : '作成した出欠メーカーリスト'}
           {isAdmin && (
             <span className="text-xs bg-red-500 text-white px-2 py-1 rounded-full">ADMIN</span>
           )}
         </h2>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           {events.length > 0 && (
-            <button
-              onClick={toggleSelectMode}
-              className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors ${
-                selectMode
-                  ? 'bg-indigo-100 text-indigo-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {selectMode ? <CheckSquare size={16} /> : <Square size={16} />}
-              {selectMode ? '選択中' : '選択'}
-            </button>
+            <>
+              <span className="text-sm text-gray-500">全 {events.length} 件</span>
+              <button
+                onClick={toggleSelectMode}
+                className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors ${
+                  selectMode
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {selectMode ? <CheckSquare size={16} /> : <Square size={16} />}
+                {selectMode ? '選択中' : '選択'}
+              </button>
+            </>
           )}
           <button
             onClick={handleCreateNew}

@@ -334,6 +334,130 @@ export async function getBookingMenu(menuId: string): Promise<BookingMenu | null
 }
 
 /**
+ * 全ての予約メニュー一覧を取得（管理者用）
+ */
+export async function getAllBookingMenus(): Promise<BookingMenu[]> {
+  const supabase = getSupabaseServer();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from('booking_menus')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('[Booking] Get all menus error:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
+/**
+ * 予約メニューを複製
+ */
+export async function duplicateBookingMenu(
+  menuId: string,
+  userId: string
+): Promise<BookingResponse<BookingMenu>> {
+  const supabase = getSupabaseServer();
+  if (!supabase) {
+    return { success: false, error: 'Database not configured', code: 'DATABASE_NOT_CONFIGURED' };
+  }
+
+  // 元のメニューを取得
+  const originalMenu = await getBookingMenu(menuId);
+  if (!originalMenu) {
+    return { success: false, error: 'Menu not found', code: 'MENU_NOT_FOUND' };
+  }
+
+  // 新しいメニューを作成
+  const { data: newMenu, error: menuError } = await supabase
+    .from('booking_menus')
+    .insert({
+      user_id: userId,
+      title: `${originalMenu.title} のコピー`,
+      description: originalMenu.description,
+      duration_min: originalMenu.duration_min,
+      type: originalMenu.type,
+      is_active: false, // 複製時は非公開
+      notification_email: originalMenu.notification_email,
+    })
+    .select()
+    .single();
+
+  if (menuError || !newMenu) {
+    console.error('[Booking] Duplicate menu error:', menuError);
+    return { success: false, error: menuError?.message || 'Failed to create menu', code: 'UNKNOWN_ERROR' };
+  }
+
+  // 元のスロットを取得
+  const { data: originalSlots, error: slotsError } = await supabase
+    .from('booking_slots')
+    .select('*')
+    .eq('menu_id', menuId);
+
+  if (slotsError) {
+    console.error('[Booking] Get slots error:', slotsError);
+    // メニューは作成されたが、スロットの複製に失敗
+    return { success: true, data: newMenu };
+  }
+
+  // スロットを複製（存在する場合）
+  if (originalSlots && originalSlots.length > 0) {
+    const newSlots = originalSlots.map((slot) => ({
+      menu_id: newMenu.id,
+      start_time: slot.start_time,
+      end_time: slot.end_time,
+      max_capacity: slot.max_capacity,
+    }));
+
+    const { error: insertSlotsError } = await supabase
+      .from('booking_slots')
+      .insert(newSlots);
+
+    if (insertSlotsError) {
+      console.error('[Booking] Duplicate slots error:', insertSlotsError);
+      // スロットの複製に失敗しても、メニューは作成されている
+    }
+  }
+
+  return { success: true, data: newMenu };
+}
+
+/**
+ * 予約メニューごとの予約数を取得
+ */
+export async function getBookingCountByMenuId(menuId: string): Promise<number> {
+  const supabase = getSupabaseServer();
+  if (!supabase) return 0;
+
+  // 該当メニューのスロットを取得
+  const { data: slots, error: slotsError } = await supabase
+    .from('booking_slots')
+    .select('id')
+    .eq('menu_id', menuId);
+
+  if (slotsError || !slots || slots.length === 0) return 0;
+
+  const slotIds = slots.map((s) => s.id);
+
+  // 予約数を取得（キャンセル以外）
+  const { count, error } = await supabase
+    .from('bookings')
+    .select('id', { count: 'exact', head: true })
+    .in('slot_id', slotIds)
+    .neq('status', 'cancelled');
+
+  if (error) {
+    console.error('[Booking] Get booking count error:', error);
+    return 0;
+  }
+
+  return count || 0;
+}
+
+/**
  * 編集キーで予約メニューを取得
  */
 export async function getBookingMenuByEditKey(editKey: string): Promise<BookingMenu | null> {

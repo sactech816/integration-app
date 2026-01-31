@@ -283,10 +283,16 @@ export default function WeeklyCalendar({
                           menuType === 'adjustment'
                             ? 'bg-purple-100 text-purple-700 border border-purple-200'
                             : slot.is_available
-                              ? 'bg-green-100 text-green-700 border border-green-200'
+                              ? 'bg-green-100 text-green-700 border border-green-200 cursor-pointer hover:bg-green-200'
                               : 'bg-red-100 text-red-700 border border-red-200'
                         }`}
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // readOnlyモードでも、空きのある枠はクリック可能
+                          if (readOnly && slot.is_available && onSlotClick) {
+                            onSlotClick(day, hour);
+                          }
+                        }}
                       >
                         <div className="flex items-center justify-between">
                           <span>

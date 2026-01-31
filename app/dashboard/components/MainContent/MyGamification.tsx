@@ -48,9 +48,10 @@ type MyGamificationProps = {
   userId: string;
   planTier: PlanTier;
   isUnlocked?: boolean;
+  isAdmin?: boolean;
 };
 
-export default function MyGamification({ userId, planTier, isUnlocked = false }: MyGamificationProps) {
+export default function MyGamification({ userId, planTier, isUnlocked = false, isAdmin = false }: MyGamificationProps) {
   const [loading, setLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<GamificationCampaign[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -64,18 +65,20 @@ export default function MyGamification({ userId, planTier, isUnlocked = false }:
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const limit = getGamificationLimitForMakers(planTier);
-  const isLimitReached = limit === 0 || campaigns.length >= limit;
+  const isLimitReached = !isAdmin && (limit === 0 || campaigns.length >= limit);
   const isPaidUser = planTier !== 'none';
-  const canCreate = limit > 0;
+  // 管理者はcanCreate=true、それ以外は従来のロジック
+  const canCreate = isAdmin || limit > 0;
 
   useEffect(() => {
     fetchCampaigns();
-  }, [userId]);
+  }, [userId, isAdmin]);
 
   const fetchCampaigns = async () => {
     setLoading(true);
     try {
-      const data = await getCampaigns(userId);
+      // 管理者は全件取得、一般ユーザーは自分のみ
+      const data = isAdmin ? await getCampaigns() : await getCampaigns(userId);
       setCampaigns(data);
     } catch (error) {
       console.error('Failed to fetch campaigns:', error);
@@ -159,12 +162,15 @@ export default function MyGamification({ userId, planTier, isUnlocked = false }:
     try {
       const deletePromises = Array.from(selectedIds).map((id) => deleteCampaign(id));
       await Promise.all(deletePromises);
-      setCampaigns((prev) => prev.filter((c) => !selectedIds.has(c.id)));
+      // データを再取得して状態を同期
+      await fetchCampaigns();
       setSelectedIds(new Set());
       setSelectMode(false);
     } catch (error) {
       console.error('一括削除エラー:', error);
       alert('一部の削除に失敗しました');
+      // エラー時もデータを再取得
+      await fetchCampaigns();
     } finally {
       setBulkDeleting(false);
     }
@@ -217,41 +223,47 @@ export default function MyGamification({ userId, planTier, isUnlocked = false }:
         <div>
           <h2 className="text-xl font-bold text-gray-900 border-l-4 border-purple-600 pl-4 flex items-center gap-2">
             <Gamepad2 size={20} className="text-purple-600" />
-            ゲーミフィケーション
+            {isAdmin ? '全ゲーミフィケーションリスト（管理者）' : '作成したゲーミフィケーションリスト'}
+            {isAdmin && (
+              <span className="text-xs bg-red-500 text-white px-2 py-1 rounded-full">ADMIN</span>
+            )}
           </h2>
           <p className="text-sm text-gray-500 mt-2 ml-5">
             ガチャ、スロット、スクラッチなどのゲームを作成
           </p>
           <div className="flex items-center gap-2 mt-2 ml-5">
-            {canCreate ? (
+            {!isAdmin && canCreate ? (
               <span className="text-sm text-gray-600">
                 作成数: <span className="font-bold">{campaigns.length}</span> / {limit}件
               </span>
-            ) : (
+            ) : !isAdmin ? (
               <span className="text-sm text-gray-600">
                 作成数: <span className="font-bold">{campaigns.length}</span>件
               </span>
-            )}
-            {!canCreate && (
+            ) : null}
+            {!isAdmin && !canCreate && (
               <span className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full font-bold">
                 有料プラン限定
               </span>
             )}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           {campaigns.length > 0 && (
-            <button
-              onClick={toggleSelectMode}
-              className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors ${
-                selectMode
-                  ? 'bg-indigo-100 text-indigo-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {selectMode ? <CheckSquare size={16} /> : <Square size={16} />}
-              {selectMode ? '選択中' : '選択'}
-            </button>
+            <>
+              <span className="text-sm text-gray-500">全 {campaigns.length} 件</span>
+              <button
+                onClick={toggleSelectMode}
+                className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors ${
+                  selectMode
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {selectMode ? <CheckSquare size={16} /> : <Square size={16} />}
+                {selectMode ? '選択中' : '選択'}
+              </button>
+            </>
           )}
           <button
             onClick={handleCreateNew}

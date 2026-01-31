@@ -172,12 +172,15 @@ export default function SurveyList({ userId, isAdmin, userEmail, isUnlocked = fa
         .in('id', Array.from(selectedIds));
       
       if (error) throw error;
-      setSurveys((prev) => prev.filter((s) => !selectedIds.has(s.id)));
+      // データを再取得して状態を同期
+      await loadSurveys();
       setSelectedIds(new Set());
       setSelectMode(false);
     } catch (error) {
       console.error('一括削除エラー:', error);
       alert('一括削除に失敗しました');
+      // エラー時もデータを再取得
+      await loadSurveys();
     } finally {
       setBulkDeleting(false);
     }
@@ -232,24 +235,27 @@ export default function SurveyList({ userId, isAdmin, userEmail, isUnlocked = fa
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-900 border-l-4 border-teal-600 pl-4 flex items-center gap-2">
           <ClipboardList size={20} className="text-teal-600" />
-          アンケートメーカー
+          {isAdmin ? '全アンケートメーカーリスト（管理者）' : '作成したアンケートメーカーリスト'}
           {isAdmin && (
             <span className="text-xs bg-red-500 text-white px-2 py-1 rounded-full">ADMIN</span>
           )}
         </h2>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           {surveys.length > 0 && (
-            <button
-              onClick={toggleSelectMode}
-              className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors ${
-                selectMode
-                  ? 'bg-indigo-100 text-indigo-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {selectMode ? <CheckSquare size={16} /> : <Square size={16} />}
-              {selectMode ? '選択中' : '選択'}
-            </button>
+            <>
+              <span className="text-sm text-gray-500">全 {surveys.length} 件</span>
+              <button
+                onClick={toggleSelectMode}
+                className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors ${
+                  selectMode
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {selectMode ? <CheckSquare size={16} /> : <Square size={16} />}
+                {selectMode ? '選択中' : '選択'}
+              </button>
+            </>
           )}
           <button
             onClick={handleCreateNew}

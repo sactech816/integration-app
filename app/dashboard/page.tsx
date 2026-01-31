@@ -254,6 +254,11 @@ function DashboardContent() {
     fetchContents(service);
   };
 
+  // データ再取得（一括削除後など）
+  const handleRefresh = async () => {
+    await fetchContents(selectedService);
+  };
+
   // 未ログイン時
   if (!user && !isLoading) {
     return (
@@ -402,6 +407,7 @@ function DashboardContent() {
             onCreateNew={handleCreateNew}
             onNavigate={handleNavigate}
             onLogout={handleLogout}
+            onRefresh={handleRefresh}
             adminComponents={adminComponents}
           />
         </DashboardLayout>

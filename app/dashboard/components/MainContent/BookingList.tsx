@@ -20,7 +20,7 @@ import {
   Square,
 } from 'lucide-react';
 import { BookingMenu } from '@/types/booking';
-import { getBookingMenus, deleteBookingMenu } from '@/app/actions/booking';
+import { getBookingMenus, getAllBookingMenus, deleteBookingMenu, duplicateBookingMenu, getBookingCountByMenuId } from '@/app/actions/booking';
 
 type BookingListProps = {
   userId: string;
@@ -34,30 +34,44 @@ export default function BookingList({ userId, isAdmin, isUnlocked = false }: Boo
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+
+  // 予約数
+  const [bookingCounts, setBookingCounts] = useState<Record<string, number>>({});
 
   // 一括選択機能
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
-  useEffect(() => {
-    const loadMenus = async () => {
-      setLoading(true);
-      try {
-        const data = await getBookingMenus(userId);
-        setMenus(data);
-      } catch (error) {
-        console.error('予約メニュー取得エラー:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadMenus = async () => {
+    setLoading(true);
+    try {
+      // 管理者は全件取得、一般ユーザーは自分のみ
+      const data = isAdmin ? await getAllBookingMenus() : await getBookingMenus(userId);
+      setMenus(data);
 
+      // 予約数を取得
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        data.map(async (menu) => {
+          counts[menu.id] = await getBookingCountByMenuId(menu.id);
+        })
+      );
+      setBookingCounts(counts);
+    } catch (error) {
+      console.error('予約メニュー取得エラー:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (userId) {
       loadMenus();
     }
-  }, [userId]);
+  }, [userId, isAdmin]);
 
   const handleCopyUrl = (menuId: string) => {
     const url = `${window.location.origin}/booking/${menuId}`;
@@ -85,8 +99,21 @@ export default function BookingList({ userId, isAdmin, isUnlocked = false }: Boo
   };
 
   const handleDuplicate = async (menu: BookingMenu) => {
-    // TODO: 複製APIを実装
-    alert('複製機能は現在準備中です');
+    setDuplicatingId(menu.id);
+    try {
+      const result = await duplicateBookingMenu(menu.id, userId);
+      if (result.success && result.data) {
+        // リストを再取得して予約数も更新
+        await loadMenus();
+      } else {
+        alert('error' in result ? result.error : '複製に失敗しました');
+      }
+    } catch (error) {
+      console.error('複製エラー:', error);
+      alert('複製に失敗しました');
+    } finally {
+      setDuplicatingId(null);
+    }
   };
 
   // 選択モード切り替え
@@ -126,12 +153,15 @@ export default function BookingList({ userId, isAdmin, isUnlocked = false }: Boo
         deleteBookingMenu(id, userId)
       );
       await Promise.all(deletePromises);
-      setMenus((prev) => prev.filter((m) => !selectedIds.has(m.id)));
+      // データを再取得して状態を同期
+      await loadMenus();
       setSelectedIds(new Set());
       setSelectMode(false);
     } catch (error) {
       console.error('一括削除エラー:', error);
       alert('一部の削除に失敗しました');
+      // エラー時もデータを再取得
+      await loadMenus();
     } finally {
       setBulkDeleting(false);
     }
@@ -161,24 +191,27 @@ export default function BookingList({ userId, isAdmin, isUnlocked = false }: Boo
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-900 border-l-4 border-blue-600 pl-4 flex items-center gap-2">
           <Calendar size={20} className="text-blue-600" />
-          予約メーカー
+          {isAdmin ? '全予約メーカーリスト（管理者）' : '作成した予約メーカーリスト'}
           {isAdmin && (
             <span className="text-xs bg-red-500 text-white px-2 py-1 rounded-full">ADMIN</span>
           )}
         </h2>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           {menus.length > 0 && (
-            <button
-              onClick={toggleSelectMode}
-              className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors ${
-                selectMode
-                  ? 'bg-indigo-100 text-indigo-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {selectMode ? <CheckSquare size={16} /> : <Square size={16} />}
-              {selectMode ? '選択中' : '選択'}
-            </button>
+            <>
+              <span className="text-sm text-gray-500">全 {menus.length} 件</span>
+              <button
+                onClick={toggleSelectMode}
+                className={`px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors ${
+                  selectMode
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {selectMode ? <CheckSquare size={16} /> : <Square size={16} />}
+                {selectMode ? '選択中' : '選択'}
+              </button>
+            </>
           )}
           <button
             onClick={() => router.push('/booking/new')}
@@ -291,6 +324,11 @@ export default function BookingList({ userId, isAdmin, isUnlocked = false }: Boo
                     <CalendarDays size={12} />
                     {menu.created_at ? new Date(menu.created_at).toLocaleDateString('ja-JP') : '-'}
                   </span>
+                  {bookingCounts[menu.id] !== undefined && (
+                    <span className="flex items-center gap-1 text-blue-600 font-semibold">
+                      予約: {bookingCounts[menu.id]}件
+                    </span>
+                  )}
                 </div>
 
                 {/* URL表示とコピー */}
@@ -327,9 +365,15 @@ export default function BookingList({ userId, isAdmin, isUnlocked = false }: Boo
                       </button>
                       <button
                         onClick={() => handleDuplicate(menu)}
-                        className="flex-1 bg-purple-50 hover:bg-purple-100 text-purple-600 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors"
+                        disabled={duplicatingId === menu.id}
+                        className="flex-1 bg-purple-50 hover:bg-purple-100 text-purple-600 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
                       >
-                        <Copy size={14} /> 複製
+                        {duplicatingId === menu.id ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Copy size={14} />
+                        )}
+                        複製
                       </button>
                     </div>
 

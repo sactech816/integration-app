@@ -357,6 +357,31 @@ export async function getAttendanceEvents(
 }
 
 // -------------------------------------------
+// 全出欠表イベント取得（管理者用）
+// -------------------------------------------
+export async function getAllAttendanceEvents(): Promise<AttendanceEvent[]> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('attendance_events')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error getting all attendance events:', error);
+      return [];
+    }
+
+    return (data || []) as AttendanceEvent[];
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    return [];
+  }
+}
+
+// -------------------------------------------
 // 出欠表イベント削除
 // -------------------------------------------
 export async function deleteAttendanceEvent(

@@ -77,8 +77,8 @@ export default function PublicBookingPage() {
   const [showUrlModal, setShowUrlModal] = useState(false);
   const [urlCopied, setUrlCopied] = useState(false);
 
-  // カレンダー表示モード
-  const [calendarViewMode, setCalendarViewMode] = useState<CalendarViewMode>('month');
+  // カレンダー表示モード（週表示がデフォルト）
+  const [calendarViewMode, setCalendarViewMode] = useState<CalendarViewMode>('week');
 
   // 予約用の状態
   const [currentMonth, setCurrentMonth] = useState(new Date());
