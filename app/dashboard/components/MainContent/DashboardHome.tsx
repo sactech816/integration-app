@@ -8,6 +8,8 @@ import AnalyticsSection from './AnalyticsSection';
 import ContentList from './ContentList';
 import { ContentItem } from './ContentCard';
 
+import { PlanTier } from '@/lib/subscription';
+
 type KdlSubscription = {
   hasActiveSubscription: boolean;
   planType: 'monthly' | 'yearly' | 'none';
@@ -16,6 +18,10 @@ type KdlSubscription = {
   isMonitor?: boolean;
   monitorExpiresAt?: string;
   planTier?: string;
+};
+
+type UserSubscription = {
+  planTier: PlanTier;
 };
 
 type DashboardHomeProps = {
@@ -36,6 +42,7 @@ type DashboardHomeProps = {
   copiedId: string | null;
   kdlSubscription: KdlSubscription | null;
   loadingKdlSubscription: boolean;
+  userSubscription?: UserSubscription | null;
   onEdit: (item: ContentItem) => void;
   onDuplicate: (item: ContentItem) => void;
   onDelete: (item: ContentItem) => void;
@@ -62,6 +69,7 @@ export default function DashboardHome({
   copiedId,
   kdlSubscription,
   loadingKdlSubscription,
+  userSubscription,
   onEdit,
   onDuplicate,
   onDelete,
@@ -74,8 +82,10 @@ export default function DashboardHome({
   onNavigate,
 }: DashboardHomeProps) {
   // アナリティクス機能のアンロック判定
-  // 管理者、パートナー、KDLサブスクリプション保持者はアンロック
-  const isAnalyticsUnlocked = isAdmin || isPartner || kdlSubscription?.hasActiveSubscription;
+  // 管理者、パートナー、集客メーカーProプラン加入者はアンロック
+  // 注: KDLサブスクではなく、集客メーカーのProプランをチェック
+  const hasMakersProAccess = userSubscription?.planTier === 'pro';
+  const isAnalyticsUnlocked = isAdmin || isPartner || hasMakersProAccess;
   return (
     <div className="space-y-6">
       {/* KDLサブスクリプション状態（コンパクト版） */}

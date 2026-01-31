@@ -131,8 +131,10 @@ export default function MainContent({
 }: MainContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Pro機能のアンロック判定（有料会員、モニター、パートナー、管理者）
-  const isUnlocked = isAdmin || isPartner || kdlSubscription?.hasActiveSubscription || false;
+  // Pro機能のアンロック判定（集客メーカーProプラン、パートナー、管理者）
+  // 注: KDLサブスクではなく、集客メーカーのProプランをチェック
+  const hasMakersProAccess = userSubscription?.planTier === 'pro';
+  const isUnlocked = isAdmin || isPartner || hasMakersProAccess;
 
   // activeViewが変更されたときにスクロール位置を最上部にリセット
   useEffect(() => {
@@ -164,6 +166,7 @@ export default function MainContent({
         copiedId={copiedId}
         kdlSubscription={kdlSubscription}
         loadingKdlSubscription={loadingKdlSubscription}
+        userSubscription={userSubscription}
         onEdit={onEdit}
         onDuplicate={onDuplicate}
         onDelete={onDelete}

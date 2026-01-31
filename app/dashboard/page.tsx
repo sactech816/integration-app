@@ -110,8 +110,9 @@ function DashboardContent() {
   const [kdlSubscription, setKdlSubscription] = useState<KdlSubscription | null>(null);
   const [loadingKdlSubscription, setLoadingKdlSubscription] = useState(true);
   
-  // ユーザーサブスクリプション状態（ゲーム作成制限用）
+  // ユーザーサブスクリプション状態（ゲーム作成制限用・集客メーカーPro判定用）
   const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
+  const [loadingUserSubscription, setLoadingUserSubscription] = useState(true);
 
   // 決済完了後の検証
   useEffect(() => {
@@ -141,15 +142,15 @@ function DashboardContent() {
     verifyPayment();
   }, [searchParams, fetchPurchases, fetchContents, selectedService]);
 
-  // アナリティクス取得をスキップするかどうか（有料会員/パートナー/管理者以外はスキップ）
-  const shouldSkipAnalytics = !isAdmin && !isPartner && !kdlSubscription?.hasActiveSubscription;
+  // 集客メーカーProプランかどうか（アナリティクス表示の条件）
+  const hasMakersProAccess = userSubscription?.planTier === 'pro';
 
   // 初期データ取得（並列化で高速化）
   useEffect(() => {
     if (user) {
-      // 並列でデータ取得（アナリティクスは条件付き）
+      // 並列でデータ取得（初回はアナリティクスなしで高速取得）
       Promise.all([
-        fetchContents(selectedService, { skipAnalytics: shouldSkipAnalytics }),
+        fetchContents(selectedService, { skipAnalytics: true }),
         fetchPurchases(),
         fetchAllContentCounts(),
         fetchKdlSubscription(),
@@ -157,10 +158,21 @@ function DashboardContent() {
       ]);
     }
   }, [user, selectedService]);
+
+  // 集客メーカーProプランユーザーのみアナリティクス込みで再取得
+  useEffect(() => {
+    if (user && !loadingUserSubscription) {
+      const shouldFetchAnalytics = isAdmin || isPartner || hasMakersProAccess;
+      if (shouldFetchAnalytics) {
+        fetchContents(selectedService, { skipAnalytics: false });
+      }
+    }
+  }, [loadingUserSubscription, hasMakersProAccess, isAdmin, isPartner]);
   
-  // ユーザーサブスクリプション状態を取得
+  // ユーザーサブスクリプション状態を取得（集客メーカーのProプラン判定用）
   const fetchUserSubscription = async () => {
     if (!user) return;
+    setLoadingUserSubscription(true);
     try {
       const response = await fetch(`/api/subscription/status?userId=${user.id}`);
       if (response.ok) {
@@ -172,6 +184,8 @@ function DashboardContent() {
     } catch (error) {
       console.error('User subscription fetch error:', error);
       setUserSubscription({ planTier: 'none' });
+    } finally {
+      setLoadingUserSubscription(false);
     }
   };
 
