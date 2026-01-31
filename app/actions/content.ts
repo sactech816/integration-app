@@ -31,7 +31,7 @@ type DeleteResponse = {
 const TABLE_MAP: Record<string, string> = {
   quiz: 'quizzes',
   profile: 'profiles',
-  business: 'business_lps',
+  business: 'business_projects',
   salesletter: 'sales_letters',
 };
 
