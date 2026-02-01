@@ -9,10 +9,10 @@ WHERE content_type = 'profile'
 AND profile_id NOT IN (SELECT id::text FROM profiles);
 
 -- 2. 孤立したビジネスLPアナリティクスの削除
--- （business_lpsテーブルに存在しないslugのデータを削除）
+-- （business_projectsテーブルに存在しないslugのデータを削除）
 DELETE FROM analytics
 WHERE content_type = 'business'
-AND profile_id NOT IN (SELECT slug FROM business_lps);
+AND profile_id NOT IN (SELECT slug FROM business_projects WHERE slug IS NOT NULL);
 
 -- 3. 孤立したクイズアナリティクスの削除
 -- （quizzesテーブルに存在しないslugのデータを削除）
@@ -83,7 +83,7 @@ BEGIN
   -- ビジネスLP
   DELETE FROM analytics
   WHERE content_type = 'business'
-  AND profile_id NOT IN (SELECT slug FROM business_lps);
+  AND profile_id NOT IN (SELECT slug FROM business_projects WHERE slug IS NOT NULL);
   GET DIAGNOSTICS temp_count = ROW_COUNT;
   deleted_count := deleted_count + temp_count;
   

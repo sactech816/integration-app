@@ -128,6 +128,9 @@ export default function SalesLetterEditor({
   // セクション開閉状態
   const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(true);
   
+  // タブ状態（モバイル用）
+  const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
+  
   // モーダル状態
   const [showTemplateModal, setShowTemplateModal] = useState(!initialData);
   const [showGuideModal, setShowGuideModal] = useState<string | null>(null);
@@ -574,11 +577,37 @@ export default function SalesLetterEditor({
         </div>
       </div>
 
+      {/* モバイル用タブバー - 共通ヘッダー(64px) + エディターヘッダー(57px) = 121pxの下に配置 */}
+      <div className="lg:hidden bg-white border-b border-gray-200 sticky top-[121px] z-40">
+        <div className="flex">
+          <button 
+            onClick={() => setActiveTab('edit')}
+            className={`flex-1 py-3 px-4 font-bold text-sm flex items-center justify-center gap-2 transition-colors ${
+              activeTab === 'edit' 
+                ? 'text-rose-600 border-b-2 border-rose-600 bg-rose-50' 
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Edit3 size={18} /> 編集
+          </button>
+          <button 
+            onClick={() => setActiveTab('preview')}
+            className={`flex-1 py-3 px-4 font-bold text-sm flex items-center justify-center gap-2 transition-colors ${
+              activeTab === 'preview' 
+                ? 'text-rose-600 border-b-2 border-rose-600 bg-rose-50' 
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Eye size={18} /> プレビュー
+          </button>
+        </div>
+      </div>
+
       {/* メインコンテンツ */}
       <div className="max-w-screen-2xl mx-auto">
         <div className="flex flex-col lg:flex-row">
           {/* 左パネル: エディタ */}
-          <div className="w-full lg:w-1/2 p-4">
+          <div className={`w-full lg:w-1/2 p-4 ${activeTab === 'preview' ? 'hidden lg:block' : ''}`}>
             {/* プロ向け説明文 */}
             <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 mb-4">
               <p className="text-sm text-rose-700">
@@ -675,7 +704,7 @@ export default function SalesLetterEditor({
           </div>
 
           {/* 右パネル: プレビュー */}
-          <div className="w-full lg:w-1/2 bg-gray-200 min-h-screen lg:sticky lg:top-32 lg:max-h-[calc(100vh-8rem)] overflow-y-auto">
+          <div className={`w-full lg:w-1/2 bg-gray-200 min-h-screen lg:sticky lg:top-32 lg:max-h-[calc(100vh-8rem)] overflow-y-auto ${activeTab === 'edit' ? 'hidden lg:block' : ''}`}>
             {/* プレビューヘッダー */}
             <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between sticky top-0 z-10">
               <div className="flex items-center gap-2">
@@ -2126,6 +2155,9 @@ function TemplateModal({
   onClose: () => void;
   onShowGuide: (id: string) => void;
 }) {
+  // カテゴリのアコーディオン状態（スマホ向け）
+  const [expandedCategory, setExpandedCategory] = useState<string | null>('sales_letter');
+
   const categories = [
     { id: 'sales_letter', name: '王道のセールスレター型', description: 'LP・長い手紙向け' },
     { id: 'ec_catalog', name: 'EC・物販・カタログ型', description: '商品説明向け' },
@@ -2133,75 +2165,107 @@ function TemplateModal({
     { id: 'marketing', name: 'マーケティング思考型', description: '構成案作成向け' },
   ];
 
+  // 背景クリックで閉じる
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  // カテゴリの開閉を切り替え
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategory(prev => prev === categoryId ? null : categoryId);
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">テンプレートを選択</h2>
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4"
+      onClick={handleBackdropClick}
+    >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg sm:max-w-3xl max-h-[90vh] overflow-hidden">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900">テンプレートを選択</h2>
           <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600">
             <X size={24} />
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+        <div className="p-3 sm:p-6 overflow-y-auto max-h-[calc(90vh-60px)] sm:max-h-[calc(90vh-80px)]">
           {categories.map((category) => {
             const templates = getTemplatesByCategory(category.id);
             if (templates.length === 0) return null;
+            const isExpanded = expandedCategory === category.id;
 
             return (
-              <div key={category.id} className="mb-8">
-                <h3 className="text-lg font-bold text-gray-900 mb-1">{category.name}</h3>
-                <p className="text-sm text-gray-500 mb-4">{category.description}</p>
+              <div key={category.id} className="mb-4 sm:mb-8">
+                {/* カテゴリヘッダー（スマホではアコーディオン、PCでは常に開く） */}
+                <button
+                  onClick={() => toggleCategory(category.id)}
+                  className="w-full flex items-center justify-between sm:cursor-default"
+                >
+                  <div className="text-left">
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900">{category.name}</h3>
+                    <p className="text-xs sm:text-sm text-gray-500">{category.description}</p>
+                  </div>
+                  <ChevronDown 
+                    size={20} 
+                    className={`sm:hidden text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                  />
+                </button>
 
-                <div className="grid grid-cols-2 gap-4">
-                  {templates.map((template) => (
-                    <div
-                      key={template.id}
-                      className="border border-gray-200 rounded-xl p-4 hover:border-rose-300 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{template.icon}</span>
-                          <h4 className="font-bold text-gray-900">{template.name}</h4>
+                {/* テンプレートリスト（スマホではアコーディオン、PCでは常に表示） */}
+                <div className={`mt-3 sm:mt-4 ${isExpanded ? 'block' : 'hidden sm:block'}`}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    {templates.map((template) => (
+                      <div
+                        key={template.id}
+                        className="border border-gray-200 rounded-xl p-3 sm:p-4 hover:border-rose-300 transition-colors"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl sm:text-2xl">{template.icon}</span>
+                            <h4 className="font-bold text-gray-900 text-sm sm:text-base">{template.name}</h4>
+                          </div>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onShowGuide(template.id); }}
+                            className="p-1 text-gray-400 hover:text-rose-500"
+                            title="詳細を見る"
+                          >
+                            <HelpCircle size={18} />
+                          </button>
                         </div>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); onShowGuide(template.id); }}
-                          className="p-1 text-gray-400 hover:text-rose-500"
-                          title="詳細を見る"
-                        >
-                          <HelpCircle size={18} />
-                        </button>
+                        <p className="text-xs sm:text-sm text-gray-600 mb-3">{template.description}</p>
+                        
+                        {/* 選択ボタン */}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => onSelect(template.id)}
+                            className="flex-1 px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                          >
+                            手動で編集
+                          </button>
+                          <button
+                            onClick={() => onSelectForAI(template.id)}
+                            className="flex-1 px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-white bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 rounded-lg transition-colors flex items-center justify-center gap-1"
+                          >
+                            <Sparkles size={14} />
+                            <span className="hidden sm:inline">AI生成</span>
+                            <span className="sm:hidden">AI</span>
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600 mb-3">{template.description}</p>
-                      
-                      {/* 選択ボタン */}
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => onSelect(template.id)}
-                          className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                        >
-                          手動で編集
-                        </button>
-                        <button
-                          onClick={() => onSelectForAI(template.id)}
-                          className="flex-1 px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 rounded-lg transition-colors flex items-center justify-center gap-1"
-                        >
-                          <Sparkles size={14} />
-                          AI生成
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             );
           })}
 
           {/* 白紙から始める */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
             <button
               onClick={() => onSelect('')}
-              className="w-full py-3 text-gray-600 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+              className="w-full py-2 sm:py-3 text-sm sm:text-base text-gray-600 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
             >
               白紙から始める
             </button>
