@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
     // コンテンツ一覧取得
     let query = supabase
       .from('kdl_education_contents')
-      .select('id, title, description, content_type, category, thumbnail_url, duration_minutes, difficulty, is_premium, view_count, created_at, is_published')
+      .select('id, title, description, body, content_type, category, thumbnail_url, video_url, duration_minutes, difficulty, tags, is_premium, is_published, required_plan, sort_order, view_count, created_at, published_at')
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false });
 
@@ -246,10 +246,23 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, ...updateData } = body;
+    const { id, ...rawUpdateData } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Content ID is required' }, { status: 400 });
+    }
+
+    // テーブルに存在するフィールドのみを許可（不要なフィールドを除外）
+    const allowedFields = [
+      'title', 'description', 'body', 'content_type', 'category', 'video_url',
+      'thumbnail_url', 'duration_minutes', 'difficulty', 'tags', 'is_published',
+      'is_premium', 'required_plan', 'sort_order', 'published_at'
+    ];
+    const updateData: Record<string, unknown> = {};
+    for (const key of allowedFields) {
+      if (key in rawUpdateData) {
+        updateData[key] = rawUpdateData[key];
+      }
     }
 
     // 公開フラグが変更された場合、published_atを更新

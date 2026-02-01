@@ -281,10 +281,22 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { id, ...updateData } = body;
+    const { id, ...rawUpdateData } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Announcement ID is required' }, { status: 400 });
+    }
+
+    // テーブルに存在するフィールドのみを許可（不要なフィールドを除外）
+    const allowedFields = [
+      'title', 'content', 'category', 'priority', 'is_published', 'is_pinned',
+      'target_plans', 'target_roles', 'start_at', 'end_at', 'published_at'
+    ];
+    const updateData: Record<string, unknown> = {};
+    for (const key of allowedFields) {
+      if (key in rawUpdateData) {
+        updateData[key] = rawUpdateData[key];
+      }
     }
 
     // 公開フラグが変更された場合、published_atを更新

@@ -41,6 +41,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const adminUserId = searchParams.get('adminUserId');
     const showExpired = searchParams.get('showExpired') === 'true';
+    const service = searchParams.get('service') || 'kdl'; // サービス種別
 
     if (!adminUserId) {
       return NextResponse.json({ error: '管理者IDが必要です' }, { status: 400 });
@@ -56,6 +57,7 @@ export async function GET(request: Request) {
     let query = supabase
       .from('monitor_users')
       .select('*')
+      .eq('service', service) // サービスでフィルタリング
       .order('created_at', { ascending: false });
 
     // 期限切れを含めるかどうか
@@ -117,6 +119,7 @@ export async function POST(request: Request) {
       monitorPlanType,
       durationDays,
       notes,
+      service = 'kdl', // サービス種別（デフォルト: kdl）
     } = body;
 
     if (!adminUserId) {
@@ -127,8 +130,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'ユーザーのEmailまたはIDが必要です' }, { status: 400 });
     }
 
-    if (!monitorPlanType || !['lite', 'standard', 'pro', 'business', 'enterprise'].includes(monitorPlanType)) {
+    // 許可されたプラン種別（継続プラン + 初回プラン）
+    const validPlanTypes = [
+      'lite', 'standard', 'pro', 'business', 'enterprise',
+      'initial_trial', 'initial_standard', 'initial_business'
+    ];
+    if (!monitorPlanType || !validPlanTypes.includes(monitorPlanType)) {
       return NextResponse.json({ error: '有効なプラン種別を指定してください' }, { status: 400 });
+    }
+
+    // サービス種別のバリデーション
+    if (!['kdl', 'makers'].includes(service)) {
+      return NextResponse.json({ error: '有効なサービス種別を指定してください' }, { status: 400 });
     }
 
     if (!durationDays || durationDays < 1) {
@@ -171,11 +184,12 @@ export async function POST(request: Request) {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
 
-    // 既存のモニター権限をチェック（1ユーザーにつき1つまで）
+    // 既存のモニター権限をチェック（同じユーザー＆同じサービスで1つまで）
     const { data: existingMonitor } = await supabase
       .from('monitor_users')
       .select('id')
       .eq('user_id', targetUserId)
+      .eq('service', service)
       .single();
 
     if (existingMonitor) {
@@ -214,6 +228,7 @@ export async function POST(request: Request) {
           monitor_start_at: now.toISOString(),
           monitor_expires_at: expiresAt.toISOString(),
           notes: notes || null,
+          service: service, // サービス種別を保存
         })
         .select()
         .single();
