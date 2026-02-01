@@ -217,113 +217,57 @@ export async function getMultipleAnalytics(
       return contentIds.map(id => ({ contentId: id, analytics: defaultResult }));
     }
 
-    // 全コンテンツのイベントを一括取得
-    // Supabaseのサーバー制限(1000件)を回避するため、ページネーションで取得
-    console.log('[Analytics] Batch fetching for:', { contentIds, contentType });
+    // RPC関数でDB側で集計（高速）
+    console.log('[Analytics] Fetching via RPC for:', { contentIds: contentIds.length, contentType });
     
-    const pageSize = 1000;
-    let allEvents: Array<{
-      id: string;
-      profile_id: string;
-      event_type: string;
-      event_data: Record<string, unknown>;
-    }> = [];
-    let page = 0;
-    let hasMore = true;
-    
-    while (hasMore) {
-      const from = page * pageSize;
-      const to = from + pageSize - 1;
-      
-      const { data: pageData, error } = await supabase
-        .from('analytics')
-        .select('id, profile_id, event_type, event_data')
-        .in('profile_id', contentIds)
-        .eq('content_type', contentType)
-        .range(from, to);
-      
-      if (error) {
-        console.error('[Analytics] Batch fetch error:', error);
-        return contentIds.map(id => ({ contentId: id, analytics: defaultResult }));
-      }
-      
-      if (pageData && pageData.length > 0) {
-        allEvents = allEvents.concat(pageData);
-        hasMore = pageData.length === pageSize;
-        page++;
-      } else {
-        hasMore = false;
-      }
-      
-      // 安全のため最大50ページ（50000件）で停止
-      if (page >= 50) {
-        console.warn('[Analytics] Reached max pages limit');
-        hasMore = false;
-      }
-    }
-    
-    console.log('[Analytics] Batch fetch result:', { 
-      eventCount: allEvents.length,
-      pages: page,
-      sampleEvents: allEvents.slice(0, 3) 
+    const { data: summaryData, error } = await supabase.rpc('get_analytics_summary', {
+      p_content_ids: contentIds,
+      p_content_type: contentType
     });
 
-    // コンテンツIDごとにグループ化して集計
+    if (error) {
+      console.error('[Analytics] RPC error:', error);
+      return contentIds.map(id => ({ contentId: id, analytics: defaultResult }));
+    }
+
+    console.log('[Analytics] RPC result:', { 
+      resultCount: summaryData?.length || 0
+    });
+
+    // 結果をマッピング
+    const summaryMap = new Map<string, {
+      views: number;
+      clicks: number;
+      completions: number;
+      avg_scroll_depth: number;
+      avg_time_spent: number;
+      read_rate: number;
+      click_rate: number;
+    }>();
+    
+    if (summaryData) {
+      for (const row of summaryData) {
+        summaryMap.set(row.content_id, row);
+      }
+    }
+
     const results = contentIds.map(contentId => {
-      const contentEvents = allEvents?.filter(e => e.profile_id === contentId) || [];
+      const summary = summaryMap.get(contentId);
       
-      if (contentEvents.length === 0) {
+      if (!summary) {
         return { contentId, analytics: defaultResult };
       }
-
-      // イベントタイプ別に分類
-      const views = contentEvents.filter(e => e.event_type === 'view');
-      const clicks = contentEvents.filter(e => e.event_type === 'click');
-      const completions = contentEvents.filter(e => e.event_type === 'completion');
-      const scrolls = contentEvents.filter(e => e.event_type === 'scroll');
-      const times = contentEvents.filter(e => e.event_type === 'time');
-      const reads = contentEvents.filter(e => e.event_type === 'read');
-
-      // 平均スクロール深度
-      const scrollDepths = scrolls
-        .map(e => Number(e.event_data?.scrollDepth) || 0)
-        .filter(d => d > 0);
-      const avgScrollDepth = scrollDepths.length > 0
-        ? Math.round(scrollDepths.reduce((a, b) => a + b, 0) / scrollDepths.length)
-        : 0;
-
-      // 平均滞在時間（秒）
-      const timeSpents = times
-        .map(e => Number(e.event_data?.timeSpent) || 0)
-        .filter(t => t > 0);
-      const avgTimeSpent = timeSpents.length > 0
-        ? Math.round(timeSpents.reduce((a, b) => a + b, 0) / timeSpents.length)
-        : 0;
-
-      // 精読率（50%以上スクロールした割合）
-      const readPercentages = reads
-        .map(e => Number(e.event_data?.readPercentage) || 0)
-        .filter(r => r > 0);
-      const readCount = readPercentages.filter(r => r >= 50).length;
-      const readRate = views.length > 0 
-        ? Math.round((readCount / views.length) * 100) 
-        : 0;
-
-      // クリック率
-      const clickRate = views.length > 0 
-        ? Math.round((clicks.length / views.length) * 100) 
-        : 0;
 
       return {
         contentId,
         analytics: {
-          views: views.length,
-          clicks: clicks.length,
-          completions: completions.length,
-          avgScrollDepth,
-          avgTimeSpent,
-          readRate,
-          clickRate
+          views: Number(summary.views) || 0,
+          clicks: Number(summary.clicks) || 0,
+          completions: Number(summary.completions) || 0,
+          avgScrollDepth: Math.round(Number(summary.avg_scroll_depth) || 0),
+          avgTimeSpent: Math.round(Number(summary.avg_time_spent) || 0),
+          readRate: Math.round(Number(summary.read_rate) || 0),
+          clickRate: Math.round(Number(summary.click_rate) || 0)
         }
       };
     });
