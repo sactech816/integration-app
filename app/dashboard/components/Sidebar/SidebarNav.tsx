@@ -56,6 +56,7 @@ type SidebarNavProps = {
   onLogout: () => void;
   // KDLサブスクリプション状態
   hasKdlSubscription?: boolean;
+  isKdlMonitor?: boolean;
 };
 
 export default function SidebarNav({
@@ -65,9 +66,17 @@ export default function SidebarNav({
   contentCounts,
   onLogout,
   hasKdlSubscription = false,
+  isKdlMonitor = false,
 }: SidebarNavProps) {
   // KDLの状態判定（管理者は常にアクセス可能）
   const kdlDisabled = !hasKdlSubscription && !isAdmin;
+  
+  // KDLバッジの表示内容
+  const getKdlBadge = () => {
+    if (kdlDisabled) return '未加入';
+    if (isKdlMonitor) return 'モニター';
+    return undefined;
+  };
 
   const menuItems: MenuItem[] = [
     // メインメニュー
@@ -86,7 +95,7 @@ export default function SidebarNav({
       icon: BookOpen, 
       section: 'main',
       isDisabled: kdlDisabled,
-      disabledBadge: kdlDisabled ? '未加入' : undefined,
+      disabledBadge: getKdlBadge(),
     },
     { id: 'affiliate', label: 'アフィリエイト', icon: Share2, section: 'main' },
     
@@ -161,9 +170,13 @@ export default function SidebarNav({
         <Icon size={18} className={getIconStyles()} />
         <span className="flex-1 text-[13px] leading-tight">{item.label}</span>
         
-        {/* 無効化バッジ（KDL未加入など） */}
+        {/* ステータスバッジ（KDL未加入・モニターなど） */}
         {item.disabledBadge && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 text-gray-500 font-bold">
+          <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+            item.disabledBadge === 'モニター' 
+              ? 'bg-purple-100 text-purple-600' 
+              : 'bg-gray-200 text-gray-500'
+          }`}>
             {item.disabledBadge}
           </span>
         )}

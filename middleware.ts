@@ -150,12 +150,15 @@ export async function middleware(request: NextRequest) {
     const now = new Date().toISOString();
     const supabaseForQuery = supabaseAdmin || supabase;
     
-    // モニター権限チェック（monitor_usersテーブルを確認）
-    const { data: monitorData } = await supabaseForQuery
+    // モニター権限チェック（monitor_usersテーブルを確認、KDLサービス限定）
+    const { data: monitorData, error: monitorError } = await supabaseForQuery
       .from('monitor_users')
-      .select('monitor_expires_at, monitor_start_at')
+      .select('monitor_expires_at, monitor_start_at, service')
       .eq('user_id', user.id)
+      .eq('service', 'kdl')
       .maybeSingle();
+    
+    console.log('[Middleware] Monitor check for user:', user.id, 'result:', monitorData, 'error:', monitorError);
 
     // モニター権限が有効期限内かチェック
     const hasMonitorAccess = monitorData && 

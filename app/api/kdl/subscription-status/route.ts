@@ -47,29 +47,37 @@ async function getAuthSupabase() {
 
 export async function GET(request: NextRequest) {
   try {
-    // 認証チェック
-    const authSupabase = await getAuthSupabase();
-    if (!authSupabase) {
-      return NextResponse.json({
-        hasActiveSubscription: false,
-        planType: 'none',
-        planTier: 'none',
-        isMonitor: false
-      });
-    }
-    
-    const { data: { user } } = await authSupabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({
-        hasActiveSubscription: false,
-        planType: 'none',
-        planTier: 'none',
-        isMonitor: false
-      });
-    }
+    console.log('[KDL Sub Status] API called');
     
     const supabase = getSupabaseServer();
     if (!supabase) {
+      console.log('[KDL Sub Status] No supabase server');
+      return NextResponse.json({
+        hasActiveSubscription: false,
+        planType: 'none',
+        planTier: 'none',
+        isMonitor: false
+      });
+    }
+    
+    // クエリパラメータからユーザーIDを取得
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    
+    // クエリパラメータがない場合はCookie認証を試行
+    let finalUserId = userId;
+    if (!finalUserId) {
+      const authSupabase = await getAuthSupabase();
+      if (authSupabase) {
+        const { data: { user } } = await authSupabase.auth.getUser();
+        finalUserId = user?.id || null;
+      }
+    }
+    
+    console.log('[KDL Sub Status] User ID:', finalUserId || 'null');
+    
+    if (!finalUserId) {
+      console.log('[KDL Sub Status] No user');
       return NextResponse.json({
         hasActiveSubscription: false,
         planType: 'none',
@@ -82,7 +90,7 @@ export async function GET(request: NextRequest) {
     const { data: subscription } = await supabase
       .from('kdl_subscriptions')
       .select('status, plan_tier, period, next_payment_date, amount')
-      .eq('user_id', user.id)
+      .eq('user_id', finalUserId)
       .in('status', ['active', 'trialing'])
       .single();
     
@@ -97,15 +105,20 @@ export async function GET(request: NextRequest) {
       });
     }
     
-    // 2. モニターユーザーをチェック
+    // 2. モニターユーザーをチェック（KDLサービス限定）
     const now = new Date().toISOString();
-    const { data: monitor } = await supabase
+    console.log('[KDL Sub Status] Checking monitor for user:', finalUserId, 'now:', now);
+    
+    const { data: monitor, error: monitorError } = await supabase
       .from('monitor_users')
-      .select('monitor_plan_type, monitor_expires_at')
-      .eq('user_id', user.id)
+      .select('monitor_plan_type, monitor_expires_at, service')
+      .eq('user_id', finalUserId)
+      .eq('service', 'kdl')
       .lte('monitor_start_at', now)
       .gt('monitor_expires_at', now)
       .single();
+    
+    console.log('[KDL Sub Status] Monitor result:', monitor, 'error:', monitorError);
     
     if (monitor) {
       return NextResponse.json({
@@ -121,7 +134,7 @@ export async function GET(request: NextRequest) {
     const { data: oldSubscription } = await supabase
       .from('subscriptions')
       .select('status, plan_tier, period, next_payment_date, amount')
-      .eq('user_id', user.id)
+      .eq('user_id', finalUserId)
       .eq('status', 'active')
       .single();
     

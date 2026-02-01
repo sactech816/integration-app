@@ -211,7 +211,7 @@ function DashboardContent() {
     if (!user) return;
     setLoadingKdlSubscription(true);
     try {
-      const response = await fetch('/api/kdl/subscription-status', {
+      const response = await fetch(`/api/kdl/subscription-status?userId=${user.id}`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -396,6 +396,7 @@ function DashboardContent() {
               onLogout={handleLogout}
               onNavigate={handleNavigate}
               hasKdlSubscription={kdlSubscription?.hasActiveSubscription || false}
+              isKdlMonitor={kdlSubscription?.isMonitor || false}
             />
           }
         >

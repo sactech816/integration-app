@@ -263,14 +263,19 @@ export async function getSubscriptionStatus(userId: string): Promise<Subscriptio
 
   try {
     // モニター権限をチェック（有効期限内のもの、KDLサービス限定）
-    const { data: monitorData } = await supabase
+    const now = new Date().toISOString();
+    console.log('[getSubscriptionStatus] Checking monitor for user:', userId, 'now:', now);
+    
+    const { data: monitorData, error: monitorError } = await supabase
       .from('monitor_users')
-      .select('monitor_plan_type, monitor_expires_at')
+      .select('monitor_plan_type, monitor_expires_at, service')
       .eq('user_id', userId)
       .eq('service', 'kdl')
-      .lte('monitor_start_at', new Date().toISOString())
-      .gt('monitor_expires_at', new Date().toISOString())
+      .lte('monitor_start_at', now)
+      .gt('monitor_expires_at', now)
       .single();
+
+    console.log('[getSubscriptionStatus] Monitor result:', monitorData, 'error:', monitorError);
 
     // モニター権限がある場合はそれを優先
     if (monitorData) {
