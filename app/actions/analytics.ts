@@ -218,22 +218,54 @@ export async function getMultipleAnalytics(
     }
 
     // 全コンテンツのイベントを一括取得
+    // Supabaseのサーバー制限(1000件)を回避するため、ページネーションで取得
     console.log('[Analytics] Batch fetching for:', { contentIds, contentType });
     
-    const { data: allEvents, error } = await supabase
-      .from('analytics')
-      .select('*')
-      .in('profile_id', contentIds)  // DBカラム名はprofile_id
-      .eq('content_type', contentType);
-
-    if (error) {
-      console.error('[Analytics] Batch fetch error:', error);
-      return contentIds.map(id => ({ contentId: id, analytics: defaultResult }));
+    const pageSize = 1000;
+    let allEvents: Array<{
+      id: string;
+      profile_id: string;
+      event_type: string;
+      event_data: Record<string, unknown>;
+    }> = [];
+    let page = 0;
+    let hasMore = true;
+    
+    while (hasMore) {
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      
+      const { data: pageData, error } = await supabase
+        .from('analytics')
+        .select('id, profile_id, event_type, event_data')
+        .in('profile_id', contentIds)
+        .eq('content_type', contentType)
+        .range(from, to);
+      
+      if (error) {
+        console.error('[Analytics] Batch fetch error:', error);
+        return contentIds.map(id => ({ contentId: id, analytics: defaultResult }));
+      }
+      
+      if (pageData && pageData.length > 0) {
+        allEvents = allEvents.concat(pageData);
+        hasMore = pageData.length === pageSize;
+        page++;
+      } else {
+        hasMore = false;
+      }
+      
+      // 安全のため最大50ページ（50000件）で停止
+      if (page >= 50) {
+        console.warn('[Analytics] Reached max pages limit');
+        hasMore = false;
+      }
     }
     
     console.log('[Analytics] Batch fetch result:', { 
-      eventCount: allEvents?.length || 0, 
-      sampleEvents: allEvents?.slice(0, 3) 
+      eventCount: allEvents.length,
+      pages: page,
+      sampleEvents: allEvents.slice(0, 3) 
     });
 
     // コンテンツIDごとにグループ化して集計

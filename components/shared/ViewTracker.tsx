@@ -104,15 +104,15 @@ export function ViewTracker({
       }
     };
 
-    // 定期的な滞在時間記録（30秒ごと）
+    // 定期的な滞在時間記録（60秒ごと - DB負荷軽減のため30秒から変更）
     let timeInterval: NodeJS.Timeout | null = null;
     if (trackTime) {
       timeInterval = setInterval(() => {
         const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000);
-        if (timeSpent >= 30) {
+        if (timeSpent >= 60) {
           saveAnalytics(contentId, contentType, 'time', { timeSpent });
         }
-      }, 30000);
+      }, 60000);
     }
 
     window.addEventListener('beforeunload', handleBeforeUnload);
