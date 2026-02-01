@@ -154,7 +154,7 @@ export default function AnnouncementList({ userId, accessToken }: AnnouncementLi
             <h1 className="text-2xl font-bold text-gray-900 mb-4">{selectedAnnouncement.title}</h1>
 
             {/* 本文 */}
-            <div className="prose prose-gray max-w-none whitespace-pre-wrap">
+            <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
               {selectedAnnouncement.content}
             </div>
           </div>
@@ -242,7 +242,7 @@ export default function AnnouncementList({ userId, accessToken }: AnnouncementLi
                       </h3>
 
                       {/* 本文プレビュー */}
-                      <p className="text-sm text-gray-500 line-clamp-2">
+                      <p className="text-sm text-gray-700 line-clamp-2">
                         {announcement.content}
                       </p>
                     </div>

@@ -606,7 +606,7 @@ export default function GuideBookManager({ userId, accessToken }: GuideBookManag
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-900">{item.title}</div>
                       {item.description && (
-                        <div className="text-sm text-gray-500 line-clamp-1">{item.description}</div>
+                        <div className="text-sm text-gray-700 line-clamp-1">{item.description}</div>
                       )}
                       {item.is_premium && (
                         <span className="inline-flex items-center gap-1 mt-1 bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs font-bold">

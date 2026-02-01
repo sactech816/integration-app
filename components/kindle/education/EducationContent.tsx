@@ -161,7 +161,7 @@ export default function EducationContent({ userId }: EducationContentProps) {
               </div>
             ) : (
               <div 
-                className="prose prose-gray prose-lg max-w-none text-gray-800"
+                className="text-gray-800 leading-relaxed text-base"
                 dangerouslySetInnerHTML={{ __html: contentBody.replace(/\n/g, '<br />') }}
               />
             )}

@@ -560,7 +560,7 @@ export default function AnnouncementManager({ userId, accessToken }: Announcemen
                         <div>
                           <div className="font-medium text-gray-900">{item.title}</div>
                           {item.content && (
-                            <div className="text-sm text-gray-500 line-clamp-1">
+                            <div className="text-sm text-gray-700 line-clamp-1">
                               {item.content.replace(/<[^>]*>/g, '').slice(0, 50)}...
                             </div>
                           )}
