@@ -217,11 +217,83 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
     }
   }, [sectionId, initialContent, editor, onSave]);
 
+  // 未保存変更の追跡用ref
+  const autoSaveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // 未保存の変更があるかどうかを判定
+  const hasUnsavedChanges = useCallback(() => {
+    if (!editor) return false;
+    const currentContent = editor.getHTML();
+    return currentContent !== lastSavedContentRef.current;
+  }, [editor]);
+
+  // 定期保存（30秒ごと）
+  useEffect(() => {
+    if (readOnly || !editor) return;
+    
+    autoSaveIntervalRef.current = setInterval(async () => {
+      const currentContent = editor.getHTML();
+      
+      // 変更がない場合はスキップ
+      if (currentContent === lastSavedContentRef.current) return;
+      
+      // デバウンスタイマーをキャンセル（重複保存を防ぐ）
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+      
+      setSaveStatus('saving');
+      try {
+        await onSave(currentSectionIdRef.current, currentContent);
+        lastSavedContentRef.current = currentContent;
+        setSaveStatus('saved');
+        console.log('✅ 自動保存完了（定期）');
+        
+        setTimeout(() => {
+          setSaveStatus((current) => current === 'saved' ? 'idle' : current);
+        }, 3000);
+      } catch (error) {
+        console.error('Auto save error:', error);
+        setSaveStatus('error');
+      }
+    }, 30000); // 30秒ごと
+    
+    return () => {
+      if (autoSaveIntervalRef.current) {
+        clearInterval(autoSaveIntervalRef.current);
+      }
+    };
+  }, [editor, onSave, readOnly]);
+
+  // ページ離脱警告
+  useEffect(() => {
+    if (readOnly) return;
+    
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges()) {
+        e.preventDefault();
+        // Chrome では returnValue の設定が必要
+        e.returnValue = '保存されていない変更があります。ページを離れますか？';
+        return e.returnValue;
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [readOnly, hasUnsavedChanges]);
+
   // クリーンアップ
   useEffect(() => {
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
+      }
+      if (autoSaveIntervalRef.current) {
+        clearInterval(autoSaveIntervalRef.current);
       }
     };
   }, []);
