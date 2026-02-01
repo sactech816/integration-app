@@ -465,10 +465,56 @@ export async function logAIUsage(params: LogAIUsageParams): Promise<string | nul
     });
 
     if (error) {
-      console.error('Failed to log AI usage:', error);
+      console.error('Failed to log AI usage via RPC:', error);
+      
+      // RPC関数がない場合（42883）は直接INSERTを試みる
+      if (error.code === '42883' || error.code === 'PGRST202') {
+        console.log('[AI Usage] RPC function not found, using direct INSERT');
+        
+        // コスト計算（簡易版）
+        const modelUsed = params.modelUsed || 'gemini-1.5-flash';
+        const inputTokens = params.inputTokens || 0;
+        const outputTokens = params.outputTokens || 0;
+        let estimatedCostJpy = 0;
+        
+        if (modelUsed.includes('gemini-1.5-flash') || modelUsed.includes('gemini-2.0-flash')) {
+          estimatedCostJpy = (inputTokens * 0.075 / 1000000 + outputTokens * 0.30 / 1000000) * 150;
+        } else if (modelUsed.includes('gemini-1.5-pro') || modelUsed.includes('gemini-2.0-pro')) {
+          estimatedCostJpy = (inputTokens * 1.25 / 1000000 + outputTokens * 5.00 / 1000000) * 150;
+        } else if (modelUsed.includes('gpt-4o-mini')) {
+          estimatedCostJpy = (inputTokens * 0.15 / 1000000 + outputTokens * 0.60 / 1000000) * 150;
+        } else if (modelUsed.includes('gpt-4o')) {
+          estimatedCostJpy = (inputTokens * 2.50 / 1000000 + outputTokens * 10.00 / 1000000) * 150;
+        }
+        
+        const { data: insertData, error: insertError } = await supabase
+          .from('ai_usage_logs')
+          .insert({
+            user_id: params.userId,
+            action_type: params.actionType,
+            service: params.service || 'kdl',
+            model_used: modelUsed,
+            input_tokens: inputTokens,
+            output_tokens: outputTokens,
+            estimated_cost_jpy: estimatedCostJpy,
+            metadata: params.metadata || null,
+          })
+          .select('id')
+          .single();
+        
+        if (insertError) {
+          console.error('Failed to log AI usage via direct INSERT:', insertError);
+          return null;
+        }
+        
+        console.log(`✅ AI usage logged via direct INSERT: ${insertData?.id}`);
+        return insertData?.id || null;
+      }
+      
       return null;
     }
 
+    console.log(`✅ AI usage logged via RPC: ${data}`);
     return data;
   } catch (err) {
     console.error('Error logging AI usage:', err);
