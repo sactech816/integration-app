@@ -10,6 +10,35 @@ interface AIUsageDisplayProps {
   isMonitor?: boolean;
 }
 
+// プラン名を詳細表示するヘルパー関数
+const getPlanDisplayName = (planTier?: string, planType?: string, isMonitor?: boolean): string => {
+  if (isMonitor) return 'モニター特典';
+  
+  // 初回プラン（一括購入）
+  if (planTier?.startsWith('initial_')) {
+    switch (planTier) {
+      case 'initial_trial': return '初回プラン（一括購入）トライアル';
+      case 'initial_standard': return '初回プラン（一括購入）スタンダード';
+      case 'initial_business': return '初回プラン（一括購入）ビジネス';
+      default: return '初回プラン（一括購入）';
+    }
+  }
+  
+  // 継続プラン
+  if (planType === 'monthly' || planType === 'yearly') {
+    switch (planTier) {
+      case 'lite': return '継続プラン ライト';
+      case 'standard': return '継続プラン スタンダード';
+      case 'pro': return '継続プラン プロ';
+      case 'business': return '継続プラン ビジネス';
+      case 'enterprise': return '継続プラン エンタープライズ';
+      default: return planType === 'yearly' ? '継続プラン（年額）' : '継続プラン（月額）';
+    }
+  }
+  
+  return 'お試し';
+};
+
 interface UsageData {
   daily: {
     total_calls: number;
@@ -147,21 +176,13 @@ export default function AIUsageDisplay({ userId, planType, planTier, isMonitor }
           <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
             isMonitor
               ? 'bg-purple-100 text-purple-700'
-              : planTier?.startsWith('initial_') || planType === 'yearly'
+              : planTier?.startsWith('initial_')
               ? 'bg-amber-100 text-amber-700'
-              : planType === 'monthly'
+              : planType === 'monthly' || planType === 'yearly'
               ? 'bg-blue-100 text-blue-700'
               : 'bg-gray-100 text-gray-600'
           }`}>
-            {isMonitor 
-              ? 'モニター特典' 
-              : planTier?.startsWith('initial_')
-                ? '初回プラン（一括）'
-                : planType === 'yearly' 
-                  ? '初回プラン（一括）' 
-                  : planType === 'monthly' 
-                    ? '継続プラン（月額）' 
-                    : 'お試し'}
+            {getPlanDisplayName(planTier, planType, isMonitor)}
           </span>
         </div>
       </div>

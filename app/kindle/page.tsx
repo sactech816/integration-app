@@ -21,6 +21,36 @@ import { AdminUserList, GuideBookManager, AnnouncementManager, KdlServiceManagem
 import { EducationContent } from '@/components/kindle/education';
 import { AnnouncementList } from '@/components/kindle/announcements';
 import AffiliateManager from '@/app/dashboard/components/Admin/AffiliateManager';
+import AdminAIUsageStats from '@/components/shared/AdminAIUsageStats';
+
+// プラン名を詳細表示するヘルパー関数
+const getPlanDisplayName = (planTier?: string, planType?: string, isMonitor?: boolean): string => {
+  if (isMonitor) return 'モニター特典';
+  
+  // 初回プラン（一括購入）
+  if (planTier?.startsWith('initial_')) {
+    switch (planTier) {
+      case 'initial_trial': return '初回プラン（一括購入）トライアル';
+      case 'initial_standard': return '初回プラン（一括購入）スタンダード';
+      case 'initial_business': return '初回プラン（一括購入）ビジネス';
+      default: return '初回プラン（一括購入）';
+    }
+  }
+  
+  // 継続プラン
+  if (planType === 'monthly' || planType === 'yearly') {
+    switch (planTier) {
+      case 'lite': return '継続プラン ライト';
+      case 'standard': return '継続プラン スタンダード';
+      case 'pro': return '継続プラン プロ';
+      case 'business': return '継続プラン ビジネス';
+      case 'enterprise': return '継続プラン エンタープライズ';
+      default: return planType === 'yearly' ? '継続プラン（年額）' : '継続プラン（月額）';
+    }
+  }
+  
+  return 'お試し';
+};
 
 interface Book {
   id: string;
@@ -666,6 +696,8 @@ function KindleListPageContent() {
             </button>
           </div>
           <KdlServiceManagement userId={user.id} accessToken={accessToken} />
+          {/* AI使用量とコスト統計 */}
+          <AdminAIUsageStats userId={user.id} />
         </div>
       ) : activeMenuItem === 'admin-affiliate' && user && isAdmin ? (
         /* アフィリエイト管理画面（管理者のみ） */
@@ -798,13 +830,7 @@ function KindleListPageContent() {
                   <Crown size={18} className={subscriptionStatus.isMonitor ? 'text-purple-600' : 'text-green-600'} />
                 </div>
                 <span className={`font-bold text-sm ${subscriptionStatus.isMonitor ? 'text-purple-700' : 'text-green-700'}`}>
-                  {subscriptionStatus.isMonitor 
-                    ? 'モニター特典' 
-                    : subscriptionStatus.planTier?.startsWith('initial_')
-                      ? '初回プラン（一括）'
-                      : subscriptionStatus.planType === 'yearly' 
-                        ? '初回プラン（一括）' 
-                        : '継続プラン（月額）'}
+                  {getPlanDisplayName(subscriptionStatus.planTier, subscriptionStatus.planType, subscriptionStatus.isMonitor)}
                 </span>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
                   subscriptionStatus.isMonitor ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'
