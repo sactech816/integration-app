@@ -47,7 +47,7 @@ export async function GET(request: Request) {
       
       const { data, error } = await supabase
         .from('ai_usage_logs')
-        .select('service, user_id, input_tokens, output_tokens, estimated_cost_jpy')
+        .select('service, user_id, input_tokens, output_tokens, estimated_cost_jpy, model_used')
         .gte('created_at', startDate)
         .lt('created_at', addOneDay(endDate));
 
@@ -58,7 +58,9 @@ export async function GET(request: Request) {
 
       // 手動でサービス別に集計
       const stats = aggregateByService(data || []);
-      return NextResponse.json({ stats });
+      // モデル別の統計も追加
+      const modelStats = aggregateByModel(data || []);
+      return NextResponse.json({ stats, modelStats });
     }
 
     if (rpcError) {
@@ -66,7 +68,16 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 });
     }
 
-    return NextResponse.json({ stats: rpcData || [] });
+    // RPC成功時もモデル別統計を追加取得
+    const { data: modelData } = await supabase
+      .from('ai_usage_logs')
+      .select('model_used, input_tokens, output_tokens, estimated_cost_jpy')
+      .gte('created_at', startDate)
+      .lt('created_at', addOneDay(endDate));
+
+    const modelStats = aggregateByModel(modelData || []);
+
+    return NextResponse.json({ stats: rpcData || [], modelStats });
   } catch (error: any) {
     console.error('GET AI usage stats error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -85,6 +96,39 @@ function addOneDay(dateStr: string): string {
   const date = new Date(dateStr);
   date.setDate(date.getDate() + 1);
   return date.toISOString().split('T')[0];
+}
+
+// モデル別に集計
+function aggregateByModel(data: any[]): any[] {
+  const modelMap: Record<string, {
+    model: string;
+    total_requests: number;
+    total_input_tokens: number;
+    total_output_tokens: number;
+    total_cost_jpy: number;
+  }> = {};
+
+  for (const row of data) {
+    const model = row.model_used || 'unknown';
+
+    if (!modelMap[model]) {
+      modelMap[model] = {
+        model,
+        total_requests: 0,
+        total_input_tokens: 0,
+        total_output_tokens: 0,
+        total_cost_jpy: 0,
+      };
+    }
+
+    const stat = modelMap[model];
+    stat.total_requests++;
+    stat.total_input_tokens += row.input_tokens || 0;
+    stat.total_output_tokens += row.output_tokens || 0;
+    stat.total_cost_jpy += parseFloat(row.estimated_cost_jpy) || 0;
+  }
+
+  return Object.values(modelMap).sort((a, b) => b.total_requests - a.total_requests);
 }
 
 // サービス別に集計

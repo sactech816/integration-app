@@ -184,8 +184,20 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
     monitor.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // 初回プラン定義
+  const INITIAL_PLAN_NAMES: Record<string, string> = {
+    initial_trial: '初回プラン トライアル',
+    initial_standard: '初回プラン スタンダード',
+    initial_business: '初回プラン ビジネス',
+  };
+
   // プラン名を取得
   const getPlanName = (planType: string, service: ServiceType = 'kdl'): string => {
+    // 初回プランの場合
+    if (planType.startsWith('initial_')) {
+      return INITIAL_PLAN_NAMES[planType] || planType;
+    }
+    
     if (service === 'makers') {
       const plan = MAKERS_PLAN_DEFINITIONS[planType as MakersPlanTier];
       return plan?.nameJa || planType;

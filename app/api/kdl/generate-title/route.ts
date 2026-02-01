@@ -4,6 +4,7 @@ import {
   generateWithFallback 
 } from '@/lib/ai-provider';
 import { getSubscriptionStatus } from '@/lib/subscription';
+import { logAIUsage } from '@/lib/ai-usage';
 
 // レスポンスの型定義
 interface TitleSuggestion {
@@ -149,6 +150,17 @@ Amazon SEOとKindleマーケティングに精通した出版プロデューサ�
     const content = response.content;
     if (!content) {
       throw new Error('AIからの応答が空です');
+    }
+
+    // AI使用量を記録
+    if (user_id) {
+      logAIUsage({
+        userId: user_id,
+        actionType: 'generate_title',
+        service: 'kdl',
+        modelUsed: response.model,
+        metadata: { theme, plan_tier: planTier },
+      }).catch(console.error);
     }
 
     const result: GeneratedTitles = JSON.parse(content);

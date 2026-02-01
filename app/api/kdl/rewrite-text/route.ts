@@ -4,6 +4,7 @@ import {
   generateWithFallback 
 } from '@/lib/ai-provider';
 import { getSubscriptionStatus } from '@/lib/subscription';
+import { logAIUsage } from '@/lib/ai-usage';
 
 // 執筆スタイルの定義
 const WRITING_STYLES = {
@@ -175,6 +176,17 @@ HTMLタグで構造化した書き換え後のテキストを出力してくだ�
     let content = response.content;
     if (!content) {
       throw new Error('AIからの応答が空です');
+    }
+
+    // AI使用量を記録
+    if (user_id) {
+      logAIUsage({
+        userId: user_id,
+        actionType: 'rewrite_text',
+        service: 'kdl',
+        modelUsed: response.model,
+        metadata: { writing_style: styleId, plan_tier: planTier },
+      }).catch(console.error);
     }
 
     // コードブロック記法を除去

@@ -21,12 +21,21 @@ interface ServiceStats {
   avg_requests_per_user: number;
 }
 
+interface ModelStats {
+  model: string;
+  total_requests: number;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  total_cost_jpy: number;
+}
+
 interface AdminAIUsageStatsProps {
   userId: string;
 }
 
 export default function AdminAIUsageStats({ userId }: AdminAIUsageStatsProps) {
   const [stats, setStats] = useState<ServiceStats[]>([]);
+  const [modelStats, setModelStats] = useState<ModelStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d'>('30d');
@@ -52,6 +61,7 @@ export default function AdminAIUsageStats({ userId }: AdminAIUsageStatsProps) {
 
       const data = await response.json();
       setStats(data.stats || []);
+      setModelStats(data.modelStats || []);
       setLastUpdated(new Date());
     } catch (err: any) {
       console.error('AI usage stats fetch error:', err);
@@ -315,6 +325,55 @@ export default function AdminAIUsageStats({ userId }: AdminAIUsageStatsProps) {
                 </div>
               ))}
             </div>
+          )}
+
+          {/* モデル別統計 */}
+          {modelStats.length > 0 && (
+            <>
+              <h3 className="font-bold text-gray-900 mb-4 mt-8">AIモデル別内訳</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2 px-3 font-medium text-gray-600">モデル</th>
+                      <th className="text-right py-2 px-3 font-medium text-gray-600">リクエスト</th>
+                      <th className="text-right py-2 px-3 font-medium text-gray-600">入力トークン</th>
+                      <th className="text-right py-2 px-3 font-medium text-gray-600">出力トークン</th>
+                      <th className="text-right py-2 px-3 font-medium text-gray-600">コスト</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {modelStats.map((model) => (
+                      <tr key={model.model} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-2 px-3">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                            model.model.includes('gpt-4o-mini') ? 'bg-green-100 text-green-700' :
+                            model.model.includes('gpt-4o') ? 'bg-blue-100 text-blue-700' :
+                            model.model.includes('gemini') ? 'bg-amber-100 text-amber-700' :
+                            model.model.includes('claude') ? 'bg-purple-100 text-purple-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {model.model || 'unknown'}
+                          </span>
+                        </td>
+                        <td className="text-right py-2 px-3 font-medium text-gray-900">
+                          {model.total_requests.toLocaleString()}
+                        </td>
+                        <td className="text-right py-2 px-3 text-gray-600">
+                          {formatTokens(model.total_input_tokens)}
+                        </td>
+                        <td className="text-right py-2 px-3 text-gray-600">
+                          {formatTokens(model.total_output_tokens)}
+                        </td>
+                        <td className="text-right py-2 px-3 font-medium text-red-600">
+                          {formatCost(model.total_cost_jpy)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </>
       )}
