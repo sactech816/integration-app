@@ -26,6 +26,7 @@ import DashboardLayout from './components/DashboardLayout';
 import Sidebar from './components/Sidebar';
 import MainContent, { ActiveView } from './components/MainContent';
 import { UserManager, AnnouncementManager, UserExport, CleanupManager } from './components/Admin';
+import OwnershipTransfer from './components/Admin/OwnershipTransfer';
 
 // カスタムフック
 import { useDashboardData } from './hooks/useDashboardData';
@@ -373,6 +374,7 @@ function DashboardContent() {
         GamificationManager: <GamificationManager />,
         AffiliateManager: <AffiliateManager user={user} />,
         FeaturedManager: <FeaturedManager />,
+        OwnershipTransfer: <OwnershipTransfer allUsers={adminData.allUsers} />,
         CleanupManager: <CleanupManager userId={user?.id} />,
       }
     : undefined;

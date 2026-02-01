@@ -34,6 +34,7 @@ export type ActiveView =
   | 'admin-affiliate'
   | 'admin-featured'
   | 'admin-gamification'
+  | 'admin-transfer'
   | 'admin-cleanup';
 
 type KdlSubscription = {
@@ -96,6 +97,7 @@ type MainContentProps = {
     GamificationManager?: React.ReactNode;
     AffiliateManager?: React.ReactNode;
     FeaturedManager?: React.ReactNode;
+    OwnershipTransfer?: React.ReactNode;
     CleanupManager?: React.ReactNode;
   };
 };
@@ -270,12 +272,16 @@ export default function MainContent({
         <>{adminComponents.FeaturedManager}</>
       )}
 
+      {activeView === 'admin-transfer' && adminComponents?.OwnershipTransfer && (
+        <>{adminComponents.OwnershipTransfer}</>
+      )}
+
       {activeView === 'admin-cleanup' && adminComponents?.CleanupManager && (
         <>{adminComponents.CleanupManager}</>
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'quiz', 'profile', 'business', 'salesletter', 'booking', 'attendance', 'survey', 'my-games', 'affiliate', 'settings', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-cleanup'].includes(activeView) && (
+      {!['dashboard', 'quiz', 'profile', 'business', 'salesletter', 'booking', 'attendance', 'survey', 'my-games', 'affiliate', 'settings', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>
