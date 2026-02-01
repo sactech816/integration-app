@@ -208,14 +208,30 @@ export default function SubscriptionPlans({
         return;
       }
 
+      // アフィリエイト紹介コードがある場合は、決済前に保存
+      if (referralCode) {
+        try {
+          await fetch('/api/affiliate/pending', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: email,
+              referralCode: referralCode,
+              service: 'kdl',
+              planTier: selectedPlan,
+              planPeriod: billingPeriod,
+            }),
+          });
+          console.log('✅ Pending affiliate saved before checkout');
+        } catch (err) {
+          // 保存に失敗しても決済は続行
+          console.warn('⚠️ Failed to save pending affiliate:', err);
+        }
+      }
+
       const params = new URLSearchParams({
         email: email,
       });
-      
-      // アフィリエイト紹介コードがあれば追加
-      if (referralCode) {
-        params.set('ref', referralCode);
-      }
       
       window.location.href = `${baseUrl}?${params.toString()}`;
     }

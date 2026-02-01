@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { recordAffiliateConversion, getAffiliateServiceSetting } from '@/app/actions/affiliate';
 
 /**
  * Stripe Webhook エンドポイント
@@ -111,6 +112,47 @@ export async function POST(request: NextRequest) {
             });
             
             console.log(`✅ Subscription recorded for user ${userId}: ${subscriptionId}`);
+            
+            // アフィリエイト成約を記録（メールアドレスからpendingレコードを検索）
+            const email = session.customer_email;
+            if (email) {
+              try {
+                // pendingレコードを検索
+                const { data: pendingMatch } = await supabase.rpc('match_pending_affiliate', {
+                  p_email: email.toLowerCase(),
+                  p_service: 'makers',
+                  p_subscription_id: subscriptionId,
+                });
+                
+                if (pendingMatch && pendingMatch.length > 0) {
+                  const referralCode = pendingMatch[0].referral_code;
+                  console.log(`✅ Matched pending affiliate: ref=${referralCode}, email=${email}`);
+                  
+                  // サービス設定から報酬率を取得
+                  const serviceSetting = await getAffiliateServiceSetting('makers');
+                  const isEnabled = serviceSetting.data?.enabled ?? true;
+
+                  if (isEnabled) {
+                    const result = await recordAffiliateConversion(
+                      referralCode,
+                      'makers',
+                      subscriptionId,
+                      userId,
+                      'pro',
+                      'monthly',
+                      amount
+                    );
+                    if (result.success) {
+                      console.log(`✅ Affiliate conversion recorded: ${result.conversionId}`);
+                    } else {
+                      console.warn(`⚠️ Failed to record affiliate conversion: ${result.error}`);
+                    }
+                  }
+                }
+              } catch (affErr) {
+                console.error('Affiliate conversion error:', affErr);
+              }
+            }
           }
         }
         break;

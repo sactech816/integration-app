@@ -132,7 +132,33 @@ export async function POST(req: Request) {
           console.log(`✅ Subscription created for user ${userId}: ${id}`);
           
           // アフィリエイト成約を記録（KDLおよびメインサイト対応）
-          if (referralCode) {
+          // 1. まずmetadataからのreferralCodeを試す
+          // 2. なければpendingレコードからメールアドレスでマッチング
+          let finalReferralCode = referralCode;
+          let finalPlanTier = planTier;
+          let finalPeriod = period;
+          
+          // metadataにreferralCodeがない場合、pendingレコードを検索
+          if (!finalReferralCode && email) {
+            try {
+              const { data: pendingMatch } = await supabase.rpc('match_pending_affiliate', {
+                p_email: email.toLowerCase(),
+                p_service: service,
+                p_subscription_id: id,
+              });
+              
+              if (pendingMatch && pendingMatch.length > 0) {
+                finalReferralCode = pendingMatch[0].referral_code;
+                finalPlanTier = pendingMatch[0].plan_tier || planTier;
+                finalPeriod = pendingMatch[0].plan_period || period;
+                console.log(`✅ Matched pending affiliate: ref=${finalReferralCode}, email=${email}`);
+              }
+            } catch (pendingErr) {
+              console.warn('⚠️ Failed to match pending affiliate:', pendingErr);
+            }
+          }
+          
+          if (finalReferralCode) {
             try {
               // サービス設定から報酬率を取得
               const serviceSetting = await getAffiliateServiceSetting(service);
@@ -143,12 +169,12 @@ export async function POST(req: Request) {
                 console.log(`📊 Affiliate service setting for ${service}: rate=${commissionRate}%, enabled=${isEnabled}`);
                 
                 const result = await recordAffiliateConversion(
-                  referralCode,
+                  finalReferralCode,
                   service,
                   id,
                   userId,
-                  planTier,
-                  period,
+                  finalPlanTier,
+                  finalPeriod,
                   amount || 0
                 );
                 if (result.success) {

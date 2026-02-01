@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
 import ServiceSelector from '@/components/shared/ServiceSelector';
 import AnnouncementBanner from '@/components/shared/AnnouncementBanner';
+import AffiliateTracker from '@/components/affiliate/AffiliateTracker';
+import { getReferralCode } from '@/components/affiliate/AffiliateTracker';
 import { 
   Sparkles, 
   UserCircle, 
@@ -231,13 +233,38 @@ export default function HomePageClientV2() {
     setIsProcessingPayment(true);
     
     try {
+      const email = user?.email;
+      
+      // アフィリエイト紹介コードがある場合は、決済前に保存
+      const referralCode = getReferralCode();
+      if (referralCode && email) {
+        try {
+          await fetch('/api/affiliate/pending', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: email,
+              referralCode: referralCode,
+              service: 'makers',
+              planTier: 'pro',
+              planPeriod: 'monthly',
+              userId: (user as { id?: string })?.id || null,
+            }),
+          });
+          console.log('✅ Pending affiliate saved before Stripe checkout');
+        } catch (err) {
+          // 保存に失敗しても決済は続行
+          console.warn('⚠️ Failed to save pending affiliate:', err);
+        }
+      }
+      
       const response = await fetch('/api/subscription/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           planId: 'makers_pro_monthly',
           userId: (user as { id?: string })?.id || null,
-          email: user?.email || null,
+          email: email || null,
         }),
       });
 
@@ -270,6 +297,11 @@ export default function HomePageClientV2() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* アフィリエイト追跡 */}
+      <Suspense fallback={null}>
+        <AffiliateTracker serviceType="makers" />
+      </Suspense>
+      
       <AnnouncementBanner serviceType="all" />
       
       <style>{`
