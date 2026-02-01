@@ -286,25 +286,25 @@ export async function getMultipleAnalytics(
 
       // 平均スクロール深度
       const scrollDepths = scrolls
-        .map(e => e.event_data?.scrollDepth || 0)
-        .filter((d: number) => d > 0);
+        .map(e => Number(e.event_data?.scrollDepth) || 0)
+        .filter(d => d > 0);
       const avgScrollDepth = scrollDepths.length > 0
-        ? Math.round(scrollDepths.reduce((a: number, b: number) => a + b, 0) / scrollDepths.length)
+        ? Math.round(scrollDepths.reduce((a, b) => a + b, 0) / scrollDepths.length)
         : 0;
 
       // 平均滞在時間（秒）
       const timeSpents = times
-        .map(e => e.event_data?.timeSpent || 0)
-        .filter((t: number) => t > 0);
+        .map(e => Number(e.event_data?.timeSpent) || 0)
+        .filter(t => t > 0);
       const avgTimeSpent = timeSpents.length > 0
-        ? Math.round(timeSpents.reduce((a: number, b: number) => a + b, 0) / timeSpents.length)
+        ? Math.round(timeSpents.reduce((a, b) => a + b, 0) / timeSpents.length)
         : 0;
 
       // 精読率（50%以上スクロールした割合）
       const readPercentages = reads
-        .map(e => e.event_data?.readPercentage || 0)
-        .filter((r: number) => r > 0);
-      const readCount = readPercentages.filter((r: number) => r >= 50).length;
+        .map(e => Number(e.event_data?.readPercentage) || 0)
+        .filter(r => r > 0);
+      const readCount = readPercentages.filter(r => r >= 50).length;
       const readRate = views.length > 0 
         ? Math.round((readCount / views.length) * 100) 
         : 0;
