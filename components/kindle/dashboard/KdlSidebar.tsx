@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { BookOpen, ExternalLink, HelpCircle } from 'lucide-react';
+import Link from 'next/link';
+import { BookOpen, ExternalLink, HelpCircle, Crown, Sparkles, ArrowRight } from 'lucide-react';
 import KdlSidebarNav, { KdlUserRole } from './KdlSidebarNav';
 
 type KdlSidebarProps = {
@@ -19,6 +20,10 @@ type KdlSidebarProps = {
     totalUsers: number;
     totalBooks: number;
   };
+  // サブスクリプション状態（継続プランバナー表示用）
+  hasActiveSubscription?: boolean;
+  isMonitor?: boolean;
+  planTier?: string;
 };
 
 export default function KdlSidebar({
@@ -31,7 +36,16 @@ export default function KdlSidebar({
   bookCount = 0,
   assignedUserCount = 0,
   adminStats,
+  hasActiveSubscription = false,
+  isMonitor = false,
+  planTier,
 }: KdlSidebarProps) {
+  // 継続プランバナーを表示するか（初回プランまたはモニターの場合）
+  const showRenewalBanner = hasActiveSubscription && (
+    isMonitor || 
+    planTier?.startsWith('initial_') ||
+    planTier === 'none'
+  );
   return (
     <div className="flex flex-col h-full">
       {/* ロゴ/タイトル */}
@@ -90,8 +104,39 @@ export default function KdlSidebar({
         assignedUserCount={assignedUserCount}
       />
 
+      {/* 継続プラン案内バナー */}
+      {showRenewalBanner && userRole === 'user' && (
+        <div className="p-3 mt-auto">
+          <Link
+            href="/kindle/lp-renewal"
+            className="block bg-gradient-to-r from-purple-500 to-indigo-500 text-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-all group"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Crown size={18} className="text-yellow-300" />
+              <span className="font-bold text-sm">継続プランのご案内</span>
+            </div>
+            <p className="text-xs text-white/90 mb-3">
+              {isMonitor 
+                ? 'モニター期間終了後も継続してご利用いただけます'
+                : '月額プランでさらにお得に執筆を続けませんか？'
+              }
+            </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <Sparkles size={14} className="text-yellow-300" />
+                <span className="text-xs font-bold">月額¥2,980〜</span>
+              </div>
+              <div className="flex items-center gap-1 text-xs group-hover:translate-x-1 transition-transform">
+                詳細を見る
+                <ArrowRight size={14} />
+              </div>
+            </div>
+          </Link>
+        </div>
+      )}
+
       {/* フッターリンク */}
-      <div className="p-4 border-t border-amber-100 space-y-2 mt-auto">
+      <div className={`p-4 border-t border-amber-100 space-y-2 ${!showRenewalBanner ? 'mt-auto' : ''}`}>
         {/* 集客メーカーに戻る（別タブで開く） */}
         <button
           onClick={() => window.open('/dashboard', '_blank')}

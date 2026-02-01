@@ -607,6 +607,9 @@ function KindleListPageContent() {
       onLogout={handleLogout}
       bookCount={isAdmin ? adminStats?.totalBooks : books.length}
       adminStats={adminStats ? { totalUsers: adminStats.totalUsers, totalBooks: adminStats.totalBooks } : undefined}
+      hasActiveSubscription={subscriptionStatus?.hasActiveSubscription}
+      isMonitor={subscriptionStatus?.isMonitor}
+      planTier={subscriptionStatus?.planTier}
     />
   );
 
