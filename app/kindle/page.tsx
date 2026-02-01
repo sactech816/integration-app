@@ -800,9 +800,11 @@ function KindleListPageContent() {
                 <span className={`font-bold text-sm ${subscriptionStatus.isMonitor ? 'text-purple-700' : 'text-green-700'}`}>
                   {subscriptionStatus.isMonitor 
                     ? 'モニター特典' 
-                    : subscriptionStatus.planType === 'yearly' 
-                      ? '初回プラン（一括）' 
-                      : '継続プラン（月額）'}
+                    : subscriptionStatus.planTier?.startsWith('initial_')
+                      ? '初回プラン（一括）'
+                      : subscriptionStatus.planType === 'yearly' 
+                        ? '初回プラン（一括）' 
+                        : '継続プラン（月額）'}
                 </span>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
                   subscriptionStatus.isMonitor ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'
@@ -874,7 +876,9 @@ function KindleListPageContent() {
         <div className="mb-6">
           <AIUsageDisplay 
             userId={user.id} 
-            planType={subscriptionStatus.planType} 
+            planType={subscriptionStatus.planType}
+            planTier={subscriptionStatus.planTier}
+            isMonitor={subscriptionStatus.isMonitor}
           />
         </div>
       )}

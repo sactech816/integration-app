@@ -262,11 +262,12 @@ export async function getSubscriptionStatus(userId: string): Promise<Subscriptio
   }
 
   try {
-    // モニター権限をチェック（有効期限内のもの）
+    // モニター権限をチェック（有効期限内のもの、KDLサービス限定）
     const { data: monitorData } = await supabase
       .from('monitor_users')
       .select('monitor_plan_type, monitor_expires_at')
       .eq('user_id', userId)
+      .eq('service', 'kdl')
       .lte('monitor_start_at', new Date().toISOString())
       .gt('monitor_expires_at', new Date().toISOString())
       .single();

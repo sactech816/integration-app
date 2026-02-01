@@ -61,26 +61,55 @@ export async function GET(request: NextRequest) {
       console.error('Monthly usage fetch error:', monthlyError);
     }
 
-    // サブスク状態を取得して制限を決定
-    const { data: subscriptionData } = await supabase
-      .from('subscriptions')
-      .select('period, status')
-      .eq('user_id', userId)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
     let dailyLimit = 3; // デフォルト（無料）
     let monthlyLimit = 10;
 
-    if (subscriptionData) {
-      if (subscriptionData.period === 'yearly') {
+    // まずモニター権限をチェック（KDLサービス限定）
+    const now = new Date().toISOString();
+    const { data: monitorData } = await supabase
+      .from('monitor_users')
+      .select('monitor_plan_type')
+      .eq('user_id', userId)
+      .eq('service', 'kdl')
+      .lte('monitor_start_at', now)
+      .gt('monitor_expires_at', now)
+      .single();
+
+    if (monitorData) {
+      // モニタープランに応じたlimitを設定
+      const planType = monitorData.monitor_plan_type;
+      if (planType === 'business' || planType === 'enterprise' || planType === 'initial_business') {
         dailyLimit = 100;
         monthlyLimit = -1; // 無制限
-      } else if (subscriptionData.period === 'monthly') {
+      } else if (planType === 'pro' || planType === 'initial_standard') {
+        dailyLimit = 80;
+        monthlyLimit = 800;
+      } else if (planType === 'initial_trial' || planType === 'standard') {
         dailyLimit = 50;
         monthlyLimit = 500;
+      } else if (planType === 'lite') {
+        dailyLimit = 20;
+        monthlyLimit = 200;
+      }
+    } else {
+      // モニター権限がない場合は通常のサブスク状態を取得
+      const { data: subscriptionData } = await supabase
+        .from('subscriptions')
+        .select('period, status')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (subscriptionData) {
+        if (subscriptionData.period === 'yearly') {
+          dailyLimit = 100;
+          monthlyLimit = -1; // 無制限
+        } else if (subscriptionData.period === 'monthly') {
+          dailyLimit = 50;
+          monthlyLimit = 500;
+        }
       }
     }
 

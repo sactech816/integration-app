@@ -6,6 +6,8 @@ import { Loader2, Zap, TrendingUp, AlertCircle } from 'lucide-react';
 interface AIUsageDisplayProps {
   userId: string;
   planType: 'monthly' | 'yearly' | 'none';
+  planTier?: string;
+  isMonitor?: boolean;
 }
 
 interface UsageData {
@@ -19,7 +21,7 @@ interface UsageData {
   };
 }
 
-export default function AIUsageDisplay({ userId, planType }: AIUsageDisplayProps) {
+export default function AIUsageDisplay({ userId, planType, planTier, isMonitor }: AIUsageDisplayProps) {
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -143,13 +145,23 @@ export default function AIUsageDisplay({ userId, planType }: AIUsageDisplayProps
         <div className="flex items-center justify-between">
           <span className="text-xs text-gray-500">現在のプラン</span>
           <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-            planType === 'yearly'
+            isMonitor
+              ? 'bg-purple-100 text-purple-700'
+              : planTier?.startsWith('initial_') || planType === 'yearly'
               ? 'bg-amber-100 text-amber-700'
               : planType === 'monthly'
               ? 'bg-blue-100 text-blue-700'
               : 'bg-gray-100 text-gray-600'
           }`}>
-            {planType === 'yearly' ? '初回プラン（一括）' : planType === 'monthly' ? '継続プラン（月額）' : 'お試し'}
+            {isMonitor 
+              ? 'モニター特典' 
+              : planTier?.startsWith('initial_')
+                ? '初回プラン（一括）'
+                : planType === 'yearly' 
+                  ? '初回プラン（一括）' 
+                  : planType === 'monthly' 
+                    ? '継続プラン（月額）' 
+                    : 'お試し'}
           </span>
         </div>
       </div>
