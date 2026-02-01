@@ -181,38 +181,39 @@ function PortalPageContent() {
     init();
   }, []);
 
-  // 各サービスの総数を取得（※プロフィール・ビジネスはフィルタ後の数と異なる可能性あり）
+  // 累計カウンターテーブルから各サービスの総数を取得（グロス：削除してもカウントダウンしない）
   const fetchTotalCounts = useCallback(async () => {
     if (!supabase) return;
 
     try {
-      const [quizCount, profileCount, businessCount, surveyCount, salesletterCount, gamificationCount] = await Promise.all([
-        supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).eq('show_in_portal', true),
-        supabase.from(TABLES.PROFILES).select('id', { count: 'exact', head: true }).eq('featured_on_top', true),
-        supabase.from('business_projects').select('id', { count: 'exact', head: true }),
-        supabase.from('surveys').select('id', { count: 'exact', head: true }).eq('show_in_portal', true),
-        supabase.from('sales_letters').select('id', { count: 'exact', head: true }),
-        supabase.from('gamification_campaigns').select('id', { count: 'exact', head: true }).eq('status', 'active')
-      ]);
+      const { data, error } = await supabase
+        .from('content_creation_counts')
+        .select('content_type, total_count');
 
-      const quiz = quizCount.count || 0;
-      const profile = profileCount.count || 0;
-      const business = businessCount.count || 0;
-      const survey = surveyCount.count || 0;
-      const salesletter = salesletterCount.count || 0;
-      const gamification = gamificationCount.count || 0;
+      if (error) {
+        console.error('Count fetch error:', error);
+        return;
+      }
 
-      setTotalCounts({
-        all: quiz + profile + business + survey + salesletter + gamification,
-        quiz,
-        profile,
-        business,
-        survey,
-        salesletter,
-        gamification,
-        attendance: 0,
-        booking: 0,
-      });
+      if (data) {
+        // content_typeをキーにしてカウントを取得
+        const counts = data.reduce((acc, row) => {
+          acc[row.content_type] = row.total_count;
+          return acc;
+        }, {} as Record<string, number>);
+
+        setTotalCounts({
+          all: Object.values(counts).reduce((a, b) => a + b, 0),
+          quiz: counts.quiz || 0,
+          profile: counts.profile || 0,
+          business: counts.lp || 0,  // LP = business_projects
+          survey: counts.survey || 0,
+          booking: counts.booking || 0,
+          attendance: counts.attendance || 0,
+          salesletter: counts.salesletter || 0,
+          gamification: counts.game || 0,
+        });
+      }
     } catch (error) {
       console.error('Count fetch error:', error);
     }
@@ -566,23 +567,43 @@ function PortalPageContent() {
               チェックしてインスピレーションを得よう
             </p>
 
-            {/* 統計 */}
-            <div className="flex justify-center gap-8 text-center">
-              <div>
-                <div className="text-3xl font-black">{totalCounts.all.toLocaleString()}</div>
-                <div className="text-sm opacity-80">総作品数</div>
+            {/* 統計（累計作成数） */}
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-center">
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{totalCounts.all.toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">総作品数</div>
               </div>
-              <div>
-                <div className="text-3xl font-black">{totalCounts.quiz.toLocaleString()}</div>
-                <div className="text-sm opacity-80">クイズ</div>
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{totalCounts.quiz.toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">クイズ</div>
               </div>
-              <div>
-                <div className="text-3xl font-black">{totalCounts.profile.toLocaleString()}</div>
-                <div className="text-sm opacity-80">プロフィール</div>
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{totalCounts.profile.toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">プロフィール</div>
               </div>
-              <div>
-                <div className="text-3xl font-black">{totalCounts.business.toLocaleString()}</div>
-                <div className="text-sm opacity-80">ビジネス</div>
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{totalCounts.business.toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">LP</div>
+              </div>
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{totalCounts.survey.toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">アンケート</div>
+              </div>
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{totalCounts.booking.toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">予約</div>
+              </div>
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{totalCounts.attendance.toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">出欠</div>
+              </div>
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{totalCounts.salesletter.toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">セールスレター</div>
+              </div>
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{totalCounts.gamification.toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">ゲーム</div>
               </div>
             </div>
           </div>
