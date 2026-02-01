@@ -7,7 +7,7 @@ import { ServiceType, Quiz, Profile, BusinessLP, SalesLetter, Block } from '@/li
 import { generateSlug } from '@/lib/utils';
 import { getMultipleAnalytics } from '@/app/actions/analytics';
 import { getUserPurchases, checkIsPartner } from '@/app/actions/purchases';
-import { fetchSubscriptionStatus, SubscriptionStatus } from '@/lib/subscription';
+import { fetchMakersSubscriptionStatus, MakersSubscriptionStatus } from '@/lib/subscription';
 import { ContentItem } from '../components/MainContent/ContentCard';
 import { deleteContent } from '@/app/actions/content';
 
@@ -95,7 +95,7 @@ export function useDashboardData(): UseDashboardDataReturn {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isPartner, setIsPartner] = useState(false);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<MakersSubscriptionStatus | null>(null);
   
   // パートナーステータスのキャッシュ（重複取得防止）
   const partnerCheckedRef = useRef(false);
@@ -160,7 +160,8 @@ export function useDashboardData(): UseDashboardDataReturn {
       subscriptionCheckedRef.current = true;
       
       try {
-        const status = await fetchSubscriptionStatus(user.id);
+        // 集客メーカー用のサブスクリプション状態を取得
+        const status = await fetchMakersSubscriptionStatus(user.id);
         setSubscriptionStatus(status);
       } catch (error) {
         console.error('Subscription status check error:', error);

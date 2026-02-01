@@ -43,11 +43,12 @@ export async function canCreatorHideCopyright(userId: string | null | undefined)
       .limit(1)
       .single();
 
-    // 2. モニターユーザーかどうかも確認
+    // 2. モニターユーザーかどうかも確認（集客メーカーサービス限定）
     const { data: monitor } = await supabase
       .from('monitor_users')
       .select('monitor_plan_type')
       .eq('user_id', userId)
+      .eq('service', 'makers')
       .lte('monitor_start_at', new Date().toISOString())
       .gt('monitor_expires_at', new Date().toISOString())
       .single();

@@ -64,8 +64,10 @@ export async function POST(req: Request) {
         const period = metadata?.period || 'monthly';
         const planTier = metadata?.planTier || 'standard';
         const referralCode = metadata?.referralCode;
+        const email = metadata?.email;
         
         if (userId && userId !== 'anonymous') {
+          // 汎用subscriptionsテーブルに書き込み
           await supabase.from('subscriptions').upsert({
             user_id: userId,
             subscription_id: id,
@@ -77,6 +79,55 @@ export async function POST(req: Request) {
           }, {
             onConflict: 'user_id,service',
           });
+          
+          // KDLサービスの場合はkdl_subscriptionsテーブルにも書き込み
+          if (service === 'kdl') {
+            // 期間終了日を計算（月額: 1ヶ月後、年額: 1年後）
+            const now = new Date();
+            const currentPeriodEnd = new Date(now);
+            if (period === 'yearly') {
+              currentPeriodEnd.setFullYear(currentPeriodEnd.getFullYear() + 1);
+            } else {
+              currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1);
+            }
+            
+            // プラン表示名を生成
+            const planNameMap: Record<string, string> = {
+              'lite': 'ライト',
+              'standard': 'スタンダード',
+              'pro': 'プロ',
+              'business': 'ビジネス',
+              'enterprise': 'エンタープライズ',
+              'initial_trial': '初回トライアル',
+              'initial_standard': '初回スタンダード',
+              'initial_business': '初回ビジネス',
+            };
+            const periodName = period === 'yearly' ? '年額' : '月額';
+            const planName = `KDL ${planNameMap[planTier] || planTier} ${periodName}`;
+            
+            await supabase.from('kdl_subscriptions').upsert({
+              id: id,
+              user_id: userId,
+              provider: 'univapay',
+              status: status === 'active' ? 'active' : 'pending',
+              amount: amount || 0,
+              currency: 'jpy',
+              period: period,
+              plan_tier: planTier,
+              plan_name: planName,
+              email: email,
+              current_period_start: now.toISOString(),
+              current_period_end: currentPeriodEnd.toISOString(),
+              next_payment_date: currentPeriodEnd.toISOString(),
+              metadata: { referralCode, originalStatus: status },
+              created_at: now.toISOString(),
+              updated_at: now.toISOString(),
+            }, {
+              onConflict: 'id',
+            });
+            
+            console.log(`✅ KDL Subscription created in kdl_subscriptions: ${id}, plan: ${planTier}, period: ${period}`);
+          }
           
           console.log(`✅ Subscription created for user ${userId}: ${id}`);
           
@@ -119,8 +170,10 @@ export async function POST(req: Request) {
       case 'subscription.updated': {
         const { id, status, metadata } = event.data;
         const userId = metadata?.userId;
+        const service = metadata?.service || 'donation';
         
         if (userId && userId !== 'anonymous') {
+          // 汎用subscriptionsテーブルを更新
           await supabase
             .from('subscriptions')
             .update({
@@ -128,6 +181,19 @@ export async function POST(req: Request) {
               updated_at: new Date().toISOString(),
             })
             .eq('subscription_id', id);
+          
+          // KDLサービスの場合はkdl_subscriptionsも更新
+          if (service === 'kdl') {
+            await supabase
+              .from('kdl_subscriptions')
+              .update({
+                status: status === 'active' ? 'active' : status,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', id);
+            
+            console.log(`✅ KDL Subscription updated in kdl_subscriptions: ${id} -> ${status}`);
+          }
           
           console.log(`✅ Subscription updated: ${id} -> ${status}`);
         }
@@ -137,16 +203,34 @@ export async function POST(req: Request) {
       case 'subscription.canceled': {
         const { id, metadata } = event.data;
         const userId = metadata?.userId;
+        const service = metadata?.service || 'donation';
         
         if (userId && userId !== 'anonymous') {
+          const now = new Date().toISOString();
+          
+          // 汎用subscriptionsテーブルを更新
           await supabase
             .from('subscriptions')
             .update({
               status: 'canceled',
-              canceled_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
+              canceled_at: now,
+              updated_at: now,
             })
             .eq('subscription_id', id);
+          
+          // KDLサービスの場合はkdl_subscriptionsも更新
+          if (service === 'kdl') {
+            await supabase
+              .from('kdl_subscriptions')
+              .update({
+                status: 'canceled',
+                canceled_at: now,
+                updated_at: now,
+              })
+              .eq('id', id);
+            
+            console.log(`✅ KDL Subscription canceled in kdl_subscriptions: ${id}`);
+          }
           
           console.log(`✅ Subscription canceled: ${id}`);
         }

@@ -26,7 +26,7 @@ import {
   ToggleLeft,
   ToggleRight,
 } from 'lucide-react';
-import { fetchSubscriptionStatus, SubscriptionStatus } from '@/lib/subscription';
+import { fetchMakersSubscriptionStatus, MakersSubscriptionStatus } from '@/lib/subscription';
 import { 
   getUserGamificationSettings, 
   updateUserNotificationSettings 
@@ -62,8 +62,8 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
   const [loadingGamificationSettings, setLoadingGamificationSettings] = useState(true);
   const [savingGamificationSettings, setSavingGamificationSettings] = useState(false);
 
-  // サブスクリプション状態
-  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
+  // サブスクリプション状態（集客メーカー用）
+  const [subscriptionStatus, setSubscriptionStatus] = useState<MakersSubscriptionStatus | null>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
 
   // 状態管理
@@ -74,7 +74,7 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
-  // サブスクリプション状態を取得
+  // サブスクリプション状態を取得（集客メーカー用）
   useEffect(() => {
     const loadSubscriptionStatus = async () => {
       if (!user?.id) {
@@ -82,7 +82,7 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
         return;
       }
       try {
-        const status = await fetchSubscriptionStatus(user.id);
+        const status = await fetchMakersSubscriptionStatus(user.id);
         setSubscriptionStatus(status);
       } catch (error) {
         console.error('Failed to load subscription status:', error);

@@ -369,6 +369,115 @@ export async function fetchSubscriptionStatus(userId: string): Promise<Subscript
   }
 }
 
+// ========================================
+// 集客メーカー用サブスクリプション状態
+// ========================================
+
+export interface MakersSubscriptionStatus {
+  hasActiveSubscription: boolean;
+  planTier: MakersPlanTier;
+  isMonitor: boolean;
+  monitorExpiresAt?: string;
+  subscriptionId?: string;
+}
+
+/**
+ * 集客メーカーのサブスク状態を取得（モニター優先）
+ */
+export async function getMakersSubscriptionStatus(userId: string): Promise<MakersSubscriptionStatus> {
+  const supabase = getServiceClient();
+
+  if (!supabase) {
+    return {
+      hasActiveSubscription: false,
+      planTier: 'free',
+      isMonitor: false,
+    };
+  }
+
+  try {
+    const now = new Date().toISOString();
+    
+    // 1. まずモニター権限をチェック（集客メーカーサービス限定）
+    const { data: monitorData } = await supabase
+      .from('monitor_users')
+      .select('monitor_plan_type, monitor_expires_at')
+      .eq('user_id', userId)
+      .eq('service', 'makers')
+      .lte('monitor_start_at', now)
+      .gt('monitor_expires_at', now)
+      .single();
+
+    // モニター権限がある場合はそれを優先
+    if (monitorData) {
+      return {
+        hasActiveSubscription: true,
+        planTier: 'pro', // 集客メーカーのモニターはプロ扱い
+        isMonitor: true,
+        monitorExpiresAt: monitorData.monitor_expires_at,
+      };
+    }
+
+    // 2. 通常のサブスクリプションをチェック（集客メーカーサービス限定）
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('id, status, plan_name')
+      .eq('user_id', userId)
+      .eq('service', 'makers')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (subscription) {
+      // プロプランかどうかを判定
+      const isPro = subscription.plan_name?.toLowerCase().includes('pro') ||
+                    subscription.plan_name?.toLowerCase().includes('プロ');
+      
+      return {
+        hasActiveSubscription: true,
+        planTier: isPro ? 'pro' : 'free',
+        isMonitor: false,
+        subscriptionId: subscription.id,
+      };
+    }
+
+    // サブスクもモニターもない場合
+    return {
+      hasActiveSubscription: false,
+      planTier: 'free',
+      isMonitor: false,
+    };
+  } catch (err) {
+    console.error('Error fetching makers subscription status:', err);
+    return {
+      hasActiveSubscription: false,
+      planTier: 'free',
+      isMonitor: false,
+    };
+  }
+}
+
+/**
+ * クライアントサイドで集客メーカーのサブスク状態を取得
+ */
+export async function fetchMakersSubscriptionStatus(userId: string): Promise<MakersSubscriptionStatus> {
+  try {
+    const response = await fetch(`/api/makers/subscription-status?userId=${userId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch makers subscription status');
+    }
+    return await response.json();
+  } catch (err) {
+    console.error('Error fetching makers subscription status:', err);
+    return {
+      hasActiveSubscription: false,
+      planTier: 'free',
+      isMonitor: false,
+    };
+  }
+}
+
 /**
  * サブスクの機能制限を取得（レガシー互換）
  */
