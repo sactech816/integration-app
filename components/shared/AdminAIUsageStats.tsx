@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, TrendingUp, DollarSign, Users, Loader2, 
-  RefreshCw, Calendar, Zap, BookOpen, Sparkles 
+  RefreshCw, Calendar, Zap, BookOpen, Sparkles, ChevronDown, ChevronRight
 } from 'lucide-react';
 
 interface ServiceStats {
@@ -74,6 +74,7 @@ export default function AdminAIUsageStats({ userId }: AdminAIUsageStatsProps) {
       const data = await response.json();
       setStats(data.stats || []);
       setModelStats(data.modelStats || []);
+      setProviderStats(data.providerStats || []);
       setLastUpdated(new Date());
     } catch (err: any) {
       console.error('AI usage stats fetch error:', err);
@@ -110,6 +111,64 @@ export default function AdminAIUsageStats({ userId }: AdminAIUsageStatsProps) {
         return <Zap size={20} className="text-gray-500" />;
     }
   };
+
+  // プロバイダー情報を取得
+  const getProviderInfo = (provider: string) => {
+    switch (provider) {
+      case 'OpenAI':
+        return {
+          name: 'OpenAI (ChatGPT)',
+          bgColor: 'from-green-50 to-emerald-50',
+          borderColor: 'border-green-200 hover:border-green-300',
+          badgeColor: 'bg-green-100 text-green-700',
+          barColor: 'bg-green-500',
+          icon: '🤖',
+        };
+      case 'Gemini':
+        return {
+          name: 'Google Gemini',
+          bgColor: 'from-amber-50 to-yellow-50',
+          borderColor: 'border-amber-200 hover:border-amber-300',
+          badgeColor: 'bg-amber-100 text-amber-700',
+          barColor: 'bg-amber-500',
+          icon: '✨',
+        };
+      case 'Claude':
+        return {
+          name: 'Anthropic Claude',
+          bgColor: 'from-purple-50 to-violet-50',
+          borderColor: 'border-purple-200 hover:border-purple-300',
+          badgeColor: 'bg-purple-100 text-purple-700',
+          barColor: 'bg-purple-500',
+          icon: '🎭',
+        };
+      default:
+        return {
+          name: 'その他',
+          bgColor: 'from-gray-50 to-slate-50',
+          borderColor: 'border-gray-200 hover:border-gray-300',
+          badgeColor: 'bg-gray-100 text-gray-700',
+          barColor: 'bg-gray-500',
+          icon: '🔧',
+        };
+    }
+  };
+
+  // プロバイダーの展開/折りたたみをトグル
+  const toggleProvider = (provider: string) => {
+    setExpandedProviders(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(provider)) {
+        newSet.delete(provider);
+      } else {
+        newSet.add(provider);
+      }
+      return newSet;
+    });
+  };
+
+  // プロバイダー全体のコスト合計を計算
+  const totalProviderCost = providerStats.reduce((sum, p) => sum + p.total_cost_jpy, 0);
 
   // 合計を計算
   const totals = stats.reduce(
@@ -339,11 +398,122 @@ export default function AdminAIUsageStats({ userId }: AdminAIUsageStatsProps) {
             </div>
           )}
 
-          {/* モデル別統計 */}
-          {modelStats.length > 0 && (
+          {/* プロバイダー別統計 */}
+          {providerStats.length > 0 && (
             <>
-              <h3 className="font-bold text-gray-900 mb-4 mt-8">AIモデル別内訳</h3>
-              <div className="overflow-x-auto">
+              <h3 className="font-bold text-gray-900 mb-4 mt-8">AIプロバイダー別内訳</h3>
+              <div className="space-y-4">
+                {providerStats.map((providerStat) => {
+                  const info = getProviderInfo(providerStat.provider);
+                  const isExpanded = expandedProviders.has(providerStat.provider);
+                  const costPercentage = totalProviderCost > 0
+                    ? (providerStat.total_cost_jpy / totalProviderCost) * 100
+                    : 0;
+
+                  return (
+                    <div
+                      key={providerStat.provider}
+                      className={`border rounded-xl transition-colors ${info.borderColor}`}
+                    >
+                      {/* プロバイダーヘッダー（クリックで展開/折りたたみ） */}
+                      <button
+                        onClick={() => toggleProvider(providerStat.provider)}
+                        className={`w-full p-4 text-left bg-gradient-to-br ${info.bgColor} rounded-t-xl ${!isExpanded ? 'rounded-b-xl' : ''}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{info.icon}</span>
+                            <div>
+                              <span className="font-bold text-gray-900">{info.name}</span>
+                              <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                                <span>{providerStat.total_requests.toLocaleString()} リクエスト</span>
+                                <span>{formatTokens(providerStat.total_input_tokens + providerStat.total_output_tokens)} トークン</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg font-bold text-red-600">
+                              {formatCost(providerStat.total_cost_jpy)}
+                            </span>
+                            {isExpanded ? (
+                              <ChevronDown size={20} className="text-gray-400" />
+                            ) : (
+                              <ChevronRight size={20} className="text-gray-400" />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* コスト比率バー */}
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                            <span>コスト比率</span>
+                            <span>{Math.round(costPercentage)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all ${info.barColor}`}
+                              style={{ width: `${costPercentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* モデル別詳細テーブル（展開時のみ表示） */}
+                      {isExpanded && providerStat.models.length > 0 && (
+                        <div className="p-4 border-t border-gray-200">
+                          <h4 className="text-sm font-medium text-gray-600 mb-3">モデル別詳細</h4>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="border-b border-gray-200">
+                                  <th className="text-left py-2 px-3 font-medium text-gray-600">モデル</th>
+                                  <th className="text-right py-2 px-3 font-medium text-gray-600">リクエスト</th>
+                                  <th className="text-right py-2 px-3 font-medium text-gray-600">入力トークン</th>
+                                  <th className="text-right py-2 px-3 font-medium text-gray-600">出力トークン</th>
+                                  <th className="text-right py-2 px-3 font-medium text-gray-600">コスト</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {providerStat.models.map((model) => (
+                                  <tr key={model.model} className="border-b border-gray-100 hover:bg-gray-50">
+                                    <td className="py-2 px-3">
+                                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${info.badgeColor}`}>
+                                        {model.model || 'unknown'}
+                                      </span>
+                                    </td>
+                                    <td className="text-right py-2 px-3 font-medium text-gray-900">
+                                      {model.total_requests.toLocaleString()}
+                                    </td>
+                                    <td className="text-right py-2 px-3 text-gray-600">
+                                      {formatTokens(model.total_input_tokens)}
+                                    </td>
+                                    <td className="text-right py-2 px-3 text-gray-600">
+                                      {formatTokens(model.total_output_tokens)}
+                                    </td>
+                                    <td className="text-right py-2 px-3 font-medium text-red-600">
+                                      {formatCost(model.total_cost_jpy)}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {/* モデル別統計（フラット表示・折りたたみセクション） */}
+          {modelStats.length > 0 && (
+            <details className="mt-8">
+              <summary className="font-bold text-gray-900 cursor-pointer hover:text-gray-700">
+                全モデル一覧（{modelStats.length}件）
+              </summary>
+              <div className="overflow-x-auto mt-4">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200">
@@ -359,10 +529,9 @@ export default function AdminAIUsageStats({ userId }: AdminAIUsageStatsProps) {
                       <tr key={model.model} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-2 px-3">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                            model.model.includes('gpt-4o-mini') ? 'bg-green-100 text-green-700' :
-                            model.model.includes('gpt-4o') ? 'bg-blue-100 text-blue-700' :
-                            model.model.includes('gemini') ? 'bg-amber-100 text-amber-700' :
-                            model.model.includes('claude') ? 'bg-purple-100 text-purple-700' :
+                            model.model.startsWith('gpt-') || model.model.startsWith('o1') || model.model.startsWith('o3') ? 'bg-green-100 text-green-700' :
+                            model.model.startsWith('gemini') ? 'bg-amber-100 text-amber-700' :
+                            model.model.startsWith('claude') ? 'bg-purple-100 text-purple-700' :
                             'bg-gray-100 text-gray-700'
                           }`}>
                             {model.model || 'unknown'}
@@ -385,7 +554,7 @@ export default function AdminAIUsageStats({ userId }: AdminAIUsageStatsProps) {
                   </tbody>
                 </table>
               </div>
-            </>
+            </details>
           )}
         </>
       )}
