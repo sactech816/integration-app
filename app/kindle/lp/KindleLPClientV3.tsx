@@ -13,7 +13,8 @@ import {
   Lightbulb,
   Wand2,
   MessageSquare,
-  Users
+  Users,
+  Loader2
 } from 'lucide-react';
 import AuthModal from '@/components/shared/AuthModal';
 import AffiliateTracker from '@/components/affiliate/AffiliateTracker';
@@ -22,12 +23,41 @@ import { supabase } from '@/lib/supabase';
 import { Suspense } from 'react';
 import KDLFooter from '@/components/shared/KDLFooter';
 
+// プラン定義（LP専用の期間集中プラン）
+type LPPlanType = 'trial' | 'standard';
+interface LPPlan {
+  id: LPPlanType;
+  name: string;
+  price: number;
+  period: string; // 期間（表示用）
+  description: string;
+}
+
+const LP_PLANS: Record<LPPlanType, LPPlan> = {
+  trial: {
+    id: 'trial',
+    name: '1ヶ月トライアル',
+    price: 49800,
+    period: '1ヶ月',
+    description: '記念に1冊作ってみたい方へ',
+  },
+  standard: {
+    id: 'standard',
+    name: '3ヶ月スタンダード',
+    price: 99800,
+    period: '3ヶ月',
+    description: '副業として印税を得たい方へ',
+  },
+};
+
 // V3: 初心者向けパターン - 優しいデザイン
 export default function KindleLPClient() {
-  const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [user, setUser] = useState<{ email?: string; id?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<LPPlanType | null>(null);
   
   // 診断クイズ用のState
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -38,10 +68,10 @@ export default function KindleLPClient() {
       // 認証状態を取得
       if (supabase) {
         supabase.auth.onAuthStateChange((event, session) => {
-          setUser(session?.user || null);
+          setUser(session?.user ? { email: session.user.email, id: session.user.id } : null);
         });
         const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user || null);
+        setUser(session?.user ? { email: session.user.email, id: session.user.id } : null);
       }
       
       // アフィリエイト紹介コードを取得（Cookieから）
@@ -57,6 +87,69 @@ export default function KindleLPClient() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // 認証完了後に決済へ進む
+  useEffect(() => {
+    if (user && selectedPlan) {
+      // 認証が完了し、選択中のプランがある場合は決済へ
+      handleCheckout(selectedPlan);
+    }
+  }, [user]);
+
+  // プラン選択ボタンクリック時の処理
+  const handlePlanSelect = (planType: LPPlanType) => {
+    if (!user) {
+      // 未認証の場合：プランを保存して認証モーダルを表示
+      setSelectedPlan(planType);
+      setShowAuth(true);
+    } else {
+      // 認証済みの場合：直接決済へ
+      handleCheckout(planType);
+    }
+  };
+
+  // 決済処理
+  const handleCheckout = async (planType: LPPlanType) => {
+    const plan = LP_PLANS[planType];
+    if (!plan || !user) return;
+
+    setIsProcessing(true);
+    setSelectedPlan(planType);
+
+    try {
+      // アフィリエイト紹介コードを取得
+      const referralCode = getReferralCode();
+
+      // 決済APIを呼び出し
+      const response = await fetch('/api/univapay/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: plan.price,
+          userId: user.id,
+          email: user.email,
+          planName: `KDL ${plan.name}（${plan.period}集中プラン）`,
+          period: planType === 'trial' ? 'monthly' : 'yearly', // トライアル=1ヶ月、スタンダード=3ヶ月
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.checkoutUrl) {
+        // 決済ページにリダイレクト
+        window.location.href = data.checkoutUrl;
+      } else if (data.error) {
+        alert(`エラー: ${data.error}`);
+        setIsProcessing(false);
+        setSelectedPlan(null);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('決済処理中にエラーが発生しました。もう一度お試しください。');
+      setIsProcessing(false);
+      setSelectedPlan(null);
+    }
+  };
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -158,9 +251,21 @@ export default function KindleLPClient() {
 
       <AuthModal 
         isOpen={showAuth} 
-        onClose={() => setShowAuth(false)} 
-        setUser={setUser} 
-        onNavigate={(page) => window.location.href = `/${page}`}
+        onClose={() => {
+          setShowAuth(false);
+          // 認証せずに閉じた場合、選択中のプランをリセット
+          if (!user) {
+            setSelectedPlan(null);
+          }
+        }} 
+        setUser={(u) => setUser(u ? { email: u.email, id: u.id } : null)} 
+        onNavigate={(page) => {
+          // 認証完了後、選択中のプランがあれば決済へ進む（useEffectで処理）
+          // なければ通常のナビゲーション
+          if (!selectedPlan) {
+            window.location.href = `/${page}`;
+          }
+        }}
       />
 
       {/* Hero Section */}
@@ -545,12 +650,20 @@ export default function KindleLPClient() {
                   <li className="flex items-center gap-2 text-slate-300">− 個別相談なし</li>
                 </ul>
 
-                <Link 
-                  href="/kindle/new" 
-                  className="block w-full bg-slate-500 hover:bg-slate-600 text-white font-bold py-4 rounded-xl shadow-md transition text-center"
+                <button 
+                  onClick={() => handlePlanSelect('trial')}
+                  disabled={isProcessing}
+                  className="block w-full bg-slate-500 hover:bg-slate-600 text-white font-bold py-4 rounded-xl shadow-md transition text-center disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  このプランで始める
-                </Link>
+                  {isProcessing && selectedPlan === 'trial' ? (
+                    <>
+                      <Loader2 className="animate-spin" size={20} />
+                      処理中...
+                    </>
+                  ) : (
+                    'このプランで始める'
+                  )}
+                </button>
               </div>
             </div>
 
@@ -571,12 +684,20 @@ export default function KindleLPClient() {
                   <li className="flex items-center gap-2"><Check className="text-orange-500" size={16} /> チャット質問し放題</li>
                 </ul>
 
-                <Link 
-                  href="/kindle/new" 
-                  className="block w-full bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white font-bold py-4 rounded-xl shadow-lg transition text-center"
+                <button 
+                  onClick={() => handlePlanSelect('standard')}
+                  disabled={isProcessing}
+                  className="block w-full bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white font-bold py-4 rounded-xl shadow-lg transition text-center disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  今すぐ作家デビューする
-                </Link>
+                  {isProcessing && selectedPlan === 'standard' ? (
+                    <>
+                      <Loader2 className="animate-spin" size={20} />
+                      処理中...
+                    </>
+                  ) : (
+                    '今すぐ作家デビューする'
+                  )}
+                </button>
               </div>
             </div>
           </div>
