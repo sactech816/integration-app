@@ -51,6 +51,7 @@ interface WeeklyCalendarProps {
   localSlots?: LocalSlot[]; // ローカル（未保存）の枠
   onSlotClick?: (date: Date, hour: number) => void;
   onSlotDelete?: (slotId: string, isLocal?: boolean) => void;
+  onSlotEdit?: (slot: BookingSlotWithAvailability) => void; // スロット編集
   durationMin?: number;
   startHour?: number;
   endHour?: number;
@@ -67,6 +68,7 @@ export default function WeeklyCalendar({
   localSlots = [],
   onSlotClick,
   onSlotDelete,
+  onSlotEdit,
   durationMin = 60,
   startHour = 9,
   endHour = 21,
@@ -280,16 +282,20 @@ export default function WeeklyCalendar({
                     {cellSlots.map((slot) => (
                       <div
                         key={slot.id}
-                        className={`group relative mb-1 p-1.5 rounded text-xs font-medium ${
+                        className={`group relative mb-1 p-1.5 rounded text-xs font-medium cursor-pointer ${
                           menuType === 'adjustment'
-                            ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                            ? 'bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200'
                             : slot.is_available
-                              ? 'bg-green-100 text-green-700 border border-green-200 cursor-pointer hover:bg-green-200'
-                              : 'bg-red-100 text-red-700 border border-red-200'
+                              ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200'
+                              : 'bg-red-100 text-red-700 border border-red-200 hover:bg-red-200'
                         }`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          // readOnlyモードでも、空きのある枠はクリック可能
+                          // 編集モードではスロット編集モーダルを開く
+                          if (!readOnly && onSlotEdit) {
+                            onSlotEdit(slot);
+                          }
+                          // readOnlyモードでも、空きのある枠はクリック可能（予約画面用）
                           if (readOnly && slot.is_available && onSlotClick) {
                             onSlotClick(day, hour);
                           }

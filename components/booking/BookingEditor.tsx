@@ -18,12 +18,14 @@ import {
   LayoutGrid,
   Trash2,
   Save,
+  Users,
 } from 'lucide-react';
 import { CreateBookingMenuInput, BookingMenuType, BookingSlotWithAvailability, BookingMenu, UpdateBookingMenuInput } from '@/types/booking';
 import WeeklyCalendar, { LocalSlot } from './WeeklyCalendar';
 import MonthlyCalendar from './MonthlyCalendar';
 import SlotModal, { SlotFormData } from './SlotModal';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import { updateBookingSlot } from '@/app/actions/booking';
 
 interface BookingEditorProps {
   userId?: string | null;
@@ -94,6 +96,11 @@ export default function BookingEditor({
   const [createdMenuId, setCreatedMenuId] = useState<string | null>(null);
   const [createdEditKey, setCreatedEditKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  
+  // スロット編集モーダル
+  const [editingSlot, setEditingSlot] = useState<BookingSlotWithAvailability | null>(null);
+  const [editSlotCapacity, setEditSlotCapacity] = useState(1);
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   // 編集モード時に既存データを読み込む
   useEffect(() => {
@@ -170,6 +177,42 @@ export default function BookingEditor({
     setShowSlotModal(false);
     setSelectedDates([]);
   }, []);
+
+  // スロット編集モーダルを開く
+  const handleOpenEditSlot = useCallback((slot: BookingSlotWithAvailability) => {
+    setEditingSlot(slot);
+    setEditSlotCapacity(slot.max_capacity);
+  }, []);
+
+  // スロット更新処理
+  const handleUpdateSlot = useCallback(async () => {
+    if (!editingSlot) return;
+    
+    setEditSubmitting(true);
+    
+    const result = await updateBookingSlot(
+      editingSlot.id,
+      userId || null,
+      { max_capacity: editSlotCapacity },
+      editKey || undefined
+    );
+
+    if (result.success) {
+      // savedSlotsを更新
+      setSavedSlots((prev) => 
+        prev.map((slot) => 
+          slot.id === editingSlot.id 
+            ? { ...slot, max_capacity: editSlotCapacity, is_available: editSlotCapacity > slot.current_bookings }
+            : slot
+        )
+      );
+      setEditingSlot(null);
+    } else {
+      alert('更新に失敗しました: ' + ('error' in result ? result.error : '更新に失敗しました'));
+    }
+
+    setEditSubmitting(false);
+  }, [editingSlot, editSlotCapacity, userId, editKey]);
 
   // 枠削除
   const handleDeleteSlot = useCallback((slotId: string, isLocal?: boolean) => {
@@ -391,6 +434,91 @@ export default function BookingEditor({
         mode={slotModalMode}
         selectedDates={selectedDates}
       />
+
+      {/* スロット編集モーダル */}
+      {editingSlot && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fade-in">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">予約枠を編集</h3>
+              <button
+                onClick={() => setEditingSlot(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  日時
+                </label>
+                <div className="px-4 py-3 bg-gray-100 rounded-xl font-medium text-gray-900">
+                  {new Date(editingSlot.start_time).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}
+                  <span className="ml-2">
+                    {new Date(editingSlot.start_time).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} - {new Date(editingSlot.end_time).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  現在の予約数
+                </label>
+                <div className="px-4 py-3 bg-gray-100 rounded-xl font-medium text-gray-900">
+                  {editingSlot.current_bookings} 件
+                </div>
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <Users size={16} />
+                  最大予約数
+                </label>
+                <input
+                  type="number"
+                  min={editingSlot.current_bookings || 1}
+                  max={100}
+                  value={editSlotCapacity}
+                  onChange={(e) => setEditSlotCapacity(Number(e.target.value))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                />
+                {editingSlot.current_bookings > 0 && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    ※ 現在{editingSlot.current_bookings}件の予約があるため、それ以下には設定できません
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setEditingSlot(null)}
+                className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleUpdateSlot}
+                disabled={editSubmitting || editSlotCapacity < (editingSlot.current_bookings || 1)}
+                className={`flex-1 py-3 text-white rounded-xl font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${
+                  formData.type === 'adjustment'
+                    ? 'bg-purple-600 hover:bg-purple-700'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {editSubmitting ? (
+                  <Loader2 size={20} className="animate-spin" />
+                ) : (
+                  <Check size={20} />
+                )}
+                更新
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* メインコンテンツ */}
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -870,6 +998,7 @@ export default function BookingEditor({
                     localSlots={localSlots}
                     onSlotClick={handleWeekSlotClick}
                     onSlotDelete={handleDeleteSlot}
+                    onSlotEdit={handleOpenEditSlot}
                     durationMin={formData.duration_min}
                     menuType={formData.type}
                     multiSelect={true}
