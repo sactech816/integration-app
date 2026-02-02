@@ -4,17 +4,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   BookOpen, 
-  Sparkles, 
   Check, 
-  ArrowRight, 
   ChevronDown,
   ChevronUp,
   Star,
   Lightbulb,
-  Wand2,
-  MessageSquare,
-  Users,
-  Loader2
+  Wand2
 } from 'lucide-react';
 import AuthModal from '@/components/shared/AuthModal';
 import AffiliateTracker from '@/components/affiliate/AffiliateTracker';
@@ -24,7 +19,7 @@ import { Suspense } from 'react';
 import KDLFooter from '@/components/shared/KDLFooter';
 
 // プラン定義（LP専用の期間集中プラン）
-type LPPlanType = 'trial' | 'standard';
+type LPPlanType = 'trial' | 'standard' | 'business';
 interface LPPlan {
   id: LPPlanType;
   name: string;
@@ -48,6 +43,21 @@ const LP_PLANS: Record<LPPlanType, LPPlan> = {
     period: '3ヶ月',
     description: '副業として印税を得たい方へ',
   },
+  business: {
+    id: 'business',
+    name: 'ビジネス（初回）',
+    price: 198000,
+    period: '6ヶ月',
+    description: '本格的に出版ビジネスを始めたい方へ',
+  },
+};
+
+// LP専用プランのUnivaPayリンク（直接指定）
+// TODO: 本番用リンクに差し替え
+const LP_UNIVAPAY_LINKS: Record<LPPlanType, string> = {
+  trial: 'https://univa.cc/M6-JZs',     // 仮: 月額スタンダード - 本番用リンクに要差替
+  standard: 'https://univa.cc/M6-JZs',  // 仮: 月額スタンダード - 本番用リンクに要差替
+  business: 'https://univa.cc/0okQBL',  // 仮: 月額ビジネス - 本番用リンクに要差替
 };
 
 // V3: 初心者向けパターン - 優しいデザイン
@@ -56,8 +66,6 @@ export default function KindleLPClient() {
   const [showAuth, setShowAuth] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<LPPlanType | null>(null);
   
   // 診断クイズ用のState
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -88,67 +96,17 @@ export default function KindleLPClient() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 認証完了後に決済へ進む
-  useEffect(() => {
-    if (user && selectedPlan) {
-      // 認証が完了し、選択中のプランがある場合は決済へ
-      handleCheckout(selectedPlan);
-    }
-  }, [user]);
-
-  // プラン選択ボタンクリック時の処理
+  // プラン選択ボタンクリック時の処理（直接UnivaPayリンクにリダイレクト）
   const handlePlanSelect = (planType: LPPlanType) => {
-    if (!user) {
-      // 未認証の場合：プランを保存して認証モーダルを表示
-      setSelectedPlan(planType);
-      setShowAuth(true);
-    } else {
-      // 認証済みの場合：直接決済へ
-      handleCheckout(planType);
+    const univaPayLink = LP_UNIVAPAY_LINKS[planType];
+    
+    if (!univaPayLink) {
+      alert('決済リンクが設定されていません。管理者にお問い合わせください。');
+      return;
     }
-  };
-
-  // 決済処理
-  const handleCheckout = async (planType: LPPlanType) => {
-    const plan = LP_PLANS[planType];
-    if (!plan || !user) return;
-
-    setIsProcessing(true);
-    setSelectedPlan(planType);
-
-    try {
-      // アフィリエイト紹介コードを取得
-      const referralCode = getReferralCode();
-
-      // 決済APIを呼び出し
-      const response = await fetch('/api/univapay/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: plan.price,
-          userId: user.id,
-          email: user.email,
-          planName: `KDL ${plan.name}（${plan.period}集中プラン）`,
-          period: planType === 'trial' ? 'monthly' : 'yearly', // トライアル=1ヶ月、スタンダード=3ヶ月
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.checkoutUrl) {
-        // 決済ページにリダイレクト
-        window.location.href = data.checkoutUrl;
-      } else if (data.error) {
-        alert(`エラー: ${data.error}`);
-        setIsProcessing(false);
-        setSelectedPlan(null);
-      }
-    } catch (error) {
-      console.error('Checkout error:', error);
-      alert('決済処理中にエラーが発生しました。もう一度お試しください。');
-      setIsProcessing(false);
-      setSelectedPlan(null);
-    }
+    
+    // 直接UnivaPayリンクにリダイレクト（認証不要）
+    window.location.href = univaPayLink;
   };
 
   const scrollToTop = () => {
@@ -251,21 +209,9 @@ export default function KindleLPClient() {
 
       <AuthModal 
         isOpen={showAuth} 
-        onClose={() => {
-          setShowAuth(false);
-          // 認証せずに閉じた場合、選択中のプランをリセット
-          if (!user) {
-            setSelectedPlan(null);
-          }
-        }} 
+        onClose={() => setShowAuth(false)} 
         setUser={(u) => setUser(u ? { email: u.email, id: u.id } : null)} 
-        onNavigate={(page) => {
-          // 認証完了後、選択中のプランがあれば決済へ進む（useEffectで処理）
-          // なければ通常のナビゲーション
-          if (!selectedPlan) {
-            window.location.href = `/${page}`;
-          }
-        }}
+        onNavigate={(page) => window.location.href = `/${page}`}
       />
 
       {/* Hero Section */}
@@ -652,17 +598,9 @@ export default function KindleLPClient() {
 
                 <button 
                   onClick={() => handlePlanSelect('trial')}
-                  disabled={isProcessing}
-                  className="block w-full bg-slate-500 hover:bg-slate-600 text-white font-bold py-4 rounded-xl shadow-md transition text-center disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="block w-full bg-slate-500 hover:bg-slate-600 text-white font-bold py-4 rounded-xl shadow-md transition text-center"
                 >
-                  {isProcessing && selectedPlan === 'trial' ? (
-                    <>
-                      <Loader2 className="animate-spin" size={20} />
-                      処理中...
-                    </>
-                  ) : (
-                    'このプランで始める'
-                  )}
+                  このプランで始める
                 </button>
               </div>
             </div>
@@ -686,17 +624,9 @@ export default function KindleLPClient() {
 
                 <button 
                   onClick={() => handlePlanSelect('standard')}
-                  disabled={isProcessing}
-                  className="block w-full bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white font-bold py-4 rounded-xl shadow-lg transition text-center disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="block w-full bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white font-bold py-4 rounded-xl shadow-lg transition text-center"
                 >
-                  {isProcessing && selectedPlan === 'standard' ? (
-                    <>
-                      <Loader2 className="animate-spin" size={20} />
-                      処理中...
-                    </>
-                  ) : (
-                    '今すぐ作家デビューする'
-                  )}
+                  今すぐ作家デビューする
                 </button>
               </div>
             </div>
