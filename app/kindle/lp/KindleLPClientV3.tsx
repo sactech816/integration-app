@@ -53,11 +53,10 @@ const LP_PLANS: Record<LPPlanType, LPPlan> = {
 };
 
 // LP専用プランのUnivaPayリンク（直接指定）
-// TODO: 本番用リンクに差し替え
 const LP_UNIVAPAY_LINKS: Record<LPPlanType, string> = {
-  trial: 'https://univa.cc/M6-JZs',     // 仮: 月額スタンダード - 本番用リンクに要差替
-  standard: 'https://univa.cc/M6-JZs',  // 仮: 月額スタンダード - 本番用リンクに要差替
-  business: 'https://univa.cc/0okQBL',  // 仮: 月額ビジネス - 本番用リンクに要差替
+  trial: 'https://univa.cc/FGpLA1',     // トライアル（初回）49,800円
+  standard: 'https://univa.cc/E13YDx',  // スタンダード（初回）99,800円
+  business: 'https://univa.cc/6yL6zc',  // ビジネス（初回）198,000円
 };
 
 // V3: 初心者向けパターン - 優しいデザイン
@@ -580,19 +579,19 @@ export default function KindleLPClient() {
             追加料金なしで始められます。
           </p>
 
-          <div className="flex flex-col md:flex-row justify-center gap-8 max-w-5xl mx-auto items-stretch">
-            {/* Plan 1 */}
-            <div className="bg-white w-full max-w-sm rounded-3xl shadow-xl overflow-hidden border-4 border-gray-200 transform hover:scale-105 transition duration-300 flex flex-col">
-              <div className="bg-gray-200 text-slate-600 py-3 font-bold">まずはお試し</div>
-              <div className="p-8 flex flex-col h-full">
-                <h3 className="text-2xl font-bold text-slate-800 mb-2">1ヶ月トライアル</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
+            {/* Plan 1: トライアル */}
+            <div className="bg-white w-full rounded-3xl shadow-xl overflow-hidden border-4 border-gray-200 hover:shadow-2xl transition duration-300 flex flex-col">
+              <div className="bg-gray-200 text-slate-600 py-3 font-bold text-center">まずはお試し</div>
+              <div className="p-6 flex flex-col h-full">
+                <h3 className="text-xl font-bold text-slate-800 mb-2">1ヶ月トライアル</h3>
                 <p className="text-sm text-slate-500 mb-4">記念に1冊作ってみたい方へ</p>
-                <div className="text-4xl font-extrabold text-slate-700 mb-6">¥49,800 <span className="text-sm font-normal text-slate-400">（税込）</span></div>
+                <div className="text-3xl font-extrabold text-slate-700 mb-6">¥49,800 <span className="text-sm font-normal text-slate-400">（税込）</span></div>
                 
-                <ul className="text-left text-sm text-slate-600 space-y-3 mb-8 flex-grow">
-                  <li className="flex items-center gap-2"><Check className="text-green-500" size={16} /> AI使い放題（1ヶ月間）</li>
-                  <li className="flex items-center gap-2"><Check className="text-green-500" size={16} /> 本を3冊まで作れます</li>
-                  <li className="flex items-center gap-2"><Check className="text-green-500" size={16} /> 初心者向けマニュアル</li>
+                <ul className="text-left text-sm text-slate-600 space-y-2 mb-6 flex-grow">
+                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> AI使い放題（1ヶ月間）</li>
+                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> 本を3冊まで作れます</li>
+                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> 初心者向けマニュアル</li>
                   <li className="flex items-center gap-2 text-slate-300">− 個別相談なし</li>
                 </ul>
 
@@ -605,21 +604,21 @@ export default function KindleLPClient() {
               </div>
             </div>
 
-            {/* Plan 2 (Featured) */}
-            <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border-4 border-orange-400 transform scale-105 relative flex flex-col">
+            {/* Plan 2: スタンダード (Featured) */}
+            <div className="bg-white w-full rounded-3xl shadow-2xl overflow-hidden border-4 border-orange-400 relative flex flex-col md:scale-105 md:z-10">
               <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">人気No.1</div>
-              <div className="bg-orange-400 text-white py-3 font-bold">しっかりサポート</div>
-              <div className="p-8 flex flex-col h-full">
-                <h3 className="text-2xl font-bold text-slate-800 mb-2">3ヶ月スタンダード</h3>
+              <div className="bg-orange-400 text-white py-3 font-bold text-center">しっかりサポート</div>
+              <div className="p-6 flex flex-col h-full">
+                <h3 className="text-xl font-bold text-slate-800 mb-2">3ヶ月スタンダード</h3>
                 <p className="text-sm text-slate-500 mb-4">副業として印税を得たい方へ</p>
-                <div className="text-4xl font-extrabold text-orange-500 mb-6">¥99,800 <span className="text-sm font-normal text-slate-400">（税込）</span></div>
+                <div className="text-3xl font-extrabold text-orange-500 mb-6">¥99,800 <span className="text-sm font-normal text-slate-400">（税込）</span></div>
                 
-                <ul className="text-left text-sm text-slate-600 space-y-3 mb-8 flex-grow">
-                  <li className="flex items-center gap-2 font-bold bg-orange-50 p-1 rounded"><Check className="text-orange-500" size={16} /> たっぷり3ヶ月使える</li>
-                  <li className="flex items-center gap-2"><Check className="text-orange-500" size={16} /> 本を10冊まで作れます</li>
-                  <li className="flex items-center gap-2"><Check className="text-orange-500" size={16} /> 売れる表紙テンプレート</li>
-                  <li className="flex items-center gap-2"><Check className="text-orange-500" size={16} /> グループ相談会（1回）</li>
-                  <li className="flex items-center gap-2"><Check className="text-orange-500" size={16} /> チャット質問し放題</li>
+                <ul className="text-left text-sm text-slate-600 space-y-2 mb-6 flex-grow">
+                  <li className="flex items-center gap-2 font-bold bg-orange-50 p-1 rounded"><Check className="text-orange-500 flex-shrink-0" size={16} /> たっぷり3ヶ月使える</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> 本を10冊まで作れます</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> 売れる表紙テンプレート</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> グループ相談会（1回）</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> チャット質問し放題</li>
                 </ul>
 
                 <button 
@@ -627,6 +626,31 @@ export default function KindleLPClient() {
                   className="block w-full bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white font-bold py-4 rounded-xl shadow-lg transition text-center"
                 >
                   今すぐ作家デビューする
+                </button>
+              </div>
+            </div>
+
+            {/* Plan 3: ビジネス */}
+            <div className="bg-white w-full rounded-3xl shadow-xl overflow-hidden border-4 border-purple-300 hover:shadow-2xl transition duration-300 flex flex-col">
+              <div className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white py-3 font-bold text-center">本格派向け</div>
+              <div className="p-6 flex flex-col h-full">
+                <h3 className="text-xl font-bold text-slate-800 mb-2">ビジネス（初回）</h3>
+                <p className="text-sm text-slate-500 mb-4">本格的に出版を始めたい方へ</p>
+                <div className="text-3xl font-extrabold text-purple-600 mb-6">¥198,000 <span className="text-sm font-normal text-slate-400">（税込）</span></div>
+                
+                <ul className="text-left text-sm text-slate-600 space-y-2 mb-6 flex-grow">
+                  <li className="flex items-center gap-2 font-bold bg-purple-50 p-1 rounded"><Check className="text-purple-500 flex-shrink-0" size={16} /> たっぷり6ヶ月使える</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 本を無制限に作れます</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 高性能AIモデル利用可</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 個別コンサル（月1回）</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 優先サポート</li>
+                </ul>
+
+                <button 
+                  onClick={() => handlePlanSelect('business')}
+                  className="block w-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold py-4 rounded-xl shadow-lg transition text-center"
+                >
+                  ビジネスプランで始める
                 </button>
               </div>
             </div>
