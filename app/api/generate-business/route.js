@@ -1,18 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import OpenAI from 'openai';
 import { checkAIUsageLimitForFeature, logAIUsage } from '@/lib/ai-usage';
-
-// Gemini または OpenAI を使用
-const genAI = process.env.GOOGLE_GEMINI_API_KEY 
-  ? new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY)
-  : null;
-
-const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-  : null;
+import { getProviderFromAdminSettings } from '@/lib/ai-provider';
 
 export async function POST(request) {
   try {
@@ -72,8 +62,21 @@ export async function POST(request) {
       return NextResponse.json({ error: 'プロンプトが必要です' }, { status: 400 });
     }
 
-    if (!genAI && !openai) {
-      return NextResponse.json({ error: 'AI APIキーが設定されていません' }, { status: 500 });
+    // admin_ai_settingsからモデル設定を取得（集客メーカーは'free'プランを使用）
+    const planTier = 'free';
+    let aiProvider, modelUsed;
+    
+    try {
+      const settings = await getProviderFromAdminSettings('makers', planTier, 'outline');
+      aiProvider = settings.provider;
+      modelUsed = settings.model;
+      console.log('[Business Generate] Using model from admin settings:', modelUsed);
+    } catch (settingsError) {
+      console.warn('[Business Generate] Failed to get admin settings, using fallback:', settingsError.message);
+      // フォールバック: Geminiを優先
+      const { createAIProvider } = await import('@/lib/ai-provider');
+      aiProvider = createAIProvider({ preferProvider: 'gemini', model: 'gemini-1.5-flash' });
+      modelUsed = 'gemini-1.5-flash';
     }
 
     const systemPrompt = `あなたはビジネスLP作成の専門家です。
@@ -151,40 +154,35 @@ export async function POST(request) {
 
 必ず hero と cta_section は含めてください。`;
 
-    let result;
+    // AIプロバイダーを使用して生成
+    const aiResponse = await aiProvider.generate({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `以下のビジネスでLPを作成してください：\n${prompt}` },
+      ],
+      responseFormat: 'json',
+      temperature: 0.7,
+    });
 
-    // Gemini を優先的に使用
-    if (genAI) {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const geminiResponse = await model.generateContent([
-        systemPrompt,
-        `以下のビジネスでLPを作成してください：\n${prompt}`
-      ]);
-      
-      const text = geminiResponse.response.text();
-      // JSONを抽出
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const content = aiResponse.content;
+    if (!content) {
+      throw new Error('AI応答が空です');
+    }
+
+    // 実際に使用されたモデル名を取得
+    const actualModel = aiResponse.model || modelUsed;
+
+    // JSONを抽出（Geminiの場合はJSONが直接返らない場合がある）
+    let result;
+    try {
+      result = JSON.parse(content);
+    } catch {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         result = JSON.parse(jsonMatch[0]);
       } else {
         throw new Error('JSONの解析に失敗しました');
       }
-    } else if (openai) {
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `以下のビジネスでLPを作成してください：\n${prompt}` },
-        ],
-        response_format: { type: 'json_object' },
-        temperature: 0.7,
-      });
-
-      const content = response.choices[0]?.message?.content;
-      if (!content) {
-        throw new Error('AI応答が空です');
-      }
-      result = JSON.parse(content);
     }
 
     // ブロックIDを追加
@@ -232,13 +230,12 @@ export async function POST(request) {
     }
 
     // 4. 使用量を記録
-    const modelUsed = genAI ? 'gemini-1.5-flash' : 'gpt-4o-mini';
     await logAIUsage({
       userId: user.id,
       actionType: 'business_generate',
       service: 'business',
       featureType: featureType,
-      modelUsed: modelUsed,
+      modelUsed: actualModel,
       metadata: { prompt }
     });
 

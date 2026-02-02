@@ -1,12 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import OpenAI from 'openai';
 import { checkAIUsageLimitForFeature, logAIUsage } from '@/lib/ai-usage';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { getProviderFromAdminSettings } from '@/lib/ai-provider';
 
 export async function POST(request) {
   try {
@@ -66,8 +62,21 @@ export async function POST(request) {
       return NextResponse.json({ error: 'プロンプトが必要です' }, { status: 400 });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json({ error: 'OpenAI APIキーが設定されていません' }, { status: 500 });
+    // admin_ai_settingsからモデル設定を取得（集客メーカーは'free'プランを使用）
+    const planTier = 'free';
+    let aiProvider, modelUsed;
+    
+    try {
+      const settings = await getProviderFromAdminSettings('makers', planTier, 'outline');
+      aiProvider = settings.provider;
+      modelUsed = settings.model;
+      console.log('[Quiz Generate] Using model from admin settings:', modelUsed);
+    } catch (settingsError) {
+      console.warn('[Quiz Generate] Failed to get admin settings, using fallback:', settingsError.message);
+      // フォールバック
+      const { createAIProvider } = await import('@/lib/ai-provider');
+      aiProvider = createAIProvider({ preferProvider: 'gemini', model: 'gemini-1.5-flash' });
+      modelUsed = 'gemini-1.5-flash';
     }
 
     // 結果タイプの配列（渡されていない場合はデフォルト）
@@ -126,22 +135,36 @@ ${resultExamples}
 - 最初の${types.length}個の選択肢は各結果タイプに3点ずつ振り分け、最後の選択肢は全タイプに1点ずつ振り分けてください
 - 診断として意味のある、魅力的な質問と選択肢を作成してください`;
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    // AIプロバイダーを使用して生成
+    const aiResponse = await aiProvider.generate({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `以下のテーマで診断クイズを作成してください：\n${prompt}` },
       ],
-      response_format: { type: 'json_object' },
+      responseFormat: 'json',
       temperature: 0.7,
     });
 
-    const content = response.choices[0]?.message?.content;
+    const content = aiResponse.content;
     if (!content) {
       throw new Error('AI応答が空です');
     }
 
-    const quiz = JSON.parse(content);
+    // 実際に使用されたモデル名を取得
+    const actualModel = aiResponse.model || modelUsed;
+
+    // JSONを解析
+    let quiz;
+    try {
+      quiz = JSON.parse(content);
+    } catch {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        quiz = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('JSONの解析に失敗しました');
+      }
+    }
 
     // 4. 使用量を記録
     await logAIUsage({
@@ -149,7 +172,7 @@ ${resultExamples}
       actionType: 'quiz_generate',
       service: 'quiz',
       featureType: featureType,
-      modelUsed: 'gpt-4o-mini',
+      modelUsed: actualModel,
       metadata: { prompt, mode, questionCount, resultCount }
     });
 

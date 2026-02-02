@@ -391,6 +391,18 @@ export async function checkAIUsageLimitByPlanTier(
  * AI使用量を記録（ハイブリッドクレジット対応 & 機能タイプ対応）
  */
 export async function logAIUsage(params: LogAIUsageParams): Promise<string | null> {
+  // デバッグログ: 呼び出しパラメータを出力
+  console.log('[AI Usage] logAIUsage called with params:', {
+    userId: params.userId,
+    actionType: params.actionType,
+    service: params.service,
+    modelUsed: params.modelUsed,
+    usageType: params.usageType,
+    featureType: params.featureType,
+    inputTokens: params.inputTokens,
+    outputTokens: params.outputTokens,
+  });
+
   const supabase = getServiceClient();
 
   if (!supabase) {
@@ -401,6 +413,7 @@ export async function logAIUsage(params: LogAIUsageParams): Promise<string | nul
   try {
     // ハイブリッドクレジットシステムに対応
     if (params.usageType) {
+      console.log('[AI Usage] Using hybrid credit system (usageType:', params.usageType, ')');
       const { data, error } = await supabase.rpc('log_ai_credit_usage', {
         p_user_id: params.userId,
         p_action_type: params.actionType,
@@ -413,9 +426,11 @@ export async function logAIUsage(params: LogAIUsageParams): Promise<string | nul
       });
 
       if (error) {
-        console.error('Failed to log AI credit usage:', error);
+        console.error('[AI Usage] Failed to log AI credit usage:', error);
         return null;
       }
+
+      console.log('[AI Usage] Successfully logged via hybrid credit system, id:', data);
 
       // feature_typeがある場合は追加で更新
       if (params.featureType && data) {
@@ -430,6 +445,7 @@ export async function logAIUsage(params: LogAIUsageParams): Promise<string | nul
 
     // 機能タイプを含む直接INSERT（新しい機能）
     if (params.featureType) {
+      console.log('[AI Usage] Using direct INSERT with featureType:', params.featureType);
       const { data, error } = await supabase
         .from('ai_usage_logs')
         .insert({
@@ -446,14 +462,16 @@ export async function logAIUsage(params: LogAIUsageParams): Promise<string | nul
         .single();
 
       if (error) {
-        console.error('Failed to log AI usage with feature type:', error);
+        console.error('[AI Usage] Failed to log AI usage with feature type:', error);
         return null;
       }
 
+      console.log('[AI Usage] Successfully logged via direct INSERT, id:', data?.id);
       return data?.id || null;
     }
 
     // レガシーシステム（後方互換性）
+    console.log('[AI Usage] Using legacy RPC system');
     const { data, error } = await supabase.rpc('log_ai_usage', {
       p_user_id: params.userId,
       p_action_type: params.actionType,
