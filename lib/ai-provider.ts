@@ -538,12 +538,12 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
  */
 export const DEFAULT_AI_MODELS = {
   primary: {
-    outline: 'gpt-5-nano',    // 構成用: $0.05/入力
-    writing: 'gpt-5-nano',    // 執筆用: $0.05/入力
+    outline: 'gemini-2.5-flash-lite',    // 構成用: $0.075/入力（コスパ良好）
+    writing: 'gemini-2.5-flash-lite',    // 執筆用: $0.075/入力（コスパ良好）
   },
   backup: {
-    outline: 'gemini-2.5-flash-lite',  // バックアップ構成用: $0.075/入力
-    writing: 'gemini-2.5-flash-lite',  // バックアップ執筆用: $0.075/入力
+    outline: 'gemini-2.5-flash-lite',  // バックアップ構成用
+    writing: 'gemini-2.5-flash-lite',  // バックアップ執筆用
   },
 } as const;
 

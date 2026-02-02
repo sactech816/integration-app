@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { 
   getProviderFromAdminSettings, 
   generateWithFallback 
 } from '@/lib/ai-provider';
 import { getSubscriptionStatus } from '@/lib/subscription';
+import { logAIUsage } from '@/lib/ai-usage';
 
 // レスポンスの型定義
 interface SubtitleSuggestion {
@@ -20,7 +23,29 @@ interface GeneratedSubtitles {
 
 export async function POST(request: Request) {
   try {
-    const { title, instruction, user_id } = await request.json();
+    const { title, instruction } = await request.json();
+
+    // セッションからユーザーを取得
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          },
+        },
+      }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const user_id = user?.id;
 
     if (!title) {
       return NextResponse.json(
@@ -165,6 +190,17 @@ Kindle出版を成功させたい著者（タイトルは決まっているがSE
 
     // スコアでソート（高い順）
     result.subtitles.sort((a, b) => b.score - a.score);
+
+    // AI使用量を記録
+    if (user_id) {
+      logAIUsage({
+        userId: user_id,
+        actionType: 'generate_subtitle',
+        service: 'kdl',
+        modelUsed: response.model,
+        metadata: { title, plan_tier: planTier },
+      }).catch(console.error);
+    }
 
     return NextResponse.json(result);
   } catch (error: any) {

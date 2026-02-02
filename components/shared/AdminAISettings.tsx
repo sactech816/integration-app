@@ -26,6 +26,7 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
 
   // サービスごとのプラン（Kindleは初回と継続を統合して表示）
   const kdlAllPlans = [
+    'none',                                                    // 未加入ユーザー
     'initial_trial', 'initial_standard', 'initial_business',  // 初回（一括）
     'lite', 'standard', 'pro', 'business', 'enterprise'       // 継続（月額）
   ] as const;
@@ -137,6 +138,8 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
       // 集客メーカー
       guest: 'ゲスト',
       free: 'フリー',
+      // Kindle未加入
+      none: '未加入（デフォルト）',
       // Kindle初回（一括）
       initial_trial: 'トライアル（初回）',
       initial_standard: 'スタンダード（初回）',
@@ -278,11 +281,19 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
                 const backupWritingInfo = getModelInfo(planSettings.backupWritingModel);
 
                 // Kindleのセクションヘッダー表示
+                const showNoneHeader = selectedService === 'kdl' && plan === 'none';
                 const showInitialHeader = selectedService === 'kdl' && plan === 'initial_trial';
                 const showContinuationHeader = selectedService === 'kdl' && plan === 'lite';
 
                 return (
                   <>
+                    {showNoneHeader && (
+                      <tr key="header-none" className="bg-gray-100">
+                        <td colSpan={4} className="px-4 py-2 text-sm font-bold text-gray-700">
+                          未加入ユーザー（デフォルト設定）
+                        </td>
+                      </tr>
+                    )}
                     {showInitialHeader && (
                       <tr key="header-initial" className="bg-orange-100">
                         <td colSpan={4} className="px-4 py-2 text-sm font-bold text-orange-800">

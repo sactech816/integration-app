@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { 
   getProviderFromAdminSettings, 
   generateWithFallback
@@ -158,7 +160,29 @@ function cleanAIResponse(content: string): string {
 export async function POST(request: Request) {
   try {
     const body: RequestBody = await request.json();
-    const { book_id, book_title, book_subtitle, chapter_title, section_title, writing_style, instruction, target_profile, user_id } = body;
+    const { book_id, book_title, book_subtitle, chapter_title, section_title, writing_style, instruction, target_profile } = body;
+
+    // セッションからユーザーを取得
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          },
+        },
+      }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const user_id = user?.id;
 
     // バリデーション
     if (!book_title) {

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { 
   getProviderFromAdminSettings, 
   generateWithFallback 
@@ -167,7 +169,29 @@ const getMockChapters = (patternId: string, title: string): GeneratedChapters =>
 
 export async function POST(request: Request) {
   try {
-    const { title, subtitle, target, patternId, action, instruction, user_id } = await request.json();
+    const { title, subtitle, target, patternId, action, instruction } = await request.json();
+
+    // セッションからユーザーを取得
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          },
+        },
+      }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const user_id = user?.id;
 
     // AI使用量チェック（user_idがある場合のみ、デモモードはスキップ）
     const useMockDataCheck = (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) || process.env.USE_MOCK_DATA === 'true';

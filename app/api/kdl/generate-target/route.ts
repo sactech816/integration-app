@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { 
   getProviderFromAdminSettings, 
   generateWithFallback 
 } from '@/lib/ai-provider';
 import { getSubscriptionStatus } from '@/lib/subscription';
+import { logAIUsage } from '@/lib/ai-usage';
 
 // レスポンスの型定義
 interface TargetSuggestion {
@@ -20,7 +23,29 @@ interface GeneratedTargets {
 
 export async function POST(request: Request) {
   try {
-    const { title, subtitle, instruction, user_id } = await request.json();
+    const { title, subtitle, instruction } = await request.json();
+
+    // セッションからユーザーを取得
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          },
+        },
+      }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const user_id = user?.id;
 
     if (!title) {
       return NextResponse.json(
@@ -207,6 +232,17 @@ ${subtitle ? `サブタイトル：${subtitle}` : ''}`;
     // バリデーション
     if (!result.targets || !Array.isArray(result.targets)) {
       throw new Error('不正な応答形式です');
+    }
+
+    // AI使用量を記録
+    if (user_id) {
+      logAIUsage({
+        userId: user_id,
+        actionType: 'generate_target',
+        service: 'kdl',
+        modelUsed: response.model,
+        metadata: { title, plan_tier: planTier },
+      }).catch(console.error);
     }
 
     return NextResponse.json(result);
