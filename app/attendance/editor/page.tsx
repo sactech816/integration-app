@@ -277,19 +277,11 @@ function AttendanceEditorContent() {
     }
   };
 
-  // 完了モーダルを閉じてフォームリセット
+  // 完了モーダルを閉じてダッシュボードへ遷移
   const handleCloseCompleteModal = () => {
     setShowCompleteModal(false);
-    if (isEditMode) {
-      // 編集モードの場合はダッシュボードに戻る
-      router.push('/dashboard?tab=attendance');
-    } else {
-      // 新規作成の場合はフォームリセット
-      setCreatedEventId(null);
-      setTitle('');
-      setDescription('');
-      setSlots([]);
-    }
+    // 新規作成・編集どちらもダッシュボードに戻る
+    router.push('/dashboard?tab=attendance');
   };
 
   const today = new Date();
