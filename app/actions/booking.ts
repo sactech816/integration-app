@@ -348,7 +348,7 @@ export async function sendBookingNotificationEmail(
 
 /**
  * 日程調整の通知メールを直接送信
- * 参加者に出欠表の状況をメールで通知する
+ * 参加者と作成者の両方に出欠表の状況をメールで通知する
  */
 export async function sendScheduleAdjustmentNotificationEmail(
   responseId: string
@@ -388,10 +388,11 @@ export async function sendScheduleAdjustmentNotificationEmail(
       return;
     }
 
-    if (!response.participant_email) {
-      // メールアドレスがない場合は送信しない（正常系）
-      console.log('[Schedule Adjustment Email] No email address provided, skipping');
-      return;
+    // 作成者のメールアドレスを取得
+    let ownerEmail = menu.notification_email || null;
+    if (!ownerEmail && menu.user_id) {
+      const { data: ownerData } = await supabase.auth.admin.getUserById(menu.user_id);
+      ownerEmail = ownerData?.user?.email || null;
     }
 
     // 出欠表データを取得
@@ -451,26 +452,31 @@ export async function sendScheduleAdjustmentNotificationEmail(
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://makers.tokyo';
 
-    // メール本文（HTML）を生成
-    const emailHtml = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: linear-gradient(135deg, #8b5cf6, #6366f1); padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 24px;">日程調整結果のお知らせ</h1>
-        </div>
-        
-        <div style="padding: 30px; background: #f9fafb;">
-          <p style="font-size: 16px; color: #374151;">
-            ${response.participant_name}様<br><br>
-            以下の日程調整に出欠を登録いただき、ありがとうございます。<br>
-            現在の出欠状況をお知らせします。
+    // 共通フッターHTML
+    const footerHtml = `
+        <div style="background: #1f2937; padding: 20px; text-align: center;">
+          <p style="color: #9ca3af; font-size: 12px; margin: 0 0 12px 0;">
+            このメールは日程調整システムから自動送信されています。
           </p>
-          
-          <div style="background: white; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
-            <h2 style="color: #1f2937; font-size: 18px; margin-top: 0;">${menu.title}</h2>
-            ${menu.description ? `<p style="color: #6b7280; margin: 10px 0;">${menu.description}</p>` : ''}
+          <div style="border-top: 1px solid #374151; padding-top: 16px; margin-top: 8px;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0 0 8px 0;">
+              集客に役立つツールが無料で使えるポータルサイト<br>
+              <a href="https://makers.tokyo/tools" style="color: #60a5fa;">https://makers.tokyo/tools</a>
+            </p>
+            <p style="color: #9ca3af; font-size: 12px; margin: 0 0 8px 0;">
+              開発支援のお願い<br>
+              <a href="https://makers.tokyo/donation" style="color: #60a5fa;">https://makers.tokyo/donation</a>
+            </p>
+            <p style="color: #6b7280; font-size: 11px; margin: 12px 0 0 0;">
+              &copy;2026 集客メーカー<br>
+              <a href="https://makers.tokyo/" style="color: #60a5fa;">https://makers.tokyo/</a>
+            </p>
           </div>
+        </div>
+    `;
 
-          ${slots && slots.length > 0 ? `
+    // 出欠表HTML（共通部分）
+    const attendanceTableHtml = slots && slots.length > 0 ? `
             <div style="background: white; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb; overflow-x: auto;">
               <h3 style="color: #1f2937; font-size: 16px; margin-top: 0; margin-bottom: 15px;">出欠表</h3>
               <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
@@ -516,7 +522,31 @@ export async function sendScheduleAdjustmentNotificationEmail(
                 </tbody>
               </table>
             </div>
-          ` : ''}
+          ` : '';
+
+    const emailPromises = [];
+
+    // 参加者へのメール（メールアドレスがある場合のみ）
+    if (response.participant_email) {
+      const participantEmailHtml = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #8b5cf6, #6366f1); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">日程調整結果のお知らせ</h1>
+        </div>
+        
+        <div style="padding: 30px; background: #f9fafb;">
+          <p style="font-size: 16px; color: #374151;">
+            ${response.participant_name}様<br><br>
+            以下の日程調整に出欠を登録いただき、ありがとうございます。<br>
+            現在の出欠状況をお知らせします。
+          </p>
+          
+          <div style="background: white; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
+            <h2 style="color: #1f2937; font-size: 18px; margin-top: 0;">${menu.title}</h2>
+            ${menu.description ? `<p style="color: #6b7280; margin: 10px 0;">${menu.description}</p>` : ''}
+          </div>
+
+          ${attendanceTableHtml}
 
           <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
             出欠状況を変更したい場合は、再度日程調整ページにアクセスしてください。<br>
@@ -524,25 +554,69 @@ export async function sendScheduleAdjustmentNotificationEmail(
           </p>
         </div>
         
-        <div style="background: #1f2937; padding: 20px; text-align: center;">
-          <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-            このメールは日程調整システムから自動送信されています。
-          </p>
-        </div>
+        ${footerHtml}
       </div>
     `;
 
-    // メール送信
-    console.log('[Schedule Adjustment Email] Sending email to:', response.participant_email);
-    
-    const result = await resend.emails.send({
-      from: FROM_EMAIL,
-      to: response.participant_email,
-      subject: `【日程調整結果】${menu.title}`,
-      html: emailHtml,
-    });
+      console.log('[Schedule Adjustment Email] Sending email to participant:', response.participant_email);
+      emailPromises.push(
+        resend.emails.send({
+          from: FROM_EMAIL,
+          to: response.participant_email,
+          subject: `【日程調整結果】${menu.title}`,
+          html: participantEmailHtml,
+        })
+      );
+    }
 
-    console.log('[Schedule Adjustment Email] Email sent successfully:', result);
+    // 作成者へのメール
+    if (ownerEmail) {
+      const ownerEmailHtml = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #8b5cf6, #6366f1); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">日程調整に新しい回答がありました</h1>
+        </div>
+        
+        <div style="padding: 30px; background: #f9fafb;">
+          <p style="font-size: 16px; color: #374151;">
+            「${menu.title}」に新しい回答が登録されました。
+          </p>
+          
+          <div style="background: white; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
+            <h3 style="color: #1f2937; font-size: 16px; margin-top: 0;">回答者情報</h3>
+            <p style="color: #374151; margin: 8px 0;"><strong>名前:</strong> ${response.participant_name}</p>
+            ${response.participant_email ? `<p style="color: #374151; margin: 8px 0;"><strong>メール:</strong> ${response.participant_email}</p>` : ''}
+          </div>
+
+          ${attendanceTableHtml}
+
+          <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
+            日程調整ページで詳細を確認できます。<br>
+            <a href="${baseUrl}/booking/${menu.id}" style="color: #6366f1;">${baseUrl}/booking/${menu.id}</a>
+          </p>
+        </div>
+        
+        ${footerHtml}
+      </div>
+    `;
+
+      console.log('[Schedule Adjustment Email] Sending email to owner:', ownerEmail);
+      emailPromises.push(
+        resend.emails.send({
+          from: FROM_EMAIL,
+          to: ownerEmail,
+          subject: `【日程調整】${response.participant_name}さんが回答しました - ${menu.title}`,
+          html: ownerEmailHtml,
+        })
+      );
+    }
+
+    if (emailPromises.length > 0) {
+      const results = await Promise.all(emailPromises);
+      console.log('[Schedule Adjustment Email] Emails sent successfully:', results);
+    } else {
+      console.log('[Schedule Adjustment Email] No email addresses to send to');
+    }
   } catch (error) {
     console.error('[Schedule Adjustment Email] Error sending notification:', error);
   }

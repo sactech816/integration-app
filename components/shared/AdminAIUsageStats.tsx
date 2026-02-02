@@ -29,6 +29,16 @@ interface ModelStats {
   total_cost_jpy: number;
 }
 
+// プロバイダー別統計（モデル別詳細を含む）
+interface ProviderStats {
+  provider: string;
+  total_requests: number;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  total_cost_jpy: number;
+  models: ModelStats[];
+}
+
 interface AdminAIUsageStatsProps {
   userId: string;
 }
@@ -36,6 +46,8 @@ interface AdminAIUsageStatsProps {
 export default function AdminAIUsageStats({ userId }: AdminAIUsageStatsProps) {
   const [stats, setStats] = useState<ServiceStats[]>([]);
   const [modelStats, setModelStats] = useState<ModelStats[]>([]);
+  const [providerStats, setProviderStats] = useState<ProviderStats[]>([]);
+  const [expandedProviders, setExpandedProviders] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d'>('30d');
