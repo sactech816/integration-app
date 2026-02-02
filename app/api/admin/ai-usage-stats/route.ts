@@ -62,7 +62,9 @@ export async function GET(request: Request) {
       const modelStats = aggregateByModel(data || []);
       // プロバイダー別の統計を追加
       const providerStats = aggregateByProvider(data || []);
-      return NextResponse.json({ stats, modelStats, providerStats });
+      // サービスごとのプロバイダー別統計を追加
+      const providerStatsByService = aggregateByProviderPerService(data || []);
+      return NextResponse.json({ stats, modelStats, providerStats, providerStatsByService });
     }
 
     if (rpcError) {
@@ -70,17 +72,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 });
     }
 
-    // RPC成功時もモデル別・プロバイダー別統計を追加取得
+    // RPC成功時もモデル別・プロバイダー別統計を追加取得（serviceも含める）
     const { data: modelData } = await supabase
       .from('ai_usage_logs')
-      .select('model_used, input_tokens, output_tokens, estimated_cost_jpy')
+      .select('service, model_used, input_tokens, output_tokens, estimated_cost_jpy')
       .gte('created_at', startDate)
       .lt('created_at', addOneDay(endDate));
 
     const modelStats = aggregateByModel(modelData || []);
     const providerStats = aggregateByProvider(modelData || []);
+    const providerStatsByService = aggregateByProviderPerService(modelData || []);
 
-    return NextResponse.json({ stats: rpcData || [], modelStats, providerStats });
+    return NextResponse.json({ stats: rpcData || [], modelStats, providerStats, providerStatsByService });
   } catch (error: any) {
     console.error('GET AI usage stats error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -118,6 +121,32 @@ function getProviderFromModel(model: string): string {
     return 'Claude';
   }
   return 'Other';
+}
+
+// サービスごとにプロバイダー別に集計
+function aggregateByProviderPerService(data: any[]): Record<string, any[]> {
+  // サービスごとにデータを分類
+  const dataByService: Record<string, any[]> = {};
+
+  for (const row of data) {
+    // サービス名を正規化（quiz, profile, business → makers）
+    const normalizedService = ['quiz', 'profile', 'business'].includes(row.service)
+      ? 'makers'
+      : (row.service || 'unknown');
+
+    if (!dataByService[normalizedService]) {
+      dataByService[normalizedService] = [];
+    }
+    dataByService[normalizedService].push(row);
+  }
+
+  // 各サービスごとにプロバイダー別統計を集計
+  const result: Record<string, any[]> = {};
+  for (const [service, serviceData] of Object.entries(dataByService)) {
+    result[service] = aggregateByProvider(serviceData);
+  }
+
+  return result;
 }
 
 // プロバイダー別に集計（モデル別詳細を含む）

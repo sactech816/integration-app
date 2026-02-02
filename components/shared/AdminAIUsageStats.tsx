@@ -47,7 +47,9 @@ export default function AdminAIUsageStats({ userId }: AdminAIUsageStatsProps) {
   const [stats, setStats] = useState<ServiceStats[]>([]);
   const [modelStats, setModelStats] = useState<ModelStats[]>([]);
   const [providerStats, setProviderStats] = useState<ProviderStats[]>([]);
+  const [providerStatsByService, setProviderStatsByService] = useState<Record<string, ProviderStats[]>>({});
   const [expandedProviders, setExpandedProviders] = useState<Set<string>>(new Set());
+  const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d'>('30d');
@@ -75,6 +77,7 @@ export default function AdminAIUsageStats({ userId }: AdminAIUsageStatsProps) {
       setStats(data.stats || []);
       setModelStats(data.modelStats || []);
       setProviderStats(data.providerStats || []);
+      setProviderStatsByService(data.providerStatsByService || {});
       setLastUpdated(new Date());
     } catch (err: any) {
       console.error('AI usage stats fetch error:', err);
@@ -162,6 +165,19 @@ export default function AdminAIUsageStats({ userId }: AdminAIUsageStatsProps) {
         newSet.delete(provider);
       } else {
         newSet.add(provider);
+      }
+      return newSet;
+    });
+  };
+
+  // サービスの展開/折りたたみをトグル
+  const toggleService = (service: string) => {
+    setExpandedServices(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(service)) {
+        newSet.delete(service);
+      } else {
+        newSet.add(service);
       }
       return newSet;
     });
@@ -320,81 +336,199 @@ export default function AdminAIUsageStats({ userId }: AdminAIUsageStatsProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              {stats.map((stat) => (
-                <div
-                  key={stat.service}
-                  className="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      {getServiceIcon(stat.service)}
-                      <span className="font-bold text-gray-900">
-                        {getServiceName(stat.service)}
-                      </span>
-                    </div>
-                    <span className="text-lg font-bold text-red-600">
-                      {formatCost(stat.total_cost_jpy)}
-                    </span>
-                  </div>
+              {stats.map((stat) => {
+                const isServiceExpanded = expandedServices.has(stat.service);
+                const serviceProviders = providerStatsByService[stat.service] || [];
+                const serviceTotalCost = serviceProviders.reduce((sum, p) => sum + p.total_cost_jpy, 0);
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-500">リクエスト数</p>
-                      <p className="font-bold text-gray-900">
-                        {stat.total_requests.toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">利用ユーザー</p>
-                      <p className="font-bold text-gray-900">
-                        {stat.total_users.toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">入力トークン</p>
-                      <p className="font-bold text-gray-900">
-                        {formatTokens(stat.total_input_tokens)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">出力トークン</p>
-                      <p className="font-bold text-gray-900">
-                        {formatTokens(stat.total_output_tokens)}
-                      </p>
-                    </div>
-                  </div>
+                return (
+                  <div
+                    key={stat.service}
+                    className="border border-gray-200 rounded-xl overflow-hidden hover:border-gray-300 transition-colors"
+                  >
+                    {/* サービスヘッダー（クリックで展開） */}
+                    <button
+                      onClick={() => toggleService(stat.service)}
+                      className="w-full p-4 text-left"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          {getServiceIcon(stat.service)}
+                          <span className="font-bold text-gray-900">
+                            {getServiceName(stat.service)}
+                          </span>
+                          {serviceProviders.length > 0 && (
+                            <span className="text-xs text-gray-500">
+                              ({serviceProviders.length} プロバイダー)
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg font-bold text-red-600">
+                            {formatCost(stat.total_cost_jpy)}
+                          </span>
+                          {isServiceExpanded ? (
+                            <ChevronDown size={20} className="text-gray-400" />
+                          ) : (
+                            <ChevronRight size={20} className="text-gray-400" />
+                          )}
+                        </div>
+                      </div>
 
-                  {/* 使用率バー */}
-                  <div className="mt-4">
-                    <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                      <span>コスト比率</span>
-                      <span>
-                        {totals.cost > 0
-                          ? `${Math.round((stat.total_cost_jpy / totals.cost) * 100)}%`
-                          : '0%'}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full transition-all ${
-                          stat.service === 'makers'
-                            ? 'bg-indigo-500'
-                            : stat.service === 'kdl'
-                            ? 'bg-amber-500'
-                            : 'bg-gray-500'
-                        }`}
-                        style={{
-                          width: `${
-                            totals.cost > 0
-                              ? (stat.total_cost_jpy / totals.cost) * 100
-                              : 0
-                          }%`,
-                        }}
-                      />
-                    </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-500">リクエスト数</p>
+                          <p className="font-bold text-gray-900">
+                            {stat.total_requests.toLocaleString()}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">利用ユーザー</p>
+                          <p className="font-bold text-gray-900">
+                            {stat.total_users.toLocaleString()}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">入力トークン</p>
+                          <p className="font-bold text-gray-900">
+                            {formatTokens(stat.total_input_tokens)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">出力トークン</p>
+                          <p className="font-bold text-gray-900">
+                            {formatTokens(stat.total_output_tokens)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* 使用率バー */}
+                      <div className="mt-4">
+                        <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                          <span>コスト比率</span>
+                          <span>
+                            {totals.cost > 0
+                              ? `${Math.round((stat.total_cost_jpy / totals.cost) * 100)}%`
+                              : '0%'}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all ${
+                              stat.service === 'makers'
+                                ? 'bg-indigo-500'
+                                : stat.service === 'kdl'
+                                ? 'bg-amber-500'
+                                : 'bg-gray-500'
+                            }`}
+                            style={{
+                              width: `${
+                                totals.cost > 0
+                                  ? (stat.total_cost_jpy / totals.cost) * 100
+                                  : 0
+                              }%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* サービス内のプロバイダー別統計（展開時のみ表示） */}
+                    {isServiceExpanded && serviceProviders.length > 0 && (
+                      <div className="border-t border-gray-200 p-4 bg-gray-50">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">
+                          {getServiceName(stat.service)} のAIプロバイダー別内訳
+                        </h4>
+                        <div className="space-y-3">
+                          {serviceProviders.map((providerStat) => {
+                            const info = getProviderInfo(providerStat.provider);
+                            const providerKey = `${stat.service}-${providerStat.provider}`;
+                            const isProviderExpanded = expandedProviders.has(providerKey);
+                            const costPercentage = serviceTotalCost > 0
+                              ? (providerStat.total_cost_jpy / serviceTotalCost) * 100
+                              : 0;
+
+                            return (
+                              <div
+                                key={providerKey}
+                                className={`border rounded-lg overflow-hidden ${info.borderColor}`}
+                              >
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleProvider(providerKey);
+                                  }}
+                                  className={`w-full p-3 text-left bg-gradient-to-br ${info.bgColor}`}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-lg">{info.icon}</span>
+                                      <span className="font-medium text-gray-900 text-sm">{info.name}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-bold text-red-600 text-sm">
+                                        {formatCost(providerStat.total_cost_jpy)}
+                                      </span>
+                                      <span className="text-xs text-gray-500">
+                                        ({Math.round(costPercentage)}%)
+                                      </span>
+                                      {isProviderExpanded ? (
+                                        <ChevronDown size={16} className="text-gray-400" />
+                                      ) : (
+                                        <ChevronRight size={16} className="text-gray-400" />
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-4 text-xs text-gray-600 mt-1">
+                                    <span>{providerStat.total_requests.toLocaleString()} リクエスト</span>
+                                    <span>{formatTokens(providerStat.total_input_tokens + providerStat.total_output_tokens)} トークン</span>
+                                  </div>
+                                </button>
+
+                                {/* モデル別詳細（展開時） */}
+                                {isProviderExpanded && providerStat.models.length > 0 && (
+                                  <div className="p-3 border-t border-gray-200 bg-white">
+                                    <table className="w-full text-xs">
+                                      <thead>
+                                        <tr className="border-b border-gray-200">
+                                          <th className="text-left py-1 px-2 font-medium text-gray-600">モデル</th>
+                                          <th className="text-right py-1 px-2 font-medium text-gray-600">リクエスト</th>
+                                          <th className="text-right py-1 px-2 font-medium text-gray-600">トークン</th>
+                                          <th className="text-right py-1 px-2 font-medium text-gray-600">コスト</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {providerStat.models.map((model) => (
+                                          <tr key={model.model} className="border-b border-gray-100">
+                                            <td className="py-1 px-2">
+                                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${info.badgeColor}`}>
+                                                {model.model || 'unknown'}
+                                              </span>
+                                            </td>
+                                            <td className="text-right py-1 px-2 font-medium text-gray-900">
+                                              {model.total_requests.toLocaleString()}
+                                            </td>
+                                            <td className="text-right py-1 px-2 text-gray-600">
+                                              {formatTokens(model.total_input_tokens + model.total_output_tokens)}
+                                            </td>
+                                            <td className="text-right py-1 px-2 font-medium text-red-600">
+                                              {formatCost(model.total_cost_jpy)}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
