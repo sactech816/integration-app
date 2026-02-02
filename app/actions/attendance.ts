@@ -134,6 +134,62 @@ export async function getAttendanceEvent(
 }
 
 // -------------------------------------------
+// 出欠表イベント更新
+// -------------------------------------------
+export async function updateAttendanceEvent(
+  eventId: string,
+  input: CreateAttendanceEventInput,
+  userId: string,
+  isAdmin?: boolean
+): Promise<AttendanceApiResponse<AttendanceEvent>> {
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return { success: false, error: 'データベースが設定されていません' };
+  }
+
+  try {
+    // 権限チェック
+    const { data: existingEvent, error: fetchError } = await supabase
+      .from('attendance_events')
+      .select('user_id')
+      .eq('id', eventId)
+      .single();
+
+    if (fetchError || !existingEvent) {
+      return { success: false, error: 'イベントが見つかりません' };
+    }
+
+    // 管理者または所有者のみ更新可能
+    if (!isAdmin && existingEvent.user_id !== userId) {
+      return { success: false, error: '更新権限がありません' };
+    }
+
+    // イベントを更新
+    const { data, error } = await supabase
+      .from('attendance_events')
+      .update({
+        title: input.title,
+        description: input.description || null,
+        slots: input.slots,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', eventId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating attendance event:', error);
+      return { success: false, error: '出欠表の更新に失敗しました' };
+    }
+
+    return { success: true, data: data as AttendanceEvent };
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    return { success: false, error: '予期しないエラーが発生しました' };
+  }
+}
+
+// -------------------------------------------
 // 出欠回答送信
 // -------------------------------------------
 export async function submitAttendanceResponse(

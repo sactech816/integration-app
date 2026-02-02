@@ -137,7 +137,7 @@ export default function EditBookingMenuPage() {
           return {
             start_time: startTime.toISOString(),
             end_time: endTime.toISOString(),
-            max_capacity: 1,
+            max_capacity: slot.maxCapacity || 1, // SlotModalで設定した値を使用
           };
         });
 

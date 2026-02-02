@@ -184,11 +184,11 @@ export default function AttendanceList({ userId, isAdmin, isUnlocked = false }: 
   };
 
   const handleCreateNew = () => {
-    router.push('/attendance/new');
+    router.push('/attendance/editor');
   };
 
   const handleEdit = (event: AttendanceEvent) => {
-    router.push('/attendance/new');
+    router.push(`/attendance/editor?id=${event.id}`);
   };
 
   const handleViewResults = async (event: AttendanceEvent) => {

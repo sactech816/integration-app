@@ -143,6 +143,7 @@ export type BookingErrorCode =
   | 'SLOT_FULL'
   | 'ALREADY_BOOKED'
   | 'INVALID_INPUT'
+  | 'INVALID_CAPACITY'
   | 'UNKNOWN_ERROR';
 
 // -------------------------------------------

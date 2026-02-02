@@ -43,6 +43,7 @@ interface LocalSlot {
   endHour: number;
   endMinute: number;
   isNew?: boolean; // まだ保存されていない新規枠
+  maxCapacity?: number; // 最大予約数
 }
 
 interface WeeklyCalendarProps {

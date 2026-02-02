@@ -154,6 +154,7 @@ export default function BookingEditor({
       endHour: Math.floor((data.startHour * 60 + data.startMinute + formData.duration_min) / 60),
       endMinute: (data.startHour * 60 + data.startMinute + formData.duration_min) % 60,
       isNew: true,
+      maxCapacity: data.maxCapacity, // 最大予約数
     };
     
     setLocalSlots((prev) => [...prev, newSlot]);

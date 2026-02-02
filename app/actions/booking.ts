@@ -1230,6 +1230,83 @@ export async function deleteBookingSlot(
   return { success: true, data: { deleted: true } };
 }
 
+/**
+ * 予約枠を更新（最大予約数の変更など）
+ * @param slotId 予約枠ID
+ * @param userId ユーザーID（オプション）
+ * @param updateData 更新データ
+ * @param editKey 編集キー（オプション、非ログインユーザーの場合）
+ */
+export async function updateBookingSlot(
+  slotId: string,
+  userId: string | null,
+  updateData: { max_capacity?: number },
+  editKey?: string
+): Promise<BookingResponse<BookingSlot>> {
+  const supabase = getSupabaseServer();
+  if (!supabase) {
+    return { success: false, error: 'Database not configured', code: 'DATABASE_NOT_CONFIGURED' };
+  }
+
+  // 枠の存在確認とメニュー所有者確認
+  const { data: slot, error: slotError } = await supabase
+    .from('booking_slots')
+    .select('*, menu:booking_menus(*)')
+    .eq('id', slotId)
+    .single();
+
+  if (slotError || !slot) {
+    return { success: false, error: 'Slot not found', code: 'SLOT_NOT_FOUND' };
+  }
+
+  // 認証チェック: ユーザーIDまたは編集キーで認証
+  const isAuthorized = 
+    (userId && slot.menu?.user_id === userId) ||
+    (editKey && slot.menu?.edit_key === editKey);
+
+  if (!isAuthorized) {
+    return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' };
+  }
+
+  // max_capacityは現在の予約数以上でなければならない
+  if (updateData.max_capacity !== undefined) {
+    // 現在の予約数を取得
+    const { count, error: countError } = await supabase
+      .from('bookings')
+      .select('*', { count: 'exact', head: true })
+      .eq('slot_id', slotId)
+      .eq('status', 'confirmed');
+
+    if (countError) {
+      console.error('[Booking] Count bookings error:', countError);
+      return { success: false, error: countError.message, code: 'UNKNOWN_ERROR' };
+    }
+
+    const currentBookings = count || 0;
+    if (updateData.max_capacity < currentBookings) {
+      return { 
+        success: false, 
+        error: `現在${currentBookings}件の予約があるため、最大予約数を${currentBookings}未満に設定できません`, 
+        code: 'INVALID_CAPACITY' 
+      };
+    }
+  }
+
+  const { data: updatedSlot, error } = await supabase
+    .from('booking_slots')
+    .update(updateData)
+    .eq('id', slotId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('[Booking] Update slot error:', error);
+    return { success: false, error: error.message, code: 'UNKNOWN_ERROR' };
+  }
+
+  return { success: true, data: updatedSlot };
+}
+
 // ===========================================
 // 予約管理
 // ===========================================

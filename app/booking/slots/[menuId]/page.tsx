@@ -18,6 +18,7 @@ import {
   Copy,
   ExternalLink,
   LayoutDashboard,
+  Pencil,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { BookingMenu, BookingSlotWithAvailability, CreateBookingSlotInput } from '@/types/booking';
@@ -26,6 +27,7 @@ import {
   getAvailableSlots,
   createBookingSlots,
   deleteBookingSlot,
+  updateBookingSlot,
 } from '@/app/actions/booking';
 
 // 日付ユーティリティ
@@ -76,6 +78,10 @@ export default function BookingSlotsPage() {
   // 一括追加フォーム
   const [bulkSlotTime, setBulkSlotTime] = useState('19:00');
   const [bulkSlotCapacity, setBulkSlotCapacity] = useState(1);
+
+  // スロット編集用
+  const [editingSlot, setEditingSlot] = useState<BookingSlotWithAvailability | null>(null);
+  const [editSlotCapacity, setEditSlotCapacity] = useState(1);
 
   useEffect(() => {
     // URLパラメータから編集キーを取得
@@ -221,6 +227,35 @@ export default function BookingSlotsPage() {
     } else {
       alert('削除に失敗しました: ' + ('error' in result ? result.error : '削除に失敗しました'));
     }
+  };
+
+  // スロット編集モーダルを開く
+  const handleOpenEditModal = (slot: BookingSlotWithAvailability) => {
+    setEditingSlot(slot);
+    setEditSlotCapacity(slot.max_capacity);
+  };
+
+  // スロット更新処理
+  const handleUpdateSlot = async () => {
+    if (!editingSlot) return;
+    
+    setSubmitting(true);
+    
+    const result = await updateBookingSlot(
+      editingSlot.id,
+      user?.id || null,
+      { max_capacity: editSlotCapacity },
+      editKey || undefined
+    );
+
+    if (result.success) {
+      await loadSlots();
+      setEditingSlot(null);
+    } else {
+      alert('更新に失敗しました: ' + ('error' in result ? result.error : '更新に失敗しました'));
+    }
+
+    setSubmitting(false);
   };
 
   const prevMonth = () => {
@@ -667,13 +702,22 @@ export default function BookingSlotsPage() {
                                 )}
                               </div>
                             </div>
-                            <button
-                              onClick={() => handleDeleteSlot(slot.id)}
-                              className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
-                              title="削除"
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleOpenEditModal(slot)}
+                                className="p-2 text-blue-500 hover:bg-blue-100 rounded-lg transition-colors"
+                                title="編集"
+                              >
+                                <Pencil size={18} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteSlot(slot.id)}
+                                className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
+                                title="削除"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -902,6 +946,86 @@ export default function BookingSlotsPage() {
                   <Check size={20} />
                 )}
                 {selectedDates.length}日分追加
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* スロット編集モーダル */}
+      {editingSlot && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fade-in">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">予約枠を編集</h3>
+              <button
+                onClick={() => setEditingSlot(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  日時
+                </label>
+                <div className="px-4 py-3 bg-gray-100 rounded-xl font-medium text-gray-900">
+                  {formatDate(new Date(editingSlot.start_time))}
+                  <span className="ml-2">
+                    {formatTime(editingSlot.start_time)} - {formatTime(editingSlot.end_time)}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  現在の予約数
+                </label>
+                <div className="px-4 py-3 bg-gray-100 rounded-xl font-medium text-gray-900">
+                  {editingSlot.current_bookings} 件
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  最大予約数
+                </label>
+                <input
+                  type="number"
+                  min={editingSlot.current_bookings || 1}
+                  max={100}
+                  value={editSlotCapacity}
+                  onChange={(e) => setEditSlotCapacity(Number(e.target.value))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                />
+                {editingSlot.current_bookings > 0 && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    ※ 現在{editingSlot.current_bookings}件の予約があるため、それ以下には設定できません
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setEditingSlot(null)}
+                className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleUpdateSlot}
+                disabled={submitting || editSlotCapacity < (editingSlot.current_bookings || 1)}
+                className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {submitting ? (
+                  <Loader2 size={20} className="animate-spin" />
+                ) : (
+                  <Check size={20} />
+                )}
+                更新
               </button>
             </div>
           </div>
