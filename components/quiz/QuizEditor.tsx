@@ -13,6 +13,7 @@ import QuizPlayer from './QuizPlayer';
 import { triggerGamificationEvent } from '@/lib/gamification/events';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import { trackGenerateComplete, trackGenerateError } from '@/lib/gtag';
 
 // --- 用途別テンプレート（プリセットデータ）---
 const USE_CASE_PRESETS = {
@@ -424,6 +425,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                 
                 // 未ログインエラー
                 if (errorData.error === 'LOGIN_REQUIRED') {
+                    trackGenerateError('LOGIN_REQUIRED');
                     if (confirm('AI機能を利用するにはログインが必要です。ログイン画面を開きますか？')) {
                         setShowAuth?.(true);
                     }
@@ -432,6 +434,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                 
                 // 使用制限エラー
                 if (errorData.error === 'LIMIT_EXCEEDED') {
+                    trackGenerateError('LIMIT_EXCEEDED');
                     alert(`${errorData.message}\n\nプランをアップグレードすると、より多くのAI機能をご利用いただけます。`);
                     return;
                 }
@@ -453,8 +456,10 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
             })); 
             setOpenSections({ template: false, basic: true, questions: false, results: false, design: false, advanced: false });
             resetPreview();
+            trackGenerateComplete('quiz');
             alert('AI生成が完了しました！');
         } catch(e: any) { 
+            trackGenerateError(e.message || '不明なエラー');
             alert('AI生成エラー: ' + e.message); 
         } finally { 
             setIsGenerating(false); 

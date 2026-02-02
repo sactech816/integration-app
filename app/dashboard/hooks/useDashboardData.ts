@@ -10,6 +10,7 @@ import { getUserPurchases, checkIsPartner } from '@/app/actions/purchases';
 import { fetchMakersSubscriptionStatus, MakersSubscriptionStatus } from '@/lib/subscription';
 import { ContentItem } from '../components/MainContent/ContentCard';
 import { deleteContent } from '@/app/actions/content';
+import { setUserId } from '@/lib/gtag';
 
 type AnalyticsData = {
   views: number;
@@ -116,6 +117,8 @@ export function useDashboardData(): UseDashboardDataReturn {
       if (supabase) {
         supabase.auth.onAuthStateChange((event, session) => {
           setUser(session?.user || null);
+          // GA4にUser IDを設定/解除
+          setUserId(session?.user?.id || null);
           // ユーザーが変わったらステータスをリセット
           if (!session?.user) {
             partnerCheckedRef.current = false;

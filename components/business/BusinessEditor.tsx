@@ -60,6 +60,7 @@ import {
 import { BlockRenderer } from '@/components/shared/BlockRenderer';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import { trackGenerateComplete, trackGenerateError } from '@/lib/gtag';
 
 interface BusinessEditorProps {
   user: { id: string; email?: string } | null;
@@ -662,9 +663,11 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
 
       setGeneratePrompt('');
       // プレビューはpostMessageで自動更新されるため、resetPreviewは不要
+      trackGenerateComplete('business');
       alert('AI生成が完了しました！');
     } catch (error) {
       console.error('Generate error:', error);
+      trackGenerateError(error instanceof Error ? error.message : '生成エラー');
       alert('AI生成中にエラーが発生しました');
     } finally {
       setIsGenerating(false);

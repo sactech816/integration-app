@@ -42,6 +42,7 @@ import {
   Stamp,
   PenTool,
 } from 'lucide-react';
+import { setUserId } from '@/lib/gtag';
 
 interface PopularContent {
   id: string;
@@ -83,6 +84,8 @@ export default function HomePageClientV2() {
       if (supabase) {
         supabase.auth.onAuthStateChange((event, session) => {
           setUser(session?.user || null);
+          // GA4にUser IDを設定/解除
+          setUserId(session?.user?.id || null);
         });
 
         const { data: { session } } = await supabase.auth.getSession();

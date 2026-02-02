@@ -51,6 +51,7 @@ import {
 } from 'lucide-react';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import { trackGenerateComplete, trackGenerateError } from '@/lib/gtag';
 
 interface ProfileEditorProps {
   user: { id: string; email?: string } | null;
@@ -1091,10 +1092,13 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         }));
         setOpenSections({ template: false, theme: true, blocks: true, advanced: false });
         resetPreview();
+        trackGenerateComplete('profile');
         alert('AI生成が完了しました！');
       }
     } catch(e: unknown) { 
-      alert('AI生成エラー: ' + (e instanceof Error ? e.message : '不明なエラー')); 
+      const errorMsg = e instanceof Error ? e.message : '不明なエラー';
+      trackGenerateError(errorMsg);
+      alert('AI生成エラー: ' + errorMsg); 
     } finally { 
       setIsGenerating(false); 
     }
