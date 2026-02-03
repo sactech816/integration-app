@@ -459,6 +459,42 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
     description: '安定・実績あり',
   },
   // ========================================
+  // OpenAI Reasoning Models (o1/o3系)
+  // ========================================
+  {
+    id: 'o3-mini',
+    name: 'o3 Mini',
+    provider: 'OpenAI',
+    inputCost: 1.10,
+    outputCost: 4.40,
+    contextLength: '200K tokens',
+    performance: 5,
+    status: 'available',
+    description: '推論特化・コスパ良好',
+  },
+  {
+    id: 'o1',
+    name: 'o1',
+    provider: 'OpenAI',
+    inputCost: 15.00,
+    outputCost: 60.00,
+    contextLength: '200K tokens',
+    performance: 6,
+    status: 'available',
+    description: '最高峰推論モデル',
+  },
+  {
+    id: 'o1-mini',
+    name: 'o1 Mini',
+    provider: 'OpenAI',
+    inputCost: 3.00,
+    outputCost: 12.00,
+    contextLength: '128K tokens',
+    performance: 5,
+    status: 'available',
+    description: '推論特化・軽量版',
+  },
+  // ========================================
   // Google Gemini Models
   // ========================================
   {
@@ -618,6 +654,13 @@ export interface AdminAISettingsResult {
 }
 
 /**
+ * モデルIDが有効かどうかをチェック
+ */
+function isValidModelId(modelId: string): boolean {
+  return AVAILABLE_AI_MODELS.some(m => m.id === modelId);
+}
+
+/**
  * admin_ai_settingsからAI設定を取得（共通関数）
  * 
  * @param service - サービス識別子（'kdl' | 'makers'）
@@ -661,11 +704,22 @@ export async function getAISettingsFromAdmin(
     const model = data[modelColumn as keyof typeof data] as string;
     const backupModel = data[backupColumn as keyof typeof data] as string;
 
-    console.log(`[AI Settings] Loaded: service=${service}, plan=${planTier}, phase=${phase}, model=${model}, backup=${backupModel}`);
+    // 無効なモデル名の場合はデフォルトにフォールバック
+    const validModel = model && isValidModelId(model) ? model : defaultSettings.model;
+    const validBackupModel = backupModel && isValidModelId(backupModel) ? backupModel : defaultSettings.backupModel;
+
+    if (model && !isValidModelId(model)) {
+      console.warn(`[AI Settings] Invalid model "${model}" for service=${service}, plan=${planTier}, phase=${phase}, falling back to "${validModel}"`);
+    }
+    if (backupModel && !isValidModelId(backupModel)) {
+      console.warn(`[AI Settings] Invalid backup model "${backupModel}" for service=${service}, plan=${planTier}, phase=${phase}, falling back to "${validBackupModel}"`);
+    }
+
+    console.log(`[AI Settings] Loaded: service=${service}, plan=${planTier}, phase=${phase}, model=${validModel}, backup=${validBackupModel}`);
 
     return {
-      model: model || defaultSettings.model,
-      backupModel: backupModel || defaultSettings.backupModel,
+      model: validModel,
+      backupModel: validBackupModel,
     };
   } catch (err) {
     console.error('[AI Settings] Failed to get AI settings:', err);
