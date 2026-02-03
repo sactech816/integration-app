@@ -77,13 +77,30 @@ export class OpenAIProvider implements AIProvider {
     const responseFormat =
       request.responseFormat === 'json' ? { type: 'json_object' as const } : undefined;
 
-    const response = await this.client.chat.completions.create({
+    // o1/o3系モデルは max_completion_tokens を使用、それ以外は max_tokens
+    const isReasoningModel = this.model.startsWith('o1') || this.model.startsWith('o3');
+    
+    const completionParams: any = {
       model: this.model,
       messages,
-      temperature: request.temperature ?? 0.8,
-      max_tokens: request.maxTokens,
       response_format: responseFormat,
-    });
+    };
+
+    // o1/o3系は temperature をサポートしない
+    if (!isReasoningModel) {
+      completionParams.temperature = request.temperature ?? 0.8;
+    }
+
+    // トークン制限パラメータの設定
+    if (request.maxTokens) {
+      if (isReasoningModel) {
+        completionParams.max_completion_tokens = request.maxTokens;
+      } else {
+        completionParams.max_tokens = request.maxTokens;
+      }
+    }
+
+    const response = await this.client.chat.completions.create(completionParams);
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
@@ -503,51 +520,40 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
   // Anthropic Claude Models
   // ========================================
   {
-    id: 'claude-4.5-sonnet',
-    name: 'Claude 4.5 Sonnet',
+    id: 'claude-sonnet-4-5-20250929',
+    name: 'Claude Sonnet 4.5',
     provider: 'Anthropic',
     inputCost: 3.00,
     outputCost: 15.00,
-    contextLength: '500K tokens',
+    contextLength: '200K tokens',
     performance: 5,
     status: 'recommended',
-    description: 'Sonnet改良版・推奨',
+    description: 'Claude 4.5シリーズ・高性能推奨',
   },
   {
-    id: 'claude-4-haiku',
-    name: 'Claude 4 Haiku',
+    id: 'claude-haiku-4-5-20251001',
+    name: 'Claude Haiku 4.5',
     provider: 'Anthropic',
     inputCost: 1.00,
     outputCost: 5.00,
     contextLength: '200K tokens',
     performance: 4,
     status: 'recommended',
-    description: '高品質軽量・現行主力',
+    description: 'Claude 4.5 最速・コスパ良好',
   },
   {
-    id: 'claude-4.5-haiku',
-    name: 'Claude 4.5 Haiku',
+    id: 'claude-3-5-sonnet-20241022',
+    name: 'Claude 3.5 Sonnet v2',
     provider: 'Anthropic',
-    inputCost: 1.00,
-    outputCost: 5.00,
+    inputCost: 3.00,
+    outputCost: 15.00,
     contextLength: '200K tokens',
     performance: 4,
     status: 'available',
-    description: 'Haiku改良版',
+    description: '旧Sonnet（レガシー）',
   },
   {
-    id: 'claude-3.5-haiku',
-    name: 'Claude 3.5 Haiku',
-    provider: 'Anthropic',
-    inputCost: 0.80,
-    outputCost: 4.00,
-    contextLength: '200K tokens',
-    performance: 3,
-    status: 'available',
-    description: '旧軽量モデル',
-  },
-  {
-    id: 'claude-3-haiku',
+    id: 'claude-3-haiku-20240307',
     name: 'Claude 3 Haiku',
     provider: 'Anthropic',
     inputCost: 0.25,
@@ -555,7 +561,7 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
     contextLength: '200K tokens',
     performance: 3,
     status: 'available',
-    description: '最安旧世代',
+    description: '最安旧世代（レガシー）',
   },
 ];
 
@@ -922,14 +928,14 @@ export const PLAN_AI_PRESETS = {
  */
 export const MODEL_CONFIG = {
   quality: {
-    outline: 'o3-mini',                      // 構成作成用（高品質）
-    writing: 'claude-3-5-sonnet-20240620',  // 執筆用（高品質）
-    provider: 'openai' as const,            // OpenAI系モデル
+    outline: 'o3-mini',                       // 構成作成用（高品質）
+    writing: 'claude-sonnet-4-5-20250929',   // 執筆用（Claude Sonnet 4.5）
+    provider: 'openai' as const,              // OpenAI系モデル（outlineに合わせる）
   },
   speed: {
-    outline: 'gemini-2.0-flash-exp',        // 構成作成用（高速）
-    writing: 'gemini-2.0-flash-exp',        // 執筆用（高速）
-    provider: 'gemini' as const,            // Gemini系モデル
+    outline: 'gemini-2.5-flash',              // 構成作成用（高速）
+    writing: 'gemini-2.5-flash',              // 執筆用（高速）
+    provider: 'gemini' as const,              // Gemini系モデル
   },
 } as const;
 
@@ -1052,13 +1058,15 @@ export function getProviderForMode(mode: 'quality' | 'speed'): 'openai' | 'gemin
 
 /**
  * モードとフェーズからAIプロバイダーを取得
+ * モデル名から自動的にプロバイダーを判定
  */
 export function getProviderForModeAndPhase(
   mode: 'quality' | 'speed',
   phase: 'outline' | 'writing'
 ): AIProvider {
-  const provider = getProviderForMode(mode);
   const model = getModelForMode(mode, phase);
+  // モデル名からプロバイダーを自動判定
+  const provider = getProviderFromModelId(model);
 
   return createAIProvider({
     preferProvider: provider,
