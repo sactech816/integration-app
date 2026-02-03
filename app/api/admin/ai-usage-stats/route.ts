@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getAdminEmails } from '@/lib/constants';
+import { calculateEstimatedCostJpy } from '@/lib/ai-usage';
 
 const getServiceClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -32,58 +33,28 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
-    // RPC関数を使用してサービス別統計を取得
-    const { data: rpcData, error: rpcError } = await supabase.rpc(
-      'get_ai_usage_stats_by_service',
-      {
-        p_start_date: startDate,
-        p_end_date: endDate,
-      }
-    );
-
-    // RPC関数が存在しない場合は直接クエリ
-    if (rpcError && rpcError.code === '42883') {
-      console.warn('get_ai_usage_stats_by_service function not found, using direct query');
-      
-      const { data, error } = await supabase
-        .from('ai_usage_logs')
-        .select('service, user_id, input_tokens, output_tokens, estimated_cost_jpy, model_used')
-        .gte('created_at', startDate)
-        .lt('created_at', addOneDay(endDate));
-
-      if (error) {
-        console.error('Failed to fetch AI usage stats:', error);
-        return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 });
-      }
-
-      // 手動でサービス別に集計
-      const stats = aggregateByService(data || []);
-      // モデル別の統計も追加
-      const modelStats = aggregateByModel(data || []);
-      // プロバイダー別の統計を追加
-      const providerStats = aggregateByProvider(data || []);
-      // サービスごとのプロバイダー別統計を追加
-      const providerStatsByService = aggregateByProviderPerService(data || []);
-      return NextResponse.json({ stats, modelStats, providerStats, providerStatsByService });
-    }
-
-    if (rpcError) {
-      console.error('Failed to fetch AI usage stats:', rpcError);
-      return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 });
-    }
-
-    // RPC成功時もモデル別・プロバイダー別統計を追加取得（serviceも含める）
-    const { data: modelData } = await supabase
+    // 直接クエリでデータを取得（コスト再計算のため）
+    const { data, error } = await supabase
       .from('ai_usage_logs')
-      .select('service, model_used, input_tokens, output_tokens, estimated_cost_jpy')
+      .select('service, user_id, input_tokens, output_tokens, estimated_cost_jpy, model_used')
       .gte('created_at', startDate)
       .lt('created_at', addOneDay(endDate));
 
-    const modelStats = aggregateByModel(modelData || []);
-    const providerStats = aggregateByProvider(modelData || []);
-    const providerStatsByService = aggregateByProviderPerService(modelData || []);
+    if (error) {
+      console.error('Failed to fetch AI usage stats:', error);
+      return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 });
+    }
 
-    return NextResponse.json({ stats: rpcData || [], modelStats, providerStats, providerStatsByService });
+    // 手動でサービス別に集計（コスト再計算を含む）
+    const stats = aggregateByService(data || []);
+    // モデル別の統計も追加
+    const modelStats = aggregateByModel(data || []);
+    // プロバイダー別の統計を追加
+    const providerStats = aggregateByProvider(data || []);
+    // サービスごとのプロバイダー別統計を追加
+    const providerStatsByService = aggregateByProviderPerService(data || []);
+    
+    return NextResponse.json({ stats, modelStats, providerStats, providerStatsByService });
   } catch (error: any) {
     console.error('GET AI usage stats error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -186,7 +157,7 @@ function aggregateByProvider(data: any[]): any[] {
     providerStat.total_requests++;
     providerStat.total_input_tokens += row.input_tokens || 0;
     providerStat.total_output_tokens += row.output_tokens || 0;
-    providerStat.total_cost_jpy += parseFloat(row.estimated_cost_jpy) || 0;
+    providerStat.total_cost_jpy += getEstimatedCost(row);
 
     // モデル別の詳細も記録
     if (!providerStat.models[model]) {
@@ -203,7 +174,7 @@ function aggregateByProvider(data: any[]): any[] {
     modelStat.total_requests++;
     modelStat.total_input_tokens += row.input_tokens || 0;
     modelStat.total_output_tokens += row.output_tokens || 0;
-    modelStat.total_cost_jpy += parseFloat(row.estimated_cost_jpy) || 0;
+    modelStat.total_cost_jpy += getEstimatedCost(row);
   }
 
   // プロバイダー順序を定義（OpenAI, Gemini, Claude, Other）
@@ -247,10 +218,25 @@ function aggregateByModel(data: any[]): any[] {
     stat.total_requests++;
     stat.total_input_tokens += row.input_tokens || 0;
     stat.total_output_tokens += row.output_tokens || 0;
-    stat.total_cost_jpy += parseFloat(row.estimated_cost_jpy) || 0;
+    stat.total_cost_jpy += getEstimatedCost(row);
   }
 
   return Object.values(modelMap).sort((a, b) => b.total_requests - a.total_requests);
+}
+
+// コストを計算（DBに保存されていない場合は再計算）
+function getEstimatedCost(row: any): number {
+  const cost = parseFloat(row.estimated_cost_jpy) || 0;
+  if (cost > 0) {
+    return cost;
+  }
+  // コストが0の場合はトークン数から再計算
+  const inputTokens = row.input_tokens || 0;
+  const outputTokens = row.output_tokens || 0;
+  if (inputTokens > 0 || outputTokens > 0) {
+    return calculateEstimatedCostJpy(row.model_used || 'gemini-1.5-flash', inputTokens, outputTokens);
+  }
+  return 0;
 }
 
 // サービス別に集計
@@ -286,7 +272,7 @@ function aggregateByService(data: any[]): any[] {
     if (row.user_id) stat.users.add(row.user_id);
     stat.total_input_tokens += row.input_tokens || 0;
     stat.total_output_tokens += row.output_tokens || 0;
-    stat.total_cost_jpy += parseFloat(row.estimated_cost_jpy) || 0;
+    stat.total_cost_jpy += getEstimatedCost(row);
   }
 
   return Object.values(serviceMap).map((stat) => ({

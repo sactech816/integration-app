@@ -236,6 +236,8 @@ export async function POST(request) {
       service: 'business',
       featureType: featureType,
       modelUsed: actualModel,
+      inputTokens: aiResponse.usage?.inputTokens || 0,
+      outputTokens: aiResponse.usage?.outputTokens || 0,
       metadata: { prompt }
     });
 

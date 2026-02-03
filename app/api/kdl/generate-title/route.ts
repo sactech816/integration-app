@@ -183,6 +183,8 @@ Amazon SEOとKindleマーケティングに精通した出版プロデューサ�
         actionType: 'generate_title',
         service: 'kdl',
         modelUsed: response.model,
+        inputTokens: response.usage?.inputTokens || 0,
+        outputTokens: response.usage?.outputTokens || 0,
         metadata: { theme, plan_tier: planTier },
       }).catch(console.error);
     }

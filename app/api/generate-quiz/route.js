@@ -173,6 +173,8 @@ ${resultExamples}
       service: 'quiz',
       featureType: featureType,
       modelUsed: actualModel,
+      inputTokens: aiResponse.usage?.inputTokens || 0,
+      outputTokens: aiResponse.usage?.outputTokens || 0,
       metadata: { prompt, mode, questionCount, resultCount }
     });
 

@@ -40,6 +40,10 @@ export interface AIGenerateResponse {
   content: string;
   model: string;
   provider: 'openai' | 'gemini' | 'anthropic';
+  usage?: {
+    inputTokens: number;
+    outputTokens: number;
+  };
 }
 
 // AI Provider の共通インターフェース
@@ -86,10 +90,17 @@ export class OpenAIProvider implements AIProvider {
       throw new Error('OpenAI returned empty response');
     }
 
+    // トークン使用量を取得
+    const usage = response.usage ? {
+      inputTokens: response.usage.prompt_tokens || 0,
+      outputTokens: response.usage.completion_tokens || 0,
+    } : undefined;
+
     return {
       content,
       model: this.model,
       provider: 'openai',
+      usage,
     };
   }
 
@@ -157,10 +168,18 @@ export class GeminiProvider implements AIProvider {
       throw new Error('Gemini returned empty response');
     }
 
+    // トークン使用量を取得
+    const usageMetadata = response.usageMetadata;
+    const usage = usageMetadata ? {
+      inputTokens: usageMetadata.promptTokenCount || 0,
+      outputTokens: usageMetadata.candidatesTokenCount || 0,
+    } : undefined;
+
     return {
       content,
       model: this.model,
       provider: 'gemini',
+      usage,
     };
   }
 
@@ -245,10 +264,17 @@ export class AnthropicProvider implements AIProvider {
       throw new Error('Anthropic returned empty response');
     }
 
+    // トークン使用量を取得
+    const usage = response.usage ? {
+      inputTokens: response.usage.input_tokens || 0,
+      outputTokens: response.usage.output_tokens || 0,
+    } : undefined;
+
     return {
       content,
       model: this.model,
       provider: 'anthropic',
+      usage,
     };
   }
 

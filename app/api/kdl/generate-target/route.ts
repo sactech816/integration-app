@@ -241,6 +241,8 @@ ${subtitle ? `サブタイトル：${subtitle}` : ''}`;
         actionType: 'generate_target',
         service: 'kdl',
         modelUsed: response.model,
+        inputTokens: response.usage?.inputTokens || 0,
+        outputTokens: response.usage?.outputTokens || 0,
         metadata: { title, plan_tier: planTier },
       }).catch(console.error);
     }

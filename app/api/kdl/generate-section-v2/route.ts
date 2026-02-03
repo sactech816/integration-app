@@ -298,6 +298,8 @@ ${WRITING_STYLES[styleId].name}（${WRITING_STYLES[styleId].description}）`;
       actionType: 'generate_section',
       service: 'kdl',
       modelUsed: response.model,
+      inputTokens: response.usage?.inputTokens || 0,
+      outputTokens: response.usage?.outputTokens || 0,
       usageType: mode === 'quality' ? 'premium' : 'standard',
       metadata: { 
         book_id, 

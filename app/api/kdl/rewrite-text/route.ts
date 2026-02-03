@@ -209,6 +209,8 @@ HTMLタグで構造化した書き換え後のテキストを出力してくだ�
         actionType: 'rewrite_text',
         service: 'kdl',
         modelUsed: response.model,
+        inputTokens: response.usage?.inputTokens || 0,
+        outputTokens: response.usage?.outputTokens || 0,
         metadata: { writing_style: styleId, plan_tier: planTier },
       }).catch(console.error);
     }

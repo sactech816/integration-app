@@ -309,6 +309,8 @@ ${WRITING_STYLES[styleId].name}（${WRITING_STYLES[styleId].description}）`;
         actionType: 'generate_section',
         service: 'kdl',
         modelUsed: response.model,
+        inputTokens: response.usage?.inputTokens || 0,
+        outputTokens: response.usage?.outputTokens || 0,
         metadata: { book_id, section_title, plan_tier: planTier },
       }).catch(console.error);
     }

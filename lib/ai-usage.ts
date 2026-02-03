@@ -92,6 +92,61 @@ export interface LogAIUsageParams {
 }
 
 /**
+ * モデル名からコストを計算（円）
+ * 価格は1Mトークンあたりのドル、1ドル=150円で換算
+ */
+export function calculateEstimatedCostJpy(
+  modelUsed: string,
+  inputTokens: number,
+  outputTokens: number
+): number {
+  // モデル別の価格設定（$/1M tokens）
+  const modelPricing: Record<string, { input: number; output: number }> = {
+    // Gemini系
+    'gemini-1.5-flash': { input: 0.075, output: 0.30 },
+    'gemini-2.0-flash': { input: 0.075, output: 0.30 },
+    'gemini-2.5-flash': { input: 0.10, output: 0.40 },
+    'gemini-2.5-flash-lite': { input: 0.075, output: 0.30 },
+    'gemini-1.5-pro': { input: 1.25, output: 5.00 },
+    'gemini-2.0-pro': { input: 1.25, output: 5.00 },
+    'gemini-2.5-pro': { input: 1.25, output: 10.00 },
+    // OpenAI系
+    'gpt-4o-mini': { input: 0.15, output: 0.60 },
+    'gpt-4o': { input: 2.50, output: 10.00 },
+    'gpt-5-nano': { input: 0.05, output: 0.40 },
+    'gpt-5-mini': { input: 0.25, output: 2.00 },
+    'gpt-5': { input: 1.25, output: 10.00 },
+    'gpt-5.1': { input: 1.25, output: 10.00 },
+    'o3-mini': { input: 1.10, output: 4.40 },
+    'o1': { input: 15.00, output: 60.00 },
+    // Anthropic系
+    'claude-3-haiku': { input: 0.25, output: 1.25 },
+    'claude-3.5-haiku': { input: 0.80, output: 4.00 },
+    'claude-4-haiku': { input: 1.00, output: 5.00 },
+    'claude-4.5-haiku': { input: 1.00, output: 5.00 },
+    'claude-3-5-sonnet': { input: 3.00, output: 15.00 },
+    'claude-4.5-sonnet': { input: 3.00, output: 15.00 },
+  };
+
+  // 部分一致でモデルを探す
+  let pricing = { input: 0.075, output: 0.30 }; // デフォルト（Gemini Flash）
+  
+  for (const [modelKey, price] of Object.entries(modelPricing)) {
+    if (modelUsed.includes(modelKey)) {
+      pricing = price;
+      break;
+    }
+  }
+
+  // コスト計算（1ドル=150円）
+  const exchangeRate = 150;
+  const inputCost = (inputTokens * pricing.input / 1000000) * exchangeRate;
+  const outputCost = (outputTokens * pricing.output / 1000000) * exchangeRate;
+  
+  return inputCost + outputCost;
+}
+
+/**
  * ハイブリッドクレジット制限をチェック（新方式）
  * Premium Credits と Standard Credits を別々に管理
  */
@@ -400,14 +455,18 @@ export async function logAIUsage(params: LogAIUsageParams): Promise<string | nul
   try {
     // ハイブリッドクレジットシステムに対応
     if (params.usageType) {
+      const modelUsed = params.modelUsed || 'gemini-1.5-flash';
+      const inputTokens = params.inputTokens || 0;
+      const outputTokens = params.outputTokens || 0;
+      
       const { data, error } = await supabase.rpc('log_ai_credit_usage', {
         p_user_id: params.userId,
         p_action_type: params.actionType,
         p_usage_type: params.usageType,
         p_service: params.service || 'kdl',
-        p_model_used: params.modelUsed || 'gemini-1.5-flash',
-        p_input_tokens: params.inputTokens || 0,
-        p_output_tokens: params.outputTokens || 0,
+        p_model_used: modelUsed,
+        p_input_tokens: inputTokens,
+        p_output_tokens: outputTokens,
         p_metadata: params.metadata || null,
       });
 
@@ -416,8 +475,18 @@ export async function logAIUsage(params: LogAIUsageParams): Promise<string | nul
         return null;
       }
 
-      // feature_typeがある場合は追加で更新
-      if (params.featureType && data) {
+      // コストを計算して更新（RPC関数がコスト計算をしていないため）
+      if (data && (inputTokens > 0 || outputTokens > 0)) {
+        const estimatedCostJpy = calculateEstimatedCostJpy(modelUsed, inputTokens, outputTokens);
+        await supabase
+          .from('ai_usage_logs')
+          .update({ 
+            estimated_cost_jpy: estimatedCostJpy,
+            ...(params.featureType ? { feature_type: params.featureType } : {})
+          })
+          .eq('id', data);
+      } else if (params.featureType && data) {
+        // feature_typeのみ更新
         await supabase
           .from('ai_usage_logs')
           .update({ feature_type: params.featureType })
@@ -429,15 +498,21 @@ export async function logAIUsage(params: LogAIUsageParams): Promise<string | nul
 
     // 機能タイプを含む直接INSERT（新しい機能）
     if (params.featureType) {
+      const modelUsed = params.modelUsed || 'gpt-4o-mini';
+      const inputTokens = params.inputTokens || 0;
+      const outputTokens = params.outputTokens || 0;
+      const estimatedCostJpy = calculateEstimatedCostJpy(modelUsed, inputTokens, outputTokens);
+
       const { data, error } = await supabase
         .from('ai_usage_logs')
         .insert({
           user_id: params.userId,
           action_type: params.actionType,
           service: params.service || 'profile',
-          model_used: params.modelUsed || 'gpt-4o-mini',
-          input_tokens: params.inputTokens || 0,
-          output_tokens: params.outputTokens || 0,
+          model_used: modelUsed,
+          input_tokens: inputTokens,
+          output_tokens: outputTokens,
+          estimated_cost_jpy: estimatedCostJpy,
           metadata: params.metadata || null,
           feature_type: params.featureType,
         })

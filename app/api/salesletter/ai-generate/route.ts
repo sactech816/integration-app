@@ -5,6 +5,7 @@ import {
   AVAILABLE_AI_MODELS,
   DEFAULT_AI_MODELS 
 } from '@/lib/ai-provider';
+import { logAIUsage } from '@/lib/ai-usage';
 import { Block } from '@/lib/types';
 import { templateGuides, getTemplateById } from '@/constants/templates/salesletter';
 import {
@@ -291,8 +292,18 @@ export async function POST(request: Request) {
     // ブロックに変換
     const blocks = convertToBlocks(aiContent, input.ctaText || '今すぐ申し込む');
 
-    // 使用量をログ（将来実装）
-    // await logAIUsage({ userId, actionType: 'salesletter_generate', modelUsed: usedModel });
+    // 使用量をログ
+    if (userId) {
+      logAIUsage({
+        userId,
+        actionType: 'salesletter_generate',
+        service: 'makers',
+        modelUsed: usedModel,
+        inputTokens: response.usage?.inputTokens || 0,
+        outputTokens: response.usage?.outputTokens || 0,
+        metadata: { templateId, productName: input.productName },
+      }).catch(console.error);
+    }
 
     return NextResponse.json({
       success: true,

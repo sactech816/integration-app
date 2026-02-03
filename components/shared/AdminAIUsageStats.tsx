@@ -198,8 +198,17 @@ export default function AdminAIUsageStats({ userId }: AdminAIUsageStatsProps) {
     { requests: 0, users: 0, cost: 0, inputTokens: 0, outputTokens: 0 }
   );
 
-  // コストをフォーマット
+  // コストをフォーマット（小数点以下2桁まで表示）
   const formatCost = (cost: number): string => {
+    if (cost < 0.01) {
+      return '¥0';
+    }
+    if (cost < 1) {
+      return `¥${cost.toFixed(2)}`;
+    }
+    if (cost < 100) {
+      return `¥${cost.toFixed(1)}`;
+    }
     return `¥${Math.round(cost).toLocaleString()}`;
   };
 

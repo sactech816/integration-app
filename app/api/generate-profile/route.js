@@ -203,6 +203,8 @@ export async function POST(request) {
       service: 'profile',
       featureType: featureType,
       modelUsed: actualModel,
+      inputTokens: aiResponse.usage?.inputTokens || 0,
+      outputTokens: aiResponse.usage?.outputTokens || 0,
       metadata: { theme, prompt, name, profession }
     });
 

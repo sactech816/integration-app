@@ -198,6 +198,8 @@ Kindle出版を成功させたい著者（タイトルは決まっているがSE
         actionType: 'generate_subtitle',
         service: 'kdl',
         modelUsed: response.model,
+        inputTokens: response.usage?.inputTokens || 0,
+        outputTokens: response.usage?.outputTokens || 0,
         metadata: { title, plan_tier: planTier },
       }).catch(console.error);
     }
