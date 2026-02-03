@@ -76,6 +76,7 @@ type MainContentProps = {
   kdlSubscription: KdlSubscription | null;
   loadingKdlSubscription: boolean;
   userSubscription?: UserSubscription | null;
+  loadingUserSubscription?: boolean;
   onEdit: (item: ContentItem) => void;
   onDuplicate: (item: ContentItem) => void;
   onDelete: (item: ContentItem) => void;
@@ -118,6 +119,7 @@ export default function MainContent({
   kdlSubscription,
   loadingKdlSubscription,
   userSubscription,
+  loadingUserSubscription,
   onEdit,
   onDuplicate,
   onDelete,
@@ -191,6 +193,7 @@ export default function MainContent({
         proAccessMap={proAccessMap}
         processingId={processingId}
         copiedId={copiedId}
+        isProUnlocked={isUnlocked}
         onEdit={onEdit}
         onDuplicate={onDuplicate}
         onDelete={onDelete}

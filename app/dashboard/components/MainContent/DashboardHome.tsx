@@ -175,6 +175,7 @@ export default function DashboardHome({
         proAccessMap={proAccessMap}
         processingId={processingId}
         copiedId={copiedId}
+        isProUnlocked={isAnalyticsUnlocked}
         onEdit={onEdit}
         onDuplicate={onDuplicate}
         onDelete={onDelete}

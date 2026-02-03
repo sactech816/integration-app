@@ -16,6 +16,8 @@ type ContentListProps = {
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
   processingId: string | null;
   copiedId: string | null;
+  // Pro機能のグローバルアンロック状態（集客メーカーProプラン、パートナー、管理者）
+  isProUnlocked?: boolean;
   onEdit: (item: ContentItem) => void;
   onDuplicate: (item: ContentItem) => void;
   onDelete: (item: ContentItem) => void;
@@ -36,6 +38,7 @@ export default function ContentList({
   proAccessMap,
   processingId,
   copiedId,
+  isProUnlocked,
   onEdit,
   onDuplicate,
   onDelete,
@@ -230,7 +233,8 @@ export default function ContentList({
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {paginatedContents.map((item) => {
               const accessInfo = proAccessMap[item.id] || { hasAccess: false };
-              const isUnlocked = accessInfo.hasAccess || isAdmin;
+              // isProUnlocked（集客メーカーProプラン、パートナー、管理者）が true なら全コンテンツをアンロック
+              const isUnlocked = isProUnlocked || accessInfo.hasAccess || isAdmin;
 
               return (
                 <div

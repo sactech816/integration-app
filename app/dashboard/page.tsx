@@ -179,16 +179,18 @@ function DashboardContent() {
   }, [loadingUserSubscription, hasMakersProAccess, canFetchAnalyticsImmediately, user, selectedService, fetchContents]);
   
   // ユーザーサブスクリプション状態を取得（集客メーカーのProプラン判定用）
+  // 注: /api/makers/subscription-status を使用（service='makers' のモニター・サブスクをチェック）
   const fetchUserSubscription = async () => {
     if (!user) return;
     setLoadingUserSubscription(true);
     try {
-      const response = await fetch(`/api/subscription/status?userId=${user.id}`);
+      const response = await fetch(`/api/makers/subscription-status?userId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
-        setUserSubscription({
-          planTier: data.planTier || 'none',
-        });
+        // MakersPlanTier ('guest' | 'free' | 'pro') を設定
+        // 'pro' の場合は Pro機能が有効になる
+        const planTier = data.planTier === 'pro' ? 'pro' : (data.planTier || 'none');
+        setUserSubscription({ planTier });
       }
     } catch (error) {
       console.error('User subscription fetch error:', error);
@@ -416,6 +418,7 @@ function DashboardContent() {
             kdlSubscription={kdlSubscription}
             loadingKdlSubscription={loadingKdlSubscription}
             userSubscription={userSubscription}
+            loadingUserSubscription={loadingUserSubscription}
             onEdit={handleEdit}
             onDuplicate={handleDuplicate}
             onDelete={handleDelete}

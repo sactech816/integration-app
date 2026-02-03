@@ -57,30 +57,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
-    // 1. ユーザーのサブスクリプション状態を確認
+    // 1. ユーザーのサブスクリプション状態を確認（集客メーカーサービス限定）
     const { data: subscription } = await supabase
       .from('subscriptions')
       .select('status, plan_tier, plan_name')
       .eq('user_id', userId)
+      .eq('service', 'makers')
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
 
-    // 2. モニターユーザーかどうかも確認
+    // 2. モニターユーザーかどうかも確認（集客メーカーサービス限定）
+    const now = new Date().toISOString();
     const { data: monitor } = await supabase
       .from('monitor_users')
       .select('monitor_plan_type')
       .eq('user_id', userId)
-      .lte('monitor_start_at', new Date().toISOString())
-      .gt('monitor_expires_at', new Date().toISOString())
+      .eq('service', 'makers')
+      .lte('monitor_start_at', now)
+      .gt('monitor_expires_at', now)
       .single();
 
     // プランTierを判定
     let planTier: 'guest' | 'free' | 'pro' = 'free';
     
-    // モニターユーザーはProとして扱う
-    if (monitor?.monitor_plan_type === 'pro') {
+    // モニターユーザーはProとして扱う（集客メーカーのモニター権限があれば全てPro扱い）
+    if (monitor) {
       planTier = 'pro';
     }
     // アクティブなサブスクリプションがある場合
