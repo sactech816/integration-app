@@ -519,6 +519,7 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
   // ========================================
   // Anthropic Claude Models
   // ========================================
+  // Claude 4.5シリーズ（最新）
   {
     id: 'claude-sonnet-4-5-20250929',
     name: 'Claude Sonnet 4.5',
@@ -528,7 +529,7 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
     contextLength: '200K tokens',
     performance: 5,
     status: 'recommended',
-    description: 'Claude 4.5シリーズ・高性能推奨',
+    description: '最新Sonnet・高性能推奨',
   },
   {
     id: 'claude-haiku-4-5-20251001',
@@ -539,8 +540,9 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
     contextLength: '200K tokens',
     performance: 4,
     status: 'recommended',
-    description: 'Claude 4.5 最速・コスパ良好',
+    description: '最新Haiku・最速コスパ良好',
   },
+  // Claude 3.5シリーズ
   {
     id: 'claude-3-5-sonnet-20241022',
     name: 'Claude 3.5 Sonnet v2',
@@ -550,8 +552,20 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
     contextLength: '200K tokens',
     performance: 4,
     status: 'available',
-    description: '旧Sonnet（レガシー）',
+    description: '3.5 Sonnet最新版',
   },
+  {
+    id: 'claude-3-5-sonnet-20240620',
+    name: 'Claude 3.5 Sonnet',
+    provider: 'Anthropic',
+    inputCost: 3.00,
+    outputCost: 15.00,
+    contextLength: '200K tokens',
+    performance: 4,
+    status: 'available',
+    description: '3.5 Sonnet初期版',
+  },
+  // Claude 3シリーズ
   {
     id: 'claude-3-haiku-20240307',
     name: 'Claude 3 Haiku',
@@ -561,7 +575,7 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
     contextLength: '200K tokens',
     performance: 3,
     status: 'available',
-    description: '最安旧世代（レガシー）',
+    description: '最安・軽量モデル',
   },
 ];
 
