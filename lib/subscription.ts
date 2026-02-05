@@ -379,10 +379,14 @@ export interface MakersSubscriptionStatus {
   isMonitor: boolean;
   monitorExpiresAt?: string;
   subscriptionId?: string;
+  // service_plansテーブルから取得した数量制限
+  gamificationLimit?: number;
+  aiDailyLimit?: number;
 }
 
 /**
  * 集客メーカーのサブスク状態を取得（モニター優先）
+ * service_plansから数量制限も取得
  */
 export async function getMakersSubscriptionStatus(userId: string): Promise<MakersSubscriptionStatus> {
   const supabase = getServiceClient();
@@ -392,8 +396,33 @@ export async function getMakersSubscriptionStatus(userId: string): Promise<Maker
       hasActiveSubscription: false,
       planTier: 'free',
       isMonitor: false,
+      gamificationLimit: 0,
+      aiDailyLimit: 0,
     };
   }
+
+  // service_plansから数量制限を取得するヘルパー関数
+  const getPlanLimits = async (planTier: MakersPlanTier): Promise<{ gamificationLimit: number; aiDailyLimit: number }> => {
+    const { data: planData } = await supabase
+      .from('service_plans')
+      .select('gamification_limit, ai_daily_limit')
+      .eq('service', 'makers')
+      .eq('plan_tier', planTier)
+      .eq('is_active', true)
+      .single();
+    
+    // DBから取得できなければデフォルト値を返す
+    const defaults: Record<MakersPlanTier, { gamificationLimit: number; aiDailyLimit: number }> = {
+      guest: { gamificationLimit: 0, aiDailyLimit: 0 },
+      free: { gamificationLimit: 0, aiDailyLimit: 0 },
+      pro: { gamificationLimit: 10, aiDailyLimit: -1 }, // -1は無制限
+    };
+    
+    return {
+      gamificationLimit: planData?.gamification_limit ?? defaults[planTier].gamificationLimit,
+      aiDailyLimit: planData?.ai_daily_limit ?? defaults[planTier].aiDailyLimit,
+    };
+  };
 
   try {
     const now = new Date().toISOString();
@@ -410,11 +439,13 @@ export async function getMakersSubscriptionStatus(userId: string): Promise<Maker
 
     // モニター権限がある場合はそれを優先
     if (monitorData) {
+      const limits = await getPlanLimits('pro');
       return {
         hasActiveSubscription: true,
         planTier: 'pro', // 集客メーカーのモニターはプロ扱い
         isMonitor: true,
         monitorExpiresAt: monitorData.monitor_expires_at,
+        ...limits,
       };
     }
 
@@ -433,20 +464,25 @@ export async function getMakersSubscriptionStatus(userId: string): Promise<Maker
       // プロプランかどうかを判定
       const isPro = subscription.plan_name?.toLowerCase().includes('pro') ||
                     subscription.plan_name?.toLowerCase().includes('プロ');
+      const planTier: MakersPlanTier = isPro ? 'pro' : 'free';
+      const limits = await getPlanLimits(planTier);
       
       return {
         hasActiveSubscription: true,
-        planTier: isPro ? 'pro' : 'free',
+        planTier,
         isMonitor: false,
         subscriptionId: subscription.id,
+        ...limits,
       };
     }
 
     // サブスクもモニターもない場合
+    const limits = await getPlanLimits('free');
     return {
       hasActiveSubscription: false,
       planTier: 'free',
       isMonitor: false,
+      ...limits,
     };
   } catch (err) {
     console.error('Error fetching makers subscription status:', err);
@@ -454,6 +490,8 @@ export async function getMakersSubscriptionStatus(userId: string): Promise<Maker
       hasActiveSubscription: false,
       planTier: 'free',
       isMonitor: false,
+      gamificationLimit: 0,
+      aiDailyLimit: 0,
     };
   }
 }

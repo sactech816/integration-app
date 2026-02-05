@@ -48,6 +48,8 @@ type KdlSubscription = {
 // ユーザーサブスクリプション状態の型
 type UserSubscription = {
   planTier: PlanTier;
+  gamificationLimit?: number;
+  aiDailyLimit?: number;
 };
 
 function DashboardContent() {
@@ -190,11 +192,15 @@ function DashboardContent() {
         // MakersPlanTier ('guest' | 'free' | 'pro') を設定
         // 'pro' の場合は Pro機能が有効になる
         const planTier = data.planTier === 'pro' ? 'pro' : (data.planTier || 'none');
-        setUserSubscription({ planTier });
+        setUserSubscription({ 
+          planTier,
+          gamificationLimit: data.gamificationLimit,
+          aiDailyLimit: data.aiDailyLimit,
+        });
       }
     } catch (error) {
       console.error('User subscription fetch error:', error);
-      setUserSubscription({ planTier: 'none' });
+      setUserSubscription({ planTier: 'none', gamificationLimit: 0, aiDailyLimit: 0 });
     } finally {
       setLoadingUserSubscription(false);
     }

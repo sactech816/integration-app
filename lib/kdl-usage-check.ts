@@ -92,6 +92,8 @@ export interface KdlLimitCheckResult {
   };
   planTier: string;
   isMonitor: boolean;
+  // AI機能が有効かどうか（service_plans.can_use_ai）
+  canUseAi: boolean;
 }
 
 /**
@@ -145,12 +147,13 @@ export async function checkKdlLimits(userId: string): Promise<KdlLimitCheckResul
     }
   }
 
-  // 2. プラン設定を取得
+  // 2. プラン設定を取得（can_use_aiフラグも含む）
   let limits = PLAN_LIMITS[planTier] || DEFAULT_LIMITS;
+  let canUseAiFlag = true; // デフォルトはtrue
 
   const { data: planData } = await supabase
     .from('service_plans')
-    .select('book_limit, ai_outline_daily_limit, ai_writing_daily_limit, ai_daily_limit')
+    .select('book_limit, ai_outline_daily_limit, ai_writing_daily_limit, ai_daily_limit, can_use_ai')
     .eq('service', 'kdl')
     .eq('plan_tier', planTier)
     .single();
@@ -162,6 +165,8 @@ export async function checkKdlLimits(userId: string): Promise<KdlLimitCheckResul
       writing: planData.ai_writing_daily_limit ?? limits.writing,
       total: planData.ai_daily_limit ?? limits.total,
     };
+    // can_use_aiがfalseの場合のみfalseに設定（nullや未定義はtrue扱い）
+    canUseAiFlag = planData.can_use_ai !== false;
   }
 
   // 3. 書籍数をカウント
@@ -207,12 +212,21 @@ export async function checkKdlLimits(userId: string): Promise<KdlLimitCheckResul
   const writingUsed = writingCount || 0;
   const totalUsed = totalCount || 0;
 
+  // 書籍作成は can_use_ai に関係なくチェック
   const bookCanCreate = limits.book === -1 || bookUsed < limits.book;
-  const outlineCanUse = (limits.outline === -1 || outlineUsed < limits.outline) && 
+  
+  // AI機能は can_use_ai フラグも考慮
+  // can_use_ai が false の場合は全てのAI機能をブロック
+  const outlineCanUse = canUseAiFlag && 
+                        (limits.outline === -1 || outlineUsed < limits.outline) && 
                         (limits.total === -1 || totalUsed < limits.total);
-  const writingCanUse = (limits.writing === -1 || writingUsed < limits.writing) && 
+  const writingCanUse = canUseAiFlag && 
+                        (limits.writing === -1 || writingUsed < limits.writing) && 
                         (limits.total === -1 || totalUsed < limits.total);
-  const totalCanUse = limits.total === -1 || totalUsed < limits.total;
+  const totalCanUse = canUseAiFlag && (limits.total === -1 || totalUsed < limits.total);
+
+  // AI機能がプランで無効化されている場合のメッセージ
+  const aiDisabledMessage = 'このプランではAI機能をご利用いただけません。プランをアップグレードしてください。';
 
   return {
     bookCreation: {
@@ -226,6 +240,7 @@ export async function checkKdlLimits(userId: string): Promise<KdlLimitCheckResul
       used: outlineUsed,
       limit: limits.outline,
       message: outlineCanUse ? undefined : 
+        !canUseAiFlag ? aiDisabledMessage :
         (limits.total !== -1 && totalUsed >= limits.total) 
           ? ERROR_MESSAGES.totalLimit(0) 
           : ERROR_MESSAGES.outlineLimit(limits.outline - outlineUsed),
@@ -235,6 +250,7 @@ export async function checkKdlLimits(userId: string): Promise<KdlLimitCheckResul
       used: writingUsed,
       limit: limits.writing,
       message: writingCanUse ? undefined : 
+        !canUseAiFlag ? aiDisabledMessage :
         (limits.total !== -1 && totalUsed >= limits.total) 
           ? ERROR_MESSAGES.totalLimit(0) 
           : ERROR_MESSAGES.writingLimit(limits.writing - writingUsed),
@@ -243,10 +259,12 @@ export async function checkKdlLimits(userId: string): Promise<KdlLimitCheckResul
       canUse: totalCanUse,
       used: totalUsed,
       limit: limits.total,
-      message: totalCanUse ? undefined : ERROR_MESSAGES.totalLimit(0),
+      message: totalCanUse ? undefined : 
+        !canUseAiFlag ? aiDisabledMessage : ERROR_MESSAGES.totalLimit(0),
     },
     planTier,
     isMonitor,
+    canUseAi: canUseAiFlag,
   };
 }
 
@@ -259,5 +277,6 @@ function getDefaultResult(planTier: string): KdlLimitCheckResult {
     totalAi: { canUse: true, used: 0, limit: -1 },
     planTier,
     isMonitor: false,
+    canUseAi: true,
   };
 }

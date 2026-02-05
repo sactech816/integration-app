@@ -22,6 +22,8 @@ type KdlSubscription = {
 
 type UserSubscription = {
   planTier: PlanTier;
+  gamificationLimit?: number;
+  aiDailyLimit?: number;
 };
 
 type DashboardHomeProps = {

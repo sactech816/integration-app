@@ -49,6 +49,8 @@ type KdlSubscription = {
 
 type UserSubscription = {
   planTier: PlanTier;
+  gamificationLimit?: number;
+  aiDailyLimit?: number;
 };
 
 type MainContentProps = {
@@ -228,6 +230,7 @@ export default function MainContent({
           planTier={userSubscription?.planTier || 'none'} 
           isUnlocked={isUnlocked}
           isAdmin={isAdmin}
+          gamificationLimit={userSubscription?.gamificationLimit}
         />
       )}
 

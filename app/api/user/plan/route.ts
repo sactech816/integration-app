@@ -27,6 +27,9 @@ export interface UserPlanResponse {
   canDownloadHtml: boolean;
   canEmbed: boolean;
   isProUser: boolean;
+  // 数量制限
+  gamificationLimit: number;
+  aiDailyLimit: number;
 }
 
 /**
@@ -49,6 +52,8 @@ export async function GET(request: NextRequest) {
         canDownloadHtml: false,
         canEmbed: false,
         isProUser: false,
+        gamificationLimit: 0,
+        aiDailyLimit: 0,
       });
     }
 
@@ -96,10 +101,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 3. service_plansテーブルからプラン権限を取得
+    // 3. service_plansテーブルからプラン権限を取得（数量制限も含む）
     const { data: planSettings } = await supabase
       .from('service_plans')
-      .select('can_hide_copyright, can_use_ai, can_use_analytics, can_use_gamification, can_download_html, can_embed')
+      .select('can_hide_copyright, can_use_ai, can_use_analytics, can_use_gamification, can_download_html, can_embed, gamification_limit, ai_daily_limit')
       .eq('service', 'makers')
       .eq('plan_tier', planTier)
       .eq('is_active', true)
@@ -114,6 +119,8 @@ export async function GET(request: NextRequest) {
         canUseGamification: false,
         canDownloadHtml: false,
         canEmbed: false,
+        gamificationLimit: 0,
+        aiDailyLimit: 0,
       },
       free: {
         canHideCopyright: false,
@@ -122,6 +129,8 @@ export async function GET(request: NextRequest) {
         canUseGamification: false,
         canDownloadHtml: false,
         canEmbed: false,
+        gamificationLimit: 0,
+        aiDailyLimit: 0,
       },
       pro: {
         canHideCopyright: true,
@@ -130,6 +139,8 @@ export async function GET(request: NextRequest) {
         canUseGamification: true,
         canDownloadHtml: true,
         canEmbed: true,
+        gamificationLimit: 10,
+        aiDailyLimit: -1, // 無制限
       },
     };
 
@@ -145,8 +156,10 @@ export async function GET(request: NextRequest) {
       canDownloadHtml: planSettings?.can_download_html ?? defaults.canDownloadHtml,
       canEmbed: planSettings?.can_embed ?? defaults.canEmbed,
       isProUser: planTier === 'pro',
+      gamificationLimit: planSettings?.gamification_limit ?? defaults.gamificationLimit,
+      aiDailyLimit: planSettings?.ai_daily_limit ?? defaults.aiDailyLimit,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('User plan API error:', error);
     // エラー時はフリープランとして返す
     return NextResponse.json<UserPlanResponse>({
@@ -158,6 +171,8 @@ export async function GET(request: NextRequest) {
       canDownloadHtml: false,
       canEmbed: false,
       isProUser: false,
+      gamificationLimit: 0,
+      aiDailyLimit: 0,
     });
   }
 }

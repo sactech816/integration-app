@@ -30,7 +30,7 @@ import {
   MAKERS_GAMIFICATION_LIMITS,
 } from '@/lib/subscription';
 
-// 集客メーカー用のゲーム作成数制限を使用
+// 集客メーカー用のゲーム作成数制限を使用（フォールバック用）
 const getGamificationLimitForMakers = (planTier: PlanTier): number => {
   let makersPlan: MakersPlanTier;
   
@@ -49,9 +49,11 @@ type MyGamificationProps = {
   planTier: PlanTier;
   isUnlocked?: boolean;
   isAdmin?: boolean;
+  // DBから取得した制限値（service_plans.gamification_limit）
+  gamificationLimit?: number;
 };
 
-export default function MyGamification({ userId, planTier, isUnlocked = false, isAdmin = false }: MyGamificationProps) {
+export default function MyGamification({ userId, planTier, isUnlocked = false, isAdmin = false, gamificationLimit }: MyGamificationProps) {
   const [loading, setLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<GamificationCampaign[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -64,7 +66,10 @@ export default function MyGamification({ userId, planTier, isUnlocked = false, i
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
-  const limit = getGamificationLimitForMakers(planTier);
+  // DB値が提供されていればそれを使用、なければフォールバック
+  // -1は無制限を意味する
+  const rawLimit = gamificationLimit !== undefined ? gamificationLimit : getGamificationLimitForMakers(planTier);
+  const limit = rawLimit === -1 ? 999 : rawLimit;
   const isLimitReached = !isAdmin && (limit === 0 || campaigns.length >= limit);
   const isPaidUser = planTier !== 'none';
   // 管理者はcanCreate=true、それ以外は従来のロジック
