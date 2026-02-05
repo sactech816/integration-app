@@ -96,8 +96,6 @@ export default function PointQuizPage() {
         if (settings?.points_per_correct) {
           setPointsPerCorrect(settings.points_per_correct as number);
         }
-
-        // 現在のポイントはPointDisplayコンポーネントで取得するため、ここでは不要
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -107,6 +105,15 @@ export default function PointQuizPage() {
 
     loadData();
   }, [quizId]);
+
+  // userが確定したらポイントを取得
+  useEffect(() => {
+    async function loadPoints() {
+      const balanceData = await getPointBalance(user?.id);
+      setCurrentPoints(balanceData?.current_points || 0);
+    }
+    loadPoints();
+  }, [user?.id]);
 
   // 回答を選択
   const handleSelectAnswer = async (answerIndex: number) => {

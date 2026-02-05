@@ -87,7 +87,6 @@ export default function GachaPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        // userはこの時点ではnullの可能性があるため、後でuseEffectで再取得する
         const [campaignData, prizesData, userPrizesData] = await Promise.all([
           getCampaign(campaignId),
           getGachaPrizes(campaignId),
@@ -106,6 +105,15 @@ export default function GachaPage() {
 
     loadData();
   }, [campaignId]);
+
+  // userが確定したらポイントを取得
+  useEffect(() => {
+    async function loadPoints() {
+      const balanceData = await getPointBalance(user?.id);
+      setCurrentPoints(balanceData?.current_points || 0);
+    }
+    loadPoints();
+  }, [user?.id]);
 
   // ガチャを回す（通常モード）
   const handlePlay = useCallback(async () => {

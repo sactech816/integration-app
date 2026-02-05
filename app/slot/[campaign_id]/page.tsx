@@ -85,7 +85,6 @@ export default function SlotPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        // userはこの時点ではnullの可能性があるため、PointDisplayコンポーネントで取得する
         const [campaignData, prizesData, userPrizesData] = await Promise.all([
           getCampaign(campaignId),
           getGachaPrizes(campaignId),
@@ -104,6 +103,15 @@ export default function SlotPage() {
 
     loadData();
   }, [campaignId]);
+
+  // userが確定したらポイントを取得
+  useEffect(() => {
+    async function loadPoints() {
+      const balanceData = await getPointBalance(user?.id);
+      setCurrentPoints(balanceData?.current_points || 0);
+    }
+    loadPoints();
+  }, [user?.id]);
 
   // スロットを回す（通常モード）
   const handlePlay = useCallback(async () => {

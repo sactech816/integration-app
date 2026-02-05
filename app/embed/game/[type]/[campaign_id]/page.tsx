@@ -70,7 +70,6 @@ export default function EmbedGamePage() {
   useEffect(() => {
     async function loadData() {
       try {
-        // userはこの時点ではnullの可能性があるため、PointDisplayコンポーネントで取得する
         const [campaignData, prizesData, userPrizesData] = await Promise.all([
           getCampaign(campaignId),
           getGachaPrizes(campaignId),
@@ -89,6 +88,15 @@ export default function EmbedGamePage() {
 
     loadData();
   }, [campaignId]);
+
+  // userが確定したらポイントを取得
+  useEffect(() => {
+    async function loadPoints() {
+      const balanceData = await getPointBalance(user?.id);
+      setCurrentPoints(balanceData?.current_points || 0);
+    }
+    loadPoints();
+  }, [user?.id]);
 
   // 親ウィンドウにメッセージを送信
   const postMessageToParent = useCallback((message: any) => {

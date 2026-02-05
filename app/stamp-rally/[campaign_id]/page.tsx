@@ -71,7 +71,6 @@ export default function StampRallyPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        // userはこの時点ではnullの可能性があるため、PointDisplayコンポーネントで取得する
         const [campaignData, stampsData] = await Promise.all([
           getCampaign(campaignId),
           getUserStamps(campaignId),
@@ -88,6 +87,15 @@ export default function StampRallyPage() {
 
     loadData();
   }, [campaignId]);
+
+  // userが確定したらポイントを取得
+  useEffect(() => {
+    async function loadPoints() {
+      const balanceData = await getPointBalance(user?.id);
+      setCurrentPoints(balanceData?.current_points || 0);
+    }
+    loadPoints();
+  }, [user?.id]);
 
   // QRコードからスタンプ取得
   useEffect(() => {

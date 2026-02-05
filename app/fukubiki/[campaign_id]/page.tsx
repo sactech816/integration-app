@@ -84,7 +84,6 @@ export default function FukubikiPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        // userはこの時点ではnullの可能性があるため、PointDisplayコンポーネントで取得する
         const [campaignData, prizesData, userPrizesData] = await Promise.all([
           getCampaign(campaignId),
           getGachaPrizes(campaignId),
@@ -103,6 +102,15 @@ export default function FukubikiPage() {
 
     loadData();
   }, [campaignId]);
+
+  // userが確定したらポイントを取得
+  useEffect(() => {
+    async function loadPoints() {
+      const balanceData = await getPointBalance(user?.id);
+      setCurrentPoints(balanceData?.current_points || 0);
+    }
+    loadPoints();
+  }, [user?.id]);
 
   // 福引きを引く（通常モード）
   const handlePlay = useCallback(async () => {
