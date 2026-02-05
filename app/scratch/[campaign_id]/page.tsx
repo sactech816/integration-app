@@ -84,16 +84,15 @@ export default function ScratchPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [campaignData, prizesData, balanceData, userPrizesData] = await Promise.all([
+        // userはこの時点ではnullの可能性があるため、PointDisplayコンポーネントで取得する
+        const [campaignData, prizesData, userPrizesData] = await Promise.all([
           getCampaign(campaignId),
           getGachaPrizes(campaignId),
-          getPointBalance(),
           getUserPrizes(),
         ]);
 
         setCampaign(campaignData);
         setPrizes(prizesData);
-        setCurrentPoints(balanceData?.current_points || 0);
         setUserPrizes(userPrizesData.filter(p => p.campaign_id === campaignId));
       } catch (error) {
         console.error('Error loading scratch data:', error);
@@ -237,6 +236,7 @@ export default function ScratchPage() {
           {!isAdminMode && (
             <div className="flex justify-center mb-8">
               <PointDisplay 
+                userId={user?.id}
                 refreshTrigger={refreshTrigger} 
                 size="lg" 
                 showTotal 

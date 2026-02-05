@@ -71,14 +71,13 @@ export default function StampRallyPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [campaignData, balanceData, stampsData] = await Promise.all([
+        // userはこの時点ではnullの可能性があるため、PointDisplayコンポーネントで取得する
+        const [campaignData, stampsData] = await Promise.all([
           getCampaign(campaignId),
-          getPointBalance(),
           getUserStamps(campaignId),
         ]);
 
         setCampaign(campaignData);
-        setCurrentPoints(balanceData?.current_points || 0);
         setAcquiredStamps(stampsData || []);
       } catch (error) {
         console.error('Error loading stamp rally data:', error);
@@ -213,6 +212,7 @@ export default function StampRallyPage() {
           {/* ポイント表示 */}
           <div className="flex justify-center mb-6">
             <PointDisplay 
+              userId={user?.id}
               refreshTrigger={refreshTrigger} 
               size="lg" 
               showTotal 

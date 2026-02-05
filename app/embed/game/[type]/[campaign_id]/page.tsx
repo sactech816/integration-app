@@ -70,16 +70,15 @@ export default function EmbedGamePage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [campaignData, prizesData, balanceData, userPrizesData] = await Promise.all([
+        // userはこの時点ではnullの可能性があるため、PointDisplayコンポーネントで取得する
+        const [campaignData, prizesData, userPrizesData] = await Promise.all([
           getCampaign(campaignId),
           getGachaPrizes(campaignId),
-          getPointBalance(),
           getUserPrizes(),
         ]);
 
         setCampaign(campaignData);
         setPrizes(prizesData);
-        setCurrentPoints(balanceData?.current_points || 0);
         setUserPrizes(userPrizesData.filter(p => p.campaign_id === campaignId));
       } catch (error) {
         console.error('[EmbedGame] Error loading data:', error);
@@ -262,6 +261,7 @@ export default function EmbedGamePage() {
           {!hidePoints && (
             <div className="flex justify-center mb-6">
               <PointDisplay 
+                userId={user?.id}
                 refreshTrigger={refreshTrigger} 
                 size="lg" 
                 showTotal={false}

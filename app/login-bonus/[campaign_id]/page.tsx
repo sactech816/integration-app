@@ -67,14 +67,13 @@ export default function LoginBonusPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [campaignData, balanceData, claimedToday] = await Promise.all([
+        // userはこの時点ではnullの可能性があるため、PointDisplayコンポーネントで取得する
+        const [campaignData, claimedToday] = await Promise.all([
           getCampaign(campaignId),
-          getPointBalance(),
           checkLoginBonusClaimed(campaignId),
         ]);
 
         setCampaign(campaignData);
-        setCurrentPoints(balanceData?.current_points || 0);
         setClaimed(claimedToday);
       } catch (error) {
         console.error('Error loading login bonus data:', error);
@@ -190,6 +189,7 @@ export default function LoginBonusPage() {
           {/* ポイント表示 */}
           <div className="flex justify-center mb-6">
             <PointDisplay 
+              userId={user?.id}
               refreshTrigger={refreshTrigger} 
               size="lg" 
               showTotal 

@@ -330,12 +330,14 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
             ...form,
             questions: [...form.questions, {text:`質問${form.questions.length+1}`, options: Array(4).fill(null).map((_,j)=>({label:`選択肢${j+1}`, score:{A:0, B:0, C:0}}))}]
         });
+        resetPreview();
     };
 
     const removeQuestion = (index: number) => {
         if(form.questions.length <= 1) return alert('質問は最低1つ必要です');
         const newQuestions = form.questions.filter((_: any, i: number) => i !== index);
         setForm({...form, questions: newQuestions});
+        resetPreview();
     };
 
     const addOption = (qIndex: number) => {
@@ -343,6 +345,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
         if(newQuestions[qIndex].options.length >= 6) return alert('選択肢は最大6つまでです');
         newQuestions[qIndex].options.push({label:`選択肢${newQuestions[qIndex].options.length+1}`, score:{A:0, B:0, C:0}});
         setForm({...form, questions: newQuestions});
+        resetPreview();
     };
 
     const removeOption = (qIndex: number, optIndex: number) => {
@@ -350,6 +353,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
         if(newQuestions[qIndex].options.length <= 2) return alert('選択肢は最低2つ必要です');
         newQuestions[qIndex].options = newQuestions[qIndex].options.filter((_: any, i: number) => i !== optIndex);
         setForm({...form, questions: newQuestions});
+        resetPreview();
     };
 
     const addResult = () => {
@@ -360,12 +364,14 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
             ...form,
             results: [...form.results, {type: nextType, title:`結果${nextType}`, description:"...", ...templateResult}]
         });
+        resetPreview();
     };
 
     const removeResult = (index: number) => {
         if(form.results.length <= 2) return alert('結果パターンは最低2つ必要です');
         const newResults = form.results.filter((_: any, i: number) => i !== index);
         setForm({...form, results: newResults});
+        resetPreview();
     };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -473,6 +479,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
             score: { A: idx === optIndex ? 1 : 0, B: 0, C: 0 } 
         }));
         setForm({...form, questions: newQuestions});
+        resetPreview();
     };
 
     // 保存処理（内部で実装）
@@ -797,7 +804,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                             <div className="mb-4">
                                 <label className="text-sm font-bold text-gray-900 block mb-2">メイン画像（任意）</label>
                                 <div className="flex flex-col md:flex-row gap-2">
-                                    <input className="flex-grow border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-indigo-500 outline-none bg-white placeholder-gray-400" value={form.image_url||''} onChange={e=>setForm({...form, image_url:e.target.value})} placeholder="画像URL (https://...) またはアップロード"/>
+                                    <input className="flex-grow border border-gray-300 p-3 rounded-lg text-black font-bold focus:ring-2 focus:ring-indigo-500 outline-none bg-white placeholder-gray-400" value={form.image_url||''} onChange={e=>{setForm({...form, image_url:e.target.value}); resetPreview();}} placeholder="画像URL (https://...) またはアップロード"/>
                                     <label className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-lg font-bold hover:bg-indigo-100 flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap">
                                         {isUploading ? <Loader2 className="animate-spin" size={16}/> : <UploadCloud size={16}/>}
                                         <span>アップロード</span>
@@ -918,7 +925,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                         <input 
                                             className="w-full border border-gray-300 p-2 rounded-lg text-black font-bold focus:ring-2 focus:ring-indigo-500 outline-none bg-white mb-3 text-sm" 
                                             value={q.text} 
-                                            onChange={v=>{const n=[...form.questions];n[i].text=v.target.value;setForm({...form, questions:n});}} 
+                                            onChange={v=>{const n=[...form.questions];n[i].text=v.target.value;setForm({...form, questions:n}); resetPreview();}} 
                                             placeholder="質問文を入力..."
                                         />
                                         
@@ -932,7 +939,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                             {q.options.map((o: any, j: number)=>(
                                                 <div key={j} className="bg-white p-2 rounded border border-gray-200 flex items-center gap-2">
                                                     <button onClick={()=>removeOption(i, j)} className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition-colors"><Trash2 size={16}/></button>
-                                                    <input className="flex-grow p-1 outline-none text-sm text-gray-900" value={o.label} onChange={e=>{const n=[...form.questions];n[i].options[j].label=e.target.value;setForm({...form, questions:n});}} placeholder={`選択肢${j+1}`} />
+                                                    <input className="flex-grow p-1 outline-none text-sm text-gray-900" value={o.label} onChange={e=>{const n=[...form.questions];n[i].options[j].label=e.target.value;setForm({...form, questions:n}); resetPreview();}} placeholder={`選択肢${j+1}`} />
                                                     
                                                     {form.mode === 'test' && (
                                                         <button onClick={()=>setCorrectOption(i, j)} className={`w-6 h-6 rounded-full flex items-center justify-center ${o.score.A === 1 ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-300'}`}><CheckCircle size={12}/></button>
@@ -947,7 +954,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                                                         type="number" 
                                                                         className="w-10 bg-gray-50 border border-gray-200 text-center text-xs rounded text-gray-900 py-1" 
                                                                         value={o.score[r.type] || 0} 
-                                                                        onChange={e=>{const n=[...form.questions];n[i].options[j].score[r.type]=parseInt(e.target.value)||0;setForm({...form, questions:n});}} 
+                                                                        onChange={e=>{const n=[...form.questions];n[i].options[j].score[r.type]=parseInt(e.target.value)||0;setForm({...form, questions:n}); resetPreview();}} 
                                                                         title={`${r.title}(${r.type})のスコア`}
                                                                     />
                                                                 </div>
@@ -988,8 +995,8 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                         <div className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold inline-block mb-3">
                                             {form.mode === 'test' ? `ランク ${i+1}` : `パターン ${r.type}`}
                                         </div>
-                                        <Input label="タイトル" val={r.title} onChange={v=>{const n=[...form.results];n[i].title=v;setForm({...form, results:n});}} />
-                                        <Textarea label="説明文" val={r.description} onChange={v=>{const n=[...form.results];n[i].description=v;setForm({...form, results:n});}}/>
+                                        <Input label="タイトル" val={r.title} onChange={v=>{const n=[...form.results];n[i].title=v;setForm({...form, results:n}); resetPreview();}} />
+                                        <Textarea label="説明文" val={r.description} onChange={v=>{const n=[...form.results];n[i].description=v;setForm({...form, results:n}); resetPreview();}}/>
                                         
                                         {/* 誘導ボタン設定 */}
                                         <details className="bg-white p-3 rounded-lg border border-gray-200 mt-3" open>
@@ -998,16 +1005,16 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                             </summary>
                                             <div className="mt-3 space-y-3">
                                                 <div className="grid grid-cols-2 gap-2">
-                                                    <Input label="リンク先URL" val={r.link_url} onChange={v=>{const n=[...form.results];n[i].link_url=v;setForm({...form, results:n});}} ph="https://..." />
-                                                    <Input label="ボタン文言" val={r.link_text} onChange={v=>{const n=[...form.results];n[i].link_text=v;setForm({...form, results:n});}} ph="詳細を見る" />
+                                                    <Input label="リンク先URL" val={r.link_url} onChange={v=>{const n=[...form.results];n[i].link_url=v;setForm({...form, results:n}); resetPreview();}} ph="https://..." />
+                                                    <Input label="ボタン文言" val={r.link_text} onChange={v=>{const n=[...form.results];n[i].link_text=v;setForm({...form, results:n}); resetPreview();}} ph="詳細を見る" />
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-2">
-                                                    <Input label="LINE登録URL" val={r.line_url} onChange={v=>{const n=[...form.results];n[i].line_url=v;setForm({...form, results:n});}} ph="https://line.me/..." />
-                                                    <Input label="ボタン文言" val={r.line_text} onChange={v=>{const n=[...form.results];n[i].line_text=v;setForm({...form, results:n});}} ph="LINEで相談" />
+                                                    <Input label="LINE登録URL" val={r.line_url} onChange={v=>{const n=[...form.results];n[i].line_url=v;setForm({...form, results:n}); resetPreview();}} ph="https://line.me/..." />
+                                                    <Input label="ボタン文言" val={r.line_text} onChange={v=>{const n=[...form.results];n[i].line_text=v;setForm({...form, results:n}); resetPreview();}} ph="LINEで相談" />
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-2">
-                                                    <Input label="LINE QR画像URL" val={r.qr_url} onChange={v=>{const n=[...form.results];n[i].qr_url=v;setForm({...form, results:n});}} ph="https://..." />
-                                                    <Input label="ボタン文言" val={r.qr_text} onChange={v=>{const n=[...form.results];n[i].qr_text=v;setForm({...form, results:n});}} ph="QRコードを表示" />
+                                                    <Input label="LINE QR画像URL" val={r.qr_url} onChange={v=>{const n=[...form.results];n[i].qr_url=v;setForm({...form, results:n}); resetPreview();}} ph="https://..." />
+                                                    <Input label="ボタン文言" val={r.qr_text} onChange={v=>{const n=[...form.results];n[i].qr_text=v;setForm({...form, results:n}); resetPreview();}} ph="QRコードを表示" />
                                                 </div>
                                             </div>
                                         </details>

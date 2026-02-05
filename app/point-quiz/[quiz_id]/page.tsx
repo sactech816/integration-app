@@ -97,9 +97,7 @@ export default function PointQuizPage() {
           setPointsPerCorrect(settings.points_per_correct as number);
         }
 
-        // 現在のポイントを取得
-        const balance = await getPointBalance();
-        setCurrentPoints(balance?.current_points || 0);
+        // 現在のポイントはPointDisplayコンポーネントで取得するため、ここでは不要
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -272,6 +270,7 @@ export default function PointQuizPage() {
           {/* ポイント表示 */}
           <div className="flex justify-center mb-6">
             <PointDisplay 
+              userId={user?.id}
               refreshTrigger={refreshTrigger} 
               size="md" 
             />
