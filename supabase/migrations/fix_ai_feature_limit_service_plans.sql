@@ -20,6 +20,7 @@ CREATE OR REPLACE FUNCTION check_ai_feature_limit(
 ) AS $$
 DECLARE
   v_plan_tier TEXT;
+  v_db_plan_tier TEXT;
   v_feature_limits JSONB;
   v_total_usage INT;
   v_feature_usage INT;
@@ -28,12 +29,12 @@ DECLARE
   v_service_plan_limit INT;
 BEGIN
   -- ユーザーのプランTierを取得（サブスクリプション優先、次にモニターユーザー）
+  -- 注: subscriptionsテーブルにはserviceカラムがないため、条件を削除
   SELECT COALESCE(s.plan_tier, m.monitor_plan_type, 'none')
   INTO v_plan_tier
   FROM (SELECT check_user_id AS user_id) u
   LEFT JOIN subscriptions s ON s.user_id = u.user_id 
     AND s.status = 'active'
-    AND s.service = 'makers'
   LEFT JOIN monitor_users m ON m.user_id = u.user_id 
     AND m.monitor_start_at <= NOW() 
     AND m.monitor_expires_at > NOW()
@@ -47,22 +48,19 @@ BEGIN
 
   -- 集客メーカーのplan_tierをDBの形式に変換（none -> free）
   -- service_plansでは 'free', 'pro' を使用
-  DECLARE v_db_plan_tier TEXT;
-  BEGIN
-    v_db_plan_tier := CASE 
-      WHEN v_plan_tier = 'none' THEN 'free'
-      WHEN v_plan_tier IN ('lite', 'standard', 'pro', 'business', 'enterprise') THEN 'pro'
-      ELSE 'free'
-    END;
-
-    -- service_plansテーブルからトータル制限を取得（優先）
-    SELECT sp.ai_daily_limit
-    INTO v_service_plan_limit
-    FROM service_plans sp
-    WHERE sp.service = 'makers'
-      AND sp.plan_tier = v_db_plan_tier
-      AND sp.is_active = true;
+  v_db_plan_tier := CASE 
+    WHEN v_plan_tier = 'none' THEN 'free'
+    WHEN v_plan_tier IN ('lite', 'standard', 'pro', 'business', 'enterprise') THEN 'pro'
+    ELSE 'free'
   END;
+
+  -- service_plansテーブルからトータル制限を取得（優先）
+  SELECT sp.ai_daily_limit
+  INTO v_service_plan_limit
+  FROM service_plans sp
+  WHERE sp.service = 'makers'
+    AND sp.plan_tier = v_db_plan_tier
+    AND sp.is_active = true;
 
   -- admin_ai_settingsから機能ごとの制限を取得（機能別制限用）
   SELECT aas.feature_limits

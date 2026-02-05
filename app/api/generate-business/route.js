@@ -42,7 +42,7 @@ export async function POST(request) {
       return NextResponse.json(
         { 
           error: 'LIMIT_EXCEEDED', 
-          message: `本日のビジネスLP AI生成上限に達しました（残り: ${usageCheck.featureRemaining}回）`,
+          message: 'AI機能の1日の上限に達しました',
           usage: {
             featureUsage: usageCheck.featureUsage,
             featureLimit: usageCheck.featureLimit,
