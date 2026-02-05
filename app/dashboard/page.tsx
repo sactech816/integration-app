@@ -363,7 +363,7 @@ function DashboardContent() {
         ) : null,
         ServiceManager: user ? (
           <div className="space-y-6">
-            <AdminPlanSettings userId={user.id} userEmail={user.email} />
+            <AdminPlanSettings userId={user.id} userEmail={user.email} serviceFilter="makers" />
             <AdminAIUsageStats userId={user.id} />
           </div>
         ) : null,

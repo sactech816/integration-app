@@ -10,14 +10,14 @@ import {
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import AIUsageDisplay from '@/components/kindle/AIUsageDisplay';
-import AdminPlanSwitcher from '@/components/shared/AdminPlanSwitcher';
+import KdlUsageHeader, { type KdlUsageLimits } from '@/components/kindle/KdlUsageHeader';
 import { KdlDashboardLayout, KdlSidebar, PublishGuideContent } from '@/components/kindle/dashboard';
 import type { KdlUserRole } from '@/components/kindle/dashboard';
 import { getAdminEmails } from '@/lib/constants';
 // 管理者機能コンポーネント
 import AdminAISettings from '@/components/shared/AdminAISettings';
 import MonitorUsersManager from '@/components/shared/MonitorUsersManager';
-import { AdminUserList, GuideBookManager, AnnouncementManager, KdlServiceManagement } from '@/components/kindle/admin';
+import { AdminUserList, GuideBookManager, AnnouncementManager, KdlServiceManagement, KdlPlanSettings } from '@/components/kindle/admin';
 import { EducationContent } from '@/components/kindle/education';
 import { AnnouncementList } from '@/components/kindle/announcements';
 import AffiliateManager from '@/app/dashboard/components/Admin/AffiliateManager';
@@ -145,10 +145,10 @@ function KindleListPageContent() {
     return 'user';
   };
 
-  // 管理者用: プラン体験モード（LocalStorageから復元）
-  // 初回プラン（initial_*）と継続プラン（lite, standard, pro, business）の両方に対応
-  type ExtendedPlanTier = 'none' | 'lite' | 'standard' | 'pro' | 'business' | 'enterprise' | 'initial_trial' | 'initial_standard' | 'initial_business';
-  const [adminTestPlan, setAdminTestPlan] = useState<ExtendedPlanTier>('pro');
+
+  // KDL使用量制限
+  const [usageLimits, setUsageLimits] = useState<KdlUsageLimits | null>(null);
+  const [usageRefreshTrigger, setUsageRefreshTrigger] = useState(0);
 
   // ユーザーが読み込まれたら管理者判定
   useEffect(() => {
@@ -161,20 +161,6 @@ function KindleListPageContent() {
       setIsAdmin(false);
     }
   }, [user]);
-
-  // 管理者の場合、LocalStorageから体験プランを復元
-  useEffect(() => {
-    if (isAdmin && typeof window !== 'undefined') {
-      const savedPlan = localStorage.getItem('adminTestPlan');
-      const validPlans = [
-        'lite', 'standard', 'pro', 'business',  // 継続プラン
-        'initial_trial', 'initial_standard', 'initial_business'  // 初回プラン
-      ];
-      if (savedPlan && validPlans.includes(savedPlan)) {
-        setAdminTestPlan(savedPlan as ExtendedPlanTier);
-      }
-    }
-  }, [isAdmin]);
 
   // ユーザーとサブスク状態を取得
   useEffect(() => {
@@ -699,6 +685,8 @@ function KindleListPageContent() {
             </button>
           </div>
           <KdlServiceManagement userId={user.id} accessToken={accessToken} />
+          {/* KDLプラン設定 */}
+          <KdlPlanSettings userId={user.id} userEmail={user.email} />
           {/* AI使用量とコスト統計 */}
           <AdminAIUsageStats userId={user.id} />
         </div>
@@ -890,16 +878,6 @@ function KindleListPageContent() {
         </div>
       )}
 
-      {/* 管理者用: プラン体験切り替え */}
-      {user && isAdmin && (
-        <div className="mb-6">
-          <AdminPlanSwitcher 
-            currentPlan={adminTestPlan}
-            onPlanChange={setAdminTestPlan}
-          />
-        </div>
-      )}
-
       {/* AI使用量表示（ログインユーザー向け） */}
       {user && subscriptionStatus && !isAdmin && (
         <div className="mb-6">
@@ -914,18 +892,42 @@ function KindleListPageContent() {
 
       {/* 書籍セクション */}
       <div id="books-section">
+        {/* 使用量ヘッダー（一般ユーザー向け） */}
+        {user && !isAdmin && (
+          <div className="mb-4 flex items-center justify-between bg-white rounded-lg border border-gray-200 px-4 py-2">
+            <span className="text-xs text-gray-500">残り回数</span>
+            <KdlUsageHeader
+              userId={user.id}
+              onLimitsChange={setUsageLimits}
+              refreshTrigger={usageRefreshTrigger}
+            />
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">
             {isAdmin ? '全ユーザーの書籍' : 'あなたの書籍'}
           </h1>
-          <Link
-            href={`/kindle/new${adminKeyParam}`}
-            className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-4 py-2 rounded-xl transition-all shadow-lg"
-          >
-            <Plus size={18} />
-            <span className="hidden sm:inline">新しい本を作成</span>
-            <span className="sm:hidden">新規</span>
-          </Link>
+          {/* 新規作成ボタン - 書籍上限チェック */}
+          {usageLimits && !usageLimits.bookCreation.canCreate && !isAdmin ? (
+            <div
+              className="flex items-center gap-2 bg-gray-300 text-gray-500 font-bold px-4 py-2 rounded-xl cursor-not-allowed"
+              title={`書籍作成の上限（${usageLimits.bookCreation.limit}冊）に達しました`}
+            >
+              <Plus size={18} />
+              <span className="hidden sm:inline">上限に達しました</span>
+              <span className="sm:hidden">上限</span>
+            </div>
+          ) : (
+            <Link
+              href={`/kindle/new${adminKeyParam}`}
+              className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-4 py-2 rounded-xl transition-all shadow-lg"
+            >
+              <Plus size={18} />
+              <span className="hidden sm:inline">新しい本を作成</span>
+              <span className="sm:hidden">新規</span>
+            </Link>
+          )}
         </div>
 
         {isLoading ? (

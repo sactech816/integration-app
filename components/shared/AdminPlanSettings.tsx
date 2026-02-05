@@ -44,15 +44,16 @@ interface PlanSetting {
 interface AdminPlanSettingsProps {
   userId: string;
   userEmail?: string;
+  serviceFilter?: 'makers' | 'kdl' | 'all'; // 表示するサービスを制限（デフォルト: all）
 }
 
-export default function AdminPlanSettings({ userId, userEmail }: AdminPlanSettingsProps) {
+export default function AdminPlanSettings({ userId, userEmail, serviceFilter = 'all' }: AdminPlanSettingsProps) {
   const [plans, setPlans] = useState<Record<string, PlanSetting[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [selectedService, setSelectedService] = useState<'makers' | 'kdl'>('makers');
+  const [selectedService, setSelectedService] = useState<'makers' | 'kdl'>(serviceFilter === 'kdl' ? 'kdl' : 'makers');
   const [selectedKdlType, setSelectedKdlType] = useState<'initial' | 'continuation'>('initial');
   const [editingPlan, setEditingPlan] = useState<PlanSetting | null>(null);
   const [requiresMigration, setRequiresMigration] = useState(false);
@@ -218,25 +219,27 @@ export default function AdminPlanSettings({ userId, userEmail }: AdminPlanSettin
         </div>
       )}
 
-      {/* サービス選択タブ */}
-      <div className="flex gap-2 mb-4">
-        {(['makers', 'kdl'] as const).map((service) => (
-          <button
-            key={service}
-            onClick={() => setSelectedService(service)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              selectedService === service
-                ? service === 'makers'
-                  ? 'bg-indigo-100 text-indigo-700'
-                  : 'bg-amber-100 text-amber-700'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            {getServiceIcon(service)}
-            {service === 'makers' ? '集客メーカー' : 'Kindle執筆'}
-          </button>
-        ))}
-      </div>
+      {/* サービス選択タブ（serviceFilter='all'の場合のみ表示） */}
+      {serviceFilter === 'all' && (
+        <div className="flex gap-2 mb-4">
+          {(['makers', 'kdl'] as const).map((service) => (
+            <button
+              key={service}
+              onClick={() => setSelectedService(service)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                selectedService === service
+                  ? service === 'makers'
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'bg-amber-100 text-amber-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {getServiceIcon(service)}
+              {service === 'makers' ? '集客メーカー' : 'Kindle執筆'}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Kindle: 初回/継続 サブタブ */}
       {selectedService === 'kdl' && (

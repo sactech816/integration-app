@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
+import { checkKdlLimits } from '@/lib/kdl-usage-check';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -50,6 +51,31 @@ export async function POST(request: Request) {
     // デモモード判定
     const useMockData = !process.env.OPENAI_API_KEY || process.env.USE_MOCK_DATA === 'true';
     const isDemo = book_id.startsWith('demo-book-') || !supabaseUrl || !supabaseServiceKey;
+
+    // 制限チェック（本の所有者を取得してチェック）
+    if (!isDemo && !useMockData && supabaseUrl && supabaseServiceKey) {
+      const supabaseForCheck = createClient(supabaseUrl, supabaseServiceKey);
+      const { data: bookOwner } = await supabaseForCheck
+        .from('kdl_books')
+        .select('user_id')
+        .eq('id', book_id)
+        .single();
+
+      if (bookOwner?.user_id) {
+        const limits = await checkKdlLimits(bookOwner.user_id);
+        if (!limits.outlineAi.canUse) {
+          return NextResponse.json(
+            { 
+              error: limits.outlineAi.message, 
+              code: 'OUTLINE_AI_LIMIT_EXCEEDED',
+              used: limits.outlineAi.used,
+              limit: limits.outlineAi.limit,
+            },
+            { status: 429 }
+          );
+        }
+      }
+    }
 
     if (isDemo || useMockData) {
       // モックデータを返す

@@ -54,6 +54,23 @@ export default function KindleEditorPage() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [targetProfile, setTargetProfile] = useState<TargetProfile | undefined>(undefined);
   const [tocPatternId, setTocPatternId] = useState<string | undefined>(undefined);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+
+  // ユーザーIDを取得
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!isSupabaseConfigured() || !supabase) return;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUserId(session.user.id);
+        }
+      } catch (err) {
+        console.error('Failed to get user session:', err);
+      }
+    };
+    fetchUser();
+  }, []);
 
   // データ取得
   const fetchBookData = useCallback(async () => {
@@ -399,6 +416,7 @@ export default function KindleEditorPage() {
       onStructureChange={handleStructureChange}
       onUpdateBookStatus={handleUpdateBookStatus}
       adminKeyParam={adminKeyParam}
+      userId={userId}
     />
   );
 }

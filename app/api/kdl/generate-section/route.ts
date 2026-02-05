@@ -5,8 +5,9 @@ import {
   getProviderFromAdminSettings, 
   generateWithFallback
 } from '@/lib/ai-provider';
-import { checkAIUsageLimit, logAIUsage } from '@/lib/ai-usage';
+import { logAIUsage } from '@/lib/ai-usage';
 import { getSubscriptionStatus } from '@/lib/subscription';
+import { checkKdlLimits } from '@/lib/kdl-usage-check';
 
 // 執筆スタイルの定義
 export const WRITING_STYLES = {
@@ -195,14 +196,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '節タイトルが必要です' }, { status: 400 });
     }
 
-    // AI使用量チェック（user_idがある場合のみ）
+    // 執筆系AI使用制限チェック（user_idがある場合のみ）
     if (user_id) {
-      const usageCheck = await checkAIUsageLimit(user_id);
-      if (!usageCheck.isWithinLimit) {
-        const message = usageCheck.remainingDaily === 0
-          ? '本日のAI使用上限に達しました。明日またお試しください。'
-          : '今月のAI使用上限に達しました。';
-        return NextResponse.json({ error: message, usageLimit: true }, { status: 429 });
+      const limits = await checkKdlLimits(user_id);
+      if (!limits.writingAi.canUse) {
+        return NextResponse.json(
+          { 
+            error: limits.writingAi.message, 
+            code: 'WRITING_AI_LIMIT_EXCEEDED',
+            used: limits.writingAi.used,
+            limit: limits.writingAi.limit,
+            usageLimit: true,
+          },
+          { status: 429 }
+        );
       }
     }
 

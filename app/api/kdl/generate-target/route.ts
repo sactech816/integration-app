@@ -7,6 +7,7 @@ import {
 } from '@/lib/ai-provider';
 import { getSubscriptionStatus } from '@/lib/subscription';
 import { logAIUsage } from '@/lib/ai-usage';
+import { checkKdlLimits } from '@/lib/kdl-usage-check';
 
 // レスポンスの型定義
 interface TargetSuggestion {
@@ -52,6 +53,22 @@ export async function POST(request: Request) {
         { error: 'タイトルを入力してください' },
         { status: 400 }
       );
+    }
+
+    // 構成系AI使用制限チェック
+    if (user_id) {
+      const limits = await checkKdlLimits(user_id);
+      if (!limits.outlineAi.canUse) {
+        return NextResponse.json(
+          { 
+            error: limits.outlineAi.message, 
+            code: 'OUTLINE_AI_LIMIT_EXCEEDED',
+            used: limits.outlineAi.used,
+            limit: limits.outlineAi.limit,
+          },
+          { status: 429 }
+        );
+      }
     }
 
     // デモモード: APIキーがない、または環境変数でデモモードが有効な場合

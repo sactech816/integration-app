@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { checkKdlLimits } from '@/lib/kdl-usage-check';
 
 // サーバーサイド用のSupabaseクライアント
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -104,6 +105,20 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'ログインが必要です。ログインしてから再度お試しください。' },
         { status: 401 }
+      );
+    }
+
+    // 書籍作成数の制限チェック
+    const limits = await checkKdlLimits(authenticatedUserId);
+    if (!limits.bookCreation.canCreate) {
+      return NextResponse.json(
+        { 
+          error: limits.bookCreation.message, 
+          code: 'BOOK_LIMIT_EXCEEDED',
+          used: limits.bookCreation.used,
+          limit: limits.bookCreation.limit,
+        },
+        { status: 429 }
       );
     }
 

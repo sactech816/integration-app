@@ -5,8 +5,9 @@ import {
   getProviderFromAdminSettings, 
   generateWithFallback 
 } from '@/lib/ai-provider';
-import { checkAIUsageLimit, logAIUsage } from '@/lib/ai-usage';
+import { logAIUsage } from '@/lib/ai-usage';
 import { getSubscriptionStatus } from '@/lib/subscription';
+import { checkKdlLimits } from '@/lib/kdl-usage-check';
 
 // パターン定義
 export const CHAPTER_PATTERNS = {
@@ -193,15 +194,21 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     const user_id = user?.id;
 
-    // AI使用量チェック（user_idがある場合のみ、デモモードはスキップ）
+    // 構成系AI使用制限チェック（user_idがある場合のみ、デモモードはスキップ）
     const useMockDataCheck = (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) || process.env.USE_MOCK_DATA === 'true';
     if (user_id && !useMockDataCheck) {
-      const usageCheck = await checkAIUsageLimit(user_id);
-      if (!usageCheck.isWithinLimit) {
-        const message = usageCheck.remainingDaily === 0
-          ? '本日のAI使用上限に達しました。明日またお試しください。'
-          : '今月のAI使用上限に達しました。';
-        return NextResponse.json({ error: message, usageLimit: true }, { status: 429 });
+      const limits = await checkKdlLimits(user_id);
+      if (!limits.outlineAi.canUse) {
+        return NextResponse.json(
+          { 
+            error: limits.outlineAi.message, 
+            code: 'OUTLINE_AI_LIMIT_EXCEEDED',
+            used: limits.outlineAi.used,
+            limit: limits.outlineAi.limit,
+            usageLimit: true,
+          },
+          { status: 429 }
+        );
       }
     }
 

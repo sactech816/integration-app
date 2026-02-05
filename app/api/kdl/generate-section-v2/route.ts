@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getProviderForModeAndPhase } from '@/lib/ai-provider';
 import { checkAICreditLimit, logAIUsage } from '@/lib/ai-usage';
 import { getSubscriptionStatus, getAICreditsForPlan } from '@/lib/subscription';
+import { checkKdlLimits } from '@/lib/kdl-usage-check';
 import type { AIMode } from '@/lib/types';
 
 // 執筆スタイルの定義（既存のコピー）
@@ -172,6 +173,21 @@ export async function POST(request: Request) {
     }
     if (!user_id) {
       return NextResponse.json({ error: 'ユーザーIDが必要です' }, { status: 400 });
+    }
+
+    // 執筆系AI使用制限チェック（KDL専用）
+    const kdlLimits = await checkKdlLimits(user_id);
+    if (!kdlLimits.writingAi.canUse) {
+      return NextResponse.json(
+        { 
+          error: kdlLimits.writingAi.message, 
+          code: 'WRITING_AI_LIMIT_EXCEEDED',
+          used: kdlLimits.writingAi.used,
+          limit: kdlLimits.writingAi.limit,
+          usageLimit: true,
+        },
+        { status: 429 }
+      );
     }
 
     // ユーザーのプラン情報を取得

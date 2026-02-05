@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle, Info, Sparkles, Copy, Tag, FileText, FolderTree, Lightbulb, BookOpen, Rocket, PlayCircle, Crown, Menu } from 'lucide-react';
 import Link from 'next/link';
 import KdlHamburgerMenu from '@/components/kindle/shared/KdlHamburgerMenu';
+import KdlUsageHeader, { type KdlUsageLimits } from '@/components/kindle/KdlUsageHeader';
 import { ChapterSidebar } from './ChapterSidebar';
 import { TiptapEditor, TiptapEditorRef } from './TiptapEditor';
 import { Home } from 'lucide-react';
@@ -79,6 +80,7 @@ interface EditorLayoutProps {
   onUpdateBookStatus?: (status: string) => Promise<void>; // 書籍ステータス更新
   readOnly?: boolean; // 閲覧専用モード（デモ用）
   adminKeyParam?: string; // admin_keyパラメータ（リンクに引き継ぐ用）
+  userId?: string; // 使用量表示用
 }
 
 export const EditorLayout: React.FC<EditorLayoutProps> = ({
@@ -91,6 +93,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   onUpdateBookStatus,
   readOnly = false,
   adminKeyParam = '',
+  userId,
 }) => {
   // 初期値: 最初の章の最初の節
   const getInitialSectionId = () => {
@@ -128,6 +131,10 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   const [kdpInfo, setKdpInfo] = useState<KdpInfo | null>(null);
   const [kdpError, setKdpError] = useState<string>('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // スマホ用サイドバー表示状態
+
+  // KDL使用量制限
+  const [usageLimits, setUsageLimits] = useState<KdlUsageLimits | null>(null);
+  const [usageRefreshTrigger, setUsageRefreshTrigger] = useState(0);
   const [isSaving, setIsSaving] = useState(false); // 途中保存中
   const [isMarkingComplete, setIsMarkingComplete] = useState(false); // 完成マーク中
   const [bookStatus, setBookStatus] = useState(book.status || 'draft'); // 書籍ステータス
@@ -1079,6 +1086,20 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
           )}
         </div>
       </div>
+
+      {/* 使用量ヘッダー（ログインユーザー向け） */}
+      {userId && !readOnly && (
+        <div className="bg-white border-b border-gray-200 px-2 sm:px-4 py-1.5">
+          <div className="flex items-center justify-between max-w-full">
+            <span className="text-xs text-gray-500">残り回数</span>
+            <KdlUsageHeader
+              userId={userId}
+              onLimitsChange={setUsageLimits}
+              refreshTrigger={usageRefreshTrigger}
+            />
+          </div>
+        </div>
+      )}
 
       {/* メインコンテンツ */}
       <div className="flex-1 flex overflow-hidden relative">

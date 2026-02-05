@@ -7,6 +7,7 @@ import {
 } from '@/lib/ai-provider';
 import { getSubscriptionStatus } from '@/lib/subscription';
 import { logAIUsage } from '@/lib/ai-usage';
+import { checkKdlLimits } from '@/lib/kdl-usage-check';
 
 // 執筆スタイルの定義
 const WRITING_STYLES = {
@@ -131,6 +132,22 @@ export async function POST(request: Request) {
     // バリデーション
     if (!text || text.trim() === '') {
       return NextResponse.json({ error: 'テキストが必要です' }, { status: 400 });
+    }
+
+    // 執筆系AI使用制限チェック
+    if (user_id) {
+      const limits = await checkKdlLimits(user_id);
+      if (!limits.writingAi.canUse) {
+        return NextResponse.json(
+          { 
+            error: limits.writingAi.message, 
+            code: 'WRITING_AI_LIMIT_EXCEEDED',
+            used: limits.writingAi.used,
+            limit: limits.writingAi.limit,
+          },
+          { status: 429 }
+        );
+      }
     }
 
     // 執筆スタイルを決定（デフォルトは説明文）

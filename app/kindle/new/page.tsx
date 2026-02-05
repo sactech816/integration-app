@@ -25,6 +25,7 @@ import AuthModal from '@/components/shared/AuthModal';
 import KDLFooter from '@/components/shared/KDLFooter';
 import { supabase } from '@/lib/supabase';
 import KdlHamburgerMenu from '@/components/kindle/shared/KdlHamburgerMenu';
+import KdlUsageHeader, { type KdlUsageLimits } from '@/components/kindle/KdlUsageHeader';
 
 // localStorageのキー
 const STORAGE_KEY = 'kindle-wizard-draft';
@@ -107,6 +108,10 @@ function KindleNewPageContent() {
   
   // 下書き保存状態
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+
+  // KDL使用量制限
+  const [usageLimits, setUsageLimits] = useState<KdlUsageLimits | null>(null);
+  const [usageRefreshTrigger, setUsageRefreshTrigger] = useState(0);
 
   // localStorageから下書きを復元（初回のみ）
   useEffect(() => {
@@ -468,6 +473,20 @@ function KindleNewPageContent() {
           </Link>
         </div>
       </header>
+
+      {/* 使用量ヘッダー（ログインユーザー向け） */}
+      {user && !isDemo && (
+        <div className="bg-white/80 backdrop-blur-md border-b border-amber-100">
+          <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between">
+            <span className="text-xs text-gray-500">残り回数</span>
+            <KdlUsageHeader
+              userId={user.id}
+              onLimitsChange={setUsageLimits}
+              refreshTrigger={usageRefreshTrigger}
+            />
+          </div>
+        </div>
+      )}
 
       {/* プログレスバー */}
       <div className="bg-white border-b border-amber-100">

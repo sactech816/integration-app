@@ -126,6 +126,7 @@ export async function POST(request: Request) {
       'can_use_gamification', 'can_download_html', 'can_embed',
       'can_hide_copyright', 'can_use_affiliate',
       'ai_daily_limit', 'ai_monthly_limit', 'gamification_limit',
+      'ai_outline_daily_limit', 'ai_writing_daily_limit', // KDL専用の構成系・執筆系AI制限
       'book_limit', 'content_limit', 'premium_credits_daily', 'standard_credits_daily',
       'sort_order', 'is_active', 'is_visible', 'badge_text',
     ];
