@@ -27,8 +27,8 @@ CREATE TABLE IF NOT EXISTS admin_ai_settings (
     'initial_trial', 'initial_standard', 'initial_business'  -- KDL初回
   )),
   selected_preset TEXT NOT NULL DEFAULT 'custom' CHECK (selected_preset IN ('presetA', 'presetB', 'custom')),
-  custom_outline_model TEXT DEFAULT 'gpt-5-nano',  -- 構成用モデル（デフォルト: 最安値）
-  custom_writing_model TEXT DEFAULT 'gpt-5-nano',  -- 執筆用モデル（デフォルト: 最安値）
+  custom_outline_model TEXT DEFAULT 'gpt-4o-mini',  -- 構成用モデル（デフォルト: バランス良好）
+  custom_writing_model TEXT DEFAULT 'gpt-4o-mini',  -- 執筆用モデル（デフォルト: バランス良好）
   backup_outline_model TEXT DEFAULT 'gemini-2.5-flash-lite',  -- バックアップ構成用モデル
   backup_writing_model TEXT DEFAULT 'gemini-2.5-flash-lite',  -- バックアップ執筆用モデル
   feature_limits JSONB DEFAULT '{"profile": 5, "business": 5, "quiz": 5, "salesletter": 5, "total": null}'::jsonb,  -- AI生成機能の使用制限
@@ -67,26 +67,26 @@ END $$;
 
 -- 2. デフォルト設定を挿入（KDL継続プラン）- すべて最安値モデルをデフォルトに
 INSERT INTO admin_ai_settings (service, plan_tier, selected_preset, custom_outline_model, custom_writing_model, backup_outline_model, backup_writing_model) VALUES
-  ('kdl', 'none', 'custom', 'gpt-5-nano', 'gpt-5-nano', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
-  ('kdl', 'lite', 'custom', 'gpt-5-nano', 'gpt-5-nano', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
-  ('kdl', 'standard', 'custom', 'gpt-5-nano', 'gpt-5-nano', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
-  ('kdl', 'pro', 'custom', 'gpt-5-nano', 'gpt-5-nano', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
-  ('kdl', 'business', 'custom', 'gpt-5-nano', 'gpt-5-nano', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
-  ('kdl', 'enterprise', 'custom', 'gpt-5-nano', 'gpt-5-nano', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite')
+  ('kdl', 'none', 'custom', 'gpt-4o-mini', 'gpt-4o-mini', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
+  ('kdl', 'lite', 'custom', 'gpt-4o-mini', 'gpt-4o-mini', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
+  ('kdl', 'standard', 'custom', 'gpt-4o-mini', 'gpt-4o-mini', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
+  ('kdl', 'pro', 'custom', 'gpt-4o-mini', 'gpt-4o-mini', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
+  ('kdl', 'business', 'custom', 'gpt-4o-mini', 'gpt-4o-mini', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
+  ('kdl', 'enterprise', 'custom', 'gpt-4o-mini', 'gpt-4o-mini', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite')
 ON CONFLICT (service, plan_tier) DO NOTHING;
 
 -- KDL初回プラン用設定
 INSERT INTO admin_ai_settings (service, plan_tier, selected_preset, custom_outline_model, custom_writing_model, backup_outline_model, backup_writing_model) VALUES
-  ('kdl', 'initial_trial', 'custom', 'gpt-5-nano', 'gpt-5-nano', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
-  ('kdl', 'initial_standard', 'custom', 'gpt-5-nano', 'gpt-5-nano', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
-  ('kdl', 'initial_business', 'custom', 'gpt-5-nano', 'gpt-5-nano', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite')
+  ('kdl', 'initial_trial', 'custom', 'gpt-4o-mini', 'gpt-4o-mini', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
+  ('kdl', 'initial_standard', 'custom', 'gpt-4o-mini', 'gpt-4o-mini', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
+  ('kdl', 'initial_business', 'custom', 'gpt-4o-mini', 'gpt-4o-mini', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite')
 ON CONFLICT (service, plan_tier) DO NOTHING;
 
 -- 集客メーカー用設定
 INSERT INTO admin_ai_settings (service, plan_tier, selected_preset, custom_outline_model, custom_writing_model, backup_outline_model, backup_writing_model) VALUES
-  ('makers', 'guest', 'custom', 'gpt-5-nano', 'gpt-5-nano', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
-  ('makers', 'free', 'custom', 'gpt-5-nano', 'gpt-5-nano', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
-  ('makers', 'pro', 'custom', 'gpt-5-nano', 'gpt-5-nano', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite')
+  ('makers', 'guest', 'custom', 'gpt-4o-mini', 'gpt-4o-mini', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
+  ('makers', 'free', 'custom', 'gpt-4o-mini', 'gpt-4o-mini', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite'),
+  ('makers', 'pro', 'custom', 'gpt-4o-mini', 'gpt-4o-mini', 'gemini-2.5-flash-lite', 'gemini-2.5-flash-lite')
 ON CONFLICT (service, plan_tier) DO NOTHING;
 
 -- 3. インデックス作成
@@ -161,8 +161,8 @@ BEGIN
     p_service,
     p_plan_tier,
     p_selected_preset,
-    COALESCE(p_custom_outline_model, 'gpt-5-nano'),
-    COALESCE(p_custom_writing_model, 'gpt-5-nano'),
+    COALESCE(p_custom_outline_model, 'gpt-4o-mini'),
+    COALESCE(p_custom_writing_model, 'gpt-4o-mini'),
     COALESCE(p_backup_outline_model, 'gemini-2.5-flash-lite'),
     COALESCE(p_backup_writing_model, 'gemini-2.5-flash-lite'),
     p_updated_by,
