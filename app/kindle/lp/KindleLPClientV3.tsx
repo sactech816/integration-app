@@ -65,10 +65,16 @@ export default function KindleLPClient() {
   const [showAuth, setShowAuth] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  
+
   // 診断クイズ用のState
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [quizResult, setQuizResult] = useState(false);
+
+  // 決済フロー用のState
+  const [selectedLPPlan, setSelectedLPPlan] = useState<LPPlanType | null>(null);
+  const [checkoutEmail, setCheckoutEmail] = useState('');
+  const [checkoutError, setCheckoutError] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -95,17 +101,62 @@ export default function KindleLPClient() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // プラン選択ボタンクリック時の処理（直接UnivaPayリンクにリダイレクト）
+  // プラン選択ボタンクリック時の処理（メール入力フォームを表示）
   const handlePlanSelect = (planType: LPPlanType) => {
-    const univaPayLink = LP_UNIVAPAY_LINKS[planType];
-    
-    if (!univaPayLink) {
-      alert('決済リンクが設定されていません。管理者にお問い合わせください。');
+    setSelectedLPPlan(planType);
+    setCheckoutError('');
+    // ログイン済みの場合はメールアドレスを自動入力
+    if (user?.email && !checkoutEmail) {
+      setCheckoutEmail(user.email);
+    }
+    // チェックアウトフォームにスクロール
+    setTimeout(() => {
+      document.getElementById('checkout-form')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
+  // 決済実行（メールアドレス入力後）
+  const handleCheckout = async () => {
+    if (!selectedLPPlan) {
+      setCheckoutError('プランを選択してください');
       return;
     }
-    
-    // 直接UnivaPayリンクにリダイレクト（認証不要）
-    window.location.href = univaPayLink;
+    if (!checkoutEmail || !checkoutEmail.includes('@')) {
+      setCheckoutError('有効なメールアドレスを入力してください');
+      return;
+    }
+
+    const univaPayLink = LP_UNIVAPAY_LINKS[selectedLPPlan];
+    if (!univaPayLink) {
+      setCheckoutError('決済リンクが設定されていません。お問い合わせください。');
+      return;
+    }
+
+    setIsProcessing(true);
+    setCheckoutError('');
+
+    // アフィリエイト紹介コードがある場合は保存
+    const refCode = getReferralCode();
+    if (refCode) {
+      try {
+        await fetch('/api/affiliate/pending', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: checkoutEmail,
+            referralCode: refCode,
+            service: 'kdl',
+            planTier: selectedLPPlan,
+          }),
+        });
+      } catch (err) {
+        console.warn('Failed to save pending affiliate:', err);
+      }
+    }
+
+    // UnivaPayリンクにメールアドレスを付与してリダイレクト
+    const params = new URLSearchParams({ email: checkoutEmail });
+    window.location.href = `${univaPayLink}?${params.toString()}`;
   };
 
   const scrollToTop = () => {
@@ -595,11 +646,15 @@ export default function KindleLPClient() {
                   <li className="flex items-center gap-2 text-slate-300">− 個別相談なし</li>
                 </ul>
 
-                <button 
+                <button
                   onClick={() => handlePlanSelect('trial')}
-                  className="block w-full bg-slate-500 hover:bg-slate-600 text-white font-bold py-4 rounded-xl shadow-md transition text-center"
+                  className={`block w-full font-bold py-4 rounded-xl shadow-md transition text-center ${
+                    selectedLPPlan === 'trial'
+                      ? 'bg-green-500 text-white ring-2 ring-green-300'
+                      : 'bg-slate-500 hover:bg-slate-600 text-white'
+                  }`}
                 >
-                  このプランで始める
+                  {selectedLPPlan === 'trial' ? '✓ 選択中' : 'このプランで始める'}
                 </button>
               </div>
             </div>
@@ -621,11 +676,15 @@ export default function KindleLPClient() {
                   <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> チャット質問し放題</li>
                 </ul>
 
-                <button 
+                <button
                   onClick={() => handlePlanSelect('standard')}
-                  className="block w-full bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white font-bold py-4 rounded-xl shadow-lg transition text-center"
+                  className={`block w-full font-bold py-4 rounded-xl shadow-lg transition text-center ${
+                    selectedLPPlan === 'standard'
+                      ? 'bg-green-500 text-white ring-2 ring-green-300'
+                      : 'bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white'
+                  }`}
                 >
-                  今すぐ作家デビューする
+                  {selectedLPPlan === 'standard' ? '✓ 選択中' : '今すぐ作家デビューする'}
                 </button>
               </div>
             </div>
@@ -646,16 +705,72 @@ export default function KindleLPClient() {
                   <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 優先サポート</li>
                 </ul>
 
-                <button 
+                <button
                   onClick={() => handlePlanSelect('business')}
-                  className="block w-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold py-4 rounded-xl shadow-lg transition text-center"
+                  className={`block w-full font-bold py-4 rounded-xl shadow-lg transition text-center ${
+                    selectedLPPlan === 'business'
+                      ? 'bg-green-500 text-white ring-2 ring-green-300'
+                      : 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white'
+                  }`}
                 >
-                  ビジネスプランで始める
+                  {selectedLPPlan === 'business' ? '✓ 選択中' : 'ビジネスプランで始める'}
                 </button>
               </div>
             </div>
           </div>
           <p className="text-xs text-slate-500 mt-8">※ サポート品質維持のため、毎月5名様までの限定募集です</p>
+
+          {/* メールアドレス入力 & 決済ボタン */}
+          {selectedLPPlan && (
+            <div id="checkout-form" className="max-w-md mx-auto mt-10">
+              <div className="bg-white rounded-2xl p-6 shadow-xl border-2 border-orange-200">
+                <h3 className="text-lg font-bold text-slate-800 mb-1 text-center">
+                  {LP_PLANS[selectedLPPlan].name}プラン
+                </h3>
+                <p className="text-sm text-slate-500 text-center mb-4">
+                  ¥{LP_PLANS[selectedLPPlan].price.toLocaleString()}（税込）/ {LP_PLANS[selectedLPPlan].period}
+                </p>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    メールアドレス
+                  </label>
+                  <input
+                    type="email"
+                    value={checkoutEmail}
+                    onChange={(e) => setCheckoutEmail(e.target.value)}
+                    placeholder="example@email.com"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none text-slate-800"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    決済完了の通知とアカウント情報をお送りします
+                  </p>
+                </div>
+
+                {checkoutError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                    {checkoutError}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleCheckout}
+                  disabled={isProcessing}
+                  className={`w-full py-4 rounded-xl font-bold text-lg transition ${
+                    isProcessing
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-orange-400 to-red-400 hover:from-orange-500 hover:to-red-500 text-white shadow-lg hover:shadow-xl'
+                  }`}
+                >
+                  {isProcessing ? '処理中...' : '決済に進む'}
+                </button>
+
+                <p className="text-center text-xs text-slate-500 mt-3">
+                  お支払いはUnivaPayで安全に処理されます
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

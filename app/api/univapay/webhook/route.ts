@@ -20,12 +20,100 @@ import { recordAffiliateConversion, getAffiliateServiceSetting } from '@/app/act
 function getSupabaseAdmin() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
+
   if (!supabaseUrl || !serviceKey) {
     throw new Error('Supabase configuration is missing');
   }
-  
+
   return createClient(supabaseUrl, serviceKey);
+}
+
+// LP専用プランの金額からプラン情報を推定
+const LP_PLAN_AMOUNT_MAP: Record<number, { planTier: string; periodMonths: number; planName: string }> = {
+  49800:  { planTier: 'initial_trial',    periodMonths: 1, planName: 'KDL 1ヶ月トライアル' },
+  99800:  { planTier: 'initial_standard', periodMonths: 3, planName: 'KDL 3ヶ月スタンダード' },
+  198000: { planTier: 'initial_business', periodMonths: 6, planName: 'KDL ビジネス（初回）' },
+};
+
+/**
+ * メールアドレスからSupabaseユーザーIDを検索
+ * 1. DB関数（find_user_id_by_email）を優先
+ * 2. フォールバックとしてauth admin APIを使用
+ */
+async function findUserIdByEmail(supabase: any, email: string): Promise<string | null> {
+  if (!email) return null;
+  try {
+    // 方法1: DB関数で効率的に検索（SQLマイグレーション適用後に有効）
+    const { data: rpcResult, error: rpcError } = await supabase.rpc('find_user_id_by_email', {
+      target_email: email.toLowerCase(),
+    });
+    if (!rpcError && rpcResult) {
+      return rpcResult;
+    }
+
+    // 方法2: フォールバック - auth admin APIで検索
+    const { data, error } = await supabase.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    });
+    if (error || !data?.users) {
+      console.warn('⚠️ Failed to list users for email lookup:', error?.message);
+      return null;
+    }
+    const match = data.users.find((u: any) =>
+      u.email?.toLowerCase() === email.toLowerCase()
+    );
+    return match?.id || null;
+  } catch (err) {
+    console.error('Error finding user by email:', err);
+    return null;
+  }
+}
+
+/**
+ * kdl_subscriptions にレコードを作成するヘルパー
+ */
+async function createKdlSubscription(
+  supabase: any,
+  params: {
+    id: string;
+    userId: string;
+    email: string | null;
+    amount: number;
+    planTier: string;
+    period: string;
+    planName: string;
+    periodMonths: number;
+    status: string;
+    referralCode?: string;
+  }
+) {
+  const now = new Date();
+  const currentPeriodEnd = new Date(now);
+  currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + params.periodMonths);
+
+  await supabase.from('kdl_subscriptions').upsert({
+    id: params.id,
+    user_id: params.userId,
+    provider: 'univapay',
+    status: params.status === 'active' ? 'active' : 'pending',
+    amount: params.amount,
+    currency: 'jpy',
+    period: params.period,
+    plan_tier: params.planTier,
+    plan_name: params.planName,
+    email: params.email,
+    current_period_start: now.toISOString(),
+    current_period_end: currentPeriodEnd.toISOString(),
+    next_payment_date: currentPeriodEnd.toISOString(),
+    metadata: { referralCode: params.referralCode, originalStatus: params.status },
+    created_at: now.toISOString(),
+    updated_at: now.toISOString(),
+  }, {
+    onConflict: 'id',
+  });
+
+  console.log(`✅ KDL Subscription created: ${params.id}, plan: ${params.planTier}, user: ${params.userId}`);
 }
 
 export async function POST(req: Request) {
@@ -59,13 +147,32 @@ export async function POST(req: Request) {
     switch (event.event) {
       case 'subscription.created': {
         const { id, status, metadata, amount } = event.data;
-        const userId = metadata?.userId;
-        const service = metadata?.service || 'donation';
-        const period = metadata?.period || 'monthly';
-        const planTier = metadata?.planTier || 'standard';
+        let userId = metadata?.userId;
+        let service = metadata?.service || 'donation';
+        let period = metadata?.period || 'monthly';
+        let planTier = metadata?.planTier || 'standard';
         const referralCode = metadata?.referralCode;
-        const email = metadata?.email;
-        
+        let email = metadata?.email;
+
+        // LP経由の決済: metadataにuserIdがない場合、金額からプラン情報を推定
+        const lpPlan = amount ? LP_PLAN_AMOUNT_MAP[amount] : null;
+        if (lpPlan && !userId) {
+          service = 'kdl';
+          planTier = lpPlan.planTier;
+          console.log(`📋 LP plan detected by amount (¥${amount}): ${lpPlan.planName}`);
+        }
+
+        // userIdが無い場合、メールアドレスからユーザーを検索
+        if ((!userId || userId === 'anonymous') && email) {
+          const foundUserId = await findUserIdByEmail(supabase, email);
+          if (foundUserId) {
+            userId = foundUserId;
+            console.log(`✅ Found user by email (${email}): ${userId}`);
+          } else {
+            console.warn(`⚠️ No user found for email: ${email}. Subscription will need manual linking.`);
+          }
+        }
+
         if (userId && userId !== 'anonymous') {
           // 汎用subscriptionsテーブルに書き込み
           await supabase.from('subscriptions').upsert({
@@ -79,65 +186,44 @@ export async function POST(req: Request) {
           }, {
             onConflict: 'user_id,service',
           });
-          
+
           // KDLサービスの場合はkdl_subscriptionsテーブルにも書き込み
           if (service === 'kdl') {
-            // 期間終了日を計算（月額: 1ヶ月後、年額: 1年後）
-            const now = new Date();
-            const currentPeriodEnd = new Date(now);
-            if (period === 'yearly') {
-              currentPeriodEnd.setFullYear(currentPeriodEnd.getFullYear() + 1);
-            } else {
-              currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1);
-            }
-            
-            // プラン表示名を生成
-            const planNameMap: Record<string, string> = {
-              'lite': 'ライト',
-              'standard': 'スタンダード',
-              'pro': 'プロ',
-              'business': 'ビジネス',
-              'enterprise': 'エンタープライズ',
-              'initial_trial': '初回トライアル',
-              'initial_standard': '初回スタンダード',
-              'initial_business': '初回ビジネス',
-            };
-            const periodName = period === 'yearly' ? '年額' : '月額';
-            const planName = `KDL ${planNameMap[planTier] || planTier} ${periodName}`;
-            
-            await supabase.from('kdl_subscriptions').upsert({
-              id: id,
-              user_id: userId,
-              provider: 'univapay',
-              status: status === 'active' ? 'active' : 'pending',
+            const periodMonths = lpPlan?.periodMonths
+              || (period === 'yearly' ? 12 : 1);
+            const planName = lpPlan?.planName
+              || (() => {
+                const planNameMap: Record<string, string> = {
+                  'lite': 'ライト', 'standard': 'スタンダード', 'pro': 'プロ',
+                  'business': 'ビジネス', 'enterprise': 'エンタープライズ',
+                  'initial_trial': '初回トライアル', 'initial_standard': '初回スタンダード',
+                  'initial_business': '初回ビジネス',
+                };
+                const periodName = period === 'yearly' ? '年額' : '月額';
+                return `KDL ${planNameMap[planTier] || planTier} ${periodName}`;
+              })();
+
+            await createKdlSubscription(supabase, {
+              id,
+              userId,
+              email: email || null,
               amount: amount || 0,
-              currency: 'jpy',
-              period: period,
-              plan_tier: planTier,
-              plan_name: planName,
-              email: email,
-              current_period_start: now.toISOString(),
-              current_period_end: currentPeriodEnd.toISOString(),
-              next_payment_date: currentPeriodEnd.toISOString(),
-              metadata: { referralCode, originalStatus: status },
-              created_at: now.toISOString(),
-              updated_at: now.toISOString(),
-            }, {
-              onConflict: 'id',
+              planTier,
+              period,
+              planName,
+              periodMonths,
+              status,
+              referralCode,
             });
-            
-            console.log(`✅ KDL Subscription created in kdl_subscriptions: ${id}, plan: ${planTier}, period: ${period}`);
           }
-          
+
           console.log(`✅ Subscription created for user ${userId}: ${id}`);
-          
-          // アフィリエイト成約を記録（KDLおよびメインサイト対応）
-          // 1. まずmetadataからのreferralCodeを試す
-          // 2. なければpendingレコードからメールアドレスでマッチング
+
+          // アフィリエイト成約を記録
           let finalReferralCode = referralCode;
           let finalPlanTier = planTier;
           let finalPeriod = period;
-          
+
           // metadataにreferralCodeがない場合、pendingレコードを検索
           if (!finalReferralCode && email) {
             try {
@@ -146,7 +232,7 @@ export async function POST(req: Request) {
                 p_service: service,
                 p_subscription_id: id,
               });
-              
+
               if (pendingMatch && pendingMatch.length > 0) {
                 finalReferralCode = pendingMatch[0].referral_code;
                 finalPlanTier = pendingMatch[0].plan_tier || planTier;
@@ -157,17 +243,16 @@ export async function POST(req: Request) {
               console.warn('⚠️ Failed to match pending affiliate:', pendingErr);
             }
           }
-          
+
           if (finalReferralCode) {
             try {
-              // サービス設定から報酬率を取得
               const serviceSetting = await getAffiliateServiceSetting(service);
               const commissionRate = serviceSetting.data?.commission_rate || 20;
               const isEnabled = serviceSetting.data?.enabled ?? true;
 
               if (isEnabled) {
                 console.log(`📊 Affiliate service setting for ${service}: rate=${commissionRate}%, enabled=${isEnabled}`);
-                
+
                 const result = await recordAffiliateConversion(
                   finalReferralCode,
                   service,
@@ -189,6 +274,9 @@ export async function POST(req: Request) {
               console.error('Affiliate conversion error:', affErr);
             }
           }
+        } else {
+          // ユーザーが見つからない場合でもログに記録
+          console.warn(`⚠️ Subscription created but no user found: id=${id}, email=${email || 'none'}, amount=${amount}`);
         }
         break;
       }
@@ -265,14 +353,83 @@ export async function POST(req: Request) {
 
       case 'charge.succeeded': {
         const { id, amount, metadata } = event.data;
-        const userId = metadata?.userId;
-        const service = metadata?.service || 'donation';
-        
-        // 課金成功をログに記録
-        console.log(`✅ Charge succeeded: ${id}, amount: ${amount}, user: ${userId}, service: ${service}`);
-        
-        // 必要に応じて課金履歴テーブルに記録
-        // await supabase.from('payment_history').insert({...});
+        let chargeUserId = metadata?.userId;
+        const chargeService = metadata?.service || 'donation';
+        const chargeEmail = metadata?.email;
+
+        console.log(`✅ Charge succeeded: ${id}, amount: ${amount}, user: ${chargeUserId}, service: ${chargeService}`);
+
+        // LP経由の一括払い: 金額からKDLプランを推定
+        const chargeLpPlan = amount ? LP_PLAN_AMOUNT_MAP[amount] : null;
+        if (chargeLpPlan) {
+          // userIdが無い場合、メールアドレスからユーザーを検索
+          if ((!chargeUserId || chargeUserId === 'anonymous') && chargeEmail) {
+            const foundId = await findUserIdByEmail(supabase, chargeEmail);
+            if (foundId) {
+              chargeUserId = foundId;
+              console.log(`✅ Found user by email for charge (${chargeEmail}): ${chargeUserId}`);
+            }
+          }
+
+          if (chargeUserId && chargeUserId !== 'anonymous') {
+            // kdl_subscriptionsテーブルに書き込み
+            await createKdlSubscription(supabase, {
+              id,
+              userId: chargeUserId,
+              email: chargeEmail || null,
+              amount: amount || 0,
+              planTier: chargeLpPlan.planTier,
+              period: 'monthly',
+              planName: chargeLpPlan.planName,
+              periodMonths: chargeLpPlan.periodMonths,
+              status: 'active',
+            });
+
+            // 汎用subscriptionsテーブルにも書き込み
+            await supabase.from('subscriptions').upsert({
+              user_id: chargeUserId,
+              subscription_id: id,
+              status: 'active',
+              service: 'kdl',
+              period: 'monthly',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'user_id,service',
+            });
+
+            console.log(`✅ KDL subscription created from charge: ${id}, plan: ${chargeLpPlan.planName}`);
+
+            // アフィリエイトpendingマッチング
+            if (chargeEmail) {
+              try {
+                const { data: pendingMatch } = await supabase.rpc('match_pending_affiliate', {
+                  p_email: chargeEmail.toLowerCase(),
+                  p_service: 'kdl',
+                  p_subscription_id: id,
+                });
+                if (pendingMatch && pendingMatch.length > 0) {
+                  const serviceSetting = await getAffiliateServiceSetting('kdl');
+                  if (serviceSetting.data?.enabled !== false) {
+                    await recordAffiliateConversion(
+                      pendingMatch[0].referral_code,
+                      'kdl',
+                      id,
+                      chargeUserId,
+                      chargeLpPlan.planTier,
+                      'monthly',
+                      amount || 0
+                    );
+                  }
+                }
+              } catch (affErr) {
+                console.warn('⚠️ Affiliate matching error on charge:', affErr);
+              }
+            }
+          } else {
+            console.warn(`⚠️ KDL charge succeeded but no user found: id=${id}, email=${chargeEmail || 'none'}, amount=${amount}`);
+          }
+        }
         break;
       }
 
