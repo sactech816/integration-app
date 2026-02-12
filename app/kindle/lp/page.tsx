@@ -3,7 +3,9 @@ import { Metadata } from 'next';
 // import KindleLPClient from './KindleLPClient';        // オリジナル（バックアップ）
 // import KindleLPClient from './KindleLPClientV1';      // V1: 新規顧客向けパターン1（期間集中プランのみ）
 // import KindleLPClient from './KindleLPClientV2';      // V2: 新規顧客向けパターン2（期間集中プランのみ・A/Bテスト用）
-import KindleLPClient from './KindleLPClientV2';         // V3: 提供されたLP内容ベース（シンプルヘッダー＋KDLフッター＋スクロールトップボタン）
+// import KindleLPClient from './KindleLPClientV3';         // V3: 提供されたLP内容ベース（シンプルヘッダー＋KDLフッター＋スクロールトップボタン）
+import KindleLPClient from './KindleLPClientV2';      // V2: 新規顧客向けパターン2（期間集中プランのみ・A/Bテスト用）
+
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
