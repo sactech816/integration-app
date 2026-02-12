@@ -129,7 +129,7 @@ async function getHealthSummary(supabase: any, service: string) {
         .select('plan_tier, custom_outline_model, custom_writing_model, backup_outline_model, backup_writing_model')
         .eq('service', service),
       supabase.from('service_plans')
-        .select('plan_tier, is_active, daily_ai_limit')
+        .select('plan_tier, is_active, ai_daily_limit')
         .eq('service', service),
     ]);
 
@@ -159,7 +159,7 @@ async function getHealthSummary(supabase: any, service: string) {
     } else {
       const activePlans = planData.filter((p: any) => p.is_active);
       for (const plan of activePlans) {
-        if (plan.daily_ai_limit === 0) {
+        if (plan.ai_daily_limit === 0) {
           planSettingsStatus = 'warning';
           break;
         }

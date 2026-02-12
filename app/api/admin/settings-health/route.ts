@@ -128,7 +128,7 @@ async function checkPlanSettings(
 ): Promise<CheckResult> {
   const { data, error } = await supabase
     .from('service_plans')
-    .select('plan_tier, is_active, monthly_price, yearly_price, daily_ai_limit, monthly_ai_limit')
+    .select('plan_tier, is_active, price, price_type, ai_daily_limit, ai_monthly_limit')
     .eq('service', service);
 
   if (error) {
@@ -147,7 +147,7 @@ async function checkPlanSettings(
   const inactivePlans = data.filter(p => !p.is_active);
 
   for (const plan of activePlans) {
-    if (plan.daily_ai_limit === 0) {
+    if (plan.ai_daily_limit === 0) {
       issues.push(`${plan.plan_tier}: 日次AI制限が0（AI使用不可）`);
     }
   }
