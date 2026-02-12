@@ -767,8 +767,8 @@ function KindleListPageContent() {
         </div>
       ) : (
         <>
-      {/* 未加入者向けサブスク促進バナー */}
-      {showBanner && !loadingSubscription && !subscriptionStatus?.hasActiveSubscription && !isAdmin && (
+      {/* 未加入者向けサブスク促進バナー - 一旦非表示 */}
+      {/* {showBanner && !loadingSubscription && !subscriptionStatus?.hasActiveSubscription && !isAdmin && (
         <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white rounded-xl mb-6">
           <div className="px-4 py-4">
             <div className="flex items-center justify-between gap-4">
@@ -805,7 +805,7 @@ function KindleListPageContent() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* 加入者向けステータス表示 */}
       {!loadingSubscription && subscriptionStatus?.hasActiveSubscription && !isAdmin && (
