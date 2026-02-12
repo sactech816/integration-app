@@ -27,6 +27,7 @@ import {
   Megaphone,
   Wrench,
   DollarSign,
+  LayoutDashboard,
 } from 'lucide-react';
 
 export type MenuSection = 'main' | 'settings' | 'admin';
@@ -346,6 +347,7 @@ export default function SidebarNav({
             <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[10px]">ADMIN</span>
           </h3>
           <div className="space-y-1">
+            {renderMenuItem({ id: 'admin-overview', label: '管理概要', icon: LayoutDashboard, section: 'admin', adminOnly: true })}
             {adminGroups.map(renderAdminGroup)}
           </div>
         </div>

@@ -28,6 +28,7 @@ import Sidebar from './components/Sidebar';
 import MainContent, { ActiveView } from './components/MainContent';
 import { UserManager, AnnouncementManager, UserExport, CleanupManager } from './components/Admin';
 import OwnershipTransfer from './components/Admin/OwnershipTransfer';
+import AdminOverview from './components/Admin/AdminOverview';
 
 // カスタムフック
 import { useDashboardData } from './hooks/useDashboardData';
@@ -330,6 +331,12 @@ function DashboardContent() {
   // 管理者コンポーネントの準備（遅延レンダリング：表示時のみマウント）
   const adminComponents = isAdmin
     ? {
+        Overview: () => (
+          <AdminOverview
+            onNavigate={(viewId) => setActiveView(viewId as ActiveView)}
+            service="makers"
+          />
+        ),
         UserManager: () => (
           <div className="space-y-6">
             <UserExport

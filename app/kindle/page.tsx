@@ -22,7 +22,9 @@ import { EducationContent } from '@/components/kindle/education';
 import { AnnouncementList } from '@/components/kindle/announcements';
 import AffiliateManager from '@/app/dashboard/components/Admin/AffiliateManager';
 import AdminAIUsageStats from '@/components/shared/AdminAIUsageStats';
+import AdminFeatureLimitsSettings from '@/components/shared/AdminFeatureLimitsSettings';
 import SettingsHealthBadge from '@/components/shared/SettingsHealthBadge';
+import AdminOverview from '@/app/dashboard/components/Admin/AdminOverview';
 
 // プラン名を詳細表示するヘルパー関数
 const getPlanDisplayName = (planTier?: string, planType?: string, isMonitor?: boolean): string => {
@@ -605,6 +607,22 @@ function KindleListPageContent() {
       {/* 出版準備ガイド表示（サイドバーから選択時） */}
       {activeMenuItem === 'publish-guide' ? (
         <PublishGuideContent />
+      ) : activeMenuItem === 'admin-overview' && user && isAdmin ? (
+        /* 管理者ダッシュボード概要 */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('dashboard')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <AdminOverview
+            onNavigate={(viewId) => setActiveMenuItem(viewId)}
+            service="kdl"
+          />
+        </div>
       ) : activeMenuItem === 'admin-ai-model' && user && isAdmin ? (
         /* AIモデル設定画面（管理者のみ） */
         <div className="space-y-6">

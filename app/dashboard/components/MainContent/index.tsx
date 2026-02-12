@@ -26,6 +26,7 @@ export type ActiveView =
   | 'kindle'
   | 'affiliate'
   | 'settings'
+  | 'admin-overview'
   | 'admin-users'
   | 'admin-announcements'
   | 'admin-monitor'
@@ -92,6 +93,7 @@ type MainContentProps = {
   onLogout: () => void;
   // 管理者コンポーネント（遅延レンダリング関数）
   adminComponents?: {
+    Overview?: () => React.ReactNode;
     UserManager?: () => React.ReactNode;
     AnnouncementManager?: () => React.ReactNode;
     MonitorManager?: () => React.ReactNode;
@@ -250,6 +252,10 @@ export default function MainContent({
       )}
 
       {/* 管理者メニュー */}
+      {activeView === 'admin-overview' && adminComponents?.Overview && (
+        <>{adminComponents.Overview()}</>
+      )}
+
       {activeView === 'admin-users' && adminComponents?.UserManager && (
         <>{adminComponents.UserManager()}</>
       )}
@@ -287,7 +293,7 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'quiz', 'profile', 'business', 'salesletter', 'booking', 'attendance', 'survey', 'my-games', 'affiliate', 'settings', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup'].includes(activeView) && (
+      {!['dashboard', 'quiz', 'profile', 'business', 'salesletter', 'booking', 'attendance', 'survey', 'my-games', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>

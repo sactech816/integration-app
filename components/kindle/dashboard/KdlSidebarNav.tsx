@@ -23,6 +23,7 @@ import {
   UserCog,
   ChevronDown,
   ChevronRight,
+  LayoutDashboard,
 } from 'lucide-react';
 
 export type KdlUserRole = 'user' | 'agency' | 'admin';
@@ -346,6 +347,7 @@ export default function KdlSidebarNav({
             <span className="bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded text-[10px]">ADMIN</span>
           </h3>
           <div className="space-y-1">
+            {renderMenuItem({ id: 'admin-overview', label: '管理概要', icon: LayoutDashboard, section: 'admin', roles: ['admin'] })}
             {adminGroups.map(renderAdminGroup)}
           </div>
         </div>
