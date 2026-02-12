@@ -96,6 +96,6 @@ BEGIN
   
   RETURN deleted_count;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- 使用例: SELECT cleanup_orphan_analytics();

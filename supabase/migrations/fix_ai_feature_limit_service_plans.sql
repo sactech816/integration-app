@@ -127,7 +127,7 @@ BEGIN
     END,
     v_plan_tier;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- コメント更新
 COMMENT ON FUNCTION check_ai_feature_limit IS '機能タイプごとのAI使用量をチェック。service_plans.ai_daily_limitを優先的に参照し、制限内かどうかを返す。';

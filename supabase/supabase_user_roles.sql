@@ -45,7 +45,7 @@ BEGIN
   
   RETURN COALESCE(is_partner_status, false);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: パートナーステータス設定
@@ -85,7 +85,7 @@ EXCEPTION
   WHEN OTHERS THEN
     RETURN false;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: 全ユーザー一覧取得（管理者用）
@@ -120,7 +120,7 @@ BEGIN
   GROUP BY au.id, au.email, ur.is_partner, ur.partner_since, ur.partner_note, au.created_at
   ORDER BY au.created_at DESC;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- ページネーション対応版（ポイント残高含む）
 DROP FUNCTION IF EXISTS get_all_users_with_roles_paginated(INTEGER, INTEGER, TEXT);
@@ -184,7 +184,7 @@ BEGIN
   LIMIT p_per_page
   OFFSET v_offset;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 
 

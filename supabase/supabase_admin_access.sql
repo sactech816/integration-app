@@ -17,7 +17,7 @@ BEGIN
     AND role = 'admin'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- ===========================================
 -- 2. 予約管理のRLSポリシー追加

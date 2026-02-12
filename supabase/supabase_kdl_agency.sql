@@ -327,7 +327,7 @@ BEGIN
     AND kau.status = 'active'
   GROUP BY au.id, au.email;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- 未読メッセージ数を取得
 CREATE OR REPLACE FUNCTION get_unread_message_count(p_user_id UUID)
@@ -343,7 +343,7 @@ BEGIN
   
   RETURN v_count;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- ============================================
 -- 7. 更新日時自動更新トリガー

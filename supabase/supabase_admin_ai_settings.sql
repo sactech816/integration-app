@@ -112,7 +112,7 @@ RETURNS TABLE (
   custom_writing_model TEXT,
   backup_outline_model TEXT,
   backup_writing_model TEXT
-) LANGUAGE plpgsql SECURITY DEFINER AS $$
+) LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
   RETURN QUERY
   SELECT 
@@ -145,7 +145,7 @@ CREATE OR REPLACE FUNCTION update_ai_setting(
   p_backup_outline_model TEXT DEFAULT NULL,
   p_backup_writing_model TEXT DEFAULT NULL
 )
-RETURNS BOOLEAN LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS BOOLEAN LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
   INSERT INTO admin_ai_settings (
     service,
@@ -260,7 +260,7 @@ EXCEPTION
   WHEN OTHERS THEN
     RETURN false;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 COMMENT ON FUNCTION set_admin_status IS '管理者フラグを設定（Supabase Studioから実行）';
 

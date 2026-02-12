@@ -85,7 +85,7 @@ RETURNS TABLE (
   selected_preset TEXT,
   custom_outline_model TEXT,
   custom_writing_model TEXT
-) LANGUAGE plpgsql SECURITY DEFINER AS $$
+) LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
   RETURN QUERY
   SELECT 
@@ -110,7 +110,7 @@ CREATE OR REPLACE FUNCTION update_ai_setting(
   p_updated_by UUID DEFAULT NULL,
   p_service TEXT DEFAULT 'kdl'
 )
-RETURNS BOOLEAN LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS BOOLEAN LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
   INSERT INTO admin_ai_settings (
     service,

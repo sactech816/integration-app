@@ -295,7 +295,7 @@ BEGIN
   
   RETURN QUERY SELECT true, v_points, false, v_message;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: ユーザーのゲーミフィケーション設定を取得/作成
@@ -320,7 +320,7 @@ BEGIN
   
   RETURN v_settings;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: ユーザーの通知設定を更新
@@ -355,7 +355,7 @@ BEGIN
   
   RETURN v_settings;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: 今日のデイリーミッション進捗を取得
@@ -395,7 +395,7 @@ BEGIN
   WHERE dm.is_active = true
   ORDER BY dm.display_order;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: ミッション進捗を更新
@@ -457,7 +457,7 @@ BEGIN
     RETURN QUERY SELECT v_mission.id, v_newly_completed, v_mission.reward_points;
   END LOOP;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: ミッション報酬を受け取る
@@ -528,7 +528,7 @@ BEGIN
   
   RETURN QUERY SELECT true, v_mission.reward_points, NULL::TEXT;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: 全ミッション達成ボーナスをチェック
@@ -575,7 +575,7 @@ BEGIN
     v_completed_missions >= v_total_missions AND NOT v_bonus_claimed,
     50; -- 全達成ボーナスは50ポイント
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: 全ミッション達成ボーナスを受け取る
@@ -616,7 +616,7 @@ BEGIN
   
   RETURN QUERY SELECT true, v_check.bonus_points, NULL::TEXT;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: 管理者設定を取得
@@ -633,7 +633,7 @@ BEGIN
   
   RETURN COALESCE(v_value, '{}'::JSONB);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: 管理者設定を更新
@@ -658,7 +658,7 @@ BEGIN
   
   RETURN v_settings;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- gamification_campaigns テーブルの拡張

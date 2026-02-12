@@ -30,12 +30,14 @@ ALTER TABLE monitor_users ENABLE ROW LEVEL SECURITY;
 -- 4. RLSポリシーの作成
 -- サービスロール（バックエンドAPI）のみがすべての操作を実行可能
 -- フロントエンドからの直接アクセスは制限
+DROP POLICY IF EXISTS "Service role can manage monitor users" ON monitor_users;
 CREATE POLICY "Service role can manage monitor users"
   ON monitor_users FOR ALL
   USING (true)
   WITH CHECK (true);
 
 -- ユーザーは自分のモニター情報のみ閲覧可能
+DROP POLICY IF EXISTS "Users can view their own monitor status" ON monitor_users;
 CREATE POLICY "Users can view their own monitor status"
   ON monitor_users FOR SELECT
   USING (user_id = auth.uid());
@@ -49,6 +51,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_monitor_users_updated_at ON monitor_users;
 CREATE TRIGGER trigger_update_monitor_users_updated_at
   BEFORE UPDATE ON monitor_users
   FOR EACH ROW
@@ -221,8 +224,9 @@ COMMENT ON COLUMN monitor_users.monitor_expires_at IS 'モニター終了日時�
 COMMENT ON COLUMN monitor_users.notes IS '管理者メモ（付与理由など）';
 
 -- 9. 有効なモニター権限を確認するヘルパービュー（オプション）
-CREATE OR REPLACE VIEW active_monitor_users AS
-SELECT 
+CREATE OR REPLACE VIEW active_monitor_users
+WITH (security_invoker = true) AS
+SELECT
   *,
   (monitor_expires_at > NOW() AND monitor_start_at <= NOW()) AS is_active
 FROM monitor_users

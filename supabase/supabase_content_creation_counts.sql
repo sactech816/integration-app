@@ -43,7 +43,7 @@ BEGIN
   WHERE content_type = TG_ARGV[0];
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 COMMENT ON FUNCTION increment_content_count() IS 'コンテンツ作成時に累計カウントをインクリメントするトリガー関数';
 

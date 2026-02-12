@@ -171,7 +171,7 @@ BEGIN
     v_new_balance,
     v_points_won;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- 3. 既存のサンプルキャンペーン景品にポイント報酬を設定

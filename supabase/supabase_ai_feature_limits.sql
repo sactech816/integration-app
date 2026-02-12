@@ -105,7 +105,7 @@ BEGIN
     END,
     v_plan_tier;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- デフォルトのAI機能制限を設定（既存プランに対して）
 INSERT INTO admin_ai_settings (plan_tier, feature_limits)

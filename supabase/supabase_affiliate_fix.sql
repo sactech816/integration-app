@@ -54,7 +54,7 @@ BEGIN
   out_status := 'active';
   RETURN NEXT;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- コメント
 COMMENT ON FUNCTION register_affiliate IS 'アフィリエイター登録（紹介コード自動発行）- 修正版';

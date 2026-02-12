@@ -45,7 +45,7 @@ RETURNS VOID AS $$
 BEGIN
     UPDATE quizzes SET views_count = COALESCE(views_count, 0) + 1 WHERE id = row_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- 完了数を1増加
 CREATE OR REPLACE FUNCTION increment_completions(row_id BIGINT)
@@ -53,7 +53,7 @@ RETURNS VOID AS $$
 BEGIN
     UPDATE quizzes SET completions_count = COALESCE(completions_count, 0) + 1 WHERE id = row_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- クリック数を1増加
 CREATE OR REPLACE FUNCTION increment_clicks(row_id BIGINT)
@@ -61,7 +61,7 @@ RETURNS VOID AS $$
 BEGIN
     UPDATE quizzes SET clicks_count = COALESCE(clicks_count, 0) + 1 WHERE id = row_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- いいね数を1増加
 CREATE OR REPLACE FUNCTION increment_likes(row_id BIGINT)
@@ -69,7 +69,7 @@ RETURNS VOID AS $$
 BEGIN
     UPDATE quizzes SET likes_count = COALESCE(likes_count, 0) + 1 WHERE id = row_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- 共通リードテーブル

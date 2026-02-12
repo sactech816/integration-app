@@ -285,7 +285,7 @@ BEGIN
   
   RETURN QUERY SELECT v_affiliate_id, v_code, 'active'::TEXT;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- アフィリエイト統計取得関数
 CREATE OR REPLACE FUNCTION get_affiliate_stats(p_user_id UUID)
@@ -315,7 +315,7 @@ BEGIN
   FROM affiliates a
   WHERE a.user_id = p_user_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- クリック記録関数
 CREATE OR REPLACE FUNCTION record_affiliate_click(
@@ -351,7 +351,7 @@ BEGIN
   
   RETURN v_click_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- 成約記録関数
 CREATE OR REPLACE FUNCTION record_affiliate_conversion(
@@ -405,7 +405,7 @@ BEGIN
   
   RETURN v_conversion_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- 6. トリガー
 -- =====================================================

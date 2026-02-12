@@ -113,7 +113,7 @@ BEGIN
   ORDER BY s.created_at DESC
   LIMIT 1;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: サブスクリプション統計取得（管理者用）
@@ -138,7 +138,7 @@ BEGIN
     ) as canceled_this_month
   FROM subscriptions;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- トリガー: updated_at自動更新

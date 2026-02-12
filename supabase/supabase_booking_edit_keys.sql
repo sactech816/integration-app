@@ -115,6 +115,7 @@ CREATE OR REPLACE FUNCTION public.verify_booking_menu_edit_key(
 RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = ''
 AS $$
 BEGIN
   RETURN EXISTS (

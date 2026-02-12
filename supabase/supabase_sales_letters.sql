@@ -79,4 +79,4 @@ BEGIN
   SET views_count = views_count + 1
   WHERE slug = letter_slug;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';

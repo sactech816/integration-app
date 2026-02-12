@@ -142,7 +142,7 @@ BEGIN
     v_monthly_limit,
     (v_daily_usage < v_daily_limit) AND (v_monthly_limit = -1 OR v_monthly_usage < v_monthly_limit);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: AI使用量を記録
@@ -185,7 +185,7 @@ BEGIN
 
   RETURN v_log_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- 管理者用: 統計取得関数
@@ -219,6 +219,6 @@ BEGIN
   WHERE created_at >= p_start_date
   AND created_at < p_end_date + INTERVAL '1 day';
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 

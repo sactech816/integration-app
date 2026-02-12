@@ -96,7 +96,7 @@ BEGIN
   FROM affiliate_service_settings s
   WHERE s.service_type = p_service_type;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- 5. 紹介登録時のポイント付与関数
 -- =====================================================
@@ -176,7 +176,7 @@ BEGIN
   
   RETURN QUERY SELECT true, v_signup_points, v_affiliate_id, 'ポイントを付与しました'::TEXT;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- 6. 成約記録関数の更新（サービス設定から報酬率を取得）
 -- =====================================================
@@ -251,7 +251,7 @@ BEGIN
   
   RETURN v_conversion_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- 7. コメント
 -- =====================================================

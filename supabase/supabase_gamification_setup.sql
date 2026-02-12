@@ -305,7 +305,7 @@ BEGIN
   
   RETURN QUERY SELECT true, v_new_points, v_log_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: スタンプ取得チェック
@@ -341,7 +341,7 @@ BEGIN
   
   RETURN v_exists;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: ログインボーナス取得チェック（JST基準）
@@ -380,7 +380,7 @@ BEGIN
   
   RETURN v_exists;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: ガチャ抽選
@@ -501,7 +501,7 @@ BEGIN
     v_selected_prize.is_winning,
     v_new_balance;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: ユーザーのスタンプ取得状況
@@ -542,7 +542,7 @@ BEGIN
     ORDER BY stamp_index;
   END IF;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: ポイント残高取得
@@ -574,7 +574,7 @@ BEGIN
     RETURN QUERY SELECT 0, 0;
   END IF;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- RPC関数: キャンペーン統計（管理者用）
@@ -597,7 +597,7 @@ BEGIN
   FROM point_logs
   WHERE campaign_id = p_campaign_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- =============================================
 -- トリガー: updated_at自動更新

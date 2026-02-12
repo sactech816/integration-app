@@ -245,7 +245,7 @@ RETURNS TABLE (
   last_accessed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ,
   days_inactive INTEGER
-) LANGUAGE plpgsql SECURITY DEFINER AS $$
+) LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE
   settings RECORD;
 BEGIN
@@ -513,7 +513,7 @@ CREATE OR REPLACE FUNCTION execute_cleanup(
   p_dry_run BOOLEAN DEFAULT true,
   p_executed_by UUID DEFAULT NULL
 )
-RETURNS UUID LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS UUID LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE
   settings RECORD;
   log_id UUID;

@@ -157,8 +157,9 @@ $$;
 
 -- 8. active_monitor_usersビューの更新
 DROP VIEW IF EXISTS active_monitor_users;
-CREATE OR REPLACE VIEW active_monitor_users AS
-SELECT 
+CREATE OR REPLACE VIEW active_monitor_users
+WITH (security_invoker = true) AS
+SELECT
   *,
   (monitor_expires_at > NOW() AND monitor_start_at <= NOW()) AS is_active
 FROM monitor_users
