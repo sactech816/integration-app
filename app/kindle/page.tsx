@@ -25,6 +25,12 @@ import AdminAIUsageStats from '@/components/shared/AdminAIUsageStats';
 import AdminFeatureLimitsSettings from '@/components/shared/AdminFeatureLimitsSettings';
 import SettingsHealthBadge from '@/components/shared/SettingsHealthBadge';
 import AdminOverview from '@/app/dashboard/components/Admin/AdminOverview';
+// 代理店機能コンポーネント
+import AgencyUserList from '@/components/kindle/agency/AgencyUserList';
+import AgencyProgressView from '@/components/kindle/agency/AgencyProgressView';
+import AgencyFeedbackView from '@/components/kindle/agency/AgencyFeedbackView';
+import AgencyMessagesView from '@/components/kindle/agency/AgencyMessagesView';
+import AdminAgencyManager from '@/components/kindle/agency/AdminAgencyManager';
 
 // プラン名を詳細表示するヘルパー関数
 const getPlanDisplayName = (planTier?: string, planType?: string, isMonitor?: boolean): string => {
@@ -141,10 +147,19 @@ function KindleListPageContent() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
+  // 代理店関連の状態
+  const [isAgency, setIsAgency] = useState(false);
+  const [agencyId, setAgencyId] = useState<string | null>(null);
+
+  // 代理店ビュー間のナビゲーション用ステート
+  const [selectedAgencyUserId, setSelectedAgencyUserId] = useState<string | undefined>();
+  const [selectedBookId, setSelectedBookId] = useState<string | undefined>();
+  const [selectedSectionId, setSelectedSectionId] = useState<string | undefined>();
+
   // ユーザーロールを決定
   const getUserRole = (): KdlUserRole => {
     if (isAdmin) return 'admin';
-    // TODO: 代理店判定を追加
+    if (isAgency) return 'agency';
     return 'user';
   };
 
@@ -164,6 +179,36 @@ function KindleListPageContent() {
       setIsAdmin(false);
     }
   }, [user]);
+
+  // 代理店ステータスチェック
+  useEffect(() => {
+    const checkAgencyStatus = async () => {
+      if (!user || !supabase || isAdmin) {
+        setIsAgency(false);
+        setAgencyId(null);
+        return;
+      }
+      try {
+        const { data } = await supabase
+          .from('kdl_agencies')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .single();
+        if (data) {
+          setIsAgency(true);
+          setAgencyId(data.id);
+        } else {
+          setIsAgency(false);
+          setAgencyId(null);
+        }
+      } catch {
+        setIsAgency(false);
+        setAgencyId(null);
+      }
+    };
+    checkAgencyStatus();
+  }, [user, isAdmin]);
 
   // ユーザーとサブスク状態を取得
   useEffect(() => {
@@ -407,8 +452,7 @@ function KindleListPageContent() {
       case 'agency-progress':
       case 'agency-feedback':
       case 'agency-messages':
-        // TODO: 代理店機能を実装
-        alert('代理店機能は準備中です');
+        // 代理店機能: setActiveMenuItemで画面切り替え（すでに上で設定済み）
         break;
       case 'admin-users':
       case 'admin-announcements':
@@ -417,6 +461,7 @@ function KindleListPageContent() {
       case 'admin-service':
       case 'admin-ai-model':
       case 'admin-affiliate':
+      case 'admin-agency':
         // 管理者機能: setActiveMenuItemで画面切り替え（すでに上で設定済み）
         break;
       case 'settings':
@@ -748,6 +793,105 @@ function KindleListPageContent() {
             </button>
           </div>
           <AnnouncementList userId={user?.id} accessToken={accessToken || undefined} />
+        </div>
+      ) : activeMenuItem === 'agency-users' && user && (isAgency || isAdmin) && agencyId ? (
+        /* 担当ユーザー一覧（代理店機能） */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('dashboard')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <AgencyUserList
+            agencyId={agencyId}
+            accessToken={accessToken || undefined}
+            onSelectUser={(uid) => {
+              setSelectedAgencyUserId(uid);
+              setActiveMenuItem('agency-progress');
+            }}
+            onFeedback={(uid) => {
+              setSelectedAgencyUserId(uid);
+              setActiveMenuItem('agency-feedback');
+            }}
+            onMessage={(uid) => {
+              setSelectedAgencyUserId(uid);
+              setActiveMenuItem('agency-messages');
+            }}
+          />
+        </div>
+      ) : activeMenuItem === 'agency-progress' && user && (isAgency || isAdmin) && agencyId && accessToken ? (
+        /* 進捗管理（代理店機能） */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('agency-users')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← 担当ユーザー一覧に戻る
+            </button>
+          </div>
+          <AgencyProgressView
+            agencyId={agencyId}
+            accessToken={accessToken}
+            selectedUserId={selectedAgencyUserId}
+            onFeedback={(uid, bookId, sectionId) => {
+              setSelectedAgencyUserId(uid);
+              setSelectedBookId(bookId);
+              setSelectedSectionId(sectionId);
+              setActiveMenuItem('agency-feedback');
+            }}
+          />
+        </div>
+      ) : activeMenuItem === 'agency-feedback' && user && (isAgency || isAdmin) && agencyId && accessToken ? (
+        /* 添削・フィードバック（代理店機能） */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('agency-users')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← 担当ユーザー一覧に戻る
+            </button>
+          </div>
+          <AgencyFeedbackView
+            agencyId={agencyId}
+            accessToken={accessToken}
+            initialBookId={selectedBookId}
+            initialSectionId={selectedSectionId}
+          />
+        </div>
+      ) : activeMenuItem === 'agency-messages' && user && (isAgency || isAdmin) && agencyId && accessToken ? (
+        /* メッセージ（代理店機能） */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('agency-users')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← 担当ユーザー一覧に戻る
+            </button>
+          </div>
+          <AgencyMessagesView
+            agencyId={agencyId}
+            userId={user.id}
+            accessToken={accessToken}
+          />
+        </div>
+      ) : activeMenuItem === 'admin-agency' && user && isAdmin && accessToken ? (
+        /* 代理店管理画面（管理者のみ） */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => setActiveMenuItem('dashboard')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <AdminAgencyManager userId={user.id} accessToken={accessToken} />
         </div>
       ) : activeMenuItem === 'settings' && user ? (
         /* アカウント設定画面 */

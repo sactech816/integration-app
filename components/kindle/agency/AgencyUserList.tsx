@@ -19,6 +19,7 @@ interface AgencyUser {
 
 interface AgencyUserListProps {
   agencyId: string;
+  accessToken?: string;
   onSelectUser?: (userId: string) => void;
   onFeedback?: (userId: string, bookId?: string) => void;
   onMessage?: (userId: string) => void;
@@ -26,6 +27,7 @@ interface AgencyUserListProps {
 
 export default function AgencyUserList({
   agencyId,
+  accessToken,
   onSelectUser,
   onFeedback,
   onMessage,
@@ -40,43 +42,16 @@ export default function AgencyUserList({
       setError(null);
       
       try {
-        // TODO: API実装後に接続
-        // const response = await fetch(`/api/kdl/agency/users?agency_id=${agencyId}`);
-        // const data = await response.json();
-        // setUsers(data.users);
-        
-        // デモデータ
-        setUsers([
-          {
-            user_id: 'demo-user-1',
-            user_email: 'user1@example.com',
-            total_books: 2,
-            total_sections: 15,
-            completed_sections: 8,
-            progress_percentage: 53.3,
-            assigned_at: '2024-01-15T00:00:00Z',
-            note: '初心者、丁寧なサポートが必要',
-          },
-          {
-            user_id: 'demo-user-2',
-            user_email: 'user2@example.com',
-            total_books: 1,
-            total_sections: 9,
-            completed_sections: 9,
-            progress_percentage: 100,
-            assigned_at: '2024-01-10T00:00:00Z',
-            note: '完成間近',
-          },
-          {
-            user_id: 'demo-user-3',
-            user_email: 'user3@example.com',
-            total_books: 3,
-            total_sections: 27,
-            completed_sections: 5,
-            progress_percentage: 18.5,
-            assigned_at: '2024-01-20T00:00:00Z',
-          },
-        ]);
+        const headers: Record<string, string> = {};
+        if (accessToken) {
+          headers['Authorization'] = `Bearer ${accessToken}`;
+        }
+        const response = await fetch('/api/kdl/agency/users', { headers });
+        if (!response.ok) {
+          throw new Error('ユーザー一覧の取得に失敗しました');
+        }
+        const data = await response.json();
+        setUsers(data.users || []);
       } catch (err: any) {
         setError(err.message || 'ユーザー一覧の取得に失敗しました');
       } finally {

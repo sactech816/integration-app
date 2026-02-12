@@ -195,6 +195,14 @@ export default function KdlSidebarNav({
         { id: 'admin-affiliate', label: 'アフィリエイト管理', icon: DollarSign, section: 'admin', roles: ['admin'] },
       ],
     },
+    {
+      id: 'group-agency',
+      label: '代理店管理',
+      icon: Shield,
+      items: [
+        { id: 'admin-agency', label: '代理店管理', icon: Shield, section: 'admin', roles: ['admin'] },
+      ],
+    },
   ];
 
   // ロールに基づいてメニュー項目をフィルタリング
