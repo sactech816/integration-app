@@ -104,8 +104,8 @@ export default function KdlSidebar({
         assignedUserCount={assignedUserCount}
       />
 
-      {/* 継続プラン案内バナー */}
-      {showRenewalBanner && userRole === 'user' && (
+      {/* 継続プラン案内バナー - 一旦非表示 */}
+      {/* {showRenewalBanner && userRole === 'user' && (
         <div className="p-3 mt-auto">
           <Link
             href="/kindle/lp-renewal"
@@ -116,7 +116,7 @@ export default function KdlSidebar({
               <span className="font-bold text-sm">継続プランのご案内</span>
             </div>
             <p className="text-xs text-white/90 mb-3">
-              {isMonitor 
+              {isMonitor
                 ? 'モニター期間終了後も継続してご利用いただけます'
                 : '月額プランでさらにお得に執筆を続けませんか？'
               }
@@ -133,7 +133,7 @@ export default function KdlSidebar({
             </div>
           </Link>
         </div>
-      )}
+      )} */}
 
       {/* フッターリンク */}
       <div className={`p-4 border-t border-amber-100 space-y-2 ${!showRenewalBanner ? 'mt-auto' : ''}`}>

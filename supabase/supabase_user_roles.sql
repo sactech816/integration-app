@@ -18,11 +18,13 @@ CREATE INDEX IF NOT EXISTS idx_user_roles_is_partner ON user_roles(is_partner) W
 ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
 
 -- ポリシー: 誰でも自分のロール情報を読み取り可能
+DROP POLICY IF EXISTS "Users can read own role" ON user_roles;
 CREATE POLICY "Users can read own role" ON user_roles
   FOR SELECT
   USING (auth.uid() = user_id);
 
 -- ポリシー: サービスロール(管理者)のみ挿入・更新可能
+DROP POLICY IF EXISTS "Service role can manage roles" ON user_roles;
 CREATE POLICY "Service role can manage roles" ON user_roles
   FOR ALL
   USING (true)
@@ -89,6 +91,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- RPC関数: 全ユーザー一覧取得（管理者用）
 -- =============================================
 
+DROP FUNCTION IF EXISTS get_all_users_with_roles();
 CREATE OR REPLACE FUNCTION get_all_users_with_roles()
 RETURNS TABLE (
   user_id UUID,
@@ -104,13 +107,13 @@ BEGIN
   RETURN QUERY
   SELECT 
     au.id as user_id,
-    au.email,
+    au.email::TEXT,
     COALESCE(ur.is_partner, false) as is_partner,
     ur.partner_since,
-    ur.partner_note,
+    ur.partner_note::TEXT,
     au.created_at as user_created_at,
-    COUNT(DISTINCT p.id) as total_purchases,
-    COALESCE(SUM(p.amount), 0) as total_donated
+    COUNT(DISTINCT p.id)::BIGINT as total_purchases,
+    COALESCE(SUM(p.amount), 0)::BIGINT as total_donated
   FROM auth.users au
   LEFT JOIN user_roles ur ON au.id = ur.user_id
   LEFT JOIN purchases p ON au.id = p.user_id
@@ -120,6 +123,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ページネーション対応版（ポイント残高含む）
+DROP FUNCTION IF EXISTS get_all_users_with_roles_paginated(INTEGER, INTEGER, TEXT);
 CREATE OR REPLACE FUNCTION get_all_users_with_roles_paginated(
   p_page INTEGER DEFAULT 1,
   p_per_page INTEGER DEFAULT 10,
@@ -147,15 +151,15 @@ BEGIN
   WITH user_data AS (
     SELECT
       au.id as uid,
-      au.email as uemail,
+      au.email::TEXT as uemail,
       COALESCE(ur.is_partner, false) as uis_partner,
       ur.partner_since as upartner_since,
-      ur.partner_note as upartner_note,
+      ur.partner_note::TEXT as upartner_note,
       au.created_at as ucreated_at,
-      COUNT(DISTINCT p.id) as utotal_purchases,
-      COALESCE(SUM(p.amount), 0) as utotal_donated,
-      COALESCE(upb.current_points, 0) as ucurrent_points,
-      COALESCE(upb.total_accumulated_points, 0) as utotal_accumulated_points
+      COUNT(DISTINCT p.id)::BIGINT as utotal_purchases,
+      COALESCE(SUM(p.amount), 0)::BIGINT as utotal_donated,
+      COALESCE(upb.current_points, 0)::INTEGER as ucurrent_points,
+      COALESCE(upb.total_accumulated_points, 0)::INTEGER as utotal_accumulated_points
     FROM auth.users au
     LEFT JOIN user_roles ur ON au.id = ur.user_id
     LEFT JOIN purchases p ON au.id = p.user_id
@@ -181,8 +185,6 @@ BEGIN
   OFFSET v_offset;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
-
 
 
 
