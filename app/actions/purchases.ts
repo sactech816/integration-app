@@ -331,7 +331,67 @@ export async function getAllUsersWithRoles(): Promise<{
   }
 }
 
+/**
+ * ページネーション対応の全ユーザー情報取得（管理者用）
+ * ポイント残高もJOINで含む
+ */
+export async function getAllUsersWithRolesPaginated(
+  page: number = 1,
+  perPage: number = 10,
+  search?: string
+): Promise<{
+  users: Array<{
+    user_id: string;
+    email: string;
+    is_partner: boolean;
+    partner_since: string | null;
+    partner_note: string | null;
+    user_created_at: string;
+    total_purchases: number;
+    total_donated: number;
+    current_points: number;
+    total_accumulated_points: number;
+  }>;
+  totalCount: number;
+  error?: string;
+}> {
+  try {
+    const supabase = getSupabaseServer();
+    if (!supabase) {
+      return { users: [], totalCount: 0, error: 'Supabase not configured' };
+    }
 
+    const { data, error } = await supabase.rpc('get_all_users_with_roles_paginated', {
+      p_page: page,
+      p_per_page: perPage,
+      p_search: search || null,
+    });
+
+    if (error) {
+      console.error('[Admin] Get paginated users error:', error);
+      return { users: [], totalCount: 0, error: error.message };
+    }
+
+    const totalCount = data?.[0]?.total_count || 0;
+    const users = (data || []).map((row: Record<string, unknown>) => ({
+      user_id: row.user_id as string,
+      email: row.email as string,
+      is_partner: row.is_partner as boolean,
+      partner_since: row.partner_since as string | null,
+      partner_note: row.partner_note as string | null,
+      user_created_at: row.user_created_at as string,
+      total_purchases: row.total_purchases as number,
+      total_donated: row.total_donated as number,
+      current_points: row.current_points as number,
+      total_accumulated_points: row.total_accumulated_points as number,
+    }));
+
+    return { users, totalCount };
+  } catch (error) {
+    console.error('[Admin] Unexpected error:', error);
+    return { users: [], totalCount: 0, error: String(error) };
+  }
+}
 
 
 

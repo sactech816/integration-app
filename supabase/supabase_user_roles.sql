@@ -119,6 +119,69 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- ページネーション対応版（ポイント残高含む）
+CREATE OR REPLACE FUNCTION get_all_users_with_roles_paginated(
+  p_page INTEGER DEFAULT 1,
+  p_per_page INTEGER DEFAULT 10,
+  p_search TEXT DEFAULT NULL
+)
+RETURNS TABLE (
+  user_id UUID,
+  email TEXT,
+  is_partner BOOLEAN,
+  partner_since TIMESTAMPTZ,
+  partner_note TEXT,
+  user_created_at TIMESTAMPTZ,
+  total_purchases BIGINT,
+  total_donated BIGINT,
+  current_points INTEGER,
+  total_accumulated_points INTEGER,
+  total_count BIGINT
+) AS $$
+DECLARE
+  v_offset INTEGER;
+BEGIN
+  v_offset := (p_page - 1) * p_per_page;
+
+  RETURN QUERY
+  WITH user_data AS (
+    SELECT
+      au.id as uid,
+      au.email as uemail,
+      COALESCE(ur.is_partner, false) as uis_partner,
+      ur.partner_since as upartner_since,
+      ur.partner_note as upartner_note,
+      au.created_at as ucreated_at,
+      COUNT(DISTINCT p.id) as utotal_purchases,
+      COALESCE(SUM(p.amount), 0) as utotal_donated,
+      COALESCE(upb.current_points, 0) as ucurrent_points,
+      COALESCE(upb.total_accumulated_points, 0) as utotal_accumulated_points
+    FROM auth.users au
+    LEFT JOIN user_roles ur ON au.id = ur.user_id
+    LEFT JOIN purchases p ON au.id = p.user_id
+    LEFT JOIN user_point_balances upb ON au.id = upb.user_id
+    WHERE (p_search IS NULL OR p_search = '' OR au.email ILIKE '%' || p_search || '%')
+    GROUP BY au.id, au.email, ur.is_partner, ur.partner_since, ur.partner_note, au.created_at, upb.current_points, upb.total_accumulated_points
+    ORDER BY au.created_at DESC
+  )
+  SELECT
+    ud.uid,
+    ud.uemail,
+    ud.uis_partner,
+    ud.upartner_since,
+    ud.upartner_note,
+    ud.ucreated_at,
+    ud.utotal_purchases,
+    ud.utotal_donated,
+    ud.ucurrent_points,
+    ud.utotal_accumulated_points,
+    (SELECT COUNT(*) FROM user_data)::BIGINT as total_count
+  FROM user_data ud
+  LIMIT p_per_page
+  OFFSET v_offset;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 
 
 

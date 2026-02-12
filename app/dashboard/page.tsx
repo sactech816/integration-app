@@ -15,6 +15,7 @@ import AdminFeatureLimitsSettings from '@/components/shared/AdminFeatureLimitsSe
 import AdminAIUsageStats from '@/components/shared/AdminAIUsageStats';
 import AdminPlanSettings from '@/components/shared/AdminPlanSettings';
 import KdlAccessModal from '@/components/shared/KdlAccessModal';
+import SettingsHealthBadge from '@/components/shared/SettingsHealthBadge';
 import AffiliateManager from './components/Admin/AffiliateManager';
 import FeaturedManager from './components/Admin/FeaturedManager';
 import GamificationManager from './components/Admin/GamificationManager';
@@ -206,13 +207,22 @@ function DashboardContent() {
     }
   };
 
-  // 管理者データ取得
+  // 管理者データ取得（各セクション表示時のみ遅延ロード）
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin && activeView === 'admin-users') {
+      adminData.fetchUsersPage(adminData.userPage, adminData.userSearch);
+    }
+    // 所有権移動でもユーザー一覧が必要（全件）
+    if (isAdmin && activeView === 'admin-transfer') {
       adminData.fetchAllUsers();
+    }
+  }, [isAdmin, activeView]);
+
+  useEffect(() => {
+    if (isAdmin && activeView === 'admin-announcements') {
       adminData.fetchAnnouncements();
     }
-  }, [isAdmin]);
+  }, [isAdmin, activeView]);
 
   // KDLサブスクリプション状態を取得
   const fetchKdlSubscription = async () => {
@@ -317,10 +327,10 @@ function DashboardContent() {
     );
   }
 
-  // 管理者コンポーネントの準備
+  // 管理者コンポーネントの準備（遅延レンダリング：表示時のみマウント）
   const adminComponents = isAdmin
     ? {
-        UserManager: (
+        UserManager: () => (
           <div className="space-y-6">
             <UserExport
               exportingCsv={adminData.exportingCsv}
@@ -333,6 +343,10 @@ function DashboardContent() {
               loadingUsers={adminData.loadingUsers}
               userPage={adminData.userPage}
               setUserPage={adminData.setUserPage}
+              userTotalCount={adminData.userTotalCount}
+              userSearch={adminData.userSearch}
+              setUserSearch={adminData.setUserSearch}
+              onFetchPage={adminData.fetchUsersPage}
               editingUserId={adminData.editingUserId}
               setEditingUserId={adminData.setEditingUserId}
               partnerNote={adminData.partnerNote}
@@ -348,7 +362,7 @@ function DashboardContent() {
             />
           </div>
         ),
-        AnnouncementManager: (
+        AnnouncementManager: () => (
           <AnnouncementManager
             announcements={adminData.announcements}
             showAnnouncementForm={adminData.showAnnouncementForm}
@@ -364,26 +378,27 @@ function DashboardContent() {
             onDelete={adminData.handleDeleteAnnouncement}
           />
         ),
-        MonitorManager: user ? (
+        MonitorManager: () => user ? (
           <MonitorUsersManager adminUserId={user.id} adminEmail={user.email} />
         ) : null,
-        ServiceManager: user ? (
+        ServiceManager: () => user ? (
           <div className="space-y-6">
+            <SettingsHealthBadge service="makers" />
             <AdminPlanSettings userId={user.id} userEmail={user.email} serviceFilter="makers" />
             <AdminAIUsageStats userId={user.id} />
           </div>
         ) : null,
-        AIModelManager: user ? (
+        AIModelManager: () => user ? (
           <div className="space-y-6">
             <AdminAISettings userId={user.id} />
             <AdminFeatureLimitsSettings userId={user.id} />
           </div>
         ) : null,
-        GamificationManager: <GamificationManager />,
-        AffiliateManager: <AffiliateManager user={user} />,
-        FeaturedManager: <FeaturedManager />,
-        OwnershipTransfer: <OwnershipTransfer allUsers={adminData.allUsers} />,
-        CleanupManager: <CleanupManager userId={user?.id} />,
+        GamificationManager: () => <GamificationManager />,
+        AffiliateManager: () => <AffiliateManager user={user} />,
+        FeaturedManager: () => <FeaturedManager />,
+        OwnershipTransfer: () => <OwnershipTransfer allUsers={adminData.allUsers} />,
+        CleanupManager: () => <CleanupManager userId={user?.id} />,
       }
     : undefined;
 

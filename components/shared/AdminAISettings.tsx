@@ -44,35 +44,28 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
   const loadSettings = async () => {
     try {
       setLoading(true);
-      const newSettings: Record<string, PlanModelSettings> = {};
 
+      // 一括取得API呼び出し（1リクエストで全プラン分取得）
+      const response = await fetch(`/api/admin/ai-settings?allPlans=true&service=${selectedService}`);
+
+      if (!response.ok) {
+        console.error('Failed to fetch all AI settings:', response.status);
+        return;
+      }
+
+      const data = await response.json();
+      const serverSettings = data.settings || {};
+
+      // サーバーの設定とデフォルト値をマージ
+      const newSettings: Record<string, PlanModelSettings> = {};
       for (const plan of currentPlans) {
-        try {
-          const response = await fetch(`/api/admin/ai-settings?planTier=${plan}&service=${selectedService}`);
-          
-          if (!response.ok) {
-            console.error(`Failed to fetch settings for ${plan}:`, response.status);
-            continue;
-          }
-          
-          const data = await response.json();
-          
-          newSettings[plan] = {
-            outlineModel: data.outlineModel || data.customOutlineModel || DEFAULT_AI_MODELS.primary.outline,
-            writingModel: data.writingModel || data.customWritingModel || DEFAULT_AI_MODELS.primary.writing,
-            backupOutlineModel: data.backupOutlineModel || DEFAULT_AI_MODELS.backup.outline,
-            backupWritingModel: data.backupWritingModel || DEFAULT_AI_MODELS.backup.writing,
-          };
-        } catch (error) {
-          console.error(`Error loading settings for ${plan}:`, error);
-          // デフォルト値を設定
-          newSettings[plan] = {
-            outlineModel: DEFAULT_AI_MODELS.primary.outline,
-            writingModel: DEFAULT_AI_MODELS.primary.writing,
-            backupOutlineModel: DEFAULT_AI_MODELS.backup.outline,
-            backupWritingModel: DEFAULT_AI_MODELS.backup.writing,
-          };
-        }
+        const saved = serverSettings[plan];
+        newSettings[plan] = {
+          outlineModel: saved?.outlineModel || DEFAULT_AI_MODELS.primary.outline,
+          writingModel: saved?.writingModel || DEFAULT_AI_MODELS.primary.writing,
+          backupOutlineModel: saved?.backupOutlineModel || DEFAULT_AI_MODELS.backup.outline,
+          backupWritingModel: saved?.backupWritingModel || DEFAULT_AI_MODELS.backup.writing,
+        };
       }
 
       setSettings(newSettings);

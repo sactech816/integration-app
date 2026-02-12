@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
-import { Users, Loader2, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Users, Loader2, X, Search, ChevronDown, ChevronRight } from 'lucide-react';
+import UserDetailPanel from './UserDetailPanel';
 
 type UserWithRoles = {
   user_id: string;
@@ -21,6 +22,10 @@ type UserManagerProps = {
   loadingUsers: boolean;
   userPage: number;
   setUserPage: React.Dispatch<React.SetStateAction<number>>;
+  userTotalCount: number;
+  userSearch: string;
+  setUserSearch: React.Dispatch<React.SetStateAction<string>>;
+  onFetchPage: (page: number, search?: string) => Promise<void>;
   editingUserId: string | null;
   setEditingUserId: React.Dispatch<React.SetStateAction<string | null>>;
   partnerNote: string;
@@ -42,6 +47,10 @@ export default function UserManager({
   loadingUsers,
   userPage,
   setUserPage,
+  userTotalCount,
+  userSearch,
+  setUserSearch,
+  onFetchPage,
   editingUserId,
   setEditingUserId,
   partnerNote,
@@ -55,16 +64,51 @@ export default function UserManager({
   onTogglePartner,
   onAwardPoints,
 }: UserManagerProps) {
-  const totalUserPages = Math.ceil(allUsers.length / USERS_PER_PAGE);
-  const paginatedUsers = allUsers.slice((userPage - 1) * USERS_PER_PAGE, userPage * USERS_PER_PAGE);
+  const totalUserPages = Math.ceil(userTotalCount / USERS_PER_PAGE);
+  const [searchInput, setSearchInput] = useState(userSearch);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+
+  // デボウンス付き検索
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (searchInput !== userSearch) {
+        setUserSearch(searchInput);
+        onFetchPage(1, searchInput);
+      }
+    }, 400);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchInput]);
+
+  const handlePageChange = (newPage: number) => {
+    setUserPage(newPage);
+    onFetchPage(newPage, userSearch);
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-          <Users size={20} className="text-purple-600" /> ユーザー管理
-          <span className="text-xs bg-purple-500 text-white px-2 py-1 rounded-full">ADMIN</span>
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <Users size={20} className="text-purple-600" /> ユーザー管理
+            <span className="text-xs bg-purple-500 text-white px-2 py-1 rounded-full">ADMIN</span>
+          </h2>
+          <span className="text-sm text-gray-500">全{userTotalCount}件</span>
+        </div>
+        {/* 検索バー */}
+        <div className="mt-3 relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="メールアドレスで検索..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg bg-white text-gray-900 focus:border-purple-400 focus:ring-1 focus:ring-purple-400 outline-none"
+          />
+        </div>
       </div>
 
       {loadingUsers ? (
@@ -75,7 +119,7 @@ export default function UserManager({
       ) : allUsers.length === 0 ? (
         <div className="p-8 text-center text-gray-500">
           <Users size={48} className="mx-auto mb-3 text-gray-300" />
-          <p>ユーザーが見つかりません</p>
+          <p>{userSearch ? '検索結果がありません' : 'ユーザーが見つかりません'}</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -92,26 +136,37 @@ export default function UserManager({
               </tr>
             </thead>
             <tbody>
-              {paginatedUsers.map((usr) => {
+              {allUsers.map((usr) => {
                 const isEditing = editingUserId === usr.user_id;
                 const isAwardingPointsToUser = awardingPoints === usr.user_id;
                 return (
-                  <tr key={usr.user_id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-4 py-3 text-gray-900 font-medium">
-                      {usr.email}
+                  <React.Fragment key={usr.user_id}>
+                  <tr className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => setExpandedUserId(expandedUserId === usr.user_id ? null : usr.user_id)}
+                        className="flex items-center gap-1.5 text-gray-900 font-medium hover:text-indigo-600 transition-colors text-left"
+                      >
+                        {expandedUserId === usr.user_id ? (
+                          <ChevronDown size={14} className="text-indigo-500 shrink-0" />
+                        ) : (
+                          <ChevronRight size={14} className="text-gray-400 shrink-0" />
+                        )}
+                        <span>{usr.email}</span>
+                      </button>
                       {usr.partner_note && (
-                        <div className="text-xs text-gray-500 mt-1">💬 {usr.partner_note}</div>
+                        <div className="text-xs text-gray-500 mt-1 ml-5">{usr.partner_note}</div>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       {usr.is_partner ? (
                         <div className="flex flex-col items-center gap-1">
                           <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                            ✨ パートナー
+                            パートナー
                           </span>
                           {usr.partner_since && (
                             <span className="text-[10px] text-gray-500">
-                              {new Date(usr.partner_since).toLocaleDateString('ja-JP')}〜
+                              {new Date(usr.partner_since).toLocaleDateString('ja-JP')}~
                             </span>
                           )}
                         </div>
@@ -229,39 +284,50 @@ export default function UserManager({
                       )}
                     </td>
                   </tr>
+                  {expandedUserId === usr.user_id && (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-2 bg-gray-50">
+                        <UserDetailPanel
+                          userId={usr.user_id}
+                          onClose={() => setExpandedUserId(null)}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
                 );
               })}
             </tbody>
           </table>
 
-          {/* ページネーションUI */}
+          {/* サーバーサイドページネーションUI */}
           {totalUserPages > 1 && (
             <div className="flex items-center justify-center gap-4 py-4 border-t border-gray-200 bg-gray-50">
               <button
-                onClick={() => setUserPage((prev) => Math.max(1, prev - 1))}
-                disabled={userPage === 1}
+                onClick={() => handlePageChange(Math.max(1, userPage - 1))}
+                disabled={userPage === 1 || loadingUsers}
                 className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 transition-colors ${
-                  userPage === 1
+                  userPage === 1 || loadingUsers
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     : 'bg-purple-600 text-white hover:bg-purple-700'
                 }`}
               >
-                ← 前へ
+                前へ
               </button>
               <span className="text-gray-700 text-sm">
                 <span className="font-bold text-purple-600">{userPage}</span> / {totalUserPages} ページ
-                <span className="text-gray-500 ml-2">(全{allUsers.length}件)</span>
+                <span className="text-gray-500 ml-2">(全{userTotalCount}件)</span>
               </span>
               <button
-                onClick={() => setUserPage((prev) => Math.min(totalUserPages, prev + 1))}
-                disabled={userPage === totalUserPages}
+                onClick={() => handlePageChange(Math.min(totalUserPages, userPage + 1))}
+                disabled={userPage === totalUserPages || loadingUsers}
                 className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 transition-colors ${
-                  userPage === totalUserPages
+                  userPage === totalUserPages || loadingUsers
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                     : 'bg-purple-600 text-white hover:bg-purple-700'
                 }`}
               >
-                次へ →
+                次へ
               </button>
             </div>
           )}

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Home,
   Plus,
@@ -21,6 +21,8 @@ import {
   DollarSign,
   PieChart,
   UserCog,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 
 export type KdlUserRole = 'user' | 'agency' | 'admin';
@@ -34,6 +36,13 @@ export type KdlMenuItem = {
   badge?: number;
   roles: KdlUserRole[]; // このメニューを表示するロール
   onClick?: () => void;
+};
+
+type KdlAdminMenuGroup = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  items: KdlMenuItem[];
 };
 
 type KdlSidebarNavProps = {
@@ -130,57 +139,6 @@ export default function KdlSidebarNav({
       roles: ['agency', 'admin'],
     },
 
-    // 管理者向けメニュー
-    { 
-      id: 'admin-users', 
-      label: 'ユーザー管理', 
-      icon: Users, 
-      section: 'admin',
-      roles: ['admin'],
-    },
-    { 
-      id: 'admin-announcements', 
-      label: 'お知らせ管理', 
-      icon: Megaphone, 
-      section: 'admin',
-      roles: ['admin'],
-    },
-    { 
-      id: 'admin-guidebook', 
-      label: 'ガイドブック管理', 
-      icon: GraduationCap, 
-      section: 'admin',
-      roles: ['admin'],
-    },
-    { 
-      id: 'admin-monitors', 
-      label: 'モニター管理', 
-      icon: UserCog, 
-      section: 'admin',
-      roles: ['admin'],
-    },
-    { 
-      id: 'admin-service', 
-      label: 'サービス管理', 
-      icon: PieChart, 
-      section: 'admin',
-      roles: ['admin'],
-    },
-    { 
-      id: 'admin-ai-model', 
-      label: 'AIモデル設定', 
-      icon: Cpu, 
-      section: 'admin',
-      roles: ['admin'],
-    },
-    { 
-      id: 'admin-affiliate', 
-      label: 'アフィリエイト管理', 
-      icon: DollarSign, 
-      section: 'admin',
-      roles: ['admin'],
-    },
-
     // 設定メニュー（全員表示）
     { 
       id: 'settings', 
@@ -196,6 +154,45 @@ export default function KdlSidebarNav({
       section: 'settings',
       roles: ['user', 'agency', 'admin'],
       onClick: onLogout,
+    },
+  ];
+
+  // 管理者メニューグループ
+  const adminGroups: KdlAdminMenuGroup[] = [
+    {
+      id: 'group-users',
+      label: 'ユーザー管理',
+      icon: Users,
+      items: [
+        { id: 'admin-users', label: 'ユーザー/購読者一覧', icon: Users, section: 'admin', roles: ['admin'] },
+        { id: 'admin-monitors', label: 'モニター管理', icon: UserCog, section: 'admin', roles: ['admin'] },
+      ],
+    },
+    {
+      id: 'group-content',
+      label: 'コンテンツ管理',
+      icon: Megaphone,
+      items: [
+        { id: 'admin-announcements', label: 'お知らせ管理', icon: Megaphone, section: 'admin', roles: ['admin'] },
+        { id: 'admin-guidebook', label: 'ガイドブック管理', icon: GraduationCap, section: 'admin', roles: ['admin'] },
+      ],
+    },
+    {
+      id: 'group-service',
+      label: 'サービス設定',
+      icon: Settings,
+      items: [
+        { id: 'admin-service', label: 'プラン・AI使用量', icon: PieChart, section: 'admin', roles: ['admin'] },
+        { id: 'admin-ai-model', label: 'AIモデル設定', icon: Cpu, section: 'admin', roles: ['admin'] },
+      ],
+    },
+    {
+      id: 'group-business',
+      label: 'ビジネス管理',
+      icon: DollarSign,
+      items: [
+        { id: 'admin-affiliate', label: 'アフィリエイト管理', icon: DollarSign, section: 'admin', roles: ['admin'] },
+      ],
     },
   ];
 
@@ -249,8 +246,72 @@ export default function KdlSidebarNav({
 
   const mainItems = filterByRole(menuItems.filter(item => item.section === 'main'));
   const agencyItems = filterByRole(menuItems.filter(item => item.section === 'agency'));
-  const adminItems = filterByRole(menuItems.filter(item => item.section === 'admin'));
   const settingsItems = filterByRole(menuItems.filter(item => item.section === 'settings'));
+  const showAdminGroups = userRole === 'admin';
+
+  // アクティブなアイテムが含まれるグループを特定して自動展開
+  const activeGroupId = useMemo(() => {
+    for (const group of adminGroups) {
+      if (group.items.some(item => item.id === activeItem)) {
+        return group.id;
+      }
+    }
+    return null;
+  }, [activeItem, adminGroups]);
+
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+    new Set(activeGroupId ? [activeGroupId] : [])
+  );
+
+  // activeGroupIdが変わったら自動展開
+  React.useEffect(() => {
+    if (activeGroupId && !expandedGroups.has(activeGroupId)) {
+      setExpandedGroups(prev => new Set([...prev, activeGroupId]));
+    }
+  }, [activeGroupId]);
+
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  };
+
+  const renderAdminGroup = (group: KdlAdminMenuGroup) => {
+    const isExpanded = expandedGroups.has(group.id);
+    const hasActiveItem = group.items.some(item => item.id === activeItem);
+    const GroupIcon = group.icon;
+
+    return (
+      <div key={group.id}>
+        <button
+          onClick={() => toggleGroup(group.id)}
+          className={`
+            w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all text-sm
+            ${hasActiveItem ? 'text-purple-600 font-bold' : 'text-gray-500 hover:text-gray-700 hover:bg-amber-50'}
+          `}
+        >
+          <GroupIcon size={14} className={hasActiveItem ? 'text-purple-500' : 'text-gray-400'} />
+          <span className="flex-1">{group.label}</span>
+          {isExpanded ? (
+            <ChevronDown size={14} className="text-gray-400" />
+          ) : (
+            <ChevronRight size={14} className="text-gray-400" />
+          )}
+        </button>
+        {isExpanded && (
+          <div className="ml-3 pl-2 border-l border-gray-200 space-y-0.5 mt-0.5">
+            {group.items.map(renderMenuItem)}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto">
@@ -277,15 +338,15 @@ export default function KdlSidebarNav({
         </div>
       )}
 
-      {/* 管理者メニュー */}
-      {adminItems.length > 0 && (
+      {/* 管理者メニュー（グループ化） */}
+      {showAdminGroups && (
         <div>
           <h3 className="px-3 mb-2 text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-2">
             管理者機能
             <span className="bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded text-[10px]">ADMIN</span>
           </h3>
           <div className="space-y-1">
-            {adminItems.map(renderMenuItem)}
+            {adminGroups.map(renderAdminGroup)}
           </div>
         </div>
       )}

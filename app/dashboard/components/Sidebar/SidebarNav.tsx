@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Home,
   Sparkles,
@@ -22,6 +22,11 @@ import {
   Trash2,
   FileText,
   ArrowRightLeft,
+  ChevronDown,
+  ChevronRight,
+  Megaphone,
+  Wrench,
+  DollarSign,
 } from 'lucide-react';
 
 export type MenuSection = 'main' | 'settings' | 'admin';
@@ -37,6 +42,13 @@ export type MenuItem = {
   // グレーアウト関連
   isDisabled?: boolean;
   disabledBadge?: string;
+};
+
+type AdminMenuGroup = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  items: MenuItem[];
 };
 
 type SidebarNavProps = {
@@ -103,17 +115,55 @@ export default function SidebarNav({
     { id: 'settings', label: 'アカウント設定', icon: Settings, section: 'settings' },
     { id: 'logout', label: 'ログアウト', icon: LogOut, section: 'settings', onClick: onLogout },
     
-    // 管理者メニュー
-    { id: 'admin-users', label: 'ユーザー管理', icon: Users, section: 'admin', adminOnly: true },
-    { id: 'admin-announcements', label: 'お知らせ管理', icon: Bell, section: 'admin', adminOnly: true },
-    { id: 'admin-monitor', label: 'モニター管理', icon: Shield, section: 'admin', adminOnly: true },
-    { id: 'admin-service', label: 'サービス管理', icon: Settings, section: 'admin', adminOnly: true },
-    { id: 'admin-ai-model', label: 'AIモデル選択', icon: Cpu, section: 'admin', adminOnly: true },
-    { id: 'admin-affiliate', label: 'アフィリエイト管理', icon: Share2, section: 'admin', adminOnly: true },
-    { id: 'admin-featured', label: 'ピックアップ管理', icon: Star, section: 'admin', adminOnly: true },
-    { id: 'admin-gamification', label: 'ゲーミフィケーション管理', icon: Gamepad2, section: 'admin', adminOnly: true },
-    { id: 'admin-transfer', label: '所有権の移動', icon: ArrowRightLeft, section: 'admin', adminOnly: true },
-    { id: 'admin-cleanup', label: 'データクリーンアップ', icon: Trash2, section: 'admin', adminOnly: true },
+  ];
+
+  // 管理者メニューグループ
+  const adminGroups: AdminMenuGroup[] = [
+    {
+      id: 'group-users',
+      label: 'ユーザー管理',
+      icon: Users,
+      items: [
+        { id: 'admin-users', label: 'ユーザー一覧', icon: Users, section: 'admin', adminOnly: true },
+        { id: 'admin-monitor', label: 'モニター管理', icon: Shield, section: 'admin', adminOnly: true },
+      ],
+    },
+    {
+      id: 'group-content',
+      label: 'コンテンツ管理',
+      icon: Megaphone,
+      items: [
+        { id: 'admin-announcements', label: 'お知らせ管理', icon: Bell, section: 'admin', adminOnly: true },
+        { id: 'admin-featured', label: 'ピックアップ管理', icon: Star, section: 'admin', adminOnly: true },
+        { id: 'admin-gamification', label: 'ゲーミフィケーション', icon: Gamepad2, section: 'admin', adminOnly: true },
+      ],
+    },
+    {
+      id: 'group-service',
+      label: 'サービス設定',
+      icon: Settings,
+      items: [
+        { id: 'admin-service', label: 'プラン・AI使用量', icon: Settings, section: 'admin', adminOnly: true },
+        { id: 'admin-ai-model', label: 'AIモデル・機能制限', icon: Cpu, section: 'admin', adminOnly: true },
+      ],
+    },
+    {
+      id: 'group-business',
+      label: 'ビジネス管理',
+      icon: DollarSign,
+      items: [
+        { id: 'admin-affiliate', label: 'アフィリエイト管理', icon: Share2, section: 'admin', adminOnly: true },
+      ],
+    },
+    {
+      id: 'group-maintenance',
+      label: 'メンテナンス',
+      icon: Wrench,
+      items: [
+        { id: 'admin-transfer', label: '所有権の移動', icon: ArrowRightLeft, section: 'admin', adminOnly: true },
+        { id: 'admin-cleanup', label: 'データクリーンアップ', icon: Trash2, section: 'admin', adminOnly: true },
+      ],
+    },
   ];
 
   const renderMenuItem = (item: MenuItem) => {
@@ -201,7 +251,70 @@ export default function SidebarNav({
 
   const mainItems = menuItems.filter(item => item.section === 'main');
   const settingsItems = menuItems.filter(item => item.section === 'settings');
-  const adminItems = menuItems.filter(item => item.section === 'admin');
+
+  // アクティブなアイテムが含まれるグループを特定して自動展開
+  const activeGroupId = useMemo(() => {
+    for (const group of adminGroups) {
+      if (group.items.some(item => item.id === activeItem)) {
+        return group.id;
+      }
+    }
+    return null;
+  }, [activeItem, adminGroups]);
+
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+    new Set(activeGroupId ? [activeGroupId] : [])
+  );
+
+  // activeGroupIdが変わったら自動展開
+  React.useEffect(() => {
+    if (activeGroupId && !expandedGroups.has(activeGroupId)) {
+      setExpandedGroups(prev => new Set([...prev, activeGroupId]));
+    }
+  }, [activeGroupId]);
+
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  };
+
+  const renderAdminGroup = (group: AdminMenuGroup) => {
+    const isExpanded = expandedGroups.has(group.id);
+    const hasActiveItem = group.items.some(item => item.id === activeItem);
+    const GroupIcon = group.icon;
+
+    return (
+      <div key={group.id}>
+        <button
+          onClick={() => toggleGroup(group.id)}
+          className={`
+            w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all text-[13px]
+            ${hasActiveItem ? 'text-red-600 font-bold' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}
+          `}
+        >
+          <GroupIcon size={14} className={hasActiveItem ? 'text-red-500' : 'text-gray-400'} />
+          <span className="flex-1">{group.label}</span>
+          {isExpanded ? (
+            <ChevronDown size={14} className="text-gray-400" />
+          ) : (
+            <ChevronRight size={14} className="text-gray-400" />
+          )}
+        </button>
+        {isExpanded && (
+          <div className="ml-3 pl-2 border-l border-gray-200 space-y-0.5 mt-0.5">
+            {group.items.map(renderMenuItem)}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <nav className="flex-1 px-3 py-4 space-y-6">
@@ -225,7 +338,7 @@ export default function SidebarNav({
         </div>
       </div>
 
-      {/* 管理者メニュー */}
+      {/* 管理者メニュー（グループ化） */}
       {isAdmin && (
         <div>
           <h3 className="px-3 mb-2 text-xs font-bold text-red-400 uppercase tracking-wider flex items-center gap-2">
@@ -233,7 +346,7 @@ export default function SidebarNav({
             <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[10px]">ADMIN</span>
           </h3>
           <div className="space-y-1">
-            {adminItems.map(renderMenuItem)}
+            {adminGroups.map(renderAdminGroup)}
           </div>
         </div>
       )}

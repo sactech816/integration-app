@@ -16,20 +16,61 @@ const getServiceClient = () => {
 
 /**
  * GET: プラン別AI設定取得
+ * - planTier指定: 単一プランの設定を返す
+ * - allPlans=true: サービスの全プラン設定を一括取得
  */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const planTier = searchParams.get('planTier') as PlanTier;
     const service = searchParams.get('service') || 'kdl';
-
-    if (!planTier) {
-      return NextResponse.json({ error: 'planTier is required' }, { status: 400 });
-    }
+    const allPlans = searchParams.get('allPlans') === 'true';
 
     const supabase = getServiceClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+    }
+
+    // 全プラン一括取得モード
+    if (allPlans) {
+      const { data, error } = await supabase
+        .from('admin_ai_settings')
+        .select('*')
+        .eq('service', service)
+        .order('plan_tier');
+
+      if (error && error.code !== '42P01') {
+        console.error('Failed to fetch all AI settings:', error);
+        return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
+      }
+
+      const settingsMap: Record<string, {
+        outlineModel: string;
+        writingModel: string;
+        backupOutlineModel: string;
+        backupWritingModel: string;
+        feature_limits?: Record<string, number | null>;
+      }> = {};
+
+      for (const row of (data || [])) {
+        settingsMap[row.plan_tier] = {
+          outlineModel: row.custom_outline_model || DEFAULT_AI_MODELS.primary.outline,
+          writingModel: row.custom_writing_model || DEFAULT_AI_MODELS.primary.writing,
+          backupOutlineModel: row.backup_outline_model || DEFAULT_AI_MODELS.backup.outline,
+          backupWritingModel: row.backup_writing_model || DEFAULT_AI_MODELS.backup.writing,
+          feature_limits: row.feature_limits,
+        };
+      }
+
+      return NextResponse.json({
+        service,
+        settings: settingsMap,
+        availableModels: AVAILABLE_AI_MODELS,
+      });
+    }
+
+    if (!planTier) {
+      return NextResponse.json({ error: 'planTier is required' }, { status: 400 });
     }
 
     // プリセット情報を取得（サービスとプランに応じて）

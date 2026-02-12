@@ -90,18 +90,18 @@ type MainContentProps = {
   onCreateNew: () => void;
   onNavigate: (path: string, addAdminKey?: boolean) => void;
   onLogout: () => void;
-  // 管理者コンポーネント
+  // 管理者コンポーネント（遅延レンダリング関数）
   adminComponents?: {
-    UserManager?: React.ReactNode;
-    AnnouncementManager?: React.ReactNode;
-    MonitorManager?: React.ReactNode;
-    ServiceManager?: React.ReactNode;
-    AIModelManager?: React.ReactNode;
-    GamificationManager?: React.ReactNode;
-    AffiliateManager?: React.ReactNode;
-    FeaturedManager?: React.ReactNode;
-    OwnershipTransfer?: React.ReactNode;
-    CleanupManager?: React.ReactNode;
+    UserManager?: () => React.ReactNode;
+    AnnouncementManager?: () => React.ReactNode;
+    MonitorManager?: () => React.ReactNode;
+    ServiceManager?: () => React.ReactNode;
+    AIModelManager?: () => React.ReactNode;
+    GamificationManager?: () => React.ReactNode;
+    AffiliateManager?: () => React.ReactNode;
+    FeaturedManager?: () => React.ReactNode;
+    OwnershipTransfer?: () => React.ReactNode;
+    CleanupManager?: () => React.ReactNode;
   };
 };
 
@@ -236,7 +236,7 @@ export default function MainContent({
 
       {/* ゲーミフィケーション管理（管理者のみ） */}
       {activeView === 'admin-gamification' && adminComponents?.GamificationManager && (
-        <>{adminComponents.GamificationManager}</>
+        <>{adminComponents.GamificationManager()}</>
       )}
 
       {/* アフィリエイト */}
@@ -251,39 +251,39 @@ export default function MainContent({
 
       {/* 管理者メニュー */}
       {activeView === 'admin-users' && adminComponents?.UserManager && (
-        <>{adminComponents.UserManager}</>
+        <>{adminComponents.UserManager()}</>
       )}
 
       {activeView === 'admin-announcements' && adminComponents?.AnnouncementManager && (
-        <>{adminComponents.AnnouncementManager}</>
+        <>{adminComponents.AnnouncementManager()}</>
       )}
 
       {activeView === 'admin-monitor' && adminComponents?.MonitorManager && (
-        <>{adminComponents.MonitorManager}</>
+        <>{adminComponents.MonitorManager()}</>
       )}
 
       {activeView === 'admin-service' && adminComponents?.ServiceManager && (
-        <>{adminComponents.ServiceManager}</>
+        <>{adminComponents.ServiceManager()}</>
       )}
 
       {activeView === 'admin-ai-model' && adminComponents?.AIModelManager && (
-        <>{adminComponents.AIModelManager}</>
+        <>{adminComponents.AIModelManager()}</>
       )}
 
       {activeView === 'admin-affiliate' && adminComponents?.AffiliateManager && (
-        <>{adminComponents.AffiliateManager}</>
+        <>{adminComponents.AffiliateManager()}</>
       )}
 
       {activeView === 'admin-featured' && adminComponents?.FeaturedManager && (
-        <>{adminComponents.FeaturedManager}</>
+        <>{adminComponents.FeaturedManager()}</>
       )}
 
       {activeView === 'admin-transfer' && adminComponents?.OwnershipTransfer && (
-        <>{adminComponents.OwnershipTransfer}</>
+        <>{adminComponents.OwnershipTransfer()}</>
       )}
 
       {activeView === 'admin-cleanup' && adminComponents?.CleanupManager && (
-        <>{adminComponents.CleanupManager}</>
+        <>{adminComponents.CleanupManager()}</>
       )}
 
       {/* デフォルト */}

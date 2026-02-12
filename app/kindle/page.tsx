@@ -22,6 +22,7 @@ import { EducationContent } from '@/components/kindle/education';
 import { AnnouncementList } from '@/components/kindle/announcements';
 import AffiliateManager from '@/app/dashboard/components/Admin/AffiliateManager';
 import AdminAIUsageStats from '@/components/shared/AdminAIUsageStats';
+import SettingsHealthBadge from '@/components/shared/SettingsHealthBadge';
 
 // プラン名を詳細表示するヘルパー関数
 const getPlanDisplayName = (planTier?: string, planType?: string, isMonitor?: boolean): string => {
@@ -684,6 +685,7 @@ function KindleListPageContent() {
               ← ダッシュボードに戻る
             </button>
           </div>
+          <SettingsHealthBadge service="kdl" />
           <KdlServiceManagement userId={user.id} accessToken={accessToken} />
           {/* KDLプラン設定 */}
           <KdlPlanSettings userId={user.id} userEmail={user.email} />

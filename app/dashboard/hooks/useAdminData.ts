@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { getAllUsersWithRoles, setPartnerStatus } from '@/app/actions/purchases';
+import { getAllUsersWithRoles, getAllUsersWithRolesPaginated, setPartnerStatus } from '@/app/actions/purchases';
 
 type UserWithRoles = {
   user_id: string;
@@ -35,6 +35,9 @@ type UseAdminDataReturn = {
   loadingUsers: boolean;
   userPage: number;
   setUserPage: React.Dispatch<React.SetStateAction<number>>;
+  userTotalCount: number;
+  userSearch: string;
+  setUserSearch: React.Dispatch<React.SetStateAction<string>>;
   editingUserId: string | null;
   setEditingUserId: React.Dispatch<React.SetStateAction<string | null>>;
   partnerNote: string;
@@ -46,6 +49,7 @@ type UseAdminDataReturn = {
   pointsReason: string;
   setPointsReason: React.Dispatch<React.SetStateAction<string>>;
   fetchAllUsers: () => Promise<void>;
+  fetchUsersPage: (page: number, search?: string) => Promise<void>;
   handleTogglePartner: (userId: string, currentStatus: boolean, note?: string) => Promise<void>;
   handleAwardPoints: (userId: string) => Promise<void>;
 
@@ -94,6 +98,8 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
   const [allUsers, setAllUsers] = useState<UserWithRoles[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [userPage, setUserPage] = useState(1);
+  const [userTotalCount, setUserTotalCount] = useState(0);
+  const [userSearch, setUserSearch] = useState('');
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [partnerNote, setPartnerNote] = useState('');
   const [awardingPoints, setAwardingPoints] = useState<string | null>(null);
@@ -159,6 +165,28 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
       }
     } catch (error) {
       console.error('Fetch users error:', error);
+      alert('ユーザー一覧の取得に失敗しました');
+    } finally {
+      setLoadingUsers(false);
+    }
+  }, [isAdmin]);
+
+  // ページネーション対応ユーザー取得（ポイント残高含む）
+  const fetchUsersPage = useCallback(async (page: number, search?: string) => {
+    if (!isAdmin) return;
+    setLoadingUsers(true);
+    try {
+      const result = await getAllUsersWithRolesPaginated(page, USERS_PER_PAGE, search);
+      if (result.error) {
+        console.error('Fetch paginated users error:', result.error);
+        alert('ユーザー一覧の取得に失敗しました: ' + result.error);
+      } else {
+        setAllUsers(result.users);
+        setUserTotalCount(result.totalCount);
+        setUserPage(page);
+      }
+    } catch (error) {
+      console.error('Fetch paginated users error:', error);
       alert('ユーザー一覧の取得に失敗しました');
     } finally {
       setLoadingUsers(false);
@@ -448,6 +476,9 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
     loadingUsers,
     userPage,
     setUserPage,
+    userTotalCount,
+    userSearch,
+    setUserSearch,
     editingUserId,
     setEditingUserId,
     partnerNote,
@@ -459,6 +490,7 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
     pointsReason,
     setPointsReason,
     fetchAllUsers,
+    fetchUsersPage,
     handleTogglePartner,
     handleAwardPoints,
 
