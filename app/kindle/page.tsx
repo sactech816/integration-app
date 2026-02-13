@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   BookOpen, Plus, Loader2, Edit3, Trash2, Calendar, FileText,
   Crown, Sparkles, Zap, ArrowRight, X, Users, ChevronDown, ChevronUp, BarChart3, User,
-  Copy, AlertCircle, Tag, FolderTree
+  Copy, AlertCircle, Tag, FolderTree, MessageSquare
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import AIUsageDisplay from '@/components/kindle/AIUsageDisplay';
@@ -180,10 +180,10 @@ function KindleListPageContent() {
     }
   }, [user]);
 
-  // 代理店ステータスチェック
+  // 代理店ステータスチェック（管理者も代理店を兼ねる可能性がある）
   useEffect(() => {
     const checkAgencyStatus = async () => {
-      if (!user || !supabase || isAdmin) {
+      if (!user || !supabase) {
         setIsAgency(false);
         setAgencyId(null);
         return;
@@ -208,7 +208,7 @@ function KindleListPageContent() {
       }
     };
     checkAgencyStatus();
-  }, [user, isAdmin]);
+  }, [user]);
 
   // ユーザーとサブスク状態を取得
   useEffect(() => {
@@ -794,7 +794,7 @@ function KindleListPageContent() {
           </div>
           <AnnouncementList userId={user?.id} accessToken={accessToken || undefined} />
         </div>
-      ) : activeMenuItem === 'agency-users' && user && (isAgency || isAdmin) && agencyId ? (
+      ) : activeMenuItem === 'agency-users' && user && (isAgency || isAdmin) ? (
         /* 担当ユーザー一覧（代理店機能） */
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
@@ -805,24 +805,40 @@ function KindleListPageContent() {
               ← ダッシュボードに戻る
             </button>
           </div>
-          <AgencyUserList
-            agencyId={agencyId}
-            accessToken={accessToken || undefined}
-            onSelectUser={(uid) => {
-              setSelectedAgencyUserId(uid);
-              setActiveMenuItem('agency-progress');
-            }}
-            onFeedback={(uid) => {
-              setSelectedAgencyUserId(uid);
-              setActiveMenuItem('agency-feedback');
-            }}
-            onMessage={(uid) => {
-              setSelectedAgencyUserId(uid);
-              setActiveMenuItem('agency-messages');
-            }}
-          />
+          {agencyId ? (
+            <AgencyUserList
+              agencyId={agencyId}
+              accessToken={accessToken || undefined}
+              onSelectUser={(uid) => {
+                setSelectedAgencyUserId(uid);
+                setActiveMenuItem('agency-progress');
+              }}
+              onFeedback={(uid) => {
+                setSelectedAgencyUserId(uid);
+                setActiveMenuItem('agency-feedback');
+              }}
+              onMessage={(uid) => {
+                setSelectedAgencyUserId(uid);
+                setActiveMenuItem('agency-messages');
+              }}
+            />
+          ) : (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-8 text-center">
+              <Users className="text-amber-400 mx-auto mb-3" size={40} />
+              <h3 className="text-lg font-bold text-gray-700 mb-2">代理店として登録されていません</h3>
+              <p className="text-gray-500 mb-4">この機能を利用するには、管理者画面から代理店登録を行ってください。</p>
+              {isAdmin && (
+                <button
+                  onClick={() => setActiveMenuItem('admin-agency')}
+                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium"
+                >
+                  代理店管理へ移動
+                </button>
+              )}
+            </div>
+          )}
         </div>
-      ) : activeMenuItem === 'agency-progress' && user && (isAgency || isAdmin) && agencyId && accessToken ? (
+      ) : activeMenuItem === 'agency-progress' && user && (isAgency || isAdmin) && accessToken ? (
         /* 進捗管理（代理店機能） */
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
@@ -833,19 +849,27 @@ function KindleListPageContent() {
               ← 担当ユーザー一覧に戻る
             </button>
           </div>
-          <AgencyProgressView
-            agencyId={agencyId}
-            accessToken={accessToken}
-            selectedUserId={selectedAgencyUserId}
-            onFeedback={(uid, bookId, sectionId) => {
-              setSelectedAgencyUserId(uid);
-              setSelectedBookId(bookId);
-              setSelectedSectionId(sectionId);
-              setActiveMenuItem('agency-feedback');
-            }}
-          />
+          {agencyId ? (
+            <AgencyProgressView
+              agencyId={agencyId}
+              accessToken={accessToken}
+              selectedUserId={selectedAgencyUserId}
+              onFeedback={(uid, bookId, sectionId) => {
+                setSelectedAgencyUserId(uid);
+                setSelectedBookId(bookId);
+                setSelectedSectionId(sectionId);
+                setActiveMenuItem('agency-feedback');
+              }}
+            />
+          ) : (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-8 text-center">
+              <BarChart3 className="text-amber-400 mx-auto mb-3" size={40} />
+              <h3 className="text-lg font-bold text-gray-700 mb-2">代理店として登録されていません</h3>
+              <p className="text-gray-500">この機能を利用するには代理店登録が必要です。</p>
+            </div>
+          )}
         </div>
-      ) : activeMenuItem === 'agency-feedback' && user && (isAgency || isAdmin) && agencyId && accessToken ? (
+      ) : activeMenuItem === 'agency-feedback' && user && (isAgency || isAdmin) && accessToken ? (
         /* 添削・フィードバック（代理店機能） */
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
@@ -856,14 +880,22 @@ function KindleListPageContent() {
               ← 担当ユーザー一覧に戻る
             </button>
           </div>
-          <AgencyFeedbackView
-            agencyId={agencyId}
-            accessToken={accessToken}
-            initialBookId={selectedBookId}
-            initialSectionId={selectedSectionId}
-          />
+          {agencyId ? (
+            <AgencyFeedbackView
+              agencyId={agencyId}
+              accessToken={accessToken}
+              initialBookId={selectedBookId}
+              initialSectionId={selectedSectionId}
+            />
+          ) : (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-8 text-center">
+              <Edit3 className="text-amber-400 mx-auto mb-3" size={40} />
+              <h3 className="text-lg font-bold text-gray-700 mb-2">代理店として登録されていません</h3>
+              <p className="text-gray-500">この機能を利用するには代理店登録が必要です。</p>
+            </div>
+          )}
         </div>
-      ) : activeMenuItem === 'agency-messages' && user && (isAgency || isAdmin) && agencyId && accessToken ? (
+      ) : activeMenuItem === 'agency-messages' && user && (isAgency || isAdmin) && accessToken ? (
         /* メッセージ（代理店機能） */
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
@@ -874,11 +906,19 @@ function KindleListPageContent() {
               ← 担当ユーザー一覧に戻る
             </button>
           </div>
-          <AgencyMessagesView
-            agencyId={agencyId}
-            userId={user.id}
-            accessToken={accessToken}
-          />
+          {agencyId ? (
+            <AgencyMessagesView
+              agencyId={agencyId}
+              userId={user.id}
+              accessToken={accessToken}
+            />
+          ) : (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-8 text-center">
+              <MessageSquare className="text-amber-400 mx-auto mb-3" size={40} />
+              <h3 className="text-lg font-bold text-gray-700 mb-2">代理店として登録されていません</h3>
+              <p className="text-gray-500">この機能を利用するには代理店登録が必要です。</p>
+            </div>
+          )}
         </div>
       ) : activeMenuItem === 'admin-agency' && user && isAdmin && accessToken ? (
         /* 代理店管理画面（管理者のみ） */
