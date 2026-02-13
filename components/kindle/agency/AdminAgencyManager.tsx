@@ -261,7 +261,7 @@ export default function AdminAgencyManager({
           <div className="flex items-center gap-2">
             <button
               onClick={fetchAgencies}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-lg transition-colors"
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-white/50 rounded-lg transition-colors"
               title="更新"
             >
               <RefreshCw size={18} />
@@ -294,56 +294,56 @@ export default function AdminAgencyManager({
           <h3 className="font-bold text-gray-900 mb-4">新規代理店登録</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-800 mb-1">
                 ユーザーメール <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
                 value={registerEmail}
                 onChange={(e) => setRegisterEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="agency@example.com"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-800 mb-1">
                 代理店名 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={registerName}
                 onChange={(e) => setRegisterName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="代理店名"
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">説明（任意）</label>
+              <label className="block text-sm font-medium text-gray-800 mb-1">説明（任意）</label>
               <textarea
                 value={registerDescription}
                 onChange={(e) => setRegisterDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 rows={2}
                 placeholder="代理店の説明"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">連絡先メール（任意）</label>
+              <label className="block text-sm font-medium text-gray-800 mb-1">連絡先メール（任意）</label>
               <input
                 type="email"
                 value={registerContactEmail}
                 onChange={(e) => setRegisterContactEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="contact@example.com"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">連絡先電話（任意）</label>
+              <label className="block text-sm font-medium text-gray-800 mb-1">連絡先電話（任意）</label>
               <input
                 type="tel"
                 value={registerContactPhone}
                 onChange={(e) => setRegisterContactPhone(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border border-gray-400 rounded-lg text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 placeholder="090-XXXX-XXXX"
               />
             </div>
@@ -354,7 +354,7 @@ export default function AdminAgencyManager({
               disabled={isRegistering || !registerEmail || !registerName}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 isRegistering || !registerEmail || !registerName
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                   : 'bg-purple-500 text-white hover:bg-purple-600'
               }`}
             >
@@ -363,7 +363,7 @@ export default function AdminAgencyManager({
             </button>
             <button
               onClick={() => setShowRegisterForm(false)}
-              className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg text-sm"
+              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg text-sm"
             >
               キャンセル
             </button>
@@ -405,7 +405,7 @@ export default function AdminAgencyManager({
                       <p className="font-bold text-gray-900">{agency.agency_name}</p>
                       {getStatusBadge(agency.status)}
                     </div>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-700">
                       {agency.agency_email} | 担当: {agency.assigned_count}名 | 登録: {formatDate(agency.created_at)}
                     </p>
                   </div>
@@ -418,7 +418,7 @@ export default function AdminAgencyManager({
                 <div className="flex items-center gap-1 ml-3">
                   <button
                     onClick={() => setAssignAgencyId(assignAgencyId === agency.id ? null : agency.id)}
-                    className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                    className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                     title="ユーザー割当"
                   >
                     <UserPlus size={16} />
@@ -426,7 +426,7 @@ export default function AdminAgencyManager({
                   {agency.status === 'active' ? (
                     <button
                       onClick={() => handleUpdateStatus(agency.id, 'suspended')}
-                      className="p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
+                      className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                       title="停止"
                     >
                       <Ban size={16} />
@@ -434,7 +434,7 @@ export default function AdminAgencyManager({
                   ) : (
                     <button
                       onClick={() => handleUpdateStatus(agency.id, 'active')}
-                      className="p-1.5 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                      className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                       title="有効化"
                     >
                       <CheckCircle size={16} />
@@ -442,7 +442,7 @@ export default function AdminAgencyManager({
                   )}
                   <button
                     onClick={() => handleRemoveAgency(agency.id)}
-                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="削除"
                   >
                     <Trash2 size={16} />
@@ -453,14 +453,14 @@ export default function AdminAgencyManager({
               {/* ユーザー割当フォーム */}
               {assignAgencyId === agency.id && (
                 <div className="px-4 pb-4 border-t border-gray-100 pt-3">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">ユーザーを割り当て</h4>
+                  <h4 className="text-sm font-medium text-gray-800 mb-2">ユーザーを割り当て</h4>
                   <div className="flex items-end gap-3">
                     <div className="flex-1">
                       <input
                         type="email"
                         value={assignEmail}
                         onChange={(e) => setAssignEmail(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-400 rounded-lg text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="ユーザーのメールアドレス"
                       />
                     </div>
@@ -469,7 +469,7 @@ export default function AdminAgencyManager({
                         type="text"
                         value={assignNote}
                         onChange={(e) => setAssignNote(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-400 rounded-lg text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="メモ（任意）"
                       />
                     </div>
@@ -478,7 +478,7 @@ export default function AdminAgencyManager({
                       disabled={isAssigning || !assignEmail}
                       className={`px-4 py-2 rounded-lg text-sm font-medium shrink-0 ${
                         isAssigning || !assignEmail
-                          ? 'bg-gray-200 text-gray-400'
+                          ? 'bg-gray-200 text-gray-500'
                           : 'bg-blue-500 text-white hover:bg-blue-600'
                       }`}
                     >
@@ -492,7 +492,7 @@ export default function AdminAgencyManager({
               {expandedAgencies.has(agency.id) && (
                 <div className="border-t border-gray-100">
                   {agency.assigned_users.length === 0 ? (
-                    <p className="text-gray-500 text-sm p-4">割り当てユーザーなし</p>
+                    <p className="text-gray-600 text-sm p-4">割り当てユーザーなし</p>
                   ) : (
                     <div className="divide-y divide-gray-50">
                       {agency.assigned_users.map(au => (
@@ -503,7 +503,7 @@ export default function AdminAgencyManager({
                             </div>
                             <div>
                               <p className="text-sm font-medium text-gray-900">{au.user_email}</p>
-                              <p className="text-xs text-gray-600">
+                              <p className="text-xs text-gray-700">
                                 割り当て: {formatDate(au.assigned_at)}
                                 {au.note && ` | ${au.note}`}
                               </p>
@@ -511,7 +511,7 @@ export default function AdminAgencyManager({
                           </div>
                           <button
                             onClick={() => au.id && handleUnassignUser(au.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="割り当て解除"
                           >
                             <Trash2 size={14} />

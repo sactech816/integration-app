@@ -167,6 +167,7 @@ export default function KdlSidebarNav({
       items: [
         { id: 'admin-users', label: 'ユーザー/購読者一覧', icon: Users, section: 'admin', roles: ['admin'] },
         { id: 'admin-monitors', label: 'モニター管理', icon: UserCog, section: 'admin', roles: ['admin'] },
+        { id: 'admin-agency', label: '代理店管理', icon: Shield, section: 'admin', roles: ['admin'] },
       ],
     },
     {
@@ -193,14 +194,6 @@ export default function KdlSidebarNav({
       icon: DollarSign,
       items: [
         { id: 'admin-affiliate', label: 'アフィリエイト管理', icon: DollarSign, section: 'admin', roles: ['admin'] },
-      ],
-    },
-    {
-      id: 'group-agency',
-      label: '代理店管理',
-      icon: Shield,
-      items: [
-        { id: 'admin-agency', label: '代理店管理', icon: Shield, section: 'admin', roles: ['admin'] },
       ],
     },
   ];
