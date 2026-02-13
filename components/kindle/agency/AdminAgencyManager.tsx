@@ -383,7 +383,7 @@ export default function AdminAgencyManager({
         </div>
       ) : agencies.length === 0 ? (
         <div className="bg-gray-50 rounded-xl p-12 text-center">
-          <Building2 className="text-gray-300 mx-auto mb-4" size={48} />
+          <Building2 className="text-gray-400 mx-auto mb-4" size={48} />
           <h3 className="text-lg font-bold text-gray-700 mb-2">代理店がまだ登録されていません</h3>
           <p className="text-gray-500">「新規代理店登録」から代理店を追加してください</p>
         </div>
@@ -405,14 +405,14 @@ export default function AdminAgencyManager({
                       <p className="font-bold text-gray-900">{agency.agency_name}</p>
                       {getStatusBadge(agency.status)}
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-600">
                       {agency.agency_email} | 担当: {agency.assigned_count}名 | 登録: {formatDate(agency.created_at)}
                     </p>
                   </div>
                   {expandedAgencies.has(agency.id) ? (
-                    <ChevronDown size={18} className="text-gray-400 shrink-0" />
+                    <ChevronDown size={18} className="text-gray-500 shrink-0" />
                   ) : (
-                    <ChevronRight size={18} className="text-gray-400 shrink-0" />
+                    <ChevronRight size={18} className="text-gray-500 shrink-0" />
                   )}
                 </button>
                 <div className="flex items-center gap-1 ml-3">
@@ -492,7 +492,7 @@ export default function AdminAgencyManager({
               {expandedAgencies.has(agency.id) && (
                 <div className="border-t border-gray-100">
                   {agency.assigned_users.length === 0 ? (
-                    <p className="text-gray-400 text-sm p-4">割り当てユーザーなし</p>
+                    <p className="text-gray-500 text-sm p-4">割り当てユーザーなし</p>
                   ) : (
                     <div className="divide-y divide-gray-50">
                       {agency.assigned_users.map(au => (
@@ -503,7 +503,7 @@ export default function AdminAgencyManager({
                             </div>
                             <div>
                               <p className="text-sm font-medium text-gray-900">{au.user_email}</p>
-                              <p className="text-xs text-gray-400">
+                              <p className="text-xs text-gray-600">
                                 割り当て: {formatDate(au.assigned_at)}
                                 {au.note && ` | ${au.note}`}
                               </p>
@@ -511,7 +511,7 @@ export default function AdminAgencyManager({
                           </div>
                           <button
                             onClick={() => au.id && handleUnassignUser(au.id)}
-                            className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                             title="割り当て解除"
                           >
                             <Trash2 size={14} />

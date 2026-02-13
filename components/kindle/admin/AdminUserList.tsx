@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, Search, Loader2, ChevronDown, ChevronUp, 
-  CreditCard, BarChart3, Calendar, Mail, Crown, Filter
+import {
+  Users, Search, Loader2, ChevronDown, ChevronUp,
+  CreditCard, BarChart3, Calendar, Mail, Crown, Filter, UserCog
 } from 'lucide-react';
 
 interface UserUsage {
@@ -30,6 +30,9 @@ interface Subscriber {
   next_payment_date?: string;
   created_at: string;
   usage: UserUsage;
+  is_monitor?: boolean;
+  monitor_expires_at?: string | null;
+  monitor_notes?: string | null;
 }
 
 interface Stats {
@@ -40,6 +43,7 @@ interface Stats {
   totalMonthlyAIUsage: number;
   totalMonthlyCost: number;
   monthlyRevenue: number;
+  activeMonitorCount?: number;
   modelUsageStats?: { gemini: number; openai: number; claude: number; unknown: number };
   modelCostStats?: { gemini: number; openai: number; claude: number };
 }
@@ -63,6 +67,7 @@ export default function AdminUserList({ userId, accessToken }: AdminUserListProp
   const [stats, setStats] = useState<Stats | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTier, setFilterTier] = useState<string>('all');
+  const [filterType, setFilterType] = useState<'all' | 'subscriber' | 'monitor'>('all');
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'created_at' | 'usage' | 'cost'>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -99,7 +104,10 @@ export default function AdminUserList({ userId, accessToken }: AdminUserListProp
     .filter(sub => {
       const matchesSearch = sub.email?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesTier = filterTier === 'all' || sub.plan_tier === filterTier;
-      return matchesSearch && matchesTier;
+      const matchesType = filterType === 'all'
+        || (filterType === 'subscriber' && sub.status !== 'monitor')
+        || (filterType === 'monitor' && (sub.status === 'monitor' || sub.is_monitor));
+      return matchesSearch && matchesTier && matchesType;
     })
     .sort((a, b) => {
       let comparison = 0;
@@ -147,19 +155,26 @@ export default function AdminUserList({ userId, accessToken }: AdminUserListProp
           <h2 className="text-2xl font-bold">KDLユーザー管理</h2>
         </div>
         <p className="text-purple-100">
-          全サブスクリプションユーザーとAI使用状況を管理します
+          全サブスクリプションユーザーとモニターユーザーのAI使用状況を管理します
         </p>
       </div>
 
       {/* 統計サマリー */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex items-center gap-2 text-gray-500 mb-2">
               <Users size={18} />
               <span className="text-sm font-medium">総加入者数</span>
             </div>
             <p className="text-3xl font-bold text-gray-900">{stats.totalSubscribers}</p>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center gap-2 text-gray-500 mb-2">
+              <UserCog size={18} />
+              <span className="text-sm font-medium">モニター</span>
+            </div>
+            <p className="text-3xl font-bold text-teal-600">{stats.activeMonitorCount || 0}</p>
           </div>
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex items-center gap-2 text-gray-500 mb-2">
@@ -215,6 +230,15 @@ export default function AdminUserList({ userId, accessToken }: AdminUserListProp
           </div>
           <div className="flex items-center gap-2">
             <Filter size={18} className="text-gray-400" />
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value as 'all' | 'subscriber' | 'monitor')}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none"
+            >
+              <option value="all">全タイプ</option>
+              <option value="subscriber">購読者のみ</option>
+              <option value="monitor">モニターのみ</option>
+            </select>
             <select
               value={filterTier}
               onChange={(e) => setFilterTier(e.target.value)}
@@ -280,15 +304,24 @@ export default function AdminUserList({ userId, accessToken }: AdminUserListProp
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded text-xs font-bold ${PLAN_COLORS[sub.plan_tier] || 'bg-gray-100 text-gray-700'}`}>
-                          {sub.plan_tier_label || sub.plan_tier}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`px-2 py-1 rounded text-xs font-bold ${PLAN_COLORS[sub.plan_tier] || 'bg-gray-100 text-gray-700'}`}>
+                            {sub.plan_tier_label || sub.plan_tier}
+                          </span>
+                          {sub.is_monitor && (
+                            <span className="px-2 py-1 rounded text-xs font-bold bg-teal-100 text-teal-700">
+                              モニター
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-1 rounded text-xs font-bold ${
-                          sub.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                          sub.status === 'active' ? 'bg-green-100 text-green-700'
+                          : sub.status === 'monitor' ? 'bg-teal-100 text-teal-700'
+                          : 'bg-gray-100 text-gray-700'
                         }`}>
-                          {sub.status === 'active' ? '有効' : sub.status}
+                          {sub.status === 'active' ? '有効' : sub.status === 'monitor' ? 'モニター' : sub.status}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -323,11 +356,27 @@ export default function AdminUserList({ userId, accessToken }: AdminUserListProp
                               <h4 className="font-bold text-gray-900 mb-2">基本情報</h4>
                               <div className="space-y-1 text-sm">
                                 <p><span className="text-gray-500">プラン:</span> {sub.plan_name || sub.plan_tier}</p>
-                                <p><span className="text-gray-500">期間:</span> {sub.period === 'yearly' ? '年額' : '月額'}</p>
-                                <p><span className="text-gray-500">金額:</span> {formatCurrency(sub.amount)}</p>
-                                <p><span className="text-gray-500">次回更新:</span> {formatDate(sub.next_payment_date || '')}</p>
+                                <p><span className="text-gray-500">期間:</span> {sub.status === 'monitor' ? 'モニター' : sub.period === 'yearly' ? '年額' : '月額'}</p>
+                                <p><span className="text-gray-500">金額:</span> {sub.status === 'monitor' ? '¥0（モニター特典）' : formatCurrency(sub.amount)}</p>
+                                {sub.status !== 'monitor' && (
+                                  <p><span className="text-gray-500">次回更新:</span> {formatDate(sub.next_payment_date || '')}</p>
+                                )}
                               </div>
                             </div>
+                            {/* モニター情報 */}
+                            {(sub.is_monitor || sub.status === 'monitor') && (
+                              <div className="bg-white rounded-lg p-4 border border-teal-200">
+                                <h4 className="font-bold text-gray-900 mb-2">モニター情報</h4>
+                                <div className="space-y-1 text-sm">
+                                  {sub.monitor_expires_at && (
+                                    <p><span className="text-gray-500">有効期限:</span> {formatDate(sub.monitor_expires_at)}</p>
+                                  )}
+                                  {sub.monitor_notes && (
+                                    <p><span className="text-gray-500">メモ:</span> {sub.monitor_notes}</p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                             {/* AI使用統計 */}
                             <div className="bg-white rounded-lg p-4 border border-purple-200">
                               <h4 className="font-bold text-gray-900 mb-2">AI使用統計</h4>

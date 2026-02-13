@@ -21,6 +21,9 @@ const PLAN_TIER_LABELS: Record<string, string> = {
   pro: 'プロ',
   business: 'ビジネス',
   enterprise: 'エンタープライズ',
+  initial_trial: '初回トライアル',
+  initial_standard: '初回スタンダード',
+  initial_business: '初回ビジネス',
 };
 
 // モデル名からプロバイダーを判定
@@ -141,8 +144,34 @@ export async function GET(request: NextRequest) {
       subscriptions = kdlSubs || [];
     }
 
-    // ユーザーIDを抽出
-    const userIds = subscriptions.map((s) => s.user_id).filter(Boolean);
+    // モニターユーザーを取得（アクティブなもののみ）
+    const now = new Date().toISOString();
+    const { data: monitorUsers, error: monitorError } = await supabase
+      .from('monitor_users')
+      .select('id, user_id, admin_user_id, monitor_plan_type, monitor_start_at, monitor_expires_at, notes, service, created_at')
+      .eq('service', 'kdl')
+      .gt('monitor_expires_at', now)
+      .order('created_at', { ascending: false });
+
+    if (monitorError) {
+      console.log('monitor_users fetch error (non-critical):', monitorError);
+    }
+
+    // 重複ユーザーの処理（購読者かつモニターの場合）
+    const subscriberUserIds = new Set(subscriptions.map((s: any) => s.user_id));
+    const monitorOnlyUsers = (monitorUsers || []).filter(
+      (m: any) => !subscriberUserIds.has(m.user_id)
+    );
+    const dualUserMonitorMap = new Map(
+      (monitorUsers || [])
+        .filter((m: any) => subscriberUserIds.has(m.user_id))
+        .map((m: any) => [m.user_id, m])
+    );
+
+    // ユーザーIDを抽出（購読者 + モニター専用ユーザー）
+    const subscriptionUserIds = subscriptions.map((s: any) => s.user_id).filter(Boolean);
+    const monitorOnlyUserIds = monitorOnlyUsers.map((m: any) => m.user_id).filter(Boolean);
+    const userIds = [...new Set([...subscriptionUserIds, ...monitorOnlyUserIds])];
 
     // ユーザー情報を取得（auth.usersから）
     let usersMap: Record<string, string> = {};
@@ -251,13 +280,42 @@ export async function GET(request: NextRequest) {
       usageMap[data.userId] = data;
     });
 
-    // サブスクリプションデータにユーザー情報と使用量を追加
-    const enrichedSubscriptions = subscriptions.map((sub) => ({
-      ...sub,
-      email: sub.email || usersMap[sub.user_id] || 'Unknown',
-      plan_tier_label: PLAN_TIER_LABELS[sub.plan_tier] || sub.plan_tier,
-      usage: usageMap[sub.user_id] || { dailyUsage: 0, monthlyUsage: 0, totalCost: 0 },
+    // サブスクリプションデータにユーザー情報と使用量を追加（モニターフラグ含む）
+    const enrichedSubscriptions = subscriptions.map((sub: any) => {
+      const monitorInfo = dualUserMonitorMap.get(sub.user_id);
+      return {
+        ...sub,
+        email: sub.email || usersMap[sub.user_id] || 'Unknown',
+        plan_tier_label: PLAN_TIER_LABELS[sub.plan_tier] || sub.plan_tier,
+        usage: usageMap[sub.user_id] || { dailyUsage: 0, monthlyUsage: 0, totalCost: 0 },
+        is_monitor: !!monitorInfo,
+        monitor_expires_at: monitorInfo?.monitor_expires_at || null,
+        monitor_notes: monitorInfo?.notes || null,
+      };
+    });
+
+    // モニター専用ユーザーをSubscriber互換フォーマットに変換
+    const monitorSubscribers = monitorOnlyUsers.map((m: any) => ({
+      id: `monitor-${m.id}`,
+      user_id: m.user_id,
+      email: usersMap[m.user_id] || 'Unknown',
+      status: 'monitor',
+      period: 'monthly',
+      amount: 0,
+      plan_tier: m.monitor_plan_type,
+      plan_tier_label: PLAN_TIER_LABELS[m.monitor_plan_type] || m.monitor_plan_type,
+      plan_name: `モニター (${PLAN_TIER_LABELS[m.monitor_plan_type] || m.monitor_plan_type})`,
+      current_period_end: m.monitor_expires_at,
+      next_payment_date: null,
+      created_at: m.created_at,
+      usage: usageMap[m.user_id] || { dailyUsage: 0, monthlyUsage: 0, totalCost: 0 },
+      is_monitor: true,
+      monitor_expires_at: m.monitor_expires_at,
+      monitor_notes: m.notes,
     }));
+
+    // 購読者とモニター専用ユーザーを統合
+    const allSubscribers = [...enrichedSubscriptions, ...monitorSubscribers];
 
     // 統計を取得（新テーブル or 旧テーブル）
     const tableName = useNewTable ? 'kdl_subscriptions' : 'subscriptions';
@@ -363,8 +421,11 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    // モニターユーザー統計
+    const activeMonitorCount = monitorOnlyUsers.length + dualUserMonitorMap.size;
+
     return NextResponse.json({
-      subscribers: enrichedSubscriptions,
+      subscribers: allSubscribers,
       stats: {
         totalSubscribers: totalSubscribers || 0,
         monthlyPlanCount: monthlyPlanCount || 0,
@@ -373,6 +434,7 @@ export async function GET(request: NextRequest) {
         totalMonthlyAIUsage: totalMonthlyAIUsage || 0,
         totalMonthlyCost: Math.round(totalMonthlyCost * 100) / 100,
         monthlyRevenue: Math.round(monthlyRevenue),
+        activeMonitorCount,
         // 新規追加: モデル別・アクション別統計
         modelUsageStats: globalByModel,
         actionUsageStats: globalByAction,
