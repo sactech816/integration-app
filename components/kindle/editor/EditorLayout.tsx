@@ -196,14 +196,53 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     setActiveTab({ type: 'main' }); // セクション変更時は本文タブに戻る
   }, []);
 
-  // ドラフト一覧を取得
+  // 初期タブ（本文2 + メモ）を自動作成
+  const createDefaultDrafts = useCallback(async (sectionId: string): Promise<SectionDraft[]> => {
+    const defaults: { label: string; tab_type: 'draft' | 'memo' }[] = [
+      { label: '本文2', tab_type: 'draft' },
+      { label: 'メモ', tab_type: 'memo' },
+    ];
+
+    const created: SectionDraft[] = [];
+    for (const d of defaults) {
+      try {
+        const response = await fetch('/api/kdl/section-drafts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            section_id: sectionId,
+            book_id: book.id,
+            label: d.label,
+            content: '',
+            tab_type: d.tab_type,
+          }),
+        });
+        if (response.ok) {
+          created.push(await response.json());
+        }
+      } catch {
+        // 作成失敗しても続行
+      }
+    }
+    return created;
+  }, [book.id]);
+
+  // ドラフト一覧を取得（なければ自動作成）
   const fetchDrafts = useCallback(async (sectionId: string) => {
     setIsDraftsLoading(true);
     try {
       const response = await fetch(`/api/kdl/section-drafts?section_id=${sectionId}`);
       if (response.ok) {
         const data = await response.json();
-        setDrafts(data.drafts || []);
+        const existing = data.drafts || [];
+
+        if (existing.length === 0 && !readOnly) {
+          // 初回: デフォルトタブを自動作成
+          const defaults = await createDefaultDrafts(sectionId);
+          setDrafts(defaults);
+        } else {
+          setDrafts(existing);
+        }
       } else {
         setDrafts([]);
       }
@@ -212,7 +251,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     } finally {
       setIsDraftsLoading(false);
     }
-  }, []);
+  }, [createDefaultDrafts, readOnly]);
 
   // セクション変更時にドラフトを読み込む
   useEffect(() => {
