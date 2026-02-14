@@ -3,10 +3,11 @@ import { Metadata } from 'next';
 import ProfileViewer from '@/components/profile/ProfileViewer';
 import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
 import { shouldHideFooter } from '@/lib/utils/checkCreatorPlanPermission';
+import { generateUGCMetadata } from '@/lib/seo/generateUGCMetadata';
+import { generateUGCSchema } from '@/lib/seo/generateUGCSchema';
 
-// 動的レンダリングを強制（常に最新のデータを取得）
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// ISR: 5分キャッシュ + On-Demand Revalidation
+export const revalidate = 300;
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -67,28 +68,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = headerBlock?.data?.title || '';
   const avatar = headerBlock?.data?.avatar || null;
 
-  // OGP画像: アバター画像があればそれを使用、なければ動的生成
-  const ogImage = avatar || 
-    `${siteUrl}/api/og?title=${encodeURIComponent(name)}&description=${encodeURIComponent(title)}&type=profile`;
-
-  return {
+  return generateUGCMetadata({
     title: name,
     description: title,
-    alternates: {
-      canonical: `${siteUrl}/profile/${slug}`,
-    },
-    openGraph: {
-      title: name,
-      description: title,
-      images: [{ url: ogImage, width: 1200, height: 630 }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: name,
-      description: title,
-      images: [ogImage],
-    },
-  };
+    type: 'profile',
+    slug,
+    imageUrl: avatar,
+  });
 }
 
 export default async function ProfilePage({ params }: Props) {
@@ -146,19 +132,23 @@ export default async function ProfilePage({ params }: Props) {
   const title = headerBlock?.data?.title || '';
   const avatar = headerBlock?.data?.avatar || null;
 
-  const profileSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'ProfilePage',
+  const profileSchema = generateUGCSchema({
+    schemaType: 'ProfilePage',
     name: name,
     description: title,
     url: `${siteUrl}/profile/${slug}`,
-    mainEntity: {
-      '@type': 'Person',
-      name: name,
-      description: title,
-      ...(avatar && { image: avatar }),
+    datePublished: profile.created_at,
+    dateModified: profile.updated_at,
+    imageUrl: avatar || undefined,
+    additionalProps: {
+      mainEntity: {
+        '@type': 'Person',
+        name: name,
+        description: title,
+        ...(avatar && { image: avatar }),
+      },
     },
-  };
+  });
 
   // パンくずリスト構造化データ
   const breadcrumbSchema = generateBreadcrumbSchema(

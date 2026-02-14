@@ -107,6 +107,7 @@ export async function GET(request: NextRequest) {
               order_index: section.order_index,
               is_completed: !!(section.content && section.content.length >= 100),
               content_length: section.content?.length || 0,
+              content: section.content || '',
             }));
 
           return {

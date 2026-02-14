@@ -186,6 +186,18 @@ export async function middleware(request: NextRequest) {
       return response;
     }
 
+    // 代理店チェック（kdl_agenciesテーブルを確認）
+    const { data: agencyData } = await supabaseForQuery
+      .from('kdl_agencies')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (agencyData) {
+      return response;
+    }
+
     // 未課金ユーザーはLPの料金セクションにリダイレクト
     return NextResponse.redirect(new URL('/kindle/lp#pricing', request.url));
 

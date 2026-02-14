@@ -185,7 +185,7 @@ export default function AgencyFeedbackView({
                 type="text"
                 value={selectedBookId}
                 onChange={(e) => setSelectedBookId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder="対象書籍のIDを入力"
               />
             </div>
@@ -195,7 +195,7 @@ export default function AgencyFeedbackView({
                 type="text"
                 value={selectedSectionId}
                 onChange={(e) => setSelectedSectionId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder="対象節のID（任意）"
               />
             </div>
@@ -221,7 +221,7 @@ export default function AgencyFeedbackView({
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as FeedbackStatus | '')}
-          className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="text-sm text-gray-900 border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-amber-500"
         >
           <option value="">すべてのステータス</option>
           <option value="pending">未読</option>
@@ -298,7 +298,7 @@ export default function AgencyFeedbackView({
                   <p className="text-xs text-blue-600 font-medium mb-1">ユーザーからの返信:</p>
                   <p className="text-sm text-blue-800">{feedback.user_response}</p>
                   {feedback.responded_at && (
-                    <p className="text-xs text-blue-400 mt-1">{formatDate(feedback.responded_at)}</p>
+                    <p className="text-xs text-blue-600 mt-1">{formatDate(feedback.responded_at)}</p>
                   )}
                 </div>
               )}

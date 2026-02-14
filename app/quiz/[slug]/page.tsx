@@ -3,10 +3,11 @@ import { Metadata } from 'next';
 import QuizPlayerWrapper from '@/components/quiz/QuizPlayerWrapper';
 import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
 import { shouldHideFooter } from '@/lib/utils/checkCreatorPlanPermission';
+import { generateUGCMetadata } from '@/lib/seo/generateUGCMetadata';
+import { generateUGCSchema } from '@/lib/seo/generateUGCSchema';
 
-// 動的レンダリングを強制（常に最新のデータを取得）
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// ISR: 5分キャッシュ + On-Demand Revalidation
+export const revalidate = 300;
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -52,33 +53,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .single();
 
   if (!quiz) {
-    return {
-      title: '診断クイズが見つかりません',
-    };
+    return { title: '診断クイズが見つかりません' };
   }
 
-  // OGP画像: コンテンツの画像があればそれを使用、なければ動的生成
-  const ogImage = quiz.image_url || 
-    `${siteUrl}/api/og?title=${encodeURIComponent(quiz.title)}&type=quiz`;
-
-  return {
+  return generateUGCMetadata({
     title: quiz.title,
     description: quiz.description,
-    alternates: {
-      canonical: `${siteUrl}/quiz/${slug}`,
-    },
-    openGraph: {
-      title: quiz.title,
-      description: quiz.description,
-      images: [{ url: ogImage, width: 1200, height: 630 }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: quiz.title,
-      description: quiz.description,
-      images: [ogImage],
-    },
-  };
+    type: 'quiz',
+    slug,
+    imageUrl: quiz.image_url,
+  });
 }
 
 export default async function QuizPage({ params }: Props) {
@@ -119,20 +103,18 @@ export default async function QuizPage({ params }: Props) {
 
   // 構造化データ - Quiz
   const questions = typeof quiz.questions === 'string' ? JSON.parse(quiz.questions) : quiz.questions;
-  const quizSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Quiz',
+  const quizSchema = generateUGCSchema({
+    schemaType: 'Quiz',
     name: quiz.title,
     description: quiz.description,
     url: `${siteUrl}/quiz/${slug}`,
-    educationalLevel: 'beginner',
-    numberOfQuestions: questions?.length || 0,
-    creator: {
-      '@type': 'Organization',
-      name: '集客メーカー',
-      url: siteUrl,
+    datePublished: quiz.created_at,
+    dateModified: quiz.updated_at,
+    additionalProps: {
+      educationalLevel: 'beginner',
+      numberOfQuestions: questions?.length || 0,
     },
-  };
+  });
 
   // パンくずリスト構造化データ
   const breadcrumbSchema = generateBreadcrumbSchema(

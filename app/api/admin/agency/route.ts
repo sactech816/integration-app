@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       // 割り当てられたユーザー一覧
       const { data: assignedUsers } = await supabase
         .from('kdl_agency_users')
-        .select('user_id, assigned_at, note, status')
+        .select('id, user_id, assigned_at, note, status')
         .eq('agency_id', agency.id);
 
       const enrichedAssigned = [];

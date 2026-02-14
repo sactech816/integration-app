@@ -1,99 +1,29 @@
-'use client';
+import { Metadata } from 'next';
+import ProfileCoachDemoPage from './CoachDemoClient';
 
-import React from 'react';
-import ProfileViewer from '@/components/profile/ProfileViewer';
-import { Profile, generateBlockId } from '@/lib/types';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
-// コーチ・講師デモ（8ブロック）
-const demoProfile: Profile = {
-  id: 'demo-coach',
-  slug: 'demo-coach',
-  nickname: 'コーチ・講師デモ',
-  settings: {
-    theme: {
-      gradient: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-      animated: false,
-    },
+export const metadata: Metadata = {
+  title: 'コーチ プロフィールLPデモ',
+  description: 'コーチ・講師向けのプロフィールLPデモです。自己紹介、サービス内容、実績、お客様の声をまとめて表示できます。集客メーカーでお試しください。',
+  keywords: ['コーチ プロフィールLP', 'コーチ ホームページ デモ', '講師 LP サンプル', '集客メーカー'],
+  alternates: { canonical: `${siteUrl}/profile/demo/coach` },
+  openGraph: {
+    title: 'コーチ プロフィールLPデモ｜集客メーカー',
+    description: 'コーチ・講師向けのプロフィールLPデモです。集客メーカーでお試しください。',
+    url: `${siteUrl}/profile/demo/coach`,
+    images: [{ url: `${siteUrl}/api/og?title=${encodeURIComponent('コーチ プロフィールLPデモ')}&type=profile`, width: 1200, height: 630 }],
+    locale: 'ja_JP',
+    siteName: '集客メーカー',
   },
-  content: [
-    {
-      id: generateBlockId(),
-      type: 'header',
-      data: {
-        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=faces',
-        name: '佐藤 美咲',
-        title: 'ライフコーチ / キャリアアドバイザー',
-        category: 'personal',
-      },
-    },
-    {
-      id: generateBlockId(),
-      type: 'text_card',
-      data: {
-        title: 'あなたの可能性を引き出します',
-        text: '「自分らしく生きたい」「もっと成長したい」\nそんな想いを持つあなたをサポートします。\n\n一人ひとりに寄り添い、あなたの中にある答えを一緒に見つけていきましょう。',
-        align: 'center',
-      },
-    },
-    {
-      id: generateBlockId(),
-      type: 'text_card',
-      data: {
-        title: 'このような方をサポートしています',
-        text: '✅ キャリアの方向性に悩んでいる\n✅ 自分の強みが分からない\n✅ ワークライフバランスを改善したい\n✅ 目標を達成したい',
-        align: 'left',
-      },
-    },
-    {
-      id: generateBlockId(),
-      type: 'text_card',
-      data: {
-        title: 'コーチングメニュー',
-        text: '【個別セッション】\n60分 × 月4回\nあなたのペースで目標達成をサポート\n\n【グループコーチング】\n90分 × 月2回\n仲間と一緒に学び成長する',
-        align: 'left',
-      },
-    },
-    {
-      id: generateBlockId(),
-      type: 'text_card',
-      data: {
-        title: 'クライアントの変化',
-        text: '「転職活動で理想の仕事に出会えました！」\n- 30代女性\n\n「起業する勇気が持てました」\n- 40代男性\n\n「自分に自信が持てるようになりました」\n- 20代女性',
-        align: 'left',
-      },
-    },
-    {
-      id: generateBlockId(),
-      type: 'text_card',
-      data: {
-        title: 'プロフィール',
-        text: '大手企業で人事・採用を10年経験後、独立。\n延べ500名以上のキャリア支援実績。\n\n【資格】\n・国際コーチング連盟認定コーチ（ICF）\n・キャリアコンサルタント',
-        align: 'left',
-      },
-    },
-    {
-      id: generateBlockId(),
-      type: 'text_card',
-      data: {
-        title: '体験セッションのご案内',
-        text: '初めての方限定で、60分の体験セッションを無料で提供しています。\n\nまずはお気軽にお試しください。',
-        align: 'center',
-      },
-    },
-    {
-      id: generateBlockId(),
-      type: 'links',
-      data: {
-        links: [
-          { label: '🎁 無料体験セッションを予約', url: 'https://example.com/trial', style: 'primary' },
-          { label: '📱 LINE公式アカウント', url: 'https://lin.ee/example', style: '' },
-          { label: '📝 お問い合わせ', url: 'https://example.com/contact', style: '' },
-        ],
-      },
-    },
-  ],
+  twitter: {
+    card: 'summary_large_image',
+    title: 'コーチ プロフィールLPデモ｜集客メーカー',
+    description: 'コーチ・講師向けのプロフィールLPデモです。集客メーカーでお試しください。',
+    creator: '@syukaku_maker',
+  },
 };
 
-export default function ProfileCoachDemoPage() {
-  return <ProfileViewer profile={demoProfile} />;
+export default function Page() {
+  return <ProfileCoachDemoPage />;
 }

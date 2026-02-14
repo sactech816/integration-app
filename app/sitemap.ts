@@ -218,6 +218,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let businessPages: MetadataRoute.Sitemap = [];
   let surveyPages: MetadataRoute.Sitemap = [];
   let bookingPages: MetadataRoute.Sitemap = [];
+  let salesLetterPages: MetadataRoute.Sitemap = [];
 
   if (supabase) {
     try {
@@ -292,12 +293,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'weekly' as const,
         priority: 0.6,
       })) || [];
+
+      // 公開されているセールスレターを取得
+      const { data: salesLetters } = await supabase
+        .from('sales_letters')
+        .select('slug, updated_at')
+        .not('slug', 'is', null);
+
+      salesLetterPages = salesLetters?.map(sl => ({
+        url: `${BASE_URL}/s/${sl.slug}`,
+        lastModified: new Date(sl.updated_at),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })) || [];
     } catch (error) {
       console.error('Sitemap: Failed to fetch dynamic content', error);
     }
   }
 
-  return [...staticPages, ...quizPages, ...profilePages, ...businessPages, ...surveyPages, ...bookingPages];
+  return [...staticPages, ...quizPages, ...profilePages, ...businessPages, ...surveyPages, ...bookingPages, ...salesLetterPages];
 }
 
 

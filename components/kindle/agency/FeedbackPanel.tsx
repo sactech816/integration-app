@@ -141,7 +141,7 @@ export default function FeedbackPanel({
                   setShowQuoteInput(false);
                   setQuotedText('');
                 }}
-                className="text-xs text-gray-500 hover:text-gray-700"
+                className="text-xs text-gray-600 hover:text-gray-800"
               >
                 削除
               </button>
@@ -149,7 +149,7 @@ export default function FeedbackPanel({
             <textarea
               value={quotedText}
               onChange={(e) => setQuotedText(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
               rows={2}
               placeholder="該当箇所のテキストを貼り付け"
             />
@@ -171,7 +171,7 @@ export default function FeedbackPanel({
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             rows={4}
             placeholder="フィードバックを入力してください..."
           />
@@ -183,7 +183,7 @@ export default function FeedbackPanel({
         {onClose && (
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+            className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
           >
             キャンセル
           </button>

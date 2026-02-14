@@ -479,9 +479,16 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
 
       if (result) {
         const wasNewCreation = !existingId; // 保存前の状態で判定
-        
+
         setSavedId(result.id);
         setSavedSlug(result.slug);
+
+        // ISRキャッシュを無効化
+        fetch('/api/revalidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: `/survey/${result.slug}` }),
+        }).catch(() => {});
 
         if (wasNewCreation) {
           setShowSuccessModal(true);

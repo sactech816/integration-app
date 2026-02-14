@@ -4,10 +4,11 @@ import { Survey } from "@/lib/types";
 import SurveyPlayer from "@/components/survey/SurveyPlayer";
 import { generateBreadcrumbSchema } from "@/components/shared/Breadcrumb";
 import { shouldHideFooter } from "@/lib/utils/checkCreatorPlanPermission";
+import { generateUGCMetadata } from '@/lib/seo/generateUGCMetadata';
+import { generateUGCSchema } from '@/lib/seo/generateUGCSchema';
 
-// 動的レンダリングを強制（常に最新のデータを取得）
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// ISR: 5分キャッシュ + On-Demand Revalidation
+export const revalidate = 300;
 
 // サーバーサイドでSupabaseクライアントを作成
 function getSupabaseClient() {
@@ -63,43 +64,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return { title: "アンケートが見つかりません" };
   }
 
-  const title = survey.title;
-  const description = survey.description || `${survey.title}へのご回答をお願いします`;
-  const ogImage = `${siteUrl}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&type=survey`;
-
-  return {
-    title,
-    description,
-    keywords: [
-      'アンケート',
-      'アンケート作成',
-      '無料アンケートツール',
-      'Googleフォーム代替',
-      'オンラインアンケート',
-      'アンケート調査',
-      '投票',
-      'フィードバック収集',
-    ],
-    alternates: {
-      canonical: `${siteUrl}/survey/${slug}`,
-    },
-    openGraph: {
-      type: 'website',
-      locale: 'ja_JP',
-      url: `${siteUrl}/survey/${slug}`,
-      siteName: '集客メーカー',
-      title,
-      description,
-      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [ogImage],
-      creator: '@syukaku_maker',
-    },
-  };
+  return generateUGCMetadata({
+    title: survey.title,
+    description: survey.description || `${survey.title}へのご回答をお願いします`,
+    type: 'survey',
+    slug,
+  });
 }
 
 export default async function SurveyPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -135,18 +105,14 @@ export default async function SurveyPage({ params }: { params: Promise<{ slug: s
   };
 
   // 構造化データ - Survey
-  const surveySchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Survey',
+  const surveySchema = generateUGCSchema({
+    schemaType: 'Survey',
     name: survey.title,
     description: survey.description || `${survey.title}へのご回答をお願いします`,
     url: `${siteUrl}/survey/${slug}`,
-    creator: {
-      '@type': 'Organization',
-      name: '集客メーカー',
-      url: siteUrl,
-    },
-  };
+    datePublished: survey.created_at,
+    dateModified: survey.updated_at,
+  });
 
   // パンくずリスト構造化データ
   const breadcrumbSchema = generateBreadcrumbSchema(

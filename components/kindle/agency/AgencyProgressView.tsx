@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   BookOpen, ChevronDown, ChevronRight, Check, Clock, FileText,
-  Loader2, AlertCircle, Edit3, BarChart3, ArrowLeft
+  Loader2, AlertCircle, Edit3, BarChart3, Eye, EyeOff, X
 } from 'lucide-react';
 
 interface Section {
@@ -12,6 +12,7 @@ interface Section {
   order_index: number;
   is_completed: boolean;
   content_length: number;
+  content: string;
 }
 
 interface Chapter {
@@ -56,6 +57,8 @@ export default function AgencyProgressView({
   const [error, setError] = useState<string | null>(null);
   const [expandedBooks, setExpandedBooks] = useState<Set<string>>(new Set());
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
+  const [viewingSection, setViewingSection] = useState<Section | null>(null);
+  const [viewingSectionMeta, setViewingSectionMeta] = useState<{ bookTitle: string; chapterTitle: string } | null>(null);
 
   const fetchProgress = useCallback(async () => {
     if (!selectedUserId) return;
@@ -108,6 +111,11 @@ export default function AgencyProgressView({
     if (percentage >= 100) return 'bg-green-500';
     if (percentage >= 50) return 'bg-amber-500';
     return 'bg-orange-400';
+  };
+
+  const handleViewContent = (section: Section, bookTitle: string, chapterTitle: string) => {
+    setViewingSection(section);
+    setViewingSectionMeta({ bookTitle, chapterTitle });
   };
 
   if (!selectedUserId) {
@@ -196,7 +204,7 @@ export default function AgencyProgressView({
                 <div className="flex items-center gap-3">
                   <div className="text-right text-sm">
                     <span className="font-bold text-gray-700">{book.progress_percentage}%</span>
-                    <span className="text-gray-400 ml-1 text-xs">
+                    <span className="text-gray-600 ml-1 text-xs">
                       ({book.completed_sections}/{book.total_sections})
                     </span>
                   </div>
@@ -212,7 +220,7 @@ export default function AgencyProgressView({
               {expandedBooks.has(book.id) && (
                 <div className="border-t border-gray-100">
                   {book.chapters.length === 0 ? (
-                    <p className="text-gray-400 text-sm p-4">章がありません</p>
+                    <p className="text-gray-500 text-sm p-4">章がありません</p>
                   ) : (
                     book.chapters.map(chapter => (
                       <div key={chapter.id} className="border-b border-gray-50 last:border-b-0">
@@ -231,7 +239,7 @@ export default function AgencyProgressView({
                               {chapter.title}
                             </span>
                           </div>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-gray-600">
                             {chapter.completed_sections}/{chapter.total_sections}節
                           </span>
                         </button>
@@ -251,28 +259,42 @@ export default function AgencyProgressView({
                                     <Clock size={14} className="text-gray-300 shrink-0" />
                                   )}
                                   <span className={`text-sm truncate ${
-                                    section.is_completed ? 'text-gray-700' : 'text-gray-400'
+                                    section.is_completed ? 'text-gray-700' : 'text-gray-600'
                                   }`}>
                                     {section.title || `節 ${section.order_index + 1}`}
                                   </span>
                                   {section.content_length > 0 && (
-                                    <span className="text-[10px] text-gray-400 shrink-0">
+                                    <span className="text-[10px] text-gray-500 shrink-0">
                                       ({section.content_length}文字)
                                     </span>
                                   )}
                                 </div>
-                                {onFeedback && section.is_completed && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onFeedback(selectedUserId!, book.id, section.id);
-                                    }}
-                                    className="p-1 text-gray-300 hover:text-amber-500 hover:bg-amber-50 rounded transition-colors shrink-0"
-                                    title="フィードバック"
-                                  >
-                                    <Edit3 size={14} />
-                                  </button>
-                                )}
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {section.content_length > 0 && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleViewContent(section, book.title, chapter.title);
+                                      }}
+                                      className="p-1 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
+                                      title="本文を閲覧"
+                                    >
+                                      <Eye size={14} />
+                                    </button>
+                                  )}
+                                  {onFeedback && section.is_completed && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onFeedback(selectedUserId!, book.id, section.id);
+                                      }}
+                                      className="p-1 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded transition-colors"
+                                      title="フィードバック"
+                                    >
+                                      <Edit3 size={14} />
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -284,6 +306,92 @@ export default function AgencyProgressView({
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* 本文閲覧モーダル */}
+      {viewingSection && viewingSectionMeta && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+            {/* モーダルヘッダー */}
+            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 shrink-0">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 truncate">
+                    {viewingSection.title || `節 ${viewingSection.order_index + 1}`}
+                  </h3>
+                  <p className="text-sm text-gray-600 truncate mt-0.5">
+                    {viewingSectionMeta.bookTitle} / {viewingSectionMeta.chapterTitle}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 ml-4 shrink-0">
+                  <span className="text-xs text-gray-500">{viewingSection.content_length}文字</span>
+                  {viewingSection.is_completed ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                      <Check size={12} />完了
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                      <Clock size={12} />執筆中
+                    </span>
+                  )}
+                  <button
+                    onClick={() => { setViewingSection(null); setViewingSectionMeta(null); }}
+                    className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
+                  >
+                    <X size={18} className="text-gray-500" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 本文 */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {viewingSection.content ? (
+                <div
+                  className="prose prose-sm max-w-none text-gray-800 leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: viewingSection.content }}
+                />
+              ) : (
+                <div className="text-center py-12">
+                  <EyeOff className="text-gray-300 mx-auto mb-3" size={40} />
+                  <p className="text-gray-500">まだ内容がありません</p>
+                </div>
+              )}
+            </div>
+
+            {/* モーダルフッター */}
+            <div className="px-6 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-between shrink-0">
+              <p className="text-xs text-gray-500">閲覧専用 - {userEmail}</p>
+              <div className="flex items-center gap-2">
+                {onFeedback && viewingSection.is_completed && (
+                  <button
+                    onClick={() => {
+                      const sectionId = viewingSection.id;
+                      const bookId = books.find(b =>
+                        b.chapters.some(c => c.sections.some(s => s.id === sectionId))
+                      )?.id;
+                      if (bookId) {
+                        setViewingSection(null);
+                        setViewingSectionMeta(null);
+                        onFeedback(selectedUserId!, bookId, sectionId);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-amber-600 hover:bg-amber-50 rounded-lg transition-colors font-medium"
+                  >
+                    <Edit3 size={14} />
+                    フィードバック
+                  </button>
+                )}
+                <button
+                  onClick={() => { setViewingSection(null); setViewingSectionMeta(null); }}
+                  className="px-4 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

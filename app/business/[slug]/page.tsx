@@ -3,10 +3,11 @@ import { Metadata } from 'next';
 import BusinessViewer from '@/components/business/BusinessViewer';
 import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
 import { shouldHideFooter } from '@/lib/utils/checkCreatorPlanPermission';
+import { generateUGCMetadata } from '@/lib/seo/generateUGCMetadata';
+import { generateUGCSchema } from '@/lib/seo/generateUGCSchema';
 
-// 動的レンダリングを強制（常に最新のデータを取得）
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// ISR: 5分キャッシュ + On-Demand Revalidation
+export const revalidate = 300;
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -53,33 +54,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = lp.settings?.title || 'ビジネスLP';
   const description = lp.settings?.description || '';
-  
-  // heroブロックから背景画像を取得
   const heroBlock = lp.content?.find((b: { type: string }) => b.type === 'hero');
   const heroImage = heroBlock?.data?.backgroundImage || null;
 
-  // OGP画像: hero画像があればそれを使用、なければ動的生成
-  const ogImage = heroImage || 
-    `${siteUrl}/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}&type=business`;
-
-  return {
+  return generateUGCMetadata({
     title,
     description,
-    alternates: {
-      canonical: `${siteUrl}/business/${slug}`,
-    },
-    openGraph: {
-      title,
-      description,
-      images: [{ url: ogImage, width: 1200, height: 630 }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [ogImage],
-    },
-  };
+    type: 'business',
+    slug,
+    imageUrl: heroImage,
+  });
 }
 
 export default async function BusinessPage({ params }: Props) {
@@ -141,22 +125,25 @@ export default async function BusinessPage({ params }: Props) {
   const lpTitle = lp.settings?.title || 'ビジネスLP';
   const lpDescription = lp.settings?.description || '';
   
-  const webPageSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
+  const webPageSchema = generateUGCSchema({
+    schemaType: 'WebPage',
     name: lpTitle,
     description: lpDescription,
     url: `${siteUrl}/business/${slug}`,
-    mainEntity: {
-      '@type': 'Service',
-      name: lpTitle,
-      description: lpDescription,
-      provider: {
-        '@type': 'Organization',
+    datePublished: lp.created_at,
+    dateModified: lp.updated_at,
+    additionalProps: {
+      mainEntity: {
+        '@type': 'Service',
         name: lpTitle,
+        description: lpDescription,
+        provider: {
+          '@type': 'Organization',
+          name: lpTitle,
+        },
       },
     },
-  };
+  });
 
   // パンくずリスト構造化データ
   const breadcrumbSchema = generateBreadcrumbSchema(

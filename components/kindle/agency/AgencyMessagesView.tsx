@@ -311,7 +311,7 @@ export default function AgencyMessagesView({
                       {formatLastMessage(conv.last_message.content)}
                     </p>
                   ) : (
-                    <p className="text-xs text-gray-400 mt-0.5">メッセージなし</p>
+                    <p className="text-xs text-gray-500 mt-0.5">メッセージなし</p>
                   )}
                   {conv.last_message && (
                     <p className="text-[10px] text-gray-400 mt-0.5">
@@ -330,7 +330,7 @@ export default function AgencyMessagesView({
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <MessageSquare className="text-gray-200 mx-auto mb-3" size={48} />
-                <p className="text-gray-400">会話を選択してください</p>
+                <p className="text-gray-500">会話を選択してください</p>
               </div>
             </div>
           ) : (
@@ -353,8 +353,8 @@ export default function AgencyMessagesView({
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-400 text-sm">まだメッセージがありません</p>
-                    <p className="text-gray-300 text-xs mt-1">最初のメッセージを送りましょう</p>
+                    <p className="text-gray-500 text-sm">まだメッセージがありません</p>
+                    <p className="text-gray-400 text-xs mt-1">最初のメッセージを送りましょう</p>
                   </div>
                 ) : (
                   messages.map(msg => (
@@ -374,12 +374,12 @@ export default function AgencyMessagesView({
                           msg.sender_type === 'agency' ? 'justify-end' : 'justify-start'
                         }`}>
                           <span className={`text-[10px] ${
-                            msg.sender_type === 'agency' ? 'text-blue-200' : 'text-gray-400'
+                            msg.sender_type === 'agency' ? 'text-blue-100' : 'text-gray-400'
                           }`}>
                             {formatTime(msg.created_at)}
                           </span>
                           {msg.sender_type === 'agency' && msg.is_read && (
-                            <span className="text-[10px] text-blue-200">既読</span>
+                            <span className="text-[10px] text-blue-100">既読</span>
                           )}
                         </div>
                       </div>

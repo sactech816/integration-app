@@ -51,4 +51,4 @@ Allow: /
 Crawl-delay: 0
 
 # サイトマップの場所
-Sitemap: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo'}/sitemap.xml
+Sitemap: https://makers.tokyo/sitemap.xml

@@ -323,6 +323,14 @@ export default function SalesLetterEditor({
         if (result.error) throw result.error;
 
         setCompletedSlug(result.data.slug);
+
+        // ISRキャッシュを無効化
+        fetch('/api/revalidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: `/s/${result.data.slug}` }),
+        }).catch(() => {});
+
         alert('保存しました！');
       } else {
         // 新規作成：カスタムslugまたは自動生成（リトライ付き）
@@ -362,6 +370,14 @@ export default function SalesLetterEditor({
           setSavedId(data.id);
           setSlug(data.slug);
           setCompletedSlug(data.slug);
+
+          // ISRキャッシュを無効化
+          fetch('/api/revalidate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: `/s/${data.slug}` }),
+          }).catch(() => {});
+
           if (customSlug) setCustomSlug(''); // カスタムslugをクリア
           setShowCompleteModal(true);
           return;

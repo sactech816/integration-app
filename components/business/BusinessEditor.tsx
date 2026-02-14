@@ -768,6 +768,14 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
         setSavedSlug(result.data.slug);
         setSavedId(result.data.id);
         setJustSavedSlug(result.data.slug);
+
+        // ISRキャッシュを無効化
+        fetch('/api/revalidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: `/business/${result.data.slug}` }),
+        }).catch(() => {});
+
         if (!initialData && !savedId) {
           // 完全な新規作成の場合のみ成功モーダルを表示
           setShowSuccessModal(true);

@@ -589,10 +589,17 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
             
             if (result) {
                 const wasNewCreation = !existingId; // 保存前の状態で判定
-                
+
                 setSavedId(result.id);
                 setSavedSlug(result.slug);
-                
+
+                // ISRキャッシュを無効化
+                fetch('/api/revalidate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: `/quiz/${result.slug}` }),
+                }).catch(() => {});
+
                 // 新規作成時のみ開発支援モーダルを表示
                 if (wasNewCreation) {
                     setJustSavedQuizId(result.slug);
