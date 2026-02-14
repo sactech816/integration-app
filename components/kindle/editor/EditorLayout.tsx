@@ -1580,9 +1580,9 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
       {/* KDP情報モーダル */}
       {isKdpModalOpen && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden animate-fade-in flex flex-col">
             {/* モーダルヘッダー */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-amber-50 to-orange-50">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-amber-50 to-orange-50 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
                   <Sparkles className="text-white" size={20} />
@@ -1601,7 +1601,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             </div>
 
             {/* モーダルコンテンツ */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+            <div className="p-6 overflow-y-auto flex-1 min-h-0">
               {(isGeneratingKdp || isLoadingKdp) ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="relative w-16 h-16 mb-4">
@@ -1735,7 +1735,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
 
             {/* モーダルフッター */}
             {kdpInfo && (
-              <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 shrink-0">
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-500">
                     各項目をクリックしてコピーできます
