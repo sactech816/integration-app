@@ -46,8 +46,9 @@ function AttendanceEditorContent() {
   // カレンダー状態
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showTimeInput, setShowTimeInput] = useState(false);
-  const [defaultStartTime, setDefaultStartTime] = useState('19:00');
-  const [defaultEndTime, setDefaultEndTime] = useState('21:00');
+  const [defaultTimeSlots, setDefaultTimeSlots] = useState<{ start: string; end: string }[]>([
+    { start: '19:00', end: '21:00' },
+  ]);
 
   // 送信状態
   const [submitting, setSubmitting] = useState(false);
@@ -60,12 +61,28 @@ function AttendanceEditorContent() {
   // showTimeInputが変更されたら既存スロットを更新
   useEffect(() => {
     if (slots.length === 0) return;
-    
-    setSlots(prevSlots => prevSlots.map(slot => ({
-      ...slot,
-      start_time: showTimeInput ? (slot.start_time || defaultStartTime) : undefined,
-      end_time: showTimeInput ? (slot.end_time || defaultEndTime) : undefined,
-    })));
+
+    if (!showTimeInput) {
+      // 時間設定OFF → 日付ごとに1つのスロットに集約（時間を除去）
+      const seenDates = new Set<string>();
+      setSlots(prevSlots => prevSlots.filter(slot => {
+        if (seenDates.has(slot.date)) return false;
+        seenDates.add(slot.date);
+        return true;
+      }).map(slot => ({
+        ...slot,
+        start_time: undefined,
+        end_time: undefined,
+      })));
+    } else {
+      // 時間設定ON → 既存スロットにデフォルト時間を付与
+      const firstDefault = defaultTimeSlots[0];
+      setSlots(prevSlots => prevSlots.map(slot => ({
+        ...slot,
+        start_time: slot.start_time || firstDefault.start,
+        end_time: slot.end_time || firstDefault.end,
+      })));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTimeInput]);
 
@@ -115,11 +132,21 @@ function AttendanceEditorContent() {
           // 時間設定があるかチェック
           const hasTime = event.slots?.some(slot => slot.start_time || slot.end_time);
           setShowTimeInput(hasTime || false);
-          
-          // 最初のスロットの時間をデフォルト値として設定
-          if (hasTime && event.slots?.[0]) {
-            if (event.slots[0].start_time) setDefaultStartTime(event.slots[0].start_time);
-            if (event.slots[0].end_time) setDefaultEndTime(event.slots[0].end_time);
+
+          // 既存スロットからユニークな時間帯パターンを復元
+          if (hasTime && event.slots) {
+            const seen = new Set<string>();
+            const restored: { start: string; end: string }[] = [];
+            event.slots.forEach(slot => {
+              if (slot.start_time && slot.end_time) {
+                const key = `${slot.start_time}-${slot.end_time}`;
+                if (!seen.has(key)) {
+                  seen.add(key);
+                  restored.push({ start: slot.start_time, end: slot.end_time });
+                }
+              }
+            });
+            if (restored.length > 0) setDefaultTimeSlots(restored);
           }
         } else {
           setError('出欠表が見つかりません');
@@ -192,24 +219,25 @@ function AttendanceEditorContent() {
       // その日付の全スロットを削除
       setSlots(slots.filter((slot) => slot.date !== dateKey));
     } else {
-      // 追加
-      const newSlot: AttendanceSlot = {
-        date: dateKey,
-        ...(showTimeInput && {
-          start_time: defaultStartTime,
-          end_time: defaultEndTime,
-        }),
-      };
-      setSlots([...slots, newSlot].sort((a, b) => a.date.localeCompare(b.date)));
+      // 追加: デフォルト時間帯の数だけスロットを作成
+      const newSlots: AttendanceSlot[] = showTimeInput
+        ? defaultTimeSlots.map((ts) => ({
+            date: dateKey,
+            start_time: ts.start,
+            end_time: ts.end,
+          }))
+        : [{ date: dateKey }];
+      setSlots([...slots, ...newSlots].sort((a, b) => a.date.localeCompare(b.date)));
     }
   };
 
   // 同じ日付に時間帯を追加
   const addTimeSlot = (dateKey: string) => {
+    const firstDefault = defaultTimeSlots[0];
     const newSlot: AttendanceSlot = {
       date: dateKey,
-      start_time: defaultStartTime,
-      end_time: defaultEndTime,
+      start_time: firstDefault.start,
+      end_time: firstDefault.end,
     };
     // 同じ日付の最後のスロットの後に挿入
     const lastIndex = slots.reduce((last, slot, i) => slot.date === dateKey ? i : last, -1);
@@ -440,30 +468,51 @@ function AttendanceEditorContent() {
                   </div>
 
                   {showTimeInput && (
-                    <div className="grid grid-cols-2 gap-3 p-3 bg-purple-50 rounded-xl">
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">
-                          開始時間
-                        </label>
-                        <input
-                          type="time"
-                          value={defaultStartTime}
-                          onChange={(e) => setDefaultStartTime(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">
-                          終了時間
-                        </label>
-                        <input
-                          type="time"
-                          value={defaultEndTime}
-                          onChange={(e) => setDefaultEndTime(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900"
-                        />
-                      </div>
-                      <p className="col-span-2 text-xs text-gray-500">
+                    <div className="space-y-2 p-3 bg-purple-50 rounded-xl">
+                      {defaultTimeSlots.map((ts, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-gray-500 w-5 text-center">{i + 1}</span>
+                          <input
+                            type="time"
+                            value={ts.start}
+                            onChange={(e) => {
+                              const updated = [...defaultTimeSlots];
+                              updated[i] = { ...updated[i], start: e.target.value };
+                              setDefaultTimeSlots(updated);
+                            }}
+                            className="flex-1 px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-900"
+                          />
+                          <span className="text-gray-400 text-sm">〜</span>
+                          <input
+                            type="time"
+                            value={ts.end}
+                            onChange={(e) => {
+                              const updated = [...defaultTimeSlots];
+                              updated[i] = { ...updated[i], end: e.target.value };
+                              setDefaultTimeSlots(updated);
+                            }}
+                            className="flex-1 px-2 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-900"
+                          />
+                          {defaultTimeSlots.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => setDefaultTimeSlots(defaultTimeSlots.filter((_, j) => j !== i))}
+                              className="p-1 text-red-400 hover:bg-red-100 rounded transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setDefaultTimeSlots([...defaultTimeSlots, { start: '19:00', end: '21:00' }])}
+                        className="flex items-center gap-1 text-xs font-semibold text-purple-600 hover:text-purple-700 py-1"
+                      >
+                        <Plus size={14} />
+                        時間帯を追加
+                      </button>
+                      <p className="text-xs text-gray-500">
                         ※ 新しく選択する候補日に適用されます
                       </p>
                     </div>

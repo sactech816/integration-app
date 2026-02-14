@@ -298,7 +298,8 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     setIsAddingDraft(true);
     try {
       const draftCount = drafts.filter(d => d.tab_type === tabType).length;
-      const label = tabType === 'memo' ? 'メモ' : `AI案${draftCount + 1}`;
+      // 本文タブは既存数+2(本文1はメインなので本文2から)、メモはそのまま
+      const label = tabType === 'memo' ? `メモ${draftCount > 0 ? draftCount + 1 : ''}` : `本文${draftCount + 2}`;
 
       const response = await fetch('/api/kdl/section-drafts', {
         method: 'POST',
@@ -1433,7 +1434,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    {draft.tab_type === 'memo' ? <StickyNote size={14} /> : <Sparkles size={14} />}
+                    {draft.tab_type === 'memo' ? <StickyNote size={14} /> : <PenLine size={14} />}
                     {draft.label}
                   </button>
                 )}
@@ -1458,7 +1459,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                   onClick={() => handleAddDraft('draft')}
                   disabled={isAddingDraft}
                   className="flex items-center gap-1 px-2 py-1.5 text-xs text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
-                  title="AI案タブを追加"
+                  title="本文タブを追加"
                 >
                   <Plus size={14} />
                 </button>
