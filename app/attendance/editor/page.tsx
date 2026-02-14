@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
+  Plus,
 } from 'lucide-react';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
@@ -185,11 +186,11 @@ function AttendanceEditorContent() {
   // 日付をトグル
   const toggleDate = (date: Date) => {
     const dateKey = formatDateKey(date);
-    const existingIndex = slots.findIndex((slot) => slot.date === dateKey);
+    const hasSlots = slots.some((slot) => slot.date === dateKey);
 
-    if (existingIndex >= 0) {
-      // 削除
-      setSlots(slots.filter((_, i) => i !== existingIndex));
+    if (hasSlots) {
+      // その日付の全スロットを削除
+      setSlots(slots.filter((slot) => slot.date !== dateKey));
     } else {
       // 追加
       const newSlot: AttendanceSlot = {
@@ -201,6 +202,20 @@ function AttendanceEditorContent() {
       };
       setSlots([...slots, newSlot].sort((a, b) => a.date.localeCompare(b.date)));
     }
+  };
+
+  // 同じ日付に時間帯を追加
+  const addTimeSlot = (dateKey: string) => {
+    const newSlot: AttendanceSlot = {
+      date: dateKey,
+      start_time: defaultStartTime,
+      end_time: defaultEndTime,
+    };
+    // 同じ日付の最後のスロットの後に挿入
+    const lastIndex = slots.reduce((last, slot, i) => slot.date === dateKey ? i : last, -1);
+    const newSlots = [...slots];
+    newSlots.splice(lastIndex + 1, 0, newSlot);
+    setSlots(newSlots);
   };
 
   // スロットの時間を更新
@@ -464,51 +479,102 @@ function AttendanceEditorContent() {
                 </h2>
 
                 {slots.length > 0 ? (
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {slots.map((slot, index) => {
-                      const date = new Date(slot.date + 'T00:00:00');
-                      return (
-                        <div
-                          key={slot.date}
-                          className="flex items-center justify-between p-3 rounded-lg border bg-purple-50 border-purple-200"
-                        >
-                          <div className="flex-1">
-                            <div className="text-sm font-semibold text-gray-900">
-                              {date.toLocaleDateString('ja-JP', {
-                                year: 'numeric',
-                                month: 'numeric',
-                                day: 'numeric',
-                                weekday: 'short',
-                              })}
+                  <div className="space-y-3 max-h-80 overflow-y-auto">
+                    {(() => {
+                      // 日付でグループ化
+                      const grouped: { dateKey: string; items: { slot: AttendanceSlot; globalIndex: number }[] }[] = [];
+                      slots.forEach((slot, globalIndex) => {
+                        const last = grouped[grouped.length - 1];
+                        if (last && last.dateKey === slot.date) {
+                          last.items.push({ slot, globalIndex });
+                        } else {
+                          grouped.push({ dateKey: slot.date, items: [{ slot, globalIndex }] });
+                        }
+                      });
+
+                      return grouped.map((group) => {
+                        const date = new Date(group.dateKey + 'T00:00:00');
+                        const dateLabel = date.toLocaleDateString('ja-JP', {
+                          year: 'numeric',
+                          month: 'numeric',
+                          day: 'numeric',
+                          weekday: 'short',
+                        });
+
+                        return (
+                          <div key={group.dateKey} className="rounded-lg border border-purple-200 bg-purple-50 overflow-hidden">
+                            {/* 日付ヘッダー */}
+                            <div className="flex items-center justify-between px-3 py-2 bg-purple-100">
+                              <div className="text-sm font-semibold text-gray-900">
+                                {dateLabel}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {showTimeInput && (
+                                  <button
+                                    type="button"
+                                    onClick={() => addTimeSlot(group.dateKey)}
+                                    className="p-1 text-purple-600 hover:bg-purple-200 rounded transition-colors"
+                                    title="時間帯を追加"
+                                  >
+                                    <Plus size={16} />
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => setSlots(slots.filter((s) => s.date !== group.dateKey))}
+                                  className="p-1 text-red-500 hover:bg-red-100 rounded transition-colors"
+                                  title="この日付を削除"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
                             </div>
-                            {slot.start_time && slot.end_time && (
-                              <div className="flex items-center gap-2 mt-1">
-                                <input
-                                  type="time"
-                                  value={slot.start_time}
-                                  onChange={(e) => updateSlotTime(index, 'start_time', e.target.value)}
-                                  className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-900"
-                                />
-                                <span className="text-gray-400">〜</span>
-                                <input
-                                  type="time"
-                                  value={slot.end_time}
-                                  onChange={(e) => updateSlotTime(index, 'end_time', e.target.value)}
-                                  className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-900"
-                                />
+
+                            {/* 時間帯リスト */}
+                            {group.items.length === 1 && !group.items[0].slot.start_time ? (
+                              // 時間設定なしの単一スロット → 時間行を表示しない
+                              null
+                            ) : (
+                              <div className="divide-y divide-purple-100">
+                                {group.items.map(({ slot, globalIndex }) => (
+                                  <div key={globalIndex} className="flex items-center justify-between px-3 py-2">
+                                    {slot.start_time && slot.end_time ? (
+                                      <div className="flex items-center gap-2">
+                                        <input
+                                          type="time"
+                                          value={slot.start_time}
+                                          onChange={(e) => updateSlotTime(globalIndex, 'start_time', e.target.value)}
+                                          className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-900"
+                                        />
+                                        <span className="text-gray-400">〜</span>
+                                        <input
+                                          type="time"
+                                          value={slot.end_time}
+                                          onChange={(e) => updateSlotTime(globalIndex, 'end_time', e.target.value)}
+                                          className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-900"
+                                        />
+                                      </div>
+                                    ) : (
+                                      <span className="text-xs text-gray-500">時間未設定</span>
+                                    )}
+                                    {group.items.length > 1 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => removeSlot(globalIndex)}
+                                        className="p-1 text-red-400 hover:bg-red-100 rounded transition-colors"
+                                        title="この時間帯を削除"
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
                               </div>
                             )}
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => removeSlot(index)}
-                            className="p-1 text-red-500 hover:bg-red-100 rounded transition-colors"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      );
-                    })}
+                        );
+                      });
+                    })()}
                   </div>
                 ) : (
                   <p className="text-sm text-gray-500 text-center py-4">
@@ -517,7 +583,12 @@ function AttendanceEditorContent() {
                 )}
 
                 <div className="mt-3 pt-3 border-t text-sm font-semibold text-purple-600">
-                  合計: {slots.length}日
+                  {(() => {
+                    const uniqueDates = new Set(slots.map(s => s.date)).size;
+                    return slots.length > uniqueDates
+                      ? `合計: ${slots.length}件（${uniqueDates}日）`
+                      : `合計: ${slots.length}日`;
+                  })()}
                 </div>
               </div>
 
