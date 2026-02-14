@@ -123,6 +123,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.6,
     },
+    // デモサブページ - Quiz
+    { url: `${BASE_URL}/quiz/demo/teacher`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/quiz/demo/shop`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/quiz/demo/consultant`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/quiz/demo/kindle-author`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    // デモサブページ - Profile
+    { url: `${BASE_URL}/profile/demo/cafe`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/profile/demo/coach`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/profile/demo/consultant`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/profile/demo/ec`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/profile/demo/full-set`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/profile/demo/shop`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    // デモサブページ - Business
+    { url: `${BASE_URL}/business/demo/pasona`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/business/demo/shop`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/business/demo/cafe`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/business/demo/aidoma`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/business/demo/quest`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/business/demo/fullset`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    // デモサブページ - Survey
+    { url: `${BASE_URL}/survey/demo/customer-satisfaction`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/survey/demo/employee-engagement`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/survey/demo/event-seminar`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/survey/demo/nps`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/survey/demo/product-service`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
+    { url: `${BASE_URL}/survey/demo/training`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
     // アンケートツール
     {
       url: `${BASE_URL}/survey`,
