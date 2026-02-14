@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle, Info, Sparkles, Copy, Tag, FileText, FolderTree, Lightbulb, BookOpen, Rocket, PlayCircle, Crown, Menu } from 'lucide-react';
+import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle, Info, Sparkles, Copy, Tag, FileText, FolderTree, Lightbulb, BookOpen, Rocket, PlayCircle, Crown, Menu, Plus, Trash2, PenLine, StickyNote, ArrowRightToLine } from 'lucide-react';
 import Link from 'next/link';
 import KdlHamburgerMenu from '@/components/kindle/shared/KdlHamburgerMenu';
 import KdlUsageHeader, { type KdlUsageLimits } from '@/components/kindle/KdlUsageHeader';
@@ -70,6 +70,18 @@ interface KdpInfo {
   catch_copy: string;
 }
 
+interface SectionDraft {
+  id: string;
+  section_id: string;
+  book_id: string;
+  label: string;
+  content: string;
+  tab_type: 'draft' | 'memo';
+  order_index: number;
+}
+
+type ActiveTab = { type: 'main' } | { type: 'draft'; draftId: string };
+
 interface EditorLayoutProps {
   book: Book;
   chapters: Chapter[];
@@ -128,9 +140,19 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   });
   const [isKdpModalOpen, setIsKdpModalOpen] = useState(false);
   const [isGeneratingKdp, setIsGeneratingKdp] = useState(false);
+  const [isLoadingKdp, setIsLoadingKdp] = useState(false);
   const [kdpInfo, setKdpInfo] = useState<KdpInfo | null>(null);
   const [kdpError, setKdpError] = useState<string>('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // スマホ用サイドバー表示状態
+
+  // タブ（ドラフト）管理
+  const [activeTab, setActiveTab] = useState<ActiveTab>({ type: 'main' });
+  const [drafts, setDrafts] = useState<SectionDraft[]>([]);
+  const [isDraftsLoading, setIsDraftsLoading] = useState(false);
+  const draftEditorRef = useRef<TiptapEditorRef>(null);
+  const [isAddingDraft, setIsAddingDraft] = useState(false);
+  const [editingDraftLabel, setEditingDraftLabel] = useState<string | null>(null);
+  const [editingLabelValue, setEditingLabelValue] = useState('');
 
   // KDL使用量制限
   const [usageLimits, setUsageLimits] = useState<KdlUsageLimits | null>(null);
@@ -171,13 +193,55 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   // 節を選択
   const handleSectionClick = useCallback((sectionId: string) => {
     setActiveSectionId(sectionId);
+    setActiveTab({ type: 'main' }); // セクション変更時は本文タブに戻る
+  }, []);
+
+  // ドラフト一覧を取得
+  const fetchDrafts = useCallback(async (sectionId: string) => {
+    setIsDraftsLoading(true);
+    try {
+      const response = await fetch(`/api/kdl/section-drafts?section_id=${sectionId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setDrafts(data.drafts || []);
+      } else {
+        setDrafts([]);
+      }
+    } catch {
+      setDrafts([]);
+    } finally {
+      setIsDraftsLoading(false);
+    }
+  }, []);
+
+  // セクション変更時にドラフトを読み込む
+  useEffect(() => {
+    if (activeSectionId) {
+      fetchDrafts(activeSectionId);
+    }
+  }, [activeSectionId, fetchDrafts]);
+
+  // ドラフトの内容を保存
+  const handleSaveDraft = useCallback(async (draftId: string, content: string) => {
+    try {
+      await fetch('/api/kdl/section-drafts', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: draftId, content }),
+      });
+      // ローカル状態も更新
+      setDrafts(prev => prev.map(d => d.id === draftId ? { ...d, content } : d));
+    } catch (error: any) {
+      console.error('Save draft error:', error);
+      throw new Error('ドラフトの保存に失敗しました');
+    }
   }, []);
 
   // トースト表示ヘルパー
   const showToast = useCallback((type: Toast['type'], message: string) => {
     const id = Date.now().toString();
     setToasts(prev => [...prev, { id, type, message }]);
-    
+
     // 3秒後に自動で消す
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
@@ -188,6 +252,93 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   const dismissToast = useCallback((id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
+
+  // 新しいドラフトタブを追加
+  const handleAddDraft = useCallback(async (tabType: 'draft' | 'memo', initialContent?: string) => {
+    if (isAddingDraft || !activeSectionId) return;
+    setIsAddingDraft(true);
+    try {
+      const draftCount = drafts.filter(d => d.tab_type === tabType).length;
+      const label = tabType === 'memo' ? 'メモ' : `AI案${draftCount + 1}`;
+
+      const response = await fetch('/api/kdl/section-drafts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          section_id: activeSectionId,
+          book_id: book.id,
+          label,
+          content: initialContent || '',
+          tab_type: tabType,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('タブの追加に失敗しました');
+      }
+
+      const newDraft: SectionDraft = await response.json();
+      setDrafts(prev => [...prev, newDraft]);
+      setActiveTab({ type: 'draft', draftId: newDraft.id });
+      showToast('success', `「${label}」タブを追加しました`);
+    } catch (error: any) {
+      showToast('error', error.message);
+    } finally {
+      setIsAddingDraft(false);
+    }
+  }, [activeSectionId, book.id, drafts, isAddingDraft, showToast]);
+
+  // ドラフトタブを削除
+  const handleDeleteDraft = useCallback(async (draftId: string) => {
+    try {
+      const response = await fetch(`/api/kdl/section-drafts?id=${draftId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('タブの削除に失敗しました');
+      }
+
+      setDrafts(prev => prev.filter(d => d.id !== draftId));
+      if (activeTab.type === 'draft' && activeTab.draftId === draftId) {
+        setActiveTab({ type: 'main' });
+      }
+      showToast('success', 'タブを削除しました');
+    } catch (error: any) {
+      showToast('error', error.message);
+    }
+  }, [activeTab, showToast]);
+
+  // ドラフトの内容を本文に採用
+  const handleAdoptDraft = useCallback(async (draftId: string) => {
+    const draft = drafts.find(d => d.id === draftId);
+    if (!draft || !activeSectionId) return;
+
+    // 現在のドラフトを保存してから採用
+    if (draftEditorRef.current) {
+      await draftEditorRef.current.forceSave();
+    }
+
+    // 本文に書き込み
+    await handleSave(activeSectionId, draft.content);
+    setActiveTab({ type: 'main' });
+    showToast('success', `「${draft.label}」の内容を本文に採用しました`);
+  }, [drafts, activeSectionId, handleSave, showToast]);
+
+  // ドラフトのラベルを更新
+  const handleRenameDraft = useCallback(async (draftId: string, newLabel: string) => {
+    try {
+      await fetch('/api/kdl/section-drafts', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: draftId, label: newLabel }),
+      });
+      setDrafts(prev => prev.map(d => d.id === draftId ? { ...d, label: newLabel } : d));
+      setEditingDraftLabel(null);
+    } catch (error: any) {
+      showToast('error', 'ラベルの変更に失敗しました');
+    }
+  }, [showToast]);
 
   // 確認ダイアログ表示
   const showConfirm = useCallback((title: string, message: string): Promise<boolean> => {
@@ -776,13 +927,47 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   }, [chaptersData, showToast]);
 
   // KDP情報生成
-  const handleGenerateKdpInfo = useCallback(async () => {
+  // KDP情報を表示（保存済みがあればそれを使い、なければ生成）
+  const handleShowKdpInfo = useCallback(async () => {
+    if (isGeneratingKdp || isLoadingKdp) return;
+
+    // 既にキャッシュ済みならモーダルを開くだけ
+    if (kdpInfo) {
+      setIsKdpModalOpen(true);
+      return;
+    }
+
+    setIsLoadingKdp(true);
+    setKdpError('');
+    setIsKdpModalOpen(true);
+
+    try {
+      // まずGETで保存済みKDP情報を取得
+      const getResponse = await fetch(`/api/kdl/generate-kdp-info?book_id=${book.id}`);
+
+      if (getResponse.ok) {
+        const data: KdpInfo = await getResponse.json();
+        setKdpInfo(data);
+        setIsLoadingKdp(false);
+        return;
+      }
+
+      // 保存済みがなければAI生成
+      setIsLoadingKdp(false);
+      await handleRegenerateKdpInfo();
+    } catch (error: any) {
+      console.error('Load KDP info error:', error);
+      setKdpError(error.message || 'KDP情報の取得に失敗しました');
+      setIsLoadingKdp(false);
+    }
+  }, [book.id, isGeneratingKdp, isLoadingKdp, kdpInfo]);
+
+  // KDP情報を再生成（常にAI APIを呼ぶ）
+  const handleRegenerateKdpInfo = useCallback(async () => {
     if (isGeneratingKdp) return;
-    
+
     setIsGeneratingKdp(true);
     setKdpError('');
-    setKdpInfo(null);
-    setIsKdpModalOpen(true);
 
     try {
       const response = await fetch('/api/kdl/generate-kdp-info', {
@@ -979,19 +1164,19 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
               <div className="w-px h-6 bg-white/30" />
               
               <button
-                onClick={handleGenerateKdpInfo}
-                disabled={isGeneratingKdp}
-                title="KDP情報生成"
+                onClick={handleShowKdpInfo}
+                disabled={isGeneratingKdp || isLoadingKdp}
+                title="KDP情報"
                 className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
-                  isGeneratingKdp
+                  isGeneratingKdp || isLoadingKdp
                     ? 'bg-white/20 cursor-not-allowed'
                     : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
                 }`}
               >
-                {isGeneratingKdp ? (
+                {isGeneratingKdp || isLoadingKdp ? (
                   <>
                     <Loader2 className="animate-spin" size={16} />
-                    <span>生成中...</span>
+                    <span>{isGeneratingKdp ? '生成中...' : '読込中...'}</span>
                   </>
                 ) : (
                   <>
@@ -1140,21 +1325,162 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
           />
         </div>
 
-        {/* 右メイン: エディタ */}
+        {/* 右メイン: タブ + エディタ */}
         <div className="flex-1 flex flex-col overflow-hidden w-full lg:w-auto">
-          <TiptapEditor
-            ref={editorRef}
-            key={activeSectionId}
-            initialContent={activeSection.content}
-            sectionId={activeSectionId}
-            sectionTitle={activeSection.title || '無題の節'}
-            chapterTitle={activeChapter?.title || '無題の章'}
-            bookInfo={book}
-            targetProfile={targetProfile}
-            tocPatternId={tocPatternId}
-            onSave={handleSave}
-            readOnly={readOnly}
-          />
+          {/* タブバー */}
+          <div className="flex items-center border-b border-gray-200 bg-gray-50 px-2 gap-0.5 overflow-x-auto shrink-0">
+            {/* 本文タブ */}
+            <button
+              onClick={() => {
+                // ドラフトタブから離れる前に保存
+                if (activeTab.type === 'draft' && draftEditorRef.current) {
+                  draftEditorRef.current.forceSave();
+                }
+                setActiveTab({ type: 'main' });
+              }}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeTab.type === 'main'
+                  ? 'border-amber-500 text-amber-700 bg-white'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <PenLine size={14} />
+              本文
+            </button>
+
+            {/* ドラフト・メモタブ */}
+            {drafts.map(draft => (
+              <div key={draft.id} className="flex items-center group relative">
+                {editingDraftLabel === draft.id ? (
+                  <input
+                    type="text"
+                    value={editingLabelValue}
+                    onChange={(e) => setEditingLabelValue(e.target.value)}
+                    onBlur={() => {
+                      if (editingLabelValue.trim()) {
+                        handleRenameDraft(draft.id, editingLabelValue.trim());
+                      } else {
+                        setEditingDraftLabel(null);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && editingLabelValue.trim()) {
+                        handleRenameDraft(draft.id, editingLabelValue.trim());
+                      } else if (e.key === 'Escape') {
+                        setEditingDraftLabel(null);
+                      }
+                    }}
+                    className="w-20 px-2 py-1.5 text-sm border border-amber-400 rounded outline-none bg-white"
+                    autoFocus
+                  />
+                ) : (
+                  <button
+                    onClick={() => {
+                      // 前のタブを保存
+                      if (activeTab.type === 'main' && editorRef.current) {
+                        editorRef.current.forceSave();
+                      } else if (activeTab.type === 'draft' && draftEditorRef.current) {
+                        draftEditorRef.current.forceSave();
+                      }
+                      setActiveTab({ type: 'draft', draftId: draft.id });
+                    }}
+                    onDoubleClick={() => {
+                      setEditingDraftLabel(draft.id);
+                      setEditingLabelValue(draft.label);
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                      activeTab.type === 'draft' && activeTab.draftId === draft.id
+                        ? 'border-amber-500 text-amber-700 bg-white'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    {draft.tab_type === 'memo' ? <StickyNote size={14} /> : <Sparkles size={14} />}
+                    {draft.label}
+                  </button>
+                )}
+                {/* 閉じるボタン（ホバー時に表示） */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteDraft(draft.id);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-100 rounded text-gray-400 hover:text-red-500 transition-all -ml-1 mr-1"
+                  title="タブを削除"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+
+            {/* タブ追加ボタン */}
+            {!readOnly && (
+              <div className="relative flex items-center ml-1">
+                <button
+                  onClick={() => handleAddDraft('draft')}
+                  disabled={isAddingDraft}
+                  className="flex items-center gap-1 px-2 py-1.5 text-xs text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
+                  title="AI案タブを追加"
+                >
+                  <Plus size={14} />
+                </button>
+                <button
+                  onClick={() => handleAddDraft('memo')}
+                  disabled={isAddingDraft}
+                  className="flex items-center gap-1 px-2 py-1.5 text-xs text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                  title="メモタブを追加"
+                >
+                  <StickyNote size={14} />
+                </button>
+              </div>
+            )}
+
+            {/* ドラフトタブ選択時: 本文に採用ボタン */}
+            {activeTab.type === 'draft' && !readOnly && (
+              <button
+                onClick={() => handleAdoptDraft(activeTab.draftId)}
+                className="flex items-center gap-1.5 ml-auto px-3 py-1.5 text-xs font-medium text-white bg-amber-500 hover:bg-amber-600 rounded-lg transition-colors whitespace-nowrap mr-2"
+                title="この内容を本文に採用"
+              >
+                <ArrowRightToLine size={14} />
+                本文に採用
+              </button>
+            )}
+          </div>
+
+          {/* エディタ本体 */}
+          {activeTab.type === 'main' ? (
+            <TiptapEditor
+              ref={editorRef}
+              key={activeSectionId}
+              initialContent={activeSection.content}
+              sectionId={activeSectionId}
+              sectionTitle={activeSection.title || '無題の節'}
+              chapterTitle={activeChapter?.title || '無題の章'}
+              bookInfo={book}
+              targetProfile={targetProfile}
+              tocPatternId={tocPatternId}
+              onSave={handleSave}
+              readOnly={readOnly}
+            />
+          ) : (() => {
+            const activeDraft = drafts.find(d => d.id === (activeTab as { type: 'draft'; draftId: string }).draftId);
+            if (!activeDraft) return null;
+            return (
+              <TiptapEditor
+                ref={draftEditorRef}
+                key={`draft-${activeDraft.id}`}
+                initialContent={activeDraft.content}
+                sectionId={activeDraft.id}
+                sectionTitle={`${activeSection.title || '無題の節'} - ${activeDraft.label}`}
+                chapterTitle={activeChapter?.title || '無題の章'}
+                bookInfo={book}
+                targetProfile={targetProfile}
+                tocPatternId={tocPatternId}
+                onSave={(draftId, content) => handleSaveDraft(draftId, content)}
+                readOnly={readOnly}
+              />
+            );
+          })()}
         </div>
       </div>
 
@@ -1236,7 +1562,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
 
             {/* モーダルコンテンツ */}
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-              {isGeneratingKdp ? (
+              {(isGeneratingKdp || isLoadingKdp) ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <div className="relative w-16 h-16 mb-4">
                     <div className="absolute inset-0 border-4 border-amber-200 rounded-full"></div>
@@ -1245,15 +1571,19 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                       style={{ borderRightColor: 'transparent', borderTopColor: 'transparent' }}
                     ></div>
                   </div>
-                  <p className="text-gray-600 font-medium">AIがKDP情報を生成中...</p>
-                  <p className="text-sm text-gray-400 mt-2">本の内容を分析しています</p>
+                  <p className="text-gray-600 font-medium">
+                    {isGeneratingKdp ? 'AIがKDP情報を生成中...' : 'KDP情報を読み込み中...'}
+                  </p>
+                  <p className="text-sm text-gray-400 mt-2">
+                    {isGeneratingKdp ? '本の内容を分析しています' : '保存済みデータを取得しています'}
+                  </p>
                 </div>
               ) : kdpError ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <AlertCircle className="text-red-400 mb-4" size={48} />
                   <p className="text-red-600 font-medium mb-4">{kdpError}</p>
                   <button
-                    onClick={handleGenerateKdpInfo}
+                    onClick={handleRegenerateKdpInfo}
                     className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-medium"
                   >
                     再試行
@@ -1368,14 +1698,32 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
               <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-500">
-                    💡 各項目をクリックしてコピーできます
+                    各項目をクリックしてコピーできます
                   </p>
-                  <button
-                    onClick={() => setIsKdpModalOpen(false)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                  >
-                    閉じる
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleRegenerateKdpInfo}
+                      disabled={isGeneratingKdp}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                        isGeneratingKdp
+                          ? 'bg-amber-200 text-amber-500 cursor-not-allowed'
+                          : 'bg-amber-500 text-white hover:bg-amber-600'
+                      }`}
+                    >
+                      {isGeneratingKdp ? (
+                        <Loader2 className="animate-spin" size={14} />
+                      ) : (
+                        <Sparkles size={14} />
+                      )}
+                      再生成
+                    </button>
+                    <button
+                      onClick={() => setIsKdpModalOpen(false)}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium text-sm"
+                    >
+                      閉じる
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
