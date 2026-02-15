@@ -132,8 +132,8 @@ export const KDL_USER_ROLES: Record<KdlUserRole, { label: string; color: string 
 
 // アプリケーション設定
 export const KDL_CONFIG = {
-  appName: 'キンドルダイレクトライト',
-  appNameShort: 'KDL',
+  appName: 'Kindle出版メーカー',
+  appNameShort: 'Kindle出版メーカー',
   appDescription: 'AIでKindle出版を簡単に',
   
   // URL設定（将来の独立化時に変更）

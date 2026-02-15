@@ -42,8 +42,8 @@ export default function KdlAccessModal({ isOpen, onClose }: KdlAccessModalProps)
               <BookOpen size={32} />
             </div>
             <div>
-              <h2 className="text-xl font-bold">Kindle執筆 (KDL)</h2>
-              <p className="text-white/80 text-sm">キンドルダイレクトライト</p>
+              <h2 className="text-xl font-bold">Kindle出版メーカー</h2>
+              <p className="text-white/80 text-sm">AIでKindle出版を簡単に</p>
             </div>
           </div>
         </div>

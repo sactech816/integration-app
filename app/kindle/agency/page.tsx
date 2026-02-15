@@ -4,10 +4,10 @@ import KindleAgencyClient from './KindleAgencyClient';
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
 export const metadata: Metadata = {
-  title: 'KDL代理店パートナー募集｜Kindle出版支援ビジネスを始めませんか',
-  description: 'キンドルダイレクトライト（KDL）の代理店パートナーを募集中。お客様のKindle出版をサポートするビジネスを開始できます。高い報酬率と充実したサポート体制をご用意しています。',
+  title: 'Kindle出版メーカー 代理店パートナー募集｜Kindle出版支援ビジネスを始めませんか',
+  description: 'Kindle出版メーカーの代理店パートナーを募集中。お客様のKindle出版をサポートするビジネスを開始できます。高い報酬率と充実したサポート体制をご用意しています。',
   keywords: [
-    'KDL',
+    'Kindle出版メーカー',
     'Kindle出版',
     '代理店',
     'パートナー',
@@ -24,8 +24,8 @@ export const metadata: Metadata = {
     locale: 'ja_JP',
     url: `${siteUrl}/kindle/agency`,
     siteName: '集客メーカー',
-    title: 'KDL代理店パートナー募集｜Kindle出版支援ビジネスを始めませんか',
-    description: 'キンドルダイレクトライト（KDL）の代理店パートナーを募集中。お客様のKindle出版をサポートするビジネスを開始できます。',
+    title: 'Kindle出版メーカー 代理店パートナー募集｜Kindle出版支援ビジネスを始めませんか',
+    description: 'Kindle出版メーカーの代理店パートナーを募集中。お客様のKindle出版をサポートするビジネスを開始できます。',
     images: [
       {
         url: `${siteUrl}/api/og?title=${encodeURIComponent('代理店パートナー募集')}&description=${encodeURIComponent('Kindle出版支援ビジネス')}`,
@@ -36,8 +36,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'KDL代理店パートナー募集｜Kindle出版支援ビジネスを始めませんか',
-    description: 'キンドルダイレクトライト（KDL）の代理店パートナーを募集中。お客様のKindle出版をサポートするビジネスを開始できます。',
+    title: 'Kindle出版メーカー 代理店パートナー募集｜Kindle出版支援ビジネスを始めませんか',
+    description: 'Kindle出版メーカーの代理店パートナーを募集中。お客様のKindle出版をサポートするビジネスを開始できます。',
     images: [`${siteUrl}/api/og?title=${encodeURIComponent('代理店パートナー募集')}&description=${encodeURIComponent('Kindle出版支援ビジネス')}`],
     creator: '@syukaku_maker',
   },

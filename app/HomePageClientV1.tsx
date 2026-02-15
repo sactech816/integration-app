@@ -330,7 +330,7 @@ export default function HomePageClient() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-gray-900 text-lg">📚 キンドルダイレクトライト</h3>
+                  <h3 className="font-bold text-gray-900 text-lg">📚 Kindle出版メーカー</h3>
                   <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">NEW</span>
                 </div>
                 <p className="text-gray-600 text-sm">AIがあなたのKindle出版をフルサポート。目次作成から執筆まで。</p>

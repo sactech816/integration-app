@@ -390,7 +390,7 @@ export default function KindleLPClient() {
           <div className="mt-12 bg-green-50 p-8 rounded-2xl border border-green-100">
             <h3 className="text-2xl font-bold text-green-700 mb-4">大丈夫、すべてAIにお任せください。</h3>
             <p className="text-lg text-slate-700">
-              KDL（キンドルダイレクトライト）は、<br className="hidden md:block" />
+              Kindle出版メーカーは、<br className="hidden md:block" />
               <strong>「おしゃべり感覚」で質問に答えるだけ</strong>で、<br />
               プロのような本が自動で作れる、夢のツールです。
             </p>

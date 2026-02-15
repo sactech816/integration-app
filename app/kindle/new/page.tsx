@@ -444,9 +444,8 @@ function KindleNewPageContent() {
           <div className="flex items-center gap-1.5 sm:gap-2">
             <BookOpen className="text-amber-600" size={20} />
             <div>
-              <span className="font-bold text-gray-900 hidden sm:inline">キンドルダイレクトライト</span>
-              <span className="font-bold text-gray-900 sm:hidden">KDL</span>
-              <span className="text-xs text-gray-500 ml-1 hidden sm:inline">KDL</span>
+              <span className="font-bold text-gray-900 hidden sm:inline">Kindle出版メーカー</span>
+              <span className="font-bold text-gray-900 sm:hidden">Kindle出版</span>
             </div>
             {isDemo && (
               <div className="flex items-center gap-1 bg-blue-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-bold ml-1 sm:ml-2">

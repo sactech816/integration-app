@@ -45,7 +45,7 @@ export default function KindleGuidePage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold">AIと一緒に、あなたらしい本を書こう</h1>
-              <p className="text-sm opacity-80">キンドルダイレクトライト（KDL）</p>
+              <p className="text-sm opacity-80">Kindle出版メーカー</p>
             </div>
           </div>
           <p className="text-white/90 text-lg leading-relaxed">

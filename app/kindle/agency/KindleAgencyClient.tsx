@@ -124,7 +124,7 @@ export default function KindleAgencyClient() {
                 代理店パートナー募集
               </h1>
               <p className="text-gray-400 mt-1">
-                キンドルダイレクトライト（KDL）
+                Kindle出版メーカー
               </p>
             </div>
           </div>

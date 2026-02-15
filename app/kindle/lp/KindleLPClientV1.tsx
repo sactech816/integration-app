@@ -927,7 +927,7 @@ export default function KindleLPClient() {
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               執筆のプロでなくても、プロ品質の本が作れる。<br />
-              それがキンドルダイレクトライトの強みです。
+              それがKindle出版メーカーの強みです。
             </p>
           </div>
 
@@ -1352,7 +1352,7 @@ export default function KindleLPClient() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
             <BookOpen size={20} className="text-yellow-300" />
-            <span className="font-bold">キンドルダイレクトライト</span>
+            <span className="font-bold">Kindle出版メーカー</span>
           </div>
           
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-6">

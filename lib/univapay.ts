@@ -268,7 +268,7 @@ export const SUBSCRIPTION_PLANS = [
   },
 ] as const;
 
-// KDL（Kindle執筆サービス）プラン定義
+// Kindle出版メーカー プラン定義
 // 注意: amount は管理画面から動的に設定されるため、ここではデフォルト値
 export const KDL_PLANS = [
   {

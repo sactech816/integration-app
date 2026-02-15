@@ -10,14 +10,14 @@ import KindleLPClient from './KindleLPClientV3';      // V2: 新規顧客向け�
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 export const metadata: Metadata = {
-  title: 'キンドルダイレクトライト（KDL） - AIでKindle出版を簡単に | 集客メーカー',
+  title: 'Kindle出版メーカー - AIでKindle出版を簡単に | 集客メーカー',
   description: 'AIがあなたのKindle出版をフルサポート。目次作成から執筆、出版準備まで、すべてをナビゲート。専門知識不要で誰でも作家デビュー。月額プランで何冊でも執筆可能。',
-  keywords: ['Kindle出版', 'KDP', 'AI執筆', '電子書籍', '副業', '印税収入', '自己出版', 'セルフパブリッシング', 'KDL', 'キンドルダイレクトライト'],
+  keywords: ['Kindle出版', 'KDP', 'AI執筆', '電子書籍', '副業', '印税収入', '自己出版', 'セルフパブリッシング', 'Kindle出版メーカー'],
   alternates: {
     canonical: `${siteUrl}/kindle/lp`,
   },
   openGraph: {
-    title: 'キンドルダイレクトライト（KDL） - AIでKindle出版を簡単に',
+    title: 'Kindle出版メーカー - AIでKindle出版を簡単に',
     description: 'AIがあなたのKindle出版をフルサポート。目次作成から執筆、出版準備まで。',
     type: 'website',
     url: `${siteUrl}/kindle/lp`,
@@ -27,13 +27,13 @@ export const metadata: Metadata = {
         url: `${siteUrl}/og-kindle-lp.png`,
         width: 1200,
         height: 630,
-        alt: 'キンドルダイレクトライト（KDL）',
+        alt: 'Kindle出版メーカー',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'キンドルダイレクトライト（KDL） - AIでKindle出版を簡単に',
+    title: 'Kindle出版メーカー - AIでKindle出版を簡単に',
     description: 'AIがあなたのKindle出版をフルサポート',
     images: [`${siteUrl}/og-kindle-lp.png`],
   },
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name: 'キンドルダイレクトライト（KDL）',
+  name: 'Kindle出版メーカー',
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   description: 'AIがあなたのKindle出版をフルサポート。目次作成から執筆、出版準備まで、すべてをナビゲート。',

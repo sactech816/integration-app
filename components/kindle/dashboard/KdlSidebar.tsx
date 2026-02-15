@@ -55,8 +55,8 @@ export default function KdlSidebar({
             <BookOpen size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="text-base font-bold text-gray-900">KDL</h1>
-            <p className="text-[10px] text-gray-500">キンドルダイレクトライト</p>
+            <h1 className="text-sm font-bold text-gray-900">Kindle出版メーカー</h1>
+            <p className="text-[10px] text-gray-500">AIでKindle出版を簡単に</p>
           </div>
         </div>
         {/* ロールバッジ */}

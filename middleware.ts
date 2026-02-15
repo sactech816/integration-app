@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 
 /**
- * KDL（Kindleダイレクトライト）のアクセス制限Middleware
+ * Kindle出版メーカーのアクセス制限Middleware
  * 
  * /kindle 配下のページへのアクセスを制御し、
  * 未ログイン・未課金ユーザーを /kindle/lp にリダイレクトします。
