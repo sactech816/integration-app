@@ -88,7 +88,7 @@ export default function SlotPage() {
         const [campaignData, prizesData, userPrizesData] = await Promise.all([
           getCampaign(campaignId),
           getGachaPrizes(campaignId),
-          getUserPrizes(),
+          getUserPrizes(user?.id),
         ]);
 
         setCampaign(campaignData);
@@ -102,7 +102,7 @@ export default function SlotPage() {
     }
 
     loadData();
-  }, [campaignId]);
+  }, [campaignId, user?.id]);
 
   // userが確定したらポイントを取得
   useEffect(() => {
@@ -135,7 +135,7 @@ export default function SlotPage() {
 
     try {
       console.log('[Slot] Calling playGacha for campaign:', campaignId);
-      const gachaResult = await playGacha(campaignId);
+      const gachaResult = await playGacha(campaignId, user?.id);
       console.log('[Slot] Gacha result:', gachaResult);
       
       // アニメーション時間分待機
@@ -154,7 +154,7 @@ export default function SlotPage() {
           // 獲得景品リストを更新
           if (gachaResult.is_winning) {
             console.log('[Slot] Won a prize, refreshing prize list');
-            getUserPrizes().then(data => {
+            getUserPrizes(user?.id).then(data => {
               setUserPrizes(data.filter(p => p.campaign_id === campaignId));
             });
           }
@@ -168,7 +168,7 @@ export default function SlotPage() {
       setShowResult(true);
       setPlaying(false);
     }
-  }, [campaign, campaignId, currentPoints, playing]);
+  }, [campaign, campaignId, currentPoints, playing, user?.id]);
 
   // 管理者用フリースロット
   const handleAdminFreePlay = useCallback(() => {

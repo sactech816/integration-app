@@ -87,7 +87,7 @@ export default function ScratchPage() {
         const [campaignData, prizesData, userPrizesData] = await Promise.all([
           getCampaign(campaignId),
           getGachaPrizes(campaignId),
-          getUserPrizes(),
+          getUserPrizes(user?.id),
         ]);
 
         setCampaign(campaignData);
@@ -101,7 +101,7 @@ export default function ScratchPage() {
     }
 
     loadData();
-  }, [campaignId]);
+  }, [campaignId, user?.id]);
 
   // userが確定したらポイントを取得
   useEffect(() => {
@@ -130,7 +130,7 @@ export default function ScratchPage() {
     setShowResult(false);
 
     try {
-      const gachaResult = await playGacha(campaignId);
+      const gachaResult = await playGacha(campaignId, user?.id);
       
       // 結果をセット（スクラッチ後に表示される）
       setResult(gachaResult);
@@ -142,7 +142,7 @@ export default function ScratchPage() {
         
         // 獲得景品リストを更新
         if (gachaResult.is_winning) {
-          getUserPrizes().then(data => {
+          getUserPrizes(user?.id).then(data => {
             setUserPrizes(data.filter(p => p.campaign_id === campaignId));
           });
         }
@@ -153,7 +153,7 @@ export default function ScratchPage() {
       setShowResult(true);
       setPlaying(false);
     }
-  }, [campaign, campaignId, currentPoints, playing]);
+  }, [campaign, campaignId, currentPoints, playing, user?.id]);
 
   // 管理者用フリープレイ
   const handleAdminFreePlay = useCallback(() => {

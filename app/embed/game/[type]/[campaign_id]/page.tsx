@@ -73,7 +73,7 @@ export default function EmbedGamePage() {
         const [campaignData, prizesData, userPrizesData] = await Promise.all([
           getCampaign(campaignId),
           getGachaPrizes(campaignId),
-          getUserPrizes(),
+          getUserPrizes(user?.id),
         ]);
 
         setCampaign(campaignData);
@@ -87,7 +87,7 @@ export default function EmbedGamePage() {
     }
 
     loadData();
-  }, [campaignId]);
+  }, [campaignId, user?.id]);
 
   // userが確定したらポイントを取得
   useEffect(() => {
@@ -132,7 +132,7 @@ export default function EmbedGamePage() {
 
     try {
       console.log('[EmbedGame] Calling playGacha for campaign:', campaignId);
-      const gachaResult = await playGacha(campaignId);
+      const gachaResult = await playGacha(campaignId, user?.id);
       console.log('[EmbedGame] Gacha result:', gachaResult);
       
       const animationDuration = 3500;
@@ -160,7 +160,7 @@ export default function EmbedGamePage() {
 
           if (gachaResult.is_winning) {
             console.log('[EmbedGame] Won a prize, refreshing prize list');
-            getUserPrizes().then(data => {
+            getUserPrizes(user?.id).then(data => {
               setUserPrizes(data.filter(p => p.campaign_id === campaignId));
             });
           }
@@ -179,7 +179,7 @@ export default function EmbedGamePage() {
       setPlaying(false);
       postMessageToParent({ type: 'error', message: 'play_failed' });
     }
-  }, [campaign, campaignId, currentPoints, playing, postMessageToParent]);
+  }, [campaign, campaignId, currentPoints, playing, postMessageToParent, user?.id]);
 
   const handleReset = () => {
     setResult(null);
