@@ -31,24 +31,24 @@ interface LPPlan {
 const LP_PLANS: Record<LPPlanType, LPPlan> = {
   trial: {
     id: 'trial',
-    name: '1ヶ月トライアル',
+    name: '30日トライアル',
     price: 49800,
-    period: '1ヶ月',
+    period: '30日',
     description: '記念に1冊作ってみたい方へ',
   },
   standard: {
     id: 'standard',
-    name: '3ヶ月スタンダード',
+    name: '90日スタンダード',
     price: 99800,
-    period: '3ヶ月',
+    period: '90日',
     description: '副業として印税を得たい方へ',
   },
   business: {
     id: 'business',
-    name: 'ビジネス（初回）',
+    name: '120日プレミアム',
     price: 198000,
-    period: '6ヶ月',
-    description: '本格的に出版ビジネスを始めたい方へ',
+    period: '120日',
+    description: '本格的に出版を始めたい方へ',
   },
 };
 
@@ -631,19 +631,32 @@ export default function KindleLPClient() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
-            {/* Plan 1: トライアル */}
+            {/* Plan 1: 30日トライアル */}
             <div className="bg-white w-full rounded-3xl shadow-xl overflow-hidden border-4 border-gray-200 hover:shadow-2xl transition duration-300 flex flex-col">
               <div className="bg-gray-200 text-slate-600 py-3 font-bold text-center">まずはお試し</div>
               <div className="p-6 flex flex-col h-full">
-                <h3 className="text-xl font-bold text-slate-800 mb-2">1ヶ月トライアル</h3>
+                <h3 className="text-xl font-bold text-slate-800 mb-2">30日トライアル</h3>
                 <p className="text-sm text-slate-500 mb-4">記念に1冊作ってみたい方へ</p>
                 <div className="text-3xl font-extrabold text-slate-700 mb-6">¥49,800 <span className="text-sm font-normal text-slate-400">（税込）</span></div>
-                
+
                 <ul className="text-left text-sm text-slate-600 space-y-2 mb-6 flex-grow">
-                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> AI使い放題（1ヶ月間）</li>
-                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> 本を3冊まで作れます</li>
+                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> システム利用（30日）</li>
+                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> 本を１冊作れます</li>
+                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> AI利用（10回/日）</li>
+                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> AIモデル（標準）</li>
+                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> 出版準備ガイド</li>
                   <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> 初心者向けマニュアル</li>
-                  <li className="flex items-center gap-2 text-slate-300">− 個別相談なし</li>
+                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> Wordエクスポート</li>
+                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> EPUBエクスポート</li>
+                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> 出版用キーワード提案</li>
+                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> 出版用カテゴリ提案</li>
+                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> 出版用の書籍紹介文作成</li>
+                  <li className="flex items-center gap-2"><Check className="text-green-500 flex-shrink-0" size={16} /> LINE招待（閲覧）</li>
+                  <li className="flex items-center gap-2 text-slate-300">× アフィリエイト機能</li>
+                  <li className="flex items-center gap-2 text-slate-300">× オプション割引</li>
+                  <li className="flex items-center gap-2 text-slate-300">× もくもく会</li>
+                  <li className="flex items-center gap-2 text-slate-300">× グループセッション</li>
+                  <li className="flex items-center gap-2 text-slate-300">× 個別セッション</li>
                 </ul>
 
                 <button
@@ -659,21 +672,33 @@ export default function KindleLPClient() {
               </div>
             </div>
 
-            {/* Plan 2: スタンダード (Featured) */}
+            {/* Plan 2: 90日スタンダード (Featured) */}
             <div className="bg-white w-full rounded-3xl shadow-2xl overflow-hidden border-4 border-orange-400 relative flex flex-col md:scale-105 md:z-10">
               <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">人気No.1</div>
               <div className="bg-orange-400 text-white py-3 font-bold text-center">しっかりサポート</div>
               <div className="p-6 flex flex-col h-full">
-                <h3 className="text-xl font-bold text-slate-800 mb-2">3ヶ月スタンダード</h3>
+                <h3 className="text-xl font-bold text-slate-800 mb-2">90日スタンダード</h3>
                 <p className="text-sm text-slate-500 mb-4">副業として印税を得たい方へ</p>
                 <div className="text-3xl font-extrabold text-orange-500 mb-6">¥99,800 <span className="text-sm font-normal text-slate-400">（税込）</span></div>
-                
+
                 <ul className="text-left text-sm text-slate-600 space-y-2 mb-6 flex-grow">
-                  <li className="flex items-center gap-2 font-bold bg-orange-50 p-1 rounded"><Check className="text-orange-500 flex-shrink-0" size={16} /> たっぷり3ヶ月使える</li>
-                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> 本を10冊まで作れます</li>
-                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> 売れる表紙テンプレート</li>
-                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> グループ相談会（1回）</li>
-                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> チャット質問し放題</li>
+                  <li className="flex items-center gap-2 font-bold bg-orange-50 p-1 rounded"><Check className="text-orange-500 flex-shrink-0" size={16} /> システム利用（90日）</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> 本を３冊まで作成可</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> AI利用（20回/日）</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> AIモデル（高性能）</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> 出版準備ガイド</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> 初心者向けマニュアル</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> Wordエクスポート</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> EPUBエクスポート</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> 出版用キーワード提案</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> 出版用カテゴリ提案</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> 出版用の書籍紹介文作成</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> LINE招待（質問可）</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> アフィリエイト機能</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> オプション割引</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> もくもく会</li>
+                  <li className="flex items-center gap-2"><Check className="text-orange-500 flex-shrink-0" size={16} /> グループセッション</li>
+                  <li className="flex items-center gap-2 text-slate-300">× 個別セッション</li>
                 </ul>
 
                 <button
@@ -689,20 +714,32 @@ export default function KindleLPClient() {
               </div>
             </div>
 
-            {/* Plan 3: ビジネス */}
+            {/* Plan 3: 120日プレミアム */}
             <div className="bg-white w-full rounded-3xl shadow-xl overflow-hidden border-4 border-purple-300 hover:shadow-2xl transition duration-300 flex flex-col">
               <div className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white py-3 font-bold text-center">本格派向け</div>
               <div className="p-6 flex flex-col h-full">
-                <h3 className="text-xl font-bold text-slate-800 mb-2">ビジネス（初回）</h3>
+                <h3 className="text-xl font-bold text-slate-800 mb-2">120日プレミアム</h3>
                 <p className="text-sm text-slate-500 mb-4">本格的に出版を始めたい方へ</p>
                 <div className="text-3xl font-extrabold text-purple-600 mb-6">¥198,000 <span className="text-sm font-normal text-slate-400">（税込）</span></div>
-                
+
                 <ul className="text-left text-sm text-slate-600 space-y-2 mb-6 flex-grow">
-                  <li className="flex items-center gap-2 font-bold bg-purple-50 p-1 rounded"><Check className="text-purple-500 flex-shrink-0" size={16} /> たっぷり6ヶ月使える</li>
-                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 本を無制限に作れます</li>
-                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 高性能AIモデル利用可</li>
-                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 個別コンサル（月1回）</li>
-                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 優先サポート</li>
+                  <li className="flex items-center gap-2 font-bold bg-purple-50 p-1 rounded"><Check className="text-purple-500 flex-shrink-0" size={16} /> システム利用（120日）</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 本を１０冊まで作成可</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> AI利用（50回/日）</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> AIモデル（最高性能）</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 出版準備ガイド</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 初心者向けマニュアル</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> Wordエクスポート</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> EPUBエクスポート</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 出版用キーワード提案</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 出版用カテゴリ提案</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 出版用の書籍紹介文作成</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> LINE招待（質問可）</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> アフィリエイト機能</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> オプション割引</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> もくもく会</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> グループセッション参加</li>
+                  <li className="flex items-center gap-2"><Check className="text-purple-500 flex-shrink-0" size={16} /> 個別セッション</li>
                 </ul>
 
                 <button
@@ -713,7 +750,7 @@ export default function KindleLPClient() {
                       : 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white'
                   }`}
                 >
-                  {selectedLPPlan === 'business' ? '✓ 選択中' : 'ビジネスプランで始める'}
+                  {selectedLPPlan === 'business' ? '✓ 選択中' : 'プレミアムプランで始める'}
                 </button>
               </div>
             </div>
