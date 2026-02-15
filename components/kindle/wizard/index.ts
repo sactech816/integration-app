@@ -3,6 +3,7 @@ export * from './types';
 
 // Components
 export { Step0Discovery } from './Step0Discovery';
+export { DiagnosisAnalysisSection } from './DiagnosisAnalysisSection';
 export { Step1Theme } from './Step1Theme';
 export { Step2Subtitle } from './Step2Subtitle';
 export { Step3Target } from './Step3Target';

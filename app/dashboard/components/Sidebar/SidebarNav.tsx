@@ -28,6 +28,7 @@ import {
   Wrench,
   DollarSign,
   LayoutDashboard,
+  Lightbulb,
 } from 'lucide-react';
 
 export type MenuSection = 'main' | 'settings' | 'admin';
@@ -110,6 +111,7 @@ export default function SidebarNav({
       isDisabled: kdlDisabled,
       disabledBadge: getKdlBadge(),
     },
+    { id: 'kindle-discovery', label: 'ネタ発掘診断', icon: Lightbulb, section: 'main' },
     { id: 'affiliate', label: 'アフィリエイト', icon: Share2, section: 'main' },
     
     // 設定メニュー

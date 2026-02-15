@@ -241,6 +241,61 @@ export const MOCK_THEME_SUGGESTIONS: ThemeSuggestion[] = [
   },
 ];
 
+// Step0 著者特性スコア（レーダーチャート用）
+export interface AuthorTraitScores {
+  expertise: number;      // 専門性 (1-5)
+  passion: number;        // 情熱度 (1-5)
+  communication: number;  // 発信力 (1-5)
+  uniqueness: number;     // 独自性 (1-5)
+  marketability: number;  // 市場性 (1-5)
+}
+
+// Step0 SWOT分析
+export interface SwotAnalysis {
+  strengths: string[];
+  weaknesses: string[];
+  opportunities: string[];
+  threats: string[];
+}
+
+// Step0 診断分析結果
+export interface DiagnosisAnalysis {
+  summary: string;
+  authorTraits: AuthorTraitScores;
+  swot: SwotAnalysis;
+  authorType: string;
+  authorTypeDescription: string;
+}
+
+// 著者特性ラベル
+export const AUTHOR_TRAIT_LABELS: Record<keyof AuthorTraitScores, string> = {
+  expertise: '専門性',
+  passion: '情熱度',
+  communication: '発信力',
+  uniqueness: '独自性',
+  marketability: '市場性',
+};
+
+// モック 診断分析結果
+export const MOCK_DIAGNOSIS_ANALYSIS: DiagnosisAnalysis = {
+  summary: 'あなたの強みは「長年の実務経験に基づく深い知識」と「高い情熱」です。キャリア・自己啓発の分野に大きな需要があり、実体験ベースの実践的なガイドブックを書くことで、多くの読者に価値を届けられるでしょう。人に教えることが得意な発信力も大きな武器になります。',
+  authorTraits: {
+    expertise: 4,
+    passion: 5,
+    communication: 3,
+    uniqueness: 4,
+    marketability: 4,
+  },
+  swot: {
+    strengths: ['実務経験に基づく深い専門知識', '継続的な学習習慣と高い情熱', '人に教えることが得意'],
+    weaknesses: ['執筆・出版の経験がまだ少ない', 'テーマの絞り込みが必要'],
+    opportunities: ['副業・スキルアップ書籍の需要拡大中', '実体験ベースの本は読者の信頼を得やすい'],
+    threats: ['同ジャンルの既刊書籍との差別化が必要', '市場トレンドの変化への対応'],
+  },
+  authorType: '実践型エキスパート',
+  authorTypeDescription: '豊富な実務経験を武器に、読者にすぐ使えるノウハウを届けるタイプです。あなたの「やってみた」経験が最大の資産になります。',
+};
+
 // デモモード用の遅延処理（ローディング演出）
 export const demoDelay = (ms: number = 1000): Promise<void> => {
   return new Promise(resolve => setTimeout(resolve, ms));

@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import {
   Clock, Star, Rocket, Sparkles, ArrowLeft, ArrowRight, Check, Loader2, ChevronRight, Search, Lightbulb
 } from 'lucide-react';
-import { DiagnosisAnswers, ThemeSuggestion, MOCK_THEME_SUGGESTIONS, demoDelay } from './types';
+import { DiagnosisAnswers, ThemeSuggestion, DiagnosisAnalysis, MOCK_THEME_SUGGESTIONS, MOCK_DIAGNOSIS_ANALYSIS, demoDelay } from './types';
+import { DiagnosisAnalysisSection } from './DiagnosisAnalysisSection';
 
 interface Step0DiscoveryProps {
   onComplete: (theme: string) => void;
@@ -174,8 +175,10 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
     lifeMessage: '',
   });
   const [themeSuggestions, setThemeSuggestions] = useState<ThemeSuggestion[]>([]);
+  const [analysis, setAnalysis] = useState<DiagnosisAnalysis | null>(null);
   const [selectedTheme, setSelectedTheme] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
   const [error, setError] = useState('');
 
   const totalQuestionSteps = DIAGNOSIS_STEPS.length;
@@ -196,10 +199,22 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
   const handleGenerateThemes = async () => {
     setIsGenerating(true);
     setError('');
+    setLoadingMessage('あなたの回答を読み取っています...');
+
+    // ローディングメッセージを段階的に変更
+    const messages = [
+      { delay: 2000, text: 'あなたの著者タイプを診断中...' },
+      { delay: 4000, text: 'SWOT分析を生成中...' },
+      { delay: 6000, text: '最適なテーマを探しています...' },
+    ];
+    const timers = messages.map(m =>
+      setTimeout(() => setLoadingMessage(m.text), m.delay)
+    );
 
     try {
       if (isDemo) {
-        await demoDelay(1500);
+        await demoDelay(2000);
+        setAnalysis(MOCK_DIAGNOSIS_ANALYSIS);
         setThemeSuggestions(MOCK_THEME_SUGGESTIONS);
         return;
       }
@@ -216,10 +231,14 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
       }
 
       const data = await response.json();
+      if (data.analysis) {
+        setAnalysis(data.analysis);
+      }
       setThemeSuggestions(data.themes);
     } catch (err: any) {
       setError(err.message || 'テーマ生成中にエラーが発生しました');
     } finally {
+      timers.forEach(clearTimeout);
       setIsGenerating(false);
     }
   };
@@ -239,6 +258,7 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
       setDiagnosisStep(diagnosisStep - 1);
       if (isResultStep) {
         setThemeSuggestions([]);
+        setAnalysis(null);
         setSelectedTheme('');
         setError('');
       }
@@ -387,24 +407,14 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
       {/* 結果ステップ */}
       {isResultStep && (
         <div className="space-y-6 animate-fade-in">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <Sparkles className="text-amber-500" size={24} />
-              AIがあなたにぴったりのテーマを提案します
-            </h2>
-            <p className="text-gray-600 text-sm">
-              あなたの回答をもとに、Kindle出版に向いているテーマを3つ提案しました。気になるテーマを1つ選んでください。
-            </p>
-          </div>
-
+          {/* ローディング */}
           {isGenerating && (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
               <div className="relative">
                 <Loader2 className="animate-spin text-amber-500" size={40} />
                 <Sparkles className="absolute -top-1 -right-1 text-orange-400 animate-pulse" size={16} />
               </div>
-              <p className="text-gray-600 font-medium">あなたの回答を分析中...</p>
-              <p className="text-gray-400 text-sm">最適なテーマを探しています</p>
+              <p className="text-gray-600 font-medium">{loadingMessage}</p>
             </div>
           )}
 
@@ -420,8 +430,35 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
             </div>
           )}
 
+          {/* 分析セクション */}
+          {!isGenerating && analysis && (
+            <>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <Search className="text-amber-500" size={24} />
+                  あなたの著者診断結果
+                </h2>
+                <p className="text-gray-600 text-sm">
+                  あなたの回答をAIが分析しました。
+                </p>
+              </div>
+              <DiagnosisAnalysisSection analysis={analysis} />
+              <div className="border-t-2 border-amber-200 my-2" />
+            </>
+          )}
+
+          {/* テーマ提案 */}
           {!isGenerating && themeSuggestions.length > 0 && (
             <div className="space-y-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <Sparkles className="text-amber-500" size={24} />
+                  AIがあなたにぴったりのテーマを提案します
+                </h2>
+                <p className="text-gray-600 text-sm">
+                  気になるテーマを1つ選んでください。
+                </p>
+              </div>
               {themeSuggestions.map((suggestion, index) => (
                 <button
                   key={index}

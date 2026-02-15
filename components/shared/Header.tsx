@@ -406,6 +406,19 @@ const Header: React.FC<HeaderProps> = ({
                           <div className="text-xs text-gray-500">ビジネスパートナーを募集中</div>
                         </div>
                       </Link>
+                      <Link
+                        href="/kindle/discovery"
+                        onClick={closeMenus}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="p-2 rounded-lg bg-yellow-50">
+                          <Lightbulb size={18} className="text-yellow-600" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900 text-sm">ネタ発掘診断</div>
+                          <div className="text-xs text-gray-500">AIがあなたの本のテーマを提案</div>
+                        </div>
+                      </Link>
                     </div>
                   </div>
                 </>
@@ -842,6 +855,17 @@ const Header: React.FC<HeaderProps> = ({
                   >
                     <Building2 size={20} className="text-blue-500" />
                     <span className="font-medium text-gray-700">代理店パートナー募集</span>
+                  </Link>
+                  <Link
+                    href="/kindle/discovery"
+                    onClick={closeMenus}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 hover:from-yellow-100 hover:to-amber-100 transition-colors"
+                  >
+                    <Lightbulb size={20} className="text-yellow-500" />
+                    <div className="text-left">
+                      <span className="font-medium text-gray-700">ネタ発掘診断</span>
+                      <p className="text-xs text-gray-500">AIがあなたの本のテーマを提案</p>
+                    </div>
                   </Link>
                 </div>
               </div>

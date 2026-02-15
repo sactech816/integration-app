@@ -157,6 +157,12 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
                   代理店パートナー募集
                 </Link>
               </li>
+              <li>
+                <Link href="/kindle/discovery" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Lightbulb size={14} className="text-yellow-500 opacity-60 group-hover:opacity-100" />
+                  ネタ発掘診断
+                </Link>
+              </li>
             </ul>
           </div>
 

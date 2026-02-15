@@ -273,6 +273,13 @@ function DashboardContent() {
       }
       return;
     }
+
+    // ネタ発掘診断への遷移
+    if (itemId === 'kindle-discovery') {
+      const adminKey = isAdmin ? `?admin_key=${process.env.NEXT_PUBLIC_ADMIN_KEY || ''}` : '';
+      router.push(`/kindle/discovery${adminKey}`);
+      return;
+    }
   };
 
   // ナビゲーション処理

@@ -9,13 +9,17 @@ import { getSubscriptionStatus } from '@/lib/subscription';
 import { logAIUsage } from '@/lib/ai-usage';
 import { checkKdlLimits } from '@/lib/kdl-usage-check';
 
-interface ThemeSuggestion {
-  theme: string;
-  targetReader: string;
-  reason: string;
-}
+import {
+  MOCK_DIAGNOSIS_ANALYSIS,
+  MOCK_THEME_SUGGESTIONS,
+} from '@/components/kindle/wizard/types';
+import type {
+  ThemeSuggestion,
+  DiagnosisAnalysis,
+} from '@/components/kindle/wizard/types';
 
-interface GeneratedThemes {
+interface DiagnosisResult {
+  analysis: DiagnosisAnalysis;
   themes: ThemeSuggestion[];
 }
 
@@ -72,25 +76,10 @@ export async function POST(request: Request) {
     const useMockData = (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) || process.env.USE_MOCK_DATA === 'true';
 
     if (useMockData) {
-      const mockThemes: ThemeSuggestion[] = [
-        {
-          theme: `${answers.strengths || answers.pastInvestment || '趣味'}を活かした実践ガイド`,
-          targetReader: '同じ分野に興味があるが、何から始めればいいかわからない初心者',
-          reason: 'あなたの経験と得意分野を活かして、初心者向けのわかりやすいガイドが作れます。',
-        },
-        {
-          theme: `${answers.futureChallenges || 'チャレンジ'}の記録｜ゼロから始める挑戦日記`,
-          targetReader: '同じ挑戦をしたいと思っているが、一歩踏み出せない人',
-          reason: '挑戦の過程を共有するプロセスエコノミー型の本は、共感を呼びやすいジャンルです。',
-        },
-        {
-          theme: `${answers.expertise || answers.immersion || '専門知識'}をわかりやすく解説する本`,
-          targetReader: 'その分野に興味はあるが専門知識がない一般の読者',
-          reason: 'あなたの専門知識を噛み砕いて伝えることで、ニッチだが需要のあるテーマになります。',
-        },
-      ];
-
-      return NextResponse.json({ themes: mockThemes });
+      return NextResponse.json({
+        analysis: MOCK_DIAGNOSIS_ANALYSIS,
+        themes: MOCK_THEME_SUGGESTIONS,
+      });
     }
 
     if (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) {
@@ -111,10 +100,10 @@ export async function POST(request: Request) {
     ].filter(Boolean).join('\n');
 
     const systemPrompt = `＃目的：
-ユーザーの自己分析結果をもとに、Kindle出版に最適な本のテーマを3つ提案してください。
+ユーザーの自己分析結果をもとに、著者としての特性を分析し、Kindle出版に最適な本のテーマを3つ提案してください。
 
 ＃あなたの役割：
-Kindle出版のコンサルタント兼プロデューサー。著者の強みや経験を引き出し、売れるテーマを発掘するプロフェッショナル。
+Kindle出版のコンサルタント兼プロデューサー。著者の強みや経験を引き出し、売れるテーマを発掘するプロフェッショナル。占い師のように相手の可能性を見抜き、ポジティブに導く存在。
 
 ＃提案の基準：
 1. ユーザーの経験・強み・情熱と合致していること（書き続けられるテーマであること）
@@ -133,6 +122,24 @@ Kindle出版のコンサルタント兼プロデューサー。著者の強み�
 以下のJSON形式で出力してください。
 
 {
+  "analysis": {
+    "summary": "総合分析テキスト。占い・診断風の語り口で、ユーザーの強みと可能性をポジティブに伝える。「あなたの強みは〇〇で、△△の分野に需要があります」という形式を含める。150-200文字。",
+    "authorTraits": {
+      "expertise": 4,
+      "passion": 5,
+      "communication": 3,
+      "uniqueness": 4,
+      "marketability": 4
+    },
+    "swot": {
+      "strengths": ["著者としての強み（2-3項目、各30文字以内）"],
+      "weaknesses": ["課題・改善点（2-3項目、各30文字以内）"],
+      "opportunities": ["市場の機会（2-3項目、各30文字以内）"],
+      "threats": ["リスク・脅威（2-3項目、各30文字以内）"]
+    },
+    "authorType": "著者タイプ名（4-8文字、キャッチーな名前。例: 実践型エキスパート、パッション発信者）",
+    "authorTypeDescription": "著者タイプの説明（50-80文字）"
+  },
   "themes": [
     {
       "theme": "本のテーマ（キャッチーで具体的な表現）",
@@ -142,10 +149,18 @@ Kindle出版のコンサルタント兼プロデューサー。著者の強み�
   ]
 }
 
+＃authorTraitsの説明：
+- expertise（専門性）: 特定分野の知識の深さ（1-5の整数）
+- passion（情熱度）: 持続的な情熱・没頭度（1-5の整数）
+- communication（発信力）: メッセージを伝える力（1-5の整数）
+- uniqueness（独自性）: 視点や経験のユニークさ（1-5の整数）
+- marketability（市場性）: テーマの商業的魅力（1-5の整数）
+
 ＃条件：
 - 日本語のみ
 - テーマは具体的かつキャッチーに（抽象的すぎないこと）
-- 必ず3つ提案すること`;
+- 必ず3つ提案すること
+- summaryは励ましと期待感を込めたポジティブな表現にすること`;
 
     // ユーザーのプランTierを取得
     let planTier = 'none';
@@ -199,11 +214,16 @@ Kindle出版のコンサルタント兼プロデューサー。著者の強み�
       }).catch(console.error);
     }
 
-    const result: GeneratedThemes = JSON.parse(content);
+    const result: DiagnosisResult = JSON.parse(content);
 
     // バリデーション
     if (!result.themes || !Array.isArray(result.themes)) {
       throw new Error('不正な応答形式です');
+    }
+
+    // analysisがない場合のフォールバック
+    if (!result.analysis) {
+      return NextResponse.json({ themes: result.themes });
     }
 
     return NextResponse.json(result);
