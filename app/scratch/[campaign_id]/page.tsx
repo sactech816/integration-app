@@ -1,396 +1,85 @@
-'use client';
+import { Metadata } from 'next';
+import { createClient } from '@supabase/supabase-js';
+import ScratchClient from './ScratchClient';
+import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
+import { generateUGCMetadata } from '@/lib/seo/generateUGCMetadata';
+import { generateUGCSchema } from '@/lib/seo/generateUGCSchema';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
-import { User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
-import { 
-  getCampaign, 
-  getGachaPrizes, 
-  getPointBalance, 
-  playGacha,
-  getUserPrizes 
-} from '@/app/actions/gamification';
-import { 
-  GamificationCampaign, 
-  GachaPrize, 
-  GachaResult, 
-  UserPrize,
-  GachaSettings 
-} from '@/lib/types';
-import AuthModal from '@/components/shared/AuthModal';
-import ContentFooter from '@/components/shared/ContentFooter';
-import ScratchAnimation from '@/components/gamification/gacha/ScratchAnimation';
-import PointDisplay from '@/components/gamification/PointDisplay';
-import { 
-  Loader2, 
-  Gift, 
-  AlertCircle, 
-  Trophy,
-  ChevronDown,
-  Shield,
-  CreditCard,
-} from 'lucide-react';
-import { getAdminEmails } from '@/lib/constants';
-import { mockGachaDraw } from '@/lib/gamification/mockGacha';
+export const revalidate = 300;
 
-export default function ScratchPage() {
-  const params = useParams();
-  const campaignId = params.campaign_id as string;
-
-  const [user, setUser] = useState<User | null>(null);
-  const [showAuth, setShowAuth] = useState(false);
-  const [campaign, setCampaign] = useState<GamificationCampaign | null>(null);
-  const [prizes, setPrizes] = useState<GachaPrize[]>([]);
-  const [userPrizes, setUserPrizes] = useState<UserPrize[]>([]);
-  const [currentPoints, setCurrentPoints] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [playing, setPlaying] = useState(false);
-  const [result, setResult] = useState<GachaResult | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [showPrizeList, setShowPrizeList] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [isAdminMode, setIsAdminMode] = useState(false);
-
-  // 管理者チェック
-  const adminEmails = getAdminEmails();
-  const isAdmin = user?.email && adminEmails.some(email =>
-    user.email?.toLowerCase() === email.toLowerCase()
-  );
-  const isOwner = user?.id && campaign?.owner_id === user.id;
-
-  // 認証状態の監視
-  useEffect(() => {
-    if (!supabase) return;
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user || null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleLogout = async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
-    setUser(null);
-  };
-
-  // データ読み込み
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [campaignData, prizesData, userPrizesData] = await Promise.all([
-          getCampaign(campaignId),
-          getGachaPrizes(campaignId),
-          getUserPrizes(user?.id),
-        ]);
-
-        setCampaign(campaignData);
-        setPrizes(prizesData);
-        setUserPrizes(userPrizesData.filter(p => p.campaign_id === campaignId));
-      } catch (error) {
-        console.error('Error loading scratch data:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadData();
-  }, [campaignId, user?.id]);
-
-  // userが確定したらポイントを取得
-  useEffect(() => {
-    async function loadPoints() {
-      const balanceData = await getPointBalance(user?.id);
-      setCurrentPoints(balanceData?.current_points || 0);
-    }
-    loadPoints();
-  }, [user?.id]);
-
-  // スクラッチカードを購入（通常モード）
-  const handlePlay = useCallback(async () => {
-    if (!campaign || playing) return;
-
-    const settings = campaign.settings as GachaSettings;
-    const cost = settings.cost_per_play || 10;
-
-    if (currentPoints < cost) {
-      setResult({ success: false, error_code: 'insufficient_points' });
-      setShowResult(true);
-      return;
-    }
-
-    setPlaying(true);
-    setResult(null);
-    setShowResult(false);
-
-    try {
-      const gachaResult = await playGacha(campaignId, user?.id);
-      
-      // 結果をセット（スクラッチ後に表示される）
-      setResult(gachaResult);
-      setPlaying(false);
-
-      if (gachaResult.success && gachaResult.new_balance !== undefined) {
-        setCurrentPoints(gachaResult.new_balance);
-        setRefreshTrigger(prev => prev + 1);
-        
-        // 獲得景品リストを更新
-        if (gachaResult.is_winning) {
-          getUserPrizes(user?.id).then(data => {
-            setUserPrizes(data.filter(p => p.campaign_id === campaignId));
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error playing scratch:', error);
-      setResult({ success: false, error_code: 'campaign_not_found' });
-      setShowResult(true);
-      setPlaying(false);
-    }
-  }, [campaign, campaignId, currentPoints, playing, user?.id]);
-
-  // 管理者用フリープレイ
-  const handleAdminFreePlay = useCallback(() => {
-    if (!campaign || playing || !prizes.length) return;
-
-    setPlaying(true);
-    setResult(null);
-    setShowResult(false);
-
-    // すぐに結果をセット
-    const mockResult = mockGachaDraw(prizes);
-    setResult(mockResult);
-    setPlaying(false);
-  }, [campaign, playing, prizes]);
-
-  // リセット
-  const handleReset = () => {
-    setResult(null);
-    setShowResult(false);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-600 via-orange-600 to-yellow-500 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-white" />
-        {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
-      </div>
-    );
-  }
-
-  if (!campaign) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-600 via-orange-600 to-yellow-500 flex items-center justify-center">
-        <div className="max-w-md mx-auto text-center px-4">
-          <AlertCircle className="w-16 h-16 mx-auto text-white/50 mb-4" />
-          <h1 className="text-2xl font-bold text-white mb-2">キャンペーンが見つかりません</h1>
-          <p className="text-white/70">指定されたスクラッチは存在しないか、終了しています。</p>
-        </div>
-        {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
-      </div>
-    );
-  }
-
-  const settings = campaign.settings as GachaSettings;
-  const cost = settings.cost_per_play || 10;
-  const canPlay = currentPoints >= cost;
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-600 via-orange-600 to-yellow-500">
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          {/* ヘッダー */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-3">
-              <CreditCard className="w-8 h-8" />
-              {campaign.title}
-              <CreditCard className="w-8 h-8" />
-            </h1>
-            {campaign.description && (
-              <p className="text-yellow-100">{campaign.description}</p>
-            )}
-          </div>
-
-          {/* 管理者モード切替 */}
-          {(isAdmin || isOwner) && (
-            <div className="mb-6">
-              <button
-                onClick={() => setIsAdminMode(!isAdminMode)}
-                className={`
-                  w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all
-                  ${isAdminMode 
-                    ? 'bg-yellow-300 text-yellow-900' 
-                    : 'bg-white/10 text-white/70 hover:bg-white/20'}
-                `}
-              >
-                <Shield className="w-5 h-5" />
-                {isAdminMode ? '管理者モード ON（フリープレイ）' : '管理者モードに切替'}
-              </button>
-              {isAdminMode && (
-                <p className="text-center text-yellow-200 text-sm mt-2">
-                  ポイント消費なし・DB保存なしでテストプレイできます
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* ポイント表示 */}
-          {!isAdminMode && (
-            <div className="flex justify-center mb-8">
-              <PointDisplay 
-                userId={user?.id}
-                refreshTrigger={refreshTrigger} 
-                size="lg" 
-                showTotal 
-              />
-            </div>
-          )}
-
-          {/* スクラッチアニメーションエリア */}
-          <div className="bg-black/20 backdrop-blur-sm rounded-3xl p-8 mb-8">
-            <ScratchAnimation
-              playing={playing}
-              result={result}
-              showResult={showResult}
-              onPlay={isAdminMode ? handleAdminFreePlay : handlePlay}
-              onReset={handleReset}
-              cost={isAdminMode ? 0 : cost}
-              canPlay={isAdminMode ? true : canPlay}
-            />
-          </div>
-
-          {/* 遊び方 */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-8">
-            <h3 className="font-bold text-white mb-2">🎮 遊び方</h3>
-            <ol className="text-yellow-100 text-sm space-y-1">
-              <li>1. ポイントを使ってスクラッチカードを購入</li>
-              <li>2. 銀色の部分を指でこすって削る</li>
-              <li>3. 50%以上削ると結果が表示されます</li>
-            </ol>
-          </div>
-
-          {/* 景品一覧 */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden">
-            <button
-              onClick={() => setShowPrizeList(!showPrizeList)}
-              className="w-full p-4 flex items-center justify-between text-white hover:bg-white/5 transition-colors"
-            >
-              <span className="flex items-center gap-2 font-medium">
-                <Gift className="w-5 h-5" />
-                景品一覧
-              </span>
-              <ChevronDown 
-                className={`w-5 h-5 transition-transform ${showPrizeList ? 'rotate-180' : ''}`} 
-              />
-            </button>
-            
-            {showPrizeList && (
-              <div className="p-4 pt-0 space-y-3">
-                {prizes.map((prize) => (
-                  <div
-                    key={prize.id}
-                    className={`
-                      flex items-center gap-4 p-3 rounded-xl
-                      ${prize.is_winning 
-                        ? 'bg-gradient-to-r from-yellow-500/30 to-orange-500/30 border border-yellow-400/30' 
-                        : 'bg-white/5'}
-                    `}
-                  >
-                    {prize.image_url ? (
-                      <img
-                        src={prize.image_url}
-                        alt={prize.name}
-                        className="w-12 h-12 rounded-lg object-cover"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center">
-                        <Gift className="w-6 h-6 text-white/50" />
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-white">{prize.name}</span>
-                        {prize.is_winning && (
-                          <span className="px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full">
-                            当たり
-                          </span>
-                        )}
-                      </div>
-                      {prize.description && (
-                        <p className="text-sm text-white/60">{prize.description}</p>
-                      )}
-                    </div>
-                    <div className="text-right text-sm text-white/50">
-                      {prize.probability}%
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 獲得した景品 */}
-          {userPrizes.length > 0 && (
-            <div className="mt-8 bg-gradient-to-r from-yellow-500/30 to-orange-500/30 rounded-2xl p-6 border border-yellow-400/30">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow-300" />
-                獲得した景品
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {userPrizes.map((userPrize) => (
-                  <div
-                    key={userPrize.id}
-                    className="bg-white/10 rounded-xl p-3 text-center"
-                  >
-                    {userPrize.prize?.image_url ? (
-                      <img
-                        src={userPrize.prize.image_url}
-                        alt={userPrize.prize?.name}
-                        className="w-16 h-16 mx-auto rounded-lg object-cover mb-2"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 mx-auto rounded-lg bg-white/10 flex items-center justify-center mb-2">
-                        <Gift className="w-8 h-8 text-white/50" />
-                      </div>
-                    )}
-                    <p className="text-sm font-medium text-white truncate">
-                      {userPrize.prize?.name}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
-      <ContentFooter toolType="gamification" variant="transparent" />
-      {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
-    </div>
-  );
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
 }
 
+interface Props {
+  params: Promise<{ campaign_id: string }>;
+}
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { campaign_id } = await params;
+  const supabase = getSupabase();
+  if (!supabase) return { title: 'スクラッチ' };
 
+  const { data } = await supabase
+    .from('gamification_campaigns')
+    .select('title, description')
+    .eq('id', campaign_id)
+    .single();
 
+  if (!data) return { title: 'スクラッチが見つかりません' };
 
+  return generateUGCMetadata({
+    title: data.title,
+    description: data.description || `${data.title} - デジタルスクラッチ`,
+    type: 'scratch',
+    slug: campaign_id,
+  });
+}
 
+export default async function ScratchPage({ params }: Props) {
+  const { campaign_id } = await params;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
+  const supabase = getSupabase();
 
+  let title = 'スクラッチ';
+  let description = '';
 
+  if (supabase) {
+    const { data } = await supabase
+      .from('gamification_campaigns')
+      .select('title, description')
+      .eq('id', campaign_id)
+      .single();
+    if (data) {
+      title = data.title;
+      description = data.description || '';
+    }
+  }
 
+  const schema = generateUGCSchema({
+    schemaType: 'WebApplication',
+    name: title,
+    description: description || `${title} - デジタルスクラッチ`,
+    url: `${siteUrl}/scratch/${campaign_id}`,
+  });
 
+  const breadcrumbSchema = generateBreadcrumbSchema(
+    [
+      { name: 'ゲーミフィケーション', href: '/gamification' },
+      { name: 'スクラッチ', href: '/scratch' },
+      { name: title },
+    ],
+    siteUrl
+  );
 
-
-
-
-
-
-
-
-
-
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <ScratchClient />
+    </>
+  );
+}
