@@ -399,24 +399,24 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     });
   }, []);
 
-  // Word出力
-  const handleDownloadDocx = async () => {
+  // ファイルダウンロード共通処理
+  const handleDownloadFile = async (format: 'docx' | 'epub') => {
     if (isDownloading) return;
-    
+
     setIsDownloading(true);
     try {
-      const response = await fetch(`/api/kdl/download-docx?book_id=${book.id}`);
-      
+      const response = await fetch(`/api/kdl/download-${format}?book_id=${book.id}`);
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'ダウンロードに失敗しました');
       }
-      
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${book.title}.docx`;
+      a.download = `${book.title}.${format}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -1227,7 +1227,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
               </button>
               
               <button
-                onClick={handleDownloadDocx}
+                onClick={() => handleDownloadFile('docx')}
                 disabled={isDownloading}
                 title="Word出力"
                 className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
@@ -1244,9 +1244,22 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 ) : (
                   <>
                     <FileDown size={16} />
-                    <span>Word出力</span>
+                    <span>Word</span>
                   </>
                 )}
+              </button>
+              <button
+                onClick={() => handleDownloadFile('epub')}
+                disabled={isDownloading}
+                title="EPUB出力"
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
+                  isDownloading
+                    ? 'bg-white/20 cursor-not-allowed'
+                    : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
+                }`}
+              >
+                <BookOpen size={16} />
+                <span>EPUB</span>
               </button>
               
               <div className="w-px h-6 bg-white/30" />
