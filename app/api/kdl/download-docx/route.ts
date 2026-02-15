@@ -495,7 +495,7 @@ function createBookDocument(book: Book, chapters: Chapter[], sections: Section[]
         document: {
           run: {
             size: 22, // 11pt
-            font: '游明朝',
+            font: '游ゴシック',
             color: COLORS.body,
           },
           paragraph: {
