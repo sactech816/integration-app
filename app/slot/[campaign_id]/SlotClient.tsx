@@ -120,10 +120,7 @@ export default function SlotClient() {
     const settings = campaign.settings as GachaSettings;
     const cost = settings.cost_per_play || 10;
 
-    console.log('[Slot] Play button clicked, current points:', currentPoints, 'cost:', cost);
-
     if (currentPoints < cost) {
-      console.warn('[Slot] Insufficient points');
       setResult({ success: false, error_code: 'insufficient_points' });
       setShowResult(true);
       return;
@@ -133,35 +130,33 @@ export default function SlotClient() {
     setResult(null);
     setShowResult(false);
 
-    try {
-      console.log('[Slot] Calling playGacha for campaign:', campaignId);
-      const gachaResult = await playGacha(campaignId, user?.id);
-      console.log('[Slot] Gacha result:', gachaResult);
+    const playStartTime = Date.now();
 
-      // アニメーション時間分待機
-      const animationDuration = 3500;
+    try {
+      const gachaResult = await playGacha(campaignId, user?.id);
+
+      // 結果を即座にセット（アニメーションが結果に基づいて絵柄を決定する）
+      setResult(gachaResult);
+
+      // アニメーション完了後に結果テキストを表示
+      const elapsed = Date.now() - playStartTime;
+      const remainingDuration = Math.max(3500 - elapsed, 2200);
 
       setTimeout(() => {
-        setResult(gachaResult);
         setShowResult(true);
         setPlaying(false);
 
         if (gachaResult.success && gachaResult.new_balance !== undefined) {
-          console.log('[Slot] Updating points to:', gachaResult.new_balance);
           setCurrentPoints(gachaResult.new_balance);
           setRefreshTrigger(prev => prev + 1);
 
-          // 獲得景品リストを更新
           if (gachaResult.is_winning) {
-            console.log('[Slot] Won a prize, refreshing prize list');
             getUserPrizes(user?.id).then(data => {
               setUserPrizes(data.filter(p => p.campaign_id === campaignId));
             });
           }
-        } else {
-          console.error('[Slot] Gacha failed or no new balance:', gachaResult);
         }
-      }, animationDuration);
+      }, remainingDuration);
     } catch (error) {
       console.error('[Slot] Error playing slot:', error);
       setResult({ success: false, error_code: 'campaign_not_found' });
@@ -335,8 +330,11 @@ export default function SlotClient() {
                         <p className="text-sm text-white/60">{prize.description}</p>
                       )}
                     </div>
-                    <div className="text-right text-sm text-white/50">
-                      {prize.probability}%
+                    <div className="text-right text-sm">
+                      {prize.point_reward != null && prize.point_reward > 0 && (
+                        <div className="text-yellow-400 font-medium">+{prize.point_reward}pt</div>
+                      )}
+                      <div className="text-white/50">{prize.probability}%</div>
                     </div>
                   </div>
                 ))}

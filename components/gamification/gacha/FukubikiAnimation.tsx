@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GachaResult } from '@/lib/types';
 import { Gift, Sparkles, AlertCircle, RotateCcw, Coins } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -25,6 +25,18 @@ const BALL_COLORS = [
   { id: 'purple', color: 'from-purple-400 to-purple-600', glow: 'shadow-purple-400/50', label: '紫' },
 ];
 
+// 景品名から球の色を判定
+function getBallForPrize(prizeName?: string): typeof BALL_COLORS[number] {
+  if (!prizeName) return BALL_COLORS[4]; // 白
+  if (prizeName.includes('金')) return BALL_COLORS[0];
+  if (prizeName.includes('赤')) return BALL_COLORS[1];
+  if (prizeName.includes('青')) return BALL_COLORS[2];
+  if (prizeName.includes('緑')) return BALL_COLORS[3];
+  if (prizeName.includes('白')) return BALL_COLORS[4];
+  if (prizeName.includes('紫')) return BALL_COLORS[5];
+  return BALL_COLORS[4]; // デフォルト: 白
+}
+
 export default function FukubikiAnimation({
   playing,
   result,
@@ -37,24 +49,40 @@ export default function FukubikiAnimation({
   const [shaking, setShaking] = useState(false);
   const [ballOut, setBallOut] = useState(false);
   const [finalBall, setFinalBall] = useState(BALL_COLORS[0]);
-  
+  const playStartRef = useRef(0);
+  const ballTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // プレイ開始時に振り始める
   useEffect(() => {
     if (playing && !showResult) {
-      // 振る演出
+      playStartRef.current = Date.now();
       setShaking(true);
       setBallOut(false);
-      
-      // ランダムな球を選択
-      const randomBall = BALL_COLORS[Math.floor(Math.random() * BALL_COLORS.length)];
-      setFinalBall(randomBall);
-      
-      // 2秒後に振り終わり
-      setTimeout(() => {
-        setShaking(false);
-        setBallOut(true);
-      }, 2000);
     }
+    return () => {
+      if (ballTimerRef.current) clearTimeout(ballTimerRef.current);
+    };
   }, [playing, showResult]);
+
+  // 結果が来たら球の色を決定し、振り終わったら球を出す
+  useEffect(() => {
+    if (!playing || showResult || !result) return;
+
+    const ball = getBallForPrize(result.prize_name);
+    setFinalBall(ball);
+
+    const elapsed = Date.now() - playStartRef.current;
+    const delay = Math.max(2000 - elapsed, 200);
+
+    ballTimerRef.current = setTimeout(() => {
+      setShaking(false);
+      setBallOut(true);
+    }, delay);
+
+    return () => {
+      if (ballTimerRef.current) clearTimeout(ballTimerRef.current);
+    };
+  }, [playing, showResult, result]);
   
   // 当たり時の紙吹雪
   useEffect(() => {

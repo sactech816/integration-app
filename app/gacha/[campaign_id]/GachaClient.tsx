@@ -132,14 +132,23 @@ export default function GachaClient() {
     setResult(null);
     setShowResult(false);
 
+    const playStartTime = Date.now();
+
     try {
       const gachaResult = await playGacha(campaignId, user?.id);
 
-      // アニメーション時間分待機
-      const animationDuration = campaign.animation_type === 'roulette' ? 4000 : 3000;
+      // 結果を即座にセット（アニメーションが結果に基づいて動作する）
+      setResult(gachaResult);
+
+      // アニメーション完了後に結果テキストを表示
+      const elapsed = Date.now() - playStartTime;
+      const isRoulette = campaign.animation_type === 'roulette';
+      // ルーレットは4s CSS transition + 余裕、その他は3s
+      const minDuration = isRoulette ? 4500 : 3000;
+      const minAfterResult = isRoulette ? 4200 : 2200;
+      const remainingDuration = Math.max(minDuration - elapsed, minAfterResult);
 
       setTimeout(() => {
-        setResult(gachaResult);
         setShowResult(true);
         setPlaying(false);
 
@@ -147,14 +156,13 @@ export default function GachaClient() {
           setCurrentPoints(gachaResult.new_balance);
           setRefreshTrigger(prev => prev + 1);
 
-          // 獲得景品リストを更新
           if (gachaResult.is_winning) {
             getUserPrizes(user?.id).then(data => {
               setUserPrizes(data.filter(p => p.campaign_id === campaignId));
             });
           }
         }
-      }, animationDuration);
+      }, remainingDuration);
     } catch (error) {
       console.error('Error playing gacha:', error);
       setResult({ success: false, error_code: 'campaign_not_found' });
@@ -356,8 +364,11 @@ export default function GachaClient() {
                         <p className="text-sm text-white/60">{prize.description}</p>
                       )}
                     </div>
-                    <div className="text-right text-sm text-white/50">
-                      {prize.probability}%
+                    <div className="text-right text-sm">
+                      {prize.point_reward != null && prize.point_reward > 0 && (
+                        <div className="text-yellow-400 font-medium">+{prize.point_reward}pt</div>
+                      )}
+                      <div className="text-white/50">{prize.probability}%</div>
                     </div>
                   </div>
                 ))}

@@ -326,8 +326,11 @@ export default function ScratchClient() {
                         <p className="text-sm text-white/60">{prize.description}</p>
                       )}
                     </div>
-                    <div className="text-right text-sm text-white/50">
-                      {prize.probability}%
+                    <div className="text-right text-sm">
+                      {prize.point_reward != null && prize.point_reward > 0 && (
+                        <div className="text-yellow-400 font-medium">+{prize.point_reward}pt</div>
+                      )}
+                      <div className="text-white/50">{prize.probability}%</div>
                     </div>
                   </div>
                 ))}

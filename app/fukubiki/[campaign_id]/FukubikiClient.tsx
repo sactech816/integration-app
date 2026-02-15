@@ -129,14 +129,19 @@ export default function FukubikiClient() {
     setResult(null);
     setShowResult(false);
 
+    const playStartTime = Date.now();
+
     try {
       const gachaResult = await playGacha(campaignId, user?.id);
 
-      // アニメーション時間分待機
-      const animationDuration = 3000;
+      // 結果を即座にセット（アニメーションが結果に基づいて球の色を決定する）
+      setResult(gachaResult);
+
+      // アニメーション完了後に結果テキストを表示
+      const elapsed = Date.now() - playStartTime;
+      const remainingDuration = Math.max(3000 - elapsed, 2200);
 
       setTimeout(() => {
-        setResult(gachaResult);
         setShowResult(true);
         setPlaying(false);
 
@@ -144,14 +149,13 @@ export default function FukubikiClient() {
           setCurrentPoints(gachaResult.new_balance);
           setRefreshTrigger(prev => prev + 1);
 
-          // 獲得景品リストを更新
           if (gachaResult.is_winning) {
             getUserPrizes(user?.id).then(data => {
               setUserPrizes(data.filter(p => p.campaign_id === campaignId));
             });
           }
         }
-      }, animationDuration);
+      }, remainingDuration);
     } catch (error) {
       console.error('Error playing fukubiki:', error);
       setResult({ success: false, error_code: 'campaign_not_found' });
@@ -325,8 +329,11 @@ export default function FukubikiClient() {
                         <p className="text-sm text-white/60">{prize.description}</p>
                       )}
                     </div>
-                    <div className="text-right text-sm text-white/50">
-                      {prize.probability}%
+                    <div className="text-right text-sm">
+                      {prize.point_reward != null && prize.point_reward > 0 && (
+                        <div className="text-yellow-400 font-medium">+{prize.point_reward}pt</div>
+                      )}
+                      <div className="text-white/50">{prize.probability}%</div>
                     </div>
                   </div>
                 ))}

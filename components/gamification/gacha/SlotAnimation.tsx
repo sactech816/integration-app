@@ -105,6 +105,38 @@ function Reel({
   );
 }
 
+// 結果に基づいてリール絵柄を決定
+function getSymbolsForResult(res: GachaResult): number[] {
+  if (!res.success) {
+    return generateNonMatchingSymbols();
+  }
+
+  const pointsWon = res.points_won || 0;
+
+  if (pointsWon >= 200) return [0, 0, 0]; // 7️⃣7️⃣7️⃣ ジャックポット
+  if (pointsWon >= 100) return [1, 1, 1]; // 🎰🎰🎰
+  if (pointsWon >= 50)  return [7, 7, 7]; // ⭐⭐⭐
+  if (pointsWon >= 20)  return [2, 2, 2]; // 🍒🍒🍒
+  if (pointsWon > 0)    return [3, 3, 3]; // 🔔🔔🔔
+  if (res.is_winning)   return [4, 4, 4]; // 🍉🍉🍉
+
+  return generateNonMatchingSymbols();
+}
+
+function generateNonMatchingSymbols(): number[] {
+  const a = Math.floor(Math.random() * SYMBOLS.length);
+  let b = Math.floor(Math.random() * SYMBOLS.length);
+  const c = (() => {
+    let v = Math.floor(Math.random() * SYMBOLS.length);
+    // 3つ揃いを防止
+    while (a === b && b === v) {
+      v = (v + 1) % SYMBOLS.length;
+    }
+    return v;
+  })();
+  return [a, b, c];
+}
+
 export default function SlotAnimation({
   playing,
   result,
@@ -120,43 +152,66 @@ export default function SlotAnimation({
     { stopped: false, symbolIndex: 0 },
   ]);
   const [allStopped, setAllStopped] = useState(false);
-  
-  // プレイ開始時にリールをスタート
+  const playStartRef = useRef(0);
+  const stopTimersRef = useRef<NodeJS.Timeout[]>([]);
+
+  // プレイ開始時にリールをスタート（最終位置は未定）
   useEffect(() => {
     if (playing && !showResult) {
-      // ランダムな最終シンボルを決定
-      const finalSymbols = [
-        Math.floor(Math.random() * SYMBOLS.length),
-        Math.floor(Math.random() * SYMBOLS.length),
-        Math.floor(Math.random() * SYMBOLS.length),
-      ];
-      
+      playStartRef.current = Date.now();
       setReelStates([
-        { stopped: false, symbolIndex: finalSymbols[0] },
-        { stopped: false, symbolIndex: finalSymbols[1] },
-        { stopped: false, symbolIndex: finalSymbols[2] },
+        { stopped: false, symbolIndex: 0 },
+        { stopped: false, symbolIndex: 0 },
+        { stopped: false, symbolIndex: 0 },
       ]);
       setAllStopped(false);
-      
-      // 順番にリールを停止
-      const stopTimes = [1500, 2200, 2900]; // 各リールの停止タイミング
-      
-      stopTimes.forEach((time, index) => {
-        setTimeout(() => {
-          setReelStates(prev => {
-            const newStates = [...prev];
-            newStates[index] = { ...newStates[index], stopped: true };
-            return newStates;
-          });
-          
-          // 最後のリールが停止したらフラグを立てる
-          if (index === 2) {
-            setTimeout(() => setAllStopped(true), 300);
-          }
-        }, time);
-      });
     }
+    return () => {
+      stopTimersRef.current.forEach(t => clearTimeout(t));
+      stopTimersRef.current = [];
+    };
   }, [playing, showResult]);
+
+  // 結果が来たら、結果に基づく絵柄でリールを順次停止
+  useEffect(() => {
+    if (!playing || showResult || !result) return;
+
+    const symbols = getSymbolsForResult(result);
+    const elapsed = Date.now() - playStartRef.current;
+
+    // リール停止位置をセット
+    setReelStates(prev => prev.map((state, i) => ({
+      ...state,
+      symbolIndex: symbols[i],
+    })));
+
+    // 最低1500msは回してから順次停止
+    const firstStop = Math.max(1500 - elapsed, 200);
+    const delays = [firstStop, firstStop + 700, firstStop + 1400];
+
+    stopTimersRef.current.forEach(t => clearTimeout(t));
+    stopTimersRef.current = [];
+
+    delays.forEach((delay, index) => {
+      const timer = setTimeout(() => {
+        setReelStates(prev => {
+          const newStates = [...prev];
+          newStates[index] = { ...newStates[index], stopped: true };
+          return newStates;
+        });
+        if (index === 2) {
+          const t2 = setTimeout(() => setAllStopped(true), 300);
+          stopTimersRef.current.push(t2);
+        }
+      }, delay);
+      stopTimersRef.current.push(timer);
+    });
+
+    return () => {
+      stopTimersRef.current.forEach(t => clearTimeout(t));
+      stopTimersRef.current = [];
+    };
+  }, [playing, showResult, result]);
   
   // 当たり時に紙吹雪
   useEffect(() => {

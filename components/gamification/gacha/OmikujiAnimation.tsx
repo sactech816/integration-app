@@ -14,6 +14,19 @@ interface OmikujiAnimationProps {
   canPlay: boolean;
 }
 
+// 景品名からおみくじの結果テキストを抽出
+function getFortuneFromPrize(prizeName?: string): string {
+  if (!prizeName) return '吉';
+  if (prizeName.includes('大吉')) return '大吉';
+  if (prizeName.includes('中吉')) return '中吉';
+  if (prizeName.includes('末吉')) return '末吉';
+  if (prizeName.includes('小吉')) return '小吉';
+  if (prizeName.includes('凶')) return '凶';
+  if (prizeName.includes('吉')) return '吉';
+  // フォールバック: 絵文字を除去して返す
+  return prizeName.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}\s]/gu, '').trim() || prizeName;
+}
+
 export default function OmikujiAnimation({
   playing,
   result,
@@ -78,7 +91,7 @@ export default function OmikujiAnimation({
         {/* 結果の紙（開く演出） */}
         {phase === 'opening' && (
           <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 w-40">
-            <div 
+            <div
               className={`
                 bg-gradient-to-b from-amber-50 to-amber-100
                 rounded-lg shadow-xl p-4 text-center
@@ -86,17 +99,16 @@ export default function OmikujiAnimation({
                 animate-paper-unfold
               `}
             >
-              {result?.is_winning ? (
-                <>
-                  <div className="text-red-600 text-3xl font-bold mb-1">大吉</div>
-                  <div className="text-amber-800 text-sm">🎉 おめでとう！</div>
-                </>
-              ) : (
-                <>
-                  <div className="text-gray-600 text-2xl font-bold mb-1">小吉</div>
-                  <div className="text-amber-700 text-sm">次こそ！</div>
-                </>
-              )}
+              {(() => {
+                const fortune = getFortuneFromPrize(result?.prize_name);
+                const isGood = ['大吉', '中吉'].includes(fortune);
+                return (
+                  <>
+                    <div className={`${isGood ? 'text-red-600 text-3xl' : 'text-gray-600 text-2xl'} font-bold mb-1`}>{fortune}</div>
+                    <div className="text-amber-800 text-sm">{isGood ? '🎉 おめでとう！' : '次こそ！'}</div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}
