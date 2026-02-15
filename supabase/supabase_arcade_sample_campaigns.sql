@@ -5,16 +5,16 @@
 -- 射幸心をくすぐる設定: 10pt消費で最大500pt獲得のチャンス！
 
 -- ============================================
--- 1. gacha_prizesテーブルにpoints_rewardカラムを追加（存在しない場合）
+-- 1. gacha_prizesテーブルにpoint_rewardカラムを追加（存在しない場合）
 -- ============================================
 DO $$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'gacha_prizes' AND column_name = 'points_reward'
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'gacha_prizes' AND column_name = 'point_reward'
   ) THEN
-    ALTER TABLE gacha_prizes ADD COLUMN points_reward INTEGER DEFAULT 0;
-    COMMENT ON COLUMN gacha_prizes.points_reward IS 'ポイント報酬（当選時に獲得できるポイント）';
+    ALTER TABLE gacha_prizes ADD COLUMN point_reward INTEGER DEFAULT 0;
+    COMMENT ON COLUMN gacha_prizes.point_reward IS 'ポイント報酬（当選時に獲得できるポイント）';
   END IF;
 END $$;
 
@@ -87,7 +87,7 @@ VALUES (
   '{"cost_per_play": 10}'
 );
 
-INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, points_reward) VALUES
+INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, point_reward) VALUES
 ('11111111-1111-1111-1111-111111111111', '🎰 ジャックポット', '777揃い！200pt獲得！', 2, true, 0, 200),
 ('11111111-1111-1111-1111-111111111111', '💎 ダイヤモンド', '100pt獲得！', 5, true, 1, 100),
 ('11111111-1111-1111-1111-111111111111', '⭐ スター', '50pt獲得！', 10, true, 2, 50),
@@ -109,7 +109,7 @@ VALUES (
   '{"cost_per_play": 10}'
 );
 
-INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, points_reward) VALUES
+INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, point_reward) VALUES
 ('22222222-2222-2222-2222-222222222222', '🥇 大当たり', '100pt獲得！', 3, true, 0, 100),
 ('22222222-2222-2222-2222-222222222222', '🥈 中当たり', '50pt獲得！', 10, true, 1, 50),
 ('22222222-2222-2222-2222-222222222222', '🥉 小当たり', '30pt獲得！', 20, true, 2, 30),
@@ -131,7 +131,7 @@ VALUES (
   '{"cost_per_play": 10}'
 );
 
-INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, points_reward) VALUES
+INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, point_reward) VALUES
 ('33333333-3333-3333-3333-333333333333', '🟡 金玉（特賞）', '150pt獲得！', 2, true, 0, 150),
 ('33333333-3333-3333-3333-333333333333', '🔴 赤玉（1等）', '80pt獲得！', 8, true, 1, 80),
 ('33333333-3333-3333-3333-333333333333', '🔵 青玉（2等）', '40pt獲得！', 15, true, 2, 40),
@@ -153,7 +153,7 @@ VALUES (
   '{"cost_per_play": 10}'
 );
 
-INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, points_reward) VALUES
+INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, point_reward) VALUES
 ('44444444-4444-4444-4444-444444444444', '👑 SSR（超激レア）', '500pt獲得！', 1, true, 0, 500),
 ('44444444-4444-4444-4444-444444444444', '💜 SR（激レア）', '100pt獲得！', 5, true, 1, 100),
 ('44444444-4444-4444-4444-444444444444', '💙 R（レア）', '30pt獲得！', 15, true, 2, 30),
@@ -175,7 +175,7 @@ VALUES (
   '{"cost_per_play": 10}'
 );
 
-INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, points_reward) VALUES
+INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, point_reward) VALUES
 ('77777777-7777-7777-7777-777777777777', '🎊 大当たり', '300pt獲得！', 3, true, 0, 300),
 ('77777777-7777-7777-7777-777777777777', '🌟 中当たり', '100pt獲得！', 10, true, 1, 100),
 ('77777777-7777-7777-7777-777777777777', '✨ 小当たり', '50pt獲得！', 20, true, 2, 50),
@@ -197,7 +197,7 @@ VALUES (
   '{"cost_per_play": 10}'
 );
 
-INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, points_reward) VALUES
+INSERT INTO gacha_prizes (campaign_id, name, description, probability, is_winning, display_order, point_reward) VALUES
 ('88888888-8888-8888-8888-888888888888', '🎉 大吉', '200pt獲得！', 5, true, 0, 200),
 ('88888888-8888-8888-8888-888888888888', '😊 中吉', '80pt獲得！', 15, true, 1, 80),
 ('88888888-8888-8888-8888-888888888888', '🙂 小吉', '40pt獲得！', 25, true, 2, 40),
