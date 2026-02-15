@@ -91,7 +91,7 @@ export default function KindleLPClient() {
     } else if (answers.includes('stock')) {
       return {
         title: "【資産リサイクル】スタイル ♻️",
-        desc: "あなたはすでに「売れる本のタネ」をたくさん持っています。ゼロから書く必要はありません。KDLのAIアシスタントが、過去のブログやメモをきれいに整理して、あっという間に本にしてくれますよ。",
+        desc: "あなたはすでに「売れる本のタネ」をたくさん持っています。ゼロから書く必要はありません。Kindle出版メーカーのAIアシスタントが、過去のブログやメモをきれいに整理して、あっという間に本にしてくれますよ。",
         kdl: "セミナーでは『1つ目のヒミツ：AIを使った本の作り方』のデモ画面をお見逃しなく！あなたの過去の文章が、どんな風に本に変わるかイメージが湧くはずです。"
       };
     } else {
@@ -127,7 +127,7 @@ export default function KindleLPClient() {
     },
     {
       q: 'あとで無理な勧誘をされませんか？',
-      a: 'セミナーの後半で、本気で出版を目指す方向けにKDLシステムの有料プランのご案内はさせていただきます。ですが、無理な勧誘等は一切いたしませんので、「まずは話を聞いてみたい」という方も安心してご参加くださいね。',
+      a: 'セミナーの後半で、本気で出版を目指す方向けにKindle出版メーカーの有料プランのご案内はさせていただきます。ですが、無理な勧誘等は一切いたしませんので、「まずは話を聞いてみたい」という方も安心してご参加くださいね。',
     },
   ];
 
@@ -194,7 +194,7 @@ export default function KindleLPClient() {
 
           <div className="animate-fade-in delay-200">
             <p className="text-base md:text-lg text-gray-600 mb-10 leading-loose font-medium max-w-2xl mx-auto">
-              Amazonの便利な仕組みと、最新のAIアシスタント「KDL」を使えば、<br />
+              Amazonの便利な仕組みと、最新のAIアシスタント「Kindle出版メーカー」を使えば、<br />
               無名の個人でも、<span className="font-bold" style={{ background: 'linear-gradient(transparent 60%, #fef08a 60%)' }}>在庫ゼロ・費用ゼロ</span>で本が出版できます。<br />
               誰でも作家になれる「新しい本の作り方」を、無料でお伝えします。
             </p>
@@ -294,7 +294,7 @@ export default function KindleLPClient() {
                 Amazonの「電子書籍（Kindle）」と「注文が入ってから印刷する仕組み（POD）」のおかげで、<strong style={{ color: '#f97316' }}>誰でも、無料で、在庫を抱えずに</strong>世界中に本を出版できるようになりました。
               </p>
               <p className="text-gray-600 mb-8 leading-relaxed text-sm md:text-base">
-                さらに、私たちが開発した出版サポートAI<strong style={{ color: '#f97316' }}>「KDL」</strong>を使えば、「何を書けばいいの？」「文章が苦手…」という悩みも解決！AIと楽しくおしゃべりするだけで、<strong className="font-bold" style={{ color: '#5d4037', background: 'linear-gradient(transparent 60%, #fef08a 60%)' }}>最短2日で本が完成</strong>します。
+                さらに、私たちが開発した出版サポートAI<strong style={{ color: '#f97316' }}>「Kindle出版メーカー」</strong>を使えば、「何を書けばいいの？」「文章が苦手…」という悩みも解決！AIと楽しくおしゃべりするだけで、<strong className="font-bold" style={{ color: '#5d4037', background: 'linear-gradient(transparent 60%, #fef08a 60%)' }}>最短2日で本が完成</strong>します。
               </p>
               <ul className="space-y-4 font-bold bg-white p-6 rounded-2xl shadow-sm" style={{ color: '#5d4037' }}>
                 <li className="flex items-center gap-3"><span className="text-xl" style={{ color: '#84cc16' }}>🌱</span> 費用ゼロ・在庫の心配ゼロ</li>
@@ -307,7 +307,7 @@ export default function KindleLPClient() {
               <div className="bg-white p-8 rounded-3xl shadow-lg border-2 text-center relative" style={{ borderColor: '#ffedd5' }}>
                 <div className="absolute -top-6 -right-6 text-6xl transform rotate-12">✨</div>
                 <h3 className="font-bold text-xl mb-6 border-b-2 border-dashed border-orange-200 pb-4" style={{ color: '#5d4037' }}>
-                  KDL AIアシスタントのお仕事
+                  AIアシスタントのお仕事
                 </h3>
 
                 <div className="space-y-4">
@@ -361,7 +361,7 @@ export default function KindleLPClient() {
               <div className="w-full md:w-2/3 text-gray-600 text-sm leading-relaxed">
                 <p>
                   あなたの経験や想いを、スラスラ読まれる「本の構成」にする方法を解説します。<br />
-                  さらに、KDLシステムに搭載された「AIアシスタント」を使い、あなたが質問に答えるだけで、AIがあっという間に原稿を書き上げていく様子を、実際の画面でお見せします。
+                  さらに、Kindle出版メーカーに搭載された「AIアシスタント」を使い、あなたが質問に答えるだけで、AIがあっという間に原稿を書き上げていく様子を、実際の画面でお見せします。
                 </p>
               </div>
             </div>

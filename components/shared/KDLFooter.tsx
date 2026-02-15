@@ -10,8 +10,8 @@ interface KDLFooterProps {
 }
 
 /**
- * KDL用共通フッターコンポーネント
- * 集客メーカートップとKDL一覧へのリンクを提供
+ * Kindle出版メーカー用共通フッターコンポーネント
+ * 集客メーカートップと書籍一覧へのリンクを提供
  */
 export const KDLFooter: React.FC<KDLFooterProps> = ({ 
   adminKeyParam = '',
@@ -34,7 +34,7 @@ export const KDLFooter: React.FC<KDLFooterProps> = ({
             className="flex items-center gap-2 text-gray-600 hover:text-amber-600 transition-colors"
           >
             <BookOpen size={16} />
-            <span>KDL 一覧へ</span>
+            <span>書籍一覧へ</span>
           </Link>
         </div>
       </div>

@@ -271,11 +271,11 @@ export async function GET(request: NextRequest) {
         {
           id: 'default-kdl',
           service_type: 'kdl',
-          display_name: 'Kindle執筆',
+          display_name: 'Kindle出版メーカー',
           commission_rate: 20,
           signup_points: 0,
           enabled: true,
-          description: 'Kindle Direct Liteのアフィリエイト。有料課金のみ20%報酬。',
+          description: 'Kindle出版メーカーのアフィリエイト。有料課金のみ20%報酬。',
           landing_page: '/kindle/lp',
         },
       ];

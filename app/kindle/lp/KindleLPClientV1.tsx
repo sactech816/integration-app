@@ -507,7 +507,7 @@ export default function KindleLPClient() {
                   <div className="w-32 h-32 bg-slate-200 rounded-full mx-auto mb-4 overflow-hidden border-4 border-white shadow-md relative flex items-center justify-center">
                     <Users size={64} className="text-slate-400" />
                   </div>
-                  <p className="font-bold text-slate-900">KDL開発者</p>
+                  <p className="font-bold text-slate-900">開発者</p>
                   <div className="flex justify-center gap-1 text-yellow-400 text-xs mt-1">
                     {[...Array(5)].map((_, i) => (
                       <Star key={i} size={12} fill="currentColor" />
@@ -535,7 +535,7 @@ export default function KindleLPClient() {
                   </div>
                   <p className="text-slate-600 text-sm leading-relaxed">
                     「私自身、最初は苦労しました。しかし、50冊出す中で『売れる本の方程式』を見つけました。
-                    KDLは単なるAIライティングツールではありません。
+                    Kindle出版メーカーは単なるAIライティングツールではありません。
                     <strong className="text-blue-700 bg-blue-50 px-1">ベストセラー作家の編集者が、あなたの隣にいるのと同じです。</strong>」
                   </p>
                 </div>
@@ -549,7 +549,7 @@ export default function KindleLPClient() {
       <section id="targets" className="py-20 bg-slate-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12 text-slate-900">
-            あなたはどのタイプ？<br />目的別 KDL活用法
+            あなたはどのタイプ？<br />目的別 活用法
           </h2>
           
           {/* タブボタン */}
@@ -647,7 +647,7 @@ export default function KindleLPClient() {
                   <p className="text-slate-600 mb-6 text-sm leading-relaxed">
                     足りなかったのは「売れる構成」と「Amazonの攻略法」でした。<br />
                     50冊の実績を持つプロの戦略で、眠っているその本をベストセラーに変えませんか？<br />
-                    KDLの「リライト機能」と「SEO最適化」を通すだけで、埋もれていたあなたの本が、稼ぐ資産として蘇ります。
+                    「リライト機能」と「SEO最適化」を通すだけで、埋もれていたあなたの本が、稼ぐ資産として蘇ります。
                   </p>
                   <a href="#features" className="text-blue-600 font-bold hover:underline text-sm">
                     リベンジ機能を見る <ArrowRight className="inline" size={16} />
@@ -768,7 +768,7 @@ export default function KindleLPClient() {
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-100 to-orange-100 px-6 py-3 rounded-full">
               <Sparkles size={20} className="text-orange-500" />
               <span className="font-bold text-gray-800">
-                その悩み、KDLがすべて解決します
+                その悩み、Kindle出版メーカーがすべて解決します
               </span>
             </div>
           </div>
@@ -891,7 +891,7 @@ export default function KindleLPClient() {
               loading="lazy"
             />
             <span className="absolute bottom-6 left-6 text-sm font-bold bg-black/50 px-3 py-1 rounded">
-              1分でわかるKDL操作デモ
+              1分でわかる操作デモ
             </span>
           </div>
           
@@ -1007,7 +1007,7 @@ export default function KindleLPClient() {
                   <th className="p-4 font-medium text-center">自力で執筆</th>
                   <th className="p-4 font-medium text-center">ライター外注/コンサル</th>
                   <th className="p-4 bg-blue-600 text-white font-bold text-center rounded-t-lg shadow-lg relative scale-105 origin-bottom">
-                    Kindle Direct Lite
+                    Kindle出版メーカー
                   </th>
                 </tr>
               </thead>
@@ -1329,7 +1329,7 @@ export default function KindleLPClient() {
                   代理店パートナー募集中
                 </h3>
                 <p className="text-gray-300 text-sm">
-                  KDLを活用したビジネスパートナーを募集しています
+                  Kindle出版メーカーを活用したビジネスパートナーを募集しています
                 </p>
               </div>
             </div>
@@ -1364,7 +1364,7 @@ export default function KindleLPClient() {
             かつて、本を出すことは選ばれた人だけの特権でした。<br />
             しかし今は違います。「書くのが大変」という理由だけで、<br />
             その宝物を埋もれさせないでください。<br />
-            私が50冊以上の出版で得たすべての知見を、このKDLに込めました。
+            私が50冊以上の出版で得たすべての知見を、このKindle出版メーカーに込めました。
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

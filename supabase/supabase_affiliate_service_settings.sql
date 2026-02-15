@@ -45,7 +45,7 @@ CREATE POLICY "Service role can manage service settings" ON affiliate_service_se
 
 INSERT INTO affiliate_service_settings (service_type, display_name, commission_rate, signup_points, enabled, description, landing_page) VALUES
   ('main', 'メインサイト', 20.00, 500, true, 'メインサイト（集客メーカー）のアフィリエイト。新規登録で500ポイント付与。', '/'),
-  ('kdl', 'Kindle執筆', 20.00, 0, true, 'Kindle Direct Lite（KDL）のアフィリエイト。有料課金のみ20%報酬。', '/kindle/lp'),
+  ('kdl', 'Kindle出版メーカー', 20.00, 0, true, 'Kindle出版メーカーのアフィリエイト。有料課金のみ20%報酬。', '/kindle/lp'),
   ('quiz', '診断クイズ', 20.00, 0, false, '診断クイズのアフィリエイト（将来対応）', '/quiz'),
   ('profile', 'プロフィールLP', 20.00, 0, false, 'プロフィールLPのアフィリエイト（将来対応）', '/profile'),
   ('business', 'ビジネスLP', 20.00, 0, false, 'ビジネスLPのアフィリエイト（将来対応）', '/business')

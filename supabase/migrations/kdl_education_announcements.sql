@@ -271,7 +271,7 @@ INSERT INTO kdl_education_contents (title, description, content_type, category, 
 
 -- お知らせサンプル
 INSERT INTO kdl_announcements (title, content, category, priority, is_published, is_pinned) VALUES
-  ('KDL正式リリースのお知らせ', 'KDL（Kindle Direct Lite）が正式リリースされました！\n\nAIを活用したKindle執筆サービスをぜひお試しください。', 'info', 10, TRUE, TRUE),
+  ('Kindle出版メーカー正式リリースのお知らせ', 'Kindle出版メーカーが正式リリースされました！\n\nAIを活用したKindle出版サービスをぜひお試しください。', 'info', 10, TRUE, TRUE),
   ('新機能：KDP情報自動生成', 'キーワード、紹介文、カテゴリー提案機能が追加されました。\n\n書籍編集画面から「KDP情報を生成」ボタンでお試しいただけます。', 'update', 5, TRUE, FALSE);
 
 -- ============================================

@@ -234,7 +234,7 @@ export default function KindleLPClient() {
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <BookOpen className="text-green-500" size={28} />
-            <span className="text-xl font-bold tracking-tight text-slate-800">Kindle Direct Lite</span>
+            <span className="text-xl font-bold tracking-tight text-slate-800">Kindle出版メーカー</span>
           </div>
           <nav className="hidden md:flex gap-6 text-sm font-bold text-slate-500">
             <a href="#diagnosis" className="hover:text-green-500 transition">かんたん診断</a>
@@ -587,7 +587,7 @@ export default function KindleLPClient() {
                   <th className="p-4 font-bold">比較項目</th>
                   <th className="p-4 font-medium text-center">自分ひとりで</th>
                   <th className="p-4 font-medium text-center">高額スクール</th>
-                  <th className="p-4 bg-orange-400 text-white font-bold text-center text-lg">KDL (当サービス)</th>
+                  <th className="p-4 bg-orange-400 text-white font-bold text-center text-lg">Kindle出版メーカー (当サービス)</th>
                 </tr>
               </thead>
               <tbody className="text-slate-700">

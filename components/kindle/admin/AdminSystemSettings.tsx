@@ -179,7 +179,7 @@ export default function AdminSystemSettings({ userId, accessToken }: AdminSystem
           <h2 className="text-2xl font-bold">システム設定</h2>
         </div>
         <p className="text-gray-300">
-          KDLのプラン定義とシステム設定を管理します
+          Kindle出版メーカーのプラン定義とシステム設定を管理します
         </p>
       </div>
 

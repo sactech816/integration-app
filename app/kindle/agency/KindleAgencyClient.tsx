@@ -130,7 +130,7 @@ export default function KindleAgencyClient() {
           </div>
 
           <p className="text-xl text-gray-300 max-w-2xl mb-8">
-            KDLを活用して、お客様のKindle出版をサポートする<br />
+            Kindle出版メーカーを活用して、お客様のKindle出版をサポートする<br />
             ビジネスパートナーを募集しています。
           </p>
 
@@ -347,7 +347,7 @@ export default function KindleAgencyClient() {
             まずはデモを体験してみませんか？
           </h2>
           <p className="text-white/80 mb-8">
-            KDLの機能を無料で体験いただけます
+            Kindle出版メーカーの機能を無料で体験いただけます
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
