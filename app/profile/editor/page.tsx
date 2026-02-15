@@ -108,7 +108,7 @@ function ProfileEditorContent() {
         isAdmin={isAdmin}
         initialData={editingProfile}
         setPage={navigateTo}
-        onBack={() => navigateTo('dashboard')}
+        onBack={() => navigateTo('dashboard?view=profile')}
         setShowAuth={setShowAuth}
       />
     </div>

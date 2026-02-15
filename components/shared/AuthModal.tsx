@@ -89,10 +89,13 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                             setShowPasswordReset(false);
                         }
                         onClose();
-                        if (onNavigate) {
-                            onNavigate('dashboard');
-                        } else if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard') {
-                            window.location.href = '/dashboard';
+                        // トップページからのログインのみダッシュボードにリダイレクト、それ以外はその場に留まる
+                        if (typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '')) {
+                            if (onNavigate) {
+                                onNavigate('dashboard');
+                            } else {
+                                window.location.href = '/dashboard';
+                            }
                         }
                         setLoading(false);
                         return;
@@ -145,10 +148,13 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                             setShowPasswordReset(false);
                         }
                         onClose();
-                        if (onNavigate) {
-                            onNavigate('dashboard');
-                        } else if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard') {
-                            window.location.href = '/dashboard';
+                        // トップページからのログインのみダッシュボードにリダイレクト、それ以外はその場に留まる
+                        if (typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '')) {
+                            if (onNavigate) {
+                                onNavigate('dashboard');
+                            } else {
+                                window.location.href = '/dashboard';
+                            }
                         }
                         setLoading(false);
                         return;
@@ -176,11 +182,13 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                     setShowPasswordReset(false);
                 }
                 onClose();
-                // ログイン成功時にマイページにリダイレクト
-                if (onNavigate) {
-                    onNavigate('dashboard');
-                } else if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard') {
-                    window.location.href = '/dashboard';
+                // トップページからのログインのみダッシュボードにリダイレクト、それ以外はその場に留まる
+                if (typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '')) {
+                    if (onNavigate) {
+                        onNavigate('dashboard');
+                    } else {
+                        window.location.href = '/dashboard';
+                    }
                 }
             } else if (!isLogin && data.user) {
                 if (!data.session) alert('確認メールを送信しました。メール内のリンクをクリックして認証を完了させてください。');
@@ -219,11 +227,13 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                         setShowPasswordReset(false);
                     }
                     onClose();
-                    // 新規登録後もログイン成功時と同様にマイページにリダイレクト
-                    if (onNavigate) {
-                        onNavigate('dashboard');
-                    } else if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard') {
-                        window.location.href = '/dashboard';
+                    // トップページからのログインのみダッシュボードにリダイレクト、それ以外はその場に留まる
+                    if (typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '')) {
+                        if (onNavigate) {
+                            onNavigate('dashboard');
+                        } else {
+                            window.location.href = '/dashboard';
+                        }
                     }
                 }
             }
@@ -409,11 +419,13 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                 onClose();
             }
             
-            // マイページにリダイレクト
-            if (onNavigate) {
-                onNavigate('dashboard');
-            } else if (typeof window !== 'undefined') {
-                window.location.href = '/dashboard';
+            // トップページからのログインのみダッシュボードにリダイレクト、それ以外はその場に留まる
+            if (typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '')) {
+                if (onNavigate) {
+                    onNavigate('dashboard');
+                } else {
+                    window.location.href = '/dashboard';
+                }
             }
         } catch (e) {
             console.error('パスワード変更エラー:', e);

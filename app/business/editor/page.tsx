@@ -108,7 +108,7 @@ function BusinessEditorContent() {
         isAdmin={isAdmin}
         initialData={editingLP}
         setPage={navigateTo}
-        onBack={() => navigateTo('dashboard')}
+        onBack={() => navigateTo('dashboard?view=business')}
         setShowAuth={setShowAuth}
       />
     </div>

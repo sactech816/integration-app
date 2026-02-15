@@ -130,6 +130,7 @@ function KindleListPageContent() {
 
   // サイドバー関連の状態
   const [activeMenuItem, setActiveMenuItem] = useState('dashboard');
+  const [previousMenuItem, setPreviousMenuItem] = useState('dashboard');
 
   // KDP情報モーダル関連の状態
   const [kdpModalBookId, setKdpModalBookId] = useState<string | null>(null);
@@ -426,6 +427,7 @@ function KindleListPageContent() {
 
   // サイドバーのメニュークリック処理
   const handleMenuItemClick = useCallback((itemId: string) => {
+    setPreviousMenuItem(activeMenuItem);
     setActiveMenuItem(itemId);
     
     switch (itemId) {
@@ -470,7 +472,7 @@ function KindleListPageContent() {
       default:
         break;
     }
-  }, [router, adminKeyParam]);
+  }, [router, adminKeyParam, activeMenuItem]);
 
   const handleNavigate = useCallback((path: string) => {
     router.push(path);
@@ -664,7 +666,10 @@ function KindleListPageContent() {
             </button>
           </div>
           <AdminOverview
-            onNavigate={(viewId) => setActiveMenuItem(viewId)}
+            onNavigate={(viewId) => {
+              setPreviousMenuItem(activeMenuItem);
+              setActiveMenuItem(viewId);
+            }}
             service="kdl"
           />
         </div>
@@ -673,10 +678,10 @@ function KindleListPageContent() {
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => setActiveMenuItem('dashboard')}
+              onClick={() => setActiveMenuItem(previousMenuItem)}
               className="text-gray-500 hover:text-gray-700"
             >
-              ← ダッシュボードに戻る
+              ← 戻る
             </button>
           </div>
           <AdminAISettings userId={user.id} />
@@ -686,14 +691,14 @@ function KindleListPageContent() {
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => setActiveMenuItem('dashboard')}
+              onClick={() => setActiveMenuItem(previousMenuItem)}
               className="text-gray-500 hover:text-gray-700"
             >
-              ← ダッシュボードに戻る
+              ← 戻る
             </button>
           </div>
-          <MonitorUsersManager 
-            adminUserId={user.id} 
+          <MonitorUsersManager
+            adminUserId={user.id}
             adminEmail={user.email}
             defaultService="kdl"
           />
@@ -703,10 +708,10 @@ function KindleListPageContent() {
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => setActiveMenuItem('dashboard')}
+              onClick={() => setActiveMenuItem(previousMenuItem)}
               className="text-gray-500 hover:text-gray-700"
             >
-              ← ダッシュボードに戻る
+              ← 戻る
             </button>
           </div>
           <AdminUserList userId={user.id} accessToken={accessToken} />
@@ -716,10 +721,10 @@ function KindleListPageContent() {
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => setActiveMenuItem('dashboard')}
+              onClick={() => setActiveMenuItem(previousMenuItem)}
               className="text-gray-500 hover:text-gray-700"
             >
-              ← ダッシュボードに戻る
+              ← 戻る
             </button>
           </div>
           <AnnouncementManager userId={user.id} accessToken={accessToken} />
@@ -729,10 +734,10 @@ function KindleListPageContent() {
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => setActiveMenuItem('dashboard')}
+              onClick={() => setActiveMenuItem(previousMenuItem)}
               className="text-gray-500 hover:text-gray-700"
             >
-              ← ダッシュボードに戻る
+              ← 戻る
             </button>
           </div>
           <GuideBookManager userId={user.id} accessToken={accessToken} />
@@ -742,10 +747,10 @@ function KindleListPageContent() {
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => setActiveMenuItem('dashboard')}
+              onClick={() => setActiveMenuItem(previousMenuItem)}
               className="text-gray-500 hover:text-gray-700"
             >
-              ← ダッシュボードに戻る
+              ← 戻る
             </button>
           </div>
           <SettingsHealthBadge service="kdl" />
@@ -760,10 +765,10 @@ function KindleListPageContent() {
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => setActiveMenuItem('dashboard')}
+              onClick={() => setActiveMenuItem(previousMenuItem)}
               className="text-gray-500 hover:text-gray-700"
             >
-              ← ダッシュボードに戻る
+              ← 戻る
             </button>
           </div>
           <AffiliateManager user={user} />
@@ -925,10 +930,10 @@ function KindleListPageContent() {
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
             <button
-              onClick={() => setActiveMenuItem('dashboard')}
+              onClick={() => setActiveMenuItem(previousMenuItem)}
               className="text-gray-500 hover:text-gray-700"
             >
-              ← ダッシュボードに戻る
+              ← 戻る
             </button>
           </div>
           <AdminAgencyManager userId={user.id} accessToken={accessToken} />
