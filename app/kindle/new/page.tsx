@@ -320,6 +320,7 @@ function KindleNewPageContent() {
             setError={setError}
             isDemo={isDemo}
             adminKey={adminKey}
+            isFromDiscovery={!!searchParams.get('discovery_theme')}
           />
         );
       case 2:

@@ -241,6 +241,65 @@ export const MOCK_THEME_SUGGESTIONS: ThemeSuggestion[] = [
   },
 ];
 
+// Step0 Big5性格特性スコア（TIPI-J）
+export interface Big5Scores {
+  extraversion: number;       // 外向性 (1-7)
+  agreeableness: number;      // 協調性 (1-7)
+  conscientiousness: number;  // 誠実性 (1-7)
+  emotionalStability: number; // 情緒安定性 (1-7, 神経症傾向の反転)
+  openness: number;           // 開放性 (1-7)
+}
+
+export const BIG5_LABELS: Record<keyof Big5Scores, string> = {
+  extraversion: '外向性',
+  agreeableness: '協調性',
+  conscientiousness: '誠実性',
+  emotionalStability: '情緒安定性',
+  openness: '開放性',
+};
+
+// TIPI-J 10問の定義
+export interface TipiQuestion {
+  id: number;
+  text: string;
+  dimension: keyof Big5Scores;
+  reversed: boolean;
+}
+
+export const TIPI_QUESTIONS: TipiQuestion[] = [
+  { id: 1,  text: '活発で、外向的だと思う',                         dimension: 'extraversion',       reversed: false },
+  { id: 2,  text: '他人に不満をもち、もめごとを起こしやすいと思う',   dimension: 'agreeableness',      reversed: true },
+  { id: 3,  text: 'しっかりしていて、自分に厳しいと思う',             dimension: 'conscientiousness',  reversed: false },
+  { id: 4,  text: '心配性で、うろたえやすいと思う',                   dimension: 'emotionalStability', reversed: true },
+  { id: 5,  text: '新しいことが好きで、変わった考えをもつと思う',     dimension: 'openness',           reversed: false },
+  { id: 6,  text: 'ひかえめで、おとなしいと思う',                     dimension: 'extraversion',       reversed: true },
+  { id: 7,  text: '人に気をつかう、やさしい人間だと思う',             dimension: 'agreeableness',      reversed: false },
+  { id: 8,  text: 'だらしなく、うっかりしていると思う',               dimension: 'conscientiousness',  reversed: true },
+  { id: 9,  text: '冷静で、気分が安定していると思う',                 dimension: 'emotionalStability', reversed: false },
+  { id: 10, text: '発想力に欠けた、平凡な人間だと思う',               dimension: 'openness',           reversed: true },
+];
+
+// Big5スコア計算関数（TIPI-J 10問の回答[1-7]からスコアを算出）
+export function calculateBig5(tipiAnswers: number[]): Big5Scores {
+  const r = (val: number) => 8 - val; // 逆転項目のスコア変換
+  return {
+    extraversion:       (tipiAnswers[0] + r(tipiAnswers[5])) / 2,
+    agreeableness:      (r(tipiAnswers[1]) + tipiAnswers[6]) / 2,
+    conscientiousness:  (tipiAnswers[2] + r(tipiAnswers[7])) / 2,
+    emotionalStability: (r(tipiAnswers[3]) + tipiAnswers[8]) / 2,
+    openness:           (tipiAnswers[4] + r(tipiAnswers[9])) / 2,
+  };
+}
+
+// モック Big5スコア
+export const MOCK_BIG5_SCORES: Big5Scores = {
+  extraversion: 4.5,
+  agreeableness: 5.0,
+  conscientiousness: 5.5,
+  emotionalStability: 3.5,
+  openness: 6.0,
+};
+
 // Step0 著者特性スコア（レーダーチャート用）
 export interface AuthorTraitScores {
   expertise: number;      // 専門性 (1-5)
@@ -262,6 +321,7 @@ export interface SwotAnalysis {
 export interface DiagnosisAnalysis {
   summary: string;
   authorTraits: AuthorTraitScores;
+  big5Scores?: Big5Scores;
   swot: SwotAnalysis;
   authorType: string;
   authorTypeDescription: string;
@@ -286,6 +346,7 @@ export const MOCK_DIAGNOSIS_ANALYSIS: DiagnosisAnalysis = {
     uniqueness: 4,
     marketability: 4,
   },
+  big5Scores: MOCK_BIG5_SCORES,
   swot: {
     strengths: ['実務経験に基づく深い専門知識', '継続的な学習習慣と高い情熱', '人に教えることが得意'],
     weaknesses: ['執筆・出版の経験がまだ少ない', 'テーマの絞り込みが必要'],
@@ -295,6 +356,35 @@ export const MOCK_DIAGNOSIS_ANALYSIS: DiagnosisAnalysis = {
   authorType: '実践型エキスパート',
   authorTypeDescription: '豊富な実務経験を武器に、読者にすぐ使えるノウハウを届けるタイプです。あなたの「やってみた」経験が最大の資産になります。',
 };
+
+// モック 追加テーマ提案（5件追加用）
+export const MOCK_ADDITIONAL_THEMES: ThemeSuggestion[] = [
+  {
+    theme: '3ヶ月で身につく！社会人のためのロジカルシンキング入門',
+    targetReader: '考えを整理するのが苦手なビジネスパーソン',
+    reason: 'あなたの分析力を活かして、初心者向けに論理的思考を教えるテーマです。',
+  },
+  {
+    theme: '「伝わらない」がなくなる！図解コミュニケーション術',
+    targetReader: '報告やプレゼンが苦手な社会人',
+    reason: 'あなたの発信力を活かし、ビジュアルで伝えるスキルを共有できます。',
+  },
+  {
+    theme: '週末2時間で始める！趣味を副収入に変える方法',
+    targetReader: '趣味を仕事にしたいが方法がわからない社会人',
+    reason: '没頭できる趣味を持つあなただからこそ書ける実体験ベースのガイドです。',
+  },
+  {
+    theme: 'ストレス知らずの働き方改革｜メンタル強化の実践メソッド',
+    targetReader: '仕事のストレスに悩むビジネスパーソン',
+    reason: 'あなたの経験から得た気づきを、同じ悩みを持つ読者に届けられます。',
+  },
+  {
+    theme: '人生後半を楽しく生きる！40代からのキャリアシフト入門',
+    targetReader: 'キャリアの転機を迎えた40代以上の社会人',
+    reason: '未来への挑戦を語るあなたの姿勢が、同世代の読者に勇気を与えます。',
+  },
+];
 
 // デモモード用の遅延処理（ローディング演出）
 export const demoDelay = (ms: number = 1000): Promise<void> => {

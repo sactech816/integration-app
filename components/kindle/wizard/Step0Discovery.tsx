@@ -2,9 +2,14 @@
 
 import React, { useState } from 'react';
 import {
-  Clock, Star, Rocket, Sparkles, ArrowLeft, ArrowRight, Check, Loader2, ChevronRight, Search, Lightbulb
+  Clock, Star, Rocket, Sparkles, ArrowLeft, ArrowRight, Check, Loader2, ChevronRight, Search, Lightbulb, User, Pencil, Info
 } from 'lucide-react';
-import { DiagnosisAnswers, ThemeSuggestion, DiagnosisAnalysis, MOCK_THEME_SUGGESTIONS, MOCK_DIAGNOSIS_ANALYSIS, demoDelay } from './types';
+import {
+  DiagnosisAnswers, ThemeSuggestion, DiagnosisAnalysis, Big5Scores,
+  TIPI_QUESTIONS, calculateBig5,
+  MOCK_THEME_SUGGESTIONS, MOCK_DIAGNOSIS_ANALYSIS, MOCK_BIG5_SCORES, MOCK_ADDITIONAL_THEMES,
+  demoDelay
+} from './types';
 import { DiagnosisAnalysisSection } from './DiagnosisAnalysisSection';
 
 interface Step0DiscoveryProps {
@@ -160,12 +165,24 @@ const DIAGNOSIS_STEPS = [
   },
 ];
 
+// プログレスバー用のステップ定義（Big5 + テキスト3ステップ）
+const PROGRESS_STEPS = [
+  { title: '性格診断', icon: User },
+  ...DIAGNOSIS_STEPS.map(s => ({ title: s.title, icon: s.icon })),
+];
+
 export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
   onComplete,
   onCancel,
   isDemo = false,
 }) => {
   const [diagnosisStep, setDiagnosisStep] = useState(0);
+
+  // Big5 性格診断
+  const [tipiAnswers, setTipiAnswers] = useState<number[]>(new Array(10).fill(0));
+  const [big5Scores, setBig5Scores] = useState<Big5Scores | null>(null);
+
+  // テキスト質問
   const [answers, setAnswers] = useState<DiagnosisAnswers>({
     pastInvestment: '',
     immersion: '',
@@ -174,26 +191,51 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
     futureChallenges: '',
     lifeMessage: '',
   });
+
+  // 結果
   const [themeSuggestions, setThemeSuggestions] = useState<ThemeSuggestion[]>([]);
   const [analysis, setAnalysis] = useState<DiagnosisAnalysis | null>(null);
-  const [selectedTheme, setSelectedTheme] = useState('');
+  const [selectedThemeIndex, setSelectedThemeIndex] = useState<number | null>(null);
+  const [selectedThemeText, setSelectedThemeText] = useState('');
+  const [isEditingTheme, setIsEditingTheme] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [error, setError] = useState('');
 
-  const totalQuestionSteps = DIAGNOSIS_STEPS.length;
-  const isResultStep = diagnosisStep === totalQuestionSteps;
+  // 追加テーマ
+  const [hasRequestedMore, setHasRequestedMore] = useState(false);
+  const [isGeneratingMore, setIsGeneratingMore] = useState(false);
 
-  const currentStepData = !isResultStep ? DIAGNOSIS_STEPS[diagnosisStep] : null;
+  // ステップ計算
+  const BIG5_STEP = 0;
+  const TEXT_STEP_OFFSET = 1;
+  const totalQuestionSteps = DIAGNOSIS_STEPS.length + 1; // Big5 + 3テキスト = 4
+  const isResultStep = diagnosisStep === totalQuestionSteps;
+  const isBig5Step = diagnosisStep === BIG5_STEP;
+  const isTextStep = diagnosisStep >= TEXT_STEP_OFFSET && diagnosisStep < totalQuestionSteps;
+  const textStepIndex = diagnosisStep - TEXT_STEP_OFFSET;
+  const currentStepData = isTextStep ? DIAGNOSIS_STEPS[textStepIndex] : null;
 
   const canProceedFromCurrentStep = () => {
-    if (isResultStep) return selectedTheme !== '';
-    const step = DIAGNOSIS_STEPS[diagnosisStep];
-    return step.questions.some(q => answers[q.key].trim() !== '');
+    if (isResultStep) return selectedThemeIndex !== null && selectedThemeText.trim() !== '';
+    if (isBig5Step) return tipiAnswers.every(a => a > 0);
+    if (isTextStep) {
+      const step = DIAGNOSIS_STEPS[textStepIndex];
+      return step.questions.some(q => answers[q.key].trim() !== '');
+    }
+    return false;
   };
 
   const handleAnswerChange = (key: keyof DiagnosisAnswers, value: string) => {
     setAnswers(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleTipiAnswer = (questionIndex: number, value: number) => {
+    setTipiAnswers(prev => {
+      const next = [...prev];
+      next[questionIndex] = value;
+      return next;
+    });
   };
 
   const handleGenerateThemes = async () => {
@@ -201,11 +243,11 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
     setError('');
     setLoadingMessage('あなたの回答を読み取っています...');
 
-    // ローディングメッセージを段階的に変更
     const messages = [
-      { delay: 2000, text: 'あなたの著者タイプを診断中...' },
-      { delay: 4000, text: 'SWOT分析を生成中...' },
-      { delay: 6000, text: '最適なテーマを探しています...' },
+      { delay: 2000, text: '性格特性を分析中...' },
+      { delay: 4000, text: 'あなたの著者タイプを診断中...' },
+      { delay: 6000, text: 'SWOT分析を生成中...' },
+      { delay: 8000, text: '最適なテーマを探しています...' },
     ];
     const timers = messages.map(m =>
       setTimeout(() => setLoadingMessage(m.text), m.delay)
@@ -222,7 +264,7 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
       const response = await fetch('/api/kdl/generate-theme', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers, big5Scores }),
       });
 
       if (!response.ok) {
@@ -243,11 +285,53 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
     }
   };
 
+  const handleGenerateMoreThemes = async () => {
+    setIsGeneratingMore(true);
+    setError('');
+
+    try {
+      if (isDemo) {
+        await demoDelay(1500);
+        setThemeSuggestions(prev => [...prev, ...MOCK_ADDITIONAL_THEMES]);
+        setHasRequestedMore(true);
+        return;
+      }
+
+      const response = await fetch('/api/kdl/generate-theme', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          answers,
+          big5Scores,
+          existingThemes: themeSuggestions.map(t => t.theme),
+          count: 5,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '追加テーマ生成に失敗しました');
+      }
+
+      const data = await response.json();
+      setThemeSuggestions(prev => [...prev, ...data.themes]);
+      setHasRequestedMore(true);
+    } catch (err: any) {
+      setError(err.message || '追加テーマ生成中にエラーが発生しました');
+      setHasRequestedMore(true); // エラー時も再試行不可
+    } finally {
+      setIsGeneratingMore(false);
+    }
+  };
+
   const handleNext = async () => {
-    if (diagnosisStep < totalQuestionSteps - 1) {
+    if (isBig5Step) {
+      const scores = calculateBig5(tipiAnswers);
+      setBig5Scores(scores);
+      setDiagnosisStep(1);
+    } else if (diagnosisStep < totalQuestionSteps - 1) {
       setDiagnosisStep(diagnosisStep + 1);
     } else if (diagnosisStep === totalQuestionSteps - 1) {
-      // 最後の質問ステップ → 結果ステップへ
       setDiagnosisStep(totalQuestionSteps);
       await handleGenerateThemes();
     }
@@ -255,32 +339,41 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
 
   const handleBack = () => {
     if (diagnosisStep > 0) {
-      setDiagnosisStep(diagnosisStep - 1);
       if (isResultStep) {
         setThemeSuggestions([]);
         setAnalysis(null);
-        setSelectedTheme('');
+        setSelectedThemeIndex(null);
+        setSelectedThemeText('');
+        setIsEditingTheme(false);
         setError('');
+        setHasRequestedMore(false);
       }
+      setDiagnosisStep(diagnosisStep - 1);
     } else {
       onCancel();
     }
   };
 
   const handleSelectTheme = () => {
-    if (selectedTheme) {
-      onComplete(selectedTheme);
+    if (selectedThemeText.trim()) {
+      onComplete(selectedThemeText);
     }
+  };
+
+  const handleThemeCardClick = (index: number, theme: string) => {
+    setSelectedThemeIndex(index);
+    setSelectedThemeText(theme);
+    setIsEditingTheme(false);
   };
 
   return (
     <div className="space-y-6">
       {/* ミニプログレスバー */}
       <div className="flex items-center justify-center gap-0">
-        {DIAGNOSIS_STEPS.map((step, index) => (
+        {PROGRESS_STEPS.map((step, index) => (
           <React.Fragment key={index}>
             <div className="flex flex-col items-center gap-1.5">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all ${
                 index === diagnosisStep && !isResultStep
                   ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg scale-110'
                   : index < diagnosisStep || isResultStep
@@ -288,37 +381,37 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
                     : 'bg-gray-200 text-gray-400'
               }`}>
                 {index < diagnosisStep || isResultStep ? (
-                  <Check size={18} />
+                  <Check size={16} />
                 ) : (
-                  <step.icon size={18} />
+                  <step.icon size={16} />
                 )}
               </div>
-              <span className={`text-xs font-medium hidden sm:block max-w-[80px] text-center leading-tight ${
+              <span className={`text-xs font-medium hidden sm:block max-w-[70px] text-center leading-tight ${
                 index === diagnosisStep && !isResultStep ? 'text-amber-600' : 'text-gray-400'
               }`}>
                 {step.title}
               </span>
             </div>
-            {index < DIAGNOSIS_STEPS.length - 1 && (
-              <div className={`w-8 sm:w-12 h-1 mx-1 rounded-full transition-all mt-[-20px] sm:mt-[-28px] ${
+            {index < PROGRESS_STEPS.length - 1 && (
+              <div className={`w-6 sm:w-10 h-1 mx-0.5 rounded-full transition-all mt-[-20px] sm:mt-[-28px] ${
                 index < diagnosisStep || isResultStep ? 'bg-green-500' : 'bg-gray-200'
               }`} />
             )}
           </React.Fragment>
         ))}
         {/* 結果ステップのインジケーター */}
-        <div className={`w-8 sm:w-12 h-1 mx-1 rounded-full transition-all mt-[-20px] sm:mt-[-28px] ${
+        <div className={`w-6 sm:w-10 h-1 mx-0.5 rounded-full transition-all mt-[-20px] sm:mt-[-28px] ${
           isResultStep ? 'bg-green-500' : 'bg-gray-200'
         }`} />
         <div className="flex flex-col items-center gap-1.5">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all ${
             isResultStep
               ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg scale-110'
               : 'bg-gray-200 text-gray-400'
           }`}>
-            <Sparkles size={18} />
+            <Sparkles size={16} />
           </div>
-          <span className={`text-xs font-medium hidden sm:block max-w-[80px] text-center leading-tight ${
+          <span className={`text-xs font-medium hidden sm:block max-w-[70px] text-center leading-tight ${
             isResultStep ? 'text-amber-600' : 'text-gray-400'
           }`}>
             テーマ提案
@@ -326,8 +419,77 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
         </div>
       </div>
 
-      {/* 質問ステップ */}
-      {!isResultStep && currentStepData && (
+      {/* Big5 性格診断ステップ */}
+      {isBig5Step && (
+        <div className="space-y-5 animate-fade-in">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <User className="text-amber-500" size={24} />
+              あなたの性格タイプ診断
+            </h2>
+            <p className="text-gray-600 text-sm">
+              以下の10の質問に直感で答えてください。あなたの性格特性を科学的に分析します。
+            </p>
+          </div>
+
+          {/* アドバイスボックス */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex gap-3">
+            <div className="bg-blue-100 p-1.5 rounded-lg h-fit flex-shrink-0">
+              <Lightbulb className="text-blue-600" size={16} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-blue-800 mb-1">回答のコツ</p>
+              <p className="text-sm text-blue-700 leading-relaxed">
+                深く考えず、直感的に「自分はこういう人間だ」と思う程度を選んでください。正解も不正解もありません。
+              </p>
+            </div>
+          </div>
+
+          {/* スケール凡例 */}
+          <div className="flex justify-between text-xs text-gray-400 px-1">
+            <span>1: 全く違う</span>
+            <span>4: どちらでもない</span>
+            <span>7: 強くそう思う</span>
+          </div>
+
+          {/* 10問 */}
+          <div className="space-y-5">
+            {TIPI_QUESTIONS.map((q, idx) => (
+              <div key={q.id} className="space-y-2">
+                <label className="block text-sm font-bold text-gray-700">
+                  {idx + 1}. 自分は「{q.text}」
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {[1, 2, 3, 4, 5, 6, 7].map(val => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => handleTipiAnswer(idx, val)}
+                      className={`w-10 h-10 rounded-full font-bold text-sm transition-all ${
+                        tipiAnswers[idx] === val
+                          ? 'bg-amber-500 text-white scale-110 shadow-lg'
+                          : 'bg-gray-100 text-gray-600 hover:bg-amber-100'
+                      }`}
+                    >
+                      {val}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 進捗表示 */}
+          <div className="text-center">
+            <span className="text-sm text-gray-400">
+              {tipiAnswers.filter(a => a > 0).length} / 10 問回答済み
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* テキスト質問ステップ */}
+      {isTextStep && currentStepData && (
         <div className="space-y-6 animate-fade-in">
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
@@ -380,7 +542,6 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
                   <button
                     key={idx}
                     onClick={() => {
-                      // 各質問のvalueをanswersにセット
                       const newAnswers = { ...answers };
                       for (const [key, value] of Object.entries(example.values)) {
                         newAnswers[key as keyof DiagnosisAnswers] = value as string;
@@ -418,7 +579,7 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
             </div>
           )}
 
-          {error && (
+          {error && !isGeneratingMore && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4">
               <p className="text-red-700 text-sm">{error}</p>
               <button
@@ -439,10 +600,10 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
                   あなたの著者診断結果
                 </h2>
                 <p className="text-gray-600 text-sm">
-                  あなたの回答をAIが分析しました。
+                  あなたの性格特性と回答をAIが総合的に分析しました。
                 </p>
               </div>
-              <DiagnosisAnalysisSection analysis={analysis} />
+              <DiagnosisAnalysisSection analysis={analysis} big5Scores={big5Scores} />
               <div className="border-t-2 border-amber-200 my-2" />
             </>
           )}
@@ -459,12 +620,21 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
                   気になるテーマを1つ選んでください。
                 </p>
               </div>
+
+              {/* テーマは後で変更可能の注記 */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+                <Info className="text-blue-500 flex-shrink-0 mt-0.5" size={16} />
+                <p className="text-xs text-blue-700">
+                  テーマは次のステップでも自由に編集できます。まずは気になるテーマを選んでみましょう。
+                </p>
+              </div>
+
               {themeSuggestions.map((suggestion, index) => (
                 <button
                   key={index}
-                  onClick={() => setSelectedTheme(suggestion.theme)}
+                  onClick={() => handleThemeCardClick(index, suggestion.theme)}
                   className={`w-full text-left p-5 rounded-xl border-2 transition-all ${
-                    selectedTheme === suggestion.theme
+                    selectedThemeIndex === index
                       ? 'border-amber-500 bg-amber-50 shadow-md'
                       : 'border-gray-200 bg-white hover:border-amber-300 hover:shadow-sm'
                   }`}
@@ -476,7 +646,56 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
                           テーマ案 {index + 1}
                         </span>
                       </div>
-                      <h4 className="font-bold text-gray-900 text-lg mb-2">{suggestion.theme}</h4>
+
+                      {/* テーマ編集 */}
+                      {selectedThemeIndex === index && isEditingTheme ? (
+                        <div onClick={(e) => e.stopPropagation()} className="mb-2">
+                          <textarea
+                            value={selectedThemeText}
+                            onChange={(e) => setSelectedThemeText(e.target.value)}
+                            className="w-full border-2 border-amber-300 rounded-lg p-2 text-sm font-bold text-gray-900 focus:border-amber-500 outline-none resize-none"
+                            rows={2}
+                            autoFocus
+                          />
+                          <div className="flex gap-2 mt-1">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setIsEditingTheme(false); }}
+                              className="text-xs bg-amber-500 text-white px-3 py-1 rounded-lg hover:bg-amber-600 transition-colors"
+                            >
+                              確定
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedThemeText(suggestion.theme);
+                                setIsEditingTheme(false);
+                              }}
+                              className="text-xs text-gray-500 hover:text-gray-700"
+                            >
+                              元に戻す
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-start gap-2 mb-2">
+                          <h4 className="font-bold text-gray-900 text-lg">
+                            {selectedThemeIndex === index ? selectedThemeText : suggestion.theme}
+                          </h4>
+                          {selectedThemeIndex === index && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIsEditingTheme(true);
+                              }}
+                              className="text-amber-600 hover:text-amber-700 p-1 flex-shrink-0"
+                              title="テーマを編集"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                          )}
+                        </div>
+                      )}
+
                       <div className="space-y-1.5">
                         <p className="text-sm text-gray-600">
                           <span className="font-medium text-gray-700">想定読者: </span>
@@ -488,7 +707,7 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
                         </p>
                       </div>
                     </div>
-                    {selectedTheme === suggestion.theme && (
+                    {selectedThemeIndex === index && !isEditingTheme && (
                       <div className="bg-amber-500 text-white p-1 rounded-full flex-shrink-0">
                         <Check size={16} />
                       </div>
@@ -496,6 +715,34 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
                   </div>
                 </button>
               ))}
+
+              {/* さらに5つ提案ボタン */}
+              {!hasRequestedMore && (
+                <button
+                  onClick={handleGenerateMoreThemes}
+                  disabled={isGeneratingMore}
+                  className="w-full border-2 border-dashed border-amber-300 rounded-xl p-4 text-amber-600 hover:bg-amber-50 hover:border-amber-400 transition-all font-medium flex items-center justify-center gap-2"
+                >
+                  {isGeneratingMore ? (
+                    <>
+                      <Loader2 className="animate-spin" size={18} />
+                      追加テーマを生成中...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={18} />
+                      さらに5つのテーマを提案してもらう
+                    </>
+                  )}
+                </button>
+              )}
+
+              {/* 追加テーマ生成時のエラー */}
+              {error && isGeneratingMore && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-red-700 text-xs">{error}</p>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -518,9 +765,9 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
         {isResultStep ? (
           <button
             onClick={handleSelectTheme}
-            disabled={!selectedTheme}
+            disabled={selectedThemeIndex === null || !selectedThemeText.trim()}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg ${
-              selectedTheme
+              selectedThemeIndex !== null && selectedThemeText.trim()
                 ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
             }`}

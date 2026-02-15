@@ -16,6 +16,7 @@ export const OUTLINE_ACTION_TYPES = [
   'generate_target',
   'generate_kdp_info',
   'generate_theme',
+  'generate_theme_additional',
 ];
 
 // 執筆系AI のアクションタイプ

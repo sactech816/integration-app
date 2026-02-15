@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import {
-  Lightbulb, Sparkles, Loader2, Check, AlertCircle, RefreshCw, MessageSquare, PlayCircle, Search, ChevronRight
+  Lightbulb, Sparkles, Loader2, Check, AlertCircle, RefreshCw, MessageSquare, PlayCircle, Search, ChevronRight, Info
 } from 'lucide-react';
 import Link from 'next/link';
 import { WizardState, TitleSuggestion, MOCK_TITLES, demoDelay } from './types';
@@ -18,6 +18,7 @@ interface Step1ThemeProps {
   setError: React.Dispatch<React.SetStateAction<string>>;
   isDemo?: boolean; // デモモードフラグ
   adminKey?: string | null; // admin_keyパラメータ（ネタ発掘診断リンク用）
+  isFromDiscovery?: boolean; // ネタ発掘診断から遷移してきたか
 }
 
 export const Step1Theme: React.FC<Step1ThemeProps> = ({ 
@@ -31,6 +32,7 @@ export const Step1Theme: React.FC<Step1ThemeProps> = ({
   setError,
   isDemo = false,
   adminKey,
+  isFromDiscovery = false,
 }) => {
   const discoveryHref = `/kindle/discovery${adminKey ? `?admin_key=${adminKey}` : ''}`;
   const [retakeInstruction, setRetakeInstruction] = useState('');
@@ -127,6 +129,14 @@ export const Step1Theme: React.FC<Step1ThemeProps> = ({
           className="w-full border-2 border-gray-200 rounded-xl p-4 text-gray-900 placeholder-gray-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all resize-none"
           rows={3}
         />
+        {isFromDiscovery && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2 flex items-start gap-2">
+            <Info className="text-blue-500 flex-shrink-0 mt-0.5" size={16} />
+            <p className="text-xs text-blue-700">
+              ネタ発掘診断で選んだテーマが入力されています。ここで自由に編集・変更できます。
+            </p>
+          </div>
+        )}
       </div>
 
       <button

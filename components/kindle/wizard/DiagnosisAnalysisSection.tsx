@@ -5,19 +5,29 @@ import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer
 } from 'recharts';
 import { Sparkles, TrendingUp, Shield, AlertTriangle, Target } from 'lucide-react';
-import { DiagnosisAnalysis, AuthorTraitScores, AUTHOR_TRAIT_LABELS } from './types';
+import { DiagnosisAnalysis, AuthorTraitScores, AUTHOR_TRAIT_LABELS, Big5Scores, BIG5_LABELS } from './types';
 
 interface DiagnosisAnalysisSectionProps {
   analysis: DiagnosisAnalysis;
+  big5Scores?: Big5Scores | null;
 }
 
-export const DiagnosisAnalysisSection: React.FC<DiagnosisAnalysisSectionProps> = ({ analysis }) => {
-  // recharts用データ変換
+export const DiagnosisAnalysisSection: React.FC<DiagnosisAnalysisSectionProps> = ({ analysis, big5Scores }) => {
+  // recharts用データ変換（著者特性）
   const radarData = Object.entries(analysis.authorTraits).map(([key, value]) => ({
     dimension: AUTHOR_TRAIT_LABELS[key as keyof AuthorTraitScores],
     score: value,
     fullMark: 5,
   }));
+
+  // Big5データ変換
+  const big5RadarData = big5Scores
+    ? Object.entries(big5Scores).map(([key, value]) => ({
+        dimension: BIG5_LABELS[key as keyof Big5Scores],
+        score: value,
+        fullMark: 7,
+      }))
+    : [];
 
   return (
     <div className="space-y-6">
@@ -31,7 +41,45 @@ export const DiagnosisAnalysisSection: React.FC<DiagnosisAnalysisSectionProps> =
         </p>
       </div>
 
-      {/* レーダーチャート */}
+      {/* Big5 性格特性チャート */}
+      {big5Scores && big5RadarData.length > 0 && (
+        <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 rounded-xl p-4">
+          <h3 className="text-sm font-bold text-gray-700 mb-2 text-center">性格特性チャート（Big5）</h3>
+          <ResponsiveContainer width="100%" height={260}>
+            <RadarChart cx="50%" cy="50%" outerRadius="75%" data={big5RadarData}>
+              <PolarGrid stroke="#e5e7eb" />
+              <PolarAngleAxis
+                dataKey="dimension"
+                tick={{ fill: '#3730a3', fontSize: 12, fontWeight: 600 }}
+              />
+              <PolarRadiusAxis
+                angle={90}
+                domain={[0, 7]}
+                tickCount={8}
+                tick={{ fill: '#9ca3af', fontSize: 10 }}
+              />
+              <Radar
+                name="スコア"
+                dataKey="score"
+                stroke="#4f46e5"
+                fill="#818cf8"
+                fillOpacity={0.3}
+                strokeWidth={2}
+              />
+            </RadarChart>
+          </ResponsiveContainer>
+          <div className="flex flex-wrap justify-center gap-2 mt-2">
+            {big5RadarData.map((item) => (
+              <div key={item.dimension} className="flex items-center gap-1 bg-white rounded-full px-3 py-1 text-xs border border-indigo-200">
+                <span className="font-bold text-indigo-700">{item.dimension}</span>
+                <span className="text-gray-500">{item.score.toFixed(1)}/7</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 著者特性レーダーチャート */}
       <div className="bg-gradient-to-br from-amber-50/50 to-orange-50/50 rounded-xl p-4">
         <h3 className="text-sm font-bold text-gray-700 mb-2 text-center">著者特性チャート</h3>
         <ResponsiveContainer width="100%" height={260}>

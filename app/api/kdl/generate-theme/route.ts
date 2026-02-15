@@ -12,10 +12,12 @@ import { checkKdlLimits } from '@/lib/kdl-usage-check';
 import {
   MOCK_DIAGNOSIS_ANALYSIS,
   MOCK_THEME_SUGGESTIONS,
+  MOCK_ADDITIONAL_THEMES,
 } from '@/components/kindle/wizard/types';
 import type {
   ThemeSuggestion,
   DiagnosisAnalysis,
+  Big5Scores,
 } from '@/components/kindle/wizard/types';
 
 interface DiagnosisResult {
@@ -25,7 +27,7 @@ interface DiagnosisResult {
 
 export async function POST(request: Request) {
   try {
-    const { answers } = await request.json();
+    const { answers, big5Scores, existingThemes, count } = await request.json();
 
     // セッションからユーザーを取得
     const cookieStore = await cookies();
@@ -76,6 +78,10 @@ export async function POST(request: Request) {
     const useMockData = (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) || process.env.USE_MOCK_DATA === 'true';
 
     if (useMockData) {
+      // 追加テーマリクエストの場合
+      if (existingThemes && existingThemes.length > 0) {
+        return NextResponse.json({ themes: MOCK_ADDITIONAL_THEMES });
+      }
       return NextResponse.json({
         analysis: MOCK_DIAGNOSIS_ANALYSIS,
         themes: MOCK_THEME_SUGGESTIONS,
@@ -99,8 +105,61 @@ export async function POST(request: Request) {
       answers.lifeMessage && `【伝えたいメッセージ】${answers.lifeMessage}`,
     ].filter(Boolean).join('\n');
 
-    const systemPrompt = `＃目的：
-ユーザーの自己分析結果をもとに、著者としての特性を分析し、Kindle出版に最適な本のテーマを3つ提案してください。
+    // Big5スコアのテキスト化
+    let big5Text = '';
+    if (big5Scores) {
+      const b5 = big5Scores as Big5Scores;
+      big5Text = `\n\n【性格特性（Big5）】
+- 外向性: ${b5.extraversion.toFixed(1)}/7
+- 協調性: ${b5.agreeableness.toFixed(1)}/7
+- 誠実性: ${b5.conscientiousness.toFixed(1)}/7
+- 情緒安定性: ${b5.emotionalStability.toFixed(1)}/7
+- 開放性: ${b5.openness.toFixed(1)}/7`;
+    }
+
+    // 追加テーマリクエストかどうか
+    const isAdditionalRequest = existingThemes && Array.isArray(existingThemes) && existingThemes.length > 0;
+    const themeCount = isAdditionalRequest ? (count || 5) : 3;
+
+    // 追加テーマモード用のシンプルなプロンプト
+    const additionalThemePrompt = `＃目的：
+ユーザーの自己分析結果をもとに、Kindle出版に最適な本のテーマを${themeCount}つ追加で提案してください。
+
+＃あなたの役割：
+Kindle出版のコンサルタント兼プロデューサー。
+
+＃重要：
+- 以下の既存テーマとは異なる新しいアプローチで提案すること
+${existingThemes?.map((t: string, i: number) => `  ${i + 1}. ${t}`).join('\n') || ''}
+- 既存テーマと重複しないこと
+
+＃Big5性格特性の活用：
+- 外向性が高い → 自己啓発・コミュニケーション系テーマ向き
+- 協調性が高い → 人間関係・チームワーク系テーマ向き
+- 誠実性が高い → ノウハウ・メソッド系テーマ向き
+- 情緒安定性が低い → メンタルヘルス・ストレス管理に共感あり
+- 開放性が高い → 創造性・新しい挑戦系テーマ向き
+性格特性を考慮して、著者が自然に書き続けられるテーマを優先してください。
+
+＃出力形式：
+以下のJSON形式で出力してください。analysisは不要です。
+{
+  "themes": [
+    {
+      "theme": "本のテーマ（キャッチーで具体的な表現）",
+      "targetReader": "想定読者（具体的なペルソナ）",
+      "reason": "このテーマをおすすめする理由（100文字以内）"
+    }
+  ]
+}
+
+＃条件：
+- 日本語のみ
+- テーマは具体的かつキャッチーに
+- 必ず${themeCount}つ提案すること`;
+
+    const systemPrompt = isAdditionalRequest ? additionalThemePrompt : `＃目的：
+ユーザーの自己分析結果と性格特性をもとに、著者としての特性を分析し、Kindle出版に最適な本のテーマを${themeCount}つ提案してください。
 
 ＃あなたの役割：
 Kindle出版のコンサルタント兼プロデューサー。著者の強みや経験を引き出し、売れるテーマを発掘するプロフェッショナル。占い師のように相手の可能性を見抜き、ポジティブに導く存在。
@@ -112,18 +171,26 @@ Kindle出版のコンサルタント兼プロデューサー。著者の強み�
 4. ユーザーの独自性・差別化ポイントがあること
 
 ＃重要：
-- 3つの提案はそれぞれ異なるアプローチで提案すること
+- ${themeCount}つの提案はそれぞれ異なるアプローチで提案すること
   - 1つ目: ユーザーの過去の経験・得意分野を活かしたテーマ
   - 2つ目: ユーザーの専門知識を一般読者向けにわかりやすくするテーマ
   - 3つ目: ユーザーの未来の挑戦や伝えたいメッセージに基づくテーマ
 - 回答が空の項目がある場合は、他の回答から総合的に判断すること
+
+＃Big5性格特性の活用：
+- 外向性が高い → 自己啓発・コミュニケーション系テーマ向き
+- 協調性が高い → 人間関係・チームワーク系テーマ向き
+- 誠実性が高い → ノウハウ・メソッド系テーマ向き
+- 情緒安定性が低い → メンタルヘルス・ストレス管理に共感あり
+- 開放性が高い → 創造性・新しい挑戦系テーマ向き
+性格特性を考慮して、著者が自然に書き続けられるテーマを優先してください。
 
 ＃出力形式：
 以下のJSON形式で出力してください。
 
 {
   "analysis": {
-    "summary": "総合分析テキスト。占い・診断風の語り口で、ユーザーの強みと可能性をポジティブに伝える。「あなたの強みは〇〇で、△△の分野に需要があります」という形式を含める。150-200文字。",
+    "summary": "総合分析テキスト。占い・診断風の語り口で、ユーザーの強みと可能性をポジティブに伝える。性格特性の結果も踏まえて分析する。「あなたの強みは〇〇で、△△の分野に需要があります」という形式を含める。150-200文字。",
     "authorTraits": {
       "expertise": 4,
       "passion": 5,
@@ -159,7 +226,7 @@ Kindle出版のコンサルタント兼プロデューサー。著者の強み�
 ＃条件：
 - 日本語のみ
 - テーマは具体的かつキャッチーに（抽象的すぎないこと）
-- 必ず3つ提案すること
+- 必ず${themeCount}つ提案すること
 - summaryは励ましと期待感を込めたポジティブな表現にすること`;
 
     // ユーザーのプランTierを取得
@@ -174,10 +241,14 @@ Kindle出版のコンサルタント兼プロデューサー。著者の強み�
 
     console.log(`[KDL generate-theme] Using model=${aiSettings.model}, backup=${aiSettings.backupModel}, plan=${planTier}`);
 
+    const userMessage = isAdditionalRequest
+      ? `以下のユーザーの自己分析結果をもとに、既存テーマとは異なる新しいテーマを${themeCount}つ提案してください：\n\n${answersText}${big5Text}`
+      : `以下のユーザーの自己分析結果をもとに、Kindle出版に最適なテーマを${themeCount}つ提案してください：\n\n${answersText}${big5Text}`;
+
     const aiRequest = {
       messages: [
         { role: 'system' as const, content: systemPrompt },
-        { role: 'user' as const, content: `以下のユーザーの自己分析結果をもとに、Kindle出版に最適なテーマを3つ提案してください：\n\n${answersText}` },
+        { role: 'user' as const, content: userMessage },
       ],
       responseFormat: 'json' as const,
       temperature: 0.8,
@@ -205,7 +276,7 @@ Kindle出版のコンサルタント兼プロデューサー。著者の強み�
     if (user_id) {
       logAIUsage({
         userId: user_id,
-        actionType: 'generate_theme',
+        actionType: isAdditionalRequest ? 'generate_theme_additional' : 'generate_theme',
         service: 'kdl',
         modelUsed: response.model,
         inputTokens: response.usage?.inputTokens || 0,
@@ -214,11 +285,16 @@ Kindle出版のコンサルタント兼プロデューサー。著者の強み�
       }).catch(console.error);
     }
 
-    const result: DiagnosisResult = JSON.parse(content);
+    const result = JSON.parse(content);
 
     // バリデーション
     if (!result.themes || !Array.isArray(result.themes)) {
       throw new Error('不正な応答形式です');
+    }
+
+    // 追加テーマリクエストの場合はテーマのみ返す
+    if (isAdditionalRequest) {
+      return NextResponse.json({ themes: result.themes });
     }
 
     // analysisがない場合のフォールバック
