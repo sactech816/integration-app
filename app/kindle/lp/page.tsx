@@ -2,9 +2,9 @@ import { Metadata } from 'next';
 // バージョン切り替え: 下記のいずれかのコメントを外してください
 // import KindleLPClient from './KindleLPClient';        // オリジナル（バックアップ）
 // import KindleLPClient from './KindleLPClientV1';      // V1: 新規顧客向けパターン1（期間集中プランのみ）
-// import KindleLPClient from './KindleLPClientV2';      // V2: 新規顧客向けパターン2（期間集中プランのみ・A/Bテスト用）
-// import KindleLPClient from './KindleLPClientV3';         // V3: 提供されたLP内容ベース（シンプルヘッダー＋KDLフッター＋スクロールトップボタン）
-import KindleLPClient from './KindleLPClientV2';      // V2: 新規顧客向けパターン2（期間集中プランのみ・A/Bテスト用）
+// import KindleLPClient from './KindleLPClientV2';      // V2: 説明会誘導
+// import KindleLPClient from './KindleLPClientV3';      // V3: 料金掲載
+import KindleLPClient from './KindleLPClientV3';      // V2: 新規顧客向けパターン2（期間集中プランのみ・A/Bテスト用）
 
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';

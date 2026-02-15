@@ -1,6 +1,8 @@
 import { Metadata } from 'next';
 
-export type UGCType = 'quiz' | 'profile' | 'business' | 'survey' | 'salesletter';
+export type UGCType = 'quiz' | 'profile' | 'business' | 'survey' | 'salesletter'
+  | 'gacha' | 'fukubiki' | 'scratch' | 'slot' | 'stamp-rally' | 'login-bonus'
+  | 'booking' | 'kindle' | 'point-quiz' | 'arcade' | 'attendance';
 
 interface UGCMetadataInput {
   title: string;
@@ -9,6 +11,7 @@ interface UGCMetadataInput {
   slug: string;
   imageUrl?: string | null;
   keywords?: string[];
+  noindex?: boolean;
 }
 
 const TYPE_CONFIG: Record<UGCType, { pathPrefix: string; label: string; defaultKeywords: string[] }> = {
@@ -37,6 +40,61 @@ const TYPE_CONFIG: Record<UGCType, { pathPrefix: string; label: string; defaultK
     label: 'セールスレター',
     defaultKeywords: ['セールスレター', 'LP'],
   },
+  gacha: {
+    pathPrefix: 'gacha',
+    label: 'ガチャ',
+    defaultKeywords: ['ガチャ', 'オンラインガチャ', 'デジタルガチャ', '集客ツール'],
+  },
+  fukubiki: {
+    pathPrefix: 'fukubiki',
+    label: '福引き',
+    defaultKeywords: ['福引き', 'デジタル福引き', '抽選', 'オンライン抽選'],
+  },
+  scratch: {
+    pathPrefix: 'scratch',
+    label: 'スクラッチ',
+    defaultKeywords: ['スクラッチ', 'デジタルスクラッチ', 'スクラッチくじ'],
+  },
+  slot: {
+    pathPrefix: 'slot',
+    label: 'スロット',
+    defaultKeywords: ['スロット', 'デジタルスロット', 'オンラインスロット'],
+  },
+  'stamp-rally': {
+    pathPrefix: 'stamp-rally',
+    label: 'スタンプラリー',
+    defaultKeywords: ['スタンプラリー', 'デジタルスタンプラリー', 'ポイントカード'],
+  },
+  'login-bonus': {
+    pathPrefix: 'login-bonus',
+    label: 'ログインボーナス',
+    defaultKeywords: ['ログインボーナス', '来店ポイント', 'リピート集客'],
+  },
+  'point-quiz': {
+    pathPrefix: 'point-quiz',
+    label: 'ポイントクイズ',
+    defaultKeywords: ['ポイントクイズ', 'クイズゲーム', 'ポイント獲得'],
+  },
+  arcade: {
+    pathPrefix: 'arcade',
+    label: 'アーケード',
+    defaultKeywords: ['アーケードゲーム', 'ミニゲーム', 'ブラウザゲーム'],
+  },
+  booking: {
+    pathPrefix: 'booking',
+    label: '予約',
+    defaultKeywords: ['予約システム', 'オンライン予約', '予約受付'],
+  },
+  kindle: {
+    pathPrefix: 'kindle',
+    label: 'Kindle出版',
+    defaultKeywords: ['Kindle出版', 'KDP', '電子書籍'],
+  },
+  attendance: {
+    pathPrefix: 'attendance',
+    label: '出席管理',
+    defaultKeywords: ['出席管理', '出欠確認', 'イベント管理'],
+  },
 };
 
 export function generateUGCMetadata(input: UGCMetadataInput): Metadata {
@@ -50,8 +108,11 @@ export function generateUGCMetadata(input: UGCMetadataInput): Metadata {
   return {
     title: input.title,
     description,
-    keywords: [...config.defaultKeywords, ...(input.keywords || [])],
+    keywords: [...config.defaultKeywords, ...(input.keywords || []), '集客メーカー'],
     alternates: { canonical },
+    ...(input.noindex && {
+      robots: { index: false, follow: true },
+    }),
     openGraph: {
       type: 'website',
       locale: 'ja_JP',

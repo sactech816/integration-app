@@ -1025,6 +1025,101 @@ function PortalPageContent() {
         )}
       </main>
 
+      {/* SEOテキスト・カテゴリ説明（内部リンク強化） */}
+      <section className="py-12 bg-white border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
+            集客メーカーで作れるコンテンツ
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <article className="p-6 bg-gray-50 rounded-xl">
+              <h3 className="font-bold text-lg text-indigo-700 mb-2">診断クイズ</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                性格診断・タイプ診断・心理テストをAIで自動生成。SNSでシェアされやすい診断コンテンツで集客を加速します。
+              </p>
+              <div className="flex gap-3">
+                <Link href="/portal?tab=quiz" className="text-sm font-semibold text-indigo-600 hover:underline">
+                  クイズ一覧
+                </Link>
+                <Link href="/quiz/demo" className="text-sm font-semibold text-indigo-600 hover:underline">
+                  デモを見る
+                </Link>
+              </div>
+            </article>
+            <article className="p-6 bg-gray-50 rounded-xl">
+              <h3 className="font-bold text-lg text-emerald-700 mb-2">プロフィールLP</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                SNSリンクをまとめたプロフィールページを簡単作成。lit.linkやLinktreeの代替として、自分だけのプロフィールサイトを公開。
+              </p>
+              <div className="flex gap-3">
+                <Link href="/portal?tab=profile" className="text-sm font-semibold text-emerald-600 hover:underline">
+                  プロフィール一覧
+                </Link>
+                <Link href="/profile/demo" className="text-sm font-semibold text-emerald-600 hover:underline">
+                  デモを見る
+                </Link>
+              </div>
+            </article>
+            <article className="p-6 bg-gray-50 rounded-xl">
+              <h3 className="font-bold text-lg text-amber-700 mb-2">ビジネスLP</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                商品・サービス紹介のランディングページを作成。PASONA・AIDMAなどのマーケティングフレームワークに対応しています。
+              </p>
+              <div className="flex gap-3">
+                <Link href="/portal?tab=business" className="text-sm font-semibold text-amber-600 hover:underline">
+                  LP一覧
+                </Link>
+                <Link href="/business/demo" className="text-sm font-semibold text-amber-600 hover:underline">
+                  デモを見る
+                </Link>
+              </div>
+            </article>
+            <article className="p-6 bg-gray-50 rounded-xl">
+              <h3 className="font-bold text-lg text-teal-700 mb-2">アンケート</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                顧客満足度調査・イベントアンケートを作成。Googleフォームの代替として、リアルタイム集計・結果分析が可能です。
+              </p>
+              <div className="flex gap-3">
+                <Link href="/portal?tab=survey" className="text-sm font-semibold text-teal-600 hover:underline">
+                  アンケート一覧
+                </Link>
+                <Link href="/survey/demo/customer-satisfaction" className="text-sm font-semibold text-teal-600 hover:underline">
+                  デモを見る
+                </Link>
+              </div>
+            </article>
+            <article className="p-6 bg-gray-50 rounded-xl">
+              <h3 className="font-bold text-lg text-rose-700 mb-2">セールスレター</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                商品販売・告知用のセールスレターを作成。AIによる文章生成支援で、効果的なコピーライティングが可能です。
+              </p>
+              <Link href="/portal?tab=salesletter" className="text-sm font-semibold text-rose-600 hover:underline">
+                セールスレター一覧
+              </Link>
+            </article>
+            <article className="p-6 bg-gray-50 rounded-xl">
+              <h3 className="font-bold text-lg text-purple-700 mb-2">ゲーミフィケーション</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                ガチャ・福引き・スクラッチ・スロット・スタンプラリーなどの集客ゲームを作成。来店促進・リピート集客に活用できます。
+              </p>
+              <div className="flex gap-3">
+                <Link href="/portal?tab=gamification" className="text-sm font-semibold text-purple-600 hover:underline">
+                  ゲーム一覧
+                </Link>
+                <Link href="/gamification" className="text-sm font-semibold text-purple-600 hover:underline">
+                  詳しく見る
+                </Link>
+              </div>
+            </article>
+          </div>
+          <div className="mt-8 text-center">
+            <Link href="/tools" className="text-sm font-semibold text-indigo-600 hover:underline">
+              全ツール一覧を見る →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-16 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

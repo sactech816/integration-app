@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import SalesLetterViewer from '@/components/salesletter/SalesLetterViewer';
+import RelatedContent from '@/components/shared/RelatedContent';
 import { SalesLetter } from '@/lib/types';
 import { shouldHideFooter } from '@/lib/utils/checkCreatorPlanPermission';
 import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
@@ -119,6 +120,7 @@ export default async function SalesLetterShortUrlPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <SalesLetterViewer salesLetter={salesLetterWithPermission} />
+      <RelatedContent contentType="salesletter" currentSlug={slug} />
     </>
   );
 }

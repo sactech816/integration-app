@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { Metadata } from 'next';
 import QuizPlayerWrapper from '@/components/quiz/QuizPlayerWrapper';
+import RelatedContent from '@/components/shared/RelatedContent';
 import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
 import { shouldHideFooter } from '@/lib/utils/checkCreatorPlanPermission';
 import { generateUGCMetadata } from '@/lib/seo/generateUGCMetadata';
@@ -136,6 +137,7 @@ export default async function QuizPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <QuizPlayerWrapper quiz={quizWithPermission} />
+      <RelatedContent contentType="quiz" currentSlug={slug} />
     </>
   );
 }

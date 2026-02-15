@@ -148,6 +148,11 @@ export default function RootLayout({
       },
       'query-input': 'required name=search_term_string',
     },
+    // AEO対策: speakable（AIが引用しやすい箇所を指定）
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['h1', 'h2', '.speakable', '[data-speakable]'],
+    },
   };
 
   return (

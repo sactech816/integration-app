@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { Metadata } from 'next';
 import ProfileViewer from '@/components/profile/ProfileViewer';
+import RelatedContent from '@/components/shared/RelatedContent';
 import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
 import { shouldHideFooter } from '@/lib/utils/checkCreatorPlanPermission';
 import { generateUGCMetadata } from '@/lib/seo/generateUGCMetadata';
@@ -170,6 +171,7 @@ export default async function ProfilePage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <ProfileViewer profile={profileWithPermission} />
+      <RelatedContent contentType="profile" currentSlug={slug} />
     </>
   );
 }

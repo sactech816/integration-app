@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // 静的ページ
+  // 静的ページ（エディターページは robots.txt でブロックしているため除外）
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: BASE_URL,
@@ -62,6 +62,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
+      url: `${BASE_URL}/pricing`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/demos`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
       url: `${BASE_URL}/contact`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
@@ -84,25 +96,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.3,
-    },
-    // エディターページ
-    {
-      url: `${BASE_URL}/quiz/editor`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/profile/editor`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/business/editor`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
     },
     // デモページ
     {
@@ -149,7 +142,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/survey/demo/nps`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
     { url: `${BASE_URL}/survey/demo/product-service`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
     { url: `${BASE_URL}/survey/demo/training`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
-    // アンケートツール
+    // ツールランディングページ
     {
       url: `${BASE_URL}/survey`,
       lastModified: new Date(),
@@ -157,31 +150,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/survey/new`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/survey/editor`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    // 予約システム
-    {
       url: `${BASE_URL}/booking`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
     },
-    {
-      url: `${BASE_URL}/booking/new`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    // ゲーミフィケーションツール
+    // ゲーミフィケーションツールページ
     {
       url: `${BASE_URL}/gamification`,
       lastModified: new Date(),
@@ -236,6 +210,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.6,
     },
+    // AEO対策 - llms.txt
+    {
+      url: `${BASE_URL}/llms.txt`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.4,
+    },
   ];
 
   // 動的コンテンツをSupabaseから取得
@@ -245,6 +226,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let surveyPages: MetadataRoute.Sitemap = [];
   let bookingPages: MetadataRoute.Sitemap = [];
   let salesLetterPages: MetadataRoute.Sitemap = [];
+  let gamificationPages: MetadataRoute.Sitemap = [];
 
   if (supabase) {
     try {
@@ -332,58 +314,47 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'weekly' as const,
         priority: 0.6,
       })) || [];
+
+      // ゲーミフィケーションキャンペーンを取得
+      const { data: campaigns } = await supabase
+        .from('gamification_campaigns')
+        .select('id, game_type, updated_at, is_active')
+        .eq('is_active', true);
+
+      if (campaigns) {
+        gamificationPages = campaigns.map(campaign => {
+          const typePathMap: Record<string, string> = {
+            gacha: 'gacha',
+            fukubiki: 'fukubiki',
+            scratch: 'scratch',
+            slot: 'slot',
+            'stamp-rally': 'stamp-rally',
+            'login-bonus': 'login-bonus',
+            'point-quiz': 'point-quiz',
+            arcade: 'arcade',
+          };
+          const path = typePathMap[campaign.game_type] || campaign.game_type;
+          return {
+            url: `${BASE_URL}/${path}/${campaign.id}`,
+            lastModified: new Date(campaign.updated_at),
+            changeFrequency: 'weekly' as const,
+            priority: 0.5,
+          };
+        });
+      }
     } catch (error) {
       console.error('Sitemap: Failed to fetch dynamic content', error);
     }
   }
 
-  return [...staticPages, ...quizPages, ...profilePages, ...businessPages, ...surveyPages, ...bookingPages, ...salesLetterPages];
+  return [
+    ...staticPages,
+    ...quizPages,
+    ...profilePages,
+    ...businessPages,
+    ...surveyPages,
+    ...bookingPages,
+    ...salesLetterPages,
+    ...gamificationPages,
+  ];
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

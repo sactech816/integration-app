@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { Metadata } from 'next';
 import BusinessViewer from '@/components/business/BusinessViewer';
+import RelatedContent from '@/components/shared/RelatedContent';
 import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
 import { shouldHideFooter } from '@/lib/utils/checkCreatorPlanPermission';
 import { generateUGCMetadata } from '@/lib/seo/generateUGCMetadata';
@@ -165,6 +166,7 @@ export default async function BusinessPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <BusinessViewer lp={businessLP} />
+      <RelatedContent contentType="business" currentSlug={slug} />
     </>
   );
 }

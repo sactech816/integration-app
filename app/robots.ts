@@ -17,10 +17,20 @@ export default function robots(): MetadataRoute.Robots {
           '/business/editor',
           '/survey/editor',
           '/gamification/editor',
+          '/salesletter/editor',
+          '/attendance/editor',
+          '/booking/edit/',
           '/*/edit/*',
+          '/embed/',
         ],
       },
-      // Google AI/Bard等のAIクローラーを許可
+      // Googlebot: 最大限クロール許可
+      {
+        userAgent: 'Googlebot',
+        allow: '/',
+        disallow: ['/api/', '/dashboard/', '/_next/', '/*/editor', '/*/edit/*', '/embed/'],
+      },
+      // AI クローラーを明示的に許可（AEO対策）
       {
         userAgent: 'ChatGPT-User',
         allow: '/',
@@ -33,86 +43,39 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: 'Google-Extended',
         allow: '/',
       },
+      {
+        userAgent: 'CCBot',
+        allow: '/',
+      },
+      {
+        userAgent: 'anthropic-ai',
+        allow: '/',
+      },
+      {
+        userAgent: 'ClaudeBot',
+        allow: '/',
+      },
+      {
+        userAgent: 'Claude-Web',
+        allow: '/',
+      },
+      {
+        userAgent: 'PerplexityBot',
+        allow: '/',
+      },
+      {
+        userAgent: 'Applebot',
+        allow: '/',
+      },
+      {
+        userAgent: 'Bytespider',
+        allow: '/',
+      },
+      {
+        userAgent: 'cohere-ai',
+        allow: '/',
+      },
     ],
     sitemap: `${BASE_URL}/sitemap.xml`,
   };
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

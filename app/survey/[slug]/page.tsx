@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { Survey } from "@/lib/types";
 import SurveyPlayer from "@/components/survey/SurveyPlayer";
+import RelatedContent from "@/components/shared/RelatedContent";
 import { generateBreadcrumbSchema } from "@/components/shared/Breadcrumb";
 import { shouldHideFooter } from "@/lib/utils/checkCreatorPlanPermission";
 import { generateUGCMetadata } from '@/lib/seo/generateUGCMetadata';
@@ -135,6 +136,7 @@ export default async function SurveyPage({ params }: { params: Promise<{ slug: s
       />
       <main className="min-h-screen bg-gradient-to-br from-gray-50 to-teal-50 py-10 px-4">
         <SurveyPlayer survey={surveyWithPermission as Survey} />
+        <RelatedContent contentType="survey" currentSlug={slug} />
       </main>
     </>
   );
