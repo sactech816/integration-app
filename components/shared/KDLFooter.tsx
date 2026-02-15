@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Home, BookOpen } from 'lucide-react';
+import { Home, BookOpen, Lightbulb } from 'lucide-react';
 
 interface KDLFooterProps {
   adminKeyParam?: string;
@@ -35,6 +35,14 @@ export const KDLFooter: React.FC<KDLFooterProps> = ({
           >
             <BookOpen size={16} />
             <span>書籍一覧へ</span>
+          </Link>
+          <span className="text-gray-300">|</span>
+          <Link
+            href={`/kindle/discovery${adminKeyParam}`}
+            className="flex items-center gap-2 text-gray-600 hover:text-amber-600 transition-colors"
+          >
+            <Lightbulb size={16} />
+            <span>ネタ発掘診断</span>
           </Link>
         </div>
       </div>

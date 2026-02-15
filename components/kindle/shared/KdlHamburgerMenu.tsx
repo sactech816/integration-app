@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
-  Menu, X, BookOpen, Home, Plus, FileText, Rocket, CreditCard, LogOut
+  Menu, X, BookOpen, Home, Plus, FileText, Rocket, CreditCard, LogOut, Lightbulb
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -41,6 +41,7 @@ export default function KdlHamburgerMenu({
   const menuItems = [
     { id: 'dashboard', label: 'ダッシュボード（マイブック）', href: `/kindle${adminKeyParam}`, icon: Home },
     { id: 'new', label: '新規作成', href: `/kindle/new${adminKeyParam}`, icon: Plus },
+    { id: 'discovery', label: 'ネタ発掘診断', href: `/kindle/discovery${adminKeyParam}`, icon: Lightbulb },
     { id: 'guide', label: 'まずお読みください', href: '/kindle/guide', icon: FileText, target: '_blank' },
     { id: 'publish-guide', label: '出版準備ガイド', href: '/kindle/publish-guide', icon: Rocket, target: '_blank' },
     { id: 'plan', label: 'プラン情報', href: `/kindle${adminKeyParam}#plan-info`, icon: CreditCard },

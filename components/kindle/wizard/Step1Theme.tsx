@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Lightbulb, Sparkles, Loader2, Check, AlertCircle, RefreshCw, MessageSquare, PlayCircle
+import {
+  Lightbulb, Sparkles, Loader2, Check, AlertCircle, RefreshCw, MessageSquare, PlayCircle, Search, ChevronRight
 } from 'lucide-react';
+import Link from 'next/link';
 import { WizardState, TitleSuggestion, MOCK_TITLES, demoDelay } from './types';
 
 interface Step1ThemeProps {
@@ -16,6 +17,7 @@ interface Step1ThemeProps {
   error: string;
   setError: React.Dispatch<React.SetStateAction<string>>;
   isDemo?: boolean; // デモモードフラグ
+  adminKey?: string | null; // admin_keyパラメータ（ネタ発掘診断リンク用）
 }
 
 export const Step1Theme: React.FC<Step1ThemeProps> = ({ 
@@ -27,8 +29,10 @@ export const Step1Theme: React.FC<Step1ThemeProps> = ({
   setIsGenerating, 
   error, 
   setError,
-  isDemo = false
+  isDemo = false,
+  adminKey,
 }) => {
+  const discoveryHref = `/kindle/discovery${adminKey ? `?admin_key=${adminKey}` : ''}`;
   const [retakeInstruction, setRetakeInstruction] = useState('');
   
   const handleGenerateTitles = async (instruction?: string) => {
@@ -81,6 +85,25 @@ export const Step1Theme: React.FC<Step1ThemeProps> = ({
             <span className="text-sm opacity-90 ml-2">AIを使わずにサンプルデータで体験できます</span>
           </div>
         </div>
+      )}
+
+      {/* ネタ発掘診断への導線 */}
+      {!isDemo && (
+        <Link
+          href={discoveryHref}
+          className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 flex items-center justify-between gap-3 hover:border-blue-300 hover:shadow-md transition-all group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-100 p-2 rounded-lg group-hover:bg-blue-200 transition-colors">
+              <Search className="text-blue-600" size={20} />
+            </div>
+            <div className="text-left">
+              <p className="font-bold text-gray-900 text-sm">書きたいテーマが決まっていない方はこちら</p>
+              <p className="text-xs text-gray-500">質問に答えるだけでAIがあなたにぴったりのテーマを提案します</p>
+            </div>
+          </div>
+          <ChevronRight className="text-blue-400 group-hover:text-blue-600 transition-colors flex-shrink-0" size={20} />
+        </Link>
       )}
 
       <div>

@@ -205,6 +205,42 @@ export const MOCK_CHAPTERS: Chapter[] = [
   },
 ];
 
+// Step0 ネタ発掘診断の回答型
+export interface DiagnosisAnswers {
+  pastInvestment: string;    // お金・時間を使ってきたこと
+  immersion: string;         // 没頭すること
+  strengths: string;         // 得意なこと
+  expertise: string;         // 専門知識
+  futureChallenges: string;  // 挑戦したいこと
+  lifeMessage: string;       // 伝えたいメッセージ
+}
+
+// Step0 AIテーマ提案の型
+export interface ThemeSuggestion {
+  theme: string;         // テーマ名
+  targetReader: string;  // 想定読者
+  reason: string;        // なぜこのテーマが合うか
+}
+
+// モック テーマ提案
+export const MOCK_THEME_SUGGESTIONS: ThemeSuggestion[] = [
+  {
+    theme: '忙しい社会人のための「ゆる副業」入門',
+    targetReader: '本業が忙しいが副収入を得たい30代〜40代の会社員',
+    reason: 'あなたの「時間管理」への関心と、仕事の経験を活かしたノウハウ共有が強みになります。実体験ベースの副業ガイドはKindleで人気ジャンルです。',
+  },
+  {
+    theme: '人見知りでもできる！オンラインコミュニケーション術',
+    targetReader: 'リモートワークでのコミュニケーションに悩む内向型の社会人',
+    reason: 'あなたの強みである「分かりやすく伝える力」と、内向的な視点からのアドバイスは独自性があります。リモートワーク関連は検索需要が高いテーマです。',
+  },
+  {
+    theme: '40歳からの学び直し｜人生を変える大人の勉強法',
+    targetReader: 'キャリアに行き詰まりを感じ、新しいスキルを身につけたい中年世代',
+    reason: 'あなたの「これから挑戦したい」という姿勢と、これまでの学びの経験を組み合わせることで、同じ境遇の読者に刺さるコンテンツが作れます。',
+  },
+];
+
 // デモモード用の遅延処理（ローディング演出）
 export const demoDelay = (ms: number = 1000): Promise<void> => {
   return new Promise(resolve => setTimeout(resolve, ms));

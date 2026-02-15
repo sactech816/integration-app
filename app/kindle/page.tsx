@@ -437,6 +437,9 @@ function KindleListPageContent() {
       case 'new-book':
         router.push(`/kindle/new${adminKeyParam}`);
         break;
+      case 'discovery':
+        router.push(`/kindle/discovery${adminKeyParam}`);
+        break;
       case 'my-books':
         // 現在のページで書籍一覧にスクロール
         document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' });

@@ -141,6 +141,14 @@ function KindleNewPageContent() {
     setIsInitialized(true);
   }, [isInitialized]);
 
+  // discovery_themeクエリパラメータからテーマを受け取る（ネタ発掘診断から遷移時）
+  useEffect(() => {
+    const discoveryTheme = searchParams.get('discovery_theme');
+    if (discoveryTheme) {
+      setState(prev => ({ ...prev, theme: discoveryTheme }));
+    }
+  }, [searchParams]);
+
   // 状態が変わるたびにlocalStorageに保存
   useEffect(() => {
     if (!isInitialized) return;
@@ -311,6 +319,7 @@ function KindleNewPageContent() {
             error={error}
             setError={setError}
             isDemo={isDemo}
+            adminKey={adminKey}
           />
         );
       case 2:

@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import {
   Home,
   Plus,
+  Lightbulb,
   BookOpen,
   Rocket,
   GraduationCap,
@@ -72,15 +73,22 @@ export default function KdlSidebarNav({
       section: 'main',
       roles: ['user', 'agency', 'admin'],
     },
-    { 
-      id: 'new-book', 
-      label: '新規作成', 
-      icon: Plus, 
+    {
+      id: 'new-book',
+      label: '新規作成',
+      icon: Plus,
       section: 'main',
       roles: ['user', 'agency', 'admin'],
     },
-    { 
-      id: 'my-books', 
+    {
+      id: 'discovery',
+      label: 'ネタ発掘診断',
+      icon: Lightbulb,
+      section: 'main',
+      roles: ['user', 'agency', 'admin'],
+    },
+    {
+      id: 'my-books',
       label: 'マイブック', 
       icon: BookOpen, 
       section: 'main',

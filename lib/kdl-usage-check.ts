@@ -15,6 +15,7 @@ export const OUTLINE_ACTION_TYPES = [
   'recommend_pattern',
   'generate_target',
   'generate_kdp_info',
+  'generate_theme',
 ];
 
 // 執筆系AI のアクションタイプ
