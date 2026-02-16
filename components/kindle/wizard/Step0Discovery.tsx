@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import {
   DiagnosisAnswers, ThemeSuggestion, DiagnosisAnalysis, Big5Scores,
-  TIPI_QUESTIONS, calculateBig5,
+  TIPI_QUESTIONS, calculateBig5, AUTHOR_TRAIT_LABELS,
   MOCK_THEME_SUGGESTIONS, MOCK_DIAGNOSIS_ANALYSIS, MOCK_BIG5_SCORES, MOCK_ADDITIONAL_THEMES,
   demoDelay
 } from './types';
@@ -383,10 +383,7 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
         </table>`
       : '';
 
-    const traitLabels: Record<string, string> = {
-      expertise: '専門性', passion: '情熱', uniqueness: '独自性',
-      marketFit: '市場適合性', executionPower: '実行力',
-    };
+    const traitLabels: Record<string, string> = AUTHOR_TRAIT_LABELS;
 
     const html = `<!DOCTYPE html>
 <html lang="ja">
