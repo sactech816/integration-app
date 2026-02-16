@@ -105,7 +105,7 @@ export function calculateEstimatedCostJpy(
     // Gemini系
     'gemini-1.5-flash': { input: 0.075, output: 0.30 },
     'gemini-2.0-flash': { input: 0.075, output: 0.30 },
-    'gemini-2.5-flash': { input: 0.10, output: 0.40 },
+    'gemini-2.5-flash': { input: 0.30, output: 2.50 },
     'gemini-2.5-flash-lite': { input: 0.075, output: 0.30 },
     'gemini-1.5-pro': { input: 1.25, output: 5.00 },
     'gemini-2.0-pro': { input: 1.25, output: 5.00 },
@@ -457,7 +457,7 @@ export async function logAIUsage(params: LogAIUsageParams): Promise<string | nul
   try {
     // ハイブリッドクレジットシステムに対応
     if (params.usageType) {
-      const modelUsed = params.modelUsed || 'gemini-1.5-flash';
+      const modelUsed = params.modelUsed || 'gemini-2.5-flash-lite';
       const inputTokens = params.inputTokens || 0;
       const outputTokens = params.outputTokens || 0;
       
@@ -534,7 +534,7 @@ export async function logAIUsage(params: LogAIUsageParams): Promise<string | nul
       p_user_id: params.userId,
       p_action_type: params.actionType,
       p_service: params.service || 'kdl',
-      p_model_used: params.modelUsed || 'gemini-1.5-flash',
+      p_model_used: params.modelUsed || 'gemini-2.5-flash-lite',
       p_input_tokens: params.inputTokens || 0,
       p_output_tokens: params.outputTokens || 0,
       p_metadata: params.metadata || null,
@@ -547,15 +547,17 @@ export async function logAIUsage(params: LogAIUsageParams): Promise<string | nul
       if (error.code === '42883' || error.code === 'PGRST202') {
         
         // コスト計算（簡易版）
-        const modelUsed = params.modelUsed || 'gemini-1.5-flash';
+        const modelUsed = params.modelUsed || 'gemini-2.5-flash-lite';
         const inputTokens = params.inputTokens || 0;
         const outputTokens = params.outputTokens || 0;
         let estimatedCostJpy = 0;
         
-        if (modelUsed.includes('gemini-1.5-flash') || modelUsed.includes('gemini-2.0-flash')) {
-          estimatedCostJpy = (inputTokens * 0.075 / 1000000 + outputTokens * 0.30 / 1000000) * 150;
-        } else if (modelUsed.includes('gemini-1.5-pro') || modelUsed.includes('gemini-2.0-pro')) {
-          estimatedCostJpy = (inputTokens * 1.25 / 1000000 + outputTokens * 5.00 / 1000000) * 150;
+        if (modelUsed.includes('gemini-2.5-flash-lite') || modelUsed.includes('gemini-1.5-flash') || modelUsed.includes('gemini-2.0-flash-lite')) {
+          estimatedCostJpy = (inputTokens * 0.10 / 1000000 + outputTokens * 0.40 / 1000000) * 150;
+        } else if (modelUsed.includes('gemini-2.5-flash') || modelUsed.includes('gemini-2.0-flash')) {
+          estimatedCostJpy = (inputTokens * 0.30 / 1000000 + outputTokens * 2.50 / 1000000) * 150;
+        } else if (modelUsed.includes('gemini-2.5-pro') || modelUsed.includes('gemini-1.5-pro') || modelUsed.includes('gemini-2.0-pro')) {
+          estimatedCostJpy = (inputTokens * 1.25 / 1000000 + outputTokens * 10.00 / 1000000) * 150;
         } else if (modelUsed.includes('gpt-4o-mini')) {
           estimatedCostJpy = (inputTokens * 0.15 / 1000000 + outputTokens * 0.60 / 1000000) * 150;
         } else if (modelUsed.includes('gpt-4o')) {

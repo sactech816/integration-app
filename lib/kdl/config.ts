@@ -141,7 +141,7 @@ export const KDL_CONFIG = {
   apiUrl: process.env.NEXT_PUBLIC_KDL_API_URL || '/api/kdl',
   
   // AI設定
-  defaultAiModel: 'gemini-2.0-flash',
+  defaultAiModel: 'gemini-2.5-flash-lite',
   qualityAiModel: 'claude-3-5-sonnet-20241022',
   
   // 文字数制限

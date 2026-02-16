@@ -187,7 +187,7 @@ export function getAIModelForPlan(planTier: PlanTier): string {
   
   switch (plan.aiModel) {
     case 'gemini-flash':
-      return 'gemini-1.5-flash';
+      return 'gemini-2.5-flash-lite';
     case 'gpt-4o-mini':
       return 'gpt-4o-mini';
     case 'gpt-4o':
@@ -195,7 +195,7 @@ export function getAIModelForPlan(planTier: PlanTier): string {
     case 'custom':
       return process.env.ENTERPRISE_AI_MODEL || 'gpt-4o';
     default:
-      return 'gemini-1.5-flash';
+      return 'gemini-2.5-flash-lite';
   }
 }
 

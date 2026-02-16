@@ -234,7 +234,7 @@ function getEstimatedCost(row: any): number {
   const inputTokens = row.input_tokens || 0;
   const outputTokens = row.output_tokens || 0;
   if (inputTokens > 0 || outputTokens > 0) {
-    return calculateEstimatedCostJpy(row.model_used || 'gemini-1.5-flash', inputTokens, outputTokens);
+    return calculateEstimatedCostJpy(row.model_used || 'gemini-2.5-flash-lite', inputTokens, outputTokens);
   }
   return 0;
 }
