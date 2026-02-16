@@ -165,10 +165,10 @@ const DIAGNOSIS_STEPS = [
   },
 ];
 
-// プログレスバー用のステップ定義（Big5 + テキスト3ステップ）
+// プログレスバー用のステップ定義（テキスト3ステップ + Big5）
 const PROGRESS_STEPS = [
-  { title: '性格診断', icon: User },
   ...DIAGNOSIS_STEPS.map(s => ({ title: s.title, icon: s.icon })),
+  { title: '性格診断', icon: User },
 ];
 
 export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
@@ -206,14 +206,13 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
   const [hasRequestedMore, setHasRequestedMore] = useState(false);
   const [isGeneratingMore, setIsGeneratingMore] = useState(false);
 
-  // ステップ計算
-  const BIG5_STEP = 0;
-  const TEXT_STEP_OFFSET = 1;
-  const totalQuestionSteps = DIAGNOSIS_STEPS.length + 1; // Big5 + 3テキスト = 4
+  // ステップ計算（テキスト3ステップ → Big5 → 結果）
+  const BIG5_STEP = DIAGNOSIS_STEPS.length; // 3（テキスト3つの後）
+  const totalQuestionSteps = DIAGNOSIS_STEPS.length + 1; // 3テキスト + Big5 = 4
   const isResultStep = diagnosisStep === totalQuestionSteps;
   const isBig5Step = diagnosisStep === BIG5_STEP;
-  const isTextStep = diagnosisStep >= TEXT_STEP_OFFSET && diagnosisStep < totalQuestionSteps;
-  const textStepIndex = diagnosisStep - TEXT_STEP_OFFSET;
+  const isTextStep = diagnosisStep >= 0 && diagnosisStep < DIAGNOSIS_STEPS.length;
+  const textStepIndex = diagnosisStep;
   const currentStepData = isTextStep ? DIAGNOSIS_STEPS[textStepIndex] : null;
 
   const canProceedFromCurrentStep = () => {
@@ -326,15 +325,21 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
 
   const handleNext = async () => {
     if (isBig5Step) {
+      // Big5回答完了 → 結果へ
       const scores = calculateBig5(tipiAnswers);
       setBig5Scores(scores);
-      setDiagnosisStep(1);
-    } else if (diagnosisStep < totalQuestionSteps - 1) {
-      setDiagnosisStep(diagnosisStep + 1);
-    } else if (diagnosisStep === totalQuestionSteps - 1) {
       setDiagnosisStep(totalQuestionSteps);
       await handleGenerateThemes();
+    } else if (diagnosisStep < totalQuestionSteps - 1) {
+      setDiagnosisStep(diagnosisStep + 1);
     }
+  };
+
+  const handleSkipBig5 = async () => {
+    // Big5をスキップして結果へ（big5Scoresはnullのまま）
+    setBig5Scores(null);
+    setDiagnosisStep(totalQuestionSteps);
+    await handleGenerateThemes();
   };
 
   const handleBack = () => {
@@ -590,6 +595,16 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
             <span className="text-sm text-gray-400">
               {tipiAnswers.filter(a => a > 0).length} / 10 問回答済み
             </span>
+          </div>
+
+          {/* スキップボタン */}
+          <div className="text-center pt-2">
+            <button
+              onClick={handleSkipBig5}
+              className="text-gray-400 hover:text-amber-600 text-sm underline transition-colors"
+            >
+              性格診断をスキップしてテーマ提案へ進む
+            </button>
           </div>
         </div>
       )}
@@ -880,7 +895,7 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-gray-700 hover:bg-gray-100 transition-all"
         >
           <ArrowLeft size={18} />
-          {diagnosisStep === 0 ? 'Step1に戻る' : '戻る'}
+          戻る
         </button>
 
         <span className="text-sm text-gray-400">
