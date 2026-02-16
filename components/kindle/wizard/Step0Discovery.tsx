@@ -712,7 +712,7 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
               <DiagnosisAnalysisSection analysis={analysis} big5Scores={big5Scores} />
 
               {/* 印刷・保存ボタン */}
-              <div className="flex gap-3 justify-center print:hidden">
+              <div className="flex gap-3 justify-center no-print">
                 <button
                   onClick={handlePrint}
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border-2 border-gray-200 rounded-xl hover:border-amber-300 hover:bg-amber-50 transition-all"

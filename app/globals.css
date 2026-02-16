@@ -158,8 +158,7 @@ button:disabled {
 /* 印刷用スタイル */
 @media print {
   body { background: white !important; }
-  nav, header, footer, .print\\:hidden { display: none !important; }
-  .space-y-6 > :not(.animate-fade-in) { display: none !important; }
+  nav, header, footer, .no-print { display: none !important; }
   .animate-fade-in { break-inside: avoid; }
 }
 
