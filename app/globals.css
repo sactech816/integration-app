@@ -155,6 +155,14 @@ button:disabled {
   animation: fade-in-up 0.3s ease-out forwards;
 }
 
+/* 印刷用スタイル */
+@media print {
+  body { background: white !important; }
+  nav, header, footer, .print\\:hidden { display: none !important; }
+  .space-y-6 > :not(.animate-fade-in) { display: none !important; }
+  .animate-fade-in { break-inside: avoid; }
+}
+
 /* スクロールバー非表示 */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* IE, Edge */

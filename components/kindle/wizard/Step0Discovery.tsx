@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import {
-  Clock, Star, Rocket, Sparkles, ArrowLeft, ArrowRight, Check, Loader2, ChevronRight, Search, Lightbulb, User, Pencil, Info
+  Clock, Star, Rocket, Sparkles, ArrowLeft, ArrowRight, Check, Loader2, ChevronRight, Search, Lightbulb, User, Pencil, Info, Printer, Download
 } from 'lucide-react';
 import {
   DiagnosisAnswers, ThemeSuggestion, DiagnosisAnalysis, Big5Scores,
@@ -360,6 +360,112 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleSaveHTML = () => {
+    if (!analysis) return;
+
+    const big5Section = big5Scores
+      ? `<h2>性格特性（Big5）</h2>
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;margin-bottom:24px;">
+          <tr style="background:#eef2ff;"><th>特性</th><th>スコア</th></tr>
+          ${Object.entries(big5Scores).map(([key, value]) => {
+            const labels: Record<string, string> = { openness: '開放性', conscientiousness: '誠実性', extraversion: '外向性', agreeableness: '協調性', neuroticism: '神経症傾向' };
+            return `<tr><td>${labels[key] || key}</td><td>${value.toFixed(1)} / 7</td></tr>`;
+          }).join('')}
+        </table>`
+      : '';
+
+    const traitLabels: Record<string, string> = {
+      expertise: '専門性', passion: '情熱', uniqueness: '独自性',
+      marketFit: '市場適合性', executionPower: '実行力',
+    };
+
+    const html = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>著者診断結果 - Kindle出版メーカー</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 24px; color: #1a1a1a; line-height: 1.7; }
+    h1 { text-align: center; color: #d97706; border-bottom: 3px solid #f59e0b; padding-bottom: 12px; }
+    h2 { color: #92400e; margin-top: 32px; border-left: 4px solid #f59e0b; padding-left: 12px; }
+    .badge { display: inline-block; background: linear-gradient(135deg, #f59e0b, #ea580c); color: white; padding: 8px 24px; border-radius: 24px; font-size: 1.2em; font-weight: bold; }
+    .summary { background: #fffbeb; border: 1px solid #fbbf24; border-radius: 12px; padding: 16px; margin: 16px 0; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    th, td { padding: 8px 12px; border: 1px solid #e5e7eb; text-align: left; }
+    th { background: #fef3c7; }
+    .swot { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: #e5e7eb; border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+    .swot > div { padding: 16px; }
+    .swot .s { background: #f0fdf4; } .swot .w { background: #fefce8; }
+    .swot .o { background: #eff6ff; } .swot .t { background: #fef2f2; }
+    .swot h3 { margin: 0 0 8px 0; font-size: 0.9em; }
+    .swot ul { margin: 0; padding-left: 16px; font-size: 0.85em; }
+    .theme-card { border: 2px solid #fbbf24; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .theme-title { font-weight: bold; font-size: 1.1em; color: #92400e; }
+    .meta { color: #6b7280; font-size: 0.85em; }
+    .footer { text-align: center; color: #9ca3af; font-size: 0.8em; margin-top: 40px; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+  </style>
+</head>
+<body>
+  <h1>著者診断結果</h1>
+  <div style="text-align:center;margin:24px 0;">
+    <span class="badge">${analysis.authorType}</span>
+    <p style="color:#6b7280;margin-top:8px;">${analysis.authorTypeDescription}</p>
+  </div>
+
+  ${big5Section}
+
+  <h2>著者特性スコア</h2>
+  <table>
+    <tr style="background:#fef3c7;"><th>特性</th><th>スコア</th></tr>
+    ${Object.entries(analysis.authorTraits).map(([key, value]) =>
+      `<tr><td>${traitLabels[key] || key}</td><td>${value} / 5</td></tr>`
+    ).join('')}
+  </table>
+
+  <h2>SWOT分析</h2>
+  <div class="swot">
+    <div class="s"><h3>強み</h3><ul>${analysis.swot.strengths.map(s => `<li>${s}</li>`).join('')}</ul></div>
+    <div class="o"><h3>機会</h3><ul>${analysis.swot.opportunities.map(s => `<li>${s}</li>`).join('')}</ul></div>
+    <div class="w"><h3>課題</h3><ul>${analysis.swot.weaknesses.map(s => `<li>${s}</li>`).join('')}</ul></div>
+    <div class="t"><h3>リスク</h3><ul>${analysis.swot.threats.map(s => `<li>${s}</li>`).join('')}</ul></div>
+  </div>
+
+  <div class="summary">
+    <strong>総合分析</strong>
+    <p>${analysis.summary}</p>
+  </div>
+
+  <h2>テーマ提案</h2>
+  ${themeSuggestions.map((t, i) => `
+    <div class="theme-card">
+      <div class="theme-title">テーマ案 ${i + 1}: ${t.theme}</div>
+      <p class="meta"><strong>想定読者:</strong> ${t.targetReader}</p>
+      <p class="meta"><strong>おすすめの理由:</strong> ${t.reason}</p>
+    </div>
+  `).join('')}
+
+  <div class="footer">
+    <p>Kindle出版メーカー - AI著者診断 | 生成日: ${new Date().toLocaleDateString('ja-JP')}</p>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `著者診断結果_${new Date().toLocaleDateString('ja-JP').replace(/\//g, '-')}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleThemeCardClick = (index: number, theme: string) => {
     setSelectedThemeIndex(index);
     setSelectedThemeText(theme);
@@ -604,6 +710,25 @@ export const Step0Discovery: React.FC<Step0DiscoveryProps> = ({
                 </p>
               </div>
               <DiagnosisAnalysisSection analysis={analysis} big5Scores={big5Scores} />
+
+              {/* 印刷・保存ボタン */}
+              <div className="flex gap-3 justify-center print:hidden">
+                <button
+                  onClick={handlePrint}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border-2 border-gray-200 rounded-xl hover:border-amber-300 hover:bg-amber-50 transition-all"
+                >
+                  <Printer size={16} />
+                  印刷 / PDF保存
+                </button>
+                <button
+                  onClick={handleSaveHTML}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border-2 border-gray-200 rounded-xl hover:border-amber-300 hover:bg-amber-50 transition-all"
+                >
+                  <Download size={16} />
+                  HTML保存
+                </button>
+              </div>
+
               <div className="border-t-2 border-amber-200 my-2" />
             </>
           )}

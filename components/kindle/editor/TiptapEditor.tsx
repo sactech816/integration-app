@@ -674,16 +674,16 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
             </button>
             
             {generateError && (
-              <div className="hidden sm:flex items-center gap-1.5 text-red-500 text-xs sm:text-sm animate-pulse">
-                <AlertCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <span>{generateError}</span>
+              <div className="flex items-center gap-1.5 text-red-500 text-xs sm:text-sm">
+                <AlertCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+                <span className="line-clamp-2">{generateError}</span>
               </div>
             )}
-            
+
             {rewriteError && (
-              <div className="hidden sm:flex items-center gap-1.5 text-red-500 text-xs sm:text-sm animate-pulse">
-                <AlertCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                <span>{rewriteError}</span>
+              <div className="flex items-center gap-1.5 text-red-500 text-xs sm:text-sm">
+                <AlertCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+                <span className="line-clamp-2">{rewriteError}</span>
               </div>
             )}
           </div>

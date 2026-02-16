@@ -281,10 +281,11 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     const id = Date.now().toString();
     setToasts(prev => [...prev, { id, type, message }]);
 
-    // 3秒後に自動で消す
+    // エラーは8秒、その他は3秒後に自動で消す
+    const duration = type === 'error' ? 8000 : 3000;
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
-    }, 3000);
+    }, duration);
   }, []);
 
   // トースト削除
@@ -487,8 +488,18 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
         });
 
         if (!response.ok) {
-          console.error(`節「${section.title}」の生成に失敗しました`);
-          continue; // エラーでもスキップして次へ
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.error || `節「${section.title}」の生成に失敗しました`;
+          console.error(errorMessage);
+
+          if (response.status === 429) {
+            // 使用上限に達した場合はバッチを中止
+            showToast('error', errorMessage);
+            break;
+          }
+          // その他のエラーはスキップして次へ
+          showToast('error', `「${section.title}」の生成をスキップしました`);
+          continue;
         }
 
         const data = await response.json();
