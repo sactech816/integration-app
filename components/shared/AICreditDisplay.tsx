@@ -100,7 +100,7 @@ export default function AICreditDisplay({ userId, compact = false }: AICreditDis
                 <span className="text-2xl">⚡</span>
                 <div>
                   <p className="font-semibold text-gray-900">高品質AI</p>
-                  <p className="text-xs text-gray-500">Claude 3.5 Sonnet, o3-mini</p>
+                  <p className="text-xs text-gray-500">Claude Sonnet 4.5, GPT-5 Mini</p>
                 </div>
               </div>
               <div className="text-right">

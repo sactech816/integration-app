@@ -411,18 +411,6 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
     description: '最新フラッグシップモデル',
   },
   {
-    id: 'gpt-5',
-    name: 'GPT-5',
-    provider: 'OpenAI',
-    inputCost: 1.25,
-    outputCost: 10.00,
-    cachedInputCost: 0.125,
-    contextLength: '128K tokens',
-    performance: 6,
-    status: 'available',
-    description: 'フラッグシップモデル',
-  },
-  {
     id: 'gpt-5-mini',
     name: 'GPT-5 Mini',
     provider: 'OpenAI',
@@ -471,42 +459,6 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
     description: '安定・実績あり',
   },
   // ========================================
-  // OpenAI Reasoning Models (o1/o3系)
-  // ========================================
-  {
-    id: 'o3-mini',
-    name: 'o3 Mini',
-    provider: 'OpenAI',
-    inputCost: 1.10,
-    outputCost: 4.40,
-    contextLength: '200K tokens',
-    performance: 5,
-    status: 'available',
-    description: '推論特化・コスパ良好',
-  },
-  {
-    id: 'o1',
-    name: 'o1',
-    provider: 'OpenAI',
-    inputCost: 15.00,
-    outputCost: 60.00,
-    contextLength: '200K tokens',
-    performance: 6,
-    status: 'available',
-    description: '最高峰推論モデル',
-  },
-  {
-    id: 'o1-mini',
-    name: 'o1 Mini',
-    provider: 'OpenAI',
-    inputCost: 3.00,
-    outputCost: 12.00,
-    contextLength: '128K tokens',
-    performance: 5,
-    status: 'available',
-    description: '推論特化・軽量版',
-  },
-  // ========================================
   // Google Gemini Models
   // ========================================
   {
@@ -532,17 +484,6 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
     description: 'コスパ最強・万能',
   },
   {
-    id: 'gemini-3-flash-preview',
-    name: 'Gemini 3 Flash Preview',
-    provider: 'Google',
-    inputCost: 0.50,
-    outputCost: 3.00,
-    contextLength: '1M tokens',
-    performance: 4,
-    status: 'preview',
-    description: '次世代プレビュー',
-  },
-  {
     id: 'gemini-2.5-pro',
     name: 'Gemini 2.5 Pro',
     provider: 'Google',
@@ -553,21 +494,9 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
     status: 'available',
     description: '高精度・長文分析',
   },
-  {
-    id: 'gemini-3-pro-preview',
-    name: 'Gemini 3 Pro Preview',
-    provider: 'Google',
-    inputCost: 2.00,
-    outputCost: 12.00,
-    contextLength: '2M tokens',
-    performance: 6,
-    status: 'preview',
-    description: '最高性能（プレビュー）',
-  },
   // ========================================
   // Anthropic Claude Models
   // ========================================
-  // Claude 4.5シリーズ（最新）
   {
     id: 'claude-sonnet-4-5-20250929',
     name: 'Claude Sonnet 4.5',
@@ -590,7 +519,6 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
     status: 'recommended',
     description: '最新Haiku・最速コスパ良好',
   },
-  // Claude 3.5シリーズ
   {
     id: 'claude-3-5-sonnet-20241022',
     name: 'Claude 3.5 Sonnet v2',
@@ -600,20 +528,8 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
     contextLength: '200K tokens',
     performance: 4,
     status: 'available',
-    description: '3.5 Sonnet最新版',
+    description: '実績ある高品質モデル',
   },
-  {
-    id: 'claude-3-5-sonnet-20240620',
-    name: 'Claude 3.5 Sonnet',
-    provider: 'Anthropic',
-    inputCost: 3.00,
-    outputCost: 15.00,
-    contextLength: '200K tokens',
-    performance: 4,
-    status: 'available',
-    description: '3.5 Sonnet初期版',
-  },
-  // Claude 3.5 Haikuシリーズ
   {
     id: 'claude-3-5-haiku-20241022',
     name: 'Claude 3.5 Haiku',
@@ -624,18 +540,6 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
     performance: 4,
     status: 'available',
     description: '高速・コスパ良好',
-  },
-  // Claude 3シリーズ
-  {
-    id: 'claude-3-haiku-20240307',
-    name: 'Claude 3 Haiku',
-    provider: 'Anthropic',
-    inputCost: 0.25,
-    outputCost: 1.25,
-    contextLength: '200K tokens',
-    performance: 3,
-    status: 'available',
-    description: '旧世代・軽量モデル',
   },
 ];
 
@@ -813,10 +717,10 @@ export const PLAN_AI_PRESETS = {
   },
   pro: {
     presetA: {
-      name: '論理重視',
-      outline: { model: 'o3-mini', provider: 'openai' as const, cost: 4.40 },
-      writing: { model: 'o3-mini', provider: 'openai' as const, cost: 4.40 },
-      description: 'o3-miniで統一。売れるロジックと賢い執筆。',
+      name: '高コスパ',
+      outline: { model: 'gpt-5-mini', provider: 'openai' as const, cost: 2.00 },
+      writing: { model: 'gpt-5-mini', provider: 'openai' as const, cost: 2.00 },
+      description: 'GPT-5 Miniで統一。高品質かつコスト効率が良い。',
     },
     presetB: {
       name: '情緒重視',
@@ -832,18 +736,18 @@ export const PLAN_AI_PRESETS = {
   business: {
     presetA: {
       name: '最高峰',
-      outline: { model: 'o3-mini', provider: 'openai' as const, cost: 4.40 },
+      outline: { model: 'gpt-5-mini', provider: 'openai' as const, cost: 2.00 },
       writing: { model: 'claude-3-5-sonnet-20241022', provider: 'anthropic' as const, cost: 15.00 },
-      description: 'o3-miniで最高の構成、Sonnetで最高品質の執筆。',
+      description: 'GPT-5 Miniで構成、Sonnetで最高品質の執筆。',
     },
     presetB: {
-      name: '推論特化',
+      name: '品質統一',
       outline: { model: 'claude-3-5-sonnet-20241022', provider: 'anthropic' as const, cost: 15.00 },
-      writing: { model: 'o3-mini', provider: 'openai' as const, cost: 4.40 },
-      description: 'Sonnetで構成、o3-miniで深い推論執筆。',
+      writing: { model: 'gpt-5-mini', provider: 'openai' as const, cost: 2.00 },
+      description: 'Sonnetで構成、GPT-5 Miniで執筆。',
     },
     customDefault: {
-      outlineModel: 'o3-mini',
+      outlineModel: 'gpt-5-mini',
       writingModel: 'claude-3-5-sonnet-20241022',
     },
   },
@@ -982,10 +886,10 @@ export const PLAN_AI_PRESETS = {
   },
   initial_business: {
     presetA: {
-      name: '論理重視',
-      outline: { model: 'o3-mini', provider: 'openai' as const, cost: 4.40 },
-      writing: { model: 'o3-mini', provider: 'openai' as const, cost: 4.40 },
-      description: 'o3-miniで統一。売れるロジックと賢い執筆。',
+      name: '高コスパ',
+      outline: { model: 'gpt-5-mini', provider: 'openai' as const, cost: 2.00 },
+      writing: { model: 'gpt-5-mini', provider: 'openai' as const, cost: 2.00 },
+      description: 'GPT-5 Miniで統一。高品質かつコスト効率が良い。',
     },
     presetB: {
       name: '情緒重視',
@@ -1007,7 +911,7 @@ export const PLAN_AI_PRESETS = {
  */
 export const MODEL_CONFIG = {
   quality: {
-    outline: 'o3-mini',                       // 構成作成用（高品質）
+    outline: 'gpt-5-mini',                    // 構成作成用（高品質）
     writing: 'claude-sonnet-4-5-20250929',   // 執筆用（Claude Sonnet 4.5）
     provider: 'openai' as const,              // OpenAI系モデル（outlineに合わせる）
   },

@@ -350,8 +350,8 @@ function generateMockContent(sectionTitle: string, styleId: WritingStyleId = 'de
 <p>これはデモモードで生成されたコンテンツです。実際のAI APIキーを設定すると、高品質なコンテンツが生成されます。</p>
 <p><strong>ハイブリッドクレジットシステム</strong>により、Proプラン以上のユーザーは「高品質AI」モードと「高速AI」モードを選択できます。</p>
 <ul>
-<li>高品質AIモード: Claude 3.5 Sonnet, o3-miniなどの高性能モデル</li>
-<li>高速AIモード: Gemini 2.0 Flashなどの高速・低コストモデル</li>
+<li>高品質AIモード: Claude Sonnet 4.5, GPT-5 Miniなどの高性能モデル</li>
+<li>高速AIモード: Gemini 2.5 Flashなどの高速・低コストモデル</li>
 </ul>`;
 }
 
