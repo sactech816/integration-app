@@ -132,7 +132,7 @@ export default function SalesLetterEditor({
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   
   // モーダル状態
-  const [showTemplateModal, setShowTemplateModal] = useState(!initialData);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState<string | null>(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
@@ -624,6 +624,17 @@ export default function SalesLetterEditor({
         <div className="flex flex-col lg:flex-row">
           {/* 左パネル: エディタ */}
           <div className={`w-full lg:w-1/2 p-4 ${activeTab === 'preview' ? 'hidden lg:block' : ''}`}>
+            {/* テンプレート選択ボタン - 一番上 */}
+            <div className="mb-4">
+              <button
+                onClick={() => setShowTemplateModal(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-xl hover:border-rose-300 hover:bg-rose-50 transition-colors"
+              >
+                <FileText size={18} className="text-rose-500" />
+                <span className="font-medium text-gray-700">テンプレートを選択</span>
+              </button>
+            </div>
+
             {/* プロ向け説明文 */}
             <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 mb-4">
               <p className="text-sm text-rose-700">
@@ -631,7 +642,7 @@ export default function SalesLetterEditor({
               </p>
             </div>
 
-            {/* 基本設定（各種オプション・背景・幅設定） - 一番上に配置 */}
+            {/* 基本設定（各種オプション・背景・幅設定） */}
             <ContentSettingsPanel
               settings={settings}
               onUpdate={(updates) => setSettings(prev => ({ ...prev, ...updates }))}
@@ -646,17 +657,6 @@ export default function SalesLetterEditor({
               setSlugError={setSlugError}
               isNewContent={!initialData?.slug && !slug}
             />
-
-            {/* テンプレート選択リンク */}
-            <div className="mb-4">
-              <button
-                onClick={() => setShowTemplateModal(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-xl hover:border-rose-300 hover:bg-rose-50 transition-colors"
-              >
-                <FileText size={18} className="text-rose-500" />
-                <span className="font-medium text-gray-700">テンプレートを選択</span>
-              </button>
-            </div>
 
             {/* ブロック追加 */}
             <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
