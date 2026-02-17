@@ -6,11 +6,12 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
+import AuthModal from '@/components/shared/AuthModal';
+import { getReferralCode } from '@/components/affiliate/AffiliateTracker';
 import {
   Check,
   Crown,
   Sparkles,
-  ArrowRight,
   Rocket,
   PlusCircle,
   Globe,
@@ -30,6 +31,9 @@ import {
   Mail,
   ImagePlus,
   MessageCircle,
+  X,
+  Loader2,
+  ExternalLink,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -50,13 +54,16 @@ const iconMap: Record<string, LucideIcon> = {
 
 export default function PricingPageClient() {
   const router = useRouter();
-  const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [user, setUser] = useState<{ email?: string; id?: string } | null>(null);
+  const [showAuth, setShowAuth] = useState(false);
+  const [showProPlanModal, setShowProPlanModal] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
     const init = async () => {
       if (supabase) {
         const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user || null);
+        setUser(session?.user ? { email: session.user.email ?? undefined, id: session.user.id } : null);
       }
     };
     init();
@@ -81,6 +88,32 @@ export default function PricingPageClient() {
     } else {
       router.push(`/${page}`);
     }
+  };
+
+  // プロプラン決済処理（トップページと同じフロー）
+  const handleProPlanCheckout = async () => {
+    setIsProcessingPayment(true);
+    try {
+      const email = user?.email;
+      const referralCode = getReferralCode();
+      if (referralCode && email) {
+        try {
+          await fetch('/api/affiliate/pending', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, referralCode, service: 'makers', planTier: 'pro', planPeriod: 'monthly', userId: user?.id || null }),
+          });
+        } catch (err) { console.warn('Failed to save pending affiliate:', err); }
+      }
+      const response = await fetch('/api/subscription/checkout', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId: 'makers_pro_monthly', userId: user?.id || null, email: email || null }),
+      });
+      const data = await response.json();
+      if (data.url) { window.location.href = data.url; }
+      else if (data.error) { throw new Error(data.error); }
+      else { alert('決済ページの準備中です。しばらくお待ちください。'); }
+    } catch (error) { console.error('決済エラー:', error); alert('決済の開始に失敗しました。もう一度お試しください。'); }
+    finally { setIsProcessingPayment(false); }
   };
 
   // 機能の利用可否を表示するヘルパー
@@ -108,8 +141,60 @@ export default function PricingPageClient() {
         setPage={navigateTo}
         user={user}
         onLogout={handleLogout}
-        setShowAuth={() => router.push('/?auth=true')}
+        setShowAuth={setShowAuth}
       />
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} onNavigate={navigateTo} />
+
+      {/* プロプランモーダル */}
+      {showProPlanModal && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-fade-in" onClick={e => e.stopPropagation()}>
+            <div className="sticky top-0 text-white px-6 py-5 flex justify-between items-center z-10 rounded-t-3xl" style={{ backgroundColor: '#f97316' }}>
+              <div className="flex items-center gap-3"><Crown size={24} /><h3 className="font-bold text-xl">プロプラン</h3></div>
+              <button onClick={() => setShowProPlanModal(false)} className="text-white/80 hover:text-white transition p-1"><X size={24} /></button>
+            </div>
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <div className="text-4xl font-black" style={{ color: '#5d4037' }}>¥3,980<span className="text-lg font-normal text-gray-500">/月</span></div>
+                <p className="text-sm text-gray-500 mt-1">税込 / いつでも解約可能</p>
+              </div>
+              <div className="rounded-2xl p-5 mb-6" style={{ backgroundColor: '#fffbf0' }}>
+                <h4 className="font-bold mb-4 flex items-center gap-2" style={{ color: '#5d4037' }}>
+                  <Sparkles size={18} style={{ color: '#f97316' }} />プロプランで使える機能
+                </h4>
+                <ul className="space-y-3">
+                  {[
+                    { text: 'フリープランの全機能', highlight: false },
+                    { text: 'アクセス解析', highlight: true },
+                    { text: 'AI利用（優先・回数無制限）', highlight: true },
+                    { text: 'HTMLダウンロード', highlight: true },
+                    { text: '埋め込みコード発行', highlight: true },
+                    { text: '広告非表示', highlight: true },
+                    { text: '優先サポート', highlight: true },
+                  ].map((item, idx) => (
+                    <li key={idx} className="flex items-center gap-3">
+                      <Check size={18} style={{ color: item.highlight ? '#f97316' : '#84cc16' }} />
+                      <span className={`text-sm ${item.highlight ? 'font-bold' : ''}`} style={{ color: '#5d4037' }}>{item.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {!user && (
+                <div className="border rounded-2xl p-4 mb-6" style={{ backgroundColor: '#fffbf0', borderColor: '#ffedd5' }}>
+                  <p className="text-sm" style={{ color: '#5d4037' }}><span className="font-bold">ヒント：</span>ログインすると、購入履歴がアカウントに紐付けられます。</p>
+                  <button onClick={() => { setShowProPlanModal(false); setShowAuth(true); }} className="mt-2 text-sm font-bold hover:underline" style={{ color: '#f97316' }}>ログイン / 新規登録はこちら →</button>
+                </div>
+              )}
+              <button onClick={handleProPlanCheckout} disabled={isProcessingPayment}
+                className="w-full text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1 transform"
+                style={{ backgroundColor: '#f97316' }}>
+                {isProcessingPayment ? (<><Loader2 className="animate-spin" size={20} />処理中...</>) : (<><CreditCard size={20} />決済ページへ進む<ExternalLink size={16} /></>)}
+              </button>
+              <p className="text-xs text-gray-500 text-center mt-4">Stripeによる安全な決済処理。カード情報は当サイトに保存されません。</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ========== ヒーロー ========== */}
       <section className="pt-20 pb-16 text-center">
@@ -136,6 +221,13 @@ export default function PricingPageClient() {
               const isGuest = plan.id === 'guest';
               const isFree = plan.id === 'free';
               const isPro = plan.id === 'pro';
+
+              const handleCta = () => {
+                if (isGuest) router.push('/#create-section');
+                else if (isFree) setShowAuth(true);
+                else setShowProPlanModal(true);
+              };
+
               return (
                 <div
                   key={plan.id}
@@ -147,8 +239,8 @@ export default function PricingPageClient() {
                         : 'border-2 bg-white hover:shadow-lg'
                   }`}
                   style={{
-                    borderColor: isFree ? '#f97316' : undefined,
-                    backgroundColor: isPro ? '#fffbf0' : isGuest ? 'white' : undefined,
+                    borderColor: isFree ? '#f97316' : isGuest ? '#ffedd5' : undefined,
+                    backgroundColor: isPro ? '#fffbf0' : undefined,
                   }}
                 >
                   <div className="mb-4 text-center">
@@ -171,7 +263,7 @@ export default function PricingPageClient() {
                       <span className="text-xs text-gray-500">{plan.priceUnit}</span>
                     </div>
                   </div>
-                  <p className="text-xs text-center mb-6 whitespace-pre-line" style={{ color: isFree ? '#5d4037' : undefined, fontWeight: isFree ? 700 : undefined }}>
+                  <p className="text-xs text-center mb-6 whitespace-pre-line" style={{ color: '#5d4037', fontWeight: isFree ? 700 : undefined }}>
                     {plan.description}
                   </p>
 
@@ -188,8 +280,8 @@ export default function PricingPageClient() {
                     })}
                   </ul>
 
-                  <Link
-                    href={plan.ctaHref}
+                  <button
+                    onClick={handleCta}
                     className={`block w-full py-3 px-4 font-bold text-center rounded-2xl transition text-sm ${
                       isPro
                         ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-md hover:-translate-y-1 transform'
@@ -204,7 +296,7 @@ export default function PricingPageClient() {
                     }
                   >
                     {plan.ctaLabel}
-                  </Link>
+                  </button>
                 </div>
               );
             })}
@@ -313,11 +405,11 @@ export default function PricingPageClient() {
         </div>
       </section>
 
-      {/* ========== FAQ ========== */}
+      {/* ========== FAQ（プロプランに関する質問） ========== */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold" style={{ color: '#5d4037' }}>よくある質問</h2>
+            <h2 className="text-3xl font-bold" style={{ color: '#5d4037' }}>プロプランに関するよくある質問</h2>
           </div>
           <div className="max-w-3xl mx-auto space-y-4">
             {PRICING_FAQ.map((faq, index) => (
@@ -340,30 +432,17 @@ export default function PricingPageClient() {
       {/* ========== CTA ========== */}
       <section className="py-20" style={{ backgroundColor: '#fffbf0' }}>
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4" style={{ color: '#5d4037' }}>
-            まずは無料で始めて、<br className="md:hidden" />ビジネスの可能性を広げましょう
+          <h2 className="text-2xl md:text-3xl font-bold mb-3" style={{ color: '#5d4037' }}>
+            ビジネスの成長を、プロプランで加速させましょう
           </h2>
-          <p className="text-gray-600 mb-8 max-w-xl mx-auto">
-            フリープランで基本機能をお試しいただき、ビジネスの成長に合わせてプロプランへアップグレード。
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center gap-2 text-white font-bold px-8 py-4 rounded-2xl transition shadow-lg hover:-translate-y-1 transform text-sm"
-              style={{ backgroundColor: '#f97316' }}
-            >
-              <Sparkles size={20} />
-              無料で始める
-            </Link>
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold px-8 py-4 rounded-2xl transition shadow-lg hover:-translate-y-1 transform text-sm"
-            >
-              <Crown size={20} />
-              プロプランに申し込む
-              <ArrowRight size={18} />
-            </Link>
-          </div>
+          <p className="text-gray-500 mb-8 text-sm">月額¥3,980 ・ いつでも解約OK</p>
+          <button
+            onClick={() => setShowProPlanModal(true)}
+            className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold px-12 py-5 rounded-2xl transition shadow-xl hover:-translate-y-1 transform text-lg"
+          >
+            <Crown size={24} />
+            プロプランに申し込む
+          </button>
         </div>
       </section>
 
