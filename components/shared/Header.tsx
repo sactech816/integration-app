@@ -33,7 +33,8 @@ import {
   Monitor,
   CalendarCheck,
   PenTool,
-  Crown
+  Crown,
+  Store
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -490,6 +491,15 @@ const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
+            {/* ===== スキルマーケット（単独リンク） ===== */}
+            <Link
+              href="/marketplace"
+              className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg px-3 py-2 transition-all"
+            >
+              <Store size={16} />
+              <span>スキルマーケット</span>
+            </Link>
+
             {/* ===== お知らせ（単独リンク） ===== */}
             <Link
               href="/announcements"
@@ -733,6 +743,17 @@ const Header: React.FC<HeaderProps> = ({
                     <div className="text-left">
                       <span className="font-medium text-purple-700">作品集（ポータル）</span>
                       <p className="text-xs text-gray-500">みんなの作品を見る</p>
+                    </div>
+                  </Link>
+                  <Link
+                    href="/marketplace"
+                    onClick={closeMenus}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 transition-colors"
+                  >
+                    <Store size={20} className="text-indigo-600" />
+                    <div className="text-left">
+                      <span className="font-medium text-indigo-700">スキルマーケット</span>
+                      <p className="text-xs text-gray-500">プロに依頼・スキルを出品</p>
                     </div>
                   </Link>
                   <Link

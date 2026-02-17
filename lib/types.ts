@@ -1246,3 +1246,107 @@ export const AI_USAGE_TYPE_LABELS: Record<AIUsageType, string> = {
   standard: 'Standard Credits'
 };
 
+// -------------------------------------------
+// マーケットプレイス関連の型定義
+// -------------------------------------------
+
+export type MarketplaceOrderStatus =
+  | 'requested'
+  | 'accepted'
+  | 'in_progress'
+  | 'delivered'
+  | 'completed'
+  | 'cancelled';
+
+export type MarketplacePriceType = 'fixed' | 'range' | 'negotiable';
+export type MarketplaceListingStatus = 'draft' | 'published' | 'paused' | 'archived';
+export type MarketplacePaymentStatus = 'none' | 'held' | 'captured' | 'refunded';
+
+export interface MarketplaceProfile {
+  id: string;
+  user_id: string;
+  display_name: string;
+  bio: string | null;
+  avatar_url: string | null;
+  skills: string[];
+  portfolio_urls: string[];
+  response_time: string | null;
+  stripe_connect_id: string | null;
+  avg_rating: number;
+  total_reviews: number;
+  total_orders: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MarketplaceListing {
+  id: string;
+  seller_id: string;
+  category: string;
+  is_tool_linked: boolean;
+  linked_service_type: string | null;
+  title: string;
+  description: string;
+  thumbnail_url: string | null;
+  price_min: number;
+  price_max: number | null;
+  price_type: MarketplacePriceType;
+  delivery_days: number | null;
+  status: MarketplaceListingStatus;
+  order_count: number;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  // JOIN結果
+  seller_profile?: MarketplaceProfile;
+}
+
+export interface MarketplaceOrder {
+  id: string;
+  listing_id: string | null;
+  buyer_id: string;
+  seller_id: string;
+  title: string;
+  description: string | null;
+  budget: number | null;
+  status: MarketplaceOrderStatus;
+  payment_intent_id: string | null;
+  payment_status: MarketplacePaymentStatus;
+  platform_fee: number | null;
+  seller_payout: number | null;
+  accepted_at: string | null;
+  delivered_at: string | null;
+  completed_at: string | null;
+  cancelled_at: string | null;
+  created_at: string;
+  updated_at: string;
+  // JOIN結果
+  listing?: MarketplaceListing;
+  buyer_email?: string;
+  seller_profile?: MarketplaceProfile;
+}
+
+export interface MarketplaceMessage {
+  id: string;
+  order_id: string;
+  sender_id: string;
+  sender_type: 'buyer' | 'seller';
+  content: string;
+  is_read: boolean;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface MarketplaceReview {
+  id: string;
+  order_id: string;
+  reviewer_id: string;
+  seller_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  // JOIN結果
+  reviewer_email?: string;
+}
+
