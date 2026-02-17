@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { BookOpen, Check, ChevronUp } from 'lucide-react';
+import { BookOpen, Check } from 'lucide-react';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
@@ -57,8 +57,6 @@ const LP_UNIVAPAY_LINKS: Record<LPPlanType, string> = {
 export default function KindleLPClient() {
   const [user, setUser] = useState<{ email?: string; id?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
-
   // 診断クイズ用のState
   const [quizStarted, setQuizStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -84,11 +82,6 @@ export default function KindleLPClient() {
     };
     init();
 
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 400);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleLogout = async () => {
@@ -158,10 +151,6 @@ export default function KindleLPClient() {
 
     const params = new URLSearchParams({ email: checkoutEmail });
     window.location.href = `${univaPayLink}?${params.toString()}`;
-  };
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // クイズのデータ
@@ -871,17 +860,6 @@ export default function KindleLPClient() {
         setShowAuth={setShowAuth}
       />
 
-      {/* スクロールトップボタン */}
-      {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-6 right-6 p-3 rounded-full shadow-2xl transition-all transform hover:scale-110 z-50 text-white"
-          style={{ backgroundColor: '#f97316' }}
-          aria-label="ページトップへ戻る"
-        >
-          <ChevronUp size={24} />
-        </button>
-      )}
     </div>
   );
 }

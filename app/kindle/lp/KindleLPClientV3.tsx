@@ -6,7 +6,6 @@ import {
   BookOpen, 
   Check, 
   ChevronDown,
-  ChevronUp,
   Star,
   Lightbulb,
   Wand2
@@ -64,8 +63,6 @@ export default function KindleLPClient() {
   const [user, setUser] = useState<{ email?: string; id?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [showScrollTop, setShowScrollTop] = useState(false);
-
   // 診断クイズ用のState
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [quizResult, setQuizResult] = useState(false);
@@ -92,13 +89,6 @@ export default function KindleLPClient() {
     };
     init();
 
-    // スクロールイベント
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 400);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // プラン選択ボタンクリック時の処理（メール入力フォームを表示）
@@ -157,10 +147,6 @@ export default function KindleLPClient() {
     // UnivaPayリンクにメールアドレスを付与してリダイレクト
     const params = new URLSearchParams({ email: checkoutEmail });
     window.location.href = `${univaPayLink}?${params.toString()}`;
-  };
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const quizQuestions = [
@@ -860,16 +846,6 @@ export default function KindleLPClient() {
       {/* フッター - KDLFooter使用 */}
       <KDLFooter />
 
-      {/* スクロールトップボタン */}
-      {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-6 right-6 bg-orange-400 hover:bg-orange-500 text-white p-3 rounded-full shadow-2xl transition-all transform hover:scale-110 z-50"
-          aria-label="ページトップへ戻る"
-        >
-          <ChevronUp size={24} />
-        </button>
-      )}
     </div>
   );
 }

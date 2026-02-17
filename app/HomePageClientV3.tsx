@@ -9,7 +9,6 @@ import ServiceSelector from '@/components/shared/ServiceSelector';
 import AnnouncementBanner from '@/components/shared/AnnouncementBanner';
 import AffiliateTracker from '@/components/affiliate/AffiliateTracker';
 import { getReferralCode } from '@/components/affiliate/AffiliateTracker';
-import FeedbackModal from '@/components/shared/FeedbackModal';
 import {
   Sparkles,
   UserCircle,
@@ -31,7 +30,6 @@ import {
   CreditCard,
   Crown,
   ExternalLink,
-  ArrowUp,
   Users,
   FileText,
   Gift,
@@ -40,9 +38,9 @@ import {
   Stamp,
   PenTool,
   BookOpen,
-  MessageSquareHeart,
 } from 'lucide-react';
 import { setUserId } from '@/lib/gtag';
+import { PLANS, PLAN_FEATURES } from '@/constants/pricing';
 
 // V3: V2内容 + KindleLPV4風デザイン + 構成改修版
 
@@ -80,12 +78,6 @@ export default function HomePageClientV3() {
   // プロプランモーダル用のstate
   const [showProPlanModal, setShowProPlanModal] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-
-  // トップに戻るボタン用のstate
-  const [showScrollTop, setShowScrollTop] = useState(false);
-
-  // ご意見箱モーダル用のstate
-  const [showFeedback, setShowFeedback] = useState(false);
 
   // 統計カウント取得（ポータルと同じ方式）
   const fetchTotalCounts = useCallback(async () => {
@@ -144,14 +136,6 @@ export default function HomePageClientV3() {
     init();
     fetchTotalCounts();
   }, [fetchTotalCounts]);
-
-  useEffect(() => {
-    const handleScroll = () => setShowScrollTop(window.scrollY > 300);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   const handleLogout = async () => {
     if (supabase) { await supabase.auth.signOut(); setUser(null); }
@@ -750,68 +734,100 @@ export default function HomePageClientV3() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
-            {/* ゲスト */}
-            <div className="border-2 rounded-3xl p-6 flex flex-col bg-white hover:shadow-lg transition" style={{ borderColor: '#ffedd5' }}>
-              <div className="mb-4 text-center">
-                <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ backgroundColor: '#fffbf0', color: '#5d4037' }}>お試し体験</span>
-                <h3 className="text-xl font-bold mt-2" style={{ color: '#5d4037' }}>ゲスト</h3>
-                <div className="mt-1"><span className="text-3xl font-bold" style={{ color: '#5d4037' }}>¥0</span><span className="text-xs text-gray-500">/ 回</span></div>
-              </div>
-              <p className="text-xs text-gray-500 mb-6 text-center">登録なしで、今すぐお試し作成。<br />※保存はされません</p>
-              <ul className="space-y-2 mb-6 flex-1 border-t pt-4" style={{ borderColor: '#ffedd5' }}>
-                <li className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}><span>新規作成（全13種）</span><Check size={16} style={{ color: '#84cc16' }} /></li>
-                <li className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}><span>ポータル掲載</span><Check size={16} style={{ color: '#84cc16' }} /></li>
-                <li className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}><span>URL発行</span><Check size={16} style={{ color: '#84cc16' }} /></li>
-                {['編集・更新','アフィリエイト','アクセス解析','AI利用','ゲーミフィケーション','HTMLダウンロード','埋め込みコード','コピーライト非表示','各種セミナー','グループコンサル'].map(f => (
-                  <li key={f} className="flex items-center justify-between text-sm font-bold text-gray-400"><span>{f}</span><span className="text-gray-300">×</span></li>
-                ))}
-              </ul>
-              <button onClick={() => navigateTo('create')} className="block w-full py-3 px-4 font-bold text-center rounded-2xl transition text-sm" style={{ backgroundColor: '#fffbf0', color: '#5d4037' }}>登録せず試す</button>
-            </div>
-
-            {/* フリープラン */}
-            <div className="border-4 rounded-3xl p-6 flex flex-col bg-white shadow-xl" style={{ borderColor: '#f97316' }}>
-              <div className="mb-4 text-center">
-                <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ backgroundColor: '#ffedd5', color: '#f97316' }}>標準</span>
-                <h3 className="text-xl font-bold mt-2" style={{ color: '#f97316' }}>フリープラン</h3>
-                <div className="mt-1"><span className="text-3xl font-bold" style={{ color: '#5d4037' }}>¥0</span><span className="text-xs text-gray-500">/ 月</span></div>
-              </div>
-              <p className="text-xs mb-6 text-center font-bold" style={{ color: '#5d4037' }}>30秒でできるアカウント登録だけでOK！<br />ずっと無料で使い放題。</p>
-              <ul className="space-y-2 mb-6 flex-1 border-t pt-4" style={{ borderColor: '#ffedd5' }}>
-                <li className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}><span>新規作成（全13種）</span><Check size={16} style={{ color: '#f97316' }} /></li>
-                {['ポータル掲載','URL発行','編集・更新','アフィリエイト'].map(f => (
-                  <li key={f} className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}><span>{f}</span><Check size={16} style={{ color: '#f97316' }} /></li>
-                ))}
-                <li className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}><span>AI利用</span><span className="text-xs" style={{ color: '#f97316' }}>回数制限</span></li>
-                <li className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}><span>ゲーミフィケーション</span><span className="text-xs" style={{ color: '#f97316' }}>回数制限</span></li>
-                {['アクセス解析','HTMLダウンロード','埋め込みコード','コピーライト非表示','各種セミナー','グループコンサル'].map(f => (
-                  <li key={f} className="flex items-center justify-between text-sm font-bold text-gray-400"><span>{f}</span><span className="text-gray-300">×</span></li>
-                ))}
-              </ul>
-              <button onClick={() => setShowAuth(true)} className="block w-full py-3 px-4 text-white font-bold text-center rounded-2xl transition text-sm shadow-md hover:-translate-y-1 transform" style={{ backgroundColor: '#f97316' }}>無料で登録する</button>
-            </div>
-
-            {/* プロプラン */}
-            <div className="border-2 border-purple-200 rounded-3xl p-6 flex flex-col hover:shadow-lg transition" style={{ backgroundColor: '#fffbf0' }}>
-              <div className="mb-4 text-center">
-                <span className="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full">ビジネス向け</span>
-                <h3 className="text-xl font-bold text-purple-800 mt-2">プロプラン</h3>
-                <div className="mt-1"><span className="text-3xl font-bold" style={{ color: '#5d4037' }}>¥3,980</span><span className="text-xs text-gray-500">/ 月</span></div>
-              </div>
-              <p className="text-xs text-gray-600 mb-6 text-center">本格的なビジネス運用に。<br />制限なしで使い放題。</p>
-              <ul className="space-y-2 mb-6 flex-1 border-t pt-4" style={{ borderColor: '#ffedd5' }}>
-                <li className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}><span>新規作成（全13種）</span><Check size={16} className="text-purple-500" /></li>
-                {['ポータル掲載','URL発行','編集・更新','アフィリエイト','アクセス解析'].map(f => (
-                  <li key={f} className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}><span>{f}</span><Check size={16} className="text-purple-500" /></li>
-                ))}
-                <li className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}><span>AI利用</span><span className="text-xs text-purple-500">優先</span></li>
-                <li className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}><span>ゲーミフィケーション</span><span className="text-xs text-purple-500">無制限</span></li>
-                {['HTMLダウンロード','埋め込みコード','コピーライト非表示','各種セミナー','グループコンサル'].map(f => (
-                  <li key={f} className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}><span>{f}</span><Check size={16} className="text-purple-500" /></li>
-                ))}
-              </ul>
-              <button onClick={() => setShowProPlanModal(true)} className="block w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold text-center rounded-2xl transition text-sm shadow-md hover:-translate-y-1 transform">プロプランに申し込む</button>
-            </div>
+            {PLANS.map((plan) => {
+              const isGuest = plan.id === 'guest';
+              const isFree = plan.id === 'free';
+              const isPro = plan.id === 'pro';
+              // チェックマークの色
+              const checkColor = isPro ? 'text-purple-500' : isFree ? undefined : undefined;
+              const checkStyle = isPro ? undefined : isFree ? { color: '#f97316' } : { color: '#84cc16' };
+              // CTAハンドラ
+              const handleCta = () => {
+                if (isGuest) navigateTo('create');
+                else if (isFree) setShowAuth(true);
+                else setShowProPlanModal(true);
+              };
+              return (
+                <div
+                  key={plan.id}
+                  className={`rounded-3xl p-6 flex flex-col transition ${
+                    isFree ? 'border-4 bg-white shadow-xl' : isPro ? 'border-2 border-purple-200' : 'border-2 bg-white hover:shadow-lg'
+                  }`}
+                  style={{
+                    borderColor: isFree ? '#f97316' : isGuest ? '#ffedd5' : undefined,
+                    backgroundColor: isPro ? '#fffbf0' : undefined,
+                  }}
+                >
+                  <div className="mb-4 text-center">
+                    <span
+                      className={`text-xs font-bold px-3 py-1 rounded-full ${isPro ? 'bg-purple-100 text-purple-700' : ''}`}
+                      style={!isPro ? { backgroundColor: isFree ? '#ffedd5' : '#fffbf0', color: isFree ? '#f97316' : '#5d4037' } : undefined}
+                    >
+                      {plan.badge}
+                    </span>
+                    <h3
+                      className={`text-xl font-bold mt-2 ${isPro ? 'text-purple-800' : ''}`}
+                      style={!isPro ? { color: isFree ? '#f97316' : '#5d4037' } : undefined}
+                    >
+                      {plan.name}
+                    </h3>
+                    <div className="mt-1">
+                      <span className="text-3xl font-bold" style={{ color: '#5d4037' }}>{plan.price}</span>
+                      <span className="text-xs text-gray-500">{plan.priceUnit}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs mb-6 text-center whitespace-pre-line" style={{ color: isFree ? '#5d4037' : undefined, fontWeight: isFree ? 700 : undefined }}>
+                    {plan.description}
+                  </p>
+                  <ul className="space-y-2 mb-6 flex-1 border-t pt-4" style={{ borderColor: '#ffedd5' }}>
+                    {PLAN_FEATURES.map((feature) => {
+                      const status = feature[plan.id];
+                      const note = isFree ? feature.freeNote : isPro ? feature.proNote : undefined;
+                      if (status === 'no') {
+                        return (
+                          <li key={feature.label} className="flex items-center justify-between text-sm font-bold text-gray-400">
+                            <span>{feature.label}</span><span className="text-gray-300">×</span>
+                          </li>
+                        );
+                      }
+                      if (status === 'limited') {
+                        return (
+                          <li key={feature.label} className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}>
+                            <span>{feature.label}</span>
+                            <span className="text-xs" style={isFree ? { color: '#f97316' } : undefined}>{note || '制限あり'}</span>
+                          </li>
+                        );
+                      }
+                      // yes
+                      return (
+                        <li key={feature.label} className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}>
+                          <span>{feature.label}</span>
+                          {note
+                            ? <span className={`text-xs ${isPro ? 'text-purple-500' : ''}`} style={!isPro ? checkStyle : undefined}>{note}</span>
+                            : <Check size={16} className={checkColor} style={checkStyle} />
+                          }
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <button
+                    onClick={handleCta}
+                    className={`block w-full py-3 px-4 font-bold text-center rounded-2xl transition text-sm ${
+                      isPro ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-md hover:-translate-y-1 transform'
+                      : isFree ? 'text-white shadow-md hover:-translate-y-1 transform'
+                      : ''
+                    }`}
+                    style={
+                      isFree ? { backgroundColor: '#f97316' }
+                      : isGuest ? { backgroundColor: '#fffbf0', color: '#5d4037' }
+                      : undefined
+                    }
+                  >
+                    {plan.ctaLabel}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -935,30 +951,6 @@ export default function HomePageClientV3() {
           </a>
         </div>
       </section>
-
-      {/* ご意見箱モーダル */}
-      <FeedbackModal
-        isOpen={showFeedback}
-        onClose={() => setShowFeedback(false)}
-        user={user as { email?: string; id?: string } | null}
-        onLoginRequest={() => { setShowFeedback(false); setShowAuth(true); }}
-      />
-
-      {/* フローティングボタン群 */}
-      {showScrollTop && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
-          <button
-            onClick={() => user ? setShowFeedback(true) : setShowAuth(true)}
-            className="w-12 h-12 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
-            style={{ background: 'linear-gradient(135deg, #818cf8, #6366f1)' }}
-            aria-label="ご意見箱"
-          >
-            <MessageSquareHeart size={22} />
-          </button>
-          <button onClick={scrollToTop} className="w-12 h-12 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
-            style={{ backgroundColor: '#f97316' }} aria-label="トップに戻る"><ArrowUp size={24} /></button>
-        </div>
-      )}
 
       <Footer setPage={navigateTo} onCreate={(service) => service && navigateTo(`${service}/editor`)} user={user} setShowAuth={setShowAuth} />
     </div>
