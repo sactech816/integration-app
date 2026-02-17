@@ -93,7 +93,7 @@ export default function FeedbackModal({ isOpen, onClose, user, onLoginRequest }:
           >
             <MessageSquareHeart size={32} className="text-white" />
           </div>
-          <h3 className="text-xl font-bold" style={{ color: '#5d4037' }}>ご意見箱</h3>
+          <h3 className="text-xl font-bold" style={{ color: '#1f2937' }}>ご意見箱</h3>
           <p className="text-sm text-gray-500 mt-1">あなたの声が、次のアップデートにつながります</p>
         </div>
 
@@ -103,7 +103,7 @@ export default function FeedbackModal({ isOpen, onClose, user, onLoginRequest }:
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#dcfce7' }}>
               <span className="text-3xl">🎉</span>
             </div>
-            <h4 className="text-lg font-bold mb-2" style={{ color: '#5d4037' }}>届きました！</h4>
+            <h4 className="text-lg font-bold mb-2" style={{ color: '#1f2937' }}>届きました！</h4>
             <p className="text-sm text-gray-600 mb-6">
               貴重なお声をありがとうございます。<br />より良いサービスづくりに役立てます。
             </p>
@@ -120,7 +120,7 @@ export default function FeedbackModal({ isOpen, onClose, user, onLoginRequest }:
           <div className="px-6 pb-6">
             {/* 満足度 */}
             <div className="mb-6">
-              <p className="font-bold text-sm mb-1 text-center" style={{ color: '#5d4037' }}>使ってみてどうでしたか？</p>
+              <p className="font-bold text-sm mb-1 text-center" style={{ color: '#1f2937' }}>使ってみてどうでしたか？</p>
               <p className="text-xs text-gray-400 text-center mb-3">星をタップしてください</p>
               <div className="flex justify-center gap-2">
                 {[1, 2, 3, 4, 5].map(n => (
@@ -144,7 +144,7 @@ export default function FeedbackModal({ isOpen, onClose, user, onLoginRequest }:
 
             {/* コメント */}
             <div className="mb-4">
-              <label className="block font-bold text-sm mb-2" style={{ color: '#5d4037' }}>
+              <label className="block font-bold text-sm mb-2" style={{ color: '#1f2937' }}>
                 もっとこうなったらいいな <span className="font-normal text-gray-400">(任意)</span>
               </label>
               <textarea
@@ -161,7 +161,7 @@ export default function FeedbackModal({ isOpen, onClose, user, onLoginRequest }:
 
             {/* 作成ツールURL */}
             <div className="mb-5">
-              <label className="block font-bold text-sm mb-2" style={{ color: '#5d4037' }}>
+              <label className="block font-bold text-sm mb-2" style={{ color: '#1f2937' }}>
                 <span className="inline-flex items-center gap-1.5">
                   <Link2 size={14} style={{ color: '#f97316' }} />
                   作成したツールのURL <span className="font-normal text-gray-400">(任意・複数可)</span>
