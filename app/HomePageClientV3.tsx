@@ -832,6 +832,56 @@ export default function HomePageClientV3() {
         </div>
       </section>
 
+      {/* ========== 11.5 プロプラン詳細への誘導 ========== */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50 border-2 border-purple-100 rounded-3xl p-8 md:p-12">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-1.5 rounded-full mb-4">
+                <Crown size={16} />
+                <span className="font-bold text-sm">Pro Plan</span>
+              </div>
+              <h3 className="text-2xl md:text-3xl font-black mb-3" style={{ color: '#5d4037' }}>
+                プロプランなら、もっとできる。
+              </h3>
+              <p className="text-gray-600 text-sm md:text-base">
+                無料で始めて、ビジネスの成長に合わせてアップグレード。<br className="hidden md:block" />
+                プロプランだけの機能で、集客を加速させましょう。
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              {[
+                { icon: Zap, label: 'AI優先利用', desc: '待ち時間ゼロで\nAIをフル活用' },
+                { icon: TrendingUp, label: 'アクセス解析', desc: 'データで\n改善サイクル' },
+                { icon: Crown, label: 'セミナー参加', desc: '限定セミナーで\nノウハウ習得' },
+                { icon: Star, label: '今後の新機能', desc: 'Pro専用の\n新機能を優先提供' },
+              ].map((item) => (
+                <div key={item.label} className="text-center p-4 bg-white/70 rounded-2xl">
+                  <div className="w-10 h-10 mx-auto mb-2 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                    <item.icon size={18} className="text-white" />
+                  </div>
+                  <div className="font-bold text-sm mb-1" style={{ color: '#5d4037' }}>{item.label}</div>
+                  <div className="text-xs text-gray-500 whitespace-pre-line leading-relaxed">{item.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center">
+              <a
+                href="/pricing"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold px-8 py-4 rounded-2xl transition shadow-lg hover:-translate-y-1 transform text-sm"
+              >
+                <Crown size={18} />
+                プロプランの全機能を見る
+                <ArrowRight size={18} />
+              </a>
+              <p className="text-xs text-gray-500 mt-3">月額¥3,980 ・ いつでも解約OK</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ========== 12. FAQ ========== */}
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
