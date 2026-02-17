@@ -32,7 +32,8 @@ import {
   Calendar,
   Monitor,
   CalendarCheck,
-  PenTool
+  PenTool,
+  Crown
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -498,6 +499,15 @@ const Header: React.FC<HeaderProps> = ({
               <span>お知らせ</span>
             </Link>
 
+            {/* ===== 料金プラン（単独リンク） ===== */}
+            <Link
+              href="/pricing"
+              className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg px-3 py-2 transition-all"
+            >
+              <Crown size={16} />
+              <span>料金プラン</span>
+            </Link>
+
           </nav>
 
           {/* ===== PC版ユーザーアクション ===== */}
@@ -786,6 +796,17 @@ const Header: React.FC<HeaderProps> = ({
                   >
                     <HelpCircle size={20} className="text-gray-500" />
                     <span className="font-medium text-gray-700">よくある質問</span>
+                  </Link>
+                  <Link
+                    href="/pricing"
+                    onClick={closeMenus}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 transition-colors"
+                  >
+                    <Crown size={20} className="text-purple-600" />
+                    <div className="text-left">
+                      <span className="font-medium text-purple-700">料金プラン</span>
+                      <p className="text-xs text-gray-500">Proプランのご案内</p>
+                    </div>
                   </Link>
                 </div>
               </div>

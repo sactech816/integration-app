@@ -137,6 +137,11 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
                   お知らせ
                 </Link>
               </li>
+              <li>
+                <Link href="/pricing" className="hover:text-white transition-colors">
+                  料金プラン
+                </Link>
+              </li>
             </ul>
           </div>
 
