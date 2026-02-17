@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Star, Loader2, Send, MessageSquareHeart } from 'lucide-react';
+import { X, Star, Loader2, Send, MessageSquareHeart, Link2 } from 'lucide-react';
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -14,7 +14,7 @@ export default function FeedbackModal({ isOpen, onClose, user, onLoginRequest }:
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [message, setMessage] = useState('');
-  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [toolUrls, setToolUrls] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
@@ -44,7 +44,7 @@ export default function FeedbackModal({ isOpen, onClose, user, onLoginRequest }:
           userEmail: user.email,
           rating,
           message,
-          youtubeUrl: youtubeUrl || undefined,
+          toolUrls: toolUrls || undefined,
         }),
       });
 
@@ -67,7 +67,7 @@ export default function FeedbackModal({ isOpen, onClose, user, onLoginRequest }:
     setRating(0);
     setHoverRating(0);
     setMessage('');
-    setYoutubeUrl('');
+    setToolUrls('');
     setSubmitted(false);
     setError('');
     onClose();
@@ -94,7 +94,7 @@ export default function FeedbackModal({ isOpen, onClose, user, onLoginRequest }:
             <MessageSquareHeart size={32} className="text-white" />
           </div>
           <h3 className="text-xl font-bold" style={{ color: '#5d4037' }}>ご意見箱</h3>
-          <p className="text-sm text-gray-500 mt-1">ご意見・ご要望をお聞かせください</p>
+          <p className="text-sm text-gray-500 mt-1">あなたの声が、次のアップデートにつながります</p>
         </div>
 
         {submitted ? (
@@ -103,9 +103,9 @@ export default function FeedbackModal({ isOpen, onClose, user, onLoginRequest }:
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#dcfce7' }}>
               <span className="text-3xl">🎉</span>
             </div>
-            <h4 className="text-lg font-bold mb-2" style={{ color: '#5d4037' }}>ありがとうございます！</h4>
+            <h4 className="text-lg font-bold mb-2" style={{ color: '#5d4037' }}>届きました！</h4>
             <p className="text-sm text-gray-600 mb-6">
-              いただいたご意見は今後の改善に<br />活かしてまいります。
+              貴重なお声をありがとうございます。<br />より良いサービスづくりに役立てます。
             </p>
             <button
               onClick={handleClose}
@@ -120,8 +120,8 @@ export default function FeedbackModal({ isOpen, onClose, user, onLoginRequest }:
           <div className="px-6 pb-6">
             {/* 満足度 */}
             <div className="mb-6">
-              <p className="font-bold text-sm mb-1 text-center" style={{ color: '#5d4037' }}>満足度を教えてください</p>
-              <p className="text-xs text-gray-400 text-center mb-3">評価してください</p>
+              <p className="font-bold text-sm mb-1 text-center" style={{ color: '#5d4037' }}>使ってみてどうでしたか？</p>
+              <p className="text-xs text-gray-400 text-center mb-3">星をタップしてください</p>
               <div className="flex justify-center gap-2">
                 {[1, 2, 3, 4, 5].map(n => (
                   <button
@@ -145,7 +145,7 @@ export default function FeedbackModal({ isOpen, onClose, user, onLoginRequest }:
             {/* コメント */}
             <div className="mb-4">
               <label className="block font-bold text-sm mb-2" style={{ color: '#5d4037' }}>
-                詳細なご意見・ご要望 <span className="font-normal text-gray-400">(任意)</span>
+                もっとこうなったらいいな <span className="font-normal text-gray-400">(任意)</span>
               </label>
               <textarea
                 value={message}
@@ -154,29 +154,29 @@ export default function FeedbackModal({ isOpen, onClose, user, onLoginRequest }:
                 rows={4}
                 className="w-full border-2 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-indigo-400 transition"
                 style={{ borderColor: '#e5e7eb' }}
-                placeholder="アプリの使い心地はいかがですか？改善点やご要望など、どんなことでもお気軽にお聞かせください..."
+                placeholder="「こんな機能がほしい」「ここが使いにくかった」など、なんでもOKです！"
               />
               <p className="text-xs text-gray-400 text-right mt-1">{message.length} / 500</p>
             </div>
 
-            {/* YouTube URL */}
+            {/* 作成ツールURL */}
             <div className="mb-5">
               <label className="block font-bold text-sm mb-2" style={{ color: '#5d4037' }}>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">▶</span>
-                  参考YouTube動画URL <span className="font-normal text-gray-400">(任意)</span>
+                  <Link2 size={14} style={{ color: '#f97316' }} />
+                  作成したツールのURL <span className="font-normal text-gray-400">(任意・複数可)</span>
                 </span>
               </label>
-              <input
-                type="url"
-                value={youtubeUrl}
-                onChange={e => setYoutubeUrl(e.target.value)}
-                className="w-full border-2 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-400 transition"
+              <textarea
+                value={toolUrls}
+                onChange={e => setToolUrls(e.target.value)}
+                rows={2}
+                className="w-full border-2 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-indigo-400 transition"
                 style={{ borderColor: '#e5e7eb' }}
-                placeholder="https://www.youtube.com/watch?v=example"
+                placeholder="https://makers.tokyo/profile/v275Z"
               />
               <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
-                こんなスタイルのテンプレートが欲しい！という参考動画があれば、URLを貼ってください。
+                ご意見の対象となる作品があれば、URLを貼っていただけると確認がスムーズです。
               </p>
             </div>
 

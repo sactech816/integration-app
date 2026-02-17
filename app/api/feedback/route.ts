@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       return createRateLimitResponse(rateLimitResult.resetIn);
     }
 
-    const { userId, userEmail, rating, message, youtubeUrl } = await request.json();
+    const { userId, userEmail, rating, message, toolUrls } = await request.json();
 
     // バリデーション
     if (!userId || !userEmail) {
@@ -27,20 +27,15 @@ export async function POST(request: Request) {
     }
 
     if (!rating || rating < 1 || rating > 5) {
-      return NextResponse.json({ error: '満足度を選択してください（1〜5）' }, { status: 400 });
+      return NextResponse.json({ error: '星をタップして評価してください（1〜5）' }, { status: 400 });
     }
 
     // サニタイズ
     const safeMessage = truncate(message || '', 500);
-    const safeYoutubeUrl = truncate(youtubeUrl || '', 500);
+    const safeToolUrls = truncate(toolUrls || '', 1000);
 
     if (safeMessage && containsSuspiciousPattern(safeMessage)) {
       console.warn('[Feedback API] Suspicious pattern detected:', { userEmail });
-    }
-
-    // YouTube URLバリデーション（入力がある場合）
-    if (safeYoutubeUrl && !safeYoutubeUrl.match(/^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//)) {
-      return NextResponse.json({ error: '有効なYouTube URLを入力してください' }, { status: 400 });
     }
 
     // Supabaseに保存
@@ -51,7 +46,7 @@ export async function POST(request: Request) {
         user_email: userEmail,
         rating,
         message: safeMessage || null,
-        youtube_url: safeYoutubeUrl || null,
+        tool_urls: safeToolUrls || null,
       });
 
     if (dbError) {
@@ -63,22 +58,22 @@ export async function POST(request: Request) {
     const starDisplay = '★'.repeat(rating) + '☆'.repeat(5 - rating);
     const escapedEmail = escapeHtml(userEmail);
     const escapedMessage = escapeHtml(safeMessage);
-    const escapedYoutubeUrl = escapeHtml(safeYoutubeUrl);
+    const escapedToolUrls = escapeHtml(safeToolUrls);
 
     try {
       await resend.emails.send({
         from: 'onboarding@resend.dev',
         to: 'info@sac-office.net',
-        subject: `【ご意見箱】満足度${rating} ${starDisplay}（${userEmail}）`,
+        subject: `【ご意見箱】${starDisplay}（${userEmail}）`,
         html: `
-          <h2>ご意見箱に新しい投稿がありました</h2>
+          <h2>ご意見箱に投稿がありました</h2>
           <hr />
-          <p><strong>満足度:</strong> ${starDisplay} (${rating}/5)</p>
-          <p><strong>ユーザー:</strong> ${escapedEmail}</p>
-          ${escapedMessage ? `<p><strong>ご意見・ご要望:</strong></p><p style="white-space: pre-wrap; background: #f5f5f5; padding: 12px; border-radius: 8px;">${escapedMessage}</p>` : '<p><em>コメントなし</em></p>'}
-          ${escapedYoutubeUrl ? `<p><strong>参考YouTube URL:</strong> <a href="${escapedYoutubeUrl}">${escapedYoutubeUrl}</a></p>` : ''}
+          <p><strong>評価:</strong> ${starDisplay} (${rating}/5)</p>
+          <p><strong>送信者:</strong> ${escapedEmail}</p>
+          ${escapedMessage ? `<p><strong>内容:</strong></p><p style="white-space: pre-wrap; background: #f5f5f5; padding: 12px; border-radius: 8px;">${escapedMessage}</p>` : '<p><em>コメントなし</em></p>'}
+          ${escapedToolUrls ? `<p><strong>関連ツールURL:</strong></p><p style="white-space: pre-wrap;">${escapedToolUrls}</p>` : ''}
           <hr />
-          <p style="color: #999; font-size: 12px;">集客メーカー フィードバックシステム</p>
+          <p style="color: #999; font-size: 12px;">集客メーカー ご意見箱</p>
         `,
       });
     } catch (emailError) {

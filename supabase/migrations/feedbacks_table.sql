@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS feedbacks (
   user_email TEXT,
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
   message TEXT,
-  youtube_url TEXT,
+  tool_urls TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
