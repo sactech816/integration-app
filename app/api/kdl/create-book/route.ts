@@ -34,6 +34,7 @@ interface CreateBookRequest {
   chapters: Chapter[];
   tocPatternId?: string; // 目次パターンID（執筆スタイルのデフォルト決定用）
   userId?: string;
+  sectionContents?: Record<string, string>; // "chapterIdx-sectionIdx" -> HTML content（インポート用）
 }
 
 export async function POST(request: Request) {
@@ -227,11 +228,14 @@ export async function POST(request: Request) {
       
       if (insertedChapter && chapter.sections) {
         chapter.sections.forEach((section, sectionIndex) => {
+          // インポート時にsectionContentsが指定されていればコンテンツを設定
+          const contentKey = `${chapterIndex}-${sectionIndex}`;
+          const importedContent = body.sectionContents?.[contentKey] || '';
           sectionInserts.push({
             book_id: bookId,
             chapter_id: insertedChapter.id,
             title: section.title,
-            content: '', // 初期は空
+            content: importedContent, // インポート時は本文が入る、通常は空
             order_index: sectionIndex,
           });
         });

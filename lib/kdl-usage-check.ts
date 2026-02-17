@@ -17,6 +17,8 @@ export const OUTLINE_ACTION_TYPES = [
   'generate_kdp_info',
   'generate_theme',
   'generate_theme_additional',
+  'generate_book_lp',          // LP自動生成
+  'import_analyze_structure',  // 原稿インポート構造分析
 ];
 
 // 執筆系AI のアクションタイプ
@@ -25,6 +27,7 @@ export const WRITING_ACTION_TYPES = [
   'rewrite',
   'rewrite_text',
   'bulk_generate',
+  'rewrite_bulk_section',      // 一括リライト（文体変換）
 ];
 
 // デフォルトの制限値（プランが見つからない場合）

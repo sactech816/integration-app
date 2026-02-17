@@ -49,6 +49,12 @@ export async function GET(request: Request) {
         writingModel: string;
         backupOutlineModel: string;
         backupWritingModel: string;
+        lpGenerationModel: string;
+        backupLpGenerationModel: string;
+        rewriteBulkModel: string;
+        backupRewriteBulkModel: string;
+        importAnalysisModel: string;
+        backupImportAnalysisModel: string;
         feature_limits?: Record<string, number | null>;
       }> = {};
 
@@ -58,6 +64,12 @@ export async function GET(request: Request) {
           writingModel: row.custom_writing_model || DEFAULT_AI_MODELS.primary.writing,
           backupOutlineModel: row.backup_outline_model || DEFAULT_AI_MODELS.backup.outline,
           backupWritingModel: row.backup_writing_model || DEFAULT_AI_MODELS.backup.writing,
+          lpGenerationModel: row.custom_lp_generation_model || DEFAULT_AI_MODELS.primary.lp_generation,
+          backupLpGenerationModel: row.backup_lp_generation_model || DEFAULT_AI_MODELS.backup.lp_generation,
+          rewriteBulkModel: row.custom_rewrite_bulk_model || DEFAULT_AI_MODELS.primary.rewrite_bulk,
+          backupRewriteBulkModel: row.backup_rewrite_bulk_model || DEFAULT_AI_MODELS.backup.rewrite_bulk,
+          importAnalysisModel: row.custom_import_analysis_model || DEFAULT_AI_MODELS.primary.import_analysis,
+          backupImportAnalysisModel: row.backup_import_analysis_model || DEFAULT_AI_MODELS.backup.import_analysis,
           feature_limits: row.feature_limits,
         };
       }
@@ -131,6 +143,13 @@ export async function GET(request: Request) {
         writingModel: DEFAULT_AI_MODELS.primary.writing,
         backupOutlineModel: DEFAULT_AI_MODELS.backup.outline,
         backupWritingModel: DEFAULT_AI_MODELS.backup.writing,
+        // 新フェーズ
+        lpGenerationModel: DEFAULT_AI_MODELS.primary.lp_generation,
+        backupLpGenerationModel: DEFAULT_AI_MODELS.backup.lp_generation,
+        rewriteBulkModel: DEFAULT_AI_MODELS.primary.rewrite_bulk,
+        backupRewriteBulkModel: DEFAULT_AI_MODELS.backup.rewrite_bulk,
+        importAnalysisModel: DEFAULT_AI_MODELS.primary.import_analysis,
+        backupImportAnalysisModel: DEFAULT_AI_MODELS.backup.import_analysis,
         // レガシー互換性
         customOutlineModel: DEFAULT_AI_MODELS.primary.outline,
         customWritingModel: DEFAULT_AI_MODELS.primary.writing,
@@ -184,6 +203,13 @@ export async function GET(request: Request) {
       writingModel: data?.custom_writing_model || DEFAULT_AI_MODELS.primary.writing,
       backupOutlineModel: data?.backup_outline_model || DEFAULT_AI_MODELS.backup.outline,
       backupWritingModel: data?.backup_writing_model || DEFAULT_AI_MODELS.backup.writing,
+      // 新フェーズ
+      lpGenerationModel: data?.custom_lp_generation_model || DEFAULT_AI_MODELS.primary.lp_generation,
+      backupLpGenerationModel: data?.backup_lp_generation_model || DEFAULT_AI_MODELS.backup.lp_generation,
+      rewriteBulkModel: data?.custom_rewrite_bulk_model || DEFAULT_AI_MODELS.primary.rewrite_bulk,
+      backupRewriteBulkModel: data?.backup_rewrite_bulk_model || DEFAULT_AI_MODELS.backup.rewrite_bulk,
+      importAnalysisModel: data?.custom_import_analysis_model || DEFAULT_AI_MODELS.primary.import_analysis,
+      backupImportAnalysisModel: data?.backup_import_analysis_model || DEFAULT_AI_MODELS.backup.import_analysis,
       // レガシー互換性
       customOutlineModel: data?.custom_outline_model || DEFAULT_AI_MODELS.primary.outline,
       customWritingModel: data?.custom_writing_model || DEFAULT_AI_MODELS.primary.writing,
@@ -213,20 +239,27 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { 
-      planTier, 
+    const {
+      planTier,
       selectedPreset = 'custom',
       // 新形式
       outlineModel,
       writingModel,
       backupOutlineModel,
       backupWritingModel,
+      // 新フェーズ
+      lpGenerationModel,
+      backupLpGenerationModel,
+      rewriteBulkModel,
+      backupRewriteBulkModel,
+      importAnalysisModel,
+      backupImportAnalysisModel,
       // レガシー互換性
-      customOutlineModel, 
-      customWritingModel, 
-      featureLimits, 
-      userId, 
-      service = 'kdl' 
+      customOutlineModel,
+      customWritingModel,
+      featureLimits,
+      userId,
+      service = 'kdl'
     } = body;
 
     if (!planTier) {
@@ -265,6 +298,27 @@ export async function POST(request: Request) {
         { error: 'Failed to update settings: ' + error.message },
         { status: 500 }
       );
+    }
+
+    // 新フェーズのモデル設定がある場合は別途更新（RPC関数に含まれないカラム）
+    const newPhaseUpdates: Record<string, string | undefined> = {};
+    if (lpGenerationModel) newPhaseUpdates.custom_lp_generation_model = lpGenerationModel;
+    if (backupLpGenerationModel) newPhaseUpdates.backup_lp_generation_model = backupLpGenerationModel;
+    if (rewriteBulkModel) newPhaseUpdates.custom_rewrite_bulk_model = rewriteBulkModel;
+    if (backupRewriteBulkModel) newPhaseUpdates.backup_rewrite_bulk_model = backupRewriteBulkModel;
+    if (importAnalysisModel) newPhaseUpdates.custom_import_analysis_model = importAnalysisModel;
+    if (backupImportAnalysisModel) newPhaseUpdates.backup_import_analysis_model = backupImportAnalysisModel;
+
+    if (Object.keys(newPhaseUpdates).length > 0) {
+      const { error: phaseError } = await supabase
+        .from('admin_ai_settings')
+        .update(newPhaseUpdates)
+        .eq('plan_tier', planTier)
+        .eq('service', service);
+
+      if (phaseError) {
+        console.error('Failed to update new phase settings:', phaseError);
+      }
     }
 
     // feature_limitsがある場合は別途更新

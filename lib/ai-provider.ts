@@ -546,14 +546,29 @@ export const AVAILABLE_AI_MODELS: AIModelInfo[] = [
 /**
  * デフォルトのAIモデル設定（最安値）
  */
+/**
+ * AIフェーズの型定義
+ * outline/writing: 既存の構成・執筆フェーズ
+ * lp_generation: LP自動生成
+ * rewrite_bulk: 一括リライト（文体変換）
+ * import_analysis: 原稿インポート構造分析
+ */
+export type AIPhase = 'outline' | 'writing' | 'lp_generation' | 'rewrite_bulk' | 'import_analysis';
+
 export const DEFAULT_AI_MODELS = {
   primary: {
     outline: 'gpt-4o-mini',    // 構成用: $0.15/入力（バランス良好）
     writing: 'gpt-4o-mini',    // 執筆用: $0.15/入力（バランス良好）
+    lp_generation: 'gemini-2.5-flash',    // LP生成: コンテキスト重視
+    rewrite_bulk: 'gpt-4o-mini',          // リライト: writingと同等
+    import_analysis: 'gemini-2.5-flash',  // インポート: 大コンテキスト
   },
   backup: {
     outline: 'gemini-2.5-flash-lite',  // バックアップ構成用（最安値）
     writing: 'gemini-2.5-flash-lite',  // バックアップ執筆用（最安値）
+    lp_generation: 'gemini-2.5-flash-lite',    // バックアップLP生成
+    rewrite_bulk: 'gemini-2.5-flash-lite',     // バックアップリライト
+    import_analysis: 'gemini-2.5-flash-lite',  // バックアップインポート
   },
 } as const;
 
@@ -593,16 +608,16 @@ function isValidModelId(modelId: string): boolean {
  * 
  * @param service - サービス識別子（'kdl' | 'makers'）
  * @param planTier - プランTier
- * @param phase - フェーズ（'outline' | 'writing'）
+ * @param phase - フェーズ（'outline' | 'writing' | 'lp_generation' | 'rewrite_bulk' | 'import_analysis'）
  * @returns モデルとバックアップモデルの設定
  */
 export async function getAISettingsFromAdmin(
   service: 'kdl' | 'makers',
   planTier: string,
-  phase: 'outline' | 'writing'
+  phase: AIPhase
 ): Promise<AdminAISettingsResult> {
   const supabase = getServiceClient();
-  
+
   const defaultSettings: AdminAISettingsResult = {
     model: DEFAULT_AI_MODELS.primary[phase],
     backupModel: DEFAULT_AI_MODELS.backup[phase],
@@ -614,8 +629,17 @@ export async function getAISettingsFromAdmin(
   }
 
   try {
-    const modelColumn = phase === 'outline' ? 'custom_outline_model' : 'custom_writing_model';
-    const backupColumn = phase === 'outline' ? 'backup_outline_model' : 'backup_writing_model';
+    // フェーズごとのDBカラム名マッピング
+    const phaseColumnMap: Record<AIPhase, { model: string; backup: string }> = {
+      outline: { model: 'custom_outline_model', backup: 'backup_outline_model' },
+      writing: { model: 'custom_writing_model', backup: 'backup_writing_model' },
+      lp_generation: { model: 'custom_lp_generation_model', backup: 'backup_lp_generation_model' },
+      rewrite_bulk: { model: 'custom_rewrite_bulk_model', backup: 'backup_rewrite_bulk_model' },
+      import_analysis: { model: 'custom_import_analysis_model', backup: 'backup_import_analysis_model' },
+    };
+    const columns = phaseColumnMap[phase];
+    const modelColumn = columns.model;
+    const backupColumn = columns.backup;
 
     const { data, error } = await supabase
       .from('admin_ai_settings')
@@ -695,6 +719,9 @@ export const PLAN_AI_PRESETS = {
     customDefault: {
       outlineModel: 'gemini-2.5-flash-lite',
       writingModel: 'gpt-4o-mini',
+      lpGenerationModel: 'gemini-2.5-flash-lite',
+      rewriteBulkModel: 'gemini-2.5-flash-lite',
+      importAnalysisModel: 'gemini-2.5-flash',
     },
   },
   standard: {
@@ -713,6 +740,9 @@ export const PLAN_AI_PRESETS = {
     customDefault: {
       outlineModel: 'gpt-4o-mini',
       writingModel: 'gpt-4o-mini',
+      lpGenerationModel: 'gemini-2.5-flash',
+      rewriteBulkModel: 'gpt-4o-mini',
+      importAnalysisModel: 'gemini-2.5-flash',
     },
   },
   pro: {
@@ -731,6 +761,9 @@ export const PLAN_AI_PRESETS = {
     customDefault: {
       outlineModel: 'gpt-4o-mini',
       writingModel: 'gpt-4o-mini',
+      lpGenerationModel: 'gemini-2.5-flash',
+      rewriteBulkModel: 'gpt-4o-mini',
+      importAnalysisModel: 'gemini-2.5-flash',
     },
   },
   business: {
@@ -749,6 +782,9 @@ export const PLAN_AI_PRESETS = {
     customDefault: {
       outlineModel: 'gpt-5-mini',
       writingModel: 'claude-3-5-sonnet-20241022',
+      lpGenerationModel: 'gemini-2.5-pro',
+      rewriteBulkModel: 'claude-sonnet-4-5-20250929',
+      importAnalysisModel: 'gemini-2.5-pro',
     },
   },
   none: {
@@ -767,6 +803,9 @@ export const PLAN_AI_PRESETS = {
     customDefault: {
       outlineModel: 'gemini-2.5-flash-lite',
       writingModel: 'gemini-2.5-flash-lite',
+      lpGenerationModel: 'gemini-2.5-flash-lite',
+      rewriteBulkModel: 'gemini-2.5-flash-lite',
+      importAnalysisModel: 'gemini-2.5-flash-lite',
     },
   },
   enterprise: {
@@ -785,6 +824,9 @@ export const PLAN_AI_PRESETS = {
     customDefault: {
       outlineModel: 'gpt-4o',
       writingModel: 'claude-3-5-sonnet-20241022',
+      lpGenerationModel: 'gemini-2.5-pro',
+      rewriteBulkModel: 'claude-sonnet-4-5-20250929',
+      importAnalysisModel: 'gemini-2.5-pro',
     },
   },
   // ========================================
@@ -946,13 +988,13 @@ export function getProviderForPlanAndPreset(
  * 
  * @param service - サービス識別子（'kdl' | 'makers'）
  * @param planTier - プランTier（'none', 'lite', 'standard', 'pro', 'business', 'enterprise', etc.）
- * @param phase - フェーズ（'outline' = 構成用, 'writing' = 執筆用）
+ * @param phase - フェーズ（'outline' | 'writing' | 'lp_generation' | 'rewrite_bulk' | 'import_analysis'）
  * @returns プロバイダー、モデル、バックアップモデルの情報
  */
 export async function getProviderFromAdminSettings(
   service: 'kdl' | 'makers',
   planTier: string,
-  phase: 'outline' | 'writing'
+  phase: AIPhase
 ): Promise<{
   provider: AIProvider;
   model: string;

@@ -6,6 +6,7 @@ import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle,
 import Link from 'next/link';
 import KdlHamburgerMenu from '@/components/kindle/shared/KdlHamburgerMenu';
 import KdlUsageHeader, { type KdlUsageLimits } from '@/components/kindle/KdlUsageHeader';
+import BookLPPreview from '@/components/kindle/lp/BookLPPreview';
 import { ChapterSidebar } from './ChapterSidebar';
 import { TiptapEditor, TiptapEditorRef } from './TiptapEditor';
 import { Home } from 'lucide-react';
@@ -144,6 +145,23 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   const [kdpInfo, setKdpInfo] = useState<KdpInfo | null>(null);
   const [kdpError, setKdpError] = useState<string>('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // スマホ用サイドバー表示状態
+
+  // LP生成関連
+  const [isLPModalOpen, setIsLPModalOpen] = useState(false);
+  const [isGeneratingLP, setIsGeneratingLP] = useState(false);
+  const [lpData, setLpData] = useState<any>(null);
+  const [lpStatus, setLpStatus] = useState<'draft' | 'published'>('draft');
+
+  // 文体変換関連
+  const [isStyleTransformOpen, setIsStyleTransformOpen] = useState(false);
+  const [selectedTargetStyle, setSelectedTargetStyle] = useState<string>('dialogue');
+  const [rewriteProgress, setRewriteProgress] = useState<{
+    isRunning: boolean;
+    currentIndex: number;
+    totalCount: number;
+    currentSectionTitle: string;
+    newBookId: string | null;
+  }>({ isRunning: false, currentIndex: 0, totalCount: 0, currentSectionTitle: '', newBookId: null });
 
   // タブ（ドラフト）管理
   const [activeTab, setActiveTab] = useState<ActiveTab>({ type: 'main' });
@@ -1042,6 +1060,185 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     }
   }, [book.id, isGeneratingKdp]);
 
+  // ===== LP生成関連ハンドラ =====
+  const handleShowLP = useCallback(async () => {
+    if (isGeneratingLP) return;
+
+    // キャッシュ済みならモーダルを開くだけ
+    if (lpData) {
+      setIsLPModalOpen(true);
+      return;
+    }
+
+    setIsLPModalOpen(true);
+
+    try {
+      // まずGETで保存済みLPデータを取得
+      const getResponse = await fetch(`/api/kdl/generate-book-lp?book_id=${book.id}`);
+      if (getResponse.ok) {
+        const data = await getResponse.json();
+        setLpData({
+          hero: data.hero,
+          pain_points: data.pain_points,
+          benefits: data.benefits,
+          chapter_summaries: data.chapter_summaries,
+          faq: data.faq,
+          cta: data.cta,
+        });
+        setLpStatus(data.status || 'draft');
+        return;
+      }
+      // 保存済みがない場合は生成を自動実行
+      await handleGenerateLP();
+    } catch (error: any) {
+      console.error('Load LP error:', error);
+      showToast('error', 'LP情報の取得に失敗しました');
+    }
+  }, [book.id, isGeneratingLP, lpData]);
+
+  const handleGenerateLP = useCallback(async () => {
+    if (isGeneratingLP) return;
+    setIsGeneratingLP(true);
+
+    try {
+      const response = await fetch('/api/kdl/generate-book-lp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ book_id: book.id }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'LP生成に失敗しました');
+      }
+
+      const data = await response.json();
+      setLpData(data.lpData);
+      setLpStatus('draft');
+      showToast('success', 'LPを生成しました');
+      setUsageRefreshTrigger(prev => prev + 1);
+    } catch (error: any) {
+      console.error('Generate LP error:', error);
+      showToast('error', error.message || 'LP生成に失敗しました');
+    } finally {
+      setIsGeneratingLP(false);
+    }
+  }, [book.id, isGeneratingLP, showToast]);
+
+  const handleLPPublishToggle = useCallback(async () => {
+    const newStatus = lpStatus === 'published' ? 'draft' : 'published';
+    try {
+      const response = await fetch('/api/kdl/generate-book-lp', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ book_id: book.id, status: newStatus }),
+      });
+      if (!response.ok) throw new Error('更新に失敗しました');
+      setLpStatus(newStatus);
+      showToast('success', newStatus === 'published' ? 'LPを公開しました' : 'LPを非公開にしました');
+    } catch (error: any) {
+      showToast('error', error.message);
+    }
+  }, [book.id, lpStatus, showToast]);
+
+  const handleLPUpdateField = useCallback(async (updates: any) => {
+    try {
+      const response = await fetch('/api/kdl/generate-book-lp', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ book_id: book.id, ...updates }),
+      });
+      if (!response.ok) throw new Error('更新に失敗しました');
+      setLpData((prev: any) => prev ? { ...prev, ...updates } : prev);
+      showToast('success', 'LPを更新しました');
+    } catch (error: any) {
+      showToast('error', error.message);
+    }
+  }, [book.id, showToast]);
+
+  // ===== 文体変換関連ハンドラ =====
+  const handleBulkRewrite = useCallback(async () => {
+    if (rewriteProgress.isRunning || !selectedTargetStyle) return;
+
+    try {
+      // 1. ブックコピー＆セクション一覧取得
+      const initResponse = await fetch('/api/kdl/rewrite-bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ book_id: book.id, target_style: selectedTargetStyle }),
+      });
+
+      if (!initResponse.ok) {
+        const error = await initResponse.json();
+        throw new Error(error.error || '文体変換の初期化に失敗しました');
+      }
+
+      const initData = await initResponse.json();
+      const { newBookId, sections } = initData;
+
+      setIsStyleTransformOpen(false);
+
+      // 2. セクション単位でリライトループ
+      for (let i = 0; i < sections.length; i++) {
+        const section = sections[i];
+
+        // コンテンツがない場合はスキップ
+        if (!section.originalContent || section.originalContent.trim() === '') {
+          continue;
+        }
+
+        setRewriteProgress({
+          isRunning: true,
+          currentIndex: i + 1,
+          totalCount: sections.length,
+          currentSectionTitle: section.title,
+          newBookId,
+        });
+
+        try {
+          const response = await fetch('/api/kdl/rewrite-section', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              book_id: newBookId,
+              section_id: section.id,
+              original_content: section.originalContent,
+              target_style: selectedTargetStyle,
+              chapter_title: section.chapterTitle,
+              section_title: section.title,
+              book_title: book.title,
+            }),
+          });
+
+          if (response.status === 429) {
+            const error = await response.json();
+            showToast('error', error.error || 'AI使用上限に達しました。残りのセクションは後で個別にリライトできます。');
+            break;
+          }
+
+          if (!response.ok) {
+            console.warn(`Section ${section.title} rewrite failed, skipping`);
+          }
+        } catch (err) {
+          console.warn(`Section ${section.title} rewrite error, skipping`, err);
+        }
+
+        // レート制限: 1秒待機
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      setRewriteProgress({ isRunning: false, currentIndex: 0, totalCount: 0, currentSectionTitle: '', newBookId: null });
+      showToast('success', '文体変換が完了しました！新しい書籍に移動します。');
+
+      // 新しい書籍のエディタに遷移
+      router.push(`/kindle/${newBookId}`);
+    } catch (error: any) {
+      console.error('Bulk rewrite error:', error);
+      showToast('error', error.message || '文体変換に失敗しました');
+      setRewriteProgress({ isRunning: false, currentIndex: 0, totalCount: 0, currentSectionTitle: '', newBookId: null });
+    }
+  }, [book.id, book.title, selectedTargetStyle, rewriteProgress.isRunning, showToast, router]);
+
   // テキストをクリップボードにコピー
   const handleCopyToClipboard = useCallback((text: string, label: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -1272,7 +1469,44 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 <BookOpen size={16} />
                 <span>EPUB</span>
               </button>
-              
+
+              <button
+                onClick={handleShowLP}
+                disabled={isGeneratingLP}
+                title="LP生成"
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
+                  isGeneratingLP
+                    ? 'bg-white/20 cursor-not-allowed'
+                    : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
+                }`}
+              >
+                {isGeneratingLP ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                    <span>生成中...</span>
+                  </>
+                ) : (
+                  <>
+                    <Rocket size={16} />
+                    <span>LP生成</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => setIsStyleTransformOpen(true)}
+                disabled={rewriteProgress.isRunning}
+                title="文体変換"
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
+                  rewriteProgress.isRunning
+                    ? 'bg-white/20 cursor-not-allowed'
+                    : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
+                }`}
+              >
+                <PenLine size={16} />
+                <span>文体変換</span>
+              </button>
+
               <div className="w-px h-6 bg-white/30" />
               
               {/* まずお読みください */}
@@ -1793,6 +2027,126 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             )}
           </div>
         </div>
+      )}
+
+      {/* 文体変換モーダル */}
+      {isStyleTransformOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <PenLine size={20} className="text-purple-600" />
+                文体変換（まるごとリライト）
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">書籍全体を選択した文体に変換します</p>
+            </div>
+            <div className="px-6 py-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                <p className="text-amber-700 text-sm">
+                  元の書籍は変更されません。新しい書籍コピーが作成され、各セクションが順番にリライトされます。
+                </p>
+              </div>
+              <p className="text-sm font-medium text-gray-700 mb-3">変換先の文体を選択:</p>
+              <div className="space-y-2">
+                {[
+                  { id: 'descriptive', name: '説明文（PREP法）', desc: '結論→理由→具体例→まとめの論理的な構成' },
+                  { id: 'narrative', name: '物語形式', desc: 'ストーリーテリングで読者を引き込む' },
+                  { id: 'dialogue', name: '対話形式', desc: '先生と生徒などの会話で内容を展開' },
+                  { id: 'qa', name: 'Q&A形式', desc: '質問と回答で分かりやすく解説' },
+                  { id: 'workbook', name: 'ワークブック形式', desc: '解説＋実践ワークの交互配置' },
+                ].map(style => (
+                  <label
+                    key={style.id}
+                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${
+                      selectedTargetStyle === style.id
+                        ? 'border-purple-300 bg-purple-50'
+                        : 'border-gray-200 hover:border-purple-200 hover:bg-purple-50/30'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="target_style"
+                      value={style.id}
+                      checked={selectedTargetStyle === style.id}
+                      onChange={() => setSelectedTargetStyle(style.id)}
+                      className="mt-1 accent-purple-600"
+                    />
+                    <div>
+                      <span className="font-medium text-gray-800 text-sm">{style.name}</span>
+                      <p className="text-xs text-gray-500 mt-0.5">{style.desc}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => setIsStyleTransformOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleBulkRewrite}
+                className="px-6 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition flex items-center gap-2"
+              >
+                <PenLine size={16} />
+                変換開始
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 文体変換中のオーバーレイ */}
+      {rewriteProgress.isRunning && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center">
+            <div className="relative w-20 h-20 mx-auto mb-4">
+              <div className="absolute inset-0 border-4 border-purple-200 rounded-full"></div>
+              <div
+                className="absolute inset-0 border-4 border-purple-500 rounded-full border-t-transparent animate-spin"
+                style={{ animationDuration: '1.5s' }}
+              ></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-lg font-bold text-purple-600">
+                  {rewriteProgress.totalCount > 0
+                    ? Math.round((rewriteProgress.currentIndex / rewriteProgress.totalCount) * 100)
+                    : 0}%
+                </span>
+              </div>
+            </div>
+            <h3 className="text-lg font-bold text-gray-800 mb-2">文体変換中...</h3>
+            <p className="text-gray-500 text-sm mb-3">
+              {rewriteProgress.currentIndex} / {rewriteProgress.totalCount} セクション
+            </p>
+            <p className="text-gray-600 text-sm font-medium">
+              {rewriteProgress.currentSectionTitle}
+            </p>
+            <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-purple-500 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${rewriteProgress.totalCount > 0 ? (rewriteProgress.currentIndex / rewriteProgress.totalCount) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LP生成プレビューモーダル */}
+      {isLPModalOpen && (
+        <BookLPPreview
+          bookId={book.id}
+          bookTitle={book.title}
+          bookSubtitle={book.subtitle || undefined}
+          lpData={lpData}
+          lpStatus={lpStatus}
+          isGenerating={isGeneratingLP}
+          onGenerate={handleGenerateLP}
+          onPublishToggle={handleLPPublishToggle}
+          onUpdateField={handleLPUpdateField}
+          onClose={() => setIsLPModalOpen(false)}
+        />
       )}
 
       {/* 一括執筆中のオーバーレイ */}

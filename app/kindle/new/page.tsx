@@ -21,6 +21,7 @@ import { Step1Theme } from '@/components/kindle/wizard/Step1Theme';
 import { Step2Subtitle } from '@/components/kindle/wizard/Step2Subtitle';
 import { Step3Target } from '@/components/kindle/wizard/Step3Target';
 import { Step4TOC } from '@/components/kindle/wizard/Step4TOC';
+import { ImportStep } from '@/components/kindle/wizard/ImportStep';
 import AuthModal from '@/components/shared/AuthModal';
 import KDLFooter from '@/components/shared/KDLFooter';
 import { supabase } from '@/lib/supabase';
@@ -70,6 +71,8 @@ function KindleNewPageContent() {
   const adminKeyParam = adminKey ? `?admin_key=${adminKey}` : '';
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [entryMode, setEntryMode] = useState<'new' | 'import' | null>(null);
+  const [importedSectionContents, setImportedSectionContents] = useState<Record<string, string>>({});
   const [state, setState] = useState<WizardState>({
     theme: '',
     selectedTitle: '',
@@ -284,6 +287,7 @@ function KindleNewPageContent() {
           chapters: cleanChapters(state.chapters),
           tocPatternId: state.tocPatternId, // 目次パターンIDを送信
           userId: user.id, // ユーザーIDをクライアントから渡す
+          ...(Object.keys(importedSectionContents).length > 0 && { sectionContents: importedSectionContents }),
         }),
       });
       
@@ -380,6 +384,133 @@ function KindleNewPageContent() {
       minute: '2-digit',
     });
   };
+
+  // エントリモード選択画面（新規作成 or インポート）
+  if (entryMode === null && isInitialized) {
+    const isBookLimitReached = usageLimits && !usageLimits.bookCreation.canCreate;
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
+        {/* 使用量ヘッダー */}
+        {user && !isDemo && (
+          <div className="bg-white/80 backdrop-blur-md border-b border-amber-100">
+            <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-between">
+              <span className="text-xs text-gray-500">残り回数</span>
+              <KdlUsageHeader
+                userId={user.id}
+                onLimitsChange={setUsageLimits}
+                refreshTrigger={usageRefreshTrigger}
+              />
+            </div>
+          </div>
+        )}
+        <div className="max-w-3xl mx-auto px-4 py-12">
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-bold text-gray-800 mb-3">新しい書籍を作成</h1>
+            <p className="text-gray-500">作成方法を選択してください</p>
+          </div>
+
+          {/* 書籍作成上限チェック */}
+          {isBookLimitReached && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-center">
+              <p className="text-red-600 font-bold mb-1">
+                書籍作成の上限（{usageLimits.bookCreation.limit}冊）に達しました
+              </p>
+              <p className="text-sm text-red-500">
+                新しい書籍を作成するには、プランのアップグレードをご検討ください。
+              </p>
+            </div>
+          )}
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <button
+              onClick={() => !isBookLimitReached && setEntryMode('new')}
+              disabled={!!isBookLimitReached}
+              className={`bg-white rounded-2xl p-8 border-2 text-left group transition-all ${
+                isBookLimitReached
+                  ? 'border-gray-200 opacity-50 cursor-not-allowed'
+                  : 'border-gray-200 hover:border-orange-400 hover:shadow-lg'
+              }`}
+            >
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition ${
+                isBookLimitReached ? 'bg-gray-100' : 'bg-orange-100 group-hover:bg-orange-200'
+              }`}>
+                <Lightbulb size={28} className={isBookLimitReached ? 'text-gray-400' : 'text-orange-600'} />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">AIで新規作成</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                テーマを入力すると、AIがタイトル、目次、本文を段階的に生成します。ゼロから書籍を作りたい方に。
+              </p>
+            </button>
+            <button
+              onClick={() => !isBookLimitReached && setEntryMode('import')}
+              disabled={!!isBookLimitReached}
+              className={`bg-white rounded-2xl p-8 border-2 text-left group transition-all ${
+                isBookLimitReached
+                  ? 'border-gray-200 opacity-50 cursor-not-allowed'
+                  : 'border-gray-200 hover:border-blue-400 hover:shadow-lg'
+              }`}
+            >
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition ${
+                isBookLimitReached ? 'bg-gray-100' : 'bg-blue-100 group-hover:bg-blue-200'
+              }`}>
+                <FileText size={28} className={isBookLimitReached ? 'text-gray-400' : 'text-blue-600'} />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">原稿をインポート</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                既存の原稿（テキスト / DOCX）を取り込み、AIが自動で章・節構造を分析。リライトしたい方に。
+              </p>
+            </button>
+          </div>
+          <div className="text-center mt-6">
+            <Link
+              href={`/kindle${adminKeyParam}`}
+              className="text-sm text-gray-400 hover:text-gray-600 transition"
+            >
+              ← ダッシュボードに戻る
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // インポートモード
+  if (entryMode === 'import') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 py-12 px-4">
+        <ImportStep
+          onImportComplete={(structure) => {
+            // 分析結果をウィザードStateに反映
+            const sectionContents: Record<string, string> = {};
+            const chapters = structure.chapters.map((ch, chIdx) => ({
+              title: ch.title,
+              summary: ch.summary,
+              sections: ch.sections.map((sec, secIdx) => {
+                // セクションコンテンツをマッピング
+                if (sec.content) {
+                  sectionContents[`${chIdx}-${secIdx}`] = sec.content;
+                }
+                return { title: sec.title };
+              }),
+            }));
+
+            setState(prev => ({
+              ...prev,
+              selectedTitle: structure.suggested_title || prev.selectedTitle,
+              subtitle: structure.suggested_subtitle || prev.subtitle,
+              chapters,
+            }));
+            setImportedSectionContents(sectionContents);
+            setEntryMode('new');
+            setCurrentStep(4); // TOCステップに直接ジャンプ（プリフィル済み）
+          }}
+          onBack={() => setEntryMode(null)}
+          isDemo={isDemo}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">

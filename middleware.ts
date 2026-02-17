@@ -33,6 +33,7 @@ const PUBLIC_PATHS = [
   '/kindle/guide',
   '/kindle/publish-guide',
   '/kindle/demo',
+  '/kindle/book-lp',  // 書籍PR用LP（公開ページ）
 ];
 
 // デモモード用のパス（クエリパラメータ付き）
