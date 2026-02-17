@@ -9,6 +9,7 @@ import ServiceSelector from '@/components/shared/ServiceSelector';
 import AnnouncementBanner from '@/components/shared/AnnouncementBanner';
 import AffiliateTracker from '@/components/affiliate/AffiliateTracker';
 import { getReferralCode } from '@/components/affiliate/AffiliateTracker';
+import FeedbackModal from '@/components/shared/FeedbackModal';
 import {
   Sparkles,
   UserCircle,
@@ -39,6 +40,7 @@ import {
   Stamp,
   PenTool,
   BookOpen,
+  MessageSquareHeart,
 } from 'lucide-react';
 import { setUserId } from '@/lib/gtag';
 
@@ -81,6 +83,9 @@ export default function HomePageClientV3() {
 
   // トップに戻るボタン用のstate
   const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // ご意見箱モーダル用のstate
+  const [showFeedback, setShowFeedback] = useState(false);
 
   // 統計カウント取得（ポータルと同じ方式）
   const fetchTotalCounts = useCallback(async () => {
@@ -931,10 +936,28 @@ export default function HomePageClientV3() {
         </div>
       </section>
 
-      {/* トップに戻るボタン */}
+      {/* ご意見箱モーダル */}
+      <FeedbackModal
+        isOpen={showFeedback}
+        onClose={() => setShowFeedback(false)}
+        user={user as { email?: string; id?: string } | null}
+        onLoginRequest={() => { setShowFeedback(false); setShowAuth(true); }}
+      />
+
+      {/* フローティングボタン群 */}
       {showScrollTop && (
-        <button onClick={scrollToTop} className="fixed bottom-6 right-6 z-50 w-12 h-12 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
-          style={{ backgroundColor: '#f97316' }} aria-label="トップに戻る"><ArrowUp size={24} /></button>
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+          <button
+            onClick={() => user ? setShowFeedback(true) : setShowAuth(true)}
+            className="w-12 h-12 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
+            style={{ background: 'linear-gradient(135deg, #818cf8, #6366f1)' }}
+            aria-label="ご意見箱"
+          >
+            <MessageSquareHeart size={22} />
+          </button>
+          <button onClick={scrollToTop} className="w-12 h-12 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110"
+            style={{ backgroundColor: '#f97316' }} aria-label="トップに戻る"><ArrowUp size={24} /></button>
+        </div>
       )}
 
       <Footer setPage={navigateTo} onCreate={(service) => service && navigateTo(`${service}/editor`)} user={user} setShowAuth={setShowAuth} />
