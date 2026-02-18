@@ -235,7 +235,7 @@ function parseBlocks(html: string, ctx: { isQuote?: boolean; olInstance: number 
       if (text) {
         elements.push(new Paragraph({
           children: [new TextRun(decodeEntities(text))],
-          spacing: { after: 240 },
+          spacing: { after: 100 },
         }));
       }
       pos = nextTag === -1 ? normalized.length : nextTag;
@@ -285,7 +285,7 @@ function parseBlocks(html: string, ctx: { isQuote?: boolean; olInstance: number 
         if (runs.length > 0) {
           elements.push(new Paragraph({
             children: runs,
-            spacing: { after: 240 },
+            spacing: { after: 100 },
             indent: ctx.isQuote
               ? { left: convertInchesToTwip(0.5) }
               : { firstLine: convertInchesToTwip(0.3) },
@@ -361,7 +361,7 @@ function parseBlocks(html: string, ctx: { isQuote?: boolean; olInstance: number 
       default: {
         const runs = parseInline(inner);
         if (runs.length > 0) {
-          elements.push(new Paragraph({ children: runs, spacing: { after: 240 } }));
+          elements.push(new Paragraph({ children: runs, spacing: { after: 100 } }));
         }
       }
     }
@@ -545,7 +545,7 @@ function createBookDocument(book: Book, chapters: Chapter[], sections: Section[]
       } else {
         children.push(new Paragraph({
           children: [new TextRun({ text: '（未執筆）', italics: true, color: COLORS.gray })],
-          spacing: { after: 240 },
+          spacing: { after: 100 },
         }));
       }
     }
@@ -561,7 +561,7 @@ function createBookDocument(book: Book, chapters: Chapter[], sections: Section[]
             color: COLORS.body,
           },
           paragraph: {
-            spacing: { line: 456, after: 240 }, // 1.9倍行間
+            spacing: { line: 312, after: 100 }, // 1.3倍行間（書籍向け）
           },
         },
       },
@@ -573,18 +573,15 @@ function createBookDocument(book: Book, chapters: Chapter[], sections: Section[]
           next: 'Normal',
           quickFormat: true,
           run: {
-            size: 44, // 22pt
+            size: 36, // 18pt
             bold: true,
             color: COLORS.dark,
             font: '游ゴシック',
           },
           paragraph: {
-            alignment: AlignmentType.CENTER,
-            spacing: { before: 480, after: 360 },
-            shading: { type: ShadingType.CLEAR, color: 'auto', fill: COLORS.lightGray },
+            spacing: { before: 240, after: 200, line: 276 },
             border: {
-              top: { style: BorderStyle.SINGLE, size: 6, color: COLORS.primary },
-              bottom: { style: BorderStyle.SINGLE, size: 6, color: COLORS.primary },
+              bottom: { style: BorderStyle.SINGLE, size: 8, color: COLORS.primary },
             },
           },
         },
@@ -601,11 +598,11 @@ function createBookDocument(book: Book, chapters: Chapter[], sections: Section[]
             font: '游ゴシック',
           },
           paragraph: {
-            spacing: { before: 360, after: 200 },
-            shading: { type: ShadingType.CLEAR, color: 'auto', fill: COLORS.veryLightGray },
+            spacing: { before: 300, after: 160, line: 276 },
             border: {
               left: { style: BorderStyle.SINGLE, size: 8, color: COLORS.primary },
             },
+            indent: { left: convertInchesToTwip(0.08) },
           },
         },
         {
@@ -621,7 +618,7 @@ function createBookDocument(book: Book, chapters: Chapter[], sections: Section[]
             font: '游ゴシック',
           },
           paragraph: {
-            spacing: { before: 320, after: 160 },
+            spacing: { before: 280, after: 120, line: 276 },
           },
         },
         {
@@ -637,7 +634,7 @@ function createBookDocument(book: Book, chapters: Chapter[], sections: Section[]
             font: '游ゴシック',
           },
           paragraph: {
-            spacing: { before: 280, after: 140 },
+            spacing: { before: 240, after: 100, line: 276 },
           },
         },
         {
@@ -653,7 +650,7 @@ function createBookDocument(book: Book, chapters: Chapter[], sections: Section[]
             font: '游ゴシック',
           },
           paragraph: {
-            spacing: { before: 240, after: 120 },
+            spacing: { before: 200, after: 80, line: 276 },
           },
         },
       ],
