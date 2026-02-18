@@ -17,15 +17,12 @@ async function getAuthUser(request: NextRequest) {
   return user;
 }
 
-// GET: 出品詳細
+// GET: 出品詳細（認証不要 — 公開サービスは誰でも閲覧可能）
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getAuthUser(request);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
     const { id } = await params;
     const supabase = getServiceClient()!;
 

@@ -7,10 +7,9 @@ import { MarketplaceListing, MarketplaceReview } from '@/lib/types';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
-import ProGate from '@/components/marketplace/ProGate';
 import SellerProfileCard from '@/components/marketplace/SellerProfileCard';
 import ReviewList from '@/components/marketplace/ReviewList';
-import { ArrowLeft, Clock, ShoppingBag, MessageSquare, Loader2 } from 'lucide-react';
+import { ArrowLeft, Clock, ShoppingBag, MessageSquare, Loader2, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { CATEGORY_MAP } from '@/constants/marketplace';
 
@@ -19,7 +18,6 @@ export default function ListingDetailPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [accessToken, setAccessToken] = useState('');
-  const [planTier, setPlanTier] = useState('free');
   const [loading, setLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
@@ -35,21 +33,17 @@ export default function ListingDetailPage() {
     const init = async () => {
       if (!supabase) { setLoading(false); return; }
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) { setLoading(false); return; }
 
-      setUser(session.user);
-      setAccessToken(session.access_token);
-
-      const planRes = await fetch(`/api/user/plan?userId=${session.user.id}`);
-      if (planRes.ok) {
-        const data = await planRes.json();
-        setPlanTier(data.planTier);
+      if (session?.user) {
+        setUser(session.user);
+        setAccessToken(session.access_token);
       }
 
-      // 出品詳細取得
-      const res = await fetch(`/api/marketplace/listings/${listingId}`, {
-        headers: { 'Authorization': `Bearer ${session.access_token}` },
-      });
+      // 出品詳細取得（認証不要）
+      const headers: Record<string, string> = {};
+      if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+      const res = await fetch(`/api/marketplace/listings/${listingId}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setListing(data.listing);
@@ -112,17 +106,6 @@ export default function ListingDetailPage() {
     );
   }
 
-  if (!user || planTier !== 'pro') {
-    return (
-      <>
-        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuthModal} />
-        <main className="min-h-screen bg-gray-50 pt-16"><ProGate /></main>
-        <Footer />
-        {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} setUser={setUser} />}
-      </>
-    );
-  }
-
   if (!listing) {
     return (
       <>
@@ -139,7 +122,7 @@ export default function ListingDetailPage() {
   }
 
   const category = CATEGORY_MAP[listing.category];
-  const isOwnListing = listing.seller_id === user.id;
+  const isOwnListing = user && listing.seller_id === user.id;
 
   return (
     <>
@@ -217,6 +200,20 @@ export default function ListingDetailPage() {
                   >
                     自分の出品を管理する
                   </Link>
+                ) : !user ? (
+                  /* 未ログインユーザー向け */
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => setShowAuthModal(true)}
+                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      ログインして相談する
+                    </button>
+                    <p className="text-xs text-gray-400 text-center">
+                      依頼にはログインが必要です
+                    </p>
+                  </div>
                 ) : !showRequestForm ? (
                   <button
                     onClick={() => {
@@ -280,6 +277,9 @@ export default function ListingDetailPage() {
         </div>
       </main>
       <Footer />
+      {showAuthModal && (
+        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} setUser={setUser} />
+      )}
     </>
   );
 }

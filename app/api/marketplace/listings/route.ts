@@ -18,11 +18,9 @@ async function getAuthUser(request: NextRequest) {
 }
 
 // GET: 出品一覧（検索・フィルタ対応）
+// 公開一覧は認証不要。my=true の場合のみ認証必須。
 export async function GET(request: NextRequest) {
   try {
-    const user = await getAuthUser(request);
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
     const supabase = getServiceClient()!;
     const { searchParams } = new URL(request.url);
 
@@ -34,13 +32,19 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = (page - 1) * limit;
 
+    // 自分の出品一覧は認証必須
+    const user = await getAuthUser(request);
+    if (myListings && !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     let query = supabase.from('marketplace_listings').select('*', { count: 'exact' });
 
-    if (myListings) {
+    if (myListings && user) {
       // 自分の出品一覧（全ステータス）
       query = query.eq('seller_id', user.id);
     } else {
-      // 公開一覧
+      // 公開一覧（誰でも閲覧可能）
       query = query.eq('status', 'published');
     }
 

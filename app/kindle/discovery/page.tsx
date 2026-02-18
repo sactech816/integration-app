@@ -2,7 +2,7 @@
 
 import React, { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { BookOpen, ArrowLeft, Lightbulb, Loader2, HelpCircle, LogIn } from 'lucide-react';
+import { BookOpen, ArrowLeft, Lightbulb, Loader2, HelpCircle, LogIn, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { Step0Discovery } from '@/components/kindle/wizard/Step0Discovery';
 import KDLFooter from '@/components/shared/KDLFooter';
@@ -38,18 +38,36 @@ function KindleDiscoveryContent() {
   const [user, setUser] = useState<any>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [hasKdlSubscription, setHasKdlSubscription] = useState(false);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
 
-  // ユーザーの認証状態を確認
+  // ユーザーの認証状態とKDLサブスク確認
   useEffect(() => {
     if (!supabase) {
       setIsCheckingAuth(false);
+      setLoadingSubscription(false);
       return;
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
       setIsCheckingAuth(false);
-    });
+
+      if (session?.user) {
+        try {
+          const res = await fetch(`/api/subscription/status?userId=${session.user.id}`);
+          if (res.ok) {
+            const data = await res.json();
+            setHasKdlSubscription(data.hasActiveSubscription === true);
+          }
+        } catch {
+          // ignore
+        }
+      }
+      setLoadingSubscription(false);
+    };
+    init();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
@@ -72,7 +90,7 @@ function KindleDiscoveryContent() {
     router.push(`/kindle/new${adminKeyParam}`);
   };
 
-  if (isCheckingAuth) {
+  if (isCheckingAuth || loadingSubscription) {
     return <LoadingFallback />;
   }
 
@@ -161,8 +179,37 @@ function KindleDiscoveryContent() {
               </Link>
             </div>
           </div>
+        ) : !hasKdlSubscription ? (
+          /* ログイン済みだがKDL未課金 */
+          <div className="bg-white rounded-2xl shadow-xl border border-amber-100 p-6 sm:p-8">
+            <div className="text-center space-y-6">
+              <div className="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+                <Lock className="text-amber-600" size={28} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">有料プラン限定機能です</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  ネタ発掘診断はAIがあなたの経験・スキルから最適なKindle出版テーマを提案する機能です。<br />
+                  ご利用にはKindle出版メーカーの有料プランへの加入が必要です。
+                </p>
+              </div>
+              <Link
+                href="/kindle/pricing"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg"
+              >
+                <Lock size={18} />
+                プランを確認する
+              </Link>
+              <Link
+                href={`/kindle/new${adminKeyParam}`}
+                className="text-gray-500 hover:text-amber-600 text-sm underline transition-colors block"
+              >
+                テーマを直接入力して始める
+              </Link>
+            </div>
+          </div>
         ) : (
-          /* ログイン済み: 診断コンテンツ */
+          /* ログイン済み & KDL課金済み: 診断コンテンツ */
           <div className="bg-white rounded-2xl shadow-xl border border-amber-100 p-6 sm:p-8">
             <Step0Discovery
               onComplete={handleComplete}

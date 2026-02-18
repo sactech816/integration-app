@@ -7,16 +7,21 @@ import { Home, BookOpen, Lightbulb } from 'lucide-react';
 interface KDLFooterProps {
   adminKeyParam?: string;
   className?: string;
+  isDemo?: boolean;
 }
 
 /**
  * Kindle出版メーカー用共通フッターコンポーネント
  * 集客メーカートップと書籍一覧へのリンクを提供
  */
-export const KDLFooter: React.FC<KDLFooterProps> = ({ 
+export const KDLFooter: React.FC<KDLFooterProps> = ({
   adminKeyParam = '',
-  className = ''
+  className = '',
+  isDemo = false,
 }) => {
+  const discoveryPath = isDemo
+    ? `/kindle/discovery/demo${adminKeyParam}`
+    : `/kindle/discovery${adminKeyParam}`;
   return (
     <footer className={`bg-white/80 backdrop-blur-md border-t border-amber-100 ${className}`}>
       <div className="max-w-4xl mx-auto px-4 py-4">
@@ -38,7 +43,7 @@ export const KDLFooter: React.FC<KDLFooterProps> = ({
           </Link>
           <span className="text-gray-300">|</span>
           <Link
-            href={`/kindle/discovery${adminKeyParam}`}
+            href={discoveryPath}
             className="flex items-center gap-2 text-gray-600 hover:text-amber-600 transition-colors"
           >
             <Lightbulb size={16} />

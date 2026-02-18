@@ -721,7 +721,7 @@ function KindleNewPageContent() {
       </main>
 
       {/* 共通フッター */}
-      <KDLFooter adminKeyParam={adminKeyParam} />
+      <KDLFooter adminKeyParam={adminKeyParam} isDemo={isDemo} />
     </div>
   );
 }

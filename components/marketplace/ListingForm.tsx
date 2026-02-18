@@ -150,7 +150,7 @@ export default function ListingForm({ listing, accessToken, onSaved, onCancel }:
                 onChange={e => setPriceType(e.target.value as MarketplacePriceType)}
                 className="text-indigo-600"
               />
-              <span className="text-sm">{label}</span>
+              <span className="text-sm text-gray-900">{label}</span>
             </label>
           ))}
         </div>
