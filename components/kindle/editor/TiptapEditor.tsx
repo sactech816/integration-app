@@ -956,9 +956,16 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
           color: #374151;
         }
         
-        .ProseMirror ul, .ProseMirror ol {
+        .ProseMirror ul {
           margin: 0.75rem 0;
           padding-left: 1.5rem;
+          list-style-type: disc;
+        }
+
+        .ProseMirror ol {
+          margin: 0.75rem 0;
+          padding-left: 1.5rem;
+          list-style-type: decimal;
         }
         
         .ProseMirror li {

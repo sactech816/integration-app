@@ -395,7 +395,11 @@ function extractListItems(html: string): string[] {
     const pMatch = content.match(/^<p(\s[^>]*)?>(.+)<\/p>$/i);
     if (pMatch) content = pMatch[2];
 
-    items.push(content);
+    // 空のリストアイテムをスキップ（空白行の原因）
+    const textOnly = content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+    if (textOnly.length > 0) {
+      items.push(content);
+    }
     pos = liClose + '</li>'.length;
   }
 
