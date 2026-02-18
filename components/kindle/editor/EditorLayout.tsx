@@ -4,7 +4,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle, Info, Sparkles, Copy, Tag, FileText, FolderTree, Lightbulb, BookOpen, Rocket, PlayCircle, Crown, Menu, Plus, Trash2, PenLine, StickyNote, ArrowRightToLine } from 'lucide-react';
 import Link from 'next/link';
-import KdlHamburgerMenu from '@/components/kindle/shared/KdlHamburgerMenu';
+import KdlHamburgerMenu, { type EditorActionItem } from '@/components/kindle/shared/KdlHamburgerMenu';
 import KdlUsageHeader, { type KdlUsageLimits } from '@/components/kindle/KdlUsageHeader';
 import BookLPPreview from '@/components/kindle/lp/BookLPPreview';
 import { ChapterSidebar } from './ChapterSidebar';
@@ -177,6 +177,25 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   const [usageRefreshTrigger, setUsageRefreshTrigger] = useState(0);
   const [isSaving, setIsSaving] = useState(false); // 途中保存中
   const [isMarkingComplete, setIsMarkingComplete] = useState(false); // 完成マーク中
+
+  // オンボーディングモーダル
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingDismissForever, setOnboardingDismissForever] = useState(false);
+
+  useEffect(() => {
+    if (readOnly) return;
+    const dismissed = localStorage.getItem('kdl_onboarding_dismissed');
+    if (!dismissed) {
+      setShowOnboarding(true);
+    }
+  }, [readOnly]);
+
+  const handleDismissOnboarding = () => {
+    if (onboardingDismissForever) {
+      localStorage.setItem('kdl_onboarding_dismissed', 'true');
+    }
+    setShowOnboarding(false);
+  };
   const [bookStatus, setBookStatus] = useState(book.status || 'draft'); // 書籍ステータス
 
   // 現在選択中の節とその章を取得
@@ -1325,13 +1344,6 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
       {/* ヘッダー */}
       <div className="flex items-center justify-between px-2 sm:px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md relative z-30">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-          {/* ハンバーガーメニュー（KDL共通ナビゲーション） */}
-          <KdlHamburgerMenu 
-            adminKey={adminKeyParam.replace('?admin_key=', '') || null}
-            buttonClassName="p-1.5 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0"
-            iconColor="text-white"
-          />
-
           {/* スマホ用サイドバートグルボタン（目次表示用） */}
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -1340,7 +1352,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
           >
             <BookOpen size={20} />
           </button>
-          
+
           <h1 className="font-bold text-xs sm:text-sm truncate max-w-[150px] sm:max-w-xs">{book.title}</h1>
           {readOnly && (
             <div className="flex items-center gap-1 bg-blue-500 text-white px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0">
@@ -1349,9 +1361,9 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             </div>
           )}
         </div>
-        
-        {/* デスクトップ用ボタン群 */}
-        <div className="hidden lg:flex items-center gap-2">
+
+        {/* ボタン群 + ハンバーガーメニュー（右側） */}
+        <div className="flex items-center gap-1 sm:gap-2">
           {!readOnly && (
             <>
               {/* 途中保存ボタン */}
@@ -1359,31 +1371,26 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 onClick={handleIntermediateSave}
                 disabled={isSaving}
                 title="途中保存"
-                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
+                className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg font-medium text-sm transition-all ${
                   isSaving
                     ? 'bg-white/20 cursor-not-allowed'
                     : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
                 }`}
               >
                 {isSaving ? (
-                  <>
-                    <Loader2 className="animate-spin" size={16} />
-                    <span>保存中...</span>
-                  </>
+                  <Loader2 className="animate-spin" size={16} />
                 ) : (
-                  <>
-                    <Save size={16} />
-                    <span>途中保存</span>
-                  </>
+                  <Save size={16} />
                 )}
+                <span className="hidden sm:inline">{isSaving ? '保存中...' : '途中保存'}</span>
               </button>
-              
+
               {/* 完成ボタン */}
               <button
                 onClick={handleMarkComplete}
                 disabled={isMarkingComplete || bookStatus === 'completed'}
                 title={bookStatus === 'completed' ? '完成済み' : '執筆完了'}
-                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
+                className={`flex items-center justify-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg font-medium text-sm transition-all ${
                   bookStatus === 'completed'
                     ? 'bg-green-500/80 cursor-default'
                     : isMarkingComplete
@@ -1392,181 +1399,67 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 }`}
               >
                 {bookStatus === 'completed' ? (
-                  <>
-                    <CheckCircle size={16} />
-                    <span>完成済み</span>
-                  </>
+                  <CheckCircle size={16} />
                 ) : isMarkingComplete ? (
-                  <>
-                    <Loader2 className="animate-spin" size={16} />
-                    <span>処理中...</span>
-                  </>
+                  <Loader2 className="animate-spin" size={16} />
                 ) : (
-                  <>
-                    <Check size={16} />
-                    <span>完成</span>
-                  </>
+                  <Check size={16} />
                 )}
-              </button>
-              
-              <div className="w-px h-6 bg-white/30" />
-              
-              <button
-                onClick={handleShowKdpInfo}
-                disabled={isGeneratingKdp || isLoadingKdp}
-                title="KDP情報"
-                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
-                  isGeneratingKdp || isLoadingKdp
-                    ? 'bg-white/20 cursor-not-allowed'
-                    : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
-                }`}
-              >
-                {isGeneratingKdp || isLoadingKdp ? (
-                  <>
-                    <Loader2 className="animate-spin" size={16} />
-                    <span>{isGeneratingKdp ? '生成中...' : '読込中...'}</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={16} />
-                    <span>KDP情報</span>
-                  </>
-                )}
-              </button>
-              
-              <button
-                onClick={() => handleDownloadFile('docx')}
-                disabled={isDownloading}
-                title="Word出力"
-                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
-                  isDownloading
-                    ? 'bg-white/20 cursor-not-allowed'
-                    : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
-                }`}
-              >
-                {isDownloading ? (
-                  <>
-                    <Loader2 className="animate-spin" size={16} />
-                    <span>生成中...</span>
-                  </>
-                ) : (
-                  <>
-                    <FileDown size={16} />
-                    <span>Word</span>
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => handleDownloadFile('epub')}
-                disabled={isDownloading}
-                title="EPUB出力"
-                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
-                  isDownloading
-                    ? 'bg-white/20 cursor-not-allowed'
-                    : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
-                }`}
-              >
-                <BookOpen size={16} />
-                <span>EPUB</span>
-              </button>
-
-              <button
-                onClick={handleShowLP}
-                disabled={isGeneratingLP}
-                title="LP生成"
-                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
-                  isGeneratingLP
-                    ? 'bg-white/20 cursor-not-allowed'
-                    : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
-                }`}
-              >
-                {isGeneratingLP ? (
-                  <>
-                    <Loader2 className="animate-spin" size={16} />
-                    <span>生成中...</span>
-                  </>
-                ) : (
-                  <>
-                    <Rocket size={16} />
-                    <span>LP生成</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                onClick={() => setIsStyleTransformOpen(true)}
-                disabled={rewriteProgress.isRunning}
-                title="文体変換"
-                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all ${
-                  rewriteProgress.isRunning
-                    ? 'bg-white/20 cursor-not-allowed'
-                    : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
-                }`}
-              >
-                <PenLine size={16} />
-                <span>文体変換</span>
-              </button>
-
-              <div className="w-px h-6 bg-white/30" />
-              
-              {/* まずお読みください */}
-              <Link
-                href="/kindle/guide"
-                target="_blank"
-                className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium text-sm transition-all bg-white/20 hover:bg-white/30 active:bg-white/40"
-              >
-                <FileText size={16} />
-                <span>まずお読みください</span>
-              </Link>
-            </>
-          )}
-        </div>
-        
-        {/* タブレット・スマホ用ボタン群（コンパクト） */}
-        <div className="lg:hidden flex items-center gap-1">
-          {!readOnly && (
-            <>
-              {/* 途中保存ボタン */}
-              <button
-                onClick={handleIntermediateSave}
-                disabled={isSaving}
-                title="途中保存"
-                className={`flex items-center justify-center p-2 rounded-lg font-medium text-sm transition-all ${
-                  isSaving
-                    ? 'bg-white/20 cursor-not-allowed'
-                    : 'bg-white/20 hover:bg-white/30 active:bg-white/40'
-                }`}
-              >
-                {isSaving ? (
-                  <Loader2 className="animate-spin" size={18} />
-                ) : (
-                  <Save size={18} />
-                )}
-              </button>
-              
-              {/* 完成ボタン */}
-              <button
-                onClick={handleMarkComplete}
-                disabled={isMarkingComplete || bookStatus === 'completed'}
-                title={bookStatus === 'completed' ? '完成済み' : '執筆完了'}
-                className={`flex items-center justify-center p-2 rounded-lg font-medium text-sm transition-all ${
-                  bookStatus === 'completed'
-                    ? 'bg-green-500/80 cursor-default'
-                    : isMarkingComplete
-                    ? 'bg-white/20 cursor-not-allowed'
-                    : 'bg-green-500 hover:bg-green-600 active:bg-green-700'
-                }`}
-              >
-                {bookStatus === 'completed' ? (
-                  <CheckCircle size={18} />
-                ) : isMarkingComplete ? (
-                  <Loader2 className="animate-spin" size={18} />
-                ) : (
-                  <Check size={18} />
-                )}
+                <span className="hidden sm:inline">
+                  {bookStatus === 'completed' ? '完成済み' : isMarkingComplete ? '処理中...' : '完成'}
+                </span>
               </button>
             </>
           )}
+
+          {/* ハンバーガーメニュー（右上） */}
+          <KdlHamburgerMenu
+            adminKey={adminKeyParam.replace('?admin_key=', '') || null}
+            buttonClassName="p-1.5 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0"
+            iconColor="text-white"
+            editorActions={!readOnly ? [
+              {
+                id: 'kdp-info',
+                label: 'KDP情報',
+                icon: <Sparkles size={20} />,
+                onClick: handleShowKdpInfo,
+                disabled: isGeneratingKdp || isLoadingKdp,
+                loadingLabel: isGeneratingKdp ? 'KDP情報 生成中...' : 'KDP情報 読込中...',
+              },
+              {
+                id: 'download-word',
+                label: 'Word出力',
+                icon: <FileDown size={20} />,
+                onClick: () => handleDownloadFile('docx'),
+                disabled: isDownloading,
+                loadingLabel: 'Word 生成中...',
+              },
+              {
+                id: 'download-epub',
+                label: 'EPUB出力',
+                icon: <BookOpen size={20} />,
+                onClick: () => handleDownloadFile('epub'),
+                disabled: isDownloading,
+                loadingLabel: 'EPUB 生成中...',
+              },
+              {
+                id: 'lp-generate',
+                label: 'LP生成',
+                icon: <Rocket size={20} />,
+                onClick: handleShowLP,
+                disabled: isGeneratingLP,
+                loadingLabel: 'LP 生成中...',
+              },
+              {
+                id: 'style-transform',
+                label: '文体変換',
+                icon: <PenLine size={20} />,
+                onClick: () => setIsStyleTransformOpen(true),
+                disabled: rewriteProgress.isRunning,
+                loadingLabel: '文体変換中...',
+              },
+            ] : undefined}
+          />
         </div>
       </div>
 
@@ -1829,6 +1722,73 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-medium hover:from-amber-600 hover:to-orange-600 transition-colors"
               >
                 実行する
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* オンボーディングモーダル */}
+      {showOnboarding && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={handleDismissOnboarding}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-fade-in overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-5">
+              <h3 className="text-xl font-bold">執筆画面の使い方</h3>
+              <p className="text-white/80 text-sm mt-1">はじめての方へ、基本的な機能をご紹介します</p>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-purple-600 font-bold text-sm">1</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">AI執筆</p>
+                  <p className="text-sm text-gray-600">ツールバーの「AI執筆」ボタンで、AIが節の内容を自動生成します。スタイルを選んで執筆を開始できます。</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-teal-600 font-bold text-sm">2</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">書き換え</p>
+                  <p className="text-sm text-gray-600">テキストを選択して「書き換え」ボタンを押すと、文章をAIがリライトします。</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-amber-600 font-bold text-sm">3</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">メニュー</p>
+                  <p className="text-sm text-gray-600">右上の <strong>&#9776;</strong> メニューから、Word/EPUB出力、KDP情報生成、LP生成などの機能にアクセスできます。</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-orange-600 font-bold text-sm">4</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900">一括執筆</p>
+                  <p className="text-sm text-gray-600">左サイドバーの <strong>&#9889;</strong> ボタンで章全体を一括でAI執筆できます。</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={onboardingDismissForever}
+                  onChange={(e) => setOnboardingDismissForever(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-400"
+                />
+                <span className="text-sm text-gray-600">次から表示しない</span>
+              </label>
+              <button
+                onClick={handleDismissOnboarding}
+                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+              >
+                はじめる
               </button>
             </div>
           </div>

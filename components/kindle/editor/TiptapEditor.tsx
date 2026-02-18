@@ -162,7 +162,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
     editable: !readOnly, // 閲覧専用モードでは編集不可
       editorProps: {
         attributes: {
-          class: `prose prose-sm sm:prose-lg max-w-none focus:outline-none min-h-[calc(100vh-300px)] px-4 sm:px-8 py-4 sm:py-6 ${readOnly ? 'cursor-default' : ''}`,
+          class: `prose prose-sm sm:prose-base max-w-none focus:outline-none min-h-[calc(100vh-300px)] px-4 sm:px-8 py-4 sm:py-6 ${readOnly ? 'cursor-default' : ''}`,
         },
       },
     onUpdate: ({ editor }) => {
@@ -951,8 +951,8 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
         }
         
         .ProseMirror p {
-          margin: 0.75rem 0;
-          line-height: 1.8;
+          margin: 0.5rem 0;
+          line-height: 1.75;
           color: #374151;
         }
         
@@ -963,7 +963,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
         
         .ProseMirror li {
           margin: 0.25rem 0;
-          line-height: 1.8;
+          line-height: 1.75;
         }
         
         .ProseMirror blockquote {

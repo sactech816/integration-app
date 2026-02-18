@@ -75,6 +75,30 @@ function sanitizeHtml(html: string | null): string {
     .replace(/<div>\s*<\/div>/gi, '');
 }
 
+/**
+ * セクションコンテンツの先頭にある見出しタグが、セクションタイトルと一致または類似する場合に除去する
+ */
+function stripLeadingHeading(html: string, sectionTitle: string): string {
+  const trimmed = html.trim();
+  const headingMatch = trimmed.match(/^<(h[1-3])(\s[^>]*)?>(.+?)<\/\1>/i);
+  if (!headingMatch) return html;
+
+  const headingText = headingMatch[3].replace(/<[^>]*>/g, '').trim();
+  const normalizedTitle = sectionTitle.replace(/\s+/g, '').trim();
+  const normalizedHeading = headingText.replace(/\s+/g, '').trim();
+
+  // 完全一致、または一方が他方を含む場合はスキップ
+  if (
+    normalizedTitle === normalizedHeading ||
+    normalizedTitle.includes(normalizedHeading) ||
+    normalizedHeading.includes(normalizedTitle)
+  ) {
+    return trimmed.slice(headingMatch[0].length).trim();
+  }
+
+  return html;
+}
+
 function decodeEntities(text: string): string {
   return text
     .replace(/&amp;/g, '&')
@@ -433,8 +457,41 @@ function createBookDocument(book: Book, chapters: Chapter[], sections: Section[]
       hyperlink: true,
       headingStyleRange: "1-2",
     }),
-    new Paragraph({ children: [new PageBreak()] }),
   );
+
+  // 手動テキスト目次（TOCフィールドが更新されない環境向けフォールバック）
+  children.push(
+    new Paragraph({ spacing: { before: 400 } }),
+  );
+  for (const chapter of chapters) {
+    children.push(new Paragraph({
+      children: [new TextRun({
+        text: chapter.title,
+        bold: true,
+        size: 24,
+        color: COLORS.dark,
+        font: '游ゴシック',
+      })],
+      spacing: { before: 200, after: 80 },
+    }));
+    const chSections = sections
+      .filter(s => s.chapter_id === chapter.id)
+      .sort((a, b) => a.order_index - b.order_index);
+    for (const sec of chSections) {
+      children.push(new Paragraph({
+        children: [new TextRun({
+          text: `  ${sec.title}`,
+          size: 22,
+          color: COLORS.gray,
+          font: '游ゴシック',
+        })],
+        spacing: { after: 40 },
+        indent: { left: convertInchesToTwip(0.3) },
+      }));
+    }
+  }
+
+  children.push(new Paragraph({ children: [new PageBreak()] }));
 
   // ========== 本文 ==========
   let olInstance = 0;
@@ -475,9 +532,10 @@ function createBookDocument(book: Book, chapters: Chapter[], sections: Section[]
         heading: HeadingLevel.HEADING_2,
       }));
 
-      // 節の内容
+      // 節の内容（先頭の重複見出しを除去）
       if (section.content) {
-        const result = parseBlocks(sanitizeHtml(section.content), { olInstance });
+        const cleanedContent = stripLeadingHeading(sanitizeHtml(section.content), section.title);
+        const result = parseBlocks(cleanedContent, { olInstance });
         children.push(...result.paragraphs);
         olInstance = result.olInstance;
       } else {
