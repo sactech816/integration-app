@@ -58,3 +58,44 @@ export const RESPONSE_TIME_OPTIONS = [
   '1週間以内',
   'ご相談ください',
 ];
+
+// =============================================
+// クリエイター登録用: サポート可能ツール
+// =============================================
+
+export interface SupportedTool {
+  id: string;
+  label: string;
+  icon: string;
+  hasSubtypes?: boolean;
+}
+
+export const SUPPORTED_TOOLS: SupportedTool[] = [
+  { id: 'quiz', label: '診断クイズ', icon: 'Sparkles' },
+  { id: 'profile', label: 'プロフィール', icon: 'UserCircle' },
+  { id: 'business', label: 'ランディングページ', icon: 'Layout' },
+  { id: 'survey', label: 'アンケート', icon: 'ClipboardList' },
+  { id: 'booking', label: '予約システム', icon: 'Calendar' },
+  { id: 'attendance', label: '出欠確認', icon: 'CalendarCheck' },
+  { id: 'gamification', label: 'ゲーム', icon: 'Gamepad2' },
+  { id: 'kindle', label: 'Kindle出版', icon: 'BookOpen', hasSubtypes: true },
+];
+
+export const SUPPORTED_TOOLS_MAP = Object.fromEntries(
+  SUPPORTED_TOOLS.map(t => [t.id, t])
+) as Record<string, SupportedTool>;
+
+// Kindle出版のサブカテゴリ
+export interface KindleSubtype {
+  id: string;
+  label: string;
+}
+
+export const KINDLE_SUBTYPES: KindleSubtype[] = [
+  { id: 'kindle_writing', label: '執筆サポート' },
+  { id: 'kindle_proofreading', label: '校正' },
+  { id: 'kindle_cover', label: '表紙作成' },
+  { id: 'kindle_paperback', label: 'ペーパーバック支援' },
+  { id: 'kindle_a_plus', label: 'A+コンテンツ作成' },
+  { id: 'kindle_marketing', label: 'マーケティング・販促' },
+];

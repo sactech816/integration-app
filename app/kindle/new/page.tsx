@@ -443,23 +443,28 @@ function KindleNewPageContent() {
               </p>
             </button>
             <button
-              onClick={() => !isBookLimitReached && setEntryMode('import')}
-              disabled={!!isBookLimitReached}
+              onClick={() => !isBookLimitReached && !isDemo && setEntryMode('import')}
+              disabled={!!isBookLimitReached || isDemo}
               className={`bg-white rounded-2xl p-8 border-2 text-left group transition-all ${
-                isBookLimitReached
+                isBookLimitReached || isDemo
                   ? 'border-gray-200 opacity-50 cursor-not-allowed'
                   : 'border-gray-200 hover:border-blue-400 hover:shadow-lg'
               }`}
             >
               <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition ${
-                isBookLimitReached ? 'bg-gray-100' : 'bg-blue-100 group-hover:bg-blue-200'
+                isBookLimitReached || isDemo ? 'bg-gray-100' : 'bg-blue-100 group-hover:bg-blue-200'
               }`}>
-                <FileText size={28} className={isBookLimitReached ? 'text-gray-400' : 'text-blue-600'} />
+                <FileText size={28} className={isBookLimitReached || isDemo ? 'text-gray-400' : 'text-blue-600'} />
               </div>
               <h3 className="text-lg font-bold text-gray-800 mb-2">原稿をインポート</h3>
               <p className="text-sm text-gray-500 leading-relaxed">
                 既存の原稿（テキスト / DOCX）を取り込み、AIが自動で章・節構造を分析。リライトしたい方に。
               </p>
+              {isDemo && (
+                <p className="text-xs text-amber-600 mt-2">
+                  ※ デモでは「AIで新規作成」をお試しください
+                </p>
+              )}
             </button>
           </div>
           <div className="text-center mt-6">

@@ -246,6 +246,20 @@ const Header: React.FC<HeaderProps> = ({
                         <div className="text-xs text-gray-500">ガチャ・スタンプラリー等</div>
                       </div>
                     </Link>
+                    <div className="border-t border-gray-100 my-1" />
+                    <Link
+                      href="/pricing"
+                      onClick={closeMenus}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="p-2 rounded-lg bg-purple-50">
+                        <Crown size={18} className="text-purple-600" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900 text-sm whitespace-nowrap">料金プラン</div>
+                        <div className="text-xs text-gray-500">Proプランのご案内</div>
+                      </div>
+                    </Link>
                     {!user && (
                       <div className="px-4 py-3 border-t border-gray-100 mt-1">
                         <p className="text-xs text-gray-600 mb-2 flex items-center gap-1 text-left">
@@ -338,6 +352,20 @@ const Header: React.FC<HeaderProps> = ({
                         <div>
                           <div className="font-semibold text-gray-900 text-sm">ゲーミフィケーション活用法</div>
                           <div className="text-xs text-gray-500">エンゲージメントを高める</div>
+                        </div>
+                      </Link>
+                      <div className="border-t border-gray-100 my-1" />
+                      <Link
+                        href="/marketplace"
+                        onClick={closeMenus}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="p-2 rounded-lg bg-indigo-50">
+                          <Store size={18} className="text-indigo-600" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900 text-sm">スキルマーケット</div>
+                          <div className="text-xs text-gray-500">プロに依頼・スキルを出品</div>
                         </div>
                       </Link>
                       <div className="border-t border-gray-100 my-1" />
@@ -491,15 +519,6 @@ const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            {/* ===== スキルマーケット（単独リンク） ===== */}
-            <Link
-              href="/marketplace"
-              className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg px-3 py-2 transition-all"
-            >
-              <Store size={16} />
-              <span>スキルマーケット</span>
-            </Link>
-
             {/* ===== お知らせ（単独リンク） ===== */}
             <Link
               href="/announcements"
@@ -507,15 +526,6 @@ const Header: React.FC<HeaderProps> = ({
             >
               <Bell size={16} />
               <span>お知らせ</span>
-            </Link>
-
-            {/* ===== 料金プラン（単独リンク） ===== */}
-            <Link
-              href="/pricing"
-              className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg px-3 py-2 transition-all"
-            >
-              <Crown size={16} />
-              <span>料金プラン</span>
             </Link>
 
           </nav>

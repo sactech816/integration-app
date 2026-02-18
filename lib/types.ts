@@ -1271,6 +1271,8 @@ export interface MarketplaceProfile {
   skills: string[];
   portfolio_urls: string[];
   response_time: string | null;
+  supported_tools: string[];
+  kindle_subtypes: string[];
   stripe_connect_id: string | null;
   avg_rating: number;
   total_reviews: number;

@@ -13,6 +13,10 @@ CREATE TABLE IF NOT EXISTS marketplace_profiles (
   skills TEXT[],
   portfolio_urls TEXT[],
   response_time TEXT,
+  -- サポート可能ツール: ['quiz','profile','business','survey','booking','attendance','gamification','kindle']
+  supported_tools TEXT[],
+  -- Kindle詳細: ['kindle_writing','kindle_proofreading','kindle_cover','kindle_paperback','kindle_a_plus','kindle_marketing']
+  kindle_subtypes TEXT[],
   -- Phase 2用（Stripe Connect）
   stripe_connect_id TEXT,
   -- 集計キャッシュ

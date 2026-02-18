@@ -30,6 +30,7 @@ import {
   LayoutDashboard,
   Lightbulb,
   MessageSquareHeart,
+  Store,
 } from 'lucide-react';
 
 export type MenuSection = 'main' | 'settings' | 'admin';
@@ -114,7 +115,8 @@ export default function SidebarNav({
     },
     { id: 'kindle-discovery', label: 'ネタ発掘診断', icon: Lightbulb, section: 'main' },
     { id: 'affiliate', label: 'アフィリエイト', icon: Share2, section: 'main' },
-    
+    { id: 'marketplace-seller', label: 'スキルマーケット管理', icon: Store, section: 'main' },
+
     // 設定メニュー
     { id: 'settings', label: 'アカウント設定', icon: Settings, section: 'settings' },
     { id: 'logout', label: 'ログアウト', icon: LogOut, section: 'settings', onClick: onLogout },

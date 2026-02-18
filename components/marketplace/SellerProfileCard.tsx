@@ -3,6 +3,7 @@
 import React from 'react';
 import { Star, Clock, ShoppingBag, ExternalLink } from 'lucide-react';
 import { MarketplaceProfile } from '@/lib/types';
+import { SUPPORTED_TOOLS_MAP, KINDLE_SUBTYPES } from '@/constants/marketplace';
 
 interface SellerProfileCardProps {
   profile: MarketplaceProfile;
@@ -67,6 +68,37 @@ export default function SellerProfileCard({ profile, compact = false }: SellerPr
                   {skill}
                 </span>
               ))}
+            </div>
+          )}
+
+          {/* サポート可能ツール */}
+          {profile.supported_tools && profile.supported_tools.length > 0 && (
+            <div className="mt-4">
+              <span className="text-xs font-medium text-gray-500">対応ツール</span>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {profile.supported_tools.map(toolId => {
+                  const tool = SUPPORTED_TOOLS_MAP[toolId];
+                  if (!tool) return null;
+                  return (
+                    <span key={toolId} className="bg-green-50 text-green-700 px-2 py-0.5 rounded-full text-xs">
+                      {tool.label}
+                    </span>
+                  );
+                })}
+              </div>
+              {profile.supported_tools.includes('kindle') && profile.kindle_subtypes && profile.kindle_subtypes.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                  {profile.kindle_subtypes.map(subId => {
+                    const sub = KINDLE_SUBTYPES.find(s => s.id === subId);
+                    if (!sub) return null;
+                    return (
+                      <span key={subId} className="bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full text-xs">
+                        {sub.label}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 

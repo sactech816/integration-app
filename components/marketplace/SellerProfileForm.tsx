@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Loader2, Plus, X } from 'lucide-react';
+import { Loader2, Plus, X, Check } from 'lucide-react';
 import { MarketplaceProfile } from '@/lib/types';
-import { RESPONSE_TIME_OPTIONS } from '@/constants/marketplace';
+import { RESPONSE_TIME_OPTIONS, SUPPORTED_TOOLS, KINDLE_SUBTYPES } from '@/constants/marketplace';
 
 interface SellerProfileFormProps {
   profile: MarketplaceProfile | null;
@@ -19,8 +19,25 @@ export default function SellerProfileForm({ profile, accessToken, onSaved }: Sel
   const [portfolioUrls, setPortfolioUrls] = useState<string[]>(profile?.portfolio_urls || []);
   const [newUrl, setNewUrl] = useState('');
   const [responseTime, setResponseTime] = useState(profile?.response_time || '');
+  const [supportedTools, setSupportedTools] = useState<string[]>(profile?.supported_tools || []);
+  const [kindleSubtypes, setKindleSubtypes] = useState<string[]>(profile?.kindle_subtypes || []);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  const toggleTool = (toolId: string) => {
+    setSupportedTools(prev =>
+      prev.includes(toolId) ? prev.filter(t => t !== toolId) : [...prev, toolId]
+    );
+    if (toolId === 'kindle' && supportedTools.includes('kindle')) {
+      setKindleSubtypes([]);
+    }
+  };
+
+  const toggleKindleSubtype = (subtypeId: string) => {
+    setKindleSubtypes(prev =>
+      prev.includes(subtypeId) ? prev.filter(s => s !== subtypeId) : [...prev, subtypeId]
+    );
+  };
 
   const addSkill = () => {
     const s = newSkill.trim();
@@ -63,6 +80,8 @@ export default function SellerProfileForm({ profile, accessToken, onSaved }: Sel
           skills,
           portfolio_urls: portfolioUrls,
           response_time: responseTime || null,
+          supported_tools: supportedTools,
+          kindle_subtypes: kindleSubtypes,
         }),
       });
 
@@ -110,6 +129,67 @@ export default function SellerProfileForm({ profile, accessToken, onSaved }: Sel
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           placeholder="スキルや経験をアピールしましょう"
         />
+      </div>
+
+      {/* サポート可能ツール */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          サポート可能なツール
+        </label>
+        <p className="text-xs text-gray-500 mb-3">対応できるツールを選択してください</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {SUPPORTED_TOOLS.map(tool => {
+            const selected = supportedTools.includes(tool.id);
+            return (
+              <button
+                key={tool.id}
+                type="button"
+                onClick={() => toggleTool(tool.id)}
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
+                  selected
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {selected && <Check className="w-4 h-4 text-indigo-600 shrink-0" />}
+                <span className="truncate">{tool.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Kindleサブカテゴリ */}
+        {supportedTools.includes('kindle') && (
+          <div className="mt-3 ml-2 pl-4 border-l-2 border-indigo-200">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Kindle出版の対応範囲
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {KINDLE_SUBTYPES.map(sub => {
+                const selected = kindleSubtypes.includes(sub.id);
+                return (
+                  <label
+                    key={sub.id}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm cursor-pointer transition-colors ${
+                      selected
+                        ? 'border-purple-400 bg-purple-50 text-purple-700'
+                        : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => toggleKindleSubtype(sub.id)}
+                      className="sr-only"
+                    />
+                    {selected && <Check className="w-3.5 h-3.5 text-purple-600 shrink-0" />}
+                    <span>{sub.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* スキルタグ */}

@@ -62,6 +62,8 @@ export async function POST(request: NextRequest) {
         skills: body.skills || [],
         portfolio_urls: body.portfolio_urls || [],
         response_time: body.response_time || null,
+        supported_tools: body.supported_tools || [],
+        kindle_subtypes: body.kindle_subtypes || [],
       })
       .select()
       .single();
@@ -83,7 +85,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
 
     const updateData: Record<string, any> = { updated_at: new Date().toISOString() };
-    const allowedFields = ['display_name', 'bio', 'avatar_url', 'skills', 'portfolio_urls', 'response_time', 'is_active'];
+    const allowedFields = ['display_name', 'bio', 'avatar_url', 'skills', 'portfolio_urls', 'response_time', 'supported_tools', 'kindle_subtypes', 'is_active'];
     for (const field of allowedFields) {
       if (body[field] !== undefined) updateData[field] = body[field];
     }

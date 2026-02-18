@@ -281,6 +281,12 @@ function DashboardContent() {
       router.push(`/kindle/discovery${adminKey}`);
       return;
     }
+
+    // スキルマーケット管理への遷移
+    if (itemId === 'marketplace-seller') {
+      router.push('/marketplace/seller');
+      return;
+    }
   };
 
   // ナビゲーション処理
