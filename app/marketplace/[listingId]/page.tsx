@@ -234,21 +234,21 @@ export default function ListingDetailPage() {
                       type="text"
                       value={requestTitle}
                       onChange={e => setRequestTitle(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-lg text-sm"
+                      className="w-full px-3 py-2 border rounded-lg text-sm text-gray-900"
                       placeholder="依頼タイトル"
                     />
                     <textarea
                       value={requestDesc}
                       onChange={e => setRequestDesc(e.target.value)}
                       rows={3}
-                      className="w-full px-3 py-2 border rounded-lg text-sm"
+                      className="w-full px-3 py-2 border rounded-lg text-sm text-gray-900"
                       placeholder="依頼の詳細（目的、希望など）"
                     />
                     <input
                       type="number"
                       value={requestBudget}
                       onChange={e => setRequestBudget(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-lg text-sm"
+                      className="w-full px-3 py-2 border rounded-lg text-sm text-gray-900"
                       placeholder="希望予算（円）"
                     />
                     <div className="flex gap-2">

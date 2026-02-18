@@ -90,7 +90,7 @@ export default function ListingForm({ listing, accessToken, onSaved, onCancel }:
         <select
           value={category}
           onChange={e => setCategory(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900"
         >
           <option value="">選択してください</option>
           <optgroup label="ツール連携">
@@ -115,7 +115,7 @@ export default function ListingForm({ listing, accessToken, onSaved, onCancel }:
           type="text"
           value={title}
           onChange={e => setTitle(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900"
           placeholder="例: プロがあなたのビジネスLPを作成します"
           maxLength={80}
         />
@@ -131,7 +131,7 @@ export default function ListingForm({ listing, accessToken, onSaved, onCancel }:
           value={description}
           onChange={e => setDescription(e.target.value)}
           rows={6}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900"
           placeholder="提供するサービスの内容、含まれるもの、対応範囲などを詳しく記載してください"
         />
       </div>
@@ -162,7 +162,7 @@ export default function ListingForm({ listing, accessToken, onSaved, onCancel }:
                 type="number"
                 value={priceMin}
                 onChange={e => setPriceMin(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-gray-900"
                 placeholder={priceType === 'range' ? '最低価格' : '価格'}
                 min={0}
               />
@@ -176,7 +176,7 @@ export default function ListingForm({ listing, accessToken, onSaved, onCancel }:
                     type="number"
                     value={priceMax}
                     onChange={e => setPriceMax(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-gray-900"
                     placeholder="最高価格"
                     min={0}
                   />
@@ -194,7 +194,7 @@ export default function ListingForm({ listing, accessToken, onSaved, onCancel }:
           type="number"
           value={deliveryDays}
           onChange={e => setDeliveryDays(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900"
           placeholder="例: 7"
           min={1}
         />

@@ -162,7 +162,7 @@ export default function OrderMessages({ orderId, currentUserId, accessToken }: O
             value={newMessage}
             onChange={e => setNewMessage(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
-            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-full text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-full text-sm text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             placeholder="メッセージを入力..."
             disabled={sending}
           />
