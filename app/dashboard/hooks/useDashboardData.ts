@@ -129,9 +129,9 @@ export function useDashboardData(): UseDashboardDataReturn {
         });
 
         const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        setUser(session?.user || null);
+          data: { user: authUser },
+        } = await supabase.auth.getUser();
+        setUser(authUser || null);
       }
       setIsLoading(false);
     };

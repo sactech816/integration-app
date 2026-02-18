@@ -114,8 +114,8 @@ export default function HomePageClientV3() {
           setUser(session?.user || null);
           setUserId(session?.user?.id || null);
         });
-        const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user || null);
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        setUser(authUser || null);
 
         try {
           const { data: quizzes } = await supabase
