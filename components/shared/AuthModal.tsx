@@ -135,43 +135,40 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                 // セッションがない場合は確認メールが送信された
                 if (!data.session) {
                     // ユーザー体験優先: 既存ユーザーかどうか確認
-                    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ 
-                        email, 
-                        password 
-                    });
-                    
-                    if (!loginError && loginData.user) {
-                        // ユーザーが既に存在し、パスワードが合っている
-                        alert('このメールアドレスは既に登録されています。\n\n自動的にログインしました。');
-                        setUser(loginData.user);
-                        if (setShowPasswordReset) {
-                            setShowPasswordReset(false);
-                        }
-                        onClose();
-                        // トップページからのログインのみダッシュボードにリダイレクト、それ以外はその場に留まる
-                        if (typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '')) {
-                            if (onNavigate) {
-                                onNavigate('dashboard');
-                            } else {
-                                window.location.href = '/dashboard';
+                    try {
+                        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+                            email,
+                            password
+                        });
+
+                        if (!loginError && loginData.user) {
+                            // ユーザーが既に存在し、パスワードが合っている
+                            alert('このメールアドレスは既に登録されています。\n\n自動的にログインしました。');
+                            setUser(loginData.user);
+                            if (setShowPasswordReset) {
+                                setShowPasswordReset(false);
                             }
+                            onClose();
+                            // トップページからのログインのみダッシュボードにリダイレクト、それ以外はその場に留まる
+                            if (typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '')) {
+                                if (onNavigate) {
+                                    onNavigate('dashboard');
+                                } else {
+                                    window.location.href = '/dashboard';
+                                }
+                            }
+                            setLoading(false);
+                            return;
                         }
-                        setLoading(false);
-                        return;
-                    } else {
-                        // 新規登録で確認メールが送信された
-                        alert('確認メールを送信しました。\n\nメール内のリンクをクリックして認証を完了させてください。');
-                        setLoading(false);
-                        return;
+                    } catch (loginCheckError) {
+                        // signInWithPasswordが失敗しても、signUp自体は成功しているので問題ない
+                        console.log('既存ユーザー確認中にエラー（登録自体は成功）:', loginCheckError);
                     }
-                    
-                    /* ========================================
-                     * セキュリティ重視版（将来用）
-                     * ----------------------------------------
+
+                    // 新規登録で確認メールが送信された
                     alert('確認メールを送信しました。\n\nメール内のリンクをクリックして認証を完了させてください。');
                     setLoading(false);
                     return;
-                     * ======================================== */
                 }
             }
 
@@ -278,9 +275,12 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
             else if (e.message.includes('Email rate limit exceeded')) {
                 errorMessage = '送信回数が上限に達しました。\n\nしばらく時間をおいてから再度お試しください。';
             }
-            // ネットワークエラー
-            else if (e.message.includes('Network') || 
-                     e.message.includes('Failed to fetch')) {
+            // ネットワークエラー（Safari: "Load failed", Chrome: "Failed to fetch"）
+            else if (e.message.includes('Network') ||
+                     e.message.includes('Failed to fetch') ||
+                     e.message.includes('Load failed') ||
+                     e.message.includes('NetworkError') ||
+                     e.message.includes('fetch')) {
                 errorMessage = 'ネットワークエラーが発生しました。\n\nインターネット接続を確認して、再度お試しください。';
             }
             // サーバーエラー
@@ -295,11 +295,8 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
             }
             // 不明なエラー
             else {
-                // 開発者向けには詳細を表示、本番では一般的なメッセージ
-                const isDevelopment = process.env.NODE_ENV === 'development';
-                errorMessage = isDevelopment 
-                    ? `エラーが発生しました\n\n${e.message}`
-                    : 'エラーが発生しました。\n\nもう一度お試しいただくか、問題が続く場合はサポートにお問い合わせください。';
+                console.error('未分類の認証エラー:', e.message, e.code, e.status);
+                errorMessage = `エラーが発生しました。\n\nもう一度お試しいただくか、問題が続く場合はサポートにお問い合わせください。\n\n(${e.message || '不明なエラー'})`;
             }
             
             alert(errorMessage);
