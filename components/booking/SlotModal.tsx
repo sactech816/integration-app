@@ -171,10 +171,12 @@ export default function SlotModal({
 
   // よく使う時間帯
   const quickTimes = [
+    { label: '早朝', hour: 6, minute: 0 },
     { label: '朝', hour: 10, minute: 0 },
     { label: '昼', hour: 13, minute: 0 },
     { label: '夕', hour: 17, minute: 0 },
     { label: '夜', hour: 19, minute: 0 },
+    { label: '深夜', hour: 22, minute: 0 },
   ];
 
   // 追加される枠の総数を計算
@@ -331,7 +333,7 @@ export default function SlotModal({
                     朝＋昼＋夜
                   </button>
                 </div>
-                <div className="grid grid-cols-4 gap-2 mt-2">
+                <div className="grid grid-cols-3 gap-2 mt-2">
                   {quickTimes.map((time) => {
                     const isSelected = multipleTimeSlots.some(
                       slot => slot.hour === time.hour && slot.minute === time.minute
@@ -380,7 +382,7 @@ export default function SlotModal({
                       menuType === 'adjustment' ? 'focus:ring-purple-500' : 'focus:ring-blue-500'
                     }`}
                   >
-                    {Array.from({ length: 14 }, (_, i) => i + 8).map((hour) => (
+                    {Array.from({ length: 25 }, (_, i) => i).map((hour) => (
                       <option key={hour} value={hour}>
                         {hour.toString().padStart(2, '0')}
                       </option>
@@ -422,7 +424,7 @@ export default function SlotModal({
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   よく使う時間帯
                 </label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {quickTimes.map((time) => (
                     <button
                       key={time.label}
@@ -460,7 +462,7 @@ export default function SlotModal({
                       menuType === 'adjustment' ? 'focus:ring-purple-500' : 'focus:ring-blue-500'
                     }`}
                   >
-                    {Array.from({ length: 14 }, (_, i) => i + 8).map((hour) => (
+                    {Array.from({ length: 25 }, (_, i) => i).map((hour) => (
                       <option key={hour} value={hour}>
                         {hour.toString().padStart(2, '0')}
                       </option>

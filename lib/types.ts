@@ -98,12 +98,14 @@ export type HeaderBlockData = {
   name: string;
   title: string;
   category?: string;
+  avatarScale?: number; // 0.5〜2.0、デフォルト1.0
 };
 
 export type TextCardBlockData = {
   title: string;
   text: string;
   align: 'left' | 'center';
+  htmlContent?: string; // リッチテキストHTML（TipTapエディタ）
 };
 
 export type ImageBlockData = {
@@ -195,6 +197,10 @@ export type HeroBlockData = {
   backgroundImage?: string;
   backgroundColor?: string;
   isFullWidth?: boolean;
+  headlineColor?: string;
+  subheadlineColor?: string;
+  headlineBold?: boolean;
+  backgroundOpacity?: number; // 0-100、デフォルト20
 };
 
 export type FeatureItem = {
@@ -253,6 +259,10 @@ export type HeroFullwidthBlockData = {
   ctaUrl?: string;
   overlay?: boolean;
   height?: 'short' | 'medium' | 'tall' | 'full';
+  headlineColor?: string;
+  subheadlineColor?: string;
+  headlineBold?: boolean;
+  backgroundOpacity?: number; // 0-100、デフォルト40
 };
 
 export type ProblemCardItem = {

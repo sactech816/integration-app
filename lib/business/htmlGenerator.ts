@@ -6,10 +6,11 @@ export const generateBusinessHTML = (lp: BusinessLP): string => {
     switch (block.type) {
       case 'hero':
         return `
-          <section style="background: ${block.data.backgroundColor || 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)'}; color: white; padding: 100px 24px; text-align: center;">
-            <div style="max-width: 800px; margin: 0 auto;">
-              <h1 style="font-size: 48px; font-weight: 900; margin-bottom: 24px; white-space: pre-line;">${block.data.headline}</h1>
-              <p style="font-size: 20px; opacity: 0.9; margin-bottom: 40px;">${block.data.subheadline}</p>
+          <section style="background: ${block.data.backgroundColor || 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)'}; color: white; padding: 100px 24px; text-align: center; position: relative; overflow: hidden;">
+            ${block.data.backgroundImage ? `<div style="position: absolute; inset: 0; background-image: url(${block.data.backgroundImage}); background-size: cover; background-position: center; opacity: ${(block.data.backgroundOpacity ?? 20) / 100};"></div>` : ''}
+            <div style="max-width: 800px; margin: 0 auto; position: relative;">
+              <h1 style="font-size: 48px; font-weight: ${block.data.headlineBold !== false ? '900' : 'normal'}; margin-bottom: 24px; white-space: pre-line; color: ${block.data.headlineColor || 'white'};">${block.data.headline}</h1>
+              <p style="font-size: 20px; margin-bottom: 40px; color: ${block.data.subheadlineColor || 'rgba(255,255,255,0.9)'};">${block.data.subheadline}</p>
               ${block.data.ctaText ? `<a href="${block.data.ctaUrl || '#'}" style="display: inline-flex; align-items: center; gap: 8px; background: #f59e0b; color: white; font-weight: bold; padding: 16px 32px; border-radius: 50px; text-decoration: none; font-size: 18px;">${block.data.ctaText} →</a>` : ''}
             </div>
           </section>

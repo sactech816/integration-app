@@ -1157,6 +1157,65 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
               {block.data.backgroundImage && (
                 <img src={block.data.backgroundImage} alt="Preview" className="w-full h-24 object-cover rounded-lg mt-2" />
               )}
+              {block.data.backgroundImage && (
+                <div className="mt-3">
+                  <label className="text-sm font-bold text-gray-900 block mb-2">
+                    背景画像の透明度: {block.data.backgroundOpacity ?? 20}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={block.data.backgroundOpacity ?? 20}
+                    onChange={(e) => updateBlock(block.id, { backgroundOpacity: Number(e.target.value) })}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <span>透明</span>
+                    <span>半透明</span>
+                    <span>不透明</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-bold text-gray-900 block mb-2">見出し文字色</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={block.data.headlineColor || '#ffffff'}
+                    onChange={(e) => updateBlock(block.id, { headlineColor: e.target.value })}
+                    className="w-8 h-8 rounded cursor-pointer border border-gray-300"
+                  />
+                  <span className="text-xs text-gray-500">{block.data.headlineColor || '#ffffff'}</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-bold text-gray-900 block mb-2">サブテキスト文字色</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={block.data.subheadlineColor || '#ffffff'}
+                    onChange={(e) => updateBlock(block.id, { subheadlineColor: e.target.value })}
+                    className="w-8 h-8 rounded cursor-pointer border border-gray-300"
+                  />
+                  <span className="text-xs text-gray-500">{block.data.subheadlineColor || '#ffffff'}</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id={`headline-bold-${block.id}`}
+                checked={block.data.headlineBold !== false}
+                onChange={(e) => updateBlock(block.id, { headlineBold: e.target.checked })}
+                className="w-4 h-4 text-amber-600"
+              />
+              <label htmlFor={`headline-bold-${block.id}`} className="text-sm font-medium text-gray-700">
+                見出しを太字にする
+              </label>
             </div>
             <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
               <input type="checkbox" id={`fullwidth-${block.id}`} checked={block.data.isFullWidth || false} onChange={(e) => updateBlock(block.id, { isFullWidth: e.target.checked })} className="w-4 h-4 text-amber-600" />
@@ -1194,6 +1253,65 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
               {block.data.backgroundImage && (
                 <img src={block.data.backgroundImage} alt="Preview" className="w-full h-24 object-cover rounded-lg mt-2" />
               )}
+              {block.data.backgroundImage && (
+                <div className="mt-3">
+                  <label className="text-sm font-bold text-gray-900 block mb-2">
+                    背景画像の透明度: {block.data.backgroundOpacity ?? 40}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={block.data.backgroundOpacity ?? 40}
+                    onChange={(e) => updateBlock(block.id, { backgroundOpacity: Number(e.target.value) })}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <span>透明</span>
+                    <span>半透明</span>
+                    <span>不透明</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-bold text-gray-900 block mb-2">見出し文字色</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={block.data.headlineColor || '#ffffff'}
+                    onChange={(e) => updateBlock(block.id, { headlineColor: e.target.value })}
+                    className="w-8 h-8 rounded cursor-pointer border border-gray-300"
+                  />
+                  <span className="text-xs text-gray-500">{block.data.headlineColor || '#ffffff'}</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-bold text-gray-900 block mb-2">サブテキスト文字色</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={block.data.subheadlineColor || '#ffffff'}
+                    onChange={(e) => updateBlock(block.id, { subheadlineColor: e.target.value })}
+                    className="w-8 h-8 rounded cursor-pointer border border-gray-300"
+                  />
+                  <span className="text-xs text-gray-500">{block.data.subheadlineColor || '#ffffff'}</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id={`headline-bold-fw-${block.id}`}
+                checked={block.data.headlineBold !== false}
+                onChange={(e) => updateBlock(block.id, { headlineBold: e.target.checked })}
+                className="w-4 h-4 text-amber-600"
+              />
+              <label htmlFor={`headline-bold-fw-${block.id}`} className="text-sm font-medium text-gray-700">
+                見出しを太字にする
+              </label>
             </div>
             <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">※ このブロックは常に全幅で表示されます</p>
           </div>

@@ -52,6 +52,12 @@ import {
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import { trackGenerateComplete, trackGenerateError } from '@/lib/gtag';
+import dynamic from 'next/dynamic';
+
+const SalesTextEditor = dynamic(() => import('@/components/salesletter/SalesTextEditor'), {
+  ssr: false,
+  loading: () => <div className="h-32 bg-gray-50 rounded-lg animate-pulse" />
+});
 
 interface ProfileEditorProps {
   user: { id: string; email?: string } | null;
@@ -414,9 +420,28 @@ const ProfileBlockRenderer = ({ block }: { block: Block }) => {
           {block.data.title && (
             <h3 className="font-bold text-gray-900 mb-3">{block.data.title}</h3>
           )}
-          <p className={`text-gray-700 whitespace-pre-wrap ${block.data.align === 'center' ? 'text-center' : ''}`}>
-            {block.data.text || 'テキストを入力...'}
-          </p>
+          {block.data.htmlContent ? (
+            <>
+              <div
+                className={`text-card-rich-content text-gray-700 ${block.data.align === 'center' ? 'text-center' : ''}`}
+                dangerouslySetInnerHTML={{ __html: block.data.htmlContent }}
+              />
+              <style jsx>{`
+                .text-card-rich-content p { margin: 0.5rem 0; }
+                .text-card-rich-content ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
+                .text-card-rich-content ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
+                .text-card-rich-content li { margin: 0.25rem 0; }
+                .text-card-rich-content strong { font-weight: 700; }
+                .text-card-rich-content em { font-style: italic; }
+                .text-card-rich-content u { text-decoration: underline; }
+                .text-card-rich-content s { text-decoration: line-through; }
+              `}</style>
+            </>
+          ) : (
+            <p className={`text-gray-700 whitespace-pre-wrap ${block.data.align === 'center' ? 'text-center' : ''}`}>
+              {block.data.text || 'テキストを入力...'}
+            </p>
+          )}
         </div>
       );
 
@@ -1255,7 +1280,36 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 </button>
               </div>
               {block.data.avatar && (
-                <img src={block.data.avatar} alt="Preview" className="w-16 h-16 rounded-full object-cover mt-2" />
+                <img
+                  src={block.data.avatar}
+                  alt="Preview"
+                  className="rounded-full object-cover mt-2"
+                  style={{
+                    width: `${Math.round(64 * (block.data.avatarScale || 1))}px`,
+                    height: `${Math.round(64 * (block.data.avatarScale || 1))}px`
+                  }}
+                />
+              )}
+              {block.data.avatar && (
+                <div className="mt-3">
+                  <label className="text-xs font-bold text-gray-600 block mb-1">
+                    写真サイズ: {Math.round((block.data.avatarScale || 1) * 100)}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2"
+                    step="0.1"
+                    value={block.data.avatarScale || 1}
+                    onChange={(e) => updateBlock(block.id, { avatarScale: parseFloat(e.target.value) })}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <span>50%</span>
+                    <span>100%</span>
+                    <span>200%</span>
+                  </div>
+                </div>
               )}
             </div>
             <Input label="名前" val={block.data.name} onChange={(v) => updateBlock(block.id, { name: v })} ph="山田 太郎" />
@@ -1267,7 +1321,14 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         return (
           <div className="space-y-4">
             <Input label="タイトル（任意）" val={block.data.title} onChange={(v) => updateBlock(block.id, { title: v })} ph="自己紹介" />
-            <Textarea label="テキスト" val={block.data.text} onChange={(v) => updateBlock(block.id, { text: v })} rows={4} />
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">テキスト</label>
+              <SalesTextEditor
+                content={block.data.htmlContent || block.data.text || ''}
+                onChange={(html) => updateBlock(block.id, { htmlContent: html })}
+                placeholder="テキストを入力してください..."
+              />
+            </div>
             <div>
               <label className="text-sm font-bold text-gray-900 block mb-2">配置</label>
               <div className="flex gap-2">
@@ -1332,15 +1393,46 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
           <div className="space-y-4">
             {block.data.links.map((link: { label: string; url: string; style?: string }, i: number) => (
               <div key={i} className="bg-gray-50 p-4 rounded-lg relative">
-                <button
-                  onClick={() => {
-                    const newLinks = block.data.links.filter((_: unknown, idx: number) => idx !== i);
-                    updateBlock(block.id, { links: newLinks });
-                  }}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
-                >
-                  <Trash2 size={16} />
-                </button>
+                <div className="absolute top-2 right-2 flex items-center gap-1">
+                  <button
+                    onClick={() => {
+                      if (i === 0) return;
+                      const newLinks = [...block.data.links];
+                      const [moved] = newLinks.splice(i, 1);
+                      newLinks.splice(i - 1, 0, moved);
+                      updateBlock(block.id, { links: newLinks });
+                    }}
+                    disabled={i === 0}
+                    className="p-1 text-gray-400 hover:text-emerald-600 disabled:opacity-30"
+                    title="上に移動"
+                  >
+                    <ArrowUp size={14} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (i === block.data.links.length - 1) return;
+                      const newLinks = [...block.data.links];
+                      const [moved] = newLinks.splice(i, 1);
+                      newLinks.splice(i + 1, 0, moved);
+                      updateBlock(block.id, { links: newLinks });
+                    }}
+                    disabled={i === block.data.links.length - 1}
+                    className="p-1 text-gray-400 hover:text-emerald-600 disabled:opacity-30"
+                    title="下に移動"
+                  >
+                    <ArrowDown size={14} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      const newLinks = block.data.links.filter((_: unknown, idx: number) => idx !== i);
+                      updateBlock(block.id, { links: newLinks });
+                    }}
+                    className="p-1 text-gray-400 hover:text-red-500"
+                    title="削除"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
                 <Input label="ラベル" val={link.label} onChange={(v) => {
                   const newLinks = [...block.data.links];
                   newLinks[i].label = v;

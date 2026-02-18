@@ -54,7 +54,11 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
             <img
               src={block.data.avatar}
               alt={block.data.name}
-              className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white/30 shadow-lg object-cover"
+              className="rounded-full mx-auto mb-4 border-4 border-white/30 shadow-lg object-cover"
+              style={{
+                width: `${Math.round(96 * (block.data.avatarScale || 1))}px`,
+                height: `${Math.round(96 * (block.data.avatarScale || 1))}px`,
+              }}
             />
           )}
           <h1 className="text-2xl font-bold text-white mb-2">{block.data.name}</h1>
@@ -69,11 +73,30 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
             {block.data.title && (
               <h3 className="font-bold text-gray-900 mb-3">{block.data.title}</h3>
             )}
-            <p 
-              className={`text-gray-700 whitespace-pre-wrap ${block.data.align === 'center' ? 'text-center' : ''}`}
-            >
-              {block.data.text}
-            </p>
+            {block.data.htmlContent ? (
+              <>
+                <div
+                  className={`text-card-rich-content text-gray-700 ${block.data.align === 'center' ? 'text-center' : ''}`}
+                  dangerouslySetInnerHTML={{ __html: block.data.htmlContent }}
+                />
+                <style jsx>{`
+                  .text-card-rich-content p { margin: 0.5rem 0; }
+                  .text-card-rich-content ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
+                  .text-card-rich-content ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
+                  .text-card-rich-content li { margin: 0.25rem 0; }
+                  .text-card-rich-content strong { font-weight: 700; }
+                  .text-card-rich-content em { font-style: italic; }
+                  .text-card-rich-content u { text-decoration: underline; }
+                  .text-card-rich-content s { text-decoration: line-through; }
+                `}</style>
+              </>
+            ) : (
+              <p
+                className={`text-gray-700 whitespace-pre-wrap ${block.data.align === 'center' ? 'text-center' : ''}`}
+              >
+                {block.data.text}
+              </p>
+            )}
           </div>
         );
       }
@@ -83,11 +106,30 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
             {block.data.title && (
               <h3 className="text-2xl font-bold text-gray-900 mb-4">{block.data.title}</h3>
             )}
-            <p 
-              className={`text-gray-700 whitespace-pre-wrap ${block.data.align === 'center' ? 'text-center' : ''}`}
-            >
-              {block.data.text}
-            </p>
+            {block.data.htmlContent ? (
+              <>
+                <div
+                  className={`text-card-rich-content text-gray-700 ${block.data.align === 'center' ? 'text-center' : ''}`}
+                  dangerouslySetInnerHTML={{ __html: block.data.htmlContent }}
+                />
+                <style jsx>{`
+                  .text-card-rich-content p { margin: 0.5rem 0; }
+                  .text-card-rich-content ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
+                  .text-card-rich-content ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
+                  .text-card-rich-content li { margin: 0.25rem 0; }
+                  .text-card-rich-content strong { font-weight: 700; }
+                  .text-card-rich-content em { font-style: italic; }
+                  .text-card-rich-content u { text-decoration: underline; }
+                  .text-card-rich-content s { text-decoration: line-through; }
+                `}</style>
+              </>
+            ) : (
+              <p
+                className={`text-gray-700 whitespace-pre-wrap ${block.data.align === 'center' ? 'text-center' : ''}`}
+              >
+                {block.data.text}
+              </p>
+            )}
           </div>
         </section>
       );
@@ -455,16 +497,25 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
           style={{ background: block.data.backgroundColor || 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' }}
         >
           {block.data.backgroundImage && (
-            <div 
-              className="absolute inset-0 bg-cover bg-center opacity-20"
-              style={{ backgroundImage: `url(${block.data.backgroundImage})` }}
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage: `url(${block.data.backgroundImage})`,
+                opacity: (block.data.backgroundOpacity ?? 20) / 100,
+              }}
             />
           )}
           <div className={`relative ${block.data.isFullWidth ? 'max-w-6xl' : 'max-w-4xl'} mx-auto text-center`}>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black mb-6 leading-tight whitespace-pre-line">
+            <h1
+              className={`text-4xl sm:text-5xl lg:text-6xl ${block.data.headlineBold !== false ? 'font-black' : 'font-normal'} mb-6 leading-tight whitespace-pre-line`}
+              style={{ color: block.data.headlineColor || 'white' }}
+            >
               {block.data.headline}
             </h1>
-            <p className="text-xl sm:text-2xl opacity-90 mb-10">
+            <p
+              className="text-xl sm:text-2xl mb-10"
+              style={{ color: block.data.subheadlineColor || 'rgba(255,255,255,0.9)' }}
+            >
               {block.data.subheadline}
             </p>
             {block.data.ctaText && (
@@ -600,20 +651,29 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
           style={{ background: block.data.backgroundColor || '#1e293b' }}
         >
           {block.data.backgroundImage && (
-            <div 
-              className={`absolute inset-0 bg-cover bg-center ${block.data.overlay ? 'opacity-40' : 'opacity-100'}`}
-              style={{ backgroundImage: `url(${block.data.backgroundImage})` }}
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage: `url(${block.data.backgroundImage})`,
+                opacity: (block.data.backgroundOpacity ?? (block.data.overlay ? 40 : 100)) / 100,
+              }}
             />
           )}
           {block.data.overlay && block.data.backgroundImage && (
             <div className="absolute inset-0 bg-black/50" />
           )}
           <div className="relative max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black mb-6 leading-tight whitespace-pre-line">
+            <h1
+              className={`text-4xl sm:text-5xl lg:text-7xl ${block.data.headlineBold !== false ? 'font-black' : 'font-normal'} mb-6 leading-tight whitespace-pre-line`}
+              style={{ color: block.data.headlineColor || 'white' }}
+            >
               {block.data.headline}
             </h1>
             {block.data.subheadline && (
-              <p className="text-xl sm:text-2xl opacity-90 mb-10">
+              <p
+                className="text-xl sm:text-2xl mb-10"
+                style={{ color: block.data.subheadlineColor || 'rgba(255,255,255,0.9)' }}
+              >
                 {block.data.subheadline}
               </p>
             )}

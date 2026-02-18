@@ -10,17 +10,20 @@ export const generateProfileHTML = (profile: Profile): string => {
       case 'header':
         return `
           <div style="text-align: center; padding: 40px 0;">
-            ${block.data.avatar ? `<img src="${block.data.avatar}" alt="${block.data.name}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.3); margin-bottom: 16px;">` : ''}
+            ${block.data.avatar ? `<img src="${block.data.avatar}" alt="${block.data.name}" style="width: ${Math.round(100 * (block.data.avatarScale || 1))}px; height: ${Math.round(100 * (block.data.avatarScale || 1))}px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.3); margin-bottom: 16px;">` : ''}
             <h1 style="font-size: 24px; font-weight: bold; color: white; margin-bottom: 8px;">${block.data.name}</h1>
             <p style="color: rgba(255,255,255,0.8);">${block.data.title}</p>
           </div>
         `;
       
       case 'text_card':
+        const textCardContent = block.data.htmlContent
+          ? `<div style="color: #4b5563; ${block.data.align === 'center' ? 'text-align: center;' : ''}">${block.data.htmlContent}</div>`
+          : `<p style="color: #4b5563; white-space: pre-wrap; ${block.data.align === 'center' ? 'text-align: center;' : ''}">${block.data.text}</p>`;
         return `
           <div style="background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border-radius: 16px; padding: 24px; margin-bottom: 16px;">
             ${block.data.title ? `<h3 style="font-weight: bold; color: #1f2937; margin-bottom: 12px;">${block.data.title}</h3>` : ''}
-            <p style="color: #4b5563; white-space: pre-wrap; ${block.data.align === 'center' ? 'text-align: center;' : ''}">${block.data.text}</p>
+            ${textCardContent}
           </div>
         `;
       
