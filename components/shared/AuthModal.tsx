@@ -58,7 +58,7 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                 : await supabase.auth.signUp({ 
                     email, 
                     password,
-                    options: { emailRedirectTo: typeof window !== 'undefined' ? window.location.origin : undefined }
+                    options: { emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined }
                   });
             
             if (error) {
@@ -315,8 +315,8 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
         try {
             // リダイレクトURLをルートに設定（パスワードリセット処理を確実に行うため）
             // Supabaseは自動的に #access_token=...&type=recovery をURLに追加します
-            const redirectUrl = typeof window !== 'undefined' 
-                ? `${window.location.origin}` 
+            const redirectUrl = typeof window !== 'undefined'
+                ? `${window.location.origin}/auth/callback?type=recovery`
                 : undefined;
             
             console.log('パスワードリセットメール送信:', email, 'リダイレクト先:', redirectUrl);

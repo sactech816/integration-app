@@ -34,6 +34,8 @@ const PUBLIC_PATHS = [
   '/kindle/publish-guide',
   '/kindle/demo',
   '/kindle/book-lp',  // 書籍PR用LP（公開ページ）
+  '/kindle/discovery',  // ネタ発掘診断（ページ側でKDLサブスクチェック）
+  '/kindle/discovery/demo',  // ネタ発掘診断デモ版
 ];
 
 // デモモード用のパス（クエリパラメータ付き）
