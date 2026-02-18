@@ -444,6 +444,9 @@ function DashboardContent() {
               isKdlMonitor={kdlSubscription?.isMonitor || false}
             />
           }
+          activeView={activeView}
+          onItemClick={handleMenuItemClick}
+          isAdmin={isAdmin}
         >
           <MainContent
             activeView={activeView}
@@ -473,6 +476,7 @@ function DashboardContent() {
             onCreateNew={handleCreateNew}
             onNavigate={handleNavigate}
             onLogout={handleLogout}
+            onMenuItemClick={handleMenuItemClick}
             adminComponents={adminComponents}
           />
         </DashboardLayout>

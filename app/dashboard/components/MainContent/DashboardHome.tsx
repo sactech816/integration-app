@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Loader2, BookOpen, Crown, Zap, Sparkles } from 'lucide-react';
+import { Loader2, BookOpen, Crown, Zap, Sparkles, LayoutGrid } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 import ServiceTabs from './ServiceTabs';
 import AnalyticsSection from './AnalyticsSection';
 import ContentList from './ContentList';
 import { ContentItem } from './ContentCard';
+import { TOOL_ITEMS } from '../Sidebar/menuItems';
 
 import { PlanTier } from '@/lib/subscription';
 
@@ -55,6 +56,7 @@ type DashboardHomeProps = {
   onPurchase: (item: ContentItem) => void;
   onCreateNew: () => void;
   onNavigate: (path: string, addAdminKey?: boolean) => void;
+  onMenuItemClick?: (itemId: string) => void;
 };
 
 export default function DashboardHome({
@@ -82,6 +84,7 @@ export default function DashboardHome({
   onPurchase,
   onCreateNew,
   onNavigate,
+  onMenuItemClick,
 }: DashboardHomeProps) {
   // アナリティクス機能のアンロック判定
   // 管理者、パートナー、集客メーカーProプラン加入者はアンロック
@@ -159,6 +162,37 @@ export default function DashboardHome({
         onServiceChange={onServiceChange}
         contentCounts={contentCounts}
       />
+
+      {/* すべてのツール */}
+      {onMenuItemClick && (
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
+          <h3 className="font-bold text-gray-900 text-sm mb-3 flex items-center gap-2">
+            <LayoutGrid size={16} className="text-gray-500" />
+            すべてのツール
+          </h3>
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+            {TOOL_ITEMS.filter(
+              (tool) => !['quiz', 'profile', 'business'].includes(tool.id)
+            ).map((tool) => {
+              const Icon = tool.icon;
+              return (
+                <button
+                  key={tool.id}
+                  onClick={() => onMenuItemClick(tool.id)}
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-all"
+                >
+                  <div className={`p-2 rounded-lg ${tool.color.bg}`}>
+                    <Icon size={20} className={tool.color.text} />
+                  </div>
+                  <span className="text-[11px] font-bold text-gray-600 text-center leading-tight">
+                    {tool.description}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* アクセス解析 */}
       <AnalyticsSection 

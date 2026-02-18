@@ -92,6 +92,7 @@ type MainContentProps = {
   onCreateNew: () => void;
   onNavigate: (path: string, addAdminKey?: boolean) => void;
   onLogout: () => void;
+  onMenuItemClick?: (itemId: string) => void;
   // 管理者コンポーネント（遅延レンダリング関数）
   adminComponents?: {
     Overview?: () => React.ReactNode;
@@ -137,6 +138,7 @@ export default function MainContent({
   onCreateNew,
   onNavigate,
   onLogout,
+  onMenuItemClick,
   adminComponents,
 }: MainContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
@@ -187,6 +189,7 @@ export default function MainContent({
         onPurchase={onPurchase}
         onCreateNew={onCreateNew}
         onNavigate={onNavigate}
+        onMenuItemClick={onMenuItemClick}
       />
       )}
 
