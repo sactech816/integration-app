@@ -114,7 +114,7 @@ export default function SellerProfileForm({ profile, accessToken, onSaved }: Sel
           type="text"
           value={displayName}
           onChange={e => setDisplayName(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           placeholder="クリエイター名"
         />
       </div>
@@ -126,7 +126,7 @@ export default function SellerProfileForm({ profile, accessToken, onSaved }: Sel
           value={bio}
           onChange={e => setBio(e.target.value)}
           rows={4}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           placeholder="スキルや経験をアピールしましょう"
         />
       </div>
@@ -211,7 +211,7 @@ export default function SellerProfileForm({ profile, accessToken, onSaved }: Sel
             value={newSkill}
             onChange={e => setNewSkill(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900"
             placeholder="スキルを追加（Enterで確定）"
           />
           <button type="button" onClick={addSkill} className="px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">
@@ -238,7 +238,7 @@ export default function SellerProfileForm({ profile, accessToken, onSaved }: Sel
             type="url"
             value={newUrl}
             onChange={e => setNewUrl(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900"
             placeholder="https://..."
           />
           <button type="button" onClick={addUrl} className="px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">
@@ -253,7 +253,7 @@ export default function SellerProfileForm({ profile, accessToken, onSaved }: Sel
         <select
           value={responseTime}
           onChange={e => setResponseTime(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900"
         >
           <option value="">選択してください</option>
           {RESPONSE_TIME_OPTIONS.map(opt => (
