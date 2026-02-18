@@ -1,26 +1,37 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ArrowRightLeft, Loader2, Search, AlertCircle, CheckCircle } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowRightLeft, Loader2, Search, AlertCircle, CheckCircle, Link, Mail, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-// コンテンツタイプの定義
-const CONTENT_TYPES = [
-  { id: 'profiles', label: 'プロフィール', icon: '👤' },
-  { id: 'sales_letters', label: 'セールスレター/LP', icon: '📝' },
-  { id: 'quizzes', label: 'クイズ', icon: '❓' },
-  { id: 'surveys', label: 'アンケート', icon: '📊' },
-  { id: 'business_projects', label: 'ビジネスLP', icon: '🏢' },
-  { id: 'gamification_campaigns', label: 'ガチャ/スタンプ', icon: '🎮' },
-] as const;
+// URLパスからコンテンツタイプを判定するパターン
+const URL_PATH_PATTERNS = [
+  { pattern: /\/profile\/([^/?#]+)/, label: 'プロフィール', icon: '👤' },
+  { pattern: /\/s\/([^/?#]+)/, label: 'セールスレター/LP', icon: '📝' },
+  { pattern: /\/quiz\/([^/?#]+)/, label: 'クイズ', icon: '❓' },
+  { pattern: /\/survey\/([^/?#]+)/, label: 'アンケート', icon: '📊' },
+  { pattern: /\/business\/([^/?#]+)/, label: 'ビジネスLP', icon: '🏢' },
+  { pattern: /\/gacha\/([^/?#]+)/, label: 'ガチャ/スタンプ', icon: '🎮' },
+  { pattern: /\/stamp-rally\/([^/?#]+)/, label: 'ガチャ/スタンプ', icon: '🎮' },
+  { pattern: /\/stamp\/([^/?#]+)/, label: 'ガチャ/スタンプ', icon: '🎮' },
+];
 
-type ContentType = typeof CONTENT_TYPES[number]['id'];
+function detectContentTypeFromUrl(url: string): { label: string; icon: string; slug: string } | null {
+  for (const { pattern, label, icon } of URL_PATH_PATTERNS) {
+    const match = url.match(pattern);
+    if (match) {
+      return { label, icon, slug: match[1] };
+    }
+  }
+  return null;
+}
 
 type ContentInfo = {
   id: string;
   title?: string;
   slug?: string;
   nickname?: string;
+  settings?: { title?: string };
   [key: string]: unknown;
 };
 
@@ -47,33 +58,53 @@ type OwnershipTransferProps = {
 };
 
 export default function OwnershipTransfer({ allUsers }: OwnershipTransferProps) {
-  // supabase は lib/supabase からインポート済み
-  
   // 状態管理
-  const [contentType, setContentType] = useState<ContentType>('profiles');
-  const [contentId, setContentId] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [contentUrl, setContentUrl] = useState('');
+  const [fromEmail, setFromEmail] = useState('');
+  const [toEmail, setToEmail] = useState('');
   const [contentInfo, setContentInfo] = useState<ContentInfo | null>(null);
   const [currentOwner, setCurrentOwner] = useState<OwnerInfo | null>(null);
-  const [newOwnerId, setNewOwnerId] = useState('');
-  const [newOwnerEmail, setNewOwnerEmail] = useState('');
+  const [detectedType, setDetectedType] = useState<{ label: string; icon: string } | null>(null);
+  const [contentTypeId, setContentTypeId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [confirmMode, setConfirmMode] = useState(false);
 
-  // ユーザー検索結果
-  const filteredUsers = searchQuery
+  // URLの変更でリアルタイムにタイプ検出
+  const handleUrlChange = (url: string) => {
+    setContentUrl(url);
+    setError(null);
+    const detected = detectContentTypeFromUrl(url);
+    setDetectedType(detected ? { label: detected.label, icon: detected.icon } : null);
+    // URLが変わったらコンテンツ情報をリセット
+    if (contentInfo) {
+      setContentInfo(null);
+      setCurrentOwner(null);
+      setFromEmail('');
+    }
+  };
+
+  // 移動先メールのサジェスト
+  const toEmailSuggestions = toEmail && !confirmMode
     ? allUsers.filter((u) =>
-        u.email.toLowerCase().includes(searchQuery.toLowerCase())
+        u.email.toLowerCase().includes(toEmail.toLowerCase()) &&
+        u.email.toLowerCase() !== currentOwner?.email?.toLowerCase()
       ).slice(0, 5)
     : [];
+  const [toEmailSelected, setToEmailSelected] = useState(false);
 
   // コンテンツ情報を取得
   const fetchContentInfo = async () => {
-    if (!contentId.trim()) {
-      setError('コンテンツIDを入力してください');
+    if (!contentUrl.trim()) {
+      setError('コンテンツのURLを入力してください');
+      return;
+    }
+
+    const detected = detectContentTypeFromUrl(contentUrl);
+    if (!detected) {
+      setError('対応していないURLです。profile, s, quiz, survey, business, gacha, stamp のURLを入力してください。');
       return;
     }
 
@@ -94,7 +125,7 @@ export default function OwnershipTransfer({ allUsers }: OwnershipTransferProps) 
       }
 
       const response = await fetch(
-        `/api/admin/transfer-ownership?contentType=${contentType}&contentId=${encodeURIComponent(contentId)}`,
+        `/api/admin/transfer-ownership?contentUrl=${encodeURIComponent(contentUrl)}`,
         {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
@@ -111,6 +142,11 @@ export default function OwnershipTransfer({ allUsers }: OwnershipTransferProps) 
 
       setContentInfo(data.content);
       setCurrentOwner(data.currentOwner);
+      setContentTypeId(data.contentTypeId);
+      // 現在の所有者メールを自動セット
+      if (data.currentOwner?.email) {
+        setFromEmail(data.currentOwner.email);
+      }
     } catch (err) {
       console.error('Fetch error:', err);
       setError('コンテンツの取得に失敗しました');
@@ -121,8 +157,8 @@ export default function OwnershipTransfer({ allUsers }: OwnershipTransferProps) 
 
   // 所有権を移動
   const transferOwnership = async () => {
-    if (!contentInfo || !newOwnerId) {
-      setError('移動先ユーザーを選択してください');
+    if (!contentInfo || !toEmail.trim()) {
+      setError('移動先のメールアドレスを入力してください');
       return;
     }
 
@@ -148,9 +184,10 @@ export default function OwnershipTransfer({ allUsers }: OwnershipTransferProps) 
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          contentType,
+          contentType: contentTypeId,
           contentId: contentInfo.id,
-          newOwnerId,
+          newOwnerEmail: toEmail.trim(),
+          fromEmail: fromEmail.trim(),
         }),
       });
 
@@ -161,12 +198,12 @@ export default function OwnershipTransfer({ allUsers }: OwnershipTransferProps) 
         return;
       }
 
-      setSuccess(`所有権を ${newOwnerEmail} に移動しました`);
-      setCurrentOwner({ id: newOwnerId, email: newOwnerEmail });
+      setSuccess(`所有権を ${toEmail} に移動しました`);
+      setCurrentOwner({ id: data.newOwner.id, email: data.newOwner.email });
+      setFromEmail(data.newOwner.email);
       setConfirmMode(false);
-      setNewOwnerId('');
-      setNewOwnerEmail('');
-      setSearchQuery('');
+      setToEmail('');
+      setToEmailSelected(false);
     } catch (err) {
       console.error('Transfer error:', err);
       setError('所有権の移動に失敗しました');
@@ -178,6 +215,7 @@ export default function OwnershipTransfer({ allUsers }: OwnershipTransferProps) 
   // コンテンツの表示名を取得
   const getContentDisplayName = (content: ContentInfo): string => {
     if (content.title) return content.title;
+    if (content.settings?.title) return content.settings.title;
     if (content.nickname) return content.nickname;
     if (content.slug) return content.slug;
     return content.id;
@@ -187,10 +225,12 @@ export default function OwnershipTransfer({ allUsers }: OwnershipTransferProps) 
   const handleReset = () => {
     setContentInfo(null);
     setCurrentOwner(null);
-    setContentId('');
-    setNewOwnerId('');
-    setNewOwnerEmail('');
-    setSearchQuery('');
+    setContentUrl('');
+    setFromEmail('');
+    setToEmail('');
+    setToEmailSelected(false);
+    setDetectedType(null);
+    setContentTypeId('');
     setError(null);
     setSuccess(null);
     setConfirmMode(false);
@@ -204,53 +244,38 @@ export default function OwnershipTransfer({ allUsers }: OwnershipTransferProps) 
           <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">ADMIN</span>
         </h2>
         <p className="text-sm text-gray-500 mt-1">
-          コンテンツの所有者を別のユーザーに変更します
+          コンテンツURLとメールアドレスで所有者を変更します
         </p>
       </div>
 
       <div className="p-6 space-y-6">
-        {/* ステップ1: コンテンツタイプ選択 */}
+        {/* ステップ1: コンテンツURL入力 */}
         <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">
-            1. コンテンツタイプを選択
-          </label>
-          <div className="grid grid-cols-3 gap-2">
-            {CONTENT_TYPES.map((type) => (
-              <button
-                key={type.id}
-                onClick={() => {
-                  setContentType(type.id);
-                  handleReset();
-                }}
-                className={`p-3 rounded-lg border-2 text-left transition-all ${
-                  contentType === type.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-blue-300 bg-white'
-                }`}
-              >
-                <span className="text-lg">{type.icon}</span>
-                <span className="ml-2 text-sm font-medium text-gray-900">{type.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ステップ2: コンテンツID入力 */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">
-            2. コンテンツIDを入力
+          <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1.5">
+            <Link size={14} />
+            1. コンテンツのURLを入力
           </label>
           <div className="flex gap-2">
-            <input
-              type="text"
-              value={contentId}
-              onChange={(e) => setContentId(e.target.value)}
-              placeholder="UUIDまたはID（例: 123e4567-e89b-12d3-a456-426614174000）"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={contentUrl}
+                onChange={(e) => handleUrlChange(e.target.value)}
+                placeholder="例: https://makers.tokyo/profile/iyf2Q"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              {/* 検出されたタイプ表示 */}
+              {detectedType && !contentInfo && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                    {detectedType.icon} {detectedType.label}
+                  </span>
+                </div>
+              )}
+            </div>
             <button
               onClick={fetchContentInfo}
-              disabled={searching || !contentId.trim()}
+              disabled={searching || !contentUrl.trim() || !detectedType}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {searching ? (
@@ -261,6 +286,9 @@ export default function OwnershipTransfer({ allUsers }: OwnershipTransferProps) 
               検索
             </button>
           </div>
+          <p className="text-xs text-gray-400 mt-1">
+            対応: /profile/, /s/, /quiz/, /survey/, /business/, /gacha/, /stamp/, /stamp-rally/
+          </p>
         </div>
 
         {/* エラー表示 */}
@@ -288,7 +316,15 @@ export default function OwnershipTransfer({ allUsers }: OwnershipTransferProps) 
         {/* コンテンツ情報表示 */}
         {contentInfo && (
           <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-            <h3 className="font-bold text-gray-900 mb-3">コンテンツ情報</h3>
+            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+              {detectedType && <span>{detectedType.icon}</span>}
+              コンテンツ情報
+              {detectedType && (
+                <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
+                  {detectedType.label}
+                </span>
+              )}
+            </h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-500">タイトル/名前:</span>
@@ -314,74 +350,71 @@ export default function OwnershipTransfer({ allUsers }: OwnershipTransferProps) 
           </div>
         )}
 
-        {/* ステップ3: 移動先ユーザー選択 */}
+        {/* ステップ2: メールアドレス入力 */}
         {contentInfo && (
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              3. 移動先ユーザーを選択
+          <div className="space-y-4">
+            <label className="block text-sm font-bold text-gray-700 flex items-center gap-1.5">
+              <Mail size={14} />
+              2. 移動元・移動先のメールアドレスを入力
             </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setNewOwnerId('');
-                  setNewOwnerEmail('');
-                }}
-                placeholder="メールアドレスで検索..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              
-              {/* 検索結果ドロップダウン */}
-              {filteredUsers.length > 0 && !newOwnerId && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-                  {filteredUsers.map((user) => (
-                    <button
-                      key={user.user_id}
-                      onClick={() => {
-                        setNewOwnerId(user.user_id);
-                        setNewOwnerEmail(user.email);
-                        setSearchQuery(user.email);
-                      }}
-                      className="w-full px-4 py-2 text-left hover:bg-blue-50 text-sm text-gray-900 border-b border-gray-100 last:border-b-0"
-                    >
-                      {user.email}
-                      {user.is_partner && (
-                        <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
-                          パートナー
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
 
-            {/* 選択されたユーザー表示 */}
-            {newOwnerId && (
-              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
-                <div>
-                  <span className="text-sm text-blue-700">選択中:</span>
-                  <span className="ml-2 font-bold text-blue-900">{newOwnerEmail}</span>
-                </div>
-                <button
-                  onClick={() => {
-                    setNewOwnerId('');
-                    setNewOwnerEmail('');
-                    setSearchQuery('');
-                  }}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                >
-                  変更
-                </button>
+            <div className="flex items-center gap-3">
+              {/* 移動元メール */}
+              <div className="flex-1">
+                <label className="block text-xs text-gray-500 mb-1">移動元（現在の所有者）</label>
+                <input
+                  type="email"
+                  value={fromEmail}
+                  onChange={(e) => setFromEmail(e.target.value)}
+                  placeholder="移動元のメールアドレス"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
-            )}
+
+              <ArrowRight size={20} className="text-gray-400 flex-shrink-0 mt-5" />
+
+              {/* 移動先メール */}
+              <div className="flex-1 relative">
+                <label className="block text-xs text-gray-500 mb-1">移動先（新しい所有者）</label>
+                <input
+                  type="email"
+                  value={toEmail}
+                  onChange={(e) => {
+                    setToEmail(e.target.value);
+                    setToEmailSelected(false);
+                  }}
+                  placeholder="移動先のメールアドレス"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                {/* サジェスト */}
+                {toEmailSuggestions.length > 0 && !toEmailSelected && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                    {toEmailSuggestions.map((user) => (
+                      <button
+                        key={user.user_id}
+                        onClick={() => {
+                          setToEmail(user.email);
+                          setToEmailSelected(true);
+                        }}
+                        className="w-full px-4 py-2 text-left hover:bg-blue-50 text-sm text-gray-900 border-b border-gray-100 last:border-b-0"
+                      >
+                        {user.email}
+                        {user.is_partner && (
+                          <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
+                            パートナー
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
         {/* 確認と実行 */}
-        {contentInfo && newOwnerId && (
+        {contentInfo && toEmail.trim() && fromEmail.trim() && (
           <div className="border-t border-gray-200 pt-6">
             {!confirmMode ? (
               <button
@@ -392,14 +425,23 @@ export default function OwnershipTransfer({ allUsers }: OwnershipTransferProps) 
               </button>
             ) : (
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="font-bold text-amber-800 mb-2">⚠️ 確認</p>
-                <p className="text-sm text-amber-700 mb-4">
-                  「{getContentDisplayName(contentInfo)}」の所有権を
-                  <span className="font-bold"> {currentOwner?.email || '未設定'} </span>
-                  から
-                  <span className="font-bold"> {newOwnerEmail} </span>
-                  に移動します。この操作は取り消せません。
-                </p>
+                <p className="font-bold text-amber-800 mb-2">確認</p>
+                <div className="text-sm text-amber-700 mb-4 space-y-1">
+                  <p>
+                    <span className="text-amber-600">コンテンツ:</span>{' '}
+                    <span className="font-bold">{getContentDisplayName(contentInfo)}</span>
+                    {detectedType && <span className="ml-1 text-xs">({detectedType.label})</span>}
+                  </p>
+                  <p>
+                    <span className="text-amber-600">移動元:</span>{' '}
+                    <span className="font-bold">{fromEmail}</span>
+                  </p>
+                  <p>
+                    <span className="text-amber-600">移動先:</span>{' '}
+                    <span className="font-bold">{toEmail}</span>
+                  </p>
+                  <p className="text-xs text-amber-500 mt-2">この操作は取り消せません。</p>
+                </div>
                 <div className="flex gap-2">
                   <button
                     onClick={transferOwnership}
