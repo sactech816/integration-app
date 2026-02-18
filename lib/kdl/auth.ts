@@ -85,8 +85,10 @@ export async function hasKdlAccess(
       .eq('user_id', userId)
       .lte('monitor_start_at', now)
       .gt('monitor_expires_at', now)
-      .single();
-    
+      .order('monitor_expires_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
     if (monitor) {
       return { hasAccess: true, reason: 'monitor' };
     }
@@ -130,8 +132,10 @@ export async function getKdlPlanTier(
       .eq('user_id', userId)
       .lte('monitor_start_at', now)
       .gt('monitor_expires_at', now)
-      .single();
-    
+      .order('monitor_expires_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
     if (monitor?.monitor_plan_type) {
       return monitor.monitor_plan_type;
     }

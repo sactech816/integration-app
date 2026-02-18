@@ -273,7 +273,9 @@ export async function getSubscriptionStatus(userId: string): Promise<Subscriptio
       .eq('service', 'kdl')
       .lte('monitor_start_at', now)
       .gt('monitor_expires_at', now)
-      .single();
+      .order('monitor_expires_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     console.log('[getSubscriptionStatus] Monitor result:', monitorData, 'error:', monitorError);
 
@@ -435,7 +437,9 @@ export async function getMakersSubscriptionStatus(userId: string): Promise<Maker
       .eq('service', 'makers')
       .lte('monitor_start_at', now)
       .gt('monitor_expires_at', now)
-      .single();
+      .order('monitor_expires_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     // モニター権限がある場合はそれを優先
     if (monitorData) {

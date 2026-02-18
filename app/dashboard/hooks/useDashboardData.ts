@@ -128,10 +128,15 @@ export function useDashboardData(): UseDashboardDataReturn {
           }
         });
 
-        const {
-          data: { user: authUser },
-        } = await supabase.auth.getUser();
-        setUser(authUser || null);
+        // getUser()でサーバー検証（トークン期限切れ時はnullになる可能性あり）
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          setUser(authUser);
+        } else {
+          // getUser()が失敗した場合、getSession()でローカルセッションを試行
+          const { data: { session } } = await supabase.auth.getSession();
+          setUser(session?.user || null);
+        }
       }
       setIsLoading(false);
     };

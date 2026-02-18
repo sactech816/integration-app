@@ -85,7 +85,9 @@ export async function GET(request: NextRequest) {
       .eq('service', 'kdl')
       .lte('monitor_start_at', now)
       .gt('monitor_expires_at', now)
-      .single();
+      .order('monitor_expires_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     if (monitorData) {
       planTier = monitorData.monitor_plan_type;

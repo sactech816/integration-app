@@ -82,7 +82,9 @@ export async function GET(request: NextRequest) {
       .eq('service', 'makers')
       .lte('monitor_start_at', now)
       .gt('monitor_expires_at', now)
-      .single();
+      .order('monitor_expires_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     // プランTierを判定
     let planTier: 'guest' | 'free' | 'pro' = 'free';

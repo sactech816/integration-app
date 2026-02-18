@@ -51,7 +51,9 @@ export async function canCreatorHideCopyright(userId: string | null | undefined)
       .eq('service', 'makers')
       .lte('monitor_start_at', new Date().toISOString())
       .gt('monitor_expires_at', new Date().toISOString())
-      .single();
+      .order('monitor_expires_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     // プランTierを判定
     let planTier: 'guest' | 'free' | 'pro' = 'free';
