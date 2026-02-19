@@ -31,9 +31,12 @@ interface RelatedContentProps {
   contentType: 'quiz' | 'profile' | 'business' | 'survey' | 'salesletter';
   currentSlug: string;
   limit?: number;
+  hide?: boolean; // Proプラン: 関連コンテンツ非表示
 }
 
-export default async function RelatedContent({ contentType, currentSlug, limit = 4 }: RelatedContentProps) {
+export default async function RelatedContent({ contentType, currentSlug, limit = 4, hide = false }: RelatedContentProps) {
+  if (hide) return null;
+
   const result = await getRelatedContents(contentType, currentSlug, limit);
 
   if (!result.success || !result.data || result.data.length === 0) {

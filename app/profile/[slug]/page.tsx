@@ -122,6 +122,7 @@ export default async function ProfilePage({ params }: Props) {
 
   // 作成者のプラン権限をチェックしてフッター非表示を決定
   const canHideFooter = await shouldHideFooter(profile.settings?.hideFooter, profile.user_id);
+  const canHideRelated = await shouldHideFooter(profile.settings?.hideRelatedContent, profile.user_id);
   const profileWithPermission = {
     ...profile,
     settings: { ...profile.settings, hideFooter: canHideFooter }
@@ -171,7 +172,7 @@ export default async function ProfilePage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <ProfileViewer profile={profileWithPermission} />
-      <RelatedContent contentType="profile" currentSlug={slug} />
+      <RelatedContent contentType="profile" currentSlug={slug} hide={canHideRelated} />
     </>
   );
 }

@@ -78,6 +78,10 @@ export default async function SalesLetterShortUrlPage({ params }: Props) {
     salesLetter.settings?.hideFooter,
     salesLetter.user_id
   );
+  const canHideRelated = await shouldHideFooter(
+    salesLetter.settings?.hideRelatedContent,
+    salesLetter.user_id
+  );
 
   // 権限チェック結果を反映
   const salesLetterWithPermission = {
@@ -120,7 +124,7 @@ export default async function SalesLetterShortUrlPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <SalesLetterViewer salesLetter={salesLetterWithPermission} />
-      <RelatedContent contentType="salesletter" currentSlug={slug} />
+      <RelatedContent contentType="salesletter" currentSlug={slug} hide={canHideRelated} />
     </>
   );
 }

@@ -100,6 +100,7 @@ export default async function SurveyPage({ params }: { params: Promise<{ slug: s
 
   // 作成者のプラン権限をチェックしてフッター非表示を決定
   const canHideFooter = await shouldHideFooter(survey.settings?.hideFooter, survey.user_id);
+  const canHideRelated = await shouldHideFooter(survey.settings?.hideRelatedContent, survey.user_id);
   const surveyWithPermission = {
     ...survey,
     settings: { ...survey.settings, hideFooter: canHideFooter }
@@ -136,7 +137,7 @@ export default async function SurveyPage({ params }: { params: Promise<{ slug: s
       />
       <main className="min-h-screen bg-gradient-to-br from-gray-50 to-teal-50 py-10 px-4">
         <SurveyPlayer survey={surveyWithPermission as Survey} />
-        <RelatedContent contentType="survey" currentSlug={slug} />
+        <RelatedContent contentType="survey" currentSlug={slug} hide={canHideRelated} />
       </main>
     </>
   );
