@@ -5,7 +5,7 @@
 // -------------------------------------------
 // サービスタイプ
 // -------------------------------------------
-export type ServiceType = 'quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking';
+export type ServiceType = 'quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding';
 
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   quiz: '診断クイズ',
@@ -15,7 +15,8 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
   survey: 'アンケート',
   gamification: 'ゲーミフィケーション',
   attendance: '出欠表',
-  booking: '予約'
+  booking: '予約',
+  onboarding: 'オンボーディング'
 };
 
 export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; text: string }> = {
@@ -26,7 +27,8 @@ export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; 
   survey: { primary: 'teal', bg: 'bg-teal-50', text: 'text-teal-600' },
   gamification: { primary: 'purple', bg: 'bg-purple-50', text: 'text-purple-600' },
   attendance: { primary: 'purple', bg: 'bg-purple-50', text: 'text-purple-600' },
-  booking: { primary: 'blue', bg: 'bg-blue-50', text: 'text-blue-600' }
+  booking: { primary: 'blue', bg: 'bg-blue-50', text: 'text-blue-600' },
+  onboarding: { primary: 'orange', bg: 'bg-orange-50', text: 'text-orange-600' }
 };
 
 // -------------------------------------------
@@ -1365,5 +1367,51 @@ export interface MarketplaceReview {
   created_at: string;
   // JOIN結果
   reviewer_email?: string;
+}
+
+// -------------------------------------------
+// オンボーディングモーダル関連の型定義
+// -------------------------------------------
+
+export interface OnboardingModalItem {
+  iconName: string;       // Lucide アイコン名 (例: 'Layout', 'Sparkles')
+  iconColor: string;      // カラーキー: 'blue', 'purple', 'teal', 'amber' 等
+  title: string;
+  description: string;
+}
+
+export interface OnboardingModalPage {
+  subtitle: string;
+  items: OnboardingModalItem[];
+}
+
+export type OnboardingTriggerType = 'immediate' | 'delay' | 'scroll' | 'click';
+export type OnboardingButtonPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+
+export interface OnboardingModalData {
+  id: number;
+  slug: string;
+  title: string;
+  description?: string;
+  pages: OnboardingModalPage[];
+  gradient_from: string;
+  gradient_to: string;
+  trigger_type: OnboardingTriggerType;
+  trigger_delay: number;
+  trigger_scroll_percent: number;
+  trigger_button_text: string;
+  trigger_button_position: OnboardingButtonPosition;
+  show_dont_show_again: boolean;
+  close_on_overlay_click: boolean;
+  auto_close_seconds: number;
+  dont_show_text: string;
+  next_button_text: string;
+  back_button_text: string;
+  start_button_text: string;
+  user_id?: string | null;
+  show_in_portal?: boolean;
+  views_count?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 

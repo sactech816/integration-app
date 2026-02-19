@@ -24,4 +24,5 @@ export const TABLES = {
   ANNOUNCEMENTS: 'announcements',
   SURVEYS: 'surveys',
   GAMIFICATION_CAMPAIGNS: 'gamification_campaigns',
+  ONBOARDING_MODALS: 'onboarding_modals',
 } as const;

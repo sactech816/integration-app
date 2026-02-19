@@ -143,6 +143,38 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
                 </Link>
               </li>
             </ul>
+
+            <h3 className="text-white font-bold mt-6 mb-3 text-sm uppercase tracking-wider flex items-center gap-2">
+              <Monitor size={14} className="text-indigo-400" />
+              デモページ
+            </h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link href="/quiz/demo/kindle-author" className="hover:text-white transition-colors">
+                  診断クイズデモ
+                </Link>
+              </li>
+              <li>
+                <Link href="/profile/demo/full-set" className="hover:text-white transition-colors">
+                  プロフィールLPデモ
+                </Link>
+              </li>
+              <li>
+                <Link href="/business/demo/fullset" className="hover:text-white transition-colors">
+                  ビジネスLPデモ
+                </Link>
+              </li>
+              <li>
+                <Link href="/survey/demo/customer-satisfaction" className="hover:text-white transition-colors">
+                  アンケートデモ
+                </Link>
+              </li>
+              <li>
+                <Link href="/salesletter/demo/new-pasona" className="hover:text-white transition-colors">
+                  セールスレターデモ
+                </Link>
+              </li>
+            </ul>
           </div>
 
           {/* Kindle出版 */}

@@ -2,7 +2,7 @@ import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
 // 許可するパスのプレフィックス一覧
-const ALLOWED_PREFIXES = ['/quiz/', '/profile/', '/business/', '/survey/', '/s/'];
+const ALLOWED_PREFIXES = ['/quiz/', '/profile/', '/business/', '/survey/', '/s/', '/onboarding/'];
 
 export async function POST(request: NextRequest) {
   try {

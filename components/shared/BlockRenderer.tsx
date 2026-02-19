@@ -562,12 +562,12 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
       return (
         <section className="py-16 px-6">
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-            <div className={isImageLeft ? '' : 'order-2'}>
+            <div className={`${isImageLeft ? '' : 'order-2'} overflow-hidden`}>
               {block.data.imageUrl && (
-                <img 
-                  src={block.data.imageUrl} 
+                <img
+                  src={block.data.imageUrl}
                   alt={block.data.title}
-                  className="w-full rounded-2xl shadow-lg"
+                  className="w-full h-auto object-cover rounded-2xl shadow-lg"
                 />
               )}
             </div>
@@ -575,7 +575,7 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
               <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
                 {block.data.title}
               </h3>
-              <p className="text-gray-600 mb-6 leading-relaxed">{block.data.text}</p>
+              <p className="text-gray-600 mb-6 leading-relaxed whitespace-pre-line">{block.data.text}</p>
               {block.data.listItems && (
                 <ul className="space-y-3">
                   {block.data.listItems.map((item, i) => (

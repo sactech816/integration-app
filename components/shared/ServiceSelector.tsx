@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2 } from 'lucide-react';
+import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb } from 'lucide-react';
 import { ServiceType, SERVICE_LABELS } from '@/lib/types';
 import Link from 'next/link';
 
@@ -97,6 +97,18 @@ const serviceConfig = [
     borderColor: 'border-rose-200',
     hoverBg: 'hover:bg-rose-50',
     features: ['AI自動生成', '売れる文章', 'テンプレート'],
+  },
+  {
+    id: 'onboarding' as ServiceType,
+    icon: Lightbulb,
+    label: 'オンボーディングメーカー',
+    description: 'サイトに埋め込めるオンボーディングモーダルを簡単作成。外部サイトへの埋め込みにも対応',
+    gradient: 'from-orange-500 to-amber-600',
+    bgLight: 'bg-orange-50',
+    textColor: 'text-orange-600',
+    borderColor: 'border-orange-200',
+    hoverBg: 'hover:bg-orange-50',
+    features: ['埋め込み対応', 'トリガー設定', 'JSスニペット'],
   },
 ];
 

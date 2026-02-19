@@ -105,6 +105,24 @@ const businessDemos = [
     color: 'from-slate-500 to-gray-600',
   },
   {
+    name: 'コンサルタント・士業（8ブロック）',
+    description: '実績と信頼性を重視したプロフェッショナル向け',
+    href: '/business/demo/consultant',
+    color: 'from-blue-700 to-blue-900',
+  },
+  {
+    name: 'コーチ・講師（9ブロック）',
+    description: 'メソッド紹介とお客様の声で信頼を獲得',
+    href: '/business/demo/coach',
+    color: 'from-violet-500 to-purple-600',
+  },
+  {
+    name: '物販・EC（8ブロック）',
+    description: '商品のこだわりと魅力を効果的にアピール',
+    href: '/business/demo/retail-ec',
+    color: 'from-pink-500 to-rose-600',
+  },
+  {
     name: '店舗ビジネス（9ブロック）',
     description: '地域密着型店舗向けの集客LP',
     href: '/business/demo/shop',
@@ -117,10 +135,16 @@ const businessDemos = [
     color: 'from-amber-500 to-orange-600',
   },
   {
+    name: 'フリーランス（10ブロック）',
+    description: 'ポートフォリオとサービス内容を効果的に紹介',
+    href: '/business/demo/freelance',
+    color: 'from-blue-500 to-indigo-600',
+  },
+  {
     name: 'PASONA法則（12ブロック）',
     description: '問題提起から解決策まで論理的に訴求',
     href: '/business/demo/pasona',
-    color: 'from-blue-500 to-indigo-600',
+    color: 'from-cyan-500 to-blue-600',
   },
   {
     name: 'AIDOMA法則（12ブロック）',
@@ -142,28 +166,28 @@ const salesLetterDemos = [
   {
     name: '新PASONAの法則（22ブロック）',
     description: '親近感を軸に自然な購買行動を促す現代のスタンダード構成',
-    href: '/salesletter/editor?new=true',
+    href: '/salesletter/demo/new-pasona',
     color: 'from-rose-500 to-pink-600',
     badge: '王道型',
   },
   {
     name: 'PASBECONAの法則（25ブロック）',
     description: '高額商品・情報商材に最強の説得力構成',
-    href: '/salesletter/editor?new=true',
+    href: '/salesletter/demo/pasbecona',
     color: 'from-red-500 to-rose-600',
     badge: '王道型',
   },
   {
     name: 'QUESTの法則（24ブロック）',
     description: '物語のようにスムーズに読ませるストーリー構成',
-    href: '/salesletter/editor?new=true',
+    href: '/salesletter/demo/quest',
     color: 'from-orange-500 to-red-600',
     badge: '王道型',
   },
   {
     name: 'PASONAの法則・旧型（23ブロック）',
     description: '煽りや痛みを強調して行動を促す緊急性重視の構成',
-    href: '/salesletter/editor?new=true',
+    href: '/salesletter/demo/old-pasona',
     color: 'from-amber-500 to-orange-600',
     badge: '王道型',
   },
@@ -171,14 +195,14 @@ const salesLetterDemos = [
   {
     name: 'BEAFの法則（20ブロック）',
     description: 'ECサイトの商品説明文に最適な構成',
-    href: '/salesletter/editor?new=true',
+    href: '/salesletter/demo/beaf',
     color: 'from-emerald-500 to-green-600',
     badge: 'EC・物販型',
   },
   {
     name: 'CREMAの法則（8ブロック）',
     description: '短めの説明で効果的に行動を促す構成',
-    href: '/salesletter/editor?new=true',
+    href: '/salesletter/demo/crema',
     color: 'from-teal-500 to-emerald-600',
     badge: 'EC・物販型',
   },
@@ -186,14 +210,14 @@ const salesLetterDemos = [
   {
     name: 'PREP法（16ブロック）',
     description: '論理的で説得力のあるビジネス文章構成',
-    href: '/salesletter/editor?new=true',
+    href: '/salesletter/demo/prep',
     color: 'from-blue-500 to-indigo-600',
     badge: 'ブログ・短文型',
   },
   {
     name: 'SDS法（15ブロック）',
     description: '要約→詳細→要約のシンプル構成',
-    href: '/salesletter/editor?new=true',
+    href: '/salesletter/demo/sds',
     color: 'from-indigo-500 to-blue-600',
     badge: 'ブログ・短文型',
   },
@@ -201,14 +225,14 @@ const salesLetterDemos = [
   {
     name: 'AISAS / AISCEAS（16ブロック）',
     description: 'Web時代の消費者行動モデルに基づく全体設計',
-    href: '/salesletter/editor?new=true',
+    href: '/salesletter/demo/aisas',
     color: 'from-violet-500 to-purple-600',
     badge: 'マーケティング型',
   },
   {
     name: 'AIDMA / AIDCAS（15ブロック）',
     description: '古典的な消費行動モデルで基本を押さえる構成',
-    href: '/salesletter/editor?new=true',
+    href: '/salesletter/demo/aidma',
     color: 'from-purple-500 to-violet-600',
     badge: 'マーケティング型',
   },
@@ -584,7 +608,7 @@ export default function DemosPageClient() {
                   {demo.description}
                 </p>
                 <div className="flex items-center gap-2 text-rose-600 font-bold text-sm group-hover:gap-4 transition-all">
-                  テンプレートを使う
+                  デモを見る
                   <ArrowRight size={16} />
                 </div>
               </Link>

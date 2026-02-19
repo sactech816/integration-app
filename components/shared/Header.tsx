@@ -44,6 +44,7 @@ interface HeaderProps {
   onLogout: () => void;
   setShowAuth: (show: boolean) => void;
   currentService?: ServiceType;
+  headerClassName?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -51,7 +52,8 @@ const Header: React.FC<HeaderProps> = ({
   user,
   onLogout,
   setShowAuth,
-  currentService
+  currentService,
+  headerClassName
 }) => {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -123,7 +125,7 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-    <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-[100]">
+    <header className={`${headerClassName || 'bg-white/80'} backdrop-blur-md border-b border-gray-100 sticky top-0 z-[100]`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
         {/* 左側: ロゴ */}
         <Link
