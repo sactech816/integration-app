@@ -41,6 +41,8 @@ import { generateSlug } from "@/lib/utils";
 import SurveyPlayer from "./SurveyPlayer";
 import { useUserPlan } from "@/lib/hooks/useUserPlan";
 import CreationCompleteModal from "@/components/shared/CreationCompleteModal";
+import OnboardingModal from "@/components/shared/OnboardingModal";
+import { useOnboarding } from "@/lib/hooks/useOnboarding";
 import { SURVEY_THEMES, SURVEY_THEME_IDS, getSurveyTheme } from "@/constants/surveyThemes";
 
 // セクションコンポーネント
@@ -260,7 +262,9 @@ interface SurveyEditorProps {
 export default function SurveyEditor({ onBack, initialData, user, templateId, setShowAuth }: SurveyEditorProps) {
   // ユーザープラン権限を取得
   const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
-  
+  // オンボーディング
+  const { showOnboarding, setShowOnboarding } = useOnboarding('survey_editor_onboarding_dismissed', { skip: !!initialData?.id });
+
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [savedId, setSavedId] = useState<number | null>(initialData?.id || null);
@@ -1264,6 +1268,36 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
           </div>
         </div>
       </div>
+
+      {/* オンボーディングモーダル */}
+      {showOnboarding && (
+        <OnboardingModal
+          storageKey="survey_editor_onboarding_dismissed"
+          title="アンケートエディタの使い方"
+          pages={[
+            {
+              subtitle: 'エディタの基本',
+              items: [
+                { icon: Settings, iconColor: 'blue', title: '左 = 設定パネル / 右 = リアルタイムプレビュー', description: '左側で質問や設定を編集すると、右側のプレビューにリアルタイム反映されます。モバイルでは「編集/プレビュー」タブで切替できます。' },
+                { icon: Sparkles, iconColor: 'amber', title: 'テンプレートから始める', description: '用途別テンプレートから始めると、質問や設定が自動入力されます。カスタマイズも自由です。' },
+                { icon: Palette, iconColor: 'teal', title: 'デザイン設定', description: 'テーマカラーやスタイルを「デザイン設定」セクションで変更できます。複数のプリセットテーマが選べます。' },
+                { icon: ListChecks, iconColor: 'purple', title: '質問タイプの種類', description: 'テキスト入力・単一選択・複数選択・評価スケールなど、複数の質問タイプに対応しています。' },
+              ],
+            },
+            {
+              subtitle: '質問と結果の設定',
+              items: [
+                { icon: Plus, iconColor: 'blue', title: '質問の追加・並べ替え', description: '「質問設定」セクションで質問を追加し、ドラッグで順番を変更できます。' },
+                { icon: Trophy, iconColor: 'amber', title: '結果表示の設定', description: '「設定」セクションで結果の表示方法をカスタマイズできます。' },
+                { icon: Share2, iconColor: 'green', title: '共有方法', description: '保存後、URLをコピーして共有できます。QRコードやSNSでの配布にも対応しています。' },
+              ],
+            },
+          ]}
+          gradientFrom="from-teal-500"
+          gradientTo="to-cyan-500"
+          onDismiss={() => setShowOnboarding(false)}
+        />
+      )}
     </div>
   );
 }

@@ -19,6 +19,8 @@ import {
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import OnboardingModal, { type OnboardingPage } from '@/components/shared/OnboardingModal';
+import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { supabase } from '@/lib/supabase';
 import { createAttendanceEvent, getAttendanceEvent, updateAttendanceEvent } from '@/app/actions/attendance';
 import { AttendanceSlot, AttendanceEvent } from '@/types/attendance';
@@ -32,6 +34,9 @@ function AttendanceEditorContent() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+
+  // オンボーディング
+  const { showOnboarding, setShowOnboarding } = useOnboarding('attendance_editor_onboarding_dismissed', { skip: !!editId });
 
   // 編集モード用
   const [isEditMode, setIsEditMode] = useState(false);
@@ -779,6 +784,26 @@ function AttendanceEditorContent() {
       </main>
 
       <Footer setPage={navigateTo} />
+
+      {/* オンボーディングモーダル */}
+      {showOnboarding && (
+        <OnboardingModal
+          storageKey="attendance_editor_onboarding_dismissed"
+          title="出欠表の作り方"
+          pages={[{
+            subtitle: '基本的な操作をご紹介します',
+            items: [
+              { icon: Calendar, iconColor: 'purple', title: 'カレンダーで日程選択', description: 'カレンダー上の日付をクリックして候補日を追加します。もう一度クリックで解除できます。' },
+              { icon: Clock, iconColor: 'blue', title: '時間帯の設定（任意）', description: '「時間帯を設定する」をONにすると、各日程に時間枠を追加できます。複数の時間帯も設定可能です。' },
+              { icon: Users, iconColor: 'teal', title: '参加者が回答', description: '保存後、共有URLを送ると参加者が出欠を回答できます。回答結果は自動で集計されます。' },
+              { icon: CalendarDays, iconColor: 'amber', title: 'タイトルと説明を忘れずに', description: 'イベント名と説明を入力すると、参加者にわかりやすくなります。' },
+            ],
+          }]}
+          gradientFrom="from-purple-500"
+          gradientTo="to-indigo-500"
+          onDismiss={() => setShowOnboarding(false)}
+        />
+      )}
     </div>
   );
 }

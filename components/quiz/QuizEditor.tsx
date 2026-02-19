@@ -13,6 +13,8 @@ import QuizPlayer from './QuizPlayer';
 import { triggerGamificationEvent } from '@/lib/gamification/events';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import OnboardingModal from '@/components/shared/OnboardingModal';
+import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { trackGenerateComplete, trackGenerateError } from '@/lib/gtag';
 
 // --- 用途別テンプレート（プリセットデータ）---
@@ -191,6 +193,8 @@ interface EditorProps {
 const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: EditorProps) => {
     // ユーザープラン権限を取得
     const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
+    // オンボーディング
+    const { showOnboarding, setShowOnboarding } = useOnboarding('quiz_editor_onboarding_dismissed', { skip: !!initialData?.id });
     
     useEffect(() => { 
         document.title = "クイズ作成・編集 | 診断クイズメーカー"; 
@@ -1293,6 +1297,37 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                 {/* PC用：右側のfixed領域分のスペーサー（背景色を左側と揃える） */}
                 <div className="hidden lg:block lg:w-1/2 lg:flex-shrink-0 bg-gray-50"></div>
             </div>
+
+            {/* オンボーディングモーダル */}
+            {showOnboarding && (
+                <OnboardingModal
+                    storageKey="quiz_editor_onboarding_dismissed"
+                    title="診断クイズエディタの使い方"
+                    pages={[
+                        {
+                            subtitle: 'エディタの基本',
+                            items: [
+                                { icon: Layout, iconColor: 'blue', title: '左 = 設定パネル / 右 = リアルタイムプレビュー', description: '左側で設問や結果を編集すると、右側にプレビューが即時反映されます。モバイルでは「編集/プレビュー」タブで切替できます。' },
+                                { icon: Sparkles, iconColor: 'amber', title: 'テンプレート・AI自動生成', description: '5つの用途別テンプレート（Kindle・講師・店舗・コンサル・カスタム）から選べます。「AIで自動生成」ボタンで設問を自動生成することもできます。' },
+                                { icon: Palette, iconColor: 'purple', title: 'テーマ＆デザイン設定', description: '「デザイン設定」セクションでカラーテーマや見た目を変更できます。6種類のプリセットテーマから選べます。' },
+                                { icon: MessageSquare, iconColor: 'teal', title: '診断モード vs おみくじモード', description: '「診断モード」はタイプ別結果表示、「おみくじ」はランダム結果表示です。用途に合わせて選択してください。' },
+                            ],
+                        },
+                        {
+                            subtitle: '設問と結果の設定',
+                            items: [
+                                { icon: Edit3, iconColor: 'blue', title: '設問の追加・編集', description: '「設問設定」セクションで設問を追加。各設問には選択肢とスコア（A/B/C）を設定します。ドラッグで並び替え可能です。' },
+                                { icon: Trophy, iconColor: 'amber', title: '結果パターン設定', description: '「結果設定」セクションで各タイプ（A/B/C）の結果タイトル・説明・リンクを設定します。' },
+                                { icon: Share2, iconColor: 'green', title: '共有・埋め込み', description: '保存後、URLをコピーして共有できます。ブログやLPに埋め込みコードで設置も可能です。' },
+                                { icon: Lock, iconColor: 'red', title: 'AI利用の残り回数', description: 'AI機能の利用にはクレジットが必要です。残り回数はプラン情報で確認できます。毎日リセットされます。' },
+                            ],
+                        },
+                    ]}
+                    gradientFrom="from-indigo-500"
+                    gradientTo="to-purple-500"
+                    onDismiss={() => setShowOnboarding(false)}
+                />
+            )}
         </div>
     );
 };

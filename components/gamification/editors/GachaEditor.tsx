@@ -28,6 +28,8 @@ import {
   Zap,
 } from 'lucide-react';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import OnboardingModal from '@/components/shared/OnboardingModal';
+import { useOnboarding } from '@/lib/hooks/useOnboarding';
 
 // ゲームタイプ設定
 type GameType = 'gacha' | 'scratch' | 'fukubiki' | 'slot';
@@ -189,6 +191,7 @@ const getDefaultPrizes = (gameType: GameType): GachaPrizeForm[] => {
 
 export default function GachaEditor({ user, initialData, onBack, setShowAuth, gameType = 'gacha' }: GachaEditorProps) {
   const router = useRouter();
+  const { showOnboarding, setShowOnboarding } = useOnboarding('gamification_gacha_onboarding_dismissed', { skip: !!initialData });
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(initialData?.id || null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -675,6 +678,36 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth, ga
         contentTitle={`${form.title || config.title}で遊んでみよう！`}
         theme="purple"
       />
+
+      {/* オンボーディングモーダル */}
+      {showOnboarding && (
+        <OnboardingModal
+          storageKey="gamification_gacha_onboarding_dismissed"
+          title={`${config.title}エディタの使い方`}
+          pages={[
+            {
+              subtitle: '基本的な操作をご紹介します',
+              items: [
+                { icon: Settings, iconColor: 'blue', title: '左 = 設定パネル / 右 = スマホプレビュー', description: '左側で景品や設定を編集し、右側のスマホ型プレビューでリアルタイム確認できます。' },
+                { icon: Gift, iconColor: 'purple', title: '景品の設定', description: '「景品設定」セクションで景品名・説明・画像・当選確率・在庫を設定します。当たり/ハズレも指定できます。' },
+                { icon: AlertCircle, iconColor: 'amber', title: '確率の自動調整', description: '全景品の確率合計が100%になるよう自動調整機能があります。手動で微調整も可能です。' },
+                { icon: Sparkles, iconColor: 'teal', title: 'アニメーション選択', description: 'カプセル・ルーレット・おみくじの3種類のアニメーションから選べます。ゲームタイプに合わせて変更可能です。' },
+              ],
+            },
+            {
+              subtitle: '公開と運用',
+              items: [
+                { icon: Palette, iconColor: 'purple', title: 'テーマカラー設定', description: '景品画面のテーマカラーを変更できます。ブランドに合わせたカスタマイズが可能です。' },
+                { icon: CreditCard, iconColor: 'amber', title: 'プレイコスト設定', description: '1回あたりのプレイに必要なポイント数を設定します。ポイント制でリピートを促進します。' },
+                { icon: Share2, iconColor: 'green', title: '共有方法', description: '保存後、URLをコピーして共有できます。QRコードでの配布にも対応しています。' },
+              ],
+            },
+          ]}
+          gradientFrom="from-purple-500"
+          gradientTo="to-pink-500"
+          onDismiss={() => setShowOnboarding(false)}
+        />
+      )}
     </>
   );
 }

@@ -32,6 +32,8 @@ import {
   Plus,
 } from 'lucide-react';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import OnboardingModal from '@/components/shared/OnboardingModal';
+import { useOnboarding } from '@/lib/hooks/useOnboarding';
 
 interface StampRallyEditorProps {
   user: User | null;
@@ -88,6 +90,7 @@ const Section = ({
 
 export default function StampRallyEditor({ user, initialData, onBack, setShowAuth }: StampRallyEditorProps) {
   const router = useRouter();
+  const { showOnboarding, setShowOnboarding } = useOnboarding('gamification_stamprally_onboarding_dismissed', { skip: !!initialData });
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(initialData?.id || null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -573,6 +576,26 @@ export default function StampRallyEditor({ user, initialData, onBack, setShowAut
         contentTitle={`${form.title || 'スタンプラリー'}に参加しよう！`}
         theme="amber"
       />
+
+      {/* オンボーディングモーダル */}
+      {showOnboarding && (
+        <OnboardingModal
+          storageKey="gamification_stamprally_onboarding_dismissed"
+          title="スタンプラリーの設定"
+          pages={[{
+            subtitle: '基本的な操作をご紹介します',
+            items: [
+              { icon: Stamp, iconColor: 'amber', title: 'スタンプの設定', description: 'スタンプの総数やラベルを設定します。各スタンプにはトリガー条件（QRスキャン・ページ閲覧など）を設定できます。' },
+              { icon: Gift, iconColor: 'purple', title: 'コンプリート報酬', description: '全スタンプ収集時のボーナスポイントを設定できます。各スタンプごとのポイントも個別に設定可能です。' },
+              { icon: Target, iconColor: 'blue', title: 'トリガー設定', description: '各スタンプの取得条件を設定します。QRコード、特定ページ閲覧、特定コンテンツ利用など複数の条件に対応しています。' },
+              { icon: Share2, iconColor: 'green', title: '共有とQRコード', description: '保存後、参加者向けURLやQRコードを生成できます。' },
+            ],
+          }]}
+          gradientFrom="from-amber-500"
+          gradientTo="to-orange-500"
+          onDismiss={() => setShowOnboarding(false)}
+        />
+      )}
     </>
   );
 }

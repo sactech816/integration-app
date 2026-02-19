@@ -60,6 +60,8 @@ import {
 import { BlockRenderer } from '@/components/shared/BlockRenderer';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import OnboardingModal from '@/components/shared/OnboardingModal';
+import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { trackGenerateComplete, trackGenerateError } from '@/lib/gtag';
 
 interface BusinessEditorProps {
@@ -458,7 +460,9 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
 }) => {
   // ユーザープラン権限を取得
   const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
-  
+  // オンボーディング
+  const { showOnboarding, setShowOnboarding } = useOnboarding('business_editor_onboarding_dismissed', { skip: !!initialData });
+
   // 初期ブロック
   const initialBlocks: Block[] = [
     {
@@ -2793,6 +2797,44 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
           accentColor="amber"
           userId={user?.id}
         />
+
+        {/* オンボーディングモーダル */}
+        {showOnboarding && (
+          <OnboardingModal
+            storageKey="business_editor_onboarding_dismissed"
+            title="ビジネスLPエディタの使い方"
+            pages={[
+              {
+                subtitle: 'エディタの基本',
+                items: [
+                  { icon: Layout, iconColor: 'blue', title: '左 = セクション設定 / 右 = ライブプレビュー', description: '左側の折りたたみセクションで編集し、右側でリアルタイムプレビューを確認できます。PC/モバイル切替にも対応しています。' },
+                  { icon: Sparkles, iconColor: 'amber', title: 'テンプレートから始める', description: 'ビジネスLP専用テンプレートを選択すると、ブロック構成とデザインが自動配置されます。' },
+                  { icon: Wand2, iconColor: 'purple', title: 'AI一括生成', description: '業種やサービス内容を入力するだけで、AIがLP全体を自動生成します（クレジット消費）。' },
+                ],
+              },
+              {
+                subtitle: 'ブロックの種類',
+                items: [
+                  { icon: Zap, iconColor: 'blue', title: 'ヒーロー・ファーストビュー', description: '「ヒーロー」「フルワイドヒーロー」でインパクトのあるメインビジュアルを配置できます。' },
+                  { icon: Star, iconColor: 'amber', title: '特徴・ベネフィット', description: '「特徴」ブロックでサービスの強みを3列カードで表示。「問題提起」で顧客の悩みを可視化します。' },
+                  { icon: Target, iconColor: 'red', title: 'CTAセクション', description: '「CTAセクション」でコンバージョンポイントを配置。ボタンテキストやリンクを設定します。' },
+                  { icon: Users, iconColor: 'teal', title: '事例・お客様の声', description: '「事例紹介」「お客様の声」で信頼性を向上。「チェックリスト」で含まれるものを一覧表示できます。' },
+                ],
+              },
+              {
+                subtitle: 'デザインと公開',
+                items: [
+                  { icon: Palette, iconColor: 'purple', title: 'テーマ・カラー設定', description: '「テーマ設定」セクションで背景グラデーションやカラーパレットを変更できます。8種類のプリセットから選べます。' },
+                  { icon: Lock, iconColor: 'red', title: 'AI利用の残り回数', description: 'AI機能はクレジットを消費します。残り回数はプラン情報で確認でき、毎日リセットされます。' },
+                  { icon: ExternalLink, iconColor: 'green', title: '公開と共有', description: '保存後URLをコピーして共有。ポータルにも掲載でき、SEO対策にもなります。' },
+                ],
+              },
+            ]}
+            gradientFrom="from-blue-600"
+            gradientTo="to-indigo-600"
+            onDismiss={() => setShowOnboarding(false)}
+          />
+        )}
         </div>
       );
 };

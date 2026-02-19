@@ -45,6 +45,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import AIGenerateModal, { AIGenerateInput } from './AIGenerateModal';
+import OnboardingModal from '@/components/shared/OnboardingModal';
+import { useOnboarding } from '@/lib/hooks/useOnboarding';
 
 // セールスレター用ブロックタイプ
 const blockTypes = [
@@ -108,6 +110,8 @@ export default function SalesLetterEditor({
   onBack,
   setShowAuth,
 }: SalesLetterEditorProps) {
+  // オンボーディング
+  const { showOnboarding, setShowOnboarding } = useOnboarding('salesletter_editor_onboarding_dismissed', { skip: !!initialData });
   // 状態管理
   const [title, setTitle] = useState(initialData?.title || 'セールスレター');
   const [blocks, setBlocks] = useState<Block[]>(initialData?.content || []);
@@ -888,6 +892,43 @@ export default function SalesLetterEditor({
           animation: gradient-xy 15s ease infinite;
         }
       `}</style>
+
+      {/* オンボーディングモーダル */}
+      {showOnboarding && (
+        <OnboardingModal
+          storageKey="salesletter_editor_onboarding_dismissed"
+          title="セールスレターエディタの使い方"
+          pages={[
+            {
+              subtitle: '画面レイアウト',
+              items: [
+                { icon: Settings, iconColor: 'blue', title: '左 = ブロックエディタ / 右 = ライブプレビュー', description: '左側でブロックを追加・編集し、右側でPC/モバイル切替プレビューを確認できます。' },
+                { icon: Monitor, iconColor: 'purple', title: 'PC/モバイルプレビュー切替', description: 'プレビューエリア上部の切替ボタンで、PC表示とモバイル表示を確認できます。' },
+                { icon: GripVertical, iconColor: 'teal', title: 'ブロックの並べ替え', description: 'ブロックをドラッグ＆ドロップで自由に並び替えできます。' },
+              ],
+            },
+            {
+              subtitle: 'ブロックとテンプレート',
+              items: [
+                { icon: Plus, iconColor: 'blue', title: '9種類のブロック', description: '見出し・本文・画像・CTAボタン・余白・区切り線・タイマー・YouTube・FAQの9種類から選んで追加できます。' },
+                { icon: FileText, iconColor: 'amber', title: 'テンプレートから始める', description: 'テンプレート一覧から選ぶと、ブロック構成が自動で配置されます。カスタマイズは自由です。' },
+                { icon: Palette, iconColor: 'purple', title: 'カラー＆背景設定', description: 'ページ全体の背景色・グラデーション・画像を設定できます。コンテンツ幅も調整可能です。' },
+              ],
+            },
+            {
+              subtitle: 'AI生成とクレジット',
+              items: [
+                { icon: Sparkles, iconColor: 'amber', title: 'AIでセールスレター自動生成', description: 'テンプレート選択後、商品名とターゲットを入力するだけで、AIがセールスレター全体を自動生成します。' },
+                { icon: Lock, iconColor: 'red', title: 'AI利用にはクレジット消費', description: 'AI生成は1回の実行でクレジットを消費します。残り回数はプラン情報で確認でき、毎日リセットされます。' },
+                { icon: Share2, iconColor: 'green', title: '公開と共有', description: '保存後、URLをコピーして共有できます。' },
+              ],
+            },
+          ]}
+          gradientFrom="from-rose-500"
+          gradientTo="to-pink-500"
+          onDismiss={() => setShowOnboarding(false)}
+        />
+      )}
     </div>
   );
 }
@@ -2162,6 +2203,7 @@ function ContentSettingsPanel({
       </div>
         </div>
       )}
+
     </div>
   );
 }

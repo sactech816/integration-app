@@ -25,6 +25,8 @@ import WeeklyCalendar, { LocalSlot } from './WeeklyCalendar';
 import MonthlyCalendar from './MonthlyCalendar';
 import SlotModal, { SlotFormData } from './SlotModal';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import OnboardingModal from '@/components/shared/OnboardingModal';
+import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { updateBookingSlot } from '@/app/actions/booking';
 
 interface BookingEditorProps {
@@ -61,7 +63,10 @@ export default function BookingEditor({
   setShowAuth,
 }: BookingEditorProps) {
   const router = useRouter();
-  
+
+  // オンボーディング
+  const { showOnboarding, setShowOnboarding } = useOnboarding('booking_editor_onboarding_dismissed', { skip: mode !== 'create' });
+
   // フォーム状態
   const [formData, setFormData] = useState<CreateBookingMenuInput>({
     title: '',
@@ -1027,6 +1032,26 @@ export default function BookingEditor({
           </div>
         </form>
       </div>
+
+      {/* オンボーディングモーダル */}
+      {showOnboarding && (
+        <OnboardingModal
+          storageKey="booking_editor_onboarding_dismissed"
+          title="予約メニューの作り方"
+          pages={[{
+            subtitle: '基本的な操作をご紹介します',
+            items: [
+              { icon: FileText, iconColor: 'blue', title: '基本情報の入力', description: 'メニュー名・説明・連絡方法・所要時間を入力します。予約タイプ（来店予約/オンライン）も選択できます。' },
+              { icon: Calendar, iconColor: 'purple', title: 'カレンダーでスロット追加', description: '週表示/月表示カレンダーで空き枠をクリックして予約スロットを追加します。複数日一括作成も可能です。' },
+              { icon: CalendarClock, iconColor: 'amber', title: 'スロットの詳細設定', description: '各スロットに時間帯と定員を設定します。作成済みスロットはクリックで編集・削除できます。' },
+              { icon: Clock, iconColor: 'teal', title: '通知メール', description: '通知先メールアドレスを設定すると、予約が入ったときにメール通知を受け取れます。' },
+            ],
+          }]}
+          gradientFrom="from-blue-500"
+          gradientTo="to-indigo-500"
+          onDismiss={() => setShowOnboarding(false)}
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileText, DollarSign, Star, Crown } from 'lucide-react';
+import OnboardingModal from '@/components/shared/OnboardingModal';
+import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { MarketplaceListing, MarketplacePriceType } from '@/lib/types';
 import { MARKETPLACE_CATEGORIES, PRICE_TYPE_LABELS } from '@/constants/marketplace';
 
@@ -13,6 +15,9 @@ interface ListingFormProps {
 }
 
 export default function ListingForm({ listing, accessToken, onSaved, onCancel }: ListingFormProps) {
+  // オンボーディング
+  const { showOnboarding, setShowOnboarding } = useOnboarding('marketplace_listing_onboarding_dismissed', { skip: !!listing });
+
   const [category, setCategory] = useState(listing?.category || '');
   const [title, setTitle] = useState(listing?.title || '');
   const [description, setDescription] = useState(listing?.description || '');
@@ -220,6 +225,26 @@ export default function ListingForm({ listing, accessToken, onSaved, onCancel }:
           {listing ? 'サービスを更新' : 'サービスを出品'}
         </button>
       </div>
+
+      {/* オンボーディングモーダル */}
+      {showOnboarding && (
+        <OnboardingModal
+          storageKey="marketplace_listing_onboarding_dismissed"
+          title="サービス出品の流れ"
+          pages={[{
+            subtitle: '出品の基本をご紹介します',
+            items: [
+              { icon: FileText, iconColor: 'blue', title: 'カテゴリとタイトル', description: 'まずカテゴリを選択し、わかりやすいサービスタイトルを入力してください。タイトルは80文字以内です。' },
+              { icon: DollarSign, iconColor: 'amber', title: '価格設定', description: '「固定価格」「価格帯」「応相談」の3種類から選べます。納期目安も設定すると依頼者に親切です。' },
+              { icon: Star, iconColor: 'purple', title: '魅力的な説明文', description: 'サービスの内容・含まれるもの・対応範囲を具体的に記載すると、依頼率が上がります。' },
+              { icon: Crown, iconColor: 'teal', title: 'プロプラン限定機能', description: 'スキルマーケットプレイスはプロプラン限定です。出品後はマーケットプレイス上で公開されます。' },
+            ],
+          }]}
+          gradientFrom="from-amber-500"
+          gradientTo="to-orange-500"
+          onDismiss={() => setShowOnboarding(false)}
+        />
+      )}
     </form>
   );
 }

@@ -21,6 +21,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import OnboardingModal from '@/components/shared/OnboardingModal';
+import { useOnboarding } from '@/lib/hooks/useOnboarding';
 
 interface LoginBonusEditorProps {
   user: User | null;
@@ -75,6 +77,7 @@ const Section = ({
 
 export default function LoginBonusEditor({ user, initialData, onBack, setShowAuth }: LoginBonusEditorProps) {
   const router = useRouter();
+  const { showOnboarding, setShowOnboarding } = useOnboarding('gamification_loginbonus_onboarding_dismissed', { skip: !!initialData });
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(initialData?.id || null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -305,6 +308,25 @@ export default function LoginBonusEditor({ user, initialData, onBack, setShowAut
         contentTitle={`${form.title || 'ログインボーナス'}をチェックしよう！`}
         theme="blue"
       />
+
+      {/* オンボーディングモーダル */}
+      {showOnboarding && (
+        <OnboardingModal
+          storageKey="gamification_loginbonus_onboarding_dismissed"
+          title="ログインボーナスの設定"
+          pages={[{
+            subtitle: '基本的な操作をご紹介します',
+            items: [
+              { icon: Calendar, iconColor: 'blue', title: '基本設定', description: 'タイトルと説明を設定します。ユーザーが毎日ログインするたびにポイントが貯まります。' },
+              { icon: Gift, iconColor: 'amber', title: 'ポイント設定', description: '1日あたりの獲得ポイントを設定します。連続ログインボーナスの日数と追加ポイントも設定可能です。' },
+              { icon: Sparkles, iconColor: 'purple', title: '連続ログインボーナス', description: '設定した日数連続でログインすると、ボーナスポイントが付与されます。リピート率向上に効果的です。' },
+            ],
+          }]}
+          gradientFrom="from-blue-500"
+          gradientTo="to-cyan-500"
+          onDismiss={() => setShowOnboarding(false)}
+        />
+      )}
     </>
   );
 }

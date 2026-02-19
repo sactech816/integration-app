@@ -51,6 +51,8 @@ import {
 } from 'lucide-react';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import OnboardingModal from '@/components/shared/OnboardingModal';
+import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { trackGenerateComplete, trackGenerateError } from '@/lib/gtag';
 import dynamic from 'next/dynamic';
 
@@ -745,7 +747,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
 }) => {
   // ユーザープラン権限を取得
   const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
-  
+  // オンボーディング
+  const { showOnboarding, setShowOnboarding } = useOnboarding('profile_editor_onboarding_dismissed', { skip: !!initialData });
+
   // 初期ブロック（ヘッダー、テキスト、リンク集）
   const initialBlocks: Block[] = [
     {
@@ -2765,6 +2769,36 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         accentColor="emerald"
         userId={user?.id}
       />
+
+      {/* オンボーディングモーダル */}
+      {showOnboarding && (
+        <OnboardingModal
+          storageKey="profile_editor_onboarding_dismissed"
+          title="プロフィールエディタの使い方"
+          pages={[
+            {
+              subtitle: 'エディタの基本',
+              items: [
+                { icon: Layout, iconColor: 'blue', title: '左 = セクション設定 / 右 = ライブプレビュー', description: '左側の折りたたみセクションで設定し、右側でリアルタイムにプレビューを確認できます。' },
+                { icon: Sparkles, iconColor: 'amber', title: 'テンプレート・AI生成', description: '「テンプレート・AI生成」セクションからテンプレートを選択するか、AIでプロフィール全体を自動生成できます。' },
+                { icon: Plus, iconColor: 'purple', title: '15種類以上のブロック', description: 'ヘッダー・テキスト・画像・リンク集・YouTube・Kindle・LINE・FAQ・料金表・お客様の声・リードフォーム・Googleマップ・診断クイズ・カウントダウン・ギャラリーなど豊富なブロックを追加できます。' },
+              ],
+            },
+            {
+              subtitle: 'デザインと公開',
+              items: [
+                { icon: Palette, iconColor: 'teal', title: 'テーマ・カラー設定', description: '「テーマ設定」セクションでグラデーション背景やカラーを変更できます。動くグラデーションにも対応しています。' },
+                { icon: GripVertical, iconColor: 'blue', title: 'ブロックの操作', description: '各ブロックはドラッグで並び替え、編集・複製・削除が可能です。' },
+                { icon: Lock, iconColor: 'red', title: 'AI利用の残り回数', description: 'AI生成機能はクレジットを消費します。残り回数はプラン情報で確認できます。' },
+                { icon: ExternalLink, iconColor: 'green', title: '公開と共有', description: '保存後URLをコピーして共有。ポータルにも掲載可能です。' },
+              ],
+            },
+          ]}
+          gradientFrom="from-violet-500"
+          gradientTo="to-purple-500"
+          onDismiss={() => setShowOnboarding(false)}
+        />
+      )}
     </div>
   );
 };
