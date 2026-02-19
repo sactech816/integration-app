@@ -861,7 +861,7 @@ function PortalPageContent() {
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-3">
             {/* タブ */}
-            <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+            <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide lg:flex-wrap lg:overflow-x-visible">
               {TABS.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = selectedTab === tab.type;
