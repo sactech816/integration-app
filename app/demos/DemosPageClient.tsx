@@ -12,6 +12,7 @@ import {
   User,
   BookOpen,
   House,
+  PenTool,
 } from 'lucide-react';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
@@ -135,6 +136,84 @@ const businessDemos = [
   },
 ];
 
+// セールスライターテンプレート
+const salesLetterDemos = [
+  // 王道のセールスレター型
+  {
+    name: '新PASONAの法則（22ブロック）',
+    description: '親近感を軸に自然な購買行動を促す現代のスタンダード構成',
+    href: '/salesletter/editor?new=true',
+    color: 'from-rose-500 to-pink-600',
+    badge: '王道型',
+  },
+  {
+    name: 'PASBECONAの法則（25ブロック）',
+    description: '高額商品・情報商材に最強の説得力構成',
+    href: '/salesletter/editor?new=true',
+    color: 'from-red-500 to-rose-600',
+    badge: '王道型',
+  },
+  {
+    name: 'QUESTの法則（24ブロック）',
+    description: '物語のようにスムーズに読ませるストーリー構成',
+    href: '/salesletter/editor?new=true',
+    color: 'from-orange-500 to-red-600',
+    badge: '王道型',
+  },
+  {
+    name: 'PASONAの法則・旧型（23ブロック）',
+    description: '煽りや痛みを強調して行動を促す緊急性重視の構成',
+    href: '/salesletter/editor?new=true',
+    color: 'from-amber-500 to-orange-600',
+    badge: '王道型',
+  },
+  // EC・物販・カタログ型
+  {
+    name: 'BEAFの法則（20ブロック）',
+    description: 'ECサイトの商品説明文に最適な構成',
+    href: '/salesletter/editor?new=true',
+    color: 'from-emerald-500 to-green-600',
+    badge: 'EC・物販型',
+  },
+  {
+    name: 'CREMAの法則（8ブロック）',
+    description: '短めの説明で効果的に行動を促す構成',
+    href: '/salesletter/editor?new=true',
+    color: 'from-teal-500 to-emerald-600',
+    badge: 'EC・物販型',
+  },
+  // ブログ・メルマガ・短文構成型
+  {
+    name: 'PREP法（16ブロック）',
+    description: '論理的で説得力のあるビジネス文章構成',
+    href: '/salesletter/editor?new=true',
+    color: 'from-blue-500 to-indigo-600',
+    badge: 'ブログ・短文型',
+  },
+  {
+    name: 'SDS法（15ブロック）',
+    description: '要約→詳細→要約のシンプル構成',
+    href: '/salesletter/editor?new=true',
+    color: 'from-indigo-500 to-blue-600',
+    badge: 'ブログ・短文型',
+  },
+  // マーケティング思考・全体設計型
+  {
+    name: 'AISAS / AISCEAS（16ブロック）',
+    description: 'Web時代の消費者行動モデルに基づく全体設計',
+    href: '/salesletter/editor?new=true',
+    color: 'from-violet-500 to-purple-600',
+    badge: 'マーケティング型',
+  },
+  {
+    name: 'AIDMA / AIDCAS（15ブロック）',
+    description: '古典的な消費行動モデルで基本を押さえる構成',
+    href: '/salesletter/editor?new=true',
+    color: 'from-purple-500 to-violet-600',
+    badge: 'マーケティング型',
+  },
+];
+
 // アンケートデモ
 const surveyDemos = [
   {
@@ -221,11 +300,11 @@ export default function DemosPageClient() {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     name: 'デモ一覧 - 集客メーカー',
-    description: '診断クイズ、プロフィールLP、ビジネスLP、アンケートの各種テンプレートのデモページ',
+    description: '診断クイズ、プロフィールLP、ビジネスLP、アンケート、セールスライターの各種テンプレートのデモページ',
     url: `${siteUrl}/demos`,
     mainEntity: {
       '@type': 'ItemList',
-      numberOfItems: quizDemos.length + profileDemos.length + businessDemos.length + surveyDemos.length,
+      numberOfItems: quizDemos.length + profileDemos.length + businessDemos.length + surveyDemos.length + salesLetterDemos.length,
       itemListElement: [
         ...quizDemos.map((demo, index) => ({
           '@type': 'ListItem',
@@ -248,6 +327,12 @@ export default function DemosPageClient() {
         ...surveyDemos.map((demo, index) => ({
           '@type': 'ListItem',
           position: quizDemos.length + profileDemos.length + businessDemos.length + index + 1,
+          name: demo.name,
+          url: `${siteUrl}${demo.href}`,
+        })),
+        ...salesLetterDemos.map((demo, index) => ({
+          '@type': 'ListItem',
+          position: quizDemos.length + profileDemos.length + businessDemos.length + surveyDemos.length + index + 1,
           name: demo.name,
           url: `${siteUrl}${demo.href}`,
         })),
@@ -460,6 +545,50 @@ export default function DemosPageClient() {
                 </Link>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* セールスライターデモ */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <PenTool size={32} className="text-rose-600" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
+              セールスライター
+            </h2>
+            <p className="text-lg text-gray-600">
+              マーケティング法則に基づいた10種のセールスレターテンプレート
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {salesLetterDemos.map((demo, index) => (
+              <Link
+                key={index}
+                href={demo.href}
+                className="group bg-white rounded-2xl border-2 border-gray-100 p-6 hover:border-transparent hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${demo.color} flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg`}>
+                    <PenTool size={28} className="text-white" />
+                  </div>
+                  <span className="text-xs font-bold bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
+                    {demo.badge}
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  {demo.name}
+                </h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  {demo.description}
+                </p>
+                <div className="flex items-center gap-2 text-rose-600 font-bold text-sm group-hover:gap-4 transition-all">
+                  テンプレートを使う
+                  <ArrowRight size={16} />
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
 
