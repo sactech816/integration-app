@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Loader2, BookOpen, Crown, Zap, Sparkles, LayoutGrid } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 import ServiceTabs from './ServiceTabs';
@@ -163,23 +164,41 @@ export default function DashboardHome({
             <LayoutGrid size={16} className="text-gray-500" />
             すべてのツール
           </h3>
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {TOOL_ITEMS.filter(
               (tool) => !['quiz', 'profile', 'business'].includes(tool.id)
             ).map((tool) => {
               const Icon = tool.icon;
-              return (
-                <button
-                  key={tool.id}
-                  onClick={() => onMenuItemClick(tool.id)}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-all"
-                >
+              const content = (
+                <>
                   <div className={`p-2 rounded-lg ${tool.color.bg}`}>
                     <Icon size={20} className={tool.color.text} />
                   </div>
                   <span className="text-[11px] font-bold text-gray-600 text-center leading-tight">
                     {tool.description}
                   </span>
+                </>
+              );
+
+              if (tool.href) {
+                return (
+                  <Link
+                    key={tool.id}
+                    href={tool.href}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-all"
+                  >
+                    {content}
+                  </Link>
+                );
+              }
+
+              return (
+                <button
+                  key={tool.id}
+                  onClick={() => onMenuItemClick(tool.id)}
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-all"
+                >
+                  {content}
                 </button>
               );
             })}
