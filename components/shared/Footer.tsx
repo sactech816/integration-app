@@ -170,7 +170,7 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
                 </Link>
               </li>
               <li>
-                <Link href="/salesletter/demo/new-pasona" className="hover:text-white transition-colors">
+                <Link href="/s/LOSXs" className="hover:text-white transition-colors">
                   セールスレターデモ
                 </Link>
               </li>

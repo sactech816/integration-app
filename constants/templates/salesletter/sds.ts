@@ -42,7 +42,7 @@ export const sdsTemplate: SalesLetterTemplate = {
   },
   content: [
     // ヘッダー画像
-    createImage('https://images.unsplash.com/photo-1504711434969-e33886168d5c?q=80&w=2070&auto=format&fit=crop', {
+    createImage('https://images.unsplash.com/photo-1495020689067-958852a7765e?q=80&w=2069&auto=format&fit=crop', {
       alt: 'ヘッダー画像',
       shadow: 'sm',
       borderRadius: 'none',

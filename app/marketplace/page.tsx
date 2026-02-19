@@ -100,7 +100,7 @@ export default function MarketplacePage() {
 
   return (
     <>
-      <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuthModal} headerClassName="bg-purple-50/90" />
+      <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuthModal} headerClassName="bg-white/95" />
       <main className="min-h-screen bg-gray-50 pt-16">
         <div className="max-w-6xl mx-auto px-4 py-8">
           {/* ヘッダー */}
