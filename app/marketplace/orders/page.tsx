@@ -6,7 +6,6 @@ import { MarketplaceOrder } from '@/lib/types';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
-import ProGate from '@/components/marketplace/ProGate';
 import OrderCard from '@/components/marketplace/OrderCard';
 import { ArrowLeft, ShoppingBag, Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -16,7 +15,6 @@ type RoleFilter = 'all' | 'buyer' | 'seller';
 export default function OrdersPage() {
   const [user, setUser] = useState<any>(null);
   const [accessToken, setAccessToken] = useState('');
-  const [planTier, setPlanTier] = useState('free');
   const [loading, setLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
 

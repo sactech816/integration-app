@@ -10,6 +10,7 @@ import ProGate from '@/components/marketplace/ProGate';
 import ListingForm from '@/components/marketplace/ListingForm';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { getAdminEmails } from '@/lib/constants';
 
 export default function NewListingPage() {
   const router = useRouter();
@@ -49,7 +50,10 @@ export default function NewListingPage() {
     );
   }
 
-  if (!user || planTier !== 'pro') {
+  const adminEmails = getAdminEmails();
+  const isAdmin = user?.email && adminEmails.some((email: string) => email.toLowerCase() === user.email?.toLowerCase());
+
+  if (!user || (planTier !== 'pro' && !isAdmin)) {
     return (
       <>
         <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuthModal} />

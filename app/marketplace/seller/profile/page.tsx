@@ -11,6 +11,7 @@ import ProGate from '@/components/marketplace/ProGate';
 import SellerProfileForm from '@/components/marketplace/SellerProfileForm';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { getAdminEmails } from '@/lib/constants';
 
 export default function SellerProfilePage() {
   const router = useRouter();
@@ -60,7 +61,10 @@ export default function SellerProfilePage() {
     );
   }
 
-  if (!user || planTier !== 'pro') {
+  const adminEmails = getAdminEmails();
+  const isAdmin = user?.email && adminEmails.some((email: string) => email.toLowerCase() === user.email?.toLowerCase());
+
+  if (!user || (planTier !== 'pro' && !isAdmin)) {
     return (
       <>
         <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuthModal} />

@@ -12,6 +12,7 @@ import SellerProfileCard from '@/components/marketplace/SellerProfileCard';
 import { Plus, Edit3, Eye, EyeOff, Trash2, ArrowLeft, Loader2, UserCog } from 'lucide-react';
 import Link from 'next/link';
 import { CATEGORY_MAP, ORDER_STATUS_LABELS } from '@/constants/marketplace';
+import { getAdminEmails } from '@/lib/constants';
 
 export default function SellerDashboardPage() {
   const router = useRouter();
@@ -99,7 +100,10 @@ export default function SellerDashboardPage() {
     );
   }
 
-  if (!user || planTier !== 'pro') {
+  const adminEmails = getAdminEmails();
+  const isAdmin = user?.email && adminEmails.some((email: string) => email.toLowerCase() === user.email?.toLowerCase());
+
+  if (!user || (planTier !== 'pro' && !isAdmin)) {
     return (
       <>
         <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuthModal} />
