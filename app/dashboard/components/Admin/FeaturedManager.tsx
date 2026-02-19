@@ -151,6 +151,7 @@ export default function FeaturedManager() {
       attendance: '出欠表',
       booking: '予約',
       onboarding: 'はじめかたガイド',
+      thumbnail: 'サムネイル',
     };
     return labels[type] || type;
   };

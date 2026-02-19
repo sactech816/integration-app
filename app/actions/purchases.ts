@@ -211,7 +211,7 @@ export async function getPurchaseStats(
       const type = p.content_type as ContentType;
       acc[type] = (acc[type] || 0) + (p.amount || 0);
       return acc;
-    }, { quiz: 0, profile: 0, business: 0, salesletter: 0, survey: 0, gamification: 0, attendance: 0, booking: 0, onboarding: 0 } as Record<ContentType, number>);
+    }, { quiz: 0, profile: 0, business: 0, salesletter: 0, survey: 0, gamification: 0, attendance: 0, booking: 0, onboarding: 0, thumbnail: 0 } as Record<ContentType, number>);
 
     return {
       totalAmount,
@@ -223,7 +223,7 @@ export async function getPurchaseStats(
     return {
       totalAmount: 0,
       totalPurchases: 0,
-      byContentType: { quiz: 0, profile: 0, business: 0, salesletter: 0, survey: 0, gamification: 0, attendance: 0, booking: 0, onboarding: 0 }
+      byContentType: { quiz: 0, profile: 0, business: 0, salesletter: 0, survey: 0, gamification: 0, attendance: 0, booking: 0, onboarding: 0, thumbnail: 0 }
     };
   }
 }

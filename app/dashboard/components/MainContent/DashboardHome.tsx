@@ -38,6 +38,7 @@ type DashboardHomeProps = {
     quiz: number;
     profile: number;
     business: number;
+    thumbnail: number;
   };
   isLoading: boolean;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;

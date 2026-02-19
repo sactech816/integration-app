@@ -56,6 +56,14 @@ const CONTENT_TYPES = {
     slugColumn: 'id', // URLでIDを直接使用
     label: 'ガチャ/スタンプ',
   },
+  thumbnails: {
+    table: 'thumbnails',
+    userIdColumn: 'user_id',
+    idColumn: 'id',
+    idType: 'uuid',
+    slugColumn: 'slug',
+    label: 'サムネイル',
+  },
 } as const;
 
 type ContentType = keyof typeof CONTENT_TYPES;
@@ -70,6 +78,7 @@ const URL_PATH_PATTERNS: { pattern: RegExp; contentType: ContentType }[] = [
   { pattern: /\/gacha\/([^/?#]+)/, contentType: 'gamification_campaigns' },
   { pattern: /\/stamp-rally\/([^/?#]+)/, contentType: 'gamification_campaigns' },
   { pattern: /\/stamp\/([^/?#]+)/, contentType: 'gamification_campaigns' },
+  { pattern: /\/thumbnail\/([^/?#]+)/, contentType: 'thumbnails' },
 ];
 
 function parseContentUrl(url: string): { contentType: ContentType; slug: string } | null {

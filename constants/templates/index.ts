@@ -37,6 +37,16 @@ export {
   getTemplatesByCategory as getBusinessTemplatesByCategory 
 } from './business';
 
+// サムネイルテンプレート
+export {
+  thumbnailTemplates,
+  getTemplatesByPlatform as getThumbnailTemplatesByPlatform,
+  getTemplatesByStyle as getThumbnailTemplatesByStyle,
+  getTemplateById as getThumbnailTemplateById,
+  PLATFORM_CATEGORIES,
+  STYLE_CATEGORIES,
+} from './thumbnail';
+
 // ===========================================
 // 後方互換性のためのエイリアス
 // ===========================================

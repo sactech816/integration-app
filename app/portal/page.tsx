@@ -160,6 +160,7 @@ function PortalPageContent() {
     attendance: 0,
     booking: 0,
     onboarding: 0,
+    thumbnail: 0,
   });
   const [featuredContents, setFeaturedContents] = useState<FeaturedContentWithDetails[]>([]);
   const [popularContents, setPopularContents] = useState<PopularContent[]>([]);
@@ -221,6 +222,7 @@ function PortalPageContent() {
           salesletter: counts.salesletter || 0,
           gamification: counts.game || 0,
           onboarding: counts.onboarding || 0,
+          thumbnail: counts.thumbnail || 0,
         });
       }
     } catch (error) {

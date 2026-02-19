@@ -23,6 +23,7 @@ import {
   PenTool,
   Gamepad2,
   Calendar,
+  Image,
 } from 'lucide-react';
 import { ServiceType, SERVICE_LABELS, Block } from '@/lib/types';
 
@@ -81,6 +82,7 @@ const getServiceIcon = (type: ServiceType) => {
     attendance: Users,
     booking: Calendar,
     onboarding: Sparkles,
+    thumbnail: Image,
   };
   return icons[type] || Sparkles; // フォールバック
 };
@@ -96,6 +98,7 @@ const getServiceColor = (type: ServiceType) => {
     attendance: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200', gradient: 'from-purple-500 to-indigo-600' },
     booking: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200', gradient: 'from-blue-500 to-indigo-600' },
     onboarding: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200', gradient: 'from-orange-500 to-amber-600' },
+    thumbnail: { bg: 'bg-pink-50', text: 'text-pink-600', border: 'border-pink-200', gradient: 'from-pink-500 to-rose-600' },
   };
   return colors[type] || colors.quiz; // フォールバック
 };

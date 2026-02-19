@@ -19,6 +19,7 @@ type SidebarProps = {
     attendance: number;
     survey: number;
     gamification: number;
+    thumbnail: number;
   };
   totalViews: number;
   onLogout: () => void;

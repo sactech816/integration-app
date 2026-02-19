@@ -33,6 +33,7 @@ const TABLE_MAP: Record<string, string> = {
   profile: 'profiles',
   business: 'business_projects',
   salesletter: 'sales_letters',
+  thumbnail: 'thumbnails',
 };
 
 // ユーザーIDカラム名のマッピング
@@ -41,13 +42,14 @@ const USER_ID_COLUMN_MAP: Record<string, string> = {
   profile: 'user_id',
   business: 'user_id',
   salesletter: 'user_id',
+  thumbnail: 'user_id',
 };
 
 /**
  * コンテンツを削除（管理者対応）
  */
 export async function deleteContent(
-  contentType: 'quiz' | 'profile' | 'business' | 'salesletter',
+  contentType: 'quiz' | 'profile' | 'business' | 'salesletter' | 'thumbnail',
   contentId: string | number,
   userId: string,
   isAdmin?: boolean

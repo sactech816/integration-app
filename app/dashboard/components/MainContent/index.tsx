@@ -72,6 +72,7 @@ type MainContentProps = {
     attendance: number;
     survey: number;
     gamification: number;
+    thumbnail: number;
   };
   isLoading: boolean;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -171,6 +172,7 @@ export default function MainContent({
           quiz: contentCounts.quiz,
           profile: contentCounts.profile,
           business: contentCounts.business,
+          thumbnail: contentCounts.thumbnail,
         }}
         isLoading={isLoading}
         proAccessMap={proAccessMap}

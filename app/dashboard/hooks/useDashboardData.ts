@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase, TABLES } from '@/lib/supabase';
 import { getAdminEmails } from '@/lib/constants';
-import { ServiceType, Quiz, Profile, BusinessLP, SalesLetter, Block } from '@/lib/types';
+import { ServiceType, Quiz, Profile, BusinessLP, SalesLetter, Thumbnail, Block } from '@/lib/types';
 import { generateSlug } from '@/lib/utils';
 import { getMultipleAnalytics } from '@/app/actions/analytics';
 import { getUserPurchases, checkIsPartner } from '@/app/actions/purchases';
@@ -42,6 +42,7 @@ type UseDashboardDataReturn = {
     attendance: number;
     survey: number;
     gamification: number;
+    thumbnail: number;
   };
   totalViews: number;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -90,6 +91,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     attendance: 0,
     survey: 0,
     gamification: 0,
+    thumbnail: 0,
   });
   const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
   const [purchases, setPurchases] = useState<string[]>([]);
@@ -333,6 +335,33 @@ export function useDashboardData(): UseDashboardDataReturn {
           }
         }
 
+        // サムネイル取得
+        if (selectedService === 'thumbnail') {
+          const query = isAdmin
+            ? supabase.from(TABLES.THUMBNAILS).select('*').order('created_at', { ascending: false })
+            : supabase.from(TABLES.THUMBNAILS).select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+
+          const { data: thumbnails } = await query;
+          if (thumbnails) {
+            allContents.push(
+              ...thumbnails.map((t: Thumbnail) => ({
+                id: t.id,
+                slug: t.slug,
+                title: t.title || 'サムネイル',
+                created_at: t.created_at,
+                updated_at: t.updated_at,
+                type: 'thumbnail' as ServiceType,
+                user_id: t.user_id,
+                views_count: t.views_count || 0,
+                clicks_count: 0,
+                readRate: 0,
+                avgTimeSpent: 0,
+                clickRate: 0,
+              }))
+            );
+          }
+        }
+
         // 作成日時でソート
         allContents.sort((a, b) => {
           const dateA = new Date(a.created_at || 0);
@@ -422,7 +451,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult] = await Promise.all([
+      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, thumbnailResult] = await Promise.all([
         // 診断クイズ数
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true })
@@ -453,6 +482,10 @@ export function useDashboardData(): UseDashboardDataReturn {
           : supabase.from('surveys').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         // ゲーミフィケーションキャンペーン数（ユーザーが作成したもの）
         supabase.from('gamification_campaigns').select('id', { count: 'exact', head: true }).eq('owner_id', user.id),
+        // サムネイル数
+        isAdmin
+          ? supabase.from(TABLES.THUMBNAILS).select('id', { count: 'exact', head: true })
+          : supabase.from(TABLES.THUMBNAILS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
       ]);
 
       setContentCounts({
@@ -464,6 +497,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         attendance: attendanceResult.count || 0,
         survey: surveyResult.count || 0,
         gamification: gamificationResult.count || 0,
+        thumbnail: thumbnailResult.count || 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);

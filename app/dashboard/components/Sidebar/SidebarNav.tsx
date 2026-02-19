@@ -31,6 +31,7 @@ import {
   Lightbulb,
   MessageSquareHeart,
   Store,
+  Image,
 } from 'lucide-react';
 
 export type MenuSection = 'main' | 'settings' | 'admin';
@@ -68,6 +69,7 @@ type SidebarNavProps = {
     attendance: number;
     survey: number;
     gamification: number;
+    thumbnail: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態
@@ -105,7 +107,8 @@ export default function SidebarNav({
     { id: 'attendance', label: '出欠メーカー', icon: Users, section: 'main', badge: contentCounts.attendance },
     { id: 'survey', label: 'アンケートメーカー', icon: ClipboardList, section: 'main', badge: contentCounts.survey },
     { id: 'my-games', label: 'ゲーミフィケーション', icon: Gamepad2, section: 'main', badge: contentCounts.gamification },
-    { 
+    { id: 'thumbnail', label: 'サムネイルメーカー', icon: Image, section: 'main', badge: contentCounts.thumbnail },
+    {
       id: 'kindle', 
       label: 'Kindle執筆 (KDL)', 
       icon: BookOpen, 

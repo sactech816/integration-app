@@ -25,4 +25,5 @@ export const TABLES = {
   SURVEYS: 'surveys',
   GAMIFICATION_CAMPAIGNS: 'gamification_campaigns',
   ONBOARDING_MODALS: 'onboarding_modals',
+  THUMBNAILS: 'thumbnails',
 } as const;

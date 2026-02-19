@@ -34,6 +34,7 @@ const SHORT_LABELS: Record<ServiceType, string> = {
   attendance: '出欠',
   booking: '予約',
   onboarding: 'モーダル',
+  thumbnail: 'サムネ',
 };
 
 const getServiceColor = (type: ServiceType) => {

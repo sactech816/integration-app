@@ -5,7 +5,7 @@
 // -------------------------------------------
 // サービスタイプ
 // -------------------------------------------
-export type ServiceType = 'quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding';
+export type ServiceType = 'quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail';
 
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   quiz: '診断クイズ',
@@ -16,7 +16,8 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
   gamification: 'ゲーミフィケーション',
   attendance: '出欠表',
   booking: '予約',
-  onboarding: 'はじめかたガイド'
+  onboarding: 'はじめかたガイド',
+  thumbnail: 'サムネイルメーカー'
 };
 
 export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; text: string }> = {
@@ -28,7 +29,8 @@ export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; 
   gamification: { primary: 'purple', bg: 'bg-purple-50', text: 'text-purple-600' },
   attendance: { primary: 'purple', bg: 'bg-purple-50', text: 'text-purple-600' },
   booking: { primary: 'blue', bg: 'bg-blue-50', text: 'text-blue-600' },
-  onboarding: { primary: 'orange', bg: 'bg-orange-50', text: 'text-orange-600' }
+  onboarding: { primary: 'orange', bg: 'bg-orange-50', text: 'text-orange-600' },
+  thumbnail: { primary: 'pink', bg: 'bg-pink-50', text: 'text-pink-600' }
 };
 
 // -------------------------------------------
@@ -1367,6 +1369,48 @@ export interface MarketplaceReview {
   created_at: string;
   // JOIN結果
   reviewer_email?: string;
+}
+
+// -------------------------------------------
+// サムネイルメーカー関連の型定義
+// -------------------------------------------
+
+export type ThumbnailPlatform = 'youtube' | 'instagram_post' | 'instagram_story' | 'twitter' | 'threads' | 'banner';
+
+export type ThumbnailTextOverlay = {
+  title?: string;
+  subtitle?: string;
+  colorTheme?: string;
+  fontSize?: number;
+  position?: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+};
+
+export interface ThumbnailSettings {
+  showInPortal?: boolean;
+  hideFooter?: boolean;
+  hideRelatedContent?: boolean;
+}
+
+export interface Thumbnail {
+  id: string;
+  slug: string;
+  title: string;
+  description?: string;
+  settings?: ThumbnailSettings;
+  image_url?: string;
+  image_versions?: Array<{ url: string; prompt: string; created_at: string }>;
+  platform: ThumbnailPlatform;
+  aspect_ratio: string;
+  template_id?: string;
+  prompt_text?: string;
+  text_overlay?: ThumbnailTextOverlay;
+  user_id?: string | null;
+  status?: string;
+  show_in_portal?: boolean;
+  views_count?: number;
+  downloads_count?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // -------------------------------------------

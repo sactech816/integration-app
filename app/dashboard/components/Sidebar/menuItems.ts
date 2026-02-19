@@ -11,6 +11,7 @@ import {
   Lightbulb,
   Store,
   Users,
+  Image,
   LucideIcon,
 } from 'lucide-react';
 
@@ -78,6 +79,13 @@ export const TOOL_ITEMS: ToolItem[] = [
     icon: Gamepad2,
     description: 'ゲーム作成',
     color: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200' },
+  },
+  {
+    id: 'thumbnail',
+    label: 'サムネイルメーカー',
+    icon: Image,
+    description: 'AIサムネイル作成',
+    color: { bg: 'bg-pink-50', text: 'text-pink-600', border: 'border-pink-200' },
   },
   {
     id: 'kindle',
