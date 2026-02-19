@@ -33,6 +33,7 @@ const SHORT_LABELS: Record<ServiceType, string> = {
   gamification: 'ゲーム',
   attendance: '出欠',
   booking: '予約',
+  onboarding: 'モーダル',
 };
 
 const getServiceColor = (type: ServiceType) => {

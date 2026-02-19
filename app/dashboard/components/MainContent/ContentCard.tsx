@@ -80,6 +80,7 @@ const getServiceIcon = (type: ServiceType) => {
     gamification: Gamepad2,
     attendance: Users,
     booking: Calendar,
+    onboarding: Sparkles,
   };
   return icons[type] || Sparkles; // フォールバック
 };
@@ -94,6 +95,7 @@ const getServiceColor = (type: ServiceType) => {
     gamification: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200', gradient: 'from-purple-500 to-pink-600' },
     attendance: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200', gradient: 'from-purple-500 to-indigo-600' },
     booking: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200', gradient: 'from-blue-500 to-indigo-600' },
+    onboarding: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200', gradient: 'from-orange-500 to-amber-600' },
   };
   return colors[type] || colors.quiz; // フォールバック
 };

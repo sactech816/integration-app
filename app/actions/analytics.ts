@@ -23,7 +23,7 @@ function getSupabaseServer() {
 }
 
 // コンテンツタイプの型定義
-export type ContentType = 'quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking';
+export type ContentType = 'quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding';
 
 // イベントタイプの型定義
 export type EventType = 'view' | 'click' | 'scroll' | 'time' | 'read' | 'completion';
