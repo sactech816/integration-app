@@ -299,15 +299,22 @@ export default function SalesLetterEditor({
       return;
     }
 
+    // initialData?.id または savedId があれば更新、なければ新規作成
+    const existingId = initialData?.id || savedId;
+
+    // 編集にはログインが必要
+    if (existingId && !user) {
+      if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
+        setShowAuth?.(true);
+      }
+      return;
+    }
+
     setIsSaving(true);
     try {
-      // initialData?.id または savedId があれば更新、なければ新規作成
-      const existingId = initialData?.id || savedId;
-      
       if (existingId) {
-        // 更新（slugは変更しない）
+        // 更新（user_idは変更しない）
         const payload = {
-          user_id: user?.id || null,
           title,
           content: blocks,
           settings,
