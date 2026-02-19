@@ -65,7 +65,7 @@ export default function KdlHamburgerMenu({
 
       <div
         className={`fixed top-0 right-0 h-full w-72 bg-white z-[9999] transform transition-transform duration-300 ease-in-out shadow-xl ${
-          isMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          isMenuOpen ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
         }`}
       >
         {/* メニューヘッダー */}
