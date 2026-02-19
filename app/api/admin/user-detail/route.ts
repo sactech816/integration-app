@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getAdminEmails } from '@/lib/constants';
 
+// プランTierの表示名
+const PLAN_TIER_LABELS: Record<string, string> = {
+  none: '無料',
+  lite: 'ライト',
+  standard: 'スタンダード',
+  pro: 'プロ',
+  business: 'ビジネス',
+  enterprise: 'エンタープライズ',
+  initial_trial: '初回トライアル',
+  initial_standard: '初回スタンダード',
+  initial_business: '初回ビジネス',
+};
+
 const getServiceClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -84,7 +97,7 @@ export async function GET(request: NextRequest) {
       supabase.from('monitor_users').select('*').eq('user_id', userId),
       // AI使用量（直近30日）
       supabase.from('ai_usage_logs')
-        .select('model, action_type, input_tokens, output_tokens, estimated_cost_jpy, created_at, service')
+        .select('model_used, action_type, input_tokens, output_tokens, estimated_cost_jpy, created_at, service')
         .eq('user_id', userId)
         .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false })
@@ -117,7 +130,7 @@ export async function GET(request: NextRequest) {
       totalCostJpy: aiLogs.reduce((sum, log) => sum + (log.estimated_cost_jpy || 0), 0),
       byModel: Object.entries(
         aiLogs.reduce((acc: Record<string, { count: number; cost: number }>, log) => {
-          const model = log.model || 'unknown';
+          const model = log.model_used || 'unknown';
           if (!acc[model]) acc[model] = { count: 0, cost: 0 };
           acc[model].count++;
           acc[model].cost += log.estimated_cost_jpy || 0;
@@ -189,6 +202,7 @@ export async function GET(request: NextRequest) {
       id: mon.id,
       service: mon.service,
       planType: mon.monitor_plan_type,
+      planTypeLabel: PLAN_TIER_LABELS[mon.monitor_plan_type] || mon.monitor_plan_type,
       startAt: mon.monitor_start_at,
       expiresAt: mon.monitor_expires_at,
       notes: mon.notes,

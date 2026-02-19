@@ -30,9 +30,6 @@ export default function OrdersPage() {
 
       setUser(session.user);
       setAccessToken(session.access_token);
-
-      const planRes = await fetch(`/api/user/plan?userId=${session.user.id}`);
-      if (planRes.ok) { const d = await planRes.json(); setPlanTier(d.planTier); }
       setLoading(false);
     };
     init();
@@ -46,7 +43,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!accessToken || planTier !== 'pro') return;
+      if (!accessToken) return;
       setLoadingOrders(true);
       try {
         const params = new URLSearchParams();
@@ -64,7 +61,7 @@ export default function OrdersPage() {
       }
     };
     fetchOrders();
-  }, [accessToken, planTier, roleFilter]);
+  }, [accessToken, roleFilter]);
 
   if (loading) {
     return (
@@ -74,11 +71,15 @@ export default function OrdersPage() {
     );
   }
 
-  if (!user || planTier !== 'pro') {
+  if (!user) {
     return (
       <>
         <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuthModal} />
-        <main className="min-h-screen bg-gray-50 pt-16"><ProGate /></main>
+        <main className="min-h-screen bg-gray-50 pt-16">
+          <div className="max-w-4xl mx-auto px-4 py-16 text-center">
+            <p className="text-gray-500">案件一覧を見るにはログインが必要です</p>
+          </div>
+        </main>
         <Footer />
         {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} setUser={setUser} />}
       </>

@@ -36,6 +36,7 @@ type UserDetail = {
     id: string;
     service: string;
     planType: string;
+    planTypeLabel: string;
     startAt: string;
     expiresAt: string;
     notes: string | null;
@@ -260,14 +261,14 @@ export default function UserDetailPanel({ userId, onClose }: UserDetailPanelProp
                   {data.monitors.map(mon => (
                     <div key={mon.id} className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 text-xs border">
                       <span className={`px-2 py-0.5 rounded font-bold ${
-                        mon.isActive ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'
+                        mon.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
                       }`}>
                         {mon.isActive ? '有効' : '期限切れ'}
                       </span>
-                      <span className="font-bold">{mon.service}</span>
-                      <span>{mon.planType}</span>
-                      <span className="text-gray-400">~ {formatDate(mon.expiresAt)}</span>
-                      {mon.notes && <span className="text-gray-400 truncate">{mon.notes}</span>}
+                      <span className="font-bold text-gray-900">{mon.service}</span>
+                      <span className="font-medium text-indigo-600">{mon.planTypeLabel || mon.planType}</span>
+                      <span className="text-gray-500">~ {formatDate(mon.expiresAt)}</span>
+                      {mon.notes && <span className="text-gray-500 truncate">{mon.notes}</span>}
                     </div>
                   ))}
                 </div>
