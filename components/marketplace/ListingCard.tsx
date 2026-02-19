@@ -71,7 +71,7 @@ function ListingCard({ listing }: ListingCardProps) {
           <div className="flex items-center gap-2 mb-3">
             <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs overflow-hidden">
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                <Image src={profile.avatar_url} alt="" width={24} height={24} className="w-full h-full object-cover" />
               ) : (
                 profile.display_name.charAt(0)
               )}

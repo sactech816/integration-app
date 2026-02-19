@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import Image from 'next/image';
 import { Star, Clock, ShoppingBag, ExternalLink } from 'lucide-react';
 import { MarketplaceProfile } from '@/lib/types';
 import { SUPPORTED_TOOLS_MAP, KINDLE_SUBTYPES } from '@/constants/marketplace';
@@ -17,7 +17,7 @@ export default function SellerProfileCard({ profile, compact = false }: SellerPr
         {/* アバター */}
         <div className={`${compact ? 'w-12 h-12' : 'w-16 h-16'} rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold ${compact ? 'text-lg' : 'text-xl'} overflow-hidden flex-shrink-0`}>
           {profile.avatar_url ? (
-            <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+            <Image src={profile.avatar_url} alt="" width={64} height={64} className="w-full h-full object-cover" />
           ) : (
             profile.display_name.charAt(0)
           )}
