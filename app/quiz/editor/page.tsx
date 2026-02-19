@@ -25,47 +25,44 @@ function QuizEditorContent() {
   );
 
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const init = async () => {
-      // newパラメータがある場合は新規作成モード（編集データをリセット）
-      if (newParam) {
-        setEditingQuiz(null);
+      if (!supabase) {
         setIsLoading(false);
-        
-        if (supabase) {
-          supabase.auth.onAuthStateChange((event, session) => {
-            setUser(session?.user || null);
-          });
-          const { data: { session } } = await supabase.auth.getSession();
-          setUser(session?.user || null);
-        }
         return;
       }
 
-      if (supabase) {
-        supabase.auth.onAuthStateChange((event, session) => {
-          setUser(session?.user || null);
-        });
-
-        const { data: { session } } = await supabase.auth.getSession();
+      const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((event, session) => {
         setUser(session?.user || null);
+      });
+      subscription = sub;
 
-        // 編集モードの場合、クイズを読み込む
-        if (editId) {
-          const { data } = await supabase
-            .from('quizzes')
-            .select('*')
-            .eq('slug', editId)
-            .single();
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
 
-          if (data) {
-            setEditingQuiz(data);
-          }
+      // newパラメータがある場合は新規作成モード（編集データをリセット）
+      if (newParam) {
+        setEditingQuiz(null);
+      } else if (editId) {
+        const { data } = await supabase
+          .from('quizzes')
+          .select('*')
+          .eq('slug', editId)
+          .single();
+
+        if (data) {
+          setEditingQuiz(data);
         }
       }
       setIsLoading(false);
     };
 
     init();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, [editId, newParam]);
 
   const handleLogout = async () => {

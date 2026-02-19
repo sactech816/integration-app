@@ -40,16 +40,16 @@ CREATE POLICY "sales_letters_select_public" ON sales_letters
   FOR SELECT
   USING (true);
 
--- INSERT: 認証済みユーザーのみ作成可能
+-- INSERT: 誰でも作成可能（未ログインユーザー対応）
 CREATE POLICY "sales_letters_insert_own" ON sales_letters
   FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (true);
 
--- UPDATE: 自分のデータのみ更新可能
+-- UPDATE: ログインユーザーのみ、自分のデータまたはuser_idがNULLのもの
 CREATE POLICY "sales_letters_update_own" ON sales_letters
   FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  USING (auth.uid() IS NOT NULL AND (user_id IS NULL OR auth.uid() = user_id))
+  WITH CHECK (auth.uid() IS NOT NULL AND (user_id IS NULL OR auth.uid() = user_id));
 
 -- DELETE: 自分のデータのみ削除可能
 CREATE POLICY "sales_letters_delete_own" ON sales_letters
