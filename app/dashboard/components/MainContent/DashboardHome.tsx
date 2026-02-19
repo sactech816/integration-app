@@ -94,63 +94,55 @@ export default function DashboardHome({
   return (
     <div className="space-y-6">
       {/* KDLサブスクリプション状態（コンパクト版） */}
-      <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-4 rounded-2xl shadow-sm border border-amber-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-amber-100 p-2 rounded-full">
-              <BookOpen size={18} className="text-amber-600" />
+      <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-3 sm:p-4 rounded-2xl shadow-sm border border-amber-200">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="bg-amber-100 p-1.5 sm:p-2 rounded-full shrink-0">
+              <BookOpen size={16} className="text-amber-600 sm:w-[18px] sm:h-[18px]" />
             </div>
-            <div>
-              <p className="font-bold text-gray-900 text-sm">Kindle執筆サービス (KDL)</p>
-              <p className="text-xs text-gray-500">AI powered 書籍執筆</p>
+            <div className="min-w-0">
+              <p className="font-bold text-gray-900 text-xs sm:text-sm truncate">
+                <span className="sm:hidden">KDL</span>
+                <span className="hidden sm:inline">Kindle執筆サービス (KDL)</span>
+              </p>
+              <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">AI powered 書籍執筆</p>
             </div>
           </div>
 
           {loadingKdlSubscription ? (
-            <Loader2 className="animate-spin text-amber-500" size={20} />
+            <Loader2 className="animate-spin text-amber-500 shrink-0" size={20} />
           ) : kdlSubscription?.hasActiveSubscription || isAdmin ? (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <Crown size={14} className="text-amber-500" />
-                <span className="font-bold text-amber-700 text-sm">
-                  {isAdmin && !kdlSubscription?.hasActiveSubscription
-                    ? '管理者特典'
-                    : kdlSubscription?.isMonitor
-                    ? 'モニター特典'
-                    : kdlSubscription?.planType === 'yearly'
-                    ? '年間プラン'
-                    : '月額プラン'}
-                </span>
-                <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Crown size={14} className="text-amber-500 hidden sm:block" />
+                <span className="bg-green-100 text-green-700 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full font-bold">
                   有効
                 </span>
               </div>
               <button
                 onClick={() => onNavigate('kindle', true)}
-                className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-lg text-xs flex items-center gap-1 transition-colors"
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-2.5 sm:py-2 sm:px-4 rounded-lg text-[10px] sm:text-xs flex items-center gap-1 transition-colors"
               >
-                <BookOpen size={14} />
-                書籍を管理
+                <BookOpen size={12} className="sm:w-[14px] sm:h-[14px]" />
+                <span className="sm:hidden">管理</span>
+                <span className="hidden sm:inline">書籍を管理</span>
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-gray-500">
-                <Zap size={14} />
-                <span className="text-sm">未加入</span>
-              </div>
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <span className="text-[10px] sm:text-sm text-gray-500 hidden sm:block">未加入</span>
               <button
                 onClick={() => onNavigate('kindle/lp')}
-                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-2 px-4 rounded-lg text-xs flex items-center gap-1 transition-all shadow-md"
+                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-1.5 px-2.5 sm:py-2 sm:px-4 rounded-lg text-[10px] sm:text-xs flex items-center gap-1 transition-all shadow-md"
               >
-                <Sparkles size={14} />
-                詳細を見る
+                <Sparkles size={12} className="sm:w-[14px] sm:h-[14px]" />
+                詳細
               </button>
             </div>
           )}
         </div>
         {kdlSubscription?.isMonitor && kdlSubscription?.monitorExpiresAt && (
-          <p className="text-xs text-purple-600 font-bold mt-2 ml-11">
+          <p className="text-[10px] sm:text-xs text-purple-600 font-bold mt-2 ml-9 sm:ml-11">
             モニター期限: {new Date(kdlSubscription.monitorExpiresAt).toLocaleDateString('ja-JP')}まで
           </p>
         )}

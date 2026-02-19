@@ -23,6 +23,18 @@ const getServiceIcon = (type: ServiceType) => {
   return icons[type];
 };
 
+// モバイル用の短いラベル
+const SHORT_LABELS: Record<ServiceType, string> = {
+  quiz: '診断',
+  profile: 'プロフ',
+  business: 'LP',
+  salesletter: 'セールス',
+  survey: 'アンケ',
+  gamification: 'ゲーム',
+  attendance: '出欠',
+  booking: '予約',
+};
+
 const getServiceColor = (type: ServiceType) => {
   const colors = {
     quiz: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200' },
@@ -51,7 +63,7 @@ export default function ServiceTabs({
             <button
               key={type}
               onClick={() => onServiceChange(type)}
-              className={`flex-1 p-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 p-2 sm:p-3 rounded-xl border-2 transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 ${
                 selectedService === type
                   ? `${colors.bg} ${colors.border}`
                   : 'bg-white border-gray-100 hover:border-gray-200'
@@ -60,8 +72,12 @@ export default function ServiceTabs({
               <div className={`p-1.5 rounded-lg ${colors.bg}`}>
                 <Icon size={16} className={colors.text} />
               </div>
-              <p className="font-bold text-gray-900 text-sm">{SERVICE_LABELS[type]}</p>
-              <div className={`text-lg font-extrabold ${colors.text}`}>{count}</div>
+              {/* モバイル: 短いラベル、PC: フルラベル */}
+              <p className="font-bold text-gray-900 text-xs sm:text-sm">
+                <span className="sm:hidden">{SHORT_LABELS[type]}</span>
+                <span className="hidden sm:inline">{SERVICE_LABELS[type]}</span>
+              </p>
+              <div className={`text-base sm:text-lg font-extrabold ${colors.text}`}>{count}</div>
             </button>
           );
         })}

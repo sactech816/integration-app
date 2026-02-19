@@ -3,6 +3,7 @@ import { X, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { grantAffiliateSignupPoints } from '@/app/actions/affiliate';
 import { getReferralCode, clearReferralCode } from '@/components/affiliate/AffiliateTracker';
+import { claimGuestContent } from '@/app/actions/claim-guest-content';
 
 const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowPasswordReset = null, onNavigate, defaultTab = 'signup' }: {
     isOpen: boolean;
@@ -48,8 +49,20 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
         }
     }, [resendCountdown, resetSent]);
     
+    // ログイン成功後、ゲストが作成したコンテンツをユーザーに紐付ける
+    const claimGuestContentIfAny = async (userId: string) => {
+        try {
+            const stored = localStorage.getItem('guest_content');
+            if (!stored) return;
+            const items = JSON.parse(stored);
+            if (!Array.isArray(items) || items.length === 0) return;
+            await claimGuestContent(userId, items);
+            localStorage.removeItem('guest_content');
+        } catch {}
+    };
+
     if (!isOpen && !isPasswordReset) return null;
-    
+
     const handleAuth = async (e) => {
         e.preventDefault(); setLoading(true);
         try {
@@ -84,19 +97,12 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                     if (!loginError && loginData.user) {
                         // パスワードが合っていた場合、自動的にログイン
                         alert('このメールアドレスは既に登録されています。\n\n自動的にログインしました。');
+                        await claimGuestContentIfAny(loginData.user.id);
                         setUser(loginData.user);
                         if (setShowPasswordReset) {
                             setShowPasswordReset(false);
                         }
                         onClose();
-                        // トップページからのログインのみダッシュボードにリダイレクト、それ以外はその場に留まる
-                        if (typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '')) {
-                            if (onNavigate) {
-                                onNavigate('dashboard');
-                            } else {
-                                window.location.href = '/dashboard';
-                            }
-                        }
                         setLoading(false);
                         return;
                     } else {
@@ -144,19 +150,12 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                         if (!loginError && loginData.user) {
                             // ユーザーが既に存在し、パスワードが合っている
                             alert('このメールアドレスは既に登録されています。\n\n自動的にログインしました。');
+                            await claimGuestContentIfAny(loginData.user.id);
                             setUser(loginData.user);
                             if (setShowPasswordReset) {
                                 setShowPasswordReset(false);
                             }
                             onClose();
-                            // トップページからのログインのみダッシュボードにリダイレクト、それ以外はその場に留まる
-                            if (typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '')) {
-                                if (onNavigate) {
-                                    onNavigate('dashboard');
-                                } else {
-                                    window.location.href = '/dashboard';
-                                }
-                            }
                             setLoading(false);
                             return;
                         }
@@ -172,21 +171,14 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                 }
             }
 
-            if (isLogin && data.user) { 
-                setUser(data.user); 
+            if (isLogin && data.user) {
+                await claimGuestContentIfAny(data.user.id);
+                setUser(data.user);
                 // パスワードリセットモードをリセット
                 if (setShowPasswordReset) {
                     setShowPasswordReset(false);
                 }
                 onClose();
-                // トップページからのログインのみダッシュボードにリダイレクト、それ以外はその場に留まる
-                if (typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '')) {
-                    if (onNavigate) {
-                        onNavigate('dashboard');
-                    } else {
-                        window.location.href = '/dashboard';
-                    }
-                }
             } else if (!isLogin && data.user) {
                 if (!data.session) alert('確認メールを送信しました。メール内のリンクをクリックして認証を完了させてください。');
                 else { 
@@ -217,21 +209,14 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                     } catch (affErr) {
                         console.error('[AuthModal] Affiliate signup points error:', affErr);
                     }
-                    
-                    setUser(data.user); 
+
+                    await claimGuestContentIfAny(data.user.id);
+                    setUser(data.user);
                     // パスワードリセットモードをリセット
                     if (setShowPasswordReset) {
                         setShowPasswordReset(false);
                     }
                     onClose();
-                    // トップページからのログインのみダッシュボードにリダイレクト、それ以外はその場に留まる
-                    if (typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '')) {
-                        if (onNavigate) {
-                            onNavigate('dashboard');
-                        } else {
-                            window.location.href = '/dashboard';
-                        }
-                    }
                 }
             }
         } catch (e) { 
@@ -414,15 +399,6 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
             // モーダルを閉じる
             if (onClose) {
                 onClose();
-            }
-            
-            // トップページからのログインのみダッシュボードにリダイレクト、それ以外はその場に留まる
-            if (typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname === '')) {
-                if (onNavigate) {
-                    onNavigate('dashboard');
-                } else {
-                    window.location.href = '/dashboard';
-                }
             }
         } catch (e) {
             console.error('パスワード変更エラー:', e);

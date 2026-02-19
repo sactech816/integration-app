@@ -371,6 +371,15 @@ export default function SalesLetterEditor({
           setSlug(data.slug);
           setCompletedSlug(data.slug);
 
+          // ゲストが新規作成した場合、ログイン後に紐付けるためlocalStorageに保存
+          if (!user) {
+            try {
+              const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
+              stored.push({ table: 'sales_letters', id: data.id });
+              localStorage.setItem('guest_content', JSON.stringify(stored));
+            } catch {}
+          }
+
           // ISRキャッシュを無効化
           fetch('/api/revalidate', {
             method: 'POST',
