@@ -649,7 +649,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                       onBatchWrite(chapter.id);
                     }}
                     disabled={batchProgress?.isRunning}
-                    title={`この章の未執筆節(${unwrittenCount}件)をAIで一括執筆`}
+                    title={`この章の未執筆節(${unwrittenCount}件)をAIで一括執筆（執筆AI×${unwrittenCount}）`}
                     className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs font-medium transition-all flex-shrink-0 ${
                       isWriting
                         ? 'bg-purple-500 text-white animate-pulse'

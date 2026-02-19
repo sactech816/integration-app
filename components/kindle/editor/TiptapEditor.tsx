@@ -628,7 +628,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
               type="button"
               onClick={handleAIButtonClick}
               disabled={isGenerating}
-              title="AIにこの節を書いてもらう"
+              title="AIにこの節を書いてもらう（執筆AI×1）"
               className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-all ${
                 isGenerating
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -653,7 +653,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
               type="button"
               onClick={handleRewriteButtonClick}
               disabled={isRewriting}
-              title="選択したテキストを別のスタイルで書き換える"
+              title="選択したテキストを別のスタイルで書き換える（執筆AI×1）"
               className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-all ${
                 isRewriting
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'

@@ -178,15 +178,18 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   const [isSaving, setIsSaving] = useState(false); // 途中保存中
   const [isMarkingComplete, setIsMarkingComplete] = useState(false); // 完成マーク中
 
-  // オンボーディングモーダル
+  // オンボーディングモーダル（ウィザード形式：3ページ構成）
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingDismissForever, setOnboardingDismissForever] = useState(false);
+  const [onboardingPage, setOnboardingPage] = useState(0);
+  const ONBOARDING_TOTAL_PAGES = 3;
 
   useEffect(() => {
     if (readOnly) return;
     const dismissed = localStorage.getItem('kdl_onboarding_dismissed');
     if (!dismissed) {
       setShowOnboarding(true);
+      setOnboardingPage(0);
     }
   }, [readOnly]);
 
@@ -195,6 +198,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
       localStorage.setItem('kdl_onboarding_dismissed', 'true');
     }
     setShowOnboarding(false);
+    setOnboardingPage(0);
   };
   const [bookStatus, setBookStatus] = useState(book.status || 'draft'); // 書籍ステータス
 
@@ -1420,7 +1424,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             editorActions={!readOnly ? [
               {
                 id: 'kdp-info',
-                label: 'KDP情報',
+                label: 'KDP情報（構成AI×1）',
                 icon: <Sparkles size={20} />,
                 onClick: handleShowKdpInfo,
                 disabled: isGeneratingKdp || isLoadingKdp,
@@ -1444,7 +1448,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
               },
               {
                 id: 'lp-generate',
-                label: 'LP生成',
+                label: 'LP生成（構成AI×1）',
                 icon: <Rocket size={20} />,
                 onClick: handleShowLP,
                 disabled: isGeneratingLP,
@@ -1452,7 +1456,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
               },
               {
                 id: 'style-transform',
-                label: '文体変換',
+                label: '文体変換（執筆AI×節数）',
                 icon: <PenLine size={20} />,
                 onClick: () => setIsStyleTransformOpen(true),
                 disabled: rewriteProgress.isRunning,
@@ -1466,7 +1470,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
       {/* 使用量ヘッダー（ログインユーザー向け） */}
       {userId && !readOnly && (
         <div className="bg-white border-b border-gray-200 px-2 sm:px-4 py-1.5">
-          <div className="flex items-center justify-between max-w-full">
+          <div className="flex items-center justify-end gap-2 max-w-full">
             <span className="text-xs text-gray-500">残り回数</span>
             <KdlUsageHeader
               userId={userId}
@@ -1728,52 +1732,163 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
         </div>
       )}
 
-      {/* オンボーディングモーダル */}
+      {/* オンボーディングウィザード（3ページ構成） */}
       {showOnboarding && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={handleDismissOnboarding}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-fade-in overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* ヘッダー */}
             <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-5">
-              <h3 className="text-xl font-bold">執筆画面の使い方</h3>
-              <p className="text-white/80 text-sm mt-1">はじめての方へ、基本的な機能をご紹介します</p>
-            </div>
-            <div className="px-6 py-5 space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-purple-600 font-bold text-sm">1</span>
-                </div>
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-gray-900">AI執筆</p>
-                  <p className="text-sm text-gray-600">ツールバーの「AI執筆」ボタンで、AIが節の内容を自動生成します。スタイルを選んで執筆を開始できます。</p>
+                  <h3 className="text-xl font-bold">執筆画面の使い方</h3>
+                  <p className="text-white/80 text-sm mt-1">
+                    {onboardingPage === 0 && '画面レイアウトと基本操作'}
+                    {onboardingPage === 1 && 'タブの使い方とAI執筆'}
+                    {onboardingPage === 2 && 'メニューツールと残り回数'}
+                  </p>
                 </div>
+                <span className="text-white/70 text-sm font-medium">{onboardingPage + 1} / {ONBOARDING_TOTAL_PAGES}</span>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-teal-600 font-bold text-sm">2</span>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900">書き換え</p>
-                  <p className="text-sm text-gray-600">テキストを選択して「書き換え」ボタンを押すと、文章をAIがリライトします。</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-amber-600 font-bold text-sm">3</span>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900">メニュー</p>
-                  <p className="text-sm text-gray-600">右上の <strong>&#9776;</strong> メニューから、Word/EPUB出力、KDP情報生成、LP生成などの機能にアクセスできます。</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-orange-600 font-bold text-sm">4</span>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900">一括執筆</p>
-                  <p className="text-sm text-gray-600">左サイドバーの <strong>&#9889;</strong> ボタンで章全体を一括でAI執筆できます。</p>
-                </div>
+              {/* ページインジケーター */}
+              <div className="flex gap-1.5 mt-3">
+                {Array.from({ length: ONBOARDING_TOTAL_PAGES }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1 rounded-full flex-1 transition-colors ${i <= onboardingPage ? 'bg-white' : 'bg-white/30'}`}
+                  />
+                ))}
               </div>
             </div>
+
+            {/* ページ1: 画面レイアウトと基本操作 */}
+            {onboardingPage === 0 && (
+              <div className="px-6 py-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <FolderTree size={16} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">左側 = 目次パネル</p>
+                    <p className="text-sm text-gray-600">章・節の構成が一覧表示されます。クリックで執筆する節を選択できます。</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <PenLine size={16} className="text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">右側 = 執筆エリア</p>
+                    <p className="text-sm text-gray-600">選択した節の本文を編集できます。自動保存機能付きです。</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Tag size={16} className="text-teal-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">タイトル・サブタイトルの編集</p>
+                    <p className="text-sm text-gray-600">目次パネル上部のタイトル・サブタイトル部分をクリックすると、直接編集できます。章名・節名も同様に変更可能です。</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Plus size={16} className="text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">章・節の追加・並べ替え</p>
+                    <p className="text-sm text-gray-600">目次パネル下部の「+章を追加」ボタンや、各章の「+節を追加」で構成を変更できます。右クリックで移動・削除も可能です。</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ページ2: タブの使い方とAI執筆 */}
+            {onboardingPage === 1 && (
+              <div className="px-6 py-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <FileText size={16} className="text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">本文タブ</p>
+                    <p className="text-sm text-gray-600">メインの執筆用タブです。ここで書いた内容が最終原稿になります。</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Copy size={16} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">本文2タブ（下書き）</p>
+                    <p className="text-sm text-gray-600">別バージョンの文章を試したいときに使います。本文を書き直す前の比較用や、別のアプローチを試すのに便利です。タブ名はダブルクリックで変更可能。</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <StickyNote size={16} className="text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">メモタブ</p>
+                    <p className="text-sm text-gray-600">節ごとのメモ書きに使えます。参考情報、アイデア、後で追加したい内容などを書き留めておけます。出力には含まれません。</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Sparkles size={16} className="text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">AI執筆 &amp; 書き換え</p>
+                    <p className="text-sm text-gray-600">ツールバーの「AI執筆」で節を自動生成（1回消費）。テキスト選択後「書き換え」でAIリライト（1回消費）。左サイドバーの <strong>&#9889;</strong> で章を一括AI執筆（節数分消費）。</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ページ3: メニューツールと残り回数 */}
+            {onboardingPage === 2 && (
+              <div className="px-6 py-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-amber-600 font-bold text-sm">&#9776;</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">メニュー（右上 &#9776;）</p>
+                    <p className="text-sm text-gray-600">
+                      <strong>KDP情報</strong> … Amazon登録用のキーワード・説明文を自動生成<br/>
+                      <strong>Word/EPUB出力</strong> … 原稿をファイルとしてダウンロード<br/>
+                      <strong>LP生成</strong> … 書籍紹介のランディングページを自動作成<br/>
+                      <strong>文体変換</strong> … 全体の文体を別スタイルに一括変換
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Lightbulb size={16} className="text-teal-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">ネタ発掘診断</p>
+                    <p className="text-sm text-gray-600">メニューからアクセス可能。性格診断をもとにあなたに合った執筆テーマを提案します。新しい書籍のアイデアに困ったときに活用してください。</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Info size={16} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">残り回数について</p>
+                    <p className="text-sm text-gray-600">
+                      画面上部に表示される3つの数字は：<br/>
+                      <strong>📚</strong> 作成した書籍数 / 上限<br/>
+                      <strong>🧠</strong> 構成系AI（タイトル・目次・KDP情報・LP）の今日の残り<br/>
+                      <strong>✏️</strong> 執筆系AI（AI執筆・書き換え・一括執筆・文体変換）の今日の残り<br/>
+                      毎日0時にリセットされます。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* フッター */}
             <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -1784,12 +1899,31 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 />
                 <span className="text-sm text-gray-600">次から表示しない</span>
               </label>
-              <button
-                onClick={handleDismissOnboarding}
-                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
-              >
-                はじめる
-              </button>
+              <div className="flex items-center gap-2">
+                {onboardingPage > 0 && (
+                  <button
+                    onClick={() => setOnboardingPage(p => p - 1)}
+                    className="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all"
+                  >
+                    戻る
+                  </button>
+                )}
+                {onboardingPage < ONBOARDING_TOTAL_PAGES - 1 ? (
+                  <button
+                    onClick={() => setOnboardingPage(p => p + 1)}
+                    className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+                  >
+                    次へ
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleDismissOnboarding}
+                    className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+                  >
+                    はじめる
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
