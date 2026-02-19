@@ -56,6 +56,8 @@ export const prepTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#2563eb',
+      backgroundColor: '#dbeafe',
+      padding: 20,
     }),
 
     createSpacer(16),
@@ -76,6 +78,8 @@ export const prepTemplate: SalesLetterTemplate = {
       fontSize: 24,
       underline: true,
       underlineColor: '#2563eb',
+      backgroundColor: '#eff6ff',
+      padding: 20,
     }),
 
     createSpacer(16),
@@ -101,6 +105,8 @@ export const prepTemplate: SalesLetterTemplate = {
       fontSize: 24,
       underline: true,
       underlineColor: '#2563eb',
+      backgroundColor: '#eff6ff',
+      padding: 20,
     }),
 
     createSpacer(16),
@@ -131,6 +137,8 @@ export const prepTemplate: SalesLetterTemplate = {
       fontSize: 24,
       underline: true,
       underlineColor: '#2563eb',
+      backgroundColor: '#eff6ff',
+      padding: 20,
     }),
 
     createSpacer(16),

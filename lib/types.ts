@@ -781,8 +781,9 @@ export interface SurveyQuestion {
 export interface SurveySettings {
   showInPortal?: boolean;
   hideFooter?: boolean; // フッター非表示（Proプラン特典）
-  theme?: 'light' | 'dark' | 'colorful';
+  theme?: string; // テーマID（teal, blue, purple, rose, orange, green）
   primaryColor?: string;
+  headerImage?: string; // ヘッダー画像URL
 }
 
 // アンケートデータ

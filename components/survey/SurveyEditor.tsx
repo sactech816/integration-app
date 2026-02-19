@@ -31,6 +31,9 @@ import {
   Heart,
   Calendar,
   Lock,
+  Palette,
+  UploadCloud,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Survey, SurveyQuestion, generateSurveyQuestionId } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
@@ -38,6 +41,7 @@ import { generateSlug } from "@/lib/utils";
 import SurveyPlayer from "./SurveyPlayer";
 import { useUserPlan } from "@/lib/hooks/useUserPlan";
 import CreationCompleteModal from "@/components/shared/CreationCompleteModal";
+import { SURVEY_THEMES, SURVEY_THEME_IDS, getSurveyTheme } from "@/constants/surveyThemes";
 
 // セクションコンポーネント
 const Section = ({
@@ -258,6 +262,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
   const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
   
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [savedId, setSavedId] = useState<number | null>(initialData?.id || null);
   const [savedSlug, setSavedSlug] = useState<string | null>(initialData?.slug || null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -267,6 +272,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
   const [openSections, setOpenSections] = useState({
     template: !initialData && !templateId, // 新規作成時はテンプレート選択を開く
     basic: !!initialData || !!templateId,
+    design: false,
     questions: !!initialData || !!templateId,
     settings: false,
   });
@@ -313,6 +319,13 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
     window.scrollTo(0, 0);
   }, []);
 
+  // ログインメールを通知先に自動入力
+  useEffect(() => {
+    if (user?.email && !form.creator_email) {
+      setForm((prev) => ({ ...prev, creator_email: user.email! }));
+    }
+  }, [user?.email]);
+
   // テンプレート適用
   const applyTemplate = (key: keyof typeof SURVEY_TEMPLATES) => {
     if (!confirm("テンプレートを適用しますか？\n現在の入力内容は上書きされます。")) return;
@@ -323,7 +336,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
       description: template.description,
       questions: template.questions.map((q) => ({ ...q, id: generateSurveyQuestionId() })),
     });
-    setOpenSections({ template: false, basic: true, questions: true, settings: false });
+    setOpenSections({ template: false, basic: true, design: false, questions: true, settings: false });
     resetPreview();
   };
 
@@ -332,6 +345,46 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
   };
 
   const resetPreview = () => setPreviewKey((k) => k + 1);
+
+  // 画像アップロード
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!supabase) return alert("データベースに接続されていません");
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${user?.id || "anonymous"}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage.from("quiz-thumbnails").upload(filePath, file);
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from("quiz-thumbnails").getPublicUrl(filePath);
+      setForm({ ...form, settings: { ...form.settings, headerImage: data.publicUrl } });
+      resetPreview();
+    } catch (error: unknown) {
+      alert("アップロードエラー: " + (error instanceof Error ? error.message : "不明なエラー"));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // ランダム画像
+  const handleRandomImage = () => {
+    const curatedImages = [
+      "https://images.unsplash.com/photo-1664575602276-acd073f104c1?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1606857521015-7f9fcf423740?auto=format&fit=crop&w=800&q=80",
+    ];
+    const selected = curatedImages[Math.floor(Math.random() * curatedImages.length)];
+    setForm({ ...form, settings: { ...form.settings, headerImage: selected } });
+    resetPreview();
+  };
 
   // 質問操作
   const addQuestion = (type: SurveyQuestion["type"]) => {
@@ -695,12 +748,125 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
                 type="email"
                 required
               />
+              {user?.email && form.creator_email === user.email && (
+                <p className="text-xs text-teal-600 -mt-3 mb-4 flex items-center gap-1">
+                  ※ ログインメールが自動入力されています
+                </p>
+              )}
               <Input
                 label="作成者名（任意）"
                 value={form.creator_name || ""}
                 onChange={(v) => setForm({ ...form, creator_name: v })}
                 placeholder="メールに表示される名前"
               />
+            </Section>
+
+            {/* デザインセクション */}
+            <Section
+              title="デザイン"
+              icon={Palette}
+              isOpen={openSections.design}
+              onToggle={() => toggleSection("design")}
+              headerBgColor="bg-pink-50"
+              headerHoverColor="hover:bg-pink-100"
+              accentColor="bg-pink-100 text-pink-600"
+            >
+              {/* カラーテーマ */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-bold text-gray-900">カラーテーマ</label>
+                  <button
+                    onClick={() => {
+                      setForm({ ...form, settings: { ...form.settings, theme: "teal" } });
+                      resetPreview();
+                    }}
+                    className="text-xs text-teal-600 hover:text-teal-800 hover:underline"
+                  >
+                    初期値に戻す
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {SURVEY_THEME_IDS.map((themeId) => {
+                    const theme = SURVEY_THEMES[themeId];
+                    const isSelected = (form.settings?.theme || "teal") === themeId;
+                    return (
+                      <button
+                        key={themeId}
+                        onClick={() => {
+                          setForm({ ...form, settings: { ...form.settings, theme: themeId } });
+                          resetPreview();
+                        }}
+                        className={`p-3 rounded-lg border-2 text-left transition-all ${
+                          isSelected
+                            ? "border-gray-800 bg-gray-50 shadow-sm"
+                            : "border-gray-200 bg-white hover:border-gray-300"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <div
+                            className="w-5 h-5 rounded-full border border-white shadow-sm"
+                            style={{ background: theme.headerGradient }}
+                          />
+                          <span className="font-bold text-sm text-gray-900">{theme.name}</span>
+                        </div>
+                        <span className="text-xs text-gray-500">{theme.description}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* ヘッダー画像 */}
+              <div>
+                <label className="text-sm font-bold text-gray-900 block mb-2">ヘッダー画像（任意）</label>
+                <div className="flex flex-col md:flex-row gap-2">
+                  <input
+                    className="flex-grow border border-gray-300 p-3 rounded-lg text-black font-medium focus:ring-2 focus:ring-teal-500 outline-none bg-white placeholder-gray-400 text-sm"
+                    value={form.settings?.headerImage || ""}
+                    onChange={(e) => {
+                      setForm({ ...form, settings: { ...form.settings, headerImage: e.target.value } });
+                      resetPreview();
+                    }}
+                    placeholder="画像URL (https://...) またはアップロード"
+                  />
+                  <label className="bg-pink-50 text-pink-700 px-4 py-3 rounded-lg font-bold hover:bg-pink-100 flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap text-sm">
+                    {isUploading ? <Loader2 className="animate-spin" size={16} /> : <UploadCloud size={16} />}
+                    <span>アップロード</span>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={isUploading}
+                    />
+                  </label>
+                  <button
+                    onClick={handleRandomImage}
+                    className="bg-gray-100 px-4 py-3 rounded-lg text-sm font-bold hover:bg-gray-200 flex items-center justify-center gap-1 whitespace-nowrap"
+                  >
+                    <ImageIcon size={16} /> 自動
+                  </button>
+                </div>
+                {form.settings?.headerImage && (
+                  <div className="relative mt-2">
+                    <img
+                      src={form.settings.headerImage}
+                      alt="Header Preview"
+                      className="h-32 w-full object-cover rounded-lg border"
+                    />
+                    <button
+                      onClick={() => {
+                        setForm({ ...form, settings: { ...form.settings, headerImage: undefined } });
+                        resetPreview();
+                      }}
+                      className="absolute top-1 right-1 bg-black/60 text-white p-1 rounded-full hover:bg-black/80"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 mt-1">アンケートのヘッダーに画像を表示します。</p>
+              </div>
             </Section>
 
             {/* ステップ3: 質問編集 */}

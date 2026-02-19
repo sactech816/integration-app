@@ -54,6 +54,8 @@ export const beafTemplate: SalesLetterTemplate = {
       fontSize: 32,
       underline: true,
       underlineColor: '#f59e0b',
+      backgroundColor: '#fffbeb',
+      padding: 20,
     }),
 
     createSpacer(8),
@@ -72,6 +74,8 @@ export const beafTemplate: SalesLetterTemplate = {
       fontSize: 24,
       underline: true,
       underlineColor: '#f59e0b',
+      backgroundColor: '#fffbeb',
+      padding: 20,
     }),
 
     createSpacer(16),
@@ -104,6 +108,8 @@ export const beafTemplate: SalesLetterTemplate = {
       fontSize: 24,
       underline: true,
       underlineColor: '#f59e0b',
+      backgroundColor: '#fffbeb',
+      padding: 20,
     }),
 
     createSpacer(16),
@@ -123,6 +129,8 @@ export const beafTemplate: SalesLetterTemplate = {
     createParagraph(`<p style="text-align: center; font-size: 18px; font-weight: bold;">累計販売数 <span style="color: #ef4444;">50,000個</span> 突破！</p>
 <p style="text-align: center; font-size: 14px; color: #6b7280;">〇〇カテゴリ 売上ランキング1位獲得</p>`, {
       align: 'center',
+      backgroundColor: '#fef3c7',
+      padding: 20,
     }),
 
     createSpacer(16),
@@ -149,6 +157,8 @@ export const beafTemplate: SalesLetterTemplate = {
       fontSize: 24,
       underline: true,
       underlineColor: '#f59e0b',
+      backgroundColor: '#fffbeb',
+      padding: 20,
     }),
 
     createSpacer(16),
@@ -192,6 +202,8 @@ export const beafTemplate: SalesLetterTemplate = {
       fontSize: 24,
       underline: true,
       underlineColor: '#f59e0b',
+      backgroundColor: '#fffbeb',
+      padding: 20,
     }),
 
     createSpacer(16),

@@ -56,6 +56,8 @@ export const sdsTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#374151',
+      backgroundColor: '#f3f4f6',
+      padding: 20,
     }),
 
     createSpacer(16),
@@ -79,6 +81,8 @@ export const sdsTemplate: SalesLetterTemplate = {
       fontSize: 24,
       underline: true,
       underlineColor: '#374151',
+      backgroundColor: '#f3f4f6',
+      padding: 20,
     }),
 
     createSpacer(16),
@@ -127,6 +131,8 @@ export const sdsTemplate: SalesLetterTemplate = {
       fontSize: 24,
       underline: true,
       underlineColor: '#374151',
+      backgroundColor: '#f3f4f6',
+      padding: 20,
     }),
 
     createSpacer(16),

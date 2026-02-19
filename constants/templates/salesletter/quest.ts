@@ -50,6 +50,8 @@ export const questTemplate: SalesLetterTemplate = {
       fontSize: 36,
       underline: true,
       underlineColor: '#d97706',
+      backgroundColor: '#fffbeb',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -81,6 +83,8 @@ export const questTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#d97706',
+      backgroundColor: '#fffbeb',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -92,6 +96,8 @@ export const questTemplate: SalesLetterTemplate = {
 <p>でも、安心してください。</p>
 <p>それは<strong>あなたのせいではありません。</strong></p>
 <p>正しい方法を知らなかっただけなのです。</p>`, {
+      backgroundColor: '#fefce8',
+      padding: 20,
     }),
 
     createSpacer(40),
@@ -104,12 +110,16 @@ export const questTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#d97706',
+      backgroundColor: '#fffbeb',
+      padding: 20,
     }),
 
     createSpacer(24),
 
     createParagraph(`<p>実は、〇〇がうまくいかない人には<strong>共通点</strong>があります。</p>
 <p>それは...</p>`, {
+      backgroundColor: '#fefce8',
+      padding: 20,
     }),
 
     createSpacer(16),
@@ -140,11 +150,15 @@ export const questTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#d97706',
+      backgroundColor: '#fffbeb',
+      padding: 20,
     }),
 
     createSpacer(24),
 
     createParagraph(`<p>もし、〇〇を手に入れたら、あなたの人生はどう変わりますか？</p>`, {
+      backgroundColor: '#fefce8',
+      padding: 20,
     }),
 
     createSpacer(16),
@@ -177,6 +191,8 @@ export const questTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#d97706',
+      backgroundColor: '#fffbeb',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -185,6 +201,8 @@ export const questTemplate: SalesLetterTemplate = {
 <p style="text-align: center;"><strong>あなたが最短で結果を出すための</strong></p>
 <p style="text-align: center;"><strong>すべてをお伝えします。</strong></p>`, {
       align: 'center',
+      backgroundColor: '#fefce8',
+      padding: 20,
     }),
 
     createSpacer(24),

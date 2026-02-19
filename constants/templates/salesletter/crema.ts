@@ -51,12 +51,16 @@ export const cremaTemplate: SalesLetterTemplate = {
       color: '#7c3aed',
       underline: true,
       underlineColor: '#a78bfa',
+      backgroundColor: '#f5f3ff',
+      padding: 20,
     }),
 
     createSpacer(16),
 
     createParagraph(`<p style="text-align: center; font-size: 18px;">もう<strong>〇〇で悩む必要はありません。</strong></p>`, {
       align: 'center',
+      backgroundColor: '#ede9fe',
+      padding: 16,
     }),
 
     createSpacer(32),

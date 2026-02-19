@@ -81,6 +81,8 @@ export const newPasonaTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#3b82f6',
+      backgroundColor: '#eff6ff',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -91,6 +93,8 @@ export const newPasonaTemplate: SalesLetterTemplate = {
 <p>今では〇〇を達成し、多くの方のサポートができるまでになりました。</p>
 <p>あなたの気持ち、痛いほどよくわかります。<br>だからこそ、同じ悩みを持つあなたの力になりたいのです。</p>`, {
       align: 'left',
+      backgroundColor: '#f8fafc',
+      padding: 20,
     }),
 
     createSpacer(40),
@@ -103,6 +107,8 @@ export const newPasonaTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#3b82f6',
+      backgroundColor: '#eff6ff',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -135,6 +141,8 @@ export const newPasonaTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#3b82f6',
+      backgroundColor: '#eff6ff',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -164,6 +172,8 @@ export const newPasonaTemplate: SalesLetterTemplate = {
       color: '#dc2626',
       underline: true,
       underlineColor: '#fca5a5',
+      backgroundColor: '#fef2f2',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -185,12 +195,16 @@ export const newPasonaTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#3b82f6',
+      backgroundColor: '#eff6ff',
+      padding: 20,
     }),
 
     createSpacer(24),
 
     createParagraph(`<p style="text-align: center;">まずは無料相談であなたの状況をお聞かせください。<br>あなたに最適な解決策をご提案します。</p>`, {
       align: 'center',
+      backgroundColor: '#f8fafc',
+      padding: 20,
     }),
 
     createSpacer(24),

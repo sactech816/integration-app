@@ -5,6 +5,7 @@ import { Survey, SurveyQuestion } from "@/lib/types";
 import { CheckCircle, Send, Loader2 } from "lucide-react";
 import ContentFooter from "@/components/shared/ContentFooter";
 import SurveyResults from "./SurveyResults";
+import { getSurveyTheme, SurveyTheme } from "@/constants/surveyThemes";
 
 interface SurveyPlayerProps {
   survey: Survey;
@@ -18,13 +19,15 @@ export default function SurveyPlayer({ survey, isPreview = false }: SurveyPlayer
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
+  const theme = getSurveyTheme(survey.settings?.theme);
+
   const handleChange = (questionId: string, value: string | number) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
   const isFormValid = () => {
     if (!respondentName.trim() || !respondentEmail.trim()) return false;
-    
+
     // 必須質問のチェック
     for (const q of survey.questions) {
       if (q.required !== false && !answers[q.id]) {
@@ -108,11 +111,30 @@ export default function SurveyPlayer({ survey, isPreview = false }: SurveyPlayer
 
   return (
     <div className="max-w-2xl mx-auto">
+      {/* ヘッダー画像 */}
+      {survey.settings?.headerImage && (
+        <div className="relative rounded-t-xl overflow-hidden">
+          <img
+            src={survey.settings.headerImage}
+            alt=""
+            className="w-full h-40 object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        </div>
+      )}
+
       {/* ヘッダー */}
-      <div className="bg-gradient-to-r from-teal-600 to-cyan-600 text-white p-6 rounded-t-xl">
-        <h1 className="text-2xl font-bold mb-2">{survey.title}</h1>
+      <div
+        className={`text-white p-6 ${survey.settings?.headerImage ? "" : "rounded-t-xl"}`}
+        style={{ background: theme.headerGradient }}
+      >
+        <h1 className="text-2xl font-bold mb-2" style={{ color: theme.headerTextColor }}>
+          {survey.title}
+        </h1>
         {survey.description && (
-          <p className="text-teal-100 text-sm">{survey.description}</p>
+          <p className="text-sm" style={{ color: theme.headerSubTextColor }}>
+            {survey.description}
+          </p>
         )}
       </div>
 
@@ -129,7 +151,10 @@ export default function SurveyPlayer({ survey, isPreview = false }: SurveyPlayer
                 type="text"
                 value={respondentName}
                 onChange={(e) => setRespondentName(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition placeholder:text-gray-400 text-gray-900 bg-white"
+                className="w-full border border-gray-300 rounded-lg p-3 outline-none transition placeholder:text-gray-400 text-gray-900 bg-white"
+                style={{ boxShadow: respondentName ? `0 0 0 2px ${theme.focusRing}` : undefined }}
+                onFocus={(e) => e.currentTarget.style.boxShadow = `0 0 0 2px ${theme.focusRing}`}
+                onBlur={(e) => { if (!respondentName) e.currentTarget.style.boxShadow = "none"; }}
                 placeholder="山田 太郎"
               />
             </div>
@@ -141,7 +166,10 @@ export default function SurveyPlayer({ survey, isPreview = false }: SurveyPlayer
                 type="email"
                 value={respondentEmail}
                 onChange={(e) => setRespondentEmail(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition placeholder:text-gray-400 text-gray-900 bg-white"
+                className="w-full border border-gray-300 rounded-lg p-3 outline-none transition placeholder:text-gray-400 text-gray-900 bg-white"
+                style={{ boxShadow: respondentEmail ? `0 0 0 2px ${theme.focusRing}` : undefined }}
+                onFocus={(e) => e.currentTarget.style.boxShadow = `0 0 0 2px ${theme.focusRing}`}
+                onBlur={(e) => { if (!respondentEmail) e.currentTarget.style.boxShadow = "none"; }}
                 placeholder="example@email.com"
               />
             </div>
@@ -157,6 +185,7 @@ export default function SurveyPlayer({ survey, isPreview = false }: SurveyPlayer
               index={index}
               value={answers[q.id]}
               onChange={(value) => handleChange(q.id, value)}
+              theme={theme}
             />
           ))}
         </div>
@@ -173,7 +202,10 @@ export default function SurveyPlayer({ survey, isPreview = false }: SurveyPlayer
           <button
             onClick={handleSubmit}
             disabled={status === "submitting" || !isFormValid()}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-bold py-4 px-10 rounded-full hover:from-teal-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+            className="inline-flex items-center gap-2 text-white font-bold py-4 px-10 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+            style={{ background: theme.buttonGradient }}
+            onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.background = theme.buttonHoverGradient; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = theme.buttonGradient; }}
           >
             {status === "submitting" ? (
               <>
@@ -207,18 +239,23 @@ function QuestionBlock({
   index,
   value,
   onChange,
+  theme,
 }: {
   question: SurveyQuestion;
   index: number;
   value: string | number | undefined;
   onChange: (value: string | number) => void;
+  theme: SurveyTheme;
 }) {
   const isRequired = question.required !== false;
 
   return (
     <div className="border-b border-gray-100 pb-6 last:border-0">
       <h3 className="font-bold text-lg mb-4 text-gray-800">
-        <span className="inline-flex items-center justify-center w-7 h-7 bg-teal-100 text-teal-700 rounded-full text-sm mr-2">
+        <span
+          className="inline-flex items-center justify-center w-7 h-7 rounded-full text-sm mr-2"
+          style={{ backgroundColor: theme.badgeBg, color: theme.badgeText }}
+        >
           {index + 1}
         </span>
         {question.text}
@@ -230,7 +267,10 @@ function QuestionBlock({
         <textarea
           value={(value as string) || ""}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg p-4 h-32 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition resize-none bg-gray-50 focus:bg-white placeholder:text-gray-400 text-gray-900"
+          className="w-full border border-gray-300 rounded-lg p-4 h-32 outline-none transition resize-none bg-gray-50 focus:bg-white placeholder:text-gray-400 text-gray-900"
+          style={{ boxShadow: value ? `0 0 0 2px ${theme.focusRing}` : undefined }}
+          onFocus={(e) => e.currentTarget.style.boxShadow = `0 0 0 2px ${theme.focusRing}`}
+          onBlur={(e) => { if (!value) e.currentTarget.style.boxShadow = "none"; }}
           placeholder={question.placeholder || "ここに回答を入力してください..."}
         />
       )}
@@ -238,26 +278,35 @@ function QuestionBlock({
       {/* 選択式 */}
       {question.type === "choice" && question.options && (
         <div className="space-y-2">
-          {question.options.map((option) => (
-            <label
-              key={option}
-              className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all ${
-                value === option
-                  ? "border-teal-500 bg-teal-50 ring-2 ring-teal-200"
-                  : "border-gray-200 hover:bg-gray-50"
-              }`}
-            >
-              <input
-                type="radio"
-                name={question.id}
-                value={option}
-                checked={value === option}
-                onChange={(e) => onChange(e.target.value)}
-                className="w-5 h-5 text-teal-600 focus:ring-teal-500"
-              />
-              <span className="text-gray-700">{option}</span>
-            </label>
-          ))}
+          {question.options.map((option) => {
+            const isSelected = value === option;
+            return (
+              <label
+                key={option}
+                className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all"
+                style={
+                  isSelected
+                    ? {
+                        borderColor: theme.selectedBorder,
+                        backgroundColor: theme.selectedBg,
+                        boxShadow: `0 0 0 2px ${theme.selectedRing}`,
+                      }
+                    : { borderColor: "#e5e7eb" }
+                }
+              >
+                <input
+                  type="radio"
+                  name={question.id}
+                  value={option}
+                  checked={isSelected}
+                  onChange={(e) => onChange(e.target.value)}
+                  className="w-5 h-5"
+                  style={{ accentColor: theme.radioColor }}
+                />
+                <span className="text-gray-700">{option}</span>
+              </label>
+            );
+          })}
         </div>
       )}
 
@@ -272,11 +321,20 @@ function QuestionBlock({
                 key={i}
                 type="button"
                 onClick={() => onChange(ratingValue)}
-                className={`w-14 h-14 rounded-full font-bold text-lg transition-all ${
+                className="w-14 h-14 rounded-full font-bold text-lg transition-all"
+                style={
                   isSelected
-                    ? "bg-teal-600 text-white scale-110 shadow-lg"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                    ? {
+                        backgroundColor: theme.ratingSelectedBg,
+                        color: theme.ratingSelectedText,
+                        transform: "scale(1.1)",
+                        boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+                      }
+                    : {
+                        backgroundColor: "#f3f4f6",
+                        color: "#4b5563",
+                      }
+                }
               >
                 {ratingValue}
               </button>
@@ -287,4 +345,3 @@ function QuestionBlock({
     </div>
   );
 }
-

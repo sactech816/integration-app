@@ -54,6 +54,8 @@ export const pasbeconaTemplate: SalesLetterTemplate = {
       fontSize: 36,
       underline: true,
       underlineColor: '#d4af37',
+      backgroundColor: '#fefce8',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -79,6 +81,8 @@ export const pasbeconaTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#d4af37',
+      backgroundColor: '#fefce8',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -88,6 +92,8 @@ export const pasbeconaTemplate: SalesLetterTemplate = {
 <p>でも、<strong>なぜか成果が出ない。</strong></p>
 <p>「自分には才能がないのかも...」そう思ったこともあります。</p>
 <p>しかし、ある「きっかけ」で全てが変わりました。</p>`, {
+      backgroundColor: '#fafaf9',
+      padding: 20,
     }),
 
     createSpacer(40),
@@ -100,6 +106,8 @@ export const pasbeconaTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#d4af37',
+      backgroundColor: '#fefce8',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -122,6 +130,8 @@ export const pasbeconaTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#d4af37',
+      backgroundColor: '#fefce8',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -154,6 +164,8 @@ export const pasbeconaTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#d4af37',
+      backgroundColor: '#fefce8',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -190,6 +202,8 @@ export const pasbeconaTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#d4af37',
+      backgroundColor: '#fefce8',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -216,6 +230,8 @@ export const pasbeconaTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#d4af37',
+      backgroundColor: '#fefce8',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -241,6 +257,8 @@ export const pasbeconaTemplate: SalesLetterTemplate = {
       color: '#dc2626',
       underline: true,
       underlineColor: '#fca5a5',
+      backgroundColor: '#fef2f2',
+      padding: 20,
     }),
 
     createSpacer(24),

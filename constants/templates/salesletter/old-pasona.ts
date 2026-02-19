@@ -55,6 +55,8 @@ export const oldPasonaTemplate: SalesLetterTemplate = {
       color: '#dc2626',
       underline: true,
       underlineColor: '#dc2626',
+      backgroundColor: '#fef2f2',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -86,12 +88,16 @@ export const oldPasonaTemplate: SalesLetterTemplate = {
       color: '#dc2626',
       underline: true,
       underlineColor: '#dc2626',
+      backgroundColor: '#fef2f2',
+      padding: 20,
     }),
 
     createSpacer(24),
 
     createParagraph(`<p>「自分は大丈夫」</p>
 <p>そう思っていた人たちが、実際に経験した<strong>悲劇</strong>をお伝えします。</p>`, {
+      backgroundColor: '#fff7ed',
+      padding: 20,
     }),
 
     createSpacer(16),
@@ -127,12 +133,16 @@ export const oldPasonaTemplate: SalesLetterTemplate = {
       color: '#059669',
       underline: true,
       underlineColor: '#34d399',
+      backgroundColor: '#f0fdf4',
+      padding: 20,
     }),
 
     createSpacer(24),
 
     createParagraph(`<p style="text-align: center;">そんな最悪の事態を<strong>完全に防ぐ方法</strong>があります。</p>`, {
       align: 'center',
+      backgroundColor: '#ecfdf5',
+      padding: 20,
     }),
 
     createSpacer(16),
@@ -158,6 +168,8 @@ export const oldPasonaTemplate: SalesLetterTemplate = {
       fontSize: 28,
       underline: true,
       underlineColor: '#dc2626',
+      backgroundColor: '#fef2f2',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -189,6 +201,8 @@ export const oldPasonaTemplate: SalesLetterTemplate = {
       color: '#dc2626',
       underline: true,
       underlineColor: '#dc2626',
+      backgroundColor: '#fef2f2',
+      padding: 20,
     }),
 
     createSpacer(24),
