@@ -110,7 +110,7 @@ export default function SalesLetterEditor({
   onBack,
   setShowAuth,
 }: SalesLetterEditorProps) {
-  // オンボーディング
+  // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('salesletter_editor_onboarding_dismissed', { skip: !!initialData });
   // 状態管理
   const [title, setTitle] = useState(initialData?.title || 'セールスレター');
@@ -893,7 +893,7 @@ export default function SalesLetterEditor({
         }
       `}</style>
 
-      {/* オンボーディングモーダル */}
+      {/* はじめかたガイド */}
       {showOnboarding && (
         <OnboardingModal
           storageKey="salesletter_editor_onboarding_dismissed"
@@ -1060,17 +1060,28 @@ function BlockEditorItem({
                   </button>
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-rose-400">
+                <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg">
                   {uploading ? (
                     <Loader2 className="animate-spin text-rose-500" size={24} />
                   ) : (
-                    <>
-                      <ImageIcon className="text-gray-400 mb-2" size={24} />
-                      <span className="text-sm text-gray-500">クリックして画像をアップロード</span>
-                    </>
+                    <div className="flex gap-3">
+                      <label className="flex items-center gap-1 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg font-bold text-sm hover:bg-indigo-200 cursor-pointer border border-indigo-300">
+                        <UploadCloud size={16} />
+                        <span>アップロード</span>
+                        <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                      </label>
+                      <button
+                        onClick={() => {
+                          const selected = curatedImages[Math.floor(Math.random() * curatedImages.length)];
+                          onUpdate({ src: selected });
+                        }}
+                        className="flex items-center gap-1 px-4 py-2 bg-gray-100 text-gray-800 rounded-lg text-sm font-bold hover:bg-gray-200 border border-gray-300"
+                      >
+                        <ImageIcon size={16} /> フリー素材
+                      </button>
+                    </div>
                   )}
-                  <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                </label>
+                </div>
               )}
               <input
                 type="text"
@@ -1458,7 +1469,7 @@ function HeadlineBlockEditor({
             </label>
             <button
               onClick={handleRandomImage}
-              className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-200 rounded-lg text-xs font-bold hover:bg-gray-300 border border-gray-300"
+              className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-200 text-gray-800 rounded-lg text-xs font-bold hover:bg-gray-300 border border-gray-300"
             >
               <ImageIcon size={14} /> 自動
             </button>
@@ -1640,7 +1651,7 @@ function ParagraphBlockEditor({
             </label>
             <button
               onClick={handleRandomImage}
-              className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-200 rounded-lg text-xs font-bold hover:bg-gray-300 border border-gray-300"
+              className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-200 text-gray-800 rounded-lg text-xs font-bold hover:bg-gray-300 border border-gray-300"
             >
               <ImageIcon size={14} /> 自動
             </button>
@@ -1903,7 +1914,7 @@ function ContentSettingsPanel({
           </label>
           <button
             onClick={handleRandomImage}
-            className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-200 rounded-lg text-sm font-bold hover:bg-gray-300 border border-gray-300"
+            className="flex items-center justify-center gap-1 px-3 py-2 bg-gray-200 text-gray-800 rounded-lg text-sm font-bold hover:bg-gray-300 border border-gray-300"
           >
             <ImageIcon size={16} /> 自動
           </button>

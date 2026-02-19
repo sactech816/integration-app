@@ -193,7 +193,7 @@ interface EditorProps {
 const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: EditorProps) => {
     // ユーザープラン権限を取得
     const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
-    // オンボーディング
+    // はじめかたガイド
     const { showOnboarding, setShowOnboarding } = useOnboarding('quiz_editor_onboarding_dismissed', { skip: !!initialData?.id });
     
     useEffect(() => { 
@@ -1298,7 +1298,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                 <div className="hidden lg:block lg:w-1/2 lg:flex-shrink-0 bg-gray-50"></div>
             </div>
 
-            {/* オンボーディングモーダル */}
+            {/* はじめかたガイド */}
             {showOnboarding && (
                 <OnboardingModal
                     storageKey="quiz_editor_onboarding_dismissed"

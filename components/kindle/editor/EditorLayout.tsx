@@ -178,7 +178,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   const [isSaving, setIsSaving] = useState(false); // 途中保存中
   const [isMarkingComplete, setIsMarkingComplete] = useState(false); // 完成マーク中
 
-  // オンボーディングモーダル（ウィザード形式：3ページ構成）
+  // はじめかたガイド（ウィザード形式：3ページ構成）
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingDismissForever, setOnboardingDismissForever] = useState(false);
   const [onboardingPage, setOnboardingPage] = useState(0);
@@ -1732,7 +1732,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
         </div>
       )}
 
-      {/* オンボーディングウィザード（3ページ構成） */}
+      {/* はじめかたガイドウィザード（3ページ構成） */}
       {showOnboarding && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={handleDismissOnboarding}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-fade-in overflow-hidden" onClick={(e) => e.stopPropagation()}>

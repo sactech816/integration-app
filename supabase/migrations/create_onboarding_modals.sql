@@ -1,8 +1,8 @@
--- オンボーディングモーダルテーブル作成
+-- はじめかたガイドテーブル作成
 CREATE TABLE IF NOT EXISTS onboarding_modals (
   id BIGSERIAL PRIMARY KEY,
   slug VARCHAR(20) UNIQUE NOT NULL,
-  title TEXT NOT NULL DEFAULT '新規オンボーディング',
+  title TEXT NOT NULL DEFAULT '新規はじめかたガイド',
   description TEXT,
   pages JSONB NOT NULL DEFAULT '[]'::jsonb,
   gradient_from VARCHAR(50) DEFAULT 'from-amber-500',

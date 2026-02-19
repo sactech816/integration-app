@@ -116,12 +116,12 @@ function KindleNewPageContent() {
   const [usageLimits, setUsageLimits] = useState<KdlUsageLimits | null>(null);
   const [usageRefreshTrigger, setUsageRefreshTrigger] = useState(0);
 
-  // ウィザードオンボーディング（2ページ構成）
+  // ウィザードはじめかたガイド（2ページ構成）
   const [showWizardOnboarding, setShowWizardOnboarding] = useState(false);
   const [wizardOnboardingPage, setWizardOnboardingPage] = useState(0);
   const WIZARD_ONBOARDING_PAGES = 2;
 
-  // entryMode が 'new' に切り替わったときにオンボーディング表示
+  // entryMode が 'new' に切り替わったときにはじめかたガイド表示
   useEffect(() => {
     if (entryMode === 'new') {
       const dismissed = localStorage.getItem('kdl_wizard_onboarding_dismissed');
@@ -739,7 +739,7 @@ function KindleNewPageContent() {
       {/* 共通フッター */}
       <KDLFooter adminKeyParam={adminKeyParam} isDemo={isDemo} />
 
-      {/* ウィザードオンボーディングモーダル（2ページ構成） */}
+      {/* ウィザードはじめかたガイド（2ページ構成） */}
       {showWizardOnboarding && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => { setShowWizardOnboarding(false); }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-fade-in overflow-hidden" onClick={(e) => e.stopPropagation()}>

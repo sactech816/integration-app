@@ -150,7 +150,7 @@ export default function FeaturedManager() {
       gamification: 'ゲーミフィケーション',
       attendance: '出欠表',
       booking: '予約',
-      onboarding: 'オンボーディング',
+      onboarding: 'はじめかたガイド',
     };
     return labels[type] || type;
   };

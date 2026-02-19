@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 /**
- * オンボーディングモーダルの表示制御フック
+ * はじめかたガイドの表示制御フック
  * localStorageで「次から表示しない」を管理
  */
 export function useOnboarding(storageKey: string, options?: { skip?: boolean }) {

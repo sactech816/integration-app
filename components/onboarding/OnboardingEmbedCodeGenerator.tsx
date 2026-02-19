@@ -72,7 +72,7 @@ export default function OnboardingEmbedCodeGenerator({
           埋め込みコード
         </h3>
         <p className="text-sm text-gray-600 mt-1">
-          外部サイトにこのオンボーディングモーダルを埋め込むことができます
+          外部サイトにこのはじめかたガイドを埋め込むことができます
         </p>
       </div>
 

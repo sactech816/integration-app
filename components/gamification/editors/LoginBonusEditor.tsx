@@ -309,7 +309,7 @@ export default function LoginBonusEditor({ user, initialData, onBack, setShowAut
         theme="blue"
       />
 
-      {/* オンボーディングモーダル */}
+      {/* はじめかたガイド */}
       {showOnboarding && (
         <OnboardingModal
           storageKey="gamification_loginbonus_onboarding_dismissed"

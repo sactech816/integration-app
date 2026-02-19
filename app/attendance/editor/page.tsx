@@ -35,7 +35,7 @@ function AttendanceEditorContent() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
 
-  // オンボーディング
+  // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('attendance_editor_onboarding_dismissed', { skip: !!editId });
 
   // 編集モード用
@@ -785,7 +785,7 @@ function AttendanceEditorContent() {
 
       <Footer setPage={navigateTo} />
 
-      {/* オンボーディングモーダル */}
+      {/* はじめかたガイド */}
       {showOnboarding && (
         <OnboardingModal
           storageKey="attendance_editor_onboarding_dismissed"

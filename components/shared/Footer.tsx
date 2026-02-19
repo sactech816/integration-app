@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Magnet, Sparkles, Building2, UserCircle, TrendingUp, Lightbulb, Heart, Calendar, ClipboardList, Gamepad2, BookOpen, Monitor, CalendarCheck, PenTool } from 'lucide-react';
+import { Magnet, Sparkles, Building2, UserCircle, TrendingUp, Lightbulb, Heart, Calendar, ClipboardList, Gamepad2, BookOpen, Monitor, CalendarCheck, PenTool, MousePointerClick } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
 interface FooterProps {
@@ -92,6 +92,12 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
                 <Link href="/gamification/new" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Gamepad2 size={16} className="opacity-60 group-hover:opacity-100" />
                   ゲーミフィケーション
+                </Link>
+              </li>
+              <li>
+                <Link href="/onboarding/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <MousePointerClick size={16} className="opacity-60 group-hover:opacity-100" />
+                  はじめかたメーカー
                 </Link>
               </li>
             </ul>

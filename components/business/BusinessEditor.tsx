@@ -460,7 +460,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
 }) => {
   // ユーザープラン権限を取得
   const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
-  // オンボーディング
+  // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('business_editor_onboarding_dismissed', { skip: !!initialData });
 
   // 初期ブロック
@@ -2798,7 +2798,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
           userId={user?.id}
         />
 
-        {/* オンボーディングモーダル */}
+        {/* はじめかたガイド */}
         {showOnboarding && (
           <OnboardingModal
             storageKey="business_editor_onboarding_dismissed"

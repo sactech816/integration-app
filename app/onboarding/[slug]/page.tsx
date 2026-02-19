@@ -25,15 +25,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
   if (!data) {
-    return { title: 'オンボーディングモーダル | 集客メーカー' };
+    return { title: 'はじめかたガイド | 集客メーカー' };
   }
 
   return {
-    title: `${data.title} | オンボーディングモーダル`,
-    description: data.description || `${data.title} - オンボーディングモーダル by 集客メーカー`,
+    title: `${data.title} | はじめかたガイド`,
+    description: data.description || `${data.title} - はじめかたガイド by 集客メーカー`,
     openGraph: {
       title: data.title,
-      description: data.description || `${data.title} - オンボーディングモーダル`,
+      description: data.description || `${data.title} - はじめかたガイド`,
       url: `${siteUrl}/onboarding/${slug}`,
       type: 'website',
     },

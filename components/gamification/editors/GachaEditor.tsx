@@ -679,7 +679,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth, ga
         theme="purple"
       />
 
-      {/* オンボーディングモーダル */}
+      {/* はじめかたガイド */}
       {showOnboarding && (
         <OnboardingModal
           storageKey="gamification_gacha_onboarding_dismissed"

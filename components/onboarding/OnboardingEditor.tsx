@@ -191,7 +191,7 @@ interface OnboardingEditorProps {
 export default function OnboardingEditor({ user, initialData, setPage, onBack, setShowAuth }: OnboardingEditorProps) {
   // フォーム状態
   const [form, setForm] = useState({
-    title: initialData?.title || '新規オンボーディング',
+    title: initialData?.title || '新規はじめかたガイド',
     description: initialData?.description || '',
     pages: (initialData?.pages as OnboardingModalPage[]) || [
       {
@@ -237,7 +237,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
   const [showDonationModal, setShowDonationModal] = useState(false);
   const [justSavedSlug, setJustSavedSlug] = useState('');
 
-  // オンボーディング
+  // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('onboarding_editor_onboarding_dismissed', { skip: !!initialData });
 
   const toggleSection = (key: string) => {
@@ -462,7 +462,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
       <CreationCompleteModal
         isOpen={showDonationModal}
         onClose={() => setShowDonationModal(false)}
-        title="オンボーディングモーダル"
+        title="はじめかたガイド"
         publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/onboarding/${customSlug || justSavedSlug}`}
         contentTitle={form.title}
         theme="amber"
@@ -473,7 +473,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
         <div className="flex items-center gap-3">
           <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full text-gray-700"><ArrowLeft /></button>
           <h2 className="font-bold text-lg text-gray-900 line-clamp-1">
-            {initialData ? 'オンボーディング編集' : 'オンボーディング作成'}
+            {initialData ? 'はじめかたガイド編集' : 'はじめかたガイド作成'}
           </h2>
           <span className="hidden md:inline text-xs px-2 py-1 rounded font-bold bg-orange-100 text-orange-700">
             モーダル
@@ -933,7 +933,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
       {showOnboarding && (
         <OnboardingModal
           storageKey="onboarding_editor_onboarding_dismissed"
-          title="オンボーディングモーダルメーカーの使い方"
+          title="はじめかたメーカーの使い方"
           gradientFrom="from-amber-500"
           gradientTo="to-orange-500"
           pages={[

@@ -262,7 +262,7 @@ interface SurveyEditorProps {
 export default function SurveyEditor({ onBack, initialData, user, templateId, setShowAuth }: SurveyEditorProps) {
   // ユーザープラン権限を取得
   const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
-  // オンボーディング
+  // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('survey_editor_onboarding_dismissed', { skip: !!initialData?.id });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -1269,7 +1269,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
         </div>
       </div>
 
-      {/* オンボーディングモーダル */}
+      {/* はじめかたガイド */}
       {showOnboarding && (
         <OnboardingModal
           storageKey="survey_editor_onboarding_dismissed"

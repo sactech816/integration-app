@@ -15,7 +15,7 @@ interface ListingFormProps {
 }
 
 export default function ListingForm({ listing, accessToken, onSaved, onCancel }: ListingFormProps) {
-  // オンボーディング
+  // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('marketplace_listing_onboarding_dismissed', { skip: !!listing });
 
   const [category, setCategory] = useState(listing?.category || '');
@@ -226,7 +226,7 @@ export default function ListingForm({ listing, accessToken, onSaved, onCancel }:
         </button>
       </div>
 
-      {/* オンボーディングモーダル */}
+      {/* はじめかたガイド */}
       {showOnboarding && (
         <OnboardingModal
           storageKey="marketplace_listing_onboarding_dismissed"

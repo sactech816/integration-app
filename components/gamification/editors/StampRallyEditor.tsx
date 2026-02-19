@@ -577,7 +577,7 @@ export default function StampRallyEditor({ user, initialData, onBack, setShowAut
         theme="amber"
       />
 
-      {/* オンボーディングモーダル */}
+      {/* はじめかたガイド */}
       {showOnboarding && (
         <OnboardingModal
           storageKey="gamification_stamprally_onboarding_dismissed"

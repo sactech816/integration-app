@@ -747,7 +747,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
 }) => {
   // ユーザープラン権限を取得
   const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
-  // オンボーディング
+  // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('profile_editor_onboarding_dismissed', { skip: !!initialData });
 
   // 初期ブロック（ヘッダー、テキスト、リンク集）
@@ -2770,7 +2770,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         userId={user?.id}
       />
 
-      {/* オンボーディングモーダル */}
+      {/* はじめかたガイド */}
       {showOnboarding && (
         <OnboardingModal
           storageKey="profile_editor_onboarding_dismissed"

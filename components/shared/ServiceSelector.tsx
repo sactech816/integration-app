@@ -101,8 +101,8 @@ const serviceConfig = [
   {
     id: 'onboarding' as ServiceType,
     icon: Lightbulb,
-    label: 'オンボーディングメーカー',
-    description: 'サイトに埋め込めるオンボーディングモーダルを簡単作成。外部サイトへの埋め込みにも対応',
+    label: 'はじめかたメーカー',
+    description: 'サイトに埋め込めるはじめかたガイドを簡単作成。外部サイトへの埋め込みにも対応',
     gradient: 'from-orange-500 to-amber-600',
     bgLight: 'bg-orange-50',
     textColor: 'text-orange-600',

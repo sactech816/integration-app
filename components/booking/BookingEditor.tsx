@@ -64,7 +64,7 @@ export default function BookingEditor({
 }: BookingEditorProps) {
   const router = useRouter();
 
-  // オンボーディング
+  // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('booking_editor_onboarding_dismissed', { skip: mode !== 'create' });
 
   // フォーム状態
@@ -1033,7 +1033,7 @@ export default function BookingEditor({
         </form>
       </div>
 
-      {/* オンボーディングモーダル */}
+      {/* はじめかたガイド */}
       {showOnboarding && (
         <OnboardingModal
           storageKey="booking_editor_onboarding_dismissed"

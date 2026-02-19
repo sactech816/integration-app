@@ -16,7 +16,7 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
   gamification: 'ゲーミフィケーション',
   attendance: '出欠表',
   booking: '予約',
-  onboarding: 'オンボーディング'
+  onboarding: 'はじめかたガイド'
 };
 
 export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; text: string }> = {
@@ -1370,7 +1370,7 @@ export interface MarketplaceReview {
 }
 
 // -------------------------------------------
-// オンボーディングモーダル関連の型定義
+// はじめかたガイド関連の型定義
 // -------------------------------------------
 
 export interface OnboardingModalItem {

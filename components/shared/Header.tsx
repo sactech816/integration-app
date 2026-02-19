@@ -34,7 +34,8 @@ import {
   CalendarCheck,
   PenTool,
   Crown,
-  Store
+  Store,
+  MousePointerClick
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -122,6 +123,9 @@ const Header: React.FC<HeaderProps> = ({
 
   // セールスライター
   const salesletterService = { id: 'salesletter', label: 'セールスライター', icon: PenTool, color: 'text-rose-600', bg: 'bg-rose-50' };
+
+  // はじめかたガイド
+  const onboardingService = { id: 'onboarding', label: 'はじめかたメーカー', icon: MousePointerClick, color: 'text-sky-600', bg: 'bg-sky-50' };
 
   return (
     <>
@@ -246,6 +250,19 @@ const Header: React.FC<HeaderProps> = ({
                       <div>
                         <div className="font-semibold text-gray-900 text-sm whitespace-nowrap">{gamificationService.label}</div>
                         <div className="text-xs text-gray-500">ガチャ・スタンプラリー等</div>
+                      </div>
+                    </Link>
+                    <Link
+                      href="/onboarding/editor"
+                      onClick={(e) => handleServiceClick(e, 'onboarding')}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                    >
+                      <div className={`p-2 rounded-lg ${onboardingService.bg}`}>
+                        <onboardingService.icon size={18} className={onboardingService.color} />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900 text-sm whitespace-nowrap">{onboardingService.label}</div>
+                        <div className="text-xs text-gray-500">新規作成</div>
                       </div>
                     </Link>
                     <div className="border-t border-gray-100 my-1" />
@@ -712,6 +729,18 @@ const Header: React.FC<HeaderProps> = ({
                     <div>
                       <div className={`font-bold ${gamificationService.color}`}>{gamificationService.label}</div>
                       <div className="text-xs text-gray-500">ガチャ・スタンプラリー等</div>
+                    </div>
+                  </Link>
+                  {/* はじめかたガイド */}
+                  <Link
+                    href="/onboarding/editor"
+                    onClick={(e) => handleServiceClick(e, 'onboarding')}
+                    className={`flex items-center gap-3 p-4 rounded-xl ${onboardingService.bg} transition-all hover:scale-[1.02]`}
+                  >
+                    <onboardingService.icon size={24} className={onboardingService.color} />
+                    <div>
+                      <div className={`font-bold ${onboardingService.color}`}>{onboardingService.label}</div>
+                      <div className="text-xs text-gray-500">新規作成</div>
                     </div>
                   </Link>
                 </div>
