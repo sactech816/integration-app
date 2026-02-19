@@ -51,15 +51,16 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
       return (
         <div className="text-center py-8">
           {block.data.avatar && (
-            <img
-              src={block.data.avatar}
-              alt={block.data.name}
-              className="rounded-full mx-auto mb-4 border-4 border-white/30 shadow-lg object-cover"
-              style={{
-                width: `${Math.round(96 * (block.data.avatarScale || 1))}px`,
-                height: `${Math.round(96 * (block.data.avatarScale || 1))}px`,
-              }}
-            />
+            <div className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white/30 shadow-lg overflow-hidden">
+              <img
+                src={block.data.avatar}
+                alt={block.data.name}
+                className="w-full h-full object-cover"
+                style={{
+                  transform: `scale(${block.data.avatarScale || 1})`,
+                }}
+              />
+            </div>
           )}
           <h1 className="text-2xl font-bold text-white mb-2">{block.data.name}</h1>
           <p className="text-white/80">{block.data.title}</p>

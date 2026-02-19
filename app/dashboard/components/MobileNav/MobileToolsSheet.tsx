@@ -45,15 +45,15 @@ export default function MobileToolsSheet({
         onClick={onClose}
       />
 
-      {/* シート本体 */}
+      {/* シート本体（ボトムナビの上に表示） */}
       <div
         className={`
-          fixed bottom-0 left-0 right-0 z-40
+          fixed bottom-16 left-0 right-0 z-40
           bg-white rounded-t-2xl shadow-2xl
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-y-0' : 'translate-y-full'}
         `}
-        style={{ maxHeight: '70vh' }}
+        style={{ maxHeight: '60vh' }}
       >
         {/* ヘッダー */}
         <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-100 px-4 pt-3 pb-2">
@@ -73,7 +73,7 @@ export default function MobileToolsSheet({
         </div>
 
         {/* ツールグリッド */}
-        <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(70vh - 70px)' }}>
+        <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(60vh - 70px)' }}>
           <div className="grid grid-cols-3 gap-3">
             {TOOL_ITEMS.map((tool) => {
               const Icon = tool.icon;

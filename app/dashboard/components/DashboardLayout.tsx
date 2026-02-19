@@ -62,7 +62,7 @@ export default function DashboardLayout({ sidebar, children, rightPanel, activeV
 
       {/* メインコンテンツエリア */}
       <main className="lg:ml-64 min-h-screen">
-        <div className="p-4 lg:p-8 pb-20 lg:pb-8">
+        <div className="p-4 lg:p-8 pb-24 lg:pb-8">
           {children}
         </div>
       </main>

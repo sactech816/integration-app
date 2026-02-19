@@ -10,7 +10,7 @@ export const generateProfileHTML = (profile: Profile): string => {
       case 'header':
         return `
           <div style="text-align: center; padding: 40px 0;">
-            ${block.data.avatar ? `<img src="${block.data.avatar}" alt="${block.data.name}" style="width: ${Math.round(100 * (block.data.avatarScale || 1))}px; height: ${Math.round(100 * (block.data.avatarScale || 1))}px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.3); margin-bottom: 16px;">` : ''}
+            ${block.data.avatar ? `<div style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; border: 4px solid rgba(255,255,255,0.3); margin: 0 auto 16px;"><img src="${block.data.avatar}" alt="${block.data.name}" style="width: 100%; height: 100%; object-fit: cover; transform: scale(${block.data.avatarScale || 1});"></div>` : ''}
             <h1 style="font-size: 24px; font-weight: bold; color: white; margin-bottom: 8px;">${block.data.name}</h1>
             <p style="color: rgba(255,255,255,0.8);">${block.data.title}</p>
           </div>

@@ -403,11 +403,16 @@ const ProfileBlockRenderer = ({ block }: { block: Block }) => {
       return (
         <div className="text-center py-8">
           {block.data.avatar && (
-            <img
-              src={block.data.avatar}
-              alt={block.data.name}
-              className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white/30 shadow-lg object-cover"
-            />
+            <div className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white/30 shadow-lg overflow-hidden">
+              <img
+                src={block.data.avatar}
+                alt={block.data.name}
+                className="w-full h-full object-cover"
+                style={{
+                  transform: `scale(${block.data.avatarScale || 1})`,
+                }}
+              />
+            </div>
           )}
           <h1 className="text-2xl font-bold text-white mb-2">{block.data.name || '名前'}</h1>
           <p className="text-white/80">{block.data.title || '肩書き'}</p>
@@ -1280,20 +1285,21 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 </button>
               </div>
               {block.data.avatar && (
-                <img
-                  src={block.data.avatar}
-                  alt="Preview"
-                  className="rounded-full object-cover mt-2"
-                  style={{
-                    width: `${Math.round(64 * (block.data.avatarScale || 1))}px`,
-                    height: `${Math.round(64 * (block.data.avatarScale || 1))}px`
-                  }}
-                />
+                <div className="w-16 h-16 rounded-full overflow-hidden mt-2">
+                  <img
+                    src={block.data.avatar}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                    style={{
+                      transform: `scale(${block.data.avatarScale || 1})`
+                    }}
+                  />
+                </div>
               )}
               {block.data.avatar && (
                 <div className="mt-3">
                   <label className="text-xs font-bold text-gray-600 block mb-1">
-                    写真サイズ: {Math.round((block.data.avatarScale || 1) * 100)}%
+                    ズーム: {Math.round((block.data.avatarScale || 1) * 100)}%
                   </label>
                   <input
                     type="range"
