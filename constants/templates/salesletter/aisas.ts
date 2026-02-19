@@ -21,28 +21,45 @@ export const aisasTemplate: SalesLetterTemplate = {
   longDescription: 'インターネット時代の消費者行動モデルです。検索と共有が含まれているのが特徴で、Web施策の全体設計に活用できます。AISCEASは比較・検討のフェーズを追加した発展形です。',
   structure: ['Attention（注意）', 'Interest（興味）', 'Search（検索）', 'Action（行動）', 'Share（共有）'],
   useCases: ['Webマーケティング戦略', 'SNSマーケティング', 'コンテンツマーケティング'],
-  settings: defaultSettings,
+  settings: {
+    ...defaultSettings,
+    pageBackground: {
+      type: 'gradient',
+      value: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+      opacity: 100,
+      animated: false,
+      scope: 'outside',
+    },
+    contentShadow: 'lg',
+    contentBorderRadius: 'lg',
+  },
   content: [
     // ヘッダー画像
     createImage('https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop', {
       alt: 'ヘッダー画像',
+      shadow: 'md',
+      borderRadius: 'none',
     }),
+
+    createSpacer(32),
 
     // タイトル
     createHeadline('【構成案】AISASモデルに基づくLP設計', {
       level: 'h1',
       fontSize: 28,
       color: '#7c3aed',
+      underline: true,
+      underlineColor: '#a78bfa',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p style="text-align: center; color: #6b7280;">このテンプレートは、AISASモデルに基づいてLP全体の流れを設計するためのガイドです。<br>各セクションに必要な要素を記載しています。</p>`, {
       align: 'center',
     }),
 
     createSpacer(32),
-    createDivider({ variant: 'full' }),
+    createDivider({ variant: 'dots', lineColor: '#a78bfa' }),
     createSpacer(32),
 
     // A: Attention（注意）
@@ -50,10 +67,12 @@ export const aisasTemplate: SalesLetterTemplate = {
       level: 'h2',
       fontSize: 24,
       color: '#7c3aed',
+      underline: true,
+      underlineColor: '#a78bfa',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p><strong>目的：</strong>ユーザーの目を止め、興味を持ってもらう</p>
 <p><strong>このセクションに必要な要素：</strong></p>
 <ul>
@@ -63,7 +82,7 @@ export const aisasTemplate: SalesLetterTemplate = {
 </ul>
 <p><strong>施策例：</strong>SNS広告、バナー広告、キャッチーなファーストビュー</p>`, {
       backgroundColor: '#f5f3ff',
-      padding: 16,
+      padding: 20,
     }),
 
     createSpacer(32),
@@ -73,10 +92,12 @@ export const aisasTemplate: SalesLetterTemplate = {
       level: 'h2',
       fontSize: 24,
       color: '#7c3aed',
+      underline: true,
+      underlineColor: '#a78bfa',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p><strong>目的：</strong>「もっと知りたい」と思わせる</p>
 <p><strong>このセクションに必要な要素：</strong></p>
 <ul>
@@ -86,7 +107,7 @@ export const aisasTemplate: SalesLetterTemplate = {
 </ul>
 <p><strong>施策例：</strong>課題への共感、Before/After、ユーザーの声</p>`, {
       backgroundColor: '#eff6ff',
-      padding: 16,
+      padding: 20,
     }),
 
     createSpacer(32),
@@ -96,10 +117,12 @@ export const aisasTemplate: SalesLetterTemplate = {
       level: 'h2',
       fontSize: 24,
       color: '#7c3aed',
+      underline: true,
+      underlineColor: '#a78bfa',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p><strong>目的：</strong>検索されたときに見つけてもらう</p>
 <p><strong>このセクションに必要な要素：</strong></p>
 <ul>
@@ -109,7 +132,7 @@ export const aisasTemplate: SalesLetterTemplate = {
 </ul>
 <p><strong>施策例：</strong>比較表、詳細スペック、よくある質問、ブログ記事</p>`, {
       backgroundColor: '#f0fdf4',
-      padding: 16,
+      padding: 20,
     }),
 
     createSpacer(32),
@@ -119,10 +142,12 @@ export const aisasTemplate: SalesLetterTemplate = {
       level: 'h2',
       fontSize: 24,
       color: '#7c3aed',
+      underline: true,
+      underlineColor: '#a78bfa',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p><strong>目的：</strong>購入・申込みを促す</p>
 <p><strong>このセクションに必要な要素：</strong></p>
 <ul>
@@ -132,8 +157,8 @@ export const aisasTemplate: SalesLetterTemplate = {
 <li>✓ 簡単な申込みフロー</li>
 </ul>
 <p><strong>施策例：</strong>CTAボタン、限定オファー、保証、簡単フォーム</p>`, {
-      backgroundColor: '#fef3c7',
-      padding: 16,
+      backgroundColor: '#fffbeb',
+      padding: 20,
     }),
 
     createSpacer(32),
@@ -143,10 +168,12 @@ export const aisasTemplate: SalesLetterTemplate = {
       level: 'h2',
       fontSize: 24,
       color: '#7c3aed',
+      underline: true,
+      underlineColor: '#a78bfa',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p><strong>目的：</strong>口コミ・シェアで拡散</p>
 <p><strong>このセクションに必要な要素：</strong></p>
 <ul>
@@ -157,21 +184,23 @@ export const aisasTemplate: SalesLetterTemplate = {
 </ul>
 <p><strong>施策例：</strong>SNSシェアボタン、レビュー依頼、紹介特典</p>`, {
       backgroundColor: '#fce7f3',
-      padding: 16,
+      padding: 20,
     }),
 
     createSpacer(32),
-    createDivider({ variant: 'full' }),
+    createDivider({ variant: 'dots', lineColor: '#a78bfa' }),
     createSpacer(32),
 
     // まとめ
     createHeadline('チェックリスト', {
       level: 'h2',
       fontSize: 24,
+      underline: true,
+      underlineColor: '#a78bfa',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p>LP作成時に以下を確認してください：</p>
 <ul>
 <li>□ Attention：ファーストビューで注意を引けているか</li>
@@ -180,8 +209,10 @@ export const aisasTemplate: SalesLetterTemplate = {
 <li>□ Action：CTAは明確で、申込みは簡単か</li>
 <li>□ Share：シェアしやすい仕組みがあるか</li>
 </ul>`, {
+      backgroundColor: '#f5f3ff',
+      padding: 24,
     }),
-    
+
     createSpacer(48),
   ],
 };

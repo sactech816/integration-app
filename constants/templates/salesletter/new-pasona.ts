@@ -22,22 +22,43 @@ export const newPasonaTemplate: SalesLetterTemplate = {
   longDescription: '消費者の心理に寄り添いながら、自然な流れで購買行動を促す現代のスタンダードな構成法です。旧PASONAの「煽り」要素を「親近感」に置き換え、より共感ベースのアプローチを取ります。',
   structure: ['Problem（問題提起）', 'Affinity（親近感）', 'Solution（解決策）', 'Offer（提案）', 'Narrowing（絞込）', 'Action（行動喚起）'],
   useCases: ['コンサルティング', 'コーチング', '教材・講座', 'サービス全般'],
-  settings: defaultSettings,
+  settings: {
+    ...defaultSettings,
+    pageBackground: {
+      type: 'color',
+      value: '#f3f4f6',
+      opacity: 100,
+      animated: false,
+      scope: 'outside',
+    },
+    contentBorder: {
+      enabled: true,
+      width: 1,
+      color: '#e5e7eb',
+    },
+    contentShadow: 'md',
+    contentBorderRadius: 'lg',
+  },
   content: [
     // ヘッダー画像
     createImage('https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop', {
       alt: 'ヘッダー画像',
+      shadow: 'md',
     }),
+
+    createSpacer(40),
 
     // P: Problem（問題提起）
     createHeadline('その悩み、本当に解決できていますか？', {
       level: 'h1',
       fontSize: 36,
       color: '#1f2937',
+      underline: true,
+      underlineColor: '#3b82f6',
     }),
-    
+
     createSpacer(24),
-    
+
     createParagraph(`<p>こんなお悩みはありませんか？</p>
 <ul>
 <li>何度も同じ失敗を繰り返してしまう</li>
@@ -46,20 +67,24 @@ export const newPasonaTemplate: SalesLetterTemplate = {
 </ul>
 <p>このまま放置すると、さらに状況は悪化するかもしれません。</p>`, {
       align: 'left',
+      backgroundColor: '#f8fafc',
+      padding: 20,
     }),
 
-    createSpacer(48),
-    createDivider({ variant: 'short', shortWidth: 30 }),
-    createSpacer(48),
+    createSpacer(40),
+    createDivider({ variant: 'wave', lineColor: '#93c5fd' }),
+    createSpacer(40),
 
     // A: Affinity（親近感）
     createHeadline('私も同じ悩みを抱えていました', {
       level: 'h2',
       fontSize: 28,
+      underline: true,
+      underlineColor: '#3b82f6',
     }),
-    
+
     createSpacer(24),
-    
+
     createParagraph(`<p>実は、私自身も以前は同じような問題に悩まされていました。</p>
 <p>何度も失敗を繰り返し、「自分には無理なのかもしれない」と諦めかけたこともあります。</p>
 <p>しかし、<strong>ある方法に出会ってから、すべてが変わりました。</strong></p>
@@ -68,48 +93,52 @@ export const newPasonaTemplate: SalesLetterTemplate = {
       align: 'left',
     }),
 
-    createSpacer(48),
-    createDivider({ variant: 'short', shortWidth: 30 }),
-    createSpacer(48),
+    createSpacer(40),
+    createDivider({ variant: 'wave', lineColor: '#93c5fd' }),
+    createSpacer(40),
 
     // S: Solution（解決策）
     createHeadline('問題を解決する3つの方法', {
       level: 'h2',
       fontSize: 28,
+      underline: true,
+      underlineColor: '#3b82f6',
     }),
-    
+
     createSpacer(24),
-    
+
     createParagraph(`<p><strong>💡 解決策①：〇〇メソッド</strong></p>
 <p>独自開発した〇〇メソッドで、根本原因から解決。再発を防ぎます。</p>`, {
       backgroundColor: '#f0fdf4',
-      padding: 16,
+      padding: 20,
     }),
-    
+
     createParagraph(`<p><strong>🎯 解決策②：個別カスタマイズ</strong></p>
 <p>あなたの状況に合わせた完全オーダーメイドの解決策をご提案します。</p>`, {
       backgroundColor: '#eff6ff',
-      padding: 16,
+      padding: 20,
     }),
-    
+
     createParagraph(`<p><strong>🤝 解決策③：継続サポート</strong></p>
 <p>一度きりではなく、成果が出るまで継続的にサポートします。</p>`, {
       backgroundColor: '#fef3c7',
-      padding: 16,
+      padding: 20,
     }),
 
-    createSpacer(48),
-    createDivider({ variant: 'short', shortWidth: 30 }),
-    createSpacer(48),
+    createSpacer(40),
+    createDivider({ variant: 'wave', lineColor: '#93c5fd' }),
+    createSpacer(40),
 
     // O: Offer（提案）
     createHeadline('ご提供サービス', {
       level: 'h2',
       fontSize: 28,
+      underline: true,
+      underlineColor: '#3b82f6',
     }),
-    
+
     createSpacer(24),
-    
+
     createParagraph(`<p style="text-align: center;"><strong>3ヶ月集中プログラム</strong></p>
 <p style="text-align: center; font-size: 32px; font-weight: bold; color: #ef4444;">¥165,000（税込）</p>
 <ul>
@@ -120,53 +149,61 @@ export const newPasonaTemplate: SalesLetterTemplate = {
 <li>【特典】フォローアップ1ヶ月無料</li>
 </ul>`, {
       align: 'center',
+      backgroundColor: '#f0f9ff',
+      padding: 24,
     }),
 
-    createSpacer(48),
-    createDivider({ variant: 'short', shortWidth: 30 }),
-    createSpacer(48),
+    createSpacer(40),
+    createDivider({ variant: 'wave', lineColor: '#93c5fd' }),
+    createSpacer(40),
 
     // N: Narrowing（絞込）
     createHeadline('ただし、誰でも受けられるわけではありません', {
       level: 'h2',
       fontSize: 28,
       color: '#dc2626',
+      underline: true,
+      underlineColor: '#fca5a5',
     }),
-    
+
     createSpacer(24),
-    
+
     createParagraph(`<p style="text-align: center;">質の高いサポートを提供するため、<strong>毎月の受付人数を限定</strong>しています。</p>
 <p style="text-align: center; font-size: 20px; font-weight: bold;">✓ 今月の残り枠：<span style="color: #ef4444;">あと3名様</span></p>
 <p style="text-align: center; font-size: 20px; font-weight: bold;">✓ 申込締切：今月末まで</p>
 <p style="text-align: center;">本気で解決したい方だけ、今すぐお申し込みください。</p>`, {
       align: 'center',
       backgroundColor: '#fef2f2',
-      padding: 16,
+      padding: 24,
     }),
 
-    createSpacer(48),
+    createSpacer(40),
 
     // A: Action（行動喚起）
     createHeadline('今すぐ無料相談を申し込む', {
       level: 'h2',
       fontSize: 28,
+      underline: true,
+      underlineColor: '#3b82f6',
     }),
-    
+
     createSpacer(24),
-    
+
     createParagraph(`<p style="text-align: center;">まずは無料相談であなたの状況をお聞かせください。<br>あなたに最適な解決策をご提案します。</p>`, {
       align: 'center',
     }),
-    
+
     createSpacer(24),
-    
+
     createCtaButton('無料相談に申し込む（残り3名）', '#contact', {
       size: 'xl',
       fullWidth: true,
-      backgroundColor: '#ef4444',
-      hoverBackgroundColor: '#dc2626',
+      backgroundColor: '#3b82f6',
+      hoverBackgroundColor: '#2563eb',
+      shadow: 'lg',
+      borderRadius: 'lg',
     }),
-    
+
     createSpacer(48),
   ],
 };

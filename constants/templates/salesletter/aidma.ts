@@ -21,28 +21,45 @@ export const aidmaTemplate: SalesLetterTemplate = {
   longDescription: '古典的な消費者行動モデルです。主にマス広告時代のモデルですが、基本的な購買心理を理解するのに役立ちます。AIDCASは確信・満足を追加した発展形です。',
   structure: ['Attention（注意）', 'Interest（興味）', 'Desire（欲求）', 'Memory（記憶）', 'Action（行動）'],
   useCases: ['ブランディング', 'テレビCM', '認知拡大施策'],
-  settings: defaultSettings,
+  settings: {
+    ...defaultSettings,
+    pageBackground: {
+      type: 'gradient',
+      value: 'linear-gradient(135deg, #0891b2 0%, #065f73 100%)',
+      opacity: 100,
+      animated: false,
+      scope: 'outside',
+    },
+    contentShadow: 'lg',
+    contentBorderRadius: 'lg',
+  },
   content: [
     // ヘッダー画像
     createImage('https://images.unsplash.com/photo-1533750349088-cd871a92f312?q=80&w=2070&auto=format&fit=crop', {
       alt: 'ヘッダー画像',
+      shadow: 'md',
+      borderRadius: 'none',
     }),
+
+    createSpacer(32),
 
     // タイトル
     createHeadline('【構成案】AIDMAモデルに基づく設計', {
       level: 'h1',
       fontSize: 28,
       color: '#0891b2',
+      underline: true,
+      underlineColor: '#67e8f9',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p style="text-align: center; color: #6b7280;">このテンプレートは、古典的なAIDMAモデルに基づいて<br>消費者の購買心理を理解するためのガイドです。</p>`, {
       align: 'center',
     }),
 
     createSpacer(32),
-    createDivider({ variant: 'full' }),
+    createDivider({ variant: 'wave', lineColor: '#67e8f9' }),
     createSpacer(32),
 
     // A: Attention（注意）
@@ -50,10 +67,12 @@ export const aidmaTemplate: SalesLetterTemplate = {
       level: 'h2',
       fontSize: 24,
       color: '#0891b2',
+      underline: true,
+      underlineColor: '#67e8f9',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p><strong>消費者の状態：</strong>商品・サービスの存在を知る</p>
 <p><strong>目標：</strong>認知を獲得する</p>
 <p><strong>施策例：</strong></p>
@@ -64,7 +83,7 @@ export const aidmaTemplate: SalesLetterTemplate = {
 <li>• インフルエンサーマーケティング</li>
 </ul>`, {
       backgroundColor: '#ecfeff',
-      padding: 16,
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -74,10 +93,12 @@ export const aidmaTemplate: SalesLetterTemplate = {
       level: 'h2',
       fontSize: 24,
       color: '#0891b2',
+      underline: true,
+      underlineColor: '#67e8f9',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p><strong>消費者の状態：</strong>「これ、気になる」と興味を持つ</p>
 <p><strong>目標：</strong>興味関心を高める</p>
 <p><strong>施策例：</strong></p>
@@ -88,7 +109,7 @@ export const aidmaTemplate: SalesLetterTemplate = {
 <li>• お役立ちコンテンツ</li>
 </ul>`, {
       backgroundColor: '#f0fdfa',
-      padding: 16,
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -98,10 +119,12 @@ export const aidmaTemplate: SalesLetterTemplate = {
       level: 'h2',
       fontSize: 24,
       color: '#0891b2',
+      underline: true,
+      underlineColor: '#67e8f9',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p><strong>消費者の状態：</strong>「欲しい」という欲求が生まれる</p>
 <p><strong>目標：</strong>購買意欲を刺激する</p>
 <p><strong>施策例：</strong></p>
@@ -112,7 +135,7 @@ export const aidmaTemplate: SalesLetterTemplate = {
 <li>• 限定性・希少性の演出</li>
 </ul>`, {
       backgroundColor: '#f0fdf4',
-      padding: 16,
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -122,10 +145,12 @@ export const aidmaTemplate: SalesLetterTemplate = {
       level: 'h2',
       fontSize: 24,
       color: '#0891b2',
+      underline: true,
+      underlineColor: '#67e8f9',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p><strong>消費者の状態：</strong>商品を記憶し、購入タイミングを待つ</p>
 <p><strong>目標：</strong>記憶に残り、想起されやすくする</p>
 <p><strong>施策例：</strong></p>
@@ -137,8 +162,8 @@ export const aidmaTemplate: SalesLetterTemplate = {
 <li>• 繰り返しの接触</li>
 </ul>
 <p style="color: #6b7280; font-size: 14px;">※ AIDMAの特徴的なフェーズ。デジタル時代では「検索」に置き換わることも。</p>`, {
-      backgroundColor: '#fef3c7',
-      padding: 16,
+      backgroundColor: '#fffbeb',
+      padding: 20,
     }),
 
     createSpacer(24),
@@ -148,10 +173,12 @@ export const aidmaTemplate: SalesLetterTemplate = {
       level: 'h2',
       fontSize: 24,
       color: '#0891b2',
+      underline: true,
+      underlineColor: '#67e8f9',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p><strong>消費者の状態：</strong>実際に購入する</p>
 <p><strong>目標：</strong>購入のハードルを下げ、行動を促す</p>
 <p><strong>施策例：</strong></p>
@@ -163,26 +190,30 @@ export const aidmaTemplate: SalesLetterTemplate = {
 <li>• 期間限定オファー</li>
 </ul>`, {
       backgroundColor: '#fce7f3',
-      padding: 16,
+      padding: 20,
     }),
 
     createSpacer(32),
-    createDivider({ variant: 'full' }),
+    createDivider({ variant: 'wave', lineColor: '#67e8f9' }),
     createSpacer(32),
 
     // AIDCAS追加要素
     createHeadline('【発展形】AIDCASモデル', {
       level: 'h2',
       fontSize: 24,
+      underline: true,
+      underlineColor: '#67e8f9',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p>AIDMAに「Conviction（確信）」と「Satisfaction（満足）」を追加したモデルです。</p>
 <p><strong>C: Conviction（確信）</strong></p>
 <p>「これで間違いない」という確信を持たせる。<br>→ 比較情報、専門家の推薦、詳細なスペック提供</p>
 <p><strong>S: Satisfaction（満足）</strong></p>
 <p>購入後の満足を高め、リピート・紹介につなげる。<br>→ アフターフォロー、コミュニティ、ロイヤルティプログラム</p>`, {
+      backgroundColor: '#ecfeff',
+      padding: 24,
     }),
 
     createSpacer(32),
@@ -191,10 +222,12 @@ export const aidmaTemplate: SalesLetterTemplate = {
     createHeadline('施策チェックリスト', {
       level: 'h2',
       fontSize: 24,
+      underline: true,
+      underlineColor: '#67e8f9',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<ul>
 <li>□ Attention：認知獲得の施策は十分か</li>
 <li>□ Interest：興味を引くコンテンツがあるか</li>
@@ -204,8 +237,10 @@ export const aidmaTemplate: SalesLetterTemplate = {
 <li>□ （Conviction）：確信を持たせる情報があるか</li>
 <li>□ （Satisfaction）：購入後のフォローがあるか</li>
 </ul>`, {
+      backgroundColor: '#f0fdfa',
+      padding: 24,
     }),
-    
+
     createSpacer(48),
   ],
 };

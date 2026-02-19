@@ -25,39 +25,61 @@ export const prepTemplate: SalesLetterTemplate = {
   settings: {
     ...defaultSettings,
     contentWidth: 700,
+    pageBackground: {
+      type: 'color',
+      value: '#f1f5f9',
+      opacity: 100,
+      animated: false,
+      scope: 'outside',
+    },
+    contentBorder: {
+      enabled: true,
+      width: 1,
+      color: '#cbd5e1',
+    },
+    contentShadow: 'sm',
+    contentBorderRadius: 'md',
   },
   content: [
     // ヘッダー画像
     createImage('https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=2070&auto=format&fit=crop', {
       alt: 'ヘッダー画像',
+      shadow: 'md',
+      borderRadius: 'none',
     }),
+
+    createSpacer(32),
 
     // P: Point（結論）
     createHeadline('結論：〇〇は△△すべきです', {
       level: 'h1',
       fontSize: 28,
+      underline: true,
+      underlineColor: '#2563eb',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p style="text-align: center; font-size: 18px; font-weight: bold; color: #1f2937;">最も重要なポイントを最初に伝えます。</p>`, {
       align: 'center',
       backgroundColor: '#dbeafe',
-      padding: 16,
+      padding: 24,
     }),
 
     createSpacer(32),
-    createDivider({ variant: 'short', shortWidth: 30 }),
+    createDivider({ variant: 'short', shortWidth: 30, lineColor: '#93c5fd' }),
     createSpacer(32),
 
     // R: Reason（理由）
     createHeadline('理由', {
       level: 'h2',
       fontSize: 24,
+      underline: true,
+      underlineColor: '#2563eb',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p>なぜそう言えるのか、3つの理由があります。</p>
 <p><strong>理由①：〇〇だから</strong></p>
 <p>△△という背景があり、〇〇することで□□が実現できます。</p>
@@ -65,44 +87,54 @@ export const prepTemplate: SalesLetterTemplate = {
 <p>多くの調査で、△△が重要であることが示されています。</p>
 <p><strong>理由③：□□だから</strong></p>
 <p>実際に□□を行った結果、〇〇%の改善が見られました。</p>`, {
+      backgroundColor: '#f8fafc',
+      padding: 20,
     }),
 
     createSpacer(32),
-    createDivider({ variant: 'short', shortWidth: 30 }),
+    createDivider({ variant: 'short', shortWidth: 30, lineColor: '#93c5fd' }),
     createSpacer(32),
 
     // E: Example（具体例）
     createHeadline('具体例', {
       level: 'h2',
       fontSize: 24,
+      underline: true,
+      underlineColor: '#2563eb',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p><strong>例えば、Aさんの場合...</strong></p>
 <p>Aさんは〇〇を実践する前、△△という課題を抱えていました。</p>
 <p>しかし、〇〇を始めてから3ヶ月で、□□という成果を得ることができました。</p>`, {
+      backgroundColor: '#eff6ff',
+      padding: 20,
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p><strong>また、B社の事例では...</strong></p>
 <p>B社は〇〇を導入した結果、売上が前年比150%に成長しました。</p>
 <p>担当者は「〇〇がなければ、この成果は出なかった」と語っています。</p>`, {
+      backgroundColor: '#eff6ff',
+      padding: 20,
     }),
 
     createSpacer(32),
-    createDivider({ variant: 'short', shortWidth: 30 }),
+    createDivider({ variant: 'short', shortWidth: 30, lineColor: '#93c5fd' }),
     createSpacer(32),
 
     // P: Point（結論・まとめ）
     createHeadline('まとめ', {
       level: 'h2',
       fontSize: 24,
+      underline: true,
+      underlineColor: '#2563eb',
     }),
-    
+
     createSpacer(16),
-    
+
     createParagraph(`<p style="text-align: center; font-size: 18px; font-weight: bold;">改めて結論です。</p>
 <p style="text-align: center; font-size: 20px; color: #1d4ed8;"><strong>〇〇は△△すべきです。</strong></p>
 <p style="text-align: center;">理由は3つありました。</p>
@@ -110,18 +142,20 @@ export const prepTemplate: SalesLetterTemplate = {
 <p style="text-align: center;">具体例からも分かるように、〇〇の効果は明らかです。</p>`, {
       align: 'center',
       backgroundColor: '#dbeafe',
-      padding: 16,
+      padding: 24,
     }),
 
     createSpacer(32),
-    
+
     createCtaButton('詳しく見る', '#detail', {
       size: 'lg',
       fullWidth: false,
       backgroundColor: '#2563eb',
       hoverBackgroundColor: '#1d4ed8',
+      shadow: 'md',
+      borderRadius: 'lg',
     }),
-    
+
     createSpacer(48),
   ],
 };
