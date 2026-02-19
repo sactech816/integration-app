@@ -15,6 +15,10 @@ type UserWithRoles = {
   total_donated: number;
   current_points?: number;
   total_accumulated_points?: number;
+  active_plans?: Array<{ service: string; plan_tier: string; plan_tier_label: string }>;
+  is_monitor?: boolean;
+  monitor_services?: string[];
+  ai_monthly_usage?: number;
 };
 
 type Announcement = {

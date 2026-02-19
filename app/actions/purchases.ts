@@ -335,6 +335,19 @@ export async function getAllUsersWithRoles(): Promise<{
  * ページネーション対応の全ユーザー情報取得（管理者用）
  * ポイント残高もJOINで含む
  */
+// プランTierの表示名
+const PLAN_TIER_LABELS: Record<string, string> = {
+  none: '無料',
+  lite: 'ライト',
+  standard: 'スタンダード',
+  pro: 'プロ',
+  business: 'ビジネス',
+  enterprise: 'エンタープライズ',
+  initial_trial: '初回トライアル',
+  initial_standard: '初回スタンダード',
+  initial_business: '初回ビジネス',
+};
+
 export async function getAllUsersWithRolesPaginated(
   page: number = 1,
   perPage: number = 10,
@@ -351,6 +364,10 @@ export async function getAllUsersWithRolesPaginated(
     total_donated: number;
     current_points: number;
     total_accumulated_points: number;
+    active_plans: Array<{ service: string; plan_tier: string; plan_tier_label: string }>;
+    is_monitor: boolean;
+    monitor_services: string[];
+    ai_monthly_usage: number;
   }>;
   totalCount: number;
   error?: string;
@@ -373,6 +390,75 @@ export async function getAllUsersWithRolesPaginated(
     }
 
     const totalCount = data?.[0]?.total_count || 0;
+    const userIds = (data || []).map((row: Record<string, unknown>) => row.user_id as string);
+
+    // バッチでプラン・モニター・AI使用量を取得
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [subsResult, kdlSubsResult, monitorResult, aiLogsResult] = await Promise.all([
+      // Makers サブスクリプション
+      supabase
+        .from('subscriptions')
+        .select('user_id, plan_tier, status, service')
+        .in('user_id', userIds)
+        .eq('status', 'active'),
+      // KDL サブスクリプション
+      supabase
+        .from('kdl_subscriptions')
+        .select('user_id, plan_tier, status')
+        .in('user_id', userIds)
+        .eq('status', 'active'),
+      // モニター
+      supabase
+        .from('monitor_users')
+        .select('user_id, monitor_plan_type, service, monitor_expires_at')
+        .in('user_id', userIds)
+        .gt('monitor_expires_at', now.toISOString()),
+      // AI使用量（今月）
+      supabase
+        .from('ai_usage_logs')
+        .select('user_id')
+        .in('user_id', userIds)
+        .gte('created_at', firstDayOfMonth.toISOString()),
+    ]);
+
+    // プランマップ作成
+    const plansMap: Record<string, Array<{ service: string; plan_tier: string; plan_tier_label: string }>> = {};
+    for (const sub of subsResult.data || []) {
+      if (!plansMap[sub.user_id]) plansMap[sub.user_id] = [];
+      plansMap[sub.user_id].push({
+        service: sub.service || 'makers',
+        plan_tier: sub.plan_tier,
+        plan_tier_label: PLAN_TIER_LABELS[sub.plan_tier] || sub.plan_tier,
+      });
+    }
+    for (const sub of kdlSubsResult.data || []) {
+      if (!plansMap[sub.user_id]) plansMap[sub.user_id] = [];
+      // 既にmakersのkdlサブスクがある場合は重複チェック
+      const existing = plansMap[sub.user_id].find(p => p.service === 'kdl');
+      if (!existing) {
+        plansMap[sub.user_id].push({
+          service: 'kdl',
+          plan_tier: sub.plan_tier,
+          plan_tier_label: PLAN_TIER_LABELS[sub.plan_tier] || sub.plan_tier,
+        });
+      }
+    }
+
+    // モニターマップ作成
+    const monitorMap: Record<string, string[]> = {};
+    for (const mon of monitorResult.data || []) {
+      if (!monitorMap[mon.user_id]) monitorMap[mon.user_id] = [];
+      monitorMap[mon.user_id].push(mon.service);
+    }
+
+    // AI使用量カウント
+    const aiCountMap: Record<string, number> = {};
+    for (const log of aiLogsResult.data || []) {
+      aiCountMap[log.user_id] = (aiCountMap[log.user_id] || 0) + 1;
+    }
+
     const users = (data || []).map((row: Record<string, unknown>) => ({
       user_id: row.user_id as string,
       email: row.email as string,
@@ -384,6 +470,10 @@ export async function getAllUsersWithRolesPaginated(
       total_donated: row.total_donated as number,
       current_points: row.current_points as number,
       total_accumulated_points: row.total_accumulated_points as number,
+      active_plans: plansMap[row.user_id as string] || [],
+      is_monitor: !!(monitorMap[row.user_id as string]?.length),
+      monitor_services: monitorMap[row.user_id as string] || [],
+      ai_monthly_usage: aiCountMap[row.user_id as string] || 0,
     }));
 
     return { users, totalCount };

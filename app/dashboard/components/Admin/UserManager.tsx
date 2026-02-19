@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Users, Loader2, X, Search, ChevronDown, ChevronRight } from 'lucide-react';
+import { Users, Loader2, X, Search, ChevronDown, ChevronRight, BarChart3, Crown } from 'lucide-react';
 import UserDetailPanel from './UserDetailPanel';
 
 type UserWithRoles = {
@@ -15,6 +15,10 @@ type UserWithRoles = {
   total_donated: number;
   current_points?: number;
   total_accumulated_points?: number;
+  active_plans?: Array<{ service: string; plan_tier: string; plan_tier_label: string }>;
+  is_monitor?: boolean;
+  monitor_services?: string[];
+  ai_monthly_usage?: number;
 };
 
 type UserManagerProps = {
@@ -41,6 +45,17 @@ type UserManagerProps = {
 };
 
 const USERS_PER_PAGE = 10;
+
+const PLAN_COLORS: Record<string, string> = {
+  lite: 'bg-blue-100 text-blue-700',
+  standard: 'bg-green-100 text-green-700',
+  pro: 'bg-purple-100 text-purple-700',
+  business: 'bg-amber-100 text-amber-700',
+  enterprise: 'bg-red-100 text-red-700',
+  initial_trial: 'bg-cyan-100 text-cyan-700',
+  initial_standard: 'bg-green-100 text-green-700',
+  initial_business: 'bg-amber-100 text-amber-700',
+};
 
 export default function UserManager({
   allUsers,
@@ -127,12 +142,11 @@ export default function UserManager({
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">メールアドレス</th>
-                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">パートナー</th>
+                <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">プラン</th>
+                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">AI使用(月)</th>
                 <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">ポイント</th>
-                <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">総支援額</th>
-                <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">購入数</th>
                 <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">登録日</th>
-                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">操作</th>
+                <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">詳細</th>
               </tr>
             </thead>
             <tbody>
@@ -142,6 +156,7 @@ export default function UserManager({
                 return (
                   <React.Fragment key={usr.user_id}>
                   <tr className="border-b border-gray-100 hover:bg-gray-50">
+                    {/* メールアドレス + パートナーバッジ */}
                     <td className="px-4 py-3">
                       <button
                         onClick={() => setExpandedUserId(expandedUserId === usr.user_id ? null : usr.user_id)}
@@ -154,139 +169,145 @@ export default function UserManager({
                         )}
                         <span>{usr.email}</span>
                       </button>
-                      {usr.partner_note && (
-                        <div className="text-xs text-gray-500 mt-1 ml-5">{usr.partner_note}</div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {usr.is_partner ? (
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                      <div className="flex items-center gap-1.5 ml-5 mt-1">
+                        {usr.is_partner && (
+                          <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-2 py-0.5 rounded-full text-[10px] font-bold">
                             パートナー
                           </span>
-                          {usr.partner_since && (
-                            <span className="text-[10px] text-gray-500">
-                              {new Date(usr.partner_since).toLocaleDateString('ja-JP')}~
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 text-xs">一般</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex flex-col items-end gap-1">
-                        <span className="font-bold text-purple-600 text-base">
-                          {usr.current_points?.toLocaleString() || 0}pt
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          累計: {usr.total_accumulated_points?.toLocaleString() || 0}pt
-                        </span>
+                        )}
+                        {usr.partner_note && (
+                          <span className="text-[10px] text-gray-400 truncate max-w-[200px]">{usr.partner_note}</span>
+                        )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right font-bold text-green-600">
-                      ¥{usr.total_donated.toLocaleString()}
+                    {/* プラン */}
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {(usr.active_plans || []).length > 0 ? (
+                          (usr.active_plans || []).map((plan, idx) => (
+                            <span key={idx} className={`px-2 py-0.5 rounded text-[10px] font-bold ${PLAN_COLORS[plan.plan_tier] || 'bg-gray-100 text-gray-700'}`}>
+                              {plan.service === 'kdl' ? 'KDL' : 'M'}: {plan.plan_tier_label}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-gray-400 text-xs">-</span>
+                        )}
+                        {usr.is_monitor && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-100 text-teal-700">
+                            モニター
+                          </span>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-600">{usr.total_purchases}件</td>
+                    {/* AI使用量(月) */}
+                    <td className="px-4 py-3 text-center">
+                      <span className={`font-bold ${(usr.ai_monthly_usage || 0) > 0 ? 'text-purple-600' : 'text-gray-400'}`}>
+                        {usr.ai_monthly_usage || 0}
+                      </span>
+                      <span className="text-gray-400 text-xs ml-0.5">回</span>
+                    </td>
+                    {/* ポイント */}
+                    <td className="px-4 py-3 text-right">
+                      <span className="font-bold text-purple-600">
+                        {usr.current_points?.toLocaleString() || 0}pt
+                      </span>
+                    </td>
+                    {/* 登録日 */}
                     <td className="px-4 py-3 text-gray-500 text-xs">
                       {new Date(usr.user_created_at).toLocaleDateString('ja-JP')}
                     </td>
-                    <td className="px-4 py-3">
-                      {isEditing ? (
-                        <div className="space-y-2">
-                          <input
-                            type="text"
-                            placeholder="メモ（任意）"
-                            value={partnerNote}
-                            onChange={(e) => setPartnerNote(e.target.value)}
-                            className="w-full text-xs border border-gray-300 p-2 rounded bg-gray-50 text-gray-900"
-                          />
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => onTogglePartner(usr.user_id, usr.is_partner, partnerNote)}
-                              className="flex-1 bg-purple-600 text-white px-2 py-1 rounded text-xs font-bold hover:bg-purple-700"
-                            >
-                              {usr.is_partner ? '解除' : '設定'}
-                            </button>
-                            <button
-                              onClick={() => {
-                                setEditingUserId(null);
-                                setPartnerNote('');
-                              }}
-                              className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300"
-                            >
-                              <X size={12} />
-                            </button>
-                          </div>
-                        </div>
-                      ) : isAwardingPointsToUser ? (
-                        <div className="space-y-2 min-w-[200px]">
-                          <input
-                            type="number"
-                            placeholder="ポイント数"
-                            value={pointsToAward || ''}
-                            onChange={(e) => setPointsToAward(Number(e.target.value))}
-                            className="w-full text-xs border border-purple-300 p-2 rounded bg-white text-gray-900"
-                          />
-                          <input
-                            type="text"
-                            placeholder="理由（任意）"
-                            value={pointsReason}
-                            onChange={(e) => setPointsReason(e.target.value)}
-                            className="w-full text-xs border border-purple-300 p-2 rounded bg-white text-gray-900"
-                          />
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => onAwardPoints(usr.user_id)}
-                              disabled={pointsToAward === 0}
-                              className="flex-1 bg-purple-600 text-white px-2 py-1 rounded text-xs font-bold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              付与
-                            </button>
-                            <button
-                              onClick={() => {
-                                setAwardingPoints(null);
-                                setPointsToAward(0);
-                                setPointsReason('');
-                              }}
-                              className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300"
-                            >
-                              <X size={12} />
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex gap-1 justify-center">
-                          <button
-                            onClick={() => {
-                              setEditingUserId(usr.user_id);
-                              setPartnerNote(usr.partner_note || '');
-                            }}
-                            className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
-                              usr.is_partner
-                                ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                                : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                            }`}
-                          >
-                            {usr.is_partner ? '解除' : 'パートナー'}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setAwardingPoints(usr.user_id);
-                              setPointsToAward(0);
-                              setPointsReason('開発支援への感謝');
-                            }}
-                            className="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1 rounded text-xs font-bold transition-colors"
-                          >
-                            Pt付与
-                          </button>
-                        </div>
-                      )}
+                    {/* 詳細ボタン */}
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => setExpandedUserId(expandedUserId === usr.user_id ? null : usr.user_id)}
+                        className="text-indigo-500 hover:text-indigo-700 transition-colors"
+                      >
+                        {expandedUserId === usr.user_id ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                      </button>
                     </td>
                   </tr>
+                  {/* 展開行: 詳細 + 操作 */}
                   {expandedUserId === usr.user_id && (
                     <tr>
-                      <td colSpan={7} className="px-4 py-2 bg-gray-50">
+                      <td colSpan={6} className="px-4 py-2 bg-gray-50">
+                        {/* 操作ボタン */}
+                        <div className="flex items-center gap-2 mb-2 px-1">
+                          {isEditing ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                placeholder="メモ（任意）"
+                                value={partnerNote}
+                                onChange={(e) => setPartnerNote(e.target.value)}
+                                className="text-xs border border-gray-300 px-2 py-1 rounded bg-white text-gray-900 w-48"
+                              />
+                              <button
+                                onClick={() => onTogglePartner(usr.user_id, usr.is_partner, partnerNote)}
+                                className="bg-purple-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-purple-700"
+                              >
+                                {usr.is_partner ? '解除' : '設定'}
+                              </button>
+                              <button
+                                onClick={() => { setEditingUserId(null); setPartnerNote(''); }}
+                                className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ) : isAwardingPointsToUser ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                placeholder="ポイント数"
+                                value={pointsToAward || ''}
+                                onChange={(e) => setPointsToAward(Number(e.target.value))}
+                                className="text-xs border border-purple-300 px-2 py-1 rounded bg-white text-gray-900 w-24"
+                              />
+                              <input
+                                type="text"
+                                placeholder="理由"
+                                value={pointsReason}
+                                onChange={(e) => setPointsReason(e.target.value)}
+                                className="text-xs border border-purple-300 px-2 py-1 rounded bg-white text-gray-900 w-40"
+                              />
+                              <button
+                                onClick={() => onAwardPoints(usr.user_id)}
+                                disabled={pointsToAward === 0}
+                                className="bg-purple-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-purple-700 disabled:opacity-50"
+                              >
+                                付与
+                              </button>
+                              <button
+                                onClick={() => { setAwardingPoints(null); setPointsToAward(0); setPointsReason(''); }}
+                                className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => { setEditingUserId(usr.user_id); setPartnerNote(usr.partner_note || ''); }}
+                                className={`px-3 py-1 rounded text-xs font-bold transition-colors ${
+                                  usr.is_partner
+                                    ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                                    : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                                }`}
+                              >
+                                {usr.is_partner ? 'パートナー解除' : 'パートナー設定'}
+                              </button>
+                              <button
+                                onClick={() => { setAwardingPoints(usr.user_id); setPointsToAward(0); setPointsReason('開発支援への感謝'); }}
+                                className="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1 rounded text-xs font-bold transition-colors"
+                              >
+                                Pt付与
+                              </button>
+                              <span className="text-xs text-gray-400 ml-2">
+                                累計: {usr.total_accumulated_points?.toLocaleString() || 0}pt / 支援額: ¥{usr.total_donated.toLocaleString()} / 購入: {usr.total_purchases}件
+                              </span>
+                            </>
+                          )}
+                        </div>
                         <UserDetailPanel
                           userId={usr.user_id}
                           onClose={() => setExpandedUserId(null)}
