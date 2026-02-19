@@ -207,6 +207,13 @@ export default function SellerDashboardPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-1">
+                        <Link
+                          href={`/marketplace/seller/listings/${listing.id}/edit`}
+                          className="p-2 text-gray-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50"
+                          title="編集"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </Link>
                         <button
                           onClick={() => toggleListingStatus(listing)}
                           className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
