@@ -167,11 +167,14 @@ function PortalPageContent() {
 
   // 認証初期化
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const init = async () => {
       if (supabase) {
-        supabase.auth.onAuthStateChange((event, session) => {
+        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((event, session) => {
           setUser(session?.user || null);
         });
+        subscription = sub;
 
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user || null);
@@ -179,6 +182,10 @@ function PortalPageContent() {
     };
 
     init();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   // 累計カウンターテーブルから各サービスの総数を取得（グロス：削除してもカウントダウンしない）

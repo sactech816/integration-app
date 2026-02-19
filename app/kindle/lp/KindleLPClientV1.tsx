@@ -67,12 +67,15 @@ export default function KindleLPClient() {
   const [quizResult, setQuizResult] = useState<string | null>(null);
 
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const init = async () => {
       // 認証状態を取得
       if (supabase) {
-        supabase.auth.onAuthStateChange((event, session) => {
+        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((event, session) => {
           setUser(session?.user || null);
         });
+        subscription = sub;
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user || null);
       }
@@ -87,7 +90,7 @@ export default function KindleLPClient() {
       } catch (e) {
         console.error('Failed to fetch prices:', e);
       }
-      
+
       // アフィリエイト紹介コードを取得（Cookieから）
       const refCode = getReferralCode();
       if (refCode) {
@@ -95,6 +98,10 @@ export default function KindleLPClient() {
       }
     };
     init();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {

@@ -180,11 +180,14 @@ export default function DemosPageClient() {
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const init = async () => {
       if (supabase) {
-        supabase.auth.onAuthStateChange((event, session) => {
+        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((event, session) => {
           setUser(session?.user || null);
         });
+        subscription = sub;
 
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user || null);
@@ -192,6 +195,10 @@ export default function DemosPageClient() {
     };
 
     init();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {

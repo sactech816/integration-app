@@ -25,46 +25,44 @@ function SalesLetterEditorContent() {
   );
 
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const init = async () => {
-      // newパラメータがある場合は新規作成モード
-      if (newParam) {
-        setEditingData(null);
+      if (!supabase) {
         setIsLoading(false);
-        
-        if (supabase) {
-          supabase.auth.onAuthStateChange((event, session) => {
-            setUser(session?.user || null);
-          });
-          const { data: { session } } = await supabase.auth.getSession();
-          setUser(session?.user || null);
-        }
         return;
       }
 
-      if (supabase) {
-        supabase.auth.onAuthStateChange((event, session) => {
-          setUser(session?.user || null);
-        });
-
-        const { data: { session } } = await supabase.auth.getSession();
+      const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((event, session) => {
         setUser(session?.user || null);
+      });
+      subscription = sub;
 
-        if (editId) {
-          const { data } = await supabase
-            .from('sales_letters')
-            .select('*')
-            .eq('slug', editId)
-            .single();
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
 
-          if (data) {
-            setEditingData(data);
-          }
+      // newパラメータがある場合は新規作成モード
+      if (newParam) {
+        setEditingData(null);
+      } else if (editId) {
+        const { data } = await supabase
+          .from('sales_letters')
+          .select('*')
+          .eq('slug', editId)
+          .single();
+
+        if (data) {
+          setEditingData(data);
         }
       }
       setIsLoading(false);
     };
 
     init();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, [editId, newParam]);
 
   const handleLogout = async () => {

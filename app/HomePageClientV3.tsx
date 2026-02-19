@@ -108,12 +108,16 @@ export default function HomePageClientV3() {
   }, []);
 
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const init = async () => {
       if (supabase) {
-        supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((_event, session) => {
           setUser(session?.user || null);
           setUserId(session?.user?.id || null);
         });
+        subscription = sub;
+
         const { data: { user: authUser } } = await supabase.auth.getUser();
         setUser(authUser || null);
 
@@ -135,6 +139,10 @@ export default function HomePageClientV3() {
     };
     init();
     fetchTotalCounts();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, [fetchTotalCounts]);
 
   const handleLogout = async () => {

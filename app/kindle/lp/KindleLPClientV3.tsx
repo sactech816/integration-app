@@ -74,21 +74,27 @@ export default function KindleLPClient() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const init = async () => {
       // 認証状態を取得
       if (supabase) {
-        supabase.auth.onAuthStateChange((event, session) => {
+        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((event, session) => {
           setUser(session?.user ? { email: session.user.email, id: session.user.id } : null);
         });
+        subscription = sub;
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user ? { email: session.user.email, id: session.user.id } : null);
       }
-      
+
       // アフィリエイト紹介コードを取得（Cookieから）
       const refCode = getReferralCode();
     };
     init();
 
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   // プラン選択ボタンクリック時の処理（メール入力フォームを表示）

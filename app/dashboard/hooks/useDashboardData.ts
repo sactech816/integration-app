@@ -113,9 +113,11 @@ export function useDashboardData(): UseDashboardDataReturn {
 
   // 初期化
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const init = async () => {
       if (supabase) {
-        supabase.auth.onAuthStateChange((event, session) => {
+        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((event, session) => {
           setUser(session?.user || null);
           // GA4にUser IDを設定/解除
           setUserId(session?.user?.id || null);
@@ -127,6 +129,7 @@ export function useDashboardData(): UseDashboardDataReturn {
             setSubscriptionStatus(null);
           }
         });
+        subscription = sub;
 
         // getUser()でサーバー検証（トークン期限切れ時はnullになる可能性あり）
         const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -142,6 +145,10 @@ export function useDashboardData(): UseDashboardDataReturn {
     };
 
     init();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   // パートナーステータスを一度だけ取得

@@ -88,27 +88,34 @@ function AttendanceEditorContent() {
 
   // ログインセッション取得
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const init = async () => {
-      if (supabase) {
-        const { data: { session } } = await supabase.auth.getSession();
+      if (!supabase) return;
+
+      const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((event, session) => {
         setUser(session?.user || null);
-        
-        // 管理者チェック
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', session.user.id)
-            .single();
-          setIsAdmin(profile?.is_admin || false);
-        }
-        
-        supabase.auth.onAuthStateChange((event, session) => {
-          setUser(session?.user || null);
-        });
+      });
+      subscription = sub;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+
+      // 管理者チェック
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', session.user.id)
+          .single();
+        setIsAdmin(profile?.is_admin || false);
       }
     };
     init();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   // 編集モード: 既存データを読み込み

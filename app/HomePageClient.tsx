@@ -60,12 +60,15 @@ export default function HomePageClient() {
   );
 
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const init = async () => {
       if (supabase) {
         // 認証状態の変更を監視
-        supabase.auth.onAuthStateChange((event, session) => {
+        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((event, session) => {
           setUser(session?.user || null);
         });
+        subscription = sub;
 
         // 初期セッション取得
         const { data: { session } } = await supabase.auth.getSession();
@@ -95,6 +98,10 @@ export default function HomePageClient() {
     };
 
     init();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {

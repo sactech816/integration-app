@@ -70,11 +70,14 @@ export default function KindleLPClient() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const init = async () => {
       if (supabase) {
-        supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((_event, session) => {
           setUser(session?.user ? { email: session.user.email, id: session.user.id } : null);
         });
+        subscription = sub;
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user ? { email: session.user.email, id: session.user.id } : null);
       }
@@ -82,6 +85,9 @@ export default function KindleLPClient() {
     };
     init();
 
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {

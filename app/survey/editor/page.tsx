@@ -21,6 +21,8 @@ function EditorContent() {
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const loadData = async () => {
       if (!supabase) {
         setError("データベースに接続されていません");
@@ -28,10 +30,15 @@ function EditorContent() {
         return;
       }
 
+      const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((event, session) => {
+        setUser(session?.user ? { id: session.user.id, email: session.user.email } : null);
+      });
+      subscription = sub;
+
       // ユーザー情報を取得
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUser({ id: user.id, email: user.email });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser({ id: session.user.id, email: session.user.email });
       }
 
       // アンケートデータを取得
@@ -53,6 +60,10 @@ function EditorContent() {
     };
 
     loadData();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, [surveyId]);
 
   const handleLogout = async () => {

@@ -80,13 +80,16 @@ export default function HomePageClientV2() {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const init = async () => {
       if (supabase) {
-        supabase.auth.onAuthStateChange((event, session) => {
+        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((event, session) => {
           setUser(session?.user || null);
           // GA4にUser IDを設定/解除
           setUserId(session?.user?.id || null);
         });
+        subscription = sub;
 
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user || null);
@@ -115,6 +118,10 @@ export default function HomePageClientV2() {
     };
 
     init();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   // スクロール監視（トップに戻るボタン表示用）

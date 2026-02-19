@@ -22,12 +22,15 @@ export default function KindleLPClient() {
   const [quizResult, setQuizResult] = useState<{ title: string; desc: string; kdl: string } | null>(null);
 
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const init = async () => {
       // 認証状態を取得
       if (supabase) {
-        supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((_event, session) => {
           setUser(session?.user || null);
         });
+        subscription = sub;
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user || null);
       }
@@ -36,6 +39,10 @@ export default function KindleLPClient() {
       getReferralCode();
     };
     init();
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {
