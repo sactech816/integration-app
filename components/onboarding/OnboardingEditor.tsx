@@ -14,9 +14,11 @@ import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import OnboardingModalPreview from './OnboardingModalPreview';
+import OnboardingEmbedCodeGenerator from './OnboardingEmbedCodeGenerator';
 import IconSelector from './IconSelector';
 import GradientSelector from './GradientSelector';
 import type { OnboardingModalPage, OnboardingTriggerType, OnboardingButtonPosition } from '@/lib/types';
+import { Code } from 'lucide-react';
 
 // --- テンプレートプリセット ---
 const PRESETS: Record<string, {
@@ -225,6 +227,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
     design: false,
     trigger: false,
     advanced: false,
+    embed: false,
   });
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const [isSaving, setIsSaving] = useState(false);
@@ -252,7 +255,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
       gradient_from: preset.gradient_from,
       gradient_to: preset.gradient_to,
     }));
-    setOpenSections({ template: false, basic: true, pages: false, design: false, trigger: false, advanced: false });
+    setOpenSections({ template: false, basic: true, pages: false, design: false, trigger: false, advanced: false, embed: false });
   };
 
   // ページ操作
@@ -866,6 +869,28 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
                 <span className="text-sm text-gray-700">ポータルサイトに掲載する</span>
               </label>
             </Section>
+
+            {/* 埋め込みコード（保存後に表示） */}
+            {(savedSlug || initialData?.slug) && (
+              <Section
+                title="埋め込みコード"
+                icon={Code}
+                isOpen={openSections.embed}
+                onToggle={() => toggleSection('embed')}
+                headerBgColor="bg-orange-50"
+                headerHoverColor="hover:bg-orange-100"
+                accentColor="bg-orange-100 text-orange-600"
+              >
+                <OnboardingEmbedCodeGenerator
+                  modalSlug={savedSlug || initialData?.slug}
+                  modalTitle={form.title}
+                  triggerType={form.trigger_type}
+                  triggerDelay={form.trigger_delay}
+                  triggerScrollPercent={form.trigger_scroll_percent}
+                  triggerButtonPosition={form.trigger_button_position}
+                />
+              </Section>
+            )}
           </div>
         </div>
 
