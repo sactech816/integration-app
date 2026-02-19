@@ -827,42 +827,39 @@ function PortalPageContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* クイックナビゲーション */}
           <div className="py-3 border-b border-gray-100">
-            <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide pb-1 -mb-1">
-              <span className="text-sm font-semibold text-gray-600 flex-shrink-0">クイックリンク:</span>
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 -mb-1">
+              <span className="text-xs font-medium text-gray-400 uppercase tracking-wider flex-shrink-0 mr-1">クイックリンク:</span>
               <Link
                 href="/tools"
-                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline flex-shrink-0 flex items-center gap-1"
+                className="text-xs font-medium text-indigo-600 hover:text-white hover:bg-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md flex-shrink-0 flex items-center gap-1.5 transition-colors"
               >
-                <LayoutGrid size={14} />
+                <LayoutGrid size={13} />
                 全ツール一覧
               </Link>
-              <span className="text-gray-300 flex-shrink-0">|</span>
               <Link
                 href="/howto"
-                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline flex-shrink-0"
+                className="text-xs font-medium text-indigo-600 hover:text-white hover:bg-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md flex-shrink-0 transition-colors"
               >
                 使い方ガイド
               </Link>
-              <span className="text-gray-300 flex-shrink-0">|</span>
               <Link
                 href="/faq"
-                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline flex-shrink-0"
+                className="text-xs font-medium text-indigo-600 hover:text-white hover:bg-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md flex-shrink-0 transition-colors"
               >
                 よくある質問
               </Link>
-              <span className="text-gray-300 flex-shrink-0">|</span>
               <Link
                 href="/effective-use"
-                className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline flex-shrink-0"
+                className="text-xs font-medium text-indigo-600 hover:text-white hover:bg-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md flex-shrink-0 transition-colors"
               >
                 効果的な活用法
               </Link>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-3">
             {/* タブ */}
-            <div className="flex gap-1 overflow-x-auto pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
               {TABS.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = selectedTab === tab.type;
@@ -873,16 +870,16 @@ function PortalPageContent() {
                     key={tab.type}
                     onClick={() => setSelectedTab(tab.type)}
                     className={`
-                      flex items-center gap-2 px-4 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap transition-all
+                      flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all border
                       ${isActive
-                        ? 'bg-gray-900 text-white shadow-lg'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-gray-900 text-white shadow-md border-gray-900'
+                        : 'bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300 border-gray-200'
                       }
                     `}
                   >
-                    <Icon size={16} />
+                    <Icon size={15} className={isActive ? 'text-white' : 'text-gray-400'} />
                     <span>{tab.label}</span>
-                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20' : 'bg-gray-200'}`}>
+                    <span className={`text-xs font-semibold ml-0.5 px-1.5 py-0.5 rounded-md ${isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
                       {count}
                     </span>
                   </button>
@@ -891,14 +888,14 @@ function PortalPageContent() {
             </div>
 
             {/* 検索 */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <div className="relative flex-shrink-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input
                 type="text"
                 placeholder="タイトルで検索..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-64 pl-10 pr-4 py-2.5 border border-gray-200 rounded-full bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                className="w-full sm:w-60 pl-9 pr-4 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-shadow hover:shadow-sm"
               />
             </div>
           </div>
