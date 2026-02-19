@@ -25,7 +25,7 @@ export const pasbeconaTemplate: SalesLetterTemplate = {
   settings: defaultSettings,
   content: [
     // ヘッダー
-    createImage('', {
+    createImage('https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2074&auto=format&fit=crop', {
       alt: 'ヘッダー画像',
     }),
 

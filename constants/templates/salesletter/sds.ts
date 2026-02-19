@@ -9,6 +9,7 @@ import {
   createCtaButton,
   createSpacer,
   createDivider,
+  createImage,
   defaultSettings,
 } from './helpers';
 
@@ -26,6 +27,11 @@ export const sdsTemplate: SalesLetterTemplate = {
     contentWidth: 700,
   },
   content: [
+    // ヘッダー画像
+    createImage('https://images.unsplash.com/photo-1504711434969-e33886168d5c?q=80&w=2070&auto=format&fit=crop', {
+      alt: 'ヘッダー画像',
+    }),
+
     // S: Summary（要約）
     createHeadline('【速報】〇〇が△△を発表', {
       level: 'h1',

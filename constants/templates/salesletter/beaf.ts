@@ -25,7 +25,7 @@ export const beafTemplate: SalesLetterTemplate = {
   settings: defaultSettings,
   content: [
     // 商品画像
-    createImage('', {
+    createImage('https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=2070&auto=format&fit=crop', {
       alt: '商品画像',
     }),
 

@@ -25,7 +25,7 @@ export const newPasonaTemplate: SalesLetterTemplate = {
   settings: defaultSettings,
   content: [
     // ヘッダー画像
-    createImage('', {
+    createImage('https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop', {
       alt: 'ヘッダー画像',
     }),
 

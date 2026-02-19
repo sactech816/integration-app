@@ -8,6 +8,7 @@ import {
   createParagraph,
   createCtaButton,
   createSpacer,
+  createImage,
   defaultSettings,
 } from './helpers';
 
@@ -25,6 +26,11 @@ export const cremaTemplate: SalesLetterTemplate = {
     contentWidth: 600,
   },
   content: [
+    // ヘッダー画像
+    createImage('https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=2074&auto=format&fit=crop', {
+      alt: 'ヘッダー画像',
+    }),
+
     // C: Conclusion（結論）
     createHeadline('たった5分で〇〇が手に入る', {
       level: 'h1',

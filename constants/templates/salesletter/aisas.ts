@@ -8,6 +8,7 @@ import {
   createParagraph,
   createSpacer,
   createDivider,
+  createImage,
   defaultSettings,
 } from './helpers';
 
@@ -22,6 +23,11 @@ export const aisasTemplate: SalesLetterTemplate = {
   useCases: ['Webマーケティング戦略', 'SNSマーケティング', 'コンテンツマーケティング'],
   settings: defaultSettings,
   content: [
+    // ヘッダー画像
+    createImage('https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop', {
+      alt: 'ヘッダー画像',
+    }),
+
     // タイトル
     createHeadline('【構成案】AISASモデルに基づくLP設計', {
       level: 'h1',

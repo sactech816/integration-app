@@ -25,7 +25,7 @@ export const questTemplate: SalesLetterTemplate = {
   settings: defaultSettings,
   content: [
     // ヘッダー
-    createImage('', {
+    createImage('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop', {
       alt: 'ヘッダー画像',
     }),
 

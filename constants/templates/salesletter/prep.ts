@@ -9,6 +9,7 @@ import {
   createCtaButton,
   createSpacer,
   createDivider,
+  createImage,
   defaultSettings,
 } from './helpers';
 
@@ -26,6 +27,11 @@ export const prepTemplate: SalesLetterTemplate = {
     contentWidth: 700,
   },
   content: [
+    // ヘッダー画像
+    createImage('https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=2070&auto=format&fit=crop', {
+      alt: 'ヘッダー画像',
+    }),
+
     // P: Point（結論）
     createHeadline('結論：〇〇は△△すべきです', {
       level: 'h1',

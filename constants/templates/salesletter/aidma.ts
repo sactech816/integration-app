@@ -8,6 +8,7 @@ import {
   createParagraph,
   createSpacer,
   createDivider,
+  createImage,
   defaultSettings,
 } from './helpers';
 
@@ -22,6 +23,11 @@ export const aidmaTemplate: SalesLetterTemplate = {
   useCases: ['ブランディング', 'テレビCM', '認知拡大施策'],
   settings: defaultSettings,
   content: [
+    // ヘッダー画像
+    createImage('https://images.unsplash.com/photo-1533750349088-cd871a92f312?q=80&w=2070&auto=format&fit=crop', {
+      alt: 'ヘッダー画像',
+    }),
+
     // タイトル
     createHeadline('【構成案】AIDMAモデルに基づく設計', {
       level: 'h1',
