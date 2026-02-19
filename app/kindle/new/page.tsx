@@ -116,6 +116,22 @@ function KindleNewPageContent() {
   const [usageLimits, setUsageLimits] = useState<KdlUsageLimits | null>(null);
   const [usageRefreshTrigger, setUsageRefreshTrigger] = useState(0);
 
+  // ウィザードオンボーディング（2ページ構成）
+  const [showWizardOnboarding, setShowWizardOnboarding] = useState(false);
+  const [wizardOnboardingPage, setWizardOnboardingPage] = useState(0);
+  const WIZARD_ONBOARDING_PAGES = 2;
+
+  // entryMode が 'new' に切り替わったときにオンボーディング表示
+  useEffect(() => {
+    if (entryMode === 'new') {
+      const dismissed = localStorage.getItem('kdl_wizard_onboarding_dismissed');
+      if (!dismissed) {
+        setShowWizardOnboarding(true);
+        setWizardOnboardingPage(0);
+      }
+    }
+  }, [entryMode]);
+
   // localStorageから下書きを復元（初回のみ）
   useEffect(() => {
     if (isInitialized) return;
@@ -394,7 +410,7 @@ function KindleNewPageContent() {
         {/* 使用量ヘッダー */}
         {user && !isDemo && (
           <div className="bg-white/80 backdrop-blur-md border-b border-amber-100">
-            <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-between">
+            <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-end gap-2">
               <span className="text-xs text-gray-500">残り回数</span>
               <KdlUsageHeader
                 userId={user.id}
@@ -622,7 +638,7 @@ function KindleNewPageContent() {
       {/* 使用量ヘッダー（ログインユーザー向け） */}
       {user && !isDemo && (
         <div className="bg-white/80 backdrop-blur-md border-b border-amber-100">
-          <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between">
+          <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-end gap-2">
             <span className="text-xs text-gray-500">残り回数</span>
             <KdlUsageHeader
               userId={user.id}
@@ -722,6 +738,153 @@ function KindleNewPageContent() {
 
       {/* 共通フッター */}
       <KDLFooter adminKeyParam={adminKeyParam} isDemo={isDemo} />
+
+      {/* ウィザードオンボーディングモーダル（2ページ構成） */}
+      {showWizardOnboarding && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => { setShowWizardOnboarding(false); }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-fade-in overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* ヘッダー */}
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold">書籍作成の流れ</h3>
+                  <p className="text-white/80 text-sm mt-1">
+                    {wizardOnboardingPage === 0 && '4ステップで書籍を作成します'}
+                    {wizardOnboardingPage === 1 && '操作のコツ'}
+                  </p>
+                </div>
+                <span className="text-white/70 text-sm font-medium">{wizardOnboardingPage + 1} / {WIZARD_ONBOARDING_PAGES}</span>
+              </div>
+              <div className="flex gap-1.5 mt-3">
+                {Array.from({ length: WIZARD_ONBOARDING_PAGES }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1 rounded-full flex-1 transition-colors ${i <= wizardOnboardingPage ? 'bg-white' : 'bg-white/30'}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* ページ1: 作成の流れ */}
+            {wizardOnboardingPage === 0 && (
+              <div className="px-6 py-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-amber-600 font-bold text-sm">1</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">タイトル設定</p>
+                    <p className="text-sm text-gray-600">テーマ欄にできるだけ<strong>具体的なテーマ</strong>を入力してください。詳しく書くほど、AIが的確なタイトル候補を提案できます。</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-orange-600 font-bold text-sm">2</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">サブタイトル設定</p>
+                    <p className="text-sm text-gray-600">タイトルを補足するサブタイトルをAIが提案します。関連キーワードも参考にできます。</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-teal-600 font-bold text-sm">3</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">ターゲット設定</p>
+                    <p className="text-sm text-gray-600">誰に向けた本かを設定します。読者像が明確になると、目次や内容の精度が上がります。</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-purple-600 font-bold text-sm">4</span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">目次（章・節）作成</p>
+                    <p className="text-sm text-gray-600">書籍の骨組みとなる目次をAIが自動生成します。複数パターンから選べます。</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ページ2: 操作のコツ */}
+            {wizardOnboardingPage === 1 && (
+              <div className="px-6 py-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Lightbulb size={16} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">テーマは詳しく書くのがコツ</p>
+                    <p className="text-sm text-gray-600">例：「ダイエット」→「40代女性向け・食事制限なしの腸活ダイエット」のように具体的に書くと、より良い提案が得られます。</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <FileText size={16} className="text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">AIの提案は自由に書き換えOK</p>
+                    <p className="text-sm text-gray-600">AIが出力したタイトル・サブタイトル・ターゲット・目次は、すべて自分で編集・修正できます。AIの提案をベースに、自分らしい表現に仕上げてください。</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Target size={16} className="text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">ネタに困ったら「ネタ発掘診断」</p>
+                    <p className="text-sm text-gray-600">メニューの「ネタ発掘診断」で、あなたの強みや興味からテーマを発見できます。診断結果から直接作成を始めることもできます。</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* フッター */}
+            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      localStorage.setItem('kdl_wizard_onboarding_dismissed', 'true');
+                    } else {
+                      localStorage.removeItem('kdl_wizard_onboarding_dismissed');
+                    }
+                  }}
+                  className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-400"
+                />
+                <span className="text-sm text-gray-600">次から表示しない</span>
+              </label>
+              <div className="flex items-center gap-2">
+                {wizardOnboardingPage > 0 && (
+                  <button
+                    onClick={() => setWizardOnboardingPage(p => p - 1)}
+                    className="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all"
+                  >
+                    戻る
+                  </button>
+                )}
+                {wizardOnboardingPage < WIZARD_ONBOARDING_PAGES - 1 ? (
+                  <button
+                    onClick={() => setWizardOnboardingPage(p => p + 1)}
+                    className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+                  >
+                    次へ
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowWizardOnboarding(false)}
+                    className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-medium hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+                  >
+                    はじめる
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
