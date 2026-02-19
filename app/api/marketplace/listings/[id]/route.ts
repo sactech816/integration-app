@@ -36,25 +36,27 @@ export async function GET(
       return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
     }
 
-    // 出品者プロフィール取得
-    const { data: profile } = await supabase
-      .from('marketplace_profiles')
-      .select('*')
-      .eq('user_id', listing.seller_id)
-      .single();
+    // 出品者プロフィール＋レビューを並列取得
+    const [profileResult, reviewsResult] = await Promise.all([
+      supabase
+        .from('marketplace_profiles')
+        .select('user_id, display_name, bio, avatar_url, skills, portfolio_urls, response_time, supported_tools, avg_rating, total_reviews, total_orders')
+        .eq('user_id', listing.seller_id)
+        .single(),
+      supabase
+        .from('marketplace_reviews')
+        .select('id, reviewer_id, rating, comment, created_at')
+        .eq('seller_id', listing.seller_id)
+        .order('created_at', { ascending: false })
+        .limit(10),
+    ]);
 
-    // レビュー取得
-    const { data: reviews } = await supabase
-      .from('marketplace_reviews')
-      .select('*')
-      .eq('seller_id', listing.seller_id)
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    return NextResponse.json({
-      listing: { ...listing, seller_profile: profile || null },
-      reviews: reviews || [],
+    const res = NextResponse.json({
+      listing: { ...listing, seller_profile: profileResult.data || null },
+      reviews: reviewsResult.data || [],
     });
+    res.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    return res;
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

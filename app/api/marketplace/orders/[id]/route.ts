@@ -44,36 +44,20 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // 出品・プロフィール情報
-    let listing = null;
-    if (order.listing_id) {
-      const { data } = await supabase
-        .from('marketplace_listings')
-        .select('*')
-        .eq('id', order.listing_id)
-        .single();
-      listing = data;
-    }
+    // 出品・プロフィール・レビューを並列取得
+    const [listingResult, sellerProfileResult, buyerProfileResult, reviewResult] = await Promise.all([
+      order.listing_id
+        ? supabase.from('marketplace_listings').select('id, title, category, description, thumbnail_url, price_min, price_max, price_type, delivery_days, status').eq('id', order.listing_id).single()
+        : Promise.resolve({ data: null }),
+      supabase.from('marketplace_profiles').select('user_id, display_name, bio, avatar_url, avg_rating, total_reviews, response_time').eq('user_id', order.seller_id).single(),
+      supabase.from('marketplace_profiles').select('user_id, display_name, avatar_url').eq('user_id', order.buyer_id).single(),
+      supabase.from('marketplace_reviews').select('id, rating, comment, created_at').eq('order_id', id).eq('reviewer_id', user.id).single(),
+    ]);
 
-    const { data: sellerProfile } = await supabase
-      .from('marketplace_profiles')
-      .select('*')
-      .eq('user_id', order.seller_id)
-      .single();
-
-    const { data: buyerProfile } = await supabase
-      .from('marketplace_profiles')
-      .select('user_id, display_name, avatar_url')
-      .eq('user_id', order.buyer_id)
-      .single();
-
-    // レビュー存在チェック
-    const { data: review } = await supabase
-      .from('marketplace_reviews')
-      .select('*')
-      .eq('order_id', id)
-      .eq('reviewer_id', user.id)
-      .single();
+    const listing = listingResult.data;
+    const sellerProfile = sellerProfileResult.data;
+    const buyerProfile = buyerProfileResult.data;
+    const review = reviewResult.data;
 
     return NextResponse.json({
       order: {

@@ -876,11 +876,6 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
   };
 
   const handleSave = async () => {
-    if (!user) {
-      setShowAuth(true);
-      return;
-    }
-
     // Supabaseが設定されているか確認
     if (!supabase) {
       alert('データベース接続が設定されていません');
@@ -892,19 +887,28 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       return;
     }
 
+    const existingId = initialData?.id || savedId;
+
+    // 編集にはログインが必要
+    if (existingId && !user) {
+      if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
+        setShowAuth(true);
+      }
+      return;
+    }
+
     setIsSaving(true);
     try {
       let result;
-      const existingId = initialData?.id || savedId;
-      
+
       if (existingId) {
-        // 更新の場合：既存のslugを維持（initialDataがある場合、または新規作成後の再保存）
+        // 更新の場合：既存のslugを維持（user_idは変更しない）
         const updatePayload = {
           nickname: customSlug || null,
           content: profile.content,
           settings: profile.settings,
         };
-        
+
         result = await supabase
           .from('profiles')
           .update(updatePayload)
@@ -915,7 +919,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         // 新規作成の場合：ユニークなslugを生成（リトライ付き）
         let attempts = 0;
         const maxAttempts = 5;
-        
+
         while (attempts < maxAttempts) {
           const newSlug = generateSlug();
           const insertPayload = {
@@ -923,7 +927,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
             content: profile.content,
             settings: profile.settings,
             slug: newSlug,
-            user_id: user.id,
+            user_id: user?.id || null,
           };
           
           result = await supabase
@@ -971,7 +975,16 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         if (!initialData && !savedId) {
           // 完全な新規作成の場合のみ成功モーダルを表示
           setShowSuccessModal(true);
-          
+
+          // ゲスト作成の場合、ログイン時に引き継ぐためlocalStorageに保存
+          if (!user) {
+            try {
+              const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
+              stored.push({ table: 'profiles', id: result.data.id });
+              localStorage.setItem('guest_content', JSON.stringify(stored));
+            } catch {}
+          }
+
           // ゲーミフィケーションイベント発火（プロフィール作成）
           if (user?.id) {
             triggerGamificationEvent(user.id, 'profile_create', {

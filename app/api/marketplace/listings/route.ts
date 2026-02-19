@@ -58,13 +58,13 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await query;
     if (error) throw error;
 
-    // 出品者プロフィールを取得
+    // 出品者プロフィールを取得（必要カラムのみ）
     const sellerIds = [...new Set((data || []).map(l => l.seller_id))];
     let profiles: Record<string, any> = {};
     if (sellerIds.length > 0) {
       const { data: profileData } = await supabase
         .from('marketplace_profiles')
-        .select('*')
+        .select('user_id, display_name, avatar_url, avg_rating, total_reviews, response_time')
         .in('user_id', sellerIds);
       if (profileData) {
         profiles = Object.fromEntries(profileData.map(p => [p.user_id, p]));
@@ -76,12 +76,14 @@ export async function GET(request: NextRequest) {
       seller_profile: profiles[l.seller_id] || null,
     }));
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       listings,
       total: count || 0,
       page,
       limit,
     });
+    res.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    return res;
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

@@ -38,7 +38,9 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return NextResponse.json({ reviews: data || [] });
+    const res = NextResponse.json({ reviews: data || [] });
+    res.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    return res;
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -96,22 +98,8 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
-    // 出品者の平均評価を更新
-    const { data: allReviews } = await supabase
-      .from('marketplace_reviews')
-      .select('rating')
-      .eq('seller_id', order.seller_id);
-
-    if (allReviews && allReviews.length > 0) {
-      const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
-      await supabase
-        .from('marketplace_profiles')
-        .update({
-          avg_rating: Math.round(avg * 10) / 10,
-          total_reviews: allReviews.length,
-        })
-        .eq('user_id', order.seller_id);
-    }
+    // 出品者の平均評価をDB側のRPC関数で集計更新
+    await supabase.rpc('update_seller_review_stats', { target_seller_id: order.seller_id });
 
     return NextResponse.json({ review: data }, { status: 201 });
   } catch (err: any) {

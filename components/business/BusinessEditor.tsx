@@ -675,13 +675,17 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   };
 
   const handleSave = async () => {
-    if (!user) {
-      setShowAuth(true);
+    // カスタムスラッグのバリデーション
+    if (customSlug && !validateCustomSlug(customSlug)) {
       return;
     }
 
-    // カスタムスラッグのバリデーション
-    if (customSlug && !validateCustomSlug(customSlug)) {
+    // 既存コンテンツの更新はログインが必要
+    const existingId = initialData?.id || savedId;
+    if (existingId && !user) {
+      if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
+        setShowAuth(true);
+      }
       return;
     }
 
@@ -730,7 +734,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
               description: lp.description,
             },
             slug: newSlug,
-            user_id: user.id,
+            user_id: user?.id || null,
           };
           
           result = await supabase
@@ -779,6 +783,15 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
         if (!initialData && !savedId) {
           // 完全な新規作成の場合のみ成功モーダルを表示
           setShowSuccessModal(true);
+
+          // ゲスト作成の場合、ログイン時に引き継ぐためlocalStorageに保存
+          if (!user) {
+            try {
+              const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
+              stored.push({ table: 'business_projects', id: result.data.id });
+              localStorage.setItem('guest_content', JSON.stringify(stored));
+            } catch {}
+          }
         } else {
           alert('保存しました！');
         }

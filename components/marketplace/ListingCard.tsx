@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star, Clock, ShoppingBag } from 'lucide-react';
 import { MarketplaceListing } from '@/lib/types';
 import { CATEGORY_MAP, PRICE_TYPE_LABELS } from '@/constants/marketplace';
@@ -19,7 +20,7 @@ function formatPrice(listing: MarketplaceListing): string {
   return `¥${min}`;
 }
 
-export default function ListingCard({ listing }: ListingCardProps) {
+function ListingCard({ listing }: ListingCardProps) {
   const category = CATEGORY_MAP[listing.category];
   const profile = listing.seller_profile;
 
@@ -30,11 +31,14 @@ export default function ListingCard({ listing }: ListingCardProps) {
     >
       {/* サムネイル */}
       {listing.thumbnail_url ? (
-        <div className="aspect-video bg-gray-100 overflow-hidden">
-          <img
+        <div className="aspect-video bg-gray-100 overflow-hidden relative">
+          <Image
             src={listing.thumbnail_url}
             alt={listing.title}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover"
+            loading="lazy"
           />
         </div>
       ) : (
@@ -104,3 +108,5 @@ export default function ListingCard({ listing }: ListingCardProps) {
     </Link>
   );
 }
+
+export default React.memo(ListingCard);

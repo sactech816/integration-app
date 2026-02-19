@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { MarketplaceListing } from '@/lib/types';
@@ -72,11 +72,20 @@ export default function MarketplacePage() {
     setAccessToken('');
   };
 
-  // 検索
+  // 検索（デバウンス付き）
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleSearchInput = useCallback((value: string) => {
+    setSearchQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setPage(1);
+    }, 400);
+  }, []);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     setPage(1);
-    fetchListings();
   };
 
   const isLoggedIn = !!user;
@@ -132,7 +141,7 @@ export default function MarketplacePage() {
               <input
                 type="text"
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={e => handleSearchInput(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="キーワードでサービスを検索..."
               />

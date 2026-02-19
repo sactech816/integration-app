@@ -28,7 +28,7 @@ type ClaimResult = {
   error?: string;
 };
 
-const ALLOWED_TABLES = ['quizzes', 'surveys', 'sales_letters'];
+const ALLOWED_TABLES = ['quizzes', 'surveys', 'sales_letters', 'profiles', 'business_projects'];
 
 /**
  * ゲストが作成したコンテンツ（user_id が null）を

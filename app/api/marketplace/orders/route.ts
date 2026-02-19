@@ -45,31 +45,27 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await query;
     if (error) throw error;
 
-    // 出品情報とプロフィールを取得
+    // 出品情報とプロフィールを並列取得
     const listingIds = [...new Set((data || []).filter(o => o.listing_id).map(o => o.listing_id))];
     const userIds = [...new Set((data || []).flatMap(o => [o.buyer_id, o.seller_id]))];
 
     let listings: Record<string, any> = {};
     let profiles: Record<string, any> = {};
 
-    if (listingIds.length > 0) {
-      const { data: listingData } = await supabase
-        .from('marketplace_listings')
-        .select('id, title, category, thumbnail_url')
-        .in('id', listingIds);
-      if (listingData) {
-        listings = Object.fromEntries(listingData.map(l => [l.id, l]));
-      }
-    }
+    const [listingResult, profileResult] = await Promise.all([
+      listingIds.length > 0
+        ? supabase.from('marketplace_listings').select('id, title, category, thumbnail_url').in('id', listingIds)
+        : Promise.resolve({ data: null }),
+      userIds.length > 0
+        ? supabase.from('marketplace_profiles').select('user_id, display_name, avatar_url').in('user_id', userIds)
+        : Promise.resolve({ data: null }),
+    ]);
 
-    if (userIds.length > 0) {
-      const { data: profileData } = await supabase
-        .from('marketplace_profiles')
-        .select('user_id, display_name, avatar_url')
-        .in('user_id', userIds);
-      if (profileData) {
-        profiles = Object.fromEntries(profileData.map(p => [p.user_id, p]));
-      }
+    if (listingResult.data) {
+      listings = Object.fromEntries(listingResult.data.map((l: any) => [l.id, l]));
+    }
+    if (profileResult.data) {
+      profiles = Object.fromEntries(profileResult.data.map((p: any) => [p.user_id, p]));
     }
 
     const orders = (data || []).map(o => ({
