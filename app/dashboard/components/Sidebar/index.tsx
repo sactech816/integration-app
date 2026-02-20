@@ -19,6 +19,7 @@ type SidebarProps = {
     attendance: number;
     survey: number;
     gamification: number;
+    onboarding: number;
     thumbnail: number;
   };
   totalViews: number;

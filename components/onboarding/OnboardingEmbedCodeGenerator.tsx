@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Copy, Check, Code, Link as LinkIcon, ExternalLink, Terminal } from 'lucide-react';
+import { Copy, Check, Code, Link as LinkIcon, ExternalLink, Terminal, Lock, Crown } from 'lucide-react';
+import Link from 'next/link';
 
 interface OnboardingEmbedCodeGeneratorProps {
   modalSlug: string;
@@ -10,6 +11,7 @@ interface OnboardingEmbedCodeGeneratorProps {
   triggerDelay: number;
   triggerScrollPercent: number;
   triggerButtonPosition: string;
+  isUnlocked?: boolean;
 }
 
 export default function OnboardingEmbedCodeGenerator({
@@ -19,6 +21,7 @@ export default function OnboardingEmbedCodeGenerator({
   triggerDelay,
   triggerScrollPercent,
   triggerButtonPosition,
+  isUnlocked = false,
 }: OnboardingEmbedCodeGeneratorProps) {
   const [copied, setCopied] = useState<string | null>(null);
   const [width, setWidth] = useState('100%');
@@ -128,24 +131,43 @@ export default function OnboardingEmbedCodeGenerator({
           </div>
         </div>
 
-        {/* 方式3: JSスニペット */}
+        {/* 方式3: JSスニペット（Pro限定） */}
         <div>
           <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
             <Terminal className="w-4 h-4" />
             方式3: JavaScriptスニペット（推奨）
+            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-bold flex items-center gap-1">
+              <Crown className="w-3 h-3" /> Pro
+            </span>
           </h4>
           <p className="text-sm text-gray-600 mb-3">
-            HTMLの&lt;head&gt;または&lt;body&gt;末尾に貼り付けるだけで、モーダルがオーバーレイ表示されます。
+            HTMLの&lt;head&gt;または&lt;body&gt;末尾に貼り付けるだけで、外部サイト上にモーダルがオーバーレイ表示されます。
             トリガー設定やデザインも自動的に適用されます。
           </p>
 
-          <div className="relative">
-            <pre className="p-4 bg-gray-900 text-green-400 rounded-lg overflow-x-auto text-sm font-mono whitespace-pre-wrap">{jsSnippetCode}</pre>
-            <button onClick={() => handleCopy(jsSnippetCode, 'js')} className="absolute top-2 right-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors flex items-center gap-2 text-sm">
-              {copied === 'js' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copied === 'js' ? 'コピー済み' : 'コピー'}
-            </button>
-          </div>
+          {isUnlocked ? (
+            <div className="relative">
+              <pre className="p-4 bg-gray-900 text-green-400 rounded-lg overflow-x-auto text-sm font-mono whitespace-pre-wrap">{jsSnippetCode}</pre>
+              <button onClick={() => handleCopy(jsSnippetCode, 'js')} className="absolute top-2 right-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors flex items-center gap-2 text-sm">
+                {copied === 'js' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied === 'js' ? 'コピー済み' : 'コピー'}
+              </button>
+            </div>
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+              <Lock className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+              <p className="font-bold text-gray-700 mb-1">Proプラン限定機能</p>
+              <p className="text-sm text-gray-500 mb-4">
+                JSスニペットを使うと、外部サイトにオーバーレイモーダルとして設置できます。
+              </p>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-2 bg-purple-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-purple-700 transition-colors text-sm"
+              >
+                <Crown className="w-4 h-4" /> Proプランを見る
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* 注意事項 */}

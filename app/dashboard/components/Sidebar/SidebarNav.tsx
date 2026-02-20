@@ -32,6 +32,7 @@ import {
   MessageSquareHeart,
   Store,
   Image,
+  MousePointerClick,
 } from 'lucide-react';
 
 export type MenuSection = 'main' | 'settings' | 'admin';
@@ -69,6 +70,7 @@ type SidebarNavProps = {
     attendance: number;
     survey: number;
     gamification: number;
+    onboarding: number;
     thumbnail: number;
   };
   onLogout: () => void;
@@ -107,6 +109,7 @@ export default function SidebarNav({
     { id: 'attendance', label: '出欠メーカー', icon: Users, section: 'main', badge: contentCounts.attendance },
     { id: 'survey', label: 'アンケートメーカー', icon: ClipboardList, section: 'main', badge: contentCounts.survey },
     { id: 'my-games', label: 'ゲーミフィケーション', icon: Gamepad2, section: 'main', badge: contentCounts.gamification },
+    { id: 'onboarding', label: 'はじめかたメーカー', icon: MousePointerClick, section: 'main', badge: contentCounts.onboarding },
     { id: 'thumbnail', label: 'サムネイルメーカー', icon: Image, section: 'main', badge: contentCounts.thumbnail },
     {
       id: 'kindle', 
@@ -184,7 +187,7 @@ export default function SidebarNav({
     const isActive = activeItem === item.id;
     const isDisabled = item.isDisabled;
     // 件数が0のコンテンツ系メニューはグレーアウト（ただしクリックは可能）
-    const hasNoContent = item.badge === 0 && ['quiz', 'profile', 'business', 'salesletter', 'booking', 'attendance', 'survey'].includes(item.id);
+    const hasNoContent = item.badge === 0 && ['quiz', 'profile', 'business', 'salesletter', 'booking', 'attendance', 'survey', 'onboarding'].includes(item.id);
 
     const handleClick = () => {
       if (item.onClick) {

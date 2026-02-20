@@ -186,9 +186,10 @@ interface OnboardingEditorProps {
   setPage: (page: string) => void;
   onBack: () => void;
   setShowAuth?: (show: boolean) => void;
+  isUnlocked?: boolean;
 }
 
-export default function OnboardingEditor({ user, initialData, setPage, onBack, setShowAuth }: OnboardingEditorProps) {
+export default function OnboardingEditor({ user, initialData, setPage, onBack, setShowAuth, isUnlocked = false }: OnboardingEditorProps) {
   // フォーム状態
   const [form, setForm] = useState({
     title: initialData?.title || '新規はじめかたガイド',
@@ -527,6 +528,31 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
         {/* 左: 編集パネル */}
         <div className={`w-full lg:w-1/2 overflow-y-auto p-4 md:p-6 bg-gray-50 ${mobileTab === 'preview' ? 'hidden lg:block' : ''}`}>
           <div className="max-w-2xl mx-auto space-y-4">
+
+            {/* 説明バナー */}
+            <div className="bg-gradient-to-r from-sky-50 to-amber-50 border border-sky-200 rounded-xl p-5">
+              <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <MousePointer size={18} className="text-sky-600" />
+                はじめかたメーカーとは？
+              </h3>
+              <p className="text-sm text-gray-700 mb-3">
+                サイトに埋め込めるステップ式ガイド（モーダル）をノーコードで作成できるツールです。
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                <div className="bg-white/80 rounded-lg px-3 py-2">
+                  <span className="font-bold text-gray-800">直接リンク</span>
+                  <p className="text-gray-500 mt-0.5">URLを共有して単体ページとして利用</p>
+                </div>
+                <div className="bg-white/80 rounded-lg px-3 py-2">
+                  <span className="font-bold text-gray-800">iframe</span>
+                  <p className="text-gray-500 mt-0.5">ページ内に埋め込み表示</p>
+                </div>
+                <div className="bg-white/80 rounded-lg px-3 py-2">
+                  <span className="font-bold text-purple-700">JSスニペット <span className="text-[10px] bg-purple-100 text-purple-600 px-1 rounded">Pro</span></span>
+                  <p className="text-gray-500 mt-0.5">外部サイトにオーバーレイ表示</p>
+                </div>
+              </div>
+            </div>
 
             {/* STEP 1: テンプレート */}
             <Section
@@ -888,6 +914,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
                   triggerDelay={form.trigger_delay}
                   triggerScrollPercent={form.trigger_scroll_percent}
                   triggerButtonPosition={form.trigger_button_position}
+                  isUnlocked={isUnlocked}
                 />
               </Section>
             )}

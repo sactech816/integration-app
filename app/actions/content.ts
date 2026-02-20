@@ -33,6 +33,7 @@ const TABLE_MAP: Record<string, string> = {
   profile: 'profiles',
   business: 'business_projects',
   salesletter: 'sales_letters',
+  onboarding: 'onboarding_modals',
   thumbnail: 'thumbnails',
 };
 
@@ -42,6 +43,7 @@ const USER_ID_COLUMN_MAP: Record<string, string> = {
   profile: 'user_id',
   business: 'user_id',
   salesletter: 'user_id',
+  onboarding: 'user_id',
   thumbnail: 'user_id',
 };
 
@@ -49,7 +51,7 @@ const USER_ID_COLUMN_MAP: Record<string, string> = {
  * コンテンツを削除（管理者対応）
  */
 export async function deleteContent(
-  contentType: 'quiz' | 'profile' | 'business' | 'salesletter' | 'thumbnail',
+  contentType: 'quiz' | 'profile' | 'business' | 'salesletter' | 'onboarding' | 'thumbnail',
   contentId: string | number,
   userId: string,
   isAdmin?: boolean

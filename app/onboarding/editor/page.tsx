@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getAdminEmails } from '@/lib/constants';
+import { fetchMakersSubscriptionStatus } from '@/lib/subscription';
 import Header from '@/components/shared/Header';
 import AuthModal from '@/components/shared/AuthModal';
 import OnboardingEditor from '@/components/onboarding/OnboardingEditor';
@@ -18,6 +19,7 @@ function OnboardingEditorContent() {
   const [showAuth, setShowAuth] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [editingModal, setEditingModal] = useState(null);
+  const [isUnlocked, setIsUnlocked] = useState(false);
 
   const adminEmails = getAdminEmails();
   const isAdmin = user?.email && adminEmails.some(email =>
@@ -39,7 +41,19 @@ function OnboardingEditorContent() {
       subscription = sub;
 
       const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user || null);
+      const currentUser = session?.user || null;
+      setUser(currentUser);
+
+      // Pro判定
+      if (currentUser) {
+        try {
+          const status = await fetchMakersSubscriptionStatus(currentUser.id);
+          const currentIsAdmin = currentUser.email && adminEmails.some(email =>
+            currentUser.email?.toLowerCase() === email.toLowerCase()
+          );
+          setIsUnlocked(!!currentIsAdmin || !!status?.hasActiveSubscription);
+        } catch { /* ignore */ }
+      }
 
       if (newParam) {
         setEditingModal(null);
@@ -107,6 +121,7 @@ function OnboardingEditorContent() {
         setPage={navigateTo}
         onBack={() => navigateTo('dashboard')}
         setShowAuth={setShowAuth}
+        isUnlocked={isUnlocked}
       />
     </div>
   );

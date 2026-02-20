@@ -42,6 +42,7 @@ type UseDashboardDataReturn = {
     attendance: number;
     survey: number;
     gamification: number;
+    onboarding: number;
     thumbnail: number;
   };
   totalViews: number;
@@ -91,6 +92,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     attendance: 0,
     survey: 0,
     gamification: 0,
+    onboarding: 0,
     thumbnail: 0,
   });
   const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
@@ -335,6 +337,30 @@ export function useDashboardData(): UseDashboardDataReturn {
           }
         }
 
+        // はじめかたガイド取得
+        if (selectedService === 'onboarding') {
+          const query = isAdmin
+            ? supabase.from(TABLES.ONBOARDING_MODALS).select('*').order('created_at', { ascending: false })
+            : supabase.from(TABLES.ONBOARDING_MODALS).select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+
+          const { data: modals } = await query;
+          if (modals) {
+            allContents.push(
+              ...modals.map((m: any) => ({
+                id: String(m.id),
+                slug: m.slug,
+                title: m.title || 'はじめかたガイド',
+                created_at: m.created_at,
+                updated_at: m.updated_at,
+                type: 'onboarding' as ServiceType,
+                user_id: m.user_id,
+                views_count: m.views_count || 0,
+                clicks_count: 0,
+              }))
+            );
+          }
+        }
+
         // サムネイル取得
         if (selectedService === 'thumbnail') {
           const query = isAdmin
@@ -451,7 +477,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, thumbnailResult] = await Promise.all([
+      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult] = await Promise.all([
         // 診断クイズ数
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true })
@@ -482,6 +508,10 @@ export function useDashboardData(): UseDashboardDataReturn {
           : supabase.from('surveys').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         // ゲーミフィケーションキャンペーン数（ユーザーが作成したもの）
         supabase.from('gamification_campaigns').select('id', { count: 'exact', head: true }).eq('owner_id', user.id),
+        // はじめかたガイド数
+        isAdmin
+          ? supabase.from(TABLES.ONBOARDING_MODALS).select('id', { count: 'exact', head: true })
+          : supabase.from(TABLES.ONBOARDING_MODALS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         // サムネイル数
         isAdmin
           ? supabase.from(TABLES.THUMBNAILS).select('id', { count: 'exact', head: true })
@@ -497,6 +527,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         attendance: attendanceResult.count || 0,
         survey: surveyResult.count || 0,
         gamification: gamificationResult.count || 0,
+        onboarding: onboardingResult.count || 0,
         thumbnail: thumbnailResult.count || 0,
       });
     } catch (error) {
@@ -531,8 +562,8 @@ export function useDashboardData(): UseDashboardDataReturn {
     }
 
     // サーバーアクションで削除（管理者対応）
-    const contentType = item.type as 'quiz' | 'profile' | 'business' | 'salesletter';
-    const contentId = item.type === 'quiz' ? parseInt(item.id) : item.id;
+    const contentType = item.type as 'quiz' | 'profile' | 'business' | 'salesletter' | 'onboarding' | 'thumbnail';
+    const contentId = (item.type === 'quiz' || item.type === 'onboarding') ? parseInt(item.id) : item.id;
 
     console.log('[Dashboard] handleDelete called:', { 
       itemType: item.type, 
@@ -618,6 +649,37 @@ export function useDashboardData(): UseDashboardDataReturn {
               template_id: original.template_id,
             },
           ]);
+          if (error) throw error;
+        }
+      } else if (item.type === 'onboarding') {
+        // はじめかたガイドの複製
+        const { data: original } = await supabase
+          .from(TABLES.ONBOARDING_MODALS)
+          .select('*')
+          .eq('id', parseInt(item.id))
+          .single();
+
+        if (original) {
+          const { error } = await supabase.from(TABLES.ONBOARDING_MODALS).insert([{
+            user_id: user.id,
+            title: `${original.title || 'はじめかたガイド'} のコピー`,
+            description: original.description,
+            pages: original.pages,
+            gradient_from: original.gradient_from,
+            gradient_to: original.gradient_to,
+            trigger_type: original.trigger_type,
+            trigger_delay: original.trigger_delay,
+            trigger_scroll_percent: original.trigger_scroll_percent,
+            trigger_button_text: original.trigger_button_text,
+            trigger_button_position: original.trigger_button_position,
+            show_dont_show_again: original.show_dont_show_again,
+            close_on_overlay_click: original.close_on_overlay_click,
+            dont_show_text: original.dont_show_text,
+            next_button_text: original.next_button_text,
+            back_button_text: original.back_button_text,
+            start_button_text: original.start_button_text,
+            slug: newSlug,
+          }]);
           if (error) throw error;
         }
       } else if (item.type === 'survey') {

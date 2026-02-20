@@ -12,6 +12,7 @@ import {
   Store,
   Users,
   Image,
+  MousePointerClick,
   LucideIcon,
 } from 'lucide-react';
 
@@ -88,6 +89,14 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: 'ゲーム作成',
     color: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200' },
     href: '/gamification',
+  },
+  {
+    id: 'onboarding',
+    label: 'はじめかたメーカー',
+    icon: MousePointerClick,
+    description: 'はじめかたガイド',
+    color: { bg: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-200' },
+    href: '/onboarding/editor',
   },
   {
     id: 'thumbnail',

@@ -97,7 +97,7 @@ function DashboardContent() {
   // URLパラメータからビューを設定
   useEffect(() => {
     const view = searchParams?.get('view');
-    if (view && ['booking', 'attendance', 'survey', 'quiz', 'profile', 'business', 'salesletter', 'affiliate', 'settings'].includes(view)) {
+    if (view && ['booking', 'attendance', 'survey', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'affiliate', 'settings'].includes(view)) {
       setActiveView(view as ActiveView);
       // URLパラメータをクリア
       window.history.replaceState({}, '', '/dashboard');
@@ -257,7 +257,7 @@ function DashboardContent() {
     setActiveView(itemId as ActiveView);
 
     // サービス選択の場合はselectedServiceも更新
-    if (['quiz', 'profile', 'business', 'salesletter'].includes(itemId)) {
+    if (['quiz', 'profile', 'business', 'salesletter', 'onboarding'].includes(itemId)) {
       setSelectedService(itemId as ServiceType);
       fetchContents(itemId as ServiceType);
     }
