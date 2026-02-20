@@ -14,7 +14,7 @@ import {
 import {
   Youtube, Instagram, Twitter, MessageCircle, Image as ImageIcon,
   ArrowLeft, ArrowRight, Sparkles, Download, Save, Loader2,
-  RefreshCw, Check, ChevronRight,
+  RefreshCw, Check, ChevronRight, Crown, Lock, Type,
 } from 'lucide-react';
 import AIEditChat from './AIEditChat';
 
@@ -22,13 +22,14 @@ interface ThumbnailEditorProps {
   user: { id: string; email?: string } | null;
   editingThumbnail?: Thumbnail | null;
   setShowAuth: (show: boolean) => void;
+  isPro?: boolean;
 }
 
 const platformIcons: Record<string, React.ElementType> = {
   Youtube, Instagram, Twitter, MessageCircle, Image: ImageIcon,
 };
 
-export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth }: ThumbnailEditorProps) {
+export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, isPro = false }: ThumbnailEditorProps) {
   // ステップ管理
   const [step, setStep] = useState(editingThumbnail ? 4 : 1);
 
@@ -50,6 +51,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth }:
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(editingThumbnail?.image_url || null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [trialExceeded, setTrialExceeded] = useState(false);
 
   // 保存
   const [isSaving, setIsSaving] = useState(false);
@@ -67,6 +69,10 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth }:
 
   // AI画像生成
   const handleGenerate = useCallback(async () => {
+    if (!user) {
+      setShowAuth(true);
+      return;
+    }
     if (!title.trim()) {
       setError('タイトルを入力してください');
       return;
@@ -85,7 +91,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth }:
           colorThemeId: selectedColorTheme,
           platform: selectedPlatform,
           aspectRatio: currentAspectRatio,
-          userId: user?.id,
+          userId: user.id,
         }),
       });
 
@@ -93,15 +99,18 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth }:
       if (data.success) {
         setGeneratedImageUrl(data.imageUrl);
         setStep(4);
+      } else if (data.error === 'FREE_TRIAL_EXCEEDED') {
+        setTrialExceeded(true);
+        setError(null);
       } else {
-        setError(data.error || '生成に失敗しました');
+        setError(data.message || data.error || '生成に失敗しました');
       }
     } catch {
       setError('ネットワークエラーが発生しました');
     } finally {
       setIsGenerating(false);
     }
-  }, [title, subtitle, selectedTemplate, selectedColorTheme, selectedPlatform, currentAspectRatio, user]);
+  }, [title, subtitle, selectedTemplate, selectedColorTheme, selectedPlatform, currentAspectRatio, user, setShowAuth]);
 
   // 保存
   const handleSave = async () => {
@@ -318,6 +327,36 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth }:
             <p className="text-gray-500 mt-1">サムネイルに表示するテキストを入力してください</p>
           </div>
 
+          {/* Pro/トライアルバナー */}
+          {!isPro && !trialExceeded && (
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3">
+              <Crown size={18} className="text-amber-500 shrink-0" />
+              <div className="text-sm">
+                <span className="font-bold text-amber-700">無料トライアル</span>
+                <span className="text-amber-600 ml-1">- 1回だけ無料でお試しできます（Pro機能）</span>
+              </div>
+            </div>
+          )}
+
+          {/* トライアル超過メッセージ */}
+          {trialExceeded && (
+            <div className="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-xl p-5 text-center space-y-3">
+              <Lock size={24} className="text-pink-400 mx-auto" />
+              <h3 className="font-bold text-gray-900">無料トライアルを使い切りました</h3>
+              <p className="text-sm text-gray-600">
+                サムネイルメーカーはPro機能です。<br />
+                Proプランにアップグレードすると無制限にご利用いただけます。
+              </p>
+              <a
+                href="/pricing"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all"
+              >
+                <Crown size={16} />
+                Proプランを見る
+              </a>
+            </div>
+          )}
+
           <div className="bg-white rounded-2xl p-6 border border-gray-200 space-y-4">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">メインテキスト *</label>
@@ -326,7 +365,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth }:
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="例: 知らないと損する3つの秘密"
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none text-lg"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none text-lg text-gray-900 placeholder:text-gray-400"
                 maxLength={50}
               />
               <p className="text-xs text-gray-400 mt-1">{title.length}/50文字</p>
@@ -339,7 +378,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth }:
                 value={subtitle}
                 onChange={(e) => setSubtitle(e.target.value)}
                 placeholder="例: 今すぐチェック！"
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none text-gray-900 placeholder:text-gray-400"
                 maxLength={30}
               />
             </div>
@@ -387,7 +426,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth }:
 
             <button
               onClick={handleGenerate}
-              disabled={isGenerating || !title.trim()}
+              disabled={isGenerating || !title.trim() || trialExceeded}
               className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold shadow-lg shadow-pink-200 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isGenerating ? (
@@ -398,7 +437,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth }:
               ) : (
                 <>
                   <Sparkles size={18} />
-                  AIで生成する
+                  {!isPro ? 'お試し生成する（残り1回）' : 'AIで生成する'}
                 </>
               )}
             </button>
@@ -463,12 +502,22 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth }:
             </button>
           </div>
 
+          {/* テキスト変更セクション */}
+          <TextChangeSection
+            imageUrl={generatedImageUrl}
+            aspectRatio={currentAspectRatio}
+            userId={user?.id}
+            isPro={isPro}
+            onImageEdited={handleImageEdited}
+          />
+
           {/* AI編集チャット */}
           <AIEditChat
             imageUrl={generatedImageUrl}
             aspectRatio={currentAspectRatio}
             userId={user?.id}
             onImageEdited={handleImageEdited}
+            isPro={isPro}
           />
 
           <button onClick={() => setStep(1)} className="flex items-center gap-1 text-gray-500 hover:text-gray-700 mx-auto text-sm">
@@ -490,6 +539,157 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth }:
             <h3 className="font-bold text-gray-900 text-lg">AIが画像を生成中...</h3>
             <p className="text-gray-500 text-sm mt-2">少々お待ちください（通常10-30秒）</p>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// テキスト変更セクション（Step 4内）
+function TextChangeSection({
+  imageUrl,
+  aspectRatio,
+  userId,
+  isPro,
+  onImageEdited,
+}: {
+  imageUrl: string;
+  aspectRatio: string;
+  userId?: string;
+  isPro: boolean;
+  onImageEdited: (url: string) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newSubtitle, setNewSubtitle] = useState('');
+  const [isChanging, setIsChanging] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleTextChange = async () => {
+    if (!newTitle.trim()) {
+      setError('変更後のテキストを入力してください');
+      return;
+    }
+    if (!isPro) {
+      setError('テキスト変更はPro機能です');
+      return;
+    }
+
+    setIsChanging(true);
+    setError(null);
+
+    try {
+      const instruction = newSubtitle.trim()
+        ? `画像内のすべてのテキストを以下に変更してください。デザインやレイアウトはそのまま維持してください。\nメインテキスト: "${newTitle}"\nサブテキスト: "${newSubtitle}"`
+        : `画像内のメインテキストを "${newTitle}" に変更してください。デザインやレイアウト、その他の要素はそのまま維持してください。`;
+
+      const res = await fetch('/api/thumbnail/edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageUrl,
+          editInstruction: instruction,
+          aspectRatio,
+          userId,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        onImageEdited(data.imageUrl);
+        setNewTitle('');
+        setNewSubtitle('');
+        setIsOpen(false);
+      } else {
+        setError(data.message || data.error || 'テキスト変更に失敗しました');
+      }
+    } catch {
+      setError('ネットワークエラーが発生しました');
+    } finally {
+      setIsChanging(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Type size={16} className="text-purple-500" />
+          <span className="font-bold text-gray-800 text-sm">テキストだけ変更</span>
+          {!isPro && (
+            <span className="text-xs bg-pink-100 text-pink-600 px-2 py-0.5 rounded-full font-medium">Pro</span>
+          )}
+        </div>
+        <ChevronRight
+          size={16}
+          className={`text-gray-400 transition-transform ${isOpen ? 'rotate-90' : ''}`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
+          {!isPro ? (
+            <div className="text-center py-2">
+              <p className="text-sm text-gray-500 mb-2">テキスト変更はPro機能です</p>
+              <a
+                href="/pricing"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-pink-600 hover:text-pink-700"
+              >
+                <Crown size={14} />
+                Proにアップグレード
+              </a>
+            </div>
+          ) : (
+            <>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">新しいメインテキスト *</label>
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="変更後のテキストを入力"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none text-sm text-gray-900 placeholder:text-gray-400"
+                  maxLength={50}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">新しいサブテキスト（任意）</label>
+                <input
+                  type="text"
+                  value={newSubtitle}
+                  onChange={(e) => setNewSubtitle(e.target.value)}
+                  placeholder="変更後のサブテキスト"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none text-sm text-gray-900 placeholder:text-gray-400"
+                  maxLength={30}
+                />
+              </div>
+
+              {error && (
+                <div className="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs">{error}</div>
+              )}
+
+              <button
+                onClick={handleTextChange}
+                disabled={isChanging || !newTitle.trim()}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-medium text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isChanging ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    テキスト変更中...
+                  </>
+                ) : (
+                  <>
+                    <Type size={16} />
+                    テキストを変更する
+                  </>
+                )}
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { logAIUsage } from '@/lib/ai-usage';
+import { getMakersSubscriptionStatus } from '@/lib/subscription';
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -20,6 +21,22 @@ export async function POST(request: Request) {
     }
     if (!editInstruction?.trim()) {
       return NextResponse.json({ error: '編集指示を入力してください' }, { status: 400 });
+    }
+
+    // Pro制限チェック（AI編集もPro機能）
+    if (!userId) {
+      return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 });
+    }
+
+    const subStatus = await getMakersSubscriptionStatus(userId);
+    if (subStatus.planTier !== 'pro') {
+      return NextResponse.json(
+        {
+          error: 'PRO_REQUIRED',
+          message: 'AI編集はPro機能です。Proプランにアップグレードしてください。',
+        },
+        { status: 403 }
+      );
     }
 
     const apiKey = process.env.GEMINI_API_KEY;

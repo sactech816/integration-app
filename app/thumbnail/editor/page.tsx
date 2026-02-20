@@ -21,6 +21,7 @@ function ThumbnailEditorContent() {
   const [showAuth, setShowAuth] = useState(false);
   const [editingThumbnail, setEditingThumbnail] = useState<Thumbnail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -35,6 +36,17 @@ function ThumbnailEditorContent() {
         setUser({ id: currentUser.id, email: currentUser.email });
         const adminEmails = getAdminEmails();
         setIsAdmin(adminEmails.some(e => currentUser.email?.toLowerCase() === e.toLowerCase()));
+
+        // Pro状態を取得
+        try {
+          const res = await fetch(`/api/makers/subscription-status?userId=${currentUser.id}`);
+          if (res.ok) {
+            const status = await res.json();
+            setIsPro(status.planTier === 'pro');
+          }
+        } catch (e) {
+          console.error('Failed to fetch subscription status:', e);
+        }
       }
 
       // 編集モード: 既存データを読み込み
@@ -88,6 +100,7 @@ function ThumbnailEditorContent() {
         user={user}
         editingThumbnail={editingThumbnail}
         setShowAuth={setShowAuth}
+        isPro={isPro}
       />
     </div>
   );

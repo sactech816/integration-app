@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Send, Loader2, Undo2, Sun, Moon, Type, Palette, Sparkles } from 'lucide-react';
+import { Send, Loader2, Undo2, Sun, Moon, Type, Palette, Sparkles, Crown } from 'lucide-react';
 
 interface AIEditChatProps {
   imageUrl: string;
   aspectRatio: string;
   userId?: string;
   onImageEdited: (newImageUrl: string) => void;
+  isPro?: boolean;
 }
 
 interface EditHistoryItem {
@@ -23,7 +24,7 @@ const PRESET_EDITS = [
   { label: '背景を変更', instruction: '背景のデザインを全く違うものに変更してください', icon: Palette },
 ];
 
-export default function AIEditChat({ imageUrl, aspectRatio, userId, onImageEdited }: AIEditChatProps) {
+export default function AIEditChat({ imageUrl, aspectRatio, userId, onImageEdited, isPro = false }: AIEditChatProps) {
   const [editInstruction, setEditInstruction] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +74,30 @@ export default function AIEditChat({ imageUrl, aspectRatio, userId, onImageEdite
     onImageEdited(lastItem.imageUrl);
     setHistory(prev => prev.slice(0, -1));
   };
+
+  if (!isPro) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden opacity-75">
+        <div className="px-4 py-4 bg-gradient-to-r from-pink-50 to-purple-50 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles size={16} className="text-pink-500" />
+            <h3 className="font-bold text-gray-800 text-sm">AI編集</h3>
+            <span className="text-xs bg-pink-100 text-pink-600 px-2 py-0.5 rounded-full font-medium">Pro</span>
+          </div>
+          <a
+            href="/pricing"
+            className="flex items-center gap-1.5 text-xs font-medium text-pink-600 hover:text-pink-700"
+          >
+            <Crown size={14} />
+            Proにアップグレード
+          </a>
+        </div>
+        <div className="px-4 py-3 text-center text-sm text-gray-500">
+          AI編集はProプラン限定機能です
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
@@ -138,7 +163,7 @@ export default function AIEditChat({ imageUrl, aspectRatio, userId, onImageEdite
           }}
           placeholder="例: 背景を宇宙空間にして"
           disabled={isEditing}
-          className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none text-sm disabled:bg-gray-50"
+          className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none text-sm text-gray-900 placeholder:text-gray-400 disabled:bg-gray-50"
         />
         <button
           onClick={() => handleEdit(editInstruction)}

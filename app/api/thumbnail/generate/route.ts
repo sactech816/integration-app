@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { logAIUsage } from '@/lib/ai-usage';
 import { getTemplateById } from '@/constants/templates/thumbnail';
+import { getMakersSubscriptionStatus } from '@/lib/subscription';
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -11,6 +12,22 @@ function getSupabaseAdmin() {
   return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
 }
 
+// ユーザーのサムネイル生成回数を取得
+async function getThumbnailGenerateCount(userId: string): Promise<number> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return 0;
+
+  const { count } = await supabase
+    .from('ai_usage_logs')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('action_type', 'thumbnail_generate');
+
+  return count || 0;
+}
+
+const FREE_TRIAL_LIMIT = 1; // 無料ユーザーは1回だけ
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -18,6 +35,30 @@ export async function POST(request: Request) {
 
     if (!title?.trim()) {
       return NextResponse.json({ error: 'タイトルは必須です' }, { status: 400 });
+    }
+
+    // ログイン必須チェック
+    if (!userId) {
+      return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 });
+    }
+
+    // Pro制限チェック: Proユーザーは無制限、無料ユーザーは1回まで
+    const subStatus = await getMakersSubscriptionStatus(userId);
+    const isPro = subStatus.planTier === 'pro';
+
+    if (!isPro) {
+      const generateCount = await getThumbnailGenerateCount(userId);
+      if (generateCount >= FREE_TRIAL_LIMIT) {
+        return NextResponse.json(
+          {
+            error: 'FREE_TRIAL_EXCEEDED',
+            message: 'サムネイルメーカーはPro機能です。無料トライアル（1回）を使い切りました。',
+            usedCount: generateCount,
+            limit: FREE_TRIAL_LIMIT,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
