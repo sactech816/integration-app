@@ -8,6 +8,7 @@ import AuthModal from '@/components/shared/AuthModal';
 import ServiceSelector from '@/components/shared/ServiceSelector';
 import AnnouncementBanner from '@/components/shared/AnnouncementBanner';
 import AffiliateTracker from '@/components/affiliate/AffiliateTracker';
+import WelcomeGuide from '@/components/home/WelcomeGuide';
 import { getReferralCode } from '@/components/affiliate/AffiliateTracker';
 import {
   Sparkles,
@@ -74,6 +75,9 @@ export default function HomePageClientV3() {
 
   // タブ切り替え用のstate
   const [activeTab, setActiveTab] = useState('tab-freelance');
+
+  // はじめてガイド用のstate
+  const [welcomeGuideOpen, setWelcomeGuideOpen] = useState(false);
 
   // プロプランモーダル用のstate
   const [showProPlanModal, setShowProPlanModal] = useState(false);
@@ -352,9 +356,17 @@ export default function HomePageClientV3() {
             <button onClick={() => navigateTo('create')} className="hover:underline transition" style={{ color: '#f97316' }}>ツール一覧</button>
             <span className="text-gray-300">|</span>
             <button onClick={() => navigateTo('diagnosis')} className="hover:underline transition" style={{ color: '#f97316' }}>無料診断</button>
+            <span className="text-gray-300">|</span>
+            <button onClick={() => setWelcomeGuideOpen(true)} className="hover:underline transition" style={{ color: '#f97316' }}>はじめてガイド</button>
           </div>
         </div>
       </section>
+
+      {/* はじめてガイド */}
+      <WelcomeGuide
+        externalOpen={welcomeGuideOpen}
+        onOpenChange={(open) => { if (!open) setWelcomeGuideOpen(false); }}
+      />
 
       {/* ========== 2. 統計バー ========== */}
       <section className="py-6 bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 text-white">
