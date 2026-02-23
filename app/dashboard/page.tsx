@@ -262,6 +262,16 @@ function DashboardContent() {
       fetchContents(itemId as ServiceType);
     }
 
+    // サムネイルメーカーへの遷移（Pro限定）
+    if (itemId === 'thumbnail') {
+      if (isAdmin || hasMakersProAccess) {
+        router.push('/thumbnail/editor');
+      } else {
+        router.push('/pricing');
+      }
+      return;
+    }
+
     // Kindle執筆への遷移
     if (itemId === 'kindle') {
       // 管理者または課金済みユーザーは直接遷移
@@ -442,6 +452,7 @@ function DashboardContent() {
               onNavigate={handleNavigate}
               hasKdlSubscription={kdlSubscription?.hasActiveSubscription || false}
               isKdlMonitor={kdlSubscription?.isMonitor || false}
+              hasMakersProAccess={hasMakersProAccess}
             />
           }
           activeView={activeView}

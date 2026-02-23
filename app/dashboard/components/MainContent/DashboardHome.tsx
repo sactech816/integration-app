@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Loader2, BookOpen, Crown, Zap, Sparkles, LayoutGrid } from 'lucide-react';
+import { Loader2, BookOpen, Crown, Zap, Sparkles, LayoutGrid, Lock } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 import ServiceTabs from './ServiceTabs';
 import AnalyticsSection from './AnalyticsSection';
@@ -169,16 +169,45 @@ export default function DashboardHome({
               (tool) => !['quiz', 'profile', 'business'].includes(tool.id)
             ).map((tool) => {
               const Icon = tool.icon;
+              // サムネイルメーカーはPro限定
+              const isProOnly = tool.id === 'thumbnail';
+              const isProLocked = isProOnly && !hasMakersProAccess && !isAdmin && !isPartner;
+
               const content = (
-                <>
+                <div className="relative">
                   <div className={`p-2 rounded-lg ${tool.color.bg}`}>
                     <Icon size={20} className={tool.color.text} />
                   </div>
-                  <span className="text-[11px] font-bold text-gray-600 text-center leading-tight">
-                    {tool.description}
-                  </span>
-                </>
+                  {isProLocked && (
+                    <div className="absolute -top-1 -right-1 bg-pink-500 text-white rounded-full p-0.5">
+                      <Lock size={10} />
+                    </div>
+                  )}
+                </div>
               );
+
+              const label = (
+                <span className="text-[11px] font-bold text-gray-600 text-center leading-tight">
+                  {tool.description}
+                  {isProOnly && (
+                    <span className="block text-[9px] font-medium text-pink-500 mt-0.5">Pro</span>
+                  )}
+                </span>
+              );
+
+              // Pro未加入の場合はPricingページへ誘導
+              if (isProLocked) {
+                return (
+                  <Link
+                    key={tool.id}
+                    href="/pricing"
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-pink-50 active:bg-pink-100 transition-all opacity-75 hover:opacity-100"
+                  >
+                    {content}
+                    {label}
+                  </Link>
+                );
+              }
 
               if (tool.href) {
                 return (
@@ -188,6 +217,7 @@ export default function DashboardHome({
                     className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-all"
                   >
                     {content}
+                    {label}
                   </Link>
                 );
               }
@@ -199,6 +229,7 @@ export default function DashboardHome({
                   className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-all"
                 >
                   {content}
+                  {label}
                 </button>
               );
             })}

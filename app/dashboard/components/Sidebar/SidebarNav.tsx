@@ -77,6 +77,8 @@ type SidebarNavProps = {
   // KDLサブスクリプション状態
   hasKdlSubscription?: boolean;
   isKdlMonitor?: boolean;
+  // 集客メーカーProプラン
+  hasMakersProAccess?: boolean;
 };
 
 export default function SidebarNav({
@@ -87,9 +89,12 @@ export default function SidebarNav({
   onLogout,
   hasKdlSubscription = false,
   isKdlMonitor = false,
+  hasMakersProAccess = false,
 }: SidebarNavProps) {
   // KDLの状態判定（管理者は常にアクセス可能）
   const kdlDisabled = !hasKdlSubscription && !isAdmin;
+  // サムネイルメーカーはPro限定（管理者は常にアクセス可能）
+  const thumbnailLocked = !hasMakersProAccess && !isAdmin;
   
   // KDLバッジの表示内容
   const getKdlBadge = () => {
@@ -110,7 +115,15 @@ export default function SidebarNav({
     { id: 'survey', label: 'アンケートメーカー', icon: ClipboardList, section: 'main', badge: contentCounts.survey },
     { id: 'my-games', label: 'ゲーミフィケーション', icon: Gamepad2, section: 'main', badge: contentCounts.gamification },
     { id: 'onboarding', label: 'はじめかたメーカー', icon: MousePointerClick, section: 'main', badge: contentCounts.onboarding },
-    { id: 'thumbnail', label: 'サムネイルメーカー', icon: Image, section: 'main', badge: contentCounts.thumbnail },
+    {
+      id: 'thumbnail',
+      label: 'サムネイルメーカー',
+      icon: Image,
+      section: 'main',
+      badge: contentCounts.thumbnail,
+      isDisabled: thumbnailLocked,
+      disabledBadge: thumbnailLocked ? 'Pro' : undefined,
+    },
     {
       id: 'kindle', 
       label: 'Kindle執筆 (KDL)', 
@@ -236,9 +249,11 @@ export default function SidebarNav({
         {/* ステータスバッジ（KDL未加入・モニターなど） */}
         {item.disabledBadge && (
           <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
-            item.disabledBadge === 'モニター' 
-              ? 'bg-purple-100 text-purple-600' 
-              : 'bg-gray-200 text-gray-500'
+            item.disabledBadge === 'モニター'
+              ? 'bg-purple-100 text-purple-600'
+              : item.disabledBadge === 'Pro'
+                ? 'bg-pink-100 text-pink-600'
+                : 'bg-gray-200 text-gray-500'
           }`}>
             {item.disabledBadge}
           </span>
