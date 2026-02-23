@@ -257,19 +257,14 @@ function DashboardContent() {
     setActiveView(itemId as ActiveView);
 
     // サービス選択の場合はselectedServiceも更新
-    if (['quiz', 'profile', 'business', 'salesletter', 'onboarding'].includes(itemId)) {
+    if (['quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail'].includes(itemId)) {
+      // サムネイルはPro限定チェック
+      if (itemId === 'thumbnail' && !isAdmin && !hasMakersProAccess) {
+        router.push('/pricing');
+        return;
+      }
       setSelectedService(itemId as ServiceType);
       fetchContents(itemId as ServiceType);
-    }
-
-    // サムネイルメーカーへの遷移（Pro限定）
-    if (itemId === 'thumbnail') {
-      if (isAdmin || hasMakersProAccess) {
-        router.push('/thumbnail/editor');
-      } else {
-        router.push('/pricing');
-      }
-      return;
     }
 
     // Kindle執筆への遷移
