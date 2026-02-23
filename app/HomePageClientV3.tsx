@@ -324,8 +324,8 @@ export default function HomePageClientV3() {
             🔰 パソコン苦手でも大丈夫！ ずっと0円
           </span>
           <h1 className="text-4xl lg:text-6xl font-black leading-tight mb-6" style={{ color: '#5d4037' }}>
-            無料で、いろんなツールが<br />
-            <span style={{ color: '#f97316' }}>カンタンに作れる！</span>
+            仕事に役立つ集客ツールが<br />
+            <span style={{ color: '#f97316' }}>無料で作り放題</span>
           </h1>
           <p className="text-base md:text-lg text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
             <span className="font-bold" style={{ color: '#f97316' }}>診断クイズ</span>、
