@@ -61,7 +61,7 @@ export async function getRelatedContents(
       const { data } = await supabase
         .from('profiles')
         .select('slug, nickname, content')
-        .eq('featured_on_top', true)
+        .eq('show_in_portal', true)
         .neq('slug', currentSlug)
         .not('slug', 'is', null)
         .limit(limit);
@@ -123,6 +123,7 @@ export async function getRelatedContents(
       const { data } = await supabase
         .from('sales_letters')
         .select('slug, title, settings, views_count')
+        .eq('show_in_portal', true)
         .neq('slug', currentSlug)
         .not('slug', 'is', null)
         .order('views_count', { ascending: false })

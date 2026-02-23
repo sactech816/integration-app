@@ -71,6 +71,12 @@ CREATE TRIGGER trigger_sales_letters_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_sales_letters_updated_at();
 
+-- ポータル掲載フラグ
+ALTER TABLE sales_letters ADD COLUMN IF NOT EXISTS show_in_portal BOOLEAN DEFAULT true;
+CREATE INDEX IF NOT EXISTS idx_sales_letters_show_in_portal ON sales_letters(show_in_portal) WHERE show_in_portal = true;
+COMMENT ON COLUMN sales_letters.show_in_portal IS 'ポータルページに掲載するかどうか（デフォルト: true）';
+UPDATE sales_letters SET show_in_portal = true WHERE show_in_portal IS NULL;
+
 -- views_countインクリメント関数
 CREATE OR REPLACE FUNCTION increment_sales_letter_views(letter_slug VARCHAR)
 RETURNS void AS $$
