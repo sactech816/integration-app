@@ -159,7 +159,7 @@ export default function HomePage() {
               パソコン苦手でも大丈夫！ ずっと0円
             </span>
             <h1 className="text-4xl lg:text-6xl font-black leading-tight mb-6" style={{ color: '#5d4037' }}>
-              仕事に役立つ集客ツールが<br />
+              仕事に役立つ<br />集客ツールが<br />
               <span style={{ color: '#f97316' }}>無料で作り放題</span>
             </h1>
             <p className="text-base md:text-lg text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed" data-speakable>
