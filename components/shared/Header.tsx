@@ -61,7 +61,6 @@ const Header: React.FC<HeaderProps> = ({
   const [isServiceMenuOpen, setIsServiceMenuOpen] = useState(false);
   const [isGuideMenuOpen, setIsGuideMenuOpen] = useState(false);
   const [isKindleMenuOpen, setIsKindleMenuOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   // ESCキーでメニューを閉じる
   useEffect(() => {
@@ -71,7 +70,6 @@ const Header: React.FC<HeaderProps> = ({
         setIsServiceMenuOpen(false);
         setIsGuideMenuOpen(false);
         setIsKindleMenuOpen(false);
-        setIsUserMenuOpen(false);
       }
     };
     window.addEventListener('keydown', handleEsc);
@@ -84,7 +82,6 @@ const Header: React.FC<HeaderProps> = ({
     setIsServiceMenuOpen(false);
     setIsGuideMenuOpen(false);
     setIsKindleMenuOpen(false);
-    setIsUserMenuOpen(false);
   };
 
   // サービスエディタリンクのクリックハンドラ（同一パス時は新規作成として扱う）
@@ -99,7 +96,6 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleLogout = () => {
     onLogout();
-    setIsUserMenuOpen(false);
     setIsMenuOpen(false);
   };
 
@@ -166,9 +162,9 @@ const Header: React.FC<HeaderProps> = ({
               {isServiceMenuOpen && (
                 <>
                   <div className="absolute top-full left-0 w-full h-2" />
-                  <div className="absolute top-full -left-20 pt-2 w-[640px] z-[120]">
+                  <div className="absolute top-full -left-20 pt-2 w-[780px] z-[120]">
                     <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-5 animate-fade-in">
-                      <div className="grid grid-cols-3 gap-6">
+                      <div className="grid grid-cols-3 gap-8">
                         {/* コンテンツ作成ツール */}
                         <div>
                           <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">コンテンツ作成</p>
@@ -178,33 +174,33 @@ const Header: React.FC<HeaderProps> = ({
                                 key={service.id}
                                 href={`/${service.id}/editor`}
                                 onClick={(e) => handleServiceClick(e, service.id)}
-                                className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                                className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                               >
-                                <div className={`p-1.5 rounded-lg ${service.bg}`}>
+                                <div className={`p-1.5 rounded-lg ${service.bg} shrink-0`}>
                                   <service.icon size={16} className={service.color} />
                                 </div>
-                                <span className="font-medium text-gray-900 text-sm">{service.label}</span>
+                                <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{service.label}</span>
                               </Link>
                             ))}
                             <Link
                               href="/salesletter/editor"
                               onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                              <div className={`p-1.5 rounded-lg ${salesletterService.bg}`}>
+                              <div className={`p-1.5 rounded-lg ${salesletterService.bg} shrink-0`}>
                                 <salesletterService.icon size={16} className={salesletterService.color} />
                               </div>
-                              <span className="font-medium text-gray-900 text-sm">{salesletterService.label}</span>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{salesletterService.label}</span>
                             </Link>
                             <Link
                               href="/onboarding/editor"
                               onClick={(e) => handleServiceClick(e, 'onboarding')}
-                              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                              <div className={`p-1.5 rounded-lg ${onboardingService.bg}`}>
+                              <div className={`p-1.5 rounded-lg ${onboardingService.bg} shrink-0`}>
                                 <onboardingService.icon size={16} className={onboardingService.color} />
                               </div>
-                              <span className="font-medium text-gray-900 text-sm">{onboardingService.label}</span>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{onboardingService.label}</span>
                             </Link>
                           </div>
                         </div>
@@ -216,42 +212,42 @@ const Header: React.FC<HeaderProps> = ({
                             <Link
                               href="/booking/new"
                               onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                              <div className="p-1.5 rounded-lg bg-blue-50">
+                              <div className="p-1.5 rounded-lg bg-blue-50 shrink-0">
                                 <Calendar size={16} className="text-blue-600" />
                               </div>
-                              <span className="font-medium text-gray-900 text-sm">予約メーカー</span>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">予約メーカー</span>
                             </Link>
                             <Link
                               href="/attendance/new"
                               onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                              <div className={`p-1.5 rounded-lg ${attendanceService.bg}`}>
+                              <div className={`p-1.5 rounded-lg ${attendanceService.bg} shrink-0`}>
                                 <attendanceService.icon size={16} className={attendanceService.color} />
                               </div>
-                              <span className="font-medium text-gray-900 text-sm">{attendanceService.label}</span>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{attendanceService.label}</span>
                             </Link>
                             <Link
                               href="/survey/new"
                               onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                              <div className={`p-1.5 rounded-lg ${surveyService.bg}`}>
+                              <div className={`p-1.5 rounded-lg ${surveyService.bg} shrink-0`}>
                                 <surveyService.icon size={16} className={surveyService.color} />
                               </div>
-                              <span className="font-medium text-gray-900 text-sm">{surveyService.label}</span>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{surveyService.label}</span>
                             </Link>
                             <Link
                               href="/gamification/new"
                               onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                              <div className={`p-1.5 rounded-lg ${gamificationService.bg}`}>
+                              <div className={`p-1.5 rounded-lg ${gamificationService.bg} shrink-0`}>
                                 <gamificationService.icon size={16} className={gamificationService.color} />
                               </div>
-                              <span className="font-medium text-gray-900 text-sm">{gamificationService.label}</span>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{gamificationService.label}</span>
                             </Link>
                           </div>
                         </div>
@@ -263,44 +259,44 @@ const Header: React.FC<HeaderProps> = ({
                             <Link
                               href="/portal"
                               onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                              <div className="p-1.5 rounded-lg bg-purple-50">
+                              <div className="p-1.5 rounded-lg bg-purple-50 shrink-0">
                                 <LayoutGrid size={16} className="text-purple-600" />
                               </div>
-                              <span className="font-medium text-gray-900 text-sm">作品集（ポータル）</span>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">作品集（ポータル）</span>
                             </Link>
                             <Link
                               href="/demos"
                               onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                              <div className="p-1.5 rounded-lg bg-indigo-50">
+                              <div className="p-1.5 rounded-lg bg-indigo-50 shrink-0">
                                 <Monitor size={16} className="text-indigo-600" />
                               </div>
-                              <span className="font-medium text-gray-900 text-sm">デモ一覧</span>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">デモ一覧</span>
                             </Link>
                             <Link
                               href="/tools"
                               onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                              <div className="p-1.5 rounded-lg bg-gray-100">
+                              <div className="p-1.5 rounded-lg bg-gray-100 shrink-0">
                                 <LayoutGrid size={16} className="text-gray-600" />
                               </div>
-                              <span className="font-medium text-gray-900 text-sm">ツール一覧</span>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">ツール一覧</span>
                             </Link>
                           </div>
                           <div className="border-t border-gray-100 mt-3 pt-3">
                             <Link
                               href="/pricing"
                               onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-purple-50 transition-colors"
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors"
                             >
-                              <div className="p-1.5 rounded-lg bg-purple-50">
+                              <div className="p-1.5 rounded-lg bg-purple-50 shrink-0">
                                 <Crown size={16} className="text-purple-600" />
                               </div>
-                              <span className="font-medium text-purple-700 text-sm">料金プラン</span>
+                              <span className="font-medium text-purple-700 text-sm whitespace-nowrap">料金プラン</span>
                             </Link>
                           </div>
                         </div>
@@ -528,64 +524,32 @@ const Header: React.FC<HeaderProps> = ({
 
           </nav>
 
-          {/* ===== PC版ユーザーアクション（小さなアイコンメニュー） ===== */}
-          <div className="hidden lg:flex items-center gap-2">
+          {/* ===== PC版ユーザーアクション（3つの小さなアイコンボタン） ===== */}
+          <div className="hidden lg:flex items-center gap-1">
             {user ? (
-              <div
-                className="relative"
-                onMouseEnter={() => setIsUserMenuOpen(true)}
-                onMouseLeave={() => setIsUserMenuOpen(false)}
-              >
-                <button
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors"
-                  title={user.email || 'ユーザーメニュー'}
+              <>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center justify-center w-9 h-9 rounded-full bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors"
+                  title="集客メーカー マイページ"
                 >
-                  <User size={20} />
+                  <Magnet size={17} />
+                </Link>
+                <Link
+                  href="/kindle"
+                  className="flex items-center justify-center w-9 h-9 rounded-full bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"
+                  title="Kindle出版 マイページ"
+                >
+                  <BookOpen size={17} />
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center justify-center w-9 h-9 rounded-full bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors"
+                  title="ログアウト"
+                >
+                  <LogOut size={17} />
                 </button>
-
-                {isUserMenuOpen && (
-                  <>
-                    <div className="absolute top-full right-0 w-full h-2" />
-                    <div className="absolute top-full right-0 pt-2 w-56 z-[120]">
-                      <div className="bg-white rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in">
-                        {/* メールアドレス表示 */}
-                        <div className="px-4 py-2.5 border-b border-gray-100">
-                          <p className="text-xs text-gray-500">ログイン中</p>
-                          <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
-                        </div>
-
-                        <Link
-                          href="/dashboard"
-                          onClick={closeMenus}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
-                        >
-                          <Magnet size={16} className="text-orange-600" />
-                          <span className="font-medium text-gray-900 text-sm">集客メーカー マイページ</span>
-                        </Link>
-
-                        <Link
-                          href="/kindle"
-                          onClick={closeMenus}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
-                        >
-                          <BookOpen size={16} className="text-amber-600" />
-                          <span className="font-medium text-gray-900 text-sm">Kindle出版 マイページ</span>
-                        </Link>
-
-                        <div className="border-t border-gray-100 mt-1 pt-1">
-                          <button
-                            onClick={handleLogout}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-red-50 transition-colors"
-                          >
-                            <LogOut size={16} className="text-red-500" />
-                            <span className="font-medium text-red-600 text-sm">ログアウト</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+              </>
             ) : (
               <button
                 onClick={() => setShowAuth(true)}
