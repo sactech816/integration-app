@@ -2887,13 +2887,27 @@ function EditorBlockItem({
     onToggle();
     if (wasCollapsed && ref.current) {
       setTimeout(() => {
-        ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const el = ref.current;
+        if (!el) return;
+        // overflow-y-auto のスクロールコンテナを探す
+        let scrollParent = el.parentElement;
+        while (scrollParent && getComputedStyle(scrollParent).overflowY !== 'auto') {
+          scrollParent = scrollParent.parentElement;
+        }
+        if (scrollParent) {
+          const elRect = el.getBoundingClientRect();
+          const containerRect = scrollParent.getBoundingClientRect();
+          const offset = elRect.top - containerRect.top + scrollParent.scrollTop - 12;
+          scrollParent.scrollTo({ top: offset, behavior: 'smooth' });
+        } else {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       }, 50);
     }
   }, [isExpanded, onToggle]);
 
   return (
-    <div ref={ref} className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden scroll-mt-8">
+    <div ref={ref} className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
       <div
         className="w-full flex items-center justify-between p-4 hover:bg-gray-100 cursor-pointer"
         onClick={handleToggle}
