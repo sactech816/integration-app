@@ -1,19 +1,28 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MarketplaceProfile, MarketplaceListing, MarketplaceOrder } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import SellerProfileCard from '@/components/marketplace/SellerProfileCard';
+import SellerProfileForm from '@/components/marketplace/SellerProfileForm';
+import ListingForm from '@/components/marketplace/ListingForm';
 import OrderCard from '@/components/marketplace/OrderCard';
 import {
   Plus, Edit3, Eye, EyeOff, Trash2, Loader2, UserCog,
-  Store, ShoppingBag, Package, MessageSquare, Star,
-  ArrowRight, ExternalLink, TrendingUp, BarChart3,
+  Store, ShoppingBag, Package, MessageSquare,
+  ArrowRight, ExternalLink, ArrowLeft, BarChart3, X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { CATEGORY_MAP } from '@/constants/marketplace';
 
 type TabId = 'overview' | 'listings' | 'orders' | 'profile';
+
+// インラインで表示するサブビュー
+type SubView =
+  | { type: 'none' }
+  | { type: 'new-listing' }
+  | { type: 'edit-listing'; listing: MarketplaceListing }
+  | { type: 'edit-profile' };
 
 interface MarketplaceSellerDashboardProps {
   userId: string;
@@ -23,11 +32,11 @@ export default function MarketplaceSellerDashboard({ userId }: MarketplaceSeller
   const [accessToken, setAccessToken] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [subView, setSubView] = useState<SubView>({ type: 'none' });
 
   const [profile, setProfile] = useState<MarketplaceProfile | null>(null);
   const [listings, setListings] = useState<MarketplaceListing[]>([]);
   const [orders, setOrders] = useState<(MarketplaceOrder & { is_buyer?: boolean; buyer_profile?: any; seller_profile?: any })[]>([]);
-  const [loadingOrders, setLoadingOrders] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -37,28 +46,26 @@ export default function MarketplaceSellerDashboard({ userId }: MarketplaceSeller
 
       setAccessToken(session.access_token);
 
-      // プロフィール取得
-      const profileRes = await fetch('/api/marketplace/profiles', {
-        headers: { 'Authorization': `Bearer ${session.access_token}` },
-      });
+      const [profileRes, listingsRes, ordersRes] = await Promise.all([
+        fetch('/api/marketplace/profiles', {
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+        }),
+        fetch('/api/marketplace/listings?my=true', {
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+        }),
+        fetch('/api/marketplace/orders', {
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+        }),
+      ]);
+
       if (profileRes.ok) {
         const d = await profileRes.json();
         setProfile(d.profile);
       }
-
-      // 自分の出品一覧
-      const listingsRes = await fetch('/api/marketplace/listings?my=true', {
-        headers: { 'Authorization': `Bearer ${session.access_token}` },
-      });
       if (listingsRes.ok) {
         const d = await listingsRes.json();
         setListings(d.listings || []);
       }
-
-      // 案件一覧
-      const ordersRes = await fetch('/api/marketplace/orders', {
-        headers: { 'Authorization': `Bearer ${session.access_token}` },
-      });
       if (ordersRes.ok) {
         const d = await ordersRes.json();
         setOrders(d.orders || []);
@@ -95,6 +102,21 @@ export default function MarketplaceSellerDashboard({ userId }: MarketplaceSeller
     }
   };
 
+  // フォーム保存後のハンドラ
+  const handleProfileSaved = (savedProfile: MarketplaceProfile) => {
+    setProfile(savedProfile);
+    setSubView({ type: 'none' });
+  };
+
+  const handleListingSaved = (savedListing: MarketplaceListing) => {
+    if (subView.type === 'edit-listing') {
+      setListings(prev => prev.map(l => l.id === savedListing.id ? savedListing : l));
+    } else {
+      setListings(prev => [savedListing, ...prev]);
+    }
+    setSubView({ type: 'none' });
+  };
+
   const publishedCount = listings.filter(l => l.status === 'published').length;
   const activeOrders = orders.filter(o => !['completed', 'cancelled'].includes(o.status));
   const sellerOrders = orders.filter(o => !o.is_buyer);
@@ -108,6 +130,91 @@ export default function MarketplaceSellerDashboard({ userId }: MarketplaceSeller
     );
   }
 
+  // ===== サブビュー: 新規出品フォーム =====
+  if (subView.type === 'new-listing') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setSubView({ type: 'none' })}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">新規出品</h2>
+            <p className="text-sm text-gray-500">サービスの情報を入力して出品しましょう</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <ListingForm
+            accessToken={accessToken}
+            onSaved={handleListingSaved}
+            onCancel={() => setSubView({ type: 'none' })}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ===== サブビュー: 出品編集フォーム =====
+  if (subView.type === 'edit-listing') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setSubView({ type: 'none' })}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">出品を編集</h2>
+            <p className="text-sm text-gray-500">{subView.listing.title}</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <ListingForm
+            listing={subView.listing}
+            accessToken={accessToken}
+            onSaved={handleListingSaved}
+            onCancel={() => setSubView({ type: 'none' })}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ===== サブビュー: プロフィール編集フォーム =====
+  if (subView.type === 'edit-profile') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setSubView({ type: 'none' })}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">
+              {profile ? 'プロフィールを編集' : 'プロフィールを作成'}
+            </h2>
+            <p className="text-sm text-gray-500">スキルや経験をアピールしましょう</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <SellerProfileForm
+            profile={profile}
+            accessToken={accessToken}
+            onSaved={handleProfileSaved}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ===== メインビュー =====
   const tabs: { id: TabId; label: string; icon: React.ElementType; badge?: number }[] = [
     { id: 'overview', label: '概要', icon: BarChart3 },
     { id: 'listings', label: '出品サービス', icon: Package, badge: listings.length },
@@ -165,7 +272,7 @@ export default function MarketplaceSellerDashboard({ userId }: MarketplaceSeller
         })}
       </div>
 
-      {/* 概要タブ */}
+      {/* ========== 概要タブ ========== */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
           {/* 統計カード */}
@@ -228,13 +335,13 @@ export default function MarketplaceSellerDashboard({ userId }: MarketplaceSeller
                   <p className="text-sm text-gray-600 mb-4">
                     出品するには、まずプロフィールの設定が必要です。スキルや対応可能なツールを登録しましょう。
                   </p>
-                  <Link
-                    href="/marketplace/seller/profile"
+                  <button
+                    onClick={() => setSubView({ type: 'edit-profile' })}
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
                   >
                     プロフィールを作成する
                     <ArrowRight className="w-4 h-4" />
-                  </Link>
+                  </button>
                 </div>
               </div>
             </div>
@@ -245,13 +352,13 @@ export default function MarketplaceSellerDashboard({ userId }: MarketplaceSeller
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-gray-700">クリエイタープロフィール</h3>
-                <Link
-                  href="/marketplace/seller/profile"
+                <button
+                  onClick={() => setSubView({ type: 'edit-profile' })}
                   className="text-xs text-indigo-600 hover:underline flex items-center gap-1"
                 >
                   <Edit3 className="w-3 h-3" />
                   編集
-                </Link>
+                </button>
               </div>
               <SellerProfileCard profile={profile} compact />
             </div>
@@ -281,9 +388,9 @@ export default function MarketplaceSellerDashboard({ userId }: MarketplaceSeller
           {/* クイックアクション */}
           {profile && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Link
-                href="/marketplace/seller/listings/new"
-                className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 hover:border-indigo-200 hover:shadow-sm p-4 transition-all"
+              <button
+                onClick={() => setSubView({ type: 'new-listing' })}
+                className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 hover:border-indigo-200 hover:shadow-sm p-4 transition-all text-left"
               >
                 <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
                   <Plus className="w-5 h-5 text-indigo-600" />
@@ -292,7 +399,7 @@ export default function MarketplaceSellerDashboard({ userId }: MarketplaceSeller
                   <p className="text-sm font-semibold text-gray-900">新規出品</p>
                   <p className="text-xs text-gray-500">サービスを出品する</p>
                 </div>
-              </Link>
+              </button>
               <Link
                 href="/marketplace"
                 target="_blank"
@@ -311,28 +418,31 @@ export default function MarketplaceSellerDashboard({ userId }: MarketplaceSeller
         </div>
       )}
 
-      {/* 出品サービスタブ */}
+      {/* ========== 出品サービスタブ ========== */}
       {activeTab === 'listings' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-gray-900">出品サービス ({listings.length}件)</h3>
             {profile && (
-              <Link
-                href="/marketplace/seller/listings/new"
+              <button
+                onClick={() => setSubView({ type: 'new-listing' })}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg text-sm font-medium hover:from-indigo-700 hover:to-purple-700 transition-all shadow-sm"
               >
                 <Plus className="w-4 h-4" />
                 新規出品
-              </Link>
+              </button>
             )}
           </div>
 
           {!profile && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-800">
               出品するには、まずクリエイタープロフィールを作成してください。
-              <Link href="/marketplace/seller/profile" className="text-indigo-600 font-medium ml-1 hover:underline">
+              <button
+                onClick={() => setSubView({ type: 'edit-profile' })}
+                className="text-indigo-600 font-medium ml-1 hover:underline"
+              >
                 作成する →
-              </Link>
+              </button>
             </div>
           )}
 
@@ -343,13 +453,13 @@ export default function MarketplaceSellerDashboard({ userId }: MarketplaceSeller
               </div>
               <p className="text-gray-500 mb-2">まだ出品がありません</p>
               {profile && (
-                <Link
-                  href="/marketplace/seller/listings/new"
+                <button
+                  onClick={() => setSubView({ type: 'new-listing' })}
                   className="inline-flex items-center gap-1.5 mt-2 text-indigo-600 text-sm font-medium hover:underline"
                 >
                   <Plus className="w-4 h-4" />
                   最初のサービスを出品する
-                </Link>
+                </button>
               )}
             </div>
           ) : (
@@ -398,13 +508,13 @@ export default function MarketplaceSellerDashboard({ userId }: MarketplaceSeller
                       >
                         <ExternalLink className="w-4 h-4" />
                       </Link>
-                      <Link
-                        href={`/marketplace/seller/listings/${listing.id}/edit`}
+                      <button
+                        onClick={() => setSubView({ type: 'edit-listing', listing })}
                         className="p-2 text-gray-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
                         title="編集"
                       >
                         <Edit3 className="w-4 h-4" />
-                      </Link>
+                      </button>
                       <button
                         onClick={() => toggleListingStatus(listing)}
                         className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
@@ -428,7 +538,7 @@ export default function MarketplaceSellerDashboard({ userId }: MarketplaceSeller
         </div>
       )}
 
-      {/* 案件・やりとりタブ */}
+      {/* ========== 案件・やりとりタブ ========== */}
       {activeTab === 'orders' && (
         <div className="space-y-4">
           <h3 className="font-semibold text-gray-900">案件一覧</h3>
@@ -476,18 +586,18 @@ export default function MarketplaceSellerDashboard({ userId }: MarketplaceSeller
         </div>
       )}
 
-      {/* プロフィールタブ */}
+      {/* ========== プロフィールタブ ========== */}
       {activeTab === 'profile' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-gray-900">クリエイタープロフィール</h3>
-            <Link
-              href="/marketplace/seller/profile"
+            <button
+              onClick={() => setSubView({ type: 'edit-profile' })}
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
             >
               <UserCog className="w-4 h-4" />
               {profile ? 'プロフィールを編集' : 'プロフィールを作成'}
-            </Link>
+            </button>
           </div>
 
           {profile ? (
@@ -499,13 +609,13 @@ export default function MarketplaceSellerDashboard({ userId }: MarketplaceSeller
               </div>
               <p className="text-gray-500 mb-2">プロフィールがまだ作成されていません</p>
               <p className="text-sm text-gray-400 mb-4">出品するにはプロフィールの作成が必要です</p>
-              <Link
-                href="/marketplace/seller/profile"
+              <button
+                onClick={() => setSubView({ type: 'edit-profile' })}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700"
               >
                 作成する
                 <ArrowRight className="w-4 h-4" />
-              </Link>
+              </button>
             </div>
           )}
         </div>
