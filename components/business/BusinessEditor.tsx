@@ -2893,7 +2893,7 @@ function EditorBlockItem({
   }, [isExpanded, onToggle]);
 
   return (
-    <div ref={ref} className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+    <div ref={ref} className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden scroll-mt-2">
       <div
         className="w-full flex items-center justify-between p-4 hover:bg-gray-100 cursor-pointer"
         onClick={handleToggle}
