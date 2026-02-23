@@ -1,11 +1,26 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Loader2, FileText, DollarSign, Star, Crown } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Loader2, FileText, DollarSign, Star, Crown, UploadCloud, ImageIcon, X, Shuffle } from 'lucide-react';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { MarketplaceListing, MarketplacePriceType } from '@/lib/types';
 import { MARKETPLACE_CATEGORIES, PRICE_TYPE_LABELS } from '@/constants/marketplace';
+import { supabase } from '@/lib/supabase';
+
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+
+const CURATED_THUMBNAILS = [
+  'https://images.unsplash.com/photo-1664575602276-acd073f104c1?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1606857521015-7f9fcf423740?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=800&q=80',
+];
 
 interface ListingFormProps {
   listing?: MarketplaceListing | null;
@@ -21,14 +36,52 @@ export default function ListingForm({ listing, accessToken, onSaved, onCancel }:
   const [category, setCategory] = useState(listing?.category || '');
   const [title, setTitle] = useState(listing?.title || '');
   const [description, setDescription] = useState(listing?.description || '');
+  const [thumbnailUrl, setThumbnailUrl] = useState(listing?.thumbnail_url || '');
   const [priceType, setPriceType] = useState<MarketplacePriceType>(listing?.price_type || 'fixed');
   const [priceMin, setPriceMin] = useState(listing?.price_min?.toString() || '');
   const [priceMax, setPriceMax] = useState(listing?.price_max?.toString() || '');
   const [deliveryDays, setDeliveryDays] = useState(listing?.delivery_days?.toString() || '');
   const [saving, setSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
+  const [showFreeImages, setShowFreeImages] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedCategory = MARKETPLACE_CATEGORIES.find(c => c.id === category);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!supabase) return alert('データベースに接続されていません');
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      alert(`ファイルサイズが大きすぎます（${(file.size / 1024 / 1024).toFixed(1)}MB）。2MB以内のファイルを選択してください。`);
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+      const filePath = `marketplace/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
+      setThumbnailUrl(data.publicUrl);
+    } catch (err: any) {
+      alert('アップロードエラー: ' + err.message);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRandomImage = () => {
+    const selected = CURATED_THUMBNAILS[Math.floor(Math.random() * CURATED_THUMBNAILS.length)];
+    setThumbnailUrl(selected);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +105,7 @@ export default function ListingForm({ listing, accessToken, onSaved, onCancel }:
         linked_service_type: selectedCategory?.linkedServiceType || null,
         title: title.trim(),
         description: description.trim(),
+        thumbnail_url: thumbnailUrl || null,
         price_type: priceType,
         price_min: priceType === 'negotiable' ? 0 : parseInt(priceMin),
         price_max: priceType === 'range' && priceMax ? parseInt(priceMax) : null,
@@ -125,6 +179,85 @@ export default function ListingForm({ listing, accessToken, onSaved, onCancel }:
           maxLength={80}
         />
         <p className="text-xs text-gray-400 mt-1">{title.length}/80</p>
+      </div>
+
+      {/* サムネイル画像 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          サムネイル画像
+        </label>
+        <p className="text-xs text-gray-500 mb-3">サービスの魅力が伝わる画像を設定しましょう（2MB以内）</p>
+
+        {/* プレビュー */}
+        {thumbnailUrl && (
+          <div className="relative mb-3 rounded-xl overflow-hidden border border-gray-200">
+            <img src={thumbnailUrl} alt="サムネイルプレビュー" className="w-full h-40 object-cover" />
+            <button
+              type="button"
+              onClick={() => setThumbnailUrl('')}
+              className="absolute top-2 right-2 w-7 h-7 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* アクションボタン */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            type="text"
+            value={thumbnailUrl}
+            onChange={e => setThumbnailUrl(e.target.value)}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400"
+            placeholder="画像URL (https://...) またはアップロード"
+          />
+          <label className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-100 cursor-pointer transition-colors whitespace-nowrap">
+            {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+            アップロード
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept="image/*"
+              onChange={handleImageUpload}
+              disabled={isUploading}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={handleRandomImage}
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors whitespace-nowrap"
+          >
+            <Shuffle className="w-4 h-4" />
+            ランダム
+          </button>
+        </div>
+
+        {/* フリー画像ギャラリー */}
+        <button
+          type="button"
+          onClick={() => setShowFreeImages(!showFreeImages)}
+          className="mt-2 text-xs text-indigo-600 hover:underline flex items-center gap-1"
+        >
+          <ImageIcon className="w-3 h-3" />
+          {showFreeImages ? 'フリー画像を閉じる' : 'フリー画像から選ぶ'}
+        </button>
+        {showFreeImages && (
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {CURATED_THUMBNAILS.map((url, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => { setThumbnailUrl(url); setShowFreeImages(false); }}
+                className={`aspect-video rounded-lg overflow-hidden border-2 transition-all hover:opacity-90 ${
+                  thumbnailUrl === url ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-gray-200'
+                }`}
+              >
+                <img src={url} alt="" className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 説明 */}

@@ -1,9 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Loader2, Plus, X, Check } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Loader2, Plus, X, Check, UploadCloud, Shuffle, ImageIcon, User } from 'lucide-react';
 import { MarketplaceProfile } from '@/lib/types';
 import { RESPONSE_TIME_OPTIONS, SUPPORTED_TOOLS, KINDLE_SUBTYPES } from '@/constants/marketplace';
+import { supabase } from '@/lib/supabase';
+
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+
+const CURATED_AVATARS = [
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&h=200&q=80',
+  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&h=200&q=80',
+  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&h=200&q=80',
+  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&h=200&q=80',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&h=200&q=80',
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&h=200&q=80',
+];
 
 interface SellerProfileFormProps {
   profile: MarketplaceProfile | null;
@@ -14,6 +26,7 @@ interface SellerProfileFormProps {
 export default function SellerProfileForm({ profile, accessToken, onSaved }: SellerProfileFormProps) {
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
   const [bio, setBio] = useState(profile?.bio || '');
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
   const [skills, setSkills] = useState<string[]>(profile?.skills || []);
   const [newSkill, setNewSkill] = useState('');
   const [portfolioUrls, setPortfolioUrls] = useState<string[]>(profile?.portfolio_urls || []);
@@ -22,7 +35,44 @@ export default function SellerProfileForm({ profile, accessToken, onSaved }: Sel
   const [supportedTools, setSupportedTools] = useState<string[]>(profile?.supported_tools || []);
   const [kindleSubtypes, setKindleSubtypes] = useState<string[]>(profile?.kindle_subtypes || []);
   const [saving, setSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
+  const [showFreeAvatars, setShowFreeAvatars] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!supabase) return alert('データベースに接続されていません');
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      alert(`ファイルサイズが大きすぎます（${(file.size / 1024 / 1024).toFixed(1)}MB）。2MB以内のファイルを選択してください。`);
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatar_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+      const filePath = `marketplace/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage.from('profile-uploads').upload(filePath, file);
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
+      setAvatarUrl(data.publicUrl);
+    } catch (err: any) {
+      alert('アップロードエラー: ' + err.message);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRandomAvatar = () => {
+    const selected = CURATED_AVATARS[Math.floor(Math.random() * CURATED_AVATARS.length)];
+    setAvatarUrl(selected);
+  };
 
   const toggleTool = (toolId: string) => {
     setSupportedTools(prev =>
@@ -77,6 +127,7 @@ export default function SellerProfileForm({ profile, accessToken, onSaved }: Sel
         body: JSON.stringify({
           display_name: displayName.trim(),
           bio: bio.trim() || null,
+          avatar_url: avatarUrl || null,
           skills,
           portfolio_urls: portfolioUrls,
           response_time: responseTime || null,
@@ -104,6 +155,93 @@ export default function SellerProfileForm({ profile, accessToken, onSaved }: Sel
       {error && (
         <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
       )}
+
+      {/* アバター画像 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">プロフィール画像</label>
+        <p className="text-xs text-gray-500 mb-3">あなたの印象を伝える画像を設定しましょう（2MB以内）</p>
+
+        <div className="flex items-start gap-4">
+          {/* プレビュー */}
+          <div className="relative flex-shrink-0">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center overflow-hidden border-2 border-gray-200">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="アバター" className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-8 h-8 text-indigo-300" />
+              )}
+            </div>
+            {avatarUrl && (
+              <button
+                type="button"
+                onClick={() => setAvatarUrl('')}
+                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
+          {/* アクションボタン */}
+          <div className="flex-1 space-y-2">
+            <div className="flex flex-wrap gap-2">
+              <label className="inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-100 cursor-pointer transition-colors">
+                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+                アップロード
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  disabled={isUploading}
+                />
+              </label>
+              <button
+                type="button"
+                onClick={handleRandomAvatar}
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+              >
+                <Shuffle className="w-4 h-4" />
+                ランダム
+              </button>
+            </div>
+            <input
+              type="text"
+              value={avatarUrl}
+              onChange={e => setAvatarUrl(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400"
+              placeholder="画像URLを直接入力..."
+            />
+            <button
+              type="button"
+              onClick={() => setShowFreeAvatars(!showFreeAvatars)}
+              className="text-xs text-indigo-600 hover:underline flex items-center gap-1"
+            >
+              <ImageIcon className="w-3 h-3" />
+              {showFreeAvatars ? 'フリー画像を閉じる' : 'フリー画像から選ぶ'}
+            </button>
+          </div>
+        </div>
+
+        {/* フリーアバターギャラリー */}
+        {showFreeAvatars && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {CURATED_AVATARS.map((url, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => { setAvatarUrl(url); setShowFreeAvatars(false); }}
+                className={`w-14 h-14 rounded-full overflow-hidden border-2 transition-all hover:opacity-90 flex-shrink-0 ${
+                  avatarUrl === url ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-gray-200'
+                }`}
+              >
+                <img src={url} alt="" className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* 表示名 */}
       <div>
