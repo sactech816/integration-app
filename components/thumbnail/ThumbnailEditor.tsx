@@ -13,10 +13,13 @@ import {
 } from '@/constants/templates/thumbnail';
 import {
   Youtube, Instagram, Twitter, MessageCircle, Image as ImageIcon,
-  ArrowLeft, ArrowRight, Sparkles, Download, Save, Loader2,
-  RefreshCw, Check, ChevronRight, Crown, Lock, Type,
+  Sparkles, Download, Save, Loader2,
+  RefreshCw, Check, Crown, Lock, Type,
+  ChevronUp, ChevronDown, Monitor, Palette, Settings,
+  Edit3, Eye,
 } from 'lucide-react';
 import AIEditChat from './AIEditChat';
+import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 
 interface ThumbnailEditorProps {
   user: { id: string; email?: string } | null;
@@ -29,9 +32,69 @@ const platformIcons: Record<string, React.ElementType> = {
   Youtube, Instagram, Twitter, MessageCircle, Image: ImageIcon,
 };
 
+// --- セクションコンポーネント（QuizEditorと同一パターン） ---
+const Section = ({
+  title,
+  icon: Icon,
+  isOpen,
+  onToggle,
+  children,
+  badge,
+  step,
+  stepLabel,
+}: {
+  title: string;
+  icon: React.ElementType;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+  badge?: string;
+  step?: number;
+  stepLabel?: string;
+}) => (
+  <div className="border border-gray-200 rounded-xl overflow-hidden mb-4 bg-white">
+    {step && stepLabel && (
+      <div className="px-5 py-2 bg-pink-50/50 border-b border-gray-200/50">
+        <span className="text-xs font-bold text-gray-600 bg-white/60 px-2 py-0.5 rounded">
+          STEP {step}
+        </span>
+        <span className="text-sm text-gray-700 ml-2">{stepLabel}</span>
+      </div>
+    )}
+    <button
+      onClick={onToggle}
+      className="w-full px-5 py-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+    >
+      <div className="flex items-center gap-3">
+        <div className={`p-2 rounded-lg ${isOpen ? 'bg-pink-100 text-pink-600' : 'bg-gray-200 text-gray-500'}`}>
+          <Icon size={18} />
+        </div>
+        <span className="font-bold text-gray-900">{title}</span>
+        {badge && (
+          <span className="text-xs bg-white/80 text-gray-700 px-2 py-0.5 rounded-full border border-gray-200">{badge}</span>
+        )}
+      </div>
+      {isOpen ? <ChevronUp size={20} className="text-gray-500" /> : <ChevronDown size={20} className="text-gray-500" />}
+    </button>
+    {isOpen && (
+      <div className="p-5 border-t border-gray-100">
+        {children}
+      </div>
+    )}
+  </div>
+);
+
 export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, isPro = false }: ThumbnailEditorProps) {
-  // ステップ管理
-  const [step, setStep] = useState(editingThumbnail ? 4 : 1);
+  // セクション開閉状態
+  const [openSections, setOpenSections] = useState({
+    platform: !editingThumbnail,
+    style: !!editingThumbnail,
+    text: !!editingThumbnail,
+    advanced: false,
+  });
+
+  // モバイル用タブ切り替え
+  const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
 
   // Step 1: プラットフォーム
   const [selectedPlatform, setSelectedPlatform] = useState<ThumbnailPlatform>(
@@ -47,7 +110,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
   const [subtitle, setSubtitle] = useState(editingThumbnail?.text_overlay?.subtitle || '');
   const [selectedColorTheme, setSelectedColorTheme] = useState('');
 
-  // Step 4: 生成結果
+  // 生成結果
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(editingThumbnail?.image_url || null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +119,10 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
   // 保存
   const [isSaving, setIsSaving] = useState(false);
   const [savedSlug, setSavedSlug] = useState<string | null>(editingThumbnail?.slug || null);
+
+  // 作成完了モーダル
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [completedUrl, setCompletedUrl] = useState('');
 
   // プラットフォーム別のテンプレートを取得
   const platformTemplates = getTemplatesByPlatform(selectedPlatform);
@@ -66,6 +133,10 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
   // アスペクト比
   const currentAspectRatio = selectedTemplate?.aspectRatio ||
     PLATFORM_CATEGORIES.find(p => p.id === selectedPlatform)?.aspectRatio || '16:9';
+
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
   // AI画像生成
   const handleGenerate = useCallback(async () => {
@@ -98,7 +169,8 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
       const data = await res.json();
       if (data.success) {
         setGeneratedImageUrl(data.imageUrl);
-        setStep(4);
+        // モバイルではプレビュータブに自動切り替え
+        setMobileTab('preview');
       } else if (data.error === 'FREE_TRIAL_EXCEEDED') {
         setTrialExceeded(true);
         setError(null);
@@ -150,7 +222,9 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
       }
 
       setSavedSlug(slug);
-      alert('保存しました！');
+      const publicUrl = `${window.location.origin}/thumbnail/${slug}`;
+      setCompletedUrl(publicUrl);
+      setShowCompleteModal(true);
     } catch (e) {
       const msg = e instanceof Error ? e.message : '不明なエラー';
       alert('保存に失敗しました: ' + msg);
@@ -183,351 +257,435 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
     setGeneratedImageUrl(newImageUrl);
   };
 
+  // 選択中の情報サマリー
+  const selectedPlatformLabel = PLATFORM_CATEGORIES.find(p => p.id === selectedPlatform)?.label || '';
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8">
-      {/* ステップインジケーター */}
-      <div className="flex items-center justify-center gap-2 mb-8">
-        {[1, 2, 3, 4].map((s) => (
-          <div key={s} className="flex items-center gap-2">
-            <button
-              onClick={() => s < step && setStep(s)}
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                s === step
-                  ? 'bg-pink-500 text-white shadow-lg shadow-pink-200'
-                  : s < step
-                    ? 'bg-pink-100 text-pink-600 cursor-pointer hover:bg-pink-200'
-                    : 'bg-gray-100 text-gray-400'
-              }`}
-            >
-              {s < step ? <Check size={14} /> : s}
-            </button>
-            {s < 4 && <ChevronRight size={14} className="text-gray-300" />}
-          </div>
-        ))}
+    <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
+      {/* ページタイトル */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">
+          {editingThumbnail ? 'サムネイルを編集' : 'サムネイルを作成'}
+        </h1>
+        <p className="text-gray-500 text-sm mt-1">AIでSNS用のサムネイルを自動生成できます</p>
       </div>
 
-      {/* Step 1: プラットフォーム選択 */}
-      {step === 1 && (
-        <div className="space-y-6">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900">プラットフォームを選択</h2>
-            <p className="text-gray-500 mt-1">サムネイルを使用するSNSを選んでください</p>
-          </div>
+      {/* モバイル用タブ切り替え */}
+      <div className="lg:hidden flex mb-4 bg-gray-100 rounded-xl p-1">
+        <button
+          onClick={() => setMobileTab('editor')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${
+            mobileTab === 'editor'
+              ? 'bg-white text-pink-600 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Edit3 size={16} />
+          エディタ
+        </button>
+        <button
+          onClick={() => setMobileTab('preview')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${
+            mobileTab === 'preview'
+              ? 'bg-white text-pink-600 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Eye size={16} />
+          プレビュー
+        </button>
+      </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {PLATFORM_CATEGORIES.map((platform) => {
-              const Icon = platformIcons[platform.icon] || ImageIcon;
-              return (
+      {/* 2カラムレイアウト */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 左パネル: エディタ */}
+        <div className={`${mobileTab === 'preview' ? 'hidden lg:block' : ''}`}>
+          {/* Section 1: プラットフォーム選択 */}
+          <Section
+            title="プラットフォーム選択"
+            icon={Monitor}
+            isOpen={openSections.platform}
+            onToggle={() => toggleSection('platform')}
+            step={1}
+            stepLabel="サムネイルを使うSNSを選択"
+            badge={selectedPlatformLabel}
+          >
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {PLATFORM_CATEGORIES.map((platform) => {
+                const Icon = platformIcons[platform.icon] || ImageIcon;
+                return (
+                  <button
+                    key={platform.id}
+                    onClick={() => {
+                      setSelectedPlatform(platform.id);
+                      setSelectedTemplate(null);
+                      setSelectedStyle(null);
+                      setOpenSections(prev => ({ ...prev, platform: false, style: true }));
+                    }}
+                    className={`p-4 rounded-xl border-2 transition-all text-center hover:shadow-md ${
+                      selectedPlatform === platform.id
+                        ? 'border-pink-400 bg-pink-50'
+                        : 'border-gray-200 bg-white hover:border-pink-200'
+                    }`}
+                  >
+                    <Icon size={28} className="mx-auto mb-2 text-pink-500" />
+                    <p className="font-bold text-gray-900 text-sm">{platform.label}</p>
+                    <p className="text-xs text-gray-400 mt-1">{platform.aspectRatio}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </Section>
+
+          {/* Section 2: スタイル＆テンプレート */}
+          <Section
+            title="スタイル＆テンプレート"
+            icon={Palette}
+            isOpen={openSections.style}
+            onToggle={() => toggleSection('style')}
+            step={2}
+            stepLabel="デザインスタイルを選択"
+            badge={selectedTemplate?.name}
+          >
+            {/* スタイルフィルター */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              <button
+                onClick={() => setSelectedStyle(null)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  !selectedStyle ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                すべて
+              </button>
+              {STYLE_CATEGORIES.map((style) => (
                 <button
-                  key={platform.id}
+                  key={style.id}
+                  onClick={() => setSelectedStyle(style.id)}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    selectedStyle === style.id ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {style.label}
+                </button>
+              ))}
+            </div>
+
+            {/* テンプレートグリッド */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {filteredTemplates.map((template) => (
+                <button
+                  key={template.id}
                   onClick={() => {
-                    setSelectedPlatform(platform.id);
-                    setSelectedTemplate(null);
-                    setSelectedStyle(null);
-                    setStep(2);
+                    setSelectedTemplate(template);
+                    setSelectedColorTheme(template.colorThemes[0]?.id || '');
+                    setOpenSections(prev => ({ ...prev, style: false, text: true }));
                   }}
-                  className={`p-4 sm:p-6 rounded-2xl border-2 transition-all text-center hover:shadow-md ${
-                    selectedPlatform === platform.id
+                  className={`p-3 rounded-xl border-2 text-left transition-all hover:shadow-md ${
+                    selectedTemplate?.id === template.id
                       ? 'border-pink-400 bg-pink-50'
                       : 'border-gray-200 bg-white hover:border-pink-200'
                   }`}
                 >
-                  <Icon size={32} className="mx-auto mb-2 text-pink-500" />
-                  <p className="font-bold text-gray-900 text-sm">{platform.label}</p>
-                  <p className="text-xs text-gray-400 mt-1">{platform.aspectRatio}</p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Step 2: テンプレート選択 */}
-      {step === 2 && (
-        <div className="space-y-6">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900">スタイルを選択</h2>
-            <p className="text-gray-500 mt-1">サムネイルのデザインスタイルを選んでください</p>
-          </div>
-
-          {/* スタイルフィルター */}
-          <div className="flex flex-wrap gap-2 justify-center">
-            <button
-              onClick={() => setSelectedStyle(null)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                !selectedStyle ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              すべて
-            </button>
-            {STYLE_CATEGORIES.map((style) => (
-              <button
-                key={style.id}
-                onClick={() => setSelectedStyle(style.id)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  selectedStyle === style.id ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {style.label}
-              </button>
-            ))}
-          </div>
-
-          {/* テンプレートグリッド */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {filteredTemplates.map((template) => (
-              <button
-                key={template.id}
-                onClick={() => {
-                  setSelectedTemplate(template);
-                  setSelectedColorTheme(template.colorThemes[0]?.id || '');
-                  setStep(3);
-                }}
-                className={`p-4 rounded-2xl border-2 text-left transition-all hover:shadow-md ${
-                  selectedTemplate?.id === template.id
-                    ? 'border-pink-400 bg-pink-50'
-                    : 'border-gray-200 bg-white hover:border-pink-200'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white shrink-0">
-                    <Sparkles size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">{template.name}</h3>
-                    <p className="text-sm text-gray-500 mt-0.5">{template.description}</p>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {template.tags.slice(0, 3).map((tag) => (
-                        <span key={tag} className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{tag}</span>
-                      ))}
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white shrink-0">
+                      <Sparkles size={16} />
                     </div>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {filteredTemplates.length === 0 && (
-            <p className="text-center text-gray-400 py-8">
-              このプラットフォーム×スタイルのテンプレートはまだありません
-            </p>
-          )}
-
-          <button onClick={() => setStep(1)} className="flex items-center gap-1 text-gray-500 hover:text-gray-700 mx-auto">
-            <ArrowLeft size={16} /> プラットフォーム選択に戻る
-          </button>
-        </div>
-      )}
-
-      {/* Step 3: テキスト入力 + カラーテーマ */}
-      {step === 3 && (
-        <div className="space-y-6">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900">テキストを入力</h2>
-            <p className="text-gray-500 mt-1">サムネイルに表示するテキストを入力してください</p>
-          </div>
-
-          {/* Pro/トライアルバナー */}
-          {!isPro && !trialExceeded && (
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3">
-              <Crown size={18} className="text-amber-500 shrink-0" />
-              <div className="text-sm">
-                <span className="font-bold text-amber-700">無料トライアル</span>
-                <span className="text-amber-600 ml-1">- 1回だけ無料でお試しできます（Pro機能）</span>
-              </div>
-            </div>
-          )}
-
-          {/* トライアル超過メッセージ */}
-          {trialExceeded && (
-            <div className="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-xl p-5 text-center space-y-3">
-              <Lock size={24} className="text-pink-400 mx-auto" />
-              <h3 className="font-bold text-gray-900">無料トライアルを使い切りました</h3>
-              <p className="text-sm text-gray-600">
-                サムネイルメーカーはPro機能です。<br />
-                Proプランにアップグレードすると無制限にご利用いただけます。
-              </p>
-              <a
-                href="/pricing"
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all"
-              >
-                <Crown size={16} />
-                Proプランを見る
-              </a>
-            </div>
-          )}
-
-          <div className="bg-white rounded-2xl p-6 border border-gray-200 space-y-4">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">メインテキスト *</label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="例: 知らないと損する3つの秘密"
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none text-lg text-gray-900 placeholder:text-gray-400"
-                maxLength={50}
-              />
-              <p className="text-xs text-gray-400 mt-1">{title.length}/50文字</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">サブテキスト（任意）</label>
-              <input
-                type="text"
-                value={subtitle}
-                onChange={(e) => setSubtitle(e.target.value)}
-                placeholder="例: 今すぐチェック！"
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none text-gray-900 placeholder:text-gray-400"
-                maxLength={30}
-              />
-            </div>
-
-            {/* カラーテーマ */}
-            {selectedTemplate && selectedTemplate.colorThemes.length > 0 && (
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">カラーテーマ</label>
-                <div className="flex flex-wrap gap-3">
-                  {selectedTemplate.colorThemes.map((theme) => (
-                    <button
-                      key={theme.id}
-                      onClick={() => setSelectedColorTheme(theme.id)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all ${
-                        selectedColorTheme === theme.id
-                          ? 'border-pink-400 bg-pink-50'
-                          : 'border-gray-200 hover:border-pink-200'
-                      }`}
-                    >
-                      <div className="flex gap-0.5">
-                        {theme.colors.map((color, i) => (
-                          <div
-                            key={i}
-                            className="w-5 h-5 rounded-full border border-gray-200"
-                            style={{ backgroundColor: color }}
-                          />
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-gray-900 text-sm">{template.name}</h3>
+                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{template.description}</p>
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {template.tags.slice(0, 3).map((tag) => (
+                          <span key={tag} className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{tag}</span>
                         ))}
                       </div>
-                      <span className="text-sm font-medium text-gray-700">{theme.name}</span>
-                    </button>
-                  ))}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {filteredTemplates.length === 0 && (
+              <p className="text-center text-gray-400 py-6 text-sm">
+                このプラットフォーム×スタイルのテンプレートはまだありません
+              </p>
+            )}
+          </Section>
+
+          {/* Section 3: テキスト＆カラー */}
+          <Section
+            title="テキスト＆カラー"
+            icon={Type}
+            isOpen={openSections.text}
+            onToggle={() => toggleSection('text')}
+            step={3}
+            stepLabel="テキストとカラーテーマを入力"
+            badge={title ? `${title.slice(0, 10)}${title.length > 10 ? '...' : ''}` : undefined}
+          >
+            {/* Pro/トライアルバナー */}
+            {!isPro && !trialExceeded && (
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3 mb-4">
+                <Crown size={18} className="text-amber-500 shrink-0" />
+                <div className="text-sm">
+                  <span className="font-bold text-amber-700">無料トライアル</span>
+                  <span className="text-amber-600 ml-1">- 1回だけ無料でお試しできます（Pro機能）</span>
                 </div>
               </div>
             )}
-          </div>
 
-          {error && (
-            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm">{error}</div>
-          )}
+            {/* トライアル超過メッセージ */}
+            {trialExceeded && (
+              <div className="bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-xl p-5 text-center space-y-3 mb-4">
+                <Lock size={24} className="text-pink-400 mx-auto" />
+                <h3 className="font-bold text-gray-900">無料トライアルを使い切りました</h3>
+                <p className="text-sm text-gray-600">
+                  サムネイルメーカーはPro機能です。<br />
+                  Proプランにアップグレードすると無制限にご利用いただけます。
+                </p>
+                <a
+                  href="/pricing"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all"
+                >
+                  <Crown size={16} />
+                  Proプランを見る
+                </a>
+              </div>
+            )}
 
-          <div className="flex items-center justify-between">
-            <button onClick={() => setStep(2)} className="flex items-center gap-1 text-gray-500 hover:text-gray-700">
-              <ArrowLeft size={16} /> テンプレート選択に戻る
-            </button>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">メインテキスト *</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="例: 知らないと損する3つの秘密"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none text-lg text-gray-900 placeholder:text-gray-400"
+                  maxLength={50}
+                />
+                <p className="text-xs text-gray-400 mt-1">{title.length}/50文字</p>
+              </div>
 
-            <button
-              onClick={handleGenerate}
-              disabled={isGenerating || !title.trim() || trialExceeded}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold shadow-lg shadow-pink-200 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  生成中...
-                </>
-              ) : (
-                <>
-                  <Sparkles size={18} />
-                  {!isPro ? 'お試し生成する（残り1回）' : 'AIで生成する'}
-                </>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">サブテキスト（任意）</label>
+                <input
+                  type="text"
+                  value={subtitle}
+                  onChange={(e) => setSubtitle(e.target.value)}
+                  placeholder="例: 今すぐチェック！"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none text-gray-900 placeholder:text-gray-400"
+                  maxLength={30}
+                />
+              </div>
+
+              {/* カラーテーマ */}
+              {selectedTemplate && selectedTemplate.colorThemes.length > 0 && (
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">カラーテーマ</label>
+                  <div className="flex flex-wrap gap-3">
+                    {selectedTemplate.colorThemes.map((theme) => (
+                      <button
+                        key={theme.id}
+                        onClick={() => setSelectedColorTheme(theme.id)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all ${
+                          selectedColorTheme === theme.id
+                            ? 'border-pink-400 bg-pink-50'
+                            : 'border-gray-200 hover:border-pink-200'
+                        }`}
+                      >
+                        <div className="flex gap-0.5">
+                          {theme.colors.map((color, i) => (
+                            <div
+                              key={i}
+                              className="w-5 h-5 rounded-full border border-gray-200"
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm font-medium text-gray-700">{theme.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 4: プレビュー + AI編集 + 保存 */}
-      {step === 4 && generatedImageUrl && (
-        <div className="space-y-6">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900">サムネイル完成</h2>
-            <p className="text-gray-500 mt-1">AI編集で修正したり、ダウンロードできます</p>
-          </div>
-
-          {/* プレビュー */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-200">
-            <div
-              className="relative mx-auto overflow-hidden rounded-xl bg-gray-100"
-              style={{
-                maxWidth: currentAspectRatio === '9:16' ? '320px' : '100%',
-                aspectRatio: currentAspectRatio.replace(':', '/'),
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={generatedImageUrl}
-                alt="生成されたサムネイル"
-                className="w-full h-full object-cover"
-              />
             </div>
-          </div>
 
-          {/* アクションボタン */}
-          <div className="flex flex-wrap gap-3 justify-center">
-            <button
-              onClick={handleDownload}
-              className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-gray-200 rounded-xl font-medium text-gray-700 hover:border-pink-300 hover:bg-pink-50 transition-all"
-            >
-              <Download size={18} />
-              ダウンロード
-            </button>
+            {error && (
+              <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm mt-4">{error}</div>
+            )}
 
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all disabled:opacity-50"
-            >
-              {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-              {isSaving ? '保存中...' : '保存する'}
-            </button>
+            {/* 生成ボタン */}
+            <div className="mt-6 pt-4 border-t border-gray-100">
+              <button
+                onClick={handleGenerate}
+                disabled={isGenerating || !title.trim() || trialExceeded}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold shadow-lg shadow-pink-200 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    生成中...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={18} />
+                    {!isPro ? 'お試し生成する（残り1回）' : 'AIで生成する'}
+                  </>
+                )}
+              </button>
+            </div>
+          </Section>
 
-            <button
-              onClick={() => {
-                setGeneratedImageUrl(null);
-                setStep(3);
-              }}
-              className="flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-gray-200 rounded-xl font-medium text-gray-700 hover:border-pink-300 hover:bg-pink-50 transition-all"
-            >
-              <RefreshCw size={18} />
-              作り直す
-            </button>
-          </div>
-
-          {/* テキスト変更セクション */}
-          <TextChangeSection
-            imageUrl={generatedImageUrl}
-            aspectRatio={currentAspectRatio}
-            userId={user?.id}
-            isPro={isPro}
-            onImageEdited={handleImageEdited}
-          />
-
-          {/* AI編集チャット */}
-          <AIEditChat
-            imageUrl={generatedImageUrl}
-            aspectRatio={currentAspectRatio}
-            userId={user?.id}
-            onImageEdited={handleImageEdited}
-            isPro={isPro}
-          />
-
-          <button onClick={() => setStep(1)} className="flex items-center gap-1 text-gray-500 hover:text-gray-700 mx-auto text-sm">
-            <ArrowLeft size={14} /> 最初からやり直す
-          </button>
+          {/* Section 4: 詳細設定（将来拡張用） */}
+          <Section
+            title="詳細設定"
+            icon={Settings}
+            isOpen={openSections.advanced}
+            onToggle={() => toggleSection('advanced')}
+            step={4}
+            stepLabel="追加オプション"
+          >
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-500">
+                現在利用可能な詳細設定はありません。<br />
+                今後、解像度設定や出力形式の選択などが追加される予定です。
+              </p>
+            </div>
+          </Section>
         </div>
-      )}
+
+        {/* 右パネル: プレビュー */}
+        <div className={`${mobileTab === 'editor' ? 'hidden lg:block' : ''}`}>
+          <div className="lg:sticky lg:top-6 space-y-4">
+            {/* プレビューヘッダー */}
+            <div className="hidden lg:flex items-center gap-2 mb-2">
+              <Eye size={16} className="text-gray-500" />
+              <span className="text-sm font-bold text-gray-700">プレビュー</span>
+            </div>
+
+            {/* プレビュー表示 */}
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              {generatedImageUrl ? (
+                /* 生成済み画像 */
+                <div className="p-4">
+                  <div
+                    className="relative mx-auto overflow-hidden rounded-xl bg-gray-100"
+                    style={{
+                      maxWidth: currentAspectRatio === '9:16' ? '320px' : '100%',
+                      aspectRatio: currentAspectRatio.replace(':', '/'),
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={generatedImageUrl}
+                      alt="生成されたサムネイル"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              ) : (
+                /* プレースホルダー */
+                <div className="p-6">
+                  <div
+                    className="relative mx-auto overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center"
+                    style={{
+                      maxWidth: currentAspectRatio === '9:16' ? '280px' : '100%',
+                      aspectRatio: currentAspectRatio.replace(':', '/'),
+                      minHeight: '200px',
+                    }}
+                  >
+                    <ImageIcon size={48} className="text-gray-300 mb-3" />
+                    <p className="text-sm font-bold text-gray-400 mb-1">プレビュー</p>
+                    <p className="text-xs text-gray-400 text-center px-4">
+                      設定を入力してAI生成ボタンを押すと<br />ここにサムネイルが表示されます
+                    </p>
+
+                    {/* 選択済み情報 */}
+                    <div className="mt-4 flex flex-wrap gap-2 justify-center">
+                      {selectedPlatformLabel && (
+                        <span className="text-xs bg-pink-100 text-pink-600 px-2.5 py-1 rounded-full font-medium">
+                          {selectedPlatformLabel}
+                        </span>
+                      )}
+                      {selectedTemplate && (
+                        <span className="text-xs bg-purple-100 text-purple-600 px-2.5 py-1 rounded-full font-medium">
+                          {selectedTemplate.name}
+                        </span>
+                      )}
+                      {title && (
+                        <span className="text-xs bg-gray-200 text-gray-600 px-2.5 py-1 rounded-full font-medium">
+                          {title.length > 15 ? title.slice(0, 15) + '...' : title}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* アクションボタン（生成後のみ表示） */}
+              {generatedImageUrl && (
+                <div className="px-4 pb-4 space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={handleDownload}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl font-medium text-sm text-gray-700 hover:border-pink-300 hover:bg-pink-50 transition-all"
+                    >
+                      <Download size={16} />
+                      ダウンロード
+                    </button>
+
+                    <button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-medium text-sm shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                    >
+                      {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                      {isSaving ? '保存中...' : '保存する'}
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setGeneratedImageUrl(null);
+                      setMobileTab('editor');
+                      setOpenSections(prev => ({ ...prev, text: true }));
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl font-medium text-sm text-gray-500 hover:bg-gray-100 transition-all"
+                  >
+                    <RefreshCw size={14} />
+                    作り直す
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* AI編集セクション（生成後のみ表示） */}
+            {generatedImageUrl && (
+              <>
+                {/* テキスト変更セクション */}
+                <TextChangeSection
+                  imageUrl={generatedImageUrl}
+                  aspectRatio={currentAspectRatio}
+                  userId={user?.id}
+                  isPro={isPro}
+                  onImageEdited={handleImageEdited}
+                />
+
+                {/* AI編集チャット */}
+                <AIEditChat
+                  imageUrl={generatedImageUrl}
+                  aspectRatio={currentAspectRatio}
+                  userId={user?.id}
+                  onImageEdited={handleImageEdited}
+                  isPro={isPro}
+                />
+              </>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* 生成中のフルスクリーンローダー */}
-      {isGenerating && step === 3 && (
+      {isGenerating && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 text-center shadow-2xl max-w-sm mx-4">
             <div className="relative w-16 h-16 mx-auto mb-4">
@@ -541,11 +699,22 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
           </div>
         </div>
       )}
+
+      {/* 作成完了モーダル */}
+      <CreationCompleteModal
+        isOpen={showCompleteModal}
+        onClose={() => setShowCompleteModal(false)}
+        title="サムネイル"
+        publicUrl={completedUrl}
+        contentTitle={title ? `「${title}」のサムネイルを作りました！` : undefined}
+        theme="rose"
+        showQrCode={false}
+      />
     </div>
   );
 }
 
-// テキスト変更セクション（Step 4内）
+// テキスト変更セクション
 function TextChangeSection({
   imageUrl,
   aspectRatio,
@@ -623,9 +792,9 @@ function TextChangeSection({
             <span className="text-xs bg-pink-100 text-pink-600 px-2 py-0.5 rounded-full font-medium">Pro</span>
           )}
         </div>
-        <ChevronRight
+        <ChevronDown
           size={16}
-          className={`text-gray-400 transition-transform ${isOpen ? 'rotate-90' : ''}`}
+          className={`text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 

@@ -9,7 +9,7 @@ import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
 import SellerProfileCard from '@/components/marketplace/SellerProfileCard';
 import ReviewList from '@/components/marketplace/ReviewList';
-import { ArrowLeft, Clock, ShoppingBag, MessageSquare, Loader2, LogIn } from 'lucide-react';
+import { ArrowLeft, Clock, ShoppingBag, MessageSquare, Loader2, LogIn, Star, Shield, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { CATEGORY_MAP } from '@/constants/marketplace';
 
@@ -100,7 +100,7 @@ export default function ListingDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
       </div>
     );
@@ -111,9 +111,14 @@ export default function ListingDetailPage() {
       <>
         <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuthModal} />
         <main className="min-h-screen bg-gray-50 pt-16">
-          <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-            <p className="text-gray-500">サービスが見つかりませんでした</p>
-            <Link href="/marketplace" className="text-indigo-600 text-sm mt-2 inline-block">マーケットに戻る</Link>
+          <div className="max-w-4xl mx-auto px-4 py-24 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <ShoppingBag className="w-8 h-8 text-gray-300" />
+            </div>
+            <p className="text-gray-500 mb-4">サービスが見つかりませんでした</p>
+            <Link href="/marketplace" className="text-indigo-600 text-sm font-medium hover:underline">
+              マーケットに戻る
+            </Link>
           </div>
         </main>
         <Footer />
@@ -126,47 +131,59 @@ export default function ListingDetailPage() {
 
   return (
     <>
-      <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuthModal} />
-      <main className="min-h-screen bg-gray-50 pt-16">
-        <div className="max-w-4xl mx-auto px-4 py-8">
+      <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuthModal} headerClassName="bg-white/95" />
+      <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-16">
+        <div className="max-w-5xl mx-auto px-4 py-8">
           {/* パンくず */}
-          <Link href="/marketplace" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 mb-6">
+          <Link href="/marketplace" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 mb-8 transition-colors">
             <ArrowLeft className="w-4 h-4" />
             マーケットに戻る
           </Link>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* メインコンテンツ */}
             <div className="lg:col-span-2 space-y-6">
               {/* サムネイル */}
-              {listing.thumbnail_url && (
-                <div className="aspect-video rounded-xl overflow-hidden bg-gray-100">
+              {listing.thumbnail_url ? (
+                <div className="aspect-video rounded-2xl overflow-hidden bg-gray-100 shadow-sm">
                   <img src={listing.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center">
+                  <div className="w-20 h-20 bg-white/60 rounded-2xl flex items-center justify-center shadow-sm">
+                    <span className="text-4xl">{category?.isToolLinked ? '🔧' : '📋'}</span>
+                  </div>
                 </div>
               )}
 
               {/* タイトル・カテゴリ */}
               <div>
                 {category && (
-                  <span className={`inline-block text-xs px-2 py-0.5 rounded-full mb-2 ${
-                    category.isToolLinked ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-100 text-gray-600'
+                  <span className={`inline-flex items-center text-xs font-medium px-3 py-1 rounded-lg mb-3 ${
+                    category.isToolLinked
+                      ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                      : 'bg-gray-100 text-gray-600 border border-gray-200'
                   }`}>
                     {category.label}
                     {category.isToolLinked && ' (ツール連携)'}
                   </span>
                 )}
-                <h1 className="text-2xl font-bold text-gray-900">{listing.title}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{listing.title}</h1>
               </div>
 
               {/* 説明 */}
-              <div className="bg-white rounded-xl border p-6">
-                <h2 className="font-semibold text-gray-900 mb-3">サービス内容</h2>
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-indigo-500" />
+                  サービス内容
+                </h2>
                 <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{listing.description}</p>
               </div>
 
               {/* レビュー */}
-              <div className="bg-white rounded-xl border p-6">
-                <h2 className="font-semibold text-gray-900 mb-3">
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+                <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Star className="w-5 h-5 text-yellow-500" />
                   レビュー ({reviews.length}件)
                 </h2>
                 <ReviewList reviews={reviews} />
@@ -174,20 +191,22 @@ export default function ListingDetailPage() {
             </div>
 
             {/* サイドバー */}
-            <div className="space-y-4">
+            <div className="space-y-5">
               {/* 価格カード */}
-              <div className="bg-white rounded-xl border p-6 sticky top-20">
-                <div className="text-3xl font-bold text-gray-900 mb-2">{formatPrice(listing)}</div>
-                <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+              <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm sticky top-20">
+                <div className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3">
+                  {formatPrice(listing)}
+                </div>
+                <div className="flex items-center gap-4 text-sm text-gray-500 mb-5 pb-5 border-b border-gray-100">
                   {listing.delivery_days && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-indigo-400" />
                       納期 {listing.delivery_days}日
                     </span>
                   )}
                   {listing.order_count > 0 && (
-                    <span className="flex items-center gap-1">
-                      <ShoppingBag className="w-4 h-4" />
+                    <span className="flex items-center gap-1.5">
+                      <ShoppingBag className="w-4 h-4 text-indigo-400" />
                       {listing.order_count}件の実績
                     </span>
                   )}
@@ -195,8 +214,8 @@ export default function ListingDetailPage() {
 
                 {isOwnListing ? (
                   <Link
-                    href="/marketplace/seller"
-                    className="block w-full text-center bg-gray-100 text-gray-700 py-3 rounded-lg font-medium text-sm"
+                    href="/dashboard?view=marketplace-seller"
+                    className="block w-full text-center bg-gray-100 text-gray-700 py-3 rounded-xl font-medium text-sm hover:bg-gray-200 transition-colors"
                   >
                     自分の出品を管理する
                   </Link>
@@ -205,7 +224,7 @@ export default function ListingDetailPage() {
                   <div className="space-y-3">
                     <button
                       onClick={() => setShowAuthModal(true)}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3.5 rounded-xl font-medium transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
                     >
                       <LogIn className="w-4 h-4" />
                       ログインして相談する
@@ -220,7 +239,7 @@ export default function ListingDetailPage() {
                       setRequestTitle(listing.title + 'の依頼');
                       setShowRequestForm(true);
                     }}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3.5 rounded-xl font-medium transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
                   >
                     <MessageSquare className="w-4 h-4" />
                     相談する
@@ -231,34 +250,34 @@ export default function ListingDetailPage() {
                       type="text"
                       value={requestTitle}
                       onChange={e => setRequestTitle(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-lg text-sm text-gray-900"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="依頼タイトル"
                     />
                     <textarea
                       value={requestDesc}
                       onChange={e => setRequestDesc(e.target.value)}
-                      rows={3}
-                      className="w-full px-3 py-2 border rounded-lg text-sm text-gray-900"
+                      rows={4}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="依頼の詳細（目的、希望など）"
                     />
                     <input
                       type="number"
                       value={requestBudget}
                       onChange={e => setRequestBudget(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-lg text-sm text-gray-900"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="希望予算（円）"
                     />
                     <div className="flex gap-2">
                       <button
                         onClick={() => setShowRequestForm(false)}
-                        className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-sm"
+                        className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
                       >
                         キャンセル
                       </button>
                       <button
                         onClick={handleSubmitRequest}
                         disabled={submitting}
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-1"
+                        className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-2.5 rounded-xl text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-1 transition-all"
                       >
                         {submitting && <Loader2 className="w-3 h-3 animate-spin" />}
                         依頼送信
@@ -266,6 +285,14 @@ export default function ListingDetailPage() {
                     </div>
                   </div>
                 )}
+
+                {/* 安心取引バッジ */}
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <Shield className="w-3.5 h-3.5" />
+                    <span>安心・安全なお取引をサポートします</span>
+                  </div>
+                </div>
               </div>
 
               {/* 出品者プロフィール */}

@@ -21,37 +21,40 @@ interface CategoryFilterProps {
 
 export default function CategoryFilter({ selected, onChange }: CategoryFilterProps) {
   return (
-    <div className="flex flex-wrap gap-2">
-      <button
-        onClick={() => onChange(null)}
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-          selected === null
-            ? 'bg-indigo-600 text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-        }`}
-      >
-        <Grid3X3 className="w-3.5 h-3.5" />
-        すべて
-      </button>
-      {MARKETPLACE_CATEGORIES.map((cat) => {
-        const Icon = ICON_MAP[cat.icon] || MoreHorizontal;
-        return (
-          <button
-            key={cat.id}
-            onClick={() => onChange(cat.id === selected ? null : cat.id)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              selected === cat.id
-                ? 'bg-indigo-600 text-white'
-                : cat.isToolLinked
-                  ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <Icon className="w-3.5 h-3.5" />
-            {cat.label}
-          </button>
-        );
-      })}
+    <div className="overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+      <div className="flex gap-2 min-w-max">
+        <button
+          onClick={() => onChange(null)}
+          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+            selected === null
+              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-200'
+              : 'bg-white text-gray-600 border border-gray-200 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600'
+          }`}
+        >
+          <Grid3X3 className="w-4 h-4" />
+          すべて
+        </button>
+        {MARKETPLACE_CATEGORIES.map((cat) => {
+          const Icon = ICON_MAP[cat.icon] || MoreHorizontal;
+          const isSelected = selected === cat.id;
+          return (
+            <button
+              key={cat.id}
+              onClick={() => onChange(cat.id === selected ? null : cat.id)}
+              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                isSelected
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-200'
+                  : cat.isToolLinked
+                    ? 'bg-indigo-50/70 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 hover:border-indigo-200'
+                    : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {cat.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

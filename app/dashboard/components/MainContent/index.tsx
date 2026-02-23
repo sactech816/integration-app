@@ -7,6 +7,7 @@ import ContentList from './ContentList';
 import { ContentItem } from './ContentCard';
 import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
 import AccountSettings from '../Settings/AccountSettings';
+import MarketplaceSellerDashboard from './MarketplaceSellerDashboard';
 import BookingList from './BookingList';
 import AttendanceList from './AttendanceList';
 import SurveyList from './SurveyList';
@@ -26,6 +27,7 @@ export type ActiveView =
   | 'onboarding'
   | 'kindle'
   | 'affiliate'
+  | 'marketplace-seller'
   | 'settings'
   | 'admin-overview'
   | 'admin-users'
@@ -250,6 +252,11 @@ export default function MainContent({
         <>{adminComponents.GamificationManager()}</>
       )}
 
+      {/* スキルマーケット管理 */}
+      {activeView === 'marketplace-seller' && user && (
+        <MarketplaceSellerDashboard userId={user.id} />
+      )}
+
       {/* アフィリエイト */}
       {activeView === 'affiliate' && user && (
         <AffiliateDashboard userId={user.id} userEmail={user.email} />
@@ -306,7 +313,7 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'booking', 'attendance', 'survey', 'my-games', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks'].includes(activeView) && (
+      {!['dashboard', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'booking', 'attendance', 'survey', 'my-games', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>

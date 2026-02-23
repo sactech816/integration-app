@@ -282,9 +282,9 @@ function DashboardContent() {
       return;
     }
 
-    // スキルマーケット管理への遷移
+    // スキルマーケット管理はダッシュボード内で表示
     if (itemId === 'marketplace-seller') {
-      router.push('/marketplace/seller');
+      setActiveView('marketplace-seller' as ActiveView);
       return;
     }
   };
