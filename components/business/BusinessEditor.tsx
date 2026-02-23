@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { generateSlug } from '@/lib/utils';
 import { BusinessLP, Block, generateBlockId } from '@/lib/types';
@@ -2306,34 +2306,22 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
           const Icon = blockType?.icon || Type;
 
           return (
-              <div key={block.id} className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
-                <div
-                  className="w-full flex items-center justify-between p-4 hover:bg-gray-100 cursor-pointer"
-                onClick={() => setExpandedBlock(expandedBlock === block.id ? null : block.id)}
-              >
-                  <div className="flex items-center gap-3 flex-1">
-                  <GripVertical size={18} className="text-gray-400" />
-                  <Icon size={18} className="text-amber-600" />
-                  <span className="font-medium text-gray-700">
-                    {blockType?.label || block.type}
-                  </span>
-                </div>
-                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => moveBlock(block.id, 'up')} disabled={index === 0} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ArrowUp size={16} /></button>
-                    <button onClick={() => moveBlock(block.id, 'down')} disabled={index === (lp.content?.length || 0) - 1} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ArrowDown size={16} /></button>
-                    <button onClick={() => removeBlock(block.id)} className="p-1 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
-                    <button onClick={() => setExpandedBlock(expandedBlock === block.id ? null : block.id)} className="p-1 text-gray-400">
-                  {expandedBlock === block.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-              </button>
-                  </div>
-                </div>
-
-              {expandedBlock === block.id && (
-                  <div className="p-4 border-t border-gray-200 bg-white">
-                    {renderBlockEditor(block)}
-                </div>
-              )}
-            </div>
+              <EditorBlockItem
+                key={block.id}
+                block={block}
+                index={index}
+                totalBlocks={lp.content?.length || 0}
+                blockType={blockType}
+                Icon={Icon}
+                isExpanded={expandedBlock === block.id}
+                onToggle={() => {
+                  setExpandedBlock(expandedBlock === block.id ? null : block.id);
+                }}
+                onMoveUp={() => moveBlock(block.id, 'up')}
+                onMoveDown={() => moveBlock(block.id, 'down')}
+                onRemove={() => removeBlock(block.id)}
+                renderBlockEditor={renderBlockEditor}
+              />
           );
         })}
       </div>
@@ -2865,5 +2853,75 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
         </div>
       );
 };
+
+// エディタ用ブロックアイテム（展開時にスクロール）
+function EditorBlockItem({
+  block,
+  index,
+  totalBlocks,
+  blockType,
+  Icon,
+  isExpanded,
+  onToggle,
+  onMoveUp,
+  onMoveDown,
+  onRemove,
+  renderBlockEditor,
+}: {
+  block: Block;
+  index: number;
+  totalBlocks: number;
+  blockType: { label: string; type: string } | undefined;
+  Icon: React.ElementType;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onRemove: () => void;
+  renderBlockEditor: (block: Block) => React.ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  const handleToggle = useCallback(() => {
+    const wasCollapsed = !isExpanded;
+    onToggle();
+    if (wasCollapsed && ref.current) {
+      setTimeout(() => {
+        ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+  }, [isExpanded, onToggle]);
+
+  return (
+    <div ref={ref} className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+      <div
+        className="w-full flex items-center justify-between p-4 hover:bg-gray-100 cursor-pointer"
+        onClick={handleToggle}
+      >
+        <div className="flex items-center gap-3 flex-1">
+          <GripVertical size={18} className="text-gray-400" />
+          <Icon size={18} className="text-amber-600" />
+          <span className="font-medium text-gray-700">
+            {blockType?.label || block.type}
+          </span>
+        </div>
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <button onClick={onMoveUp} disabled={index === 0} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ArrowUp size={16} /></button>
+          <button onClick={onMoveDown} disabled={index === totalBlocks - 1} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ArrowDown size={16} /></button>
+          <button onClick={onRemove} className="p-1 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
+          <button onClick={handleToggle} className="p-1 text-gray-400">
+            {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </button>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="p-4 border-t border-gray-200 bg-white">
+          {renderBlockEditor(block)}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default BusinessEditor;

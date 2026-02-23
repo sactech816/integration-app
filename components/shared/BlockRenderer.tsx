@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Block } from '@/lib/types';
 import { extractYouTubeId } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
@@ -325,32 +325,13 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
           )}
           <div className={`space-y-${variant === 'profile' ? '3' : '4'} ${variant === 'business' ? 'max-w-3xl mx-auto' : ''}`}>
             {block.data.items.map((item) => (
-              <div 
-                key={item.id} 
-                className={variant === 'profile' 
-                  ? 'glass rounded-xl overflow-hidden' 
-                  : 'bg-white rounded-xl border border-gray-100 overflow-hidden'
-                }
-              >
-                <button
-                  onClick={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)}
-                  className={`w-full flex items-center justify-between p-${variant === 'profile' ? '4' : '5'} text-left ${variant === 'business' ? 'hover:bg-gray-50' : ''}`}
-                >
-                  <span className={`font-${variant === 'profile' ? 'medium' : 'semibold'} text-gray-900`}>
-                    Q. {item.question}
-                  </span>
-                  {expandedFaq === item.id ? (
-                    <ChevronUp size={20} className="text-gray-400" />
-                  ) : (
-                    <ChevronDown size={20} className="text-gray-400" />
-                  )}
-                </button>
-                {expandedFaq === item.id && (
-                  <div className={`px-${variant === 'profile' ? '4' : '5'} pb-${variant === 'profile' ? '4' : '5'} text-gray-600`}>
-                    A. {item.answer}
-                  </div>
-                )}
-              </div>
+              <FaqItem
+                key={item.id}
+                item={item}
+                variant={variant}
+                isExpanded={expandedFaq === item.id}
+                onToggle={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)}
+              />
             ))}
           </div>
         </div>
@@ -1756,6 +1737,60 @@ function SalesCountdownBlock({
   );
 }
 
+// ビジネスLP・プロフィールLP用FAQアイテム
+function FaqItem({
+  item,
+  variant,
+  isExpanded,
+  onToggle,
+}: {
+  item: { id: string; question: string; answer: string };
+  variant: 'profile' | 'business' | 'salesletter';
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  const handleToggle = useCallback(() => {
+    const wasCollapsed = !isExpanded;
+    onToggle();
+    if (wasCollapsed && ref.current) {
+      setTimeout(() => {
+        ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+  }, [isExpanded, onToggle]);
+
+  return (
+    <div
+      ref={ref}
+      className={variant === 'profile'
+        ? 'glass rounded-xl overflow-hidden'
+        : 'bg-white rounded-xl border border-gray-100 overflow-hidden'
+      }
+    >
+      <button
+        onClick={handleToggle}
+        className={`w-full flex items-center justify-between p-${variant === 'profile' ? '4' : '5'} text-left ${variant === 'business' ? 'hover:bg-gray-50' : ''}`}
+      >
+        <span className={`font-${variant === 'profile' ? 'medium' : 'semibold'} text-gray-900`}>
+          Q. {item.question}
+        </span>
+        {isExpanded ? (
+          <ChevronUp size={20} className="text-gray-400" />
+        ) : (
+          <ChevronDown size={20} className="text-gray-400" />
+        )}
+      </button>
+      {isExpanded && (
+        <div className={`px-${variant === 'profile' ? '4' : '5'} pb-${variant === 'profile' ? '4' : '5'} text-gray-600`}>
+          A. {item.answer}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // セールスレター用FAQアイテム
 function SalesFaqItem({
   question,
@@ -1771,11 +1806,22 @@ function SalesFaqItem({
   answerColor?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const handleToggle = useCallback(() => {
+    const wasCollapsed = !isOpen;
+    setIsOpen(!isOpen);
+    if (wasCollapsed && ref.current) {
+      setTimeout(() => {
+        ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+  }, [isOpen]);
 
   return (
-    <div className={!isLast ? 'border-b border-gray-200' : ''}>
+    <div ref={ref} className={!isLast ? 'border-b border-gray-200' : ''}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
       >
         <span
