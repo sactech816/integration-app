@@ -1849,6 +1849,26 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
           <div className="space-y-4">
             <Input label="タイトル" val={block.data.title || ''} onChange={(v) => updateBlock(block.id, { title: v })} />
             <Input label="サブタイトル" val={block.data.subtitle || ''} onChange={(v) => updateBlock(block.id, { subtitle: v })} />
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">背景色</label>
+              <div className="flex gap-2 flex-wrap">
+                {[
+                  { label: 'ダーク', value: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' },
+                  { label: 'ネイビー', value: 'linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%)' },
+                  { label: 'パープル', value: 'linear-gradient(135deg, #4c1d95 0%, #1e1b4b 100%)' },
+                  { label: 'グリーン', value: 'linear-gradient(135deg, #064e3b 0%, #022c22 100%)' },
+                ].map((preset) => (
+                  <button
+                    key={preset.label}
+                    onClick={() => updateBlock(block.id, { backgroundColor: preset.value })}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium text-white ${block.data.backgroundColor === preset.value ? 'ring-2 ring-offset-1 ring-amber-500' : ''}`}
+                    style={{ background: preset.value }}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
               <input type="checkbox" id={`fullwidth-${block.id}`} checked={block.data.isFullWidth || false} onChange={(e) => updateBlock(block.id, { isFullWidth: e.target.checked })} className="w-4 h-4 text-amber-600" />
               <label htmlFor={`fullwidth-${block.id}`} className="text-sm font-medium text-amber-800">🖥️ 全幅表示（PC向け）</label>
@@ -1880,21 +1900,23 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
               <input type="checkbox" id={`fullwidth-${block.id}`} checked={block.data.isFullWidth || false} onChange={(e) => updateBlock(block.id, { isFullWidth: e.target.checked })} className="w-4 h-4 text-amber-600" />
               <label htmlFor={`fullwidth-${block.id}`} className="text-sm font-medium text-amber-800">🖥️ 全幅表示（PC向け）</label>
             </div>
-            {block.data.items?.map((item: { id: string; icon?: string; title: string; description: string }, i: number) => (
+            {block.data.items?.map((item: { id: string; icon?: string; title: string; description: string; value?: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
                 <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
                 <div className="mb-3">
-                  <IconPicker 
-                    value={item.icon || ''} 
-                    onChange={(v) => { const newItems = [...block.data.items]; newItems[i].icon = v; updateBlock(block.id, { items: newItems }); }} 
+                  <IconPicker
+                    value={item.icon || ''}
+                    onChange={(v) => { const newItems = [...block.data.items]; newItems[i].icon = v; updateBlock(block.id, { items: newItems }); }}
                     category="bonus"
                   />
                 </div>
                 <Input label="タイトル" val={item.title} onChange={(v) => { const newItems = [...block.data.items]; newItems[i].title = v; updateBlock(block.id, { items: newItems }); }} />
                 <Textarea label="説明" val={item.description} onChange={(v) => { const newItems = [...block.data.items]; newItems[i].description = v; updateBlock(block.id, { items: newItems }); }} rows={2} />
+                <Input label="通常価格（任意）" val={item.value || ''} onChange={(v) => { const newItems = [...block.data.items]; newItems[i].value = v; updateBlock(block.id, { items: newItems }); }} ph="¥10,000" />
               </div>
             ))}
-            <button onClick={() => updateBlock(block.id, { items: [...(block.data.items || []), { id: generateBlockId(), icon: '🎁', title: '', description: '' }] })} className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-amber-500 hover:text-amber-600 font-medium">+ 特典を追加</button>
+            <button onClick={() => updateBlock(block.id, { items: [...(block.data.items || []), { id: generateBlockId(), icon: '🎁', title: '', description: '', value: '' }] })} className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-amber-500 hover:text-amber-600 font-medium">+ 特典を追加</button>
+            <Input label="特典の総額（任意）" val={block.data.totalValue || ''} onChange={(v) => updateBlock(block.id, { totalValue: v })} ph="¥50,000" />
           </div>
         );
 
@@ -1980,7 +2002,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
               <input type="checkbox" id={`fullwidth-${block.id}`} checked={block.data.isFullWidth || false} onChange={(e) => updateBlock(block.id, { isFullWidth: e.target.checked })} className="w-4 h-4 text-amber-600" />
               <label htmlFor={`fullwidth-${block.id}`} className="text-sm font-medium text-amber-800">🖥️ 全幅表示（PC向け）</label>
             </div>
-            {block.data.items?.map((item: { id: string; imageUrl?: string; category?: string; title: string; description: string; categoryColor?: string }, i: number) => (
+            {block.data.items?.map((item: { id: string; imageUrl?: string; category?: string; title: string; description: string; categoryColor?: string; beforeText?: string; afterText?: string }, i: number) => (
               <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
                 <button onClick={() => { const newItems = block.data.items.filter((it: { id: string }) => it.id !== item.id); updateBlock(block.id, { items: newItems }); }} className="absolute top-2 right-2 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
                 <div className="mb-3">
@@ -2037,10 +2059,14 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                   </div>
                 </div>
                 <Input label="事例タイトル" val={item.title} onChange={(v) => { const newItems = [...block.data.items]; newItems[i].title = v; updateBlock(block.id, { items: newItems }); }} ph="〇〇株式会社様" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input label="Before（任意）" val={item.beforeText || ''} onChange={(v) => { const newItems = [...block.data.items]; newItems[i].beforeText = v; updateBlock(block.id, { items: newItems }); }} ph="導入前の課題" />
+                  <Input label="After（任意）" val={item.afterText || ''} onChange={(v) => { const newItems = [...block.data.items]; newItems[i].afterText = v; updateBlock(block.id, { items: newItems }); }} ph="導入後の成果" />
+                </div>
                 <Textarea label="説明・成果" val={item.description} onChange={(v) => { const newItems = [...block.data.items]; newItems[i].description = v; updateBlock(block.id, { items: newItems }); }} rows={2} />
               </div>
             ))}
-            <button onClick={() => updateBlock(block.id, { items: [...(block.data.items || []), { id: generateBlockId(), imageUrl: '', category: 'カテゴリ', title: '', description: '', categoryColor: 'blue' }] })} className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-amber-500 hover:text-amber-600 font-medium">+ 事例を追加</button>
+            <button onClick={() => updateBlock(block.id, { items: [...(block.data.items || []), { id: generateBlockId(), imageUrl: '', category: 'カテゴリ', title: '', description: '', categoryColor: 'blue', beforeText: '', afterText: '' }] })} className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-amber-500 hover:text-amber-600 font-medium">+ 事例を追加</button>
           </div>
         );
 
@@ -2760,12 +2786,13 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             <div className={`p-4 h-full flex items-center justify-center ${previewMode === 'mobile' ? '' : 'hidden'}`}>
               <div className="relative bg-gray-900 rounded-[3rem] p-2 shadow-2xl" style={{ width: '390px' }}>
                 {/* iPhone風フレーム */}
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-6 bg-black rounded-full z-10" />
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-6 bg-black rounded-full z-10 pointer-events-none" />
                 <div className="bg-white rounded-[2.5rem] overflow-hidden" style={{ width: '375px', height: '667px' }}>
                   <iframe
                     ref={mobileIframeRef}
                     src="/business/preview"
                     className="w-full h-full border-0"
+                    style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
                     title="スマホプレビュー"
                   />
                 </div>

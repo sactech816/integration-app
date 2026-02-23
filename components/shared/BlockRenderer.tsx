@@ -696,9 +696,9 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
       return (
         <section className={`py-20 px-6 bg-red-50 ${block.data.isFullWidth ? 'w-full' : ''}`}>
           <div className={block.data.isFullWidth ? 'w-full px-4 lg:px-8' : 'max-w-5xl mx-auto'}>
-            {block.data.sectionTitle && (
+            {(block.data.title || block.data.sectionTitle) && (
               <h2 className="text-3xl sm:text-4xl font-black text-center text-gray-900 mb-12">
-                {block.data.sectionTitle}
+                {block.data.title || block.data.sectionTitle}
               </h2>
             )}
             <div className={`grid md:grid-cols-2 ${block.data.isFullWidth ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-6`}>
@@ -720,14 +720,34 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
 
     case 'dark_section':
       return (
-        <section 
+        <section
           className={`py-20 px-6 text-white ${block.data.isFullWidth ? 'w-full' : ''}`}
           style={{ background: block.data.backgroundColor || 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' }}
         >
           <div className={`${block.data.isFullWidth ? 'max-w-6xl' : 'max-w-4xl'} mx-auto text-center`}>
             <h2 className="text-3xl sm:text-4xl font-black mb-6">{block.data.title}</h2>
-            <p className="text-xl opacity-90 mb-8 leading-relaxed">{block.data.description}</p>
-            {block.data.bulletPoints && block.data.bulletPoints.length > 0 && (
+            {(block.data.subtitle || block.data.description) && (
+              <p className="text-xl opacity-90 mb-8 leading-relaxed">{block.data.subtitle || block.data.description}</p>
+            )}
+            {block.data.items && block.data.items.length > 0 ? (
+              <div className="inline-block text-left space-y-4 mt-6">
+                {block.data.items.map((item, i) => (
+                  <div key={item.id ?? i} className="flex items-start gap-3 text-lg">
+                    {item.icon ? (
+                      <span className="text-2xl flex-shrink-0">{item.icon}</span>
+                    ) : (
+                      <Check className="text-green-400 flex-shrink-0 mt-1" size={20} />
+                    )}
+                    <div>
+                      <span className="font-bold">{item.title}</span>
+                      {item.description && (
+                        <p className="text-base opacity-80 mt-1">{item.description}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : block.data.bulletPoints && block.data.bulletPoints.length > 0 ? (
               <ul className="inline-block text-left space-y-3 mt-6">
                 {block.data.bulletPoints.map((point, i) => (
                   <li key={i} className="flex items-center gap-3 text-lg">
@@ -736,18 +756,18 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
                   </li>
                 ))}
               </ul>
-            )}
+            ) : null}
           </div>
         </section>
       );
 
     case 'case_study_cards':
       return (
-        <section className="py-20 px-6 bg-white">
-          <div className="max-w-5xl mx-auto">
-            {block.data.sectionTitle && (
+        <section className={`py-20 px-6 bg-white ${block.data.isFullWidth ? 'w-full' : ''}`}>
+          <div className={block.data.isFullWidth ? 'w-full px-4 lg:px-8' : 'max-w-5xl mx-auto'}>
+            {(block.data.title || block.data.sectionTitle) && (
               <h2 className="text-3xl sm:text-4xl font-black text-center text-gray-900 mb-12">
-                {block.data.sectionTitle}
+                {block.data.title || block.data.sectionTitle}
               </h2>
             )}
             <div className="grid md:grid-cols-2 gap-8">
@@ -791,9 +811,9 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
       return (
         <section className={`py-20 px-6 bg-gradient-to-r from-amber-500 to-orange-500 ${block.data.isFullWidth ? 'w-full' : ''}`}>
           <div className={block.data.isFullWidth ? 'w-full px-4 lg:px-8' : 'max-w-5xl mx-auto'}>
-            {block.data.sectionTitle && (
+            {(block.data.title || block.data.sectionTitle) && (
               <h2 className="text-3xl sm:text-4xl font-black text-center text-white mb-12">
-                {block.data.sectionTitle}
+                {block.data.title || block.data.sectionTitle}
               </h2>
             )}
             <div className={`grid md:grid-cols-2 ${block.data.isFullWidth ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-6`}>
@@ -832,13 +852,13 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
         card: 'bg-gray-50',
         highlight: 'bg-green-50'
       }[block.data.style || 'simple'];
-      
+
       return (
         <section className={`py-20 px-6 ${styleClass} ${block.data.isFullWidth ? 'w-full' : ''}`}>
           <div className={block.data.isFullWidth ? 'max-w-6xl mx-auto px-4 lg:px-8' : 'max-w-3xl mx-auto'}>
-            {block.data.sectionTitle && (
+            {(block.data.title || block.data.sectionTitle) && (
               <h2 className="text-3xl font-black text-center text-gray-900 mb-12">
-                {block.data.sectionTitle}
+                {block.data.title || block.data.sectionTitle}
               </h2>
             )}
             <ul className={`${block.data.isFullWidth ? 'grid md:grid-cols-2 gap-4' : 'space-y-4'}`}>

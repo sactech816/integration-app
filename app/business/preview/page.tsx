@@ -12,6 +12,7 @@ interface PreviewData {
     theme?: {
       gradient?: string;
       backgroundImage?: string;
+      animated?: boolean;
     };
   };
 }
@@ -64,22 +65,28 @@ export default function BusinessPreviewPage() {
   const theme = previewData.settings?.theme;
   const backgroundImage = theme?.backgroundImage;
   const gradient = theme?.gradient || 'linear-gradient(-45deg, #f59e0b, #fbbf24, #fcd34d, #fbbf24)';
+  const isAnimated = theme?.animated !== false;
+  const isSolidColor = gradient.startsWith('#');
 
   const backgroundStyle: React.CSSProperties = backgroundImage
     ? {
         backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${backgroundImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
+        backgroundAttachment: 'scroll',
+      }
+    : isSolidColor
+    ? {
+        backgroundColor: gradient,
       }
     : {
         backgroundImage: gradient,
-        backgroundSize: '400% 400%',
+        backgroundSize: isAnimated ? '400% 400%' : 'auto',
       };
 
   return (
-    <div 
-      className={`min-h-screen ${!backgroundImage ? 'animate-gradient-xy' : ''}`}
+    <div
+      className={`min-h-screen ${!backgroundImage && !isSolidColor && isAnimated ? 'animate-gradient-xy' : ''}`}
       style={backgroundStyle}
     >
       {previewData.content?.map(block => {
