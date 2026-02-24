@@ -31,7 +31,8 @@ const FREE_TRIAL_LIMIT = 1; // 無料ユーザーは1回だけ
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { templateId, title, subtitle, colorThemeId, platform, aspectRatio, userId } = body;
+    const { templateId, title, subtitle, colorThemeId, platform, aspectRatio, userId, mode } = body;
+    const generationMode = mode === 'editable_text' ? 'editable_text' : 'ai_text';
 
     if (!title?.trim()) {
       return NextResponse.json({ error: 'タイトルは必須です' }, { status: 400 });

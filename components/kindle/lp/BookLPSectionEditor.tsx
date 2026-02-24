@@ -11,19 +11,32 @@ interface BookLPSectionEditorProps {
   onCancel: () => void;
 }
 
+// 配列型セクションかどうかを判定
+const ARRAY_SECTION_KEYS = ['pain_points', 'benefits', 'key_takeaways', 'chapter_summaries', 'social_proof', 'bonus', 'faq'];
+
+function getInitialData(sectionKey: string, sectionData: any): any {
+  if (ARRAY_SECTION_KEYS.includes(sectionKey)) {
+    return Array.isArray(sectionData) ? JSON.parse(JSON.stringify(sectionData)) : [];
+  }
+  if (sectionData && typeof sectionData === 'object' && !Array.isArray(sectionData)) {
+    return JSON.parse(JSON.stringify(sectionData));
+  }
+  return {};
+}
+
 function TextInput({ label, value, onChange, placeholder, multiline }: {
   label: string; value: string; onChange: (v: string) => void; placeholder?: string; multiline?: boolean;
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+      <label className="block text-xs font-bold text-gray-700 mb-1">{label}</label>
       {multiline ? (
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={3}
-          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300 resize-y"
+          className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300 resize-y"
         />
       ) : (
         <input
@@ -31,19 +44,21 @@ function TextInput({ label, value, onChange, placeholder, multiline }: {
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300"
+          className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300"
         />
       )}
     </div>
   );
 }
 
-function DynamicList({ items, onUpdate, fields, maxItems = 10 }: {
+function DynamicList({ items: rawItems, onUpdate, fields, maxItems = 10 }: {
   items: any[];
   onUpdate: (items: any[]) => void;
   fields: Array<{ key: string; label: string; multiline?: boolean }>;
   maxItems?: number;
 }) {
+  const items = Array.isArray(rawItems) ? rawItems : [];
+
   const addItem = () => {
     if (items.length >= maxItems) return;
     const newItem: any = {};
@@ -102,32 +117,33 @@ function StringList({ items, onUpdate, label, maxItems = 10 }: {
   label: string;
   maxItems?: number;
 }) {
+  const safeItems = Array.isArray(items) ? items : [];
   return (
     <div className="space-y-2">
-      {items.map((item, i) => (
+      {safeItems.map((item, i) => (
         <div key={i} className="flex items-center gap-2">
           <input
             type="text"
             value={item}
             onChange={(e) => {
-              const updated = [...items];
+              const updated = [...safeItems];
               updated[i] = e.target.value;
               onUpdate(updated);
             }}
-            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300"
+            className="flex-1 px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300"
             placeholder={`${label} #${i + 1}`}
           />
           <button
-            onClick={() => onUpdate(items.filter((_, idx) => idx !== i))}
+            onClick={() => onUpdate(safeItems.filter((_, idx) => idx !== i))}
             className="p-1 text-gray-400 hover:text-red-500 transition"
           >
             <Trash2 size={14} />
           </button>
         </div>
       ))}
-      {items.length < maxItems && (
+      {safeItems.length < maxItems && (
         <button
-          onClick={() => onUpdate([...items, ''])}
+          onClick={() => onUpdate([...safeItems, ''])}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition"
         >
           <Plus size={14} /> 追加
@@ -144,7 +160,7 @@ export default function BookLPSectionEditor({
   onSave,
   onCancel,
 }: BookLPSectionEditorProps) {
-  const [data, setData] = useState<any>(JSON.parse(JSON.stringify(sectionData || {})));
+  const [data, setData] = useState<any>(() => getInitialData(sectionKey, sectionData));
 
   const handleSave = () => {
     onSave(sectionKey, data);
@@ -264,13 +280,14 @@ export default function BookLPSectionEditor({
           />
         );
 
-      case 'social_proof':
+      case 'social_proof': {
+        const reviews = Array.isArray(data) ? data : [];
         return (
           <div className="space-y-3">
-            {(data || []).map((review: any, i: number) => (
+            {reviews.map((review: any, i: number) => (
               <div key={i} className="p-3 bg-gray-50 rounded-lg border border-gray-100 relative">
                 <button
-                  onClick={() => setData((data || []).filter((_: any, idx: number) => idx !== i))}
+                  onClick={() => setData(reviews.filter((_: any, idx: number) => idx !== i))}
                   className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-500 transition"
                 >
                   <Trash2 size={14} />
@@ -280,7 +297,7 @@ export default function BookLPSectionEditor({
                     label={`レビュー #${i + 1}`}
                     value={review.quote || ''}
                     onChange={(v) => {
-                      const updated = [...data];
+                      const updated = [...reviews];
                       updated[i] = { ...updated[i], quote: v };
                       setData(updated);
                     }}
@@ -290,19 +307,19 @@ export default function BookLPSectionEditor({
                     label="レビュアー名"
                     value={review.reviewer_name || ''}
                     onChange={(v) => {
-                      const updated = [...data];
+                      const updated = [...reviews];
                       updated[i] = { ...updated[i], reviewer_name: v };
                       setData(updated);
                     }}
                   />
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">評価</label>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">評価</label>
                     <div className="flex gap-1">
                       {[1, 2, 3, 4, 5].map(n => (
                         <button
                           key={n}
                           onClick={() => {
-                            const updated = [...data];
+                            const updated = [...reviews];
                             updated[i] = { ...updated[i], rating: n };
                             setData(updated);
                           }}
@@ -319,9 +336,9 @@ export default function BookLPSectionEditor({
                 </div>
               </div>
             ))}
-            {(data || []).length < 5 && (
+            {reviews.length < 5 && (
               <button
-                onClick={() => setData([...(data || []), { quote: '', reviewer_name: '', rating: 5 }])}
+                onClick={() => setData([...reviews, { quote: '', reviewer_name: '', rating: 5 }])}
                 className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition"
               >
                 <Plus size={14} /> レビューを追加
@@ -329,6 +346,7 @@ export default function BookLPSectionEditor({
             )}
           </div>
         );
+      }
 
       case 'bonus':
         return (
