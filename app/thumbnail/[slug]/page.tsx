@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ThumbnailViewer from '@/components/thumbnail/ThumbnailViewer';
+import { generateUGCMetadata } from '@/lib/seo/generateUGCMetadata';
 
 export const revalidate = 300;
 
@@ -44,15 +45,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!data) return { title: 'サムネイル' };
 
-  return {
-    title: `${data.title} | サムネイルメーカー - 集客メーカー`,
-    description: data.description || `AIで生成されたサムネイル: ${data.title}`,
-    openGraph: {
-      title: data.title,
-      description: data.description || `AIで生成されたサムネイル: ${data.title}`,
-      images: data.image_url ? [{ url: data.image_url }] : [],
-    },
-  };
+  return generateUGCMetadata({
+    title: data.title,
+    description: data.description || '',
+    type: 'thumbnail',
+    slug,
+    imageUrl: data.image_url,
+  });
 }
 
 export default async function ThumbnailPage({ params }: Props) {

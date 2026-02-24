@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   
   const { data } = await supabase
     .from('sales_letters')
-    .select('title, settings')
+    .select('title, settings, content')
     .eq('slug', slug)
     .single();
 
@@ -47,11 +47,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'ページが見つかりません' };
   }
 
-  const title = data.title || 'セールスレター';
+  // タイトルフォールバックチェーン:
+  // 1. ユーザー設定のタイトル → 2. 最初のsales_headlineのtext → 3. デフォルト
+  const headlineBlock = data.content?.find((b: { type: string }) => b.type === 'sales_headline');
+  const title = data.title || headlineBlock?.data?.text || 'セールスレター';
 
   return generateUGCMetadata({
     title,
-    description: `${title}のページです。`,
+    description: '',
     type: 'salesletter',
     slug,
   });

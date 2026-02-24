@@ -53,10 +53,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'ページが見つかりません' };
   }
 
-  const title = lp.settings?.title || 'ビジネスLP';
-  const description = lp.settings?.description || '';
+  // タイトルフォールバックチェーン:
+  // 1. ユーザー設定のタイトル → 2. heroのheadline → 3. hero_fullwidthのheadline → 4. 最初のtext_cardのtitle → 5. デフォルト
   const heroBlock = lp.content?.find((b: { type: string }) => b.type === 'hero');
-  const heroImage = heroBlock?.data?.backgroundImage || null;
+  const heroFullwidthBlock = lp.content?.find((b: { type: string }) => b.type === 'hero_fullwidth');
+  const textCardBlock = lp.content?.find((b: { type: string }) => b.type === 'text_card');
+  const title = lp.settings?.title
+    || heroBlock?.data?.headline
+    || heroFullwidthBlock?.data?.headline
+    || textCardBlock?.data?.title
+    || 'ビジネスLP';
+  const description = lp.settings?.description || heroBlock?.data?.subheadline || heroFullwidthBlock?.data?.subheadline || '';
+  const heroImage = heroBlock?.data?.backgroundImage || heroFullwidthBlock?.data?.backgroundImage || null;
 
   return generateUGCMetadata({
     title,

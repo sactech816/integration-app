@@ -16,6 +16,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import ContentFooter from '@/components/shared/ContentFooter';
+import AddToCalendarButton from '@/components/shared/AddToCalendarButton';
 import {
   AttendanceTableData,
   AttendanceStatus,
@@ -223,6 +224,41 @@ export default function AttendancePublicPage() {
             <p className="text-gray-600 mb-6">
               ご回答ありがとうございます。
             </p>
+            {/* カレンダーに追加（ベスト候補日） */}
+            {tableData && tableData.best_slot_index !== undefined && (() => {
+              const bestSlotSummary = tableData.slots.find(
+                s => s.slot_index === tableData.best_slot_index
+              );
+              if (!bestSlotSummary) return null;
+              const slot = bestSlotSummary.slot;
+              const hasTime = !!slot.start_time && !!slot.end_time;
+              const startDate = hasTime
+                ? new Date(`${slot.date}T${slot.start_time}:00`)
+                : new Date(`${slot.date}T00:00:00`);
+              const endDate = hasTime
+                ? new Date(`${slot.date}T${slot.end_time}:00`)
+                : new Date(`${slot.date}T23:59:59`);
+
+              return (
+                <div className="mb-6">
+                  <p className="text-xs text-gray-500 mb-2">
+                    ★ 有力候補日：{formatDate(slot.date)}
+                    {hasTime && ` ${slot.start_time} - ${slot.end_time}`}
+                  </p>
+                  <AddToCalendarButton
+                    event={{
+                      title: event.title,
+                      startTime: startDate,
+                      endTime: endDate,
+                      description: event.description || undefined,
+                      allDay: !hasTime,
+                    }}
+                    filename={`attendance-${tableData.event.id}.ics`}
+                    variant="purple"
+                  />
+                </div>
+              );
+            })()}
             <button
               onClick={() => setSubmitComplete(false)}
               className="text-purple-600 font-semibold hover:underline"

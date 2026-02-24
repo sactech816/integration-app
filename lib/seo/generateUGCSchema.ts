@@ -26,6 +26,11 @@ export function generateUGCSchema(input: UGCSchemaInput) {
       name: '集客メーカー',
       url: siteUrl,
     },
+    // AEO対策: AIが引用しやすい箇所を指定
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['h1', 'h2', '.speakable', '[data-speakable]'],
+    },
     ...input.additionalProps,
   };
 }

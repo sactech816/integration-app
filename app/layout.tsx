@@ -23,7 +23,7 @@ const siteDescription = '診断クイズ・プロフィールLP・ビジネスLP
 export const metadata: Metadata = {
   title: {
     default: siteTitle,
-    template: `%s | 集客メーカー | 診断クイズ・プロフィールLP・ビジネスLPが簡単作成`,
+    template: `%s｜集客メーカー`,
   },
   description: siteDescription,
   keywords: [

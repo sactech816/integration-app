@@ -24,6 +24,7 @@ import {
   LayoutGrid,
   XCircle,
 } from 'lucide-react';
+import AddToCalendarButton from '@/components/shared/AddToCalendarButton';
 import { supabase } from '@/lib/supabase';
 import {
   BookingMenu,
@@ -708,6 +709,22 @@ export default function PublicBookingPage() {
                 <div className="text-blue-600 font-semibold">
                   {formatTime(selectedSlot.start_time)} - {formatTime(selectedSlot.end_time)}
                 </div>
+              </div>
+            )}
+            {/* カレンダーに追加 */}
+            {selectedSlot && menu && (
+              <div className="mb-6">
+                <AddToCalendarButton
+                  event={{
+                    title: menu.title,
+                    startTime: new Date(selectedSlot.start_time),
+                    endTime: new Date(selectedSlot.end_time),
+                    description: menu.description || undefined,
+                    location: menu.contact_method || undefined,
+                  }}
+                  filename={`booking-${menu.id}.ics`}
+                  variant="blue"
+                />
               </div>
             )}
             {/* 説明・コンタクト方法 */}
