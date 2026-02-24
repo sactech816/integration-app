@@ -362,7 +362,7 @@ ${sampleContent ? `\n【本文抜粋】\n${sampleContent}` : ''}`;
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.7,
-        maxTokens: 6000,
+        maxTokens: 8000,
         responseFormat: 'json',
       },
       { service: 'kdl', phase: 'lp_generation', model, backupModel }
@@ -386,14 +386,59 @@ ${sampleContent ? `\n【本文抜粋】\n${sampleContent}` : ''}`;
       if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
         cleanContent = cleanContent.slice(firstBrace, lastBrace + 1);
       }
+      // 制御文字の除去（改行・タブ以外）
+      cleanContent = cleanContent.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+      // トレーリングカンマの除去 (,] or ,})
+      cleanContent = cleanContent.replace(/,\s*([\]}])/g, '$1');
       lpData = JSON.parse(cleanContent);
     } catch (parseError) {
-      console.error('JSON parse error. Raw content:', content.slice(0, 500));
-      throw new Error('AIの応答をJSONとしてパースできませんでした');
+      console.error('JSON parse error. Raw content (first 1000 chars):', content.slice(0, 1000));
+      console.error('JSON parse error. Raw content (last 500 chars):', content.slice(-500));
+      // 出力が途中で切れた場合: 不足している閉じ括弧を補完して再試行
+      try {
+        let truncated = content.trim();
+        truncated = truncated.replace(/^```(?:json)?\s*\n?/i, '');
+        truncated = truncated.replace(/\n?```\s*$/i, '');
+        const first = truncated.indexOf('{');
+        if (first !== -1) {
+          truncated = truncated.slice(first);
+        }
+        truncated = truncated.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+        truncated = truncated.replace(/,\s*([\]}])/g, '$1');
+        // 開き括弧と閉じ括弧の数を数えて不足分を補完
+        const openBraces = (truncated.match(/{/g) || []).length;
+        const closeBraces = (truncated.match(/}/g) || []).length;
+        const openBrackets = (truncated.match(/\[/g) || []).length;
+        const closeBrackets = (truncated.match(/]/g) || []).length;
+        // 末尾の不完全なキー/値を除去
+        truncated = truncated.replace(/,\s*"[^"]*"?\s*:?\s*"?[^"]*$/, '');
+        truncated = truncated.replace(/,\s*$/, '');
+        // 閉じ括弧を補完
+        for (let i = 0; i < openBrackets - closeBrackets; i++) truncated += ']';
+        for (let i = 0; i < openBraces - closeBraces; i++) truncated += '}';
+        lpData = JSON.parse(truncated);
+        console.log('JSON parse recovered with bracket completion');
+      } catch (retryError) {
+        throw new Error('AIの応答をJSONとしてパースできませんでした');
+      }
     }
 
-    // CTAにユーザー指定のリンクを追加
+    // 欠損フィールドのデフォルト補完（AI出力が途中で切れた場合の安全対策）
+    if (!lpData.hero) lpData.hero = { catchcopy: bookData.title, subtitle: '', description: '' };
+    if (!lpData.pain_points) lpData.pain_points = [];
+    if (!lpData.author_profile) lpData.author_profile = { name: '著者', credentials: '', story: '' };
+    if (!lpData.benefits) lpData.benefits = [];
+    if (!lpData.key_takeaways) lpData.key_takeaways = [];
+    if (!lpData.target_readers) lpData.target_readers = { heading: '', items: [] };
+    if (!lpData.transformation) lpData.transformation = { before: [], after: [] };
+    if (!lpData.chapter_summaries) lpData.chapter_summaries = [];
+    if (!lpData.social_proof) lpData.social_proof = [];
+    if (!lpData.bonus) lpData.bonus = [];
+    if (!lpData.faq) lpData.faq = [];
+    if (!lpData.closing_message) lpData.closing_message = { title: '', message: '' };
     if (!lpData.cta) lpData.cta = { amazon_link: '', line_link: '', cta_text: '今すぐ読む' };
+
+    // CTAにユーザー指定のリンクを追加
     if (amazon_link) lpData.cta.amazon_link = amazon_link;
     if (line_link) lpData.cta.line_link = line_link;
 
