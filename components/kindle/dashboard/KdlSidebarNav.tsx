@@ -25,6 +25,7 @@ import {
   ChevronDown,
   ChevronRight,
   LayoutDashboard,
+  Globe,
 } from 'lucide-react';
 
 export type KdlUserRole = 'user' | 'agency' | 'admin';
@@ -84,6 +85,13 @@ export default function KdlSidebarNav({
       id: 'discovery',
       label: 'ネタ発掘診断',
       icon: Lightbulb,
+      section: 'main',
+      roles: ['user', 'agency', 'admin'],
+    },
+    {
+      id: 'book-lps',
+      label: '書籍LP',
+      icon: Globe,
       section: 'main',
       roles: ['user', 'agency', 'admin'],
     },
