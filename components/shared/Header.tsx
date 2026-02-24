@@ -35,7 +35,9 @@ import {
   PenTool,
   Crown,
   Store,
-  MousePointerClick
+  MousePointerClick,
+  Lock,
+  Image
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -120,6 +122,12 @@ const Header: React.FC<HeaderProps> = ({
   // はじめかたガイド
   const onboardingService = { id: 'onboarding', label: 'はじめかたメーカー', icon: MousePointerClick, color: 'text-sky-600', bg: 'bg-sky-50' };
 
+  // サムネイルメーカー
+  const thumbnailService = { id: 'thumbnail', label: 'サムネイルメーカー', icon: Image, color: 'text-pink-600', bg: 'bg-pink-50' };
+
+  // スキルマーケット
+  const marketplaceService = { id: 'marketplace', label: 'スキルマーケット', icon: Store, color: 'text-indigo-600', bg: 'bg-indigo-50' };
+
   return (
     <>
     <header className={`${headerClassName || 'bg-white/80'} backdrop-blur-md border-b border-gray-100 sticky top-0 z-[100]`}>
@@ -162,9 +170,9 @@ const Header: React.FC<HeaderProps> = ({
               {isServiceMenuOpen && (
                 <>
                   <div className="absolute top-full left-0 w-full h-2" />
-                  <div className="absolute top-full -left-20 pt-2 w-[780px] z-[120]">
+                  <div className="absolute top-full -left-20 pt-2 w-[980px] z-[120]">
                     <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-5 animate-fade-in">
-                      <div className="grid grid-cols-3 gap-8">
+                      <div className="grid grid-cols-4 gap-8">
                         {/* コンテンツ作成ツール */}
                         <div>
                           <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">コンテンツ作成</p>
@@ -191,16 +199,6 @@ const Header: React.FC<HeaderProps> = ({
                                 <salesletterService.icon size={16} className={salesletterService.color} />
                               </div>
                               <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{salesletterService.label}</span>
-                            </Link>
-                            <Link
-                              href="/onboarding/editor"
-                              onClick={(e) => handleServiceClick(e, 'onboarding')}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${onboardingService.bg} shrink-0`}>
-                                <onboardingService.icon size={16} className={onboardingService.color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{onboardingService.label}</span>
                             </Link>
                           </div>
                         </div>
@@ -238,16 +236,6 @@ const Header: React.FC<HeaderProps> = ({
                                 <surveyService.icon size={16} className={surveyService.color} />
                               </div>
                               <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{surveyService.label}</span>
-                            </Link>
-                            <Link
-                              href="/gamification/new"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${gamificationService.bg} shrink-0`}>
-                                <gamificationService.icon size={16} className={gamificationService.color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{gamificationService.label}</span>
                             </Link>
                           </div>
                         </div>
@@ -297,6 +285,56 @@ const Header: React.FC<HeaderProps> = ({
                                 <Crown size={16} className="text-purple-600" />
                               </div>
                               <span className="font-medium text-purple-700 text-sm whitespace-nowrap">料金プラン</span>
+                            </Link>
+                          </div>
+                        </div>
+
+                        {/* PROプラン専用 */}
+                        <div>
+                          <p className="text-xs font-bold text-purple-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                            <Crown size={12} className="text-purple-500" />
+                            PROプラン専用
+                          </p>
+                          <div className="space-y-1">
+                            <Link
+                              href="/onboarding/editor"
+                              onClick={(e) => handleServiceClick(e, 'onboarding')}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${onboardingService.bg} shrink-0`}>
+                                <onboardingService.icon size={16} className={onboardingService.color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{onboardingService.label}</span>
+                            </Link>
+                            <Link
+                              href="/gamification/new"
+                              onClick={closeMenus}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${gamificationService.bg} shrink-0`}>
+                                <gamificationService.icon size={16} className={gamificationService.color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{gamificationService.label}</span>
+                            </Link>
+                            <Link
+                              href="/thumbnail/editor"
+                              onClick={closeMenus}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${thumbnailService.bg} shrink-0`}>
+                                <thumbnailService.icon size={16} className={thumbnailService.color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{thumbnailService.label}</span>
+                            </Link>
+                            <Link
+                              href="/marketplace"
+                              onClick={closeMenus}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${marketplaceService.bg} shrink-0`}>
+                                <marketplaceService.icon size={16} className={marketplaceService.color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{marketplaceService.label}</span>
                             </Link>
                           </div>
                         </div>
@@ -654,14 +692,6 @@ const Header: React.FC<HeaderProps> = ({
                     <salesletterService.icon size={20} className={salesletterService.color} />
                     <div className={`font-bold text-sm ${salesletterService.color}`}>{salesletterService.label}</div>
                   </Link>
-                  <Link
-                    href="/onboarding/editor"
-                    onClick={(e) => handleServiceClick(e, 'onboarding')}
-                    className={`flex items-center gap-2.5 p-3 rounded-xl ${onboardingService.bg} transition-all hover:scale-[1.02]`}
-                  >
-                    <onboardingService.icon size={20} className={onboardingService.color} />
-                    <div className={`font-bold text-sm ${onboardingService.color}`}>{onboardingService.label}</div>
-                  </Link>
                 </div>
               </div>
 
@@ -693,13 +723,47 @@ const Header: React.FC<HeaderProps> = ({
                     <surveyService.icon size={20} className={surveyService.color} />
                     <div className={`font-bold text-sm ${surveyService.color}`}>{surveyService.label}</div>
                   </Link>
+                </div>
+              </div>
+
+              {/* ===== PROプラン専用（2段グリッド） ===== */}
+              <div>
+                <p className="text-xs font-bold text-purple-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Crown size={12} className="text-purple-500" />
+                  PROプラン専用
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link
+                    href="/onboarding/editor"
+                    onClick={(e) => handleServiceClick(e, 'onboarding')}
+                    className="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 transition-all hover:scale-[1.02] border border-purple-100"
+                  >
+                    <onboardingService.icon size={20} className={onboardingService.color} />
+                    <div className="font-bold text-sm text-purple-700">{onboardingService.label}</div>
+                  </Link>
                   <Link
                     href="/gamification/new"
                     onClick={closeMenus}
-                    className={`flex items-center gap-2.5 p-3 rounded-xl ${gamificationService.bg} transition-all hover:scale-[1.02]`}
+                    className="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 transition-all hover:scale-[1.02] border border-purple-100"
                   >
                     <gamificationService.icon size={20} className={gamificationService.color} />
-                    <div className={`font-bold text-sm ${gamificationService.color}`}>{gamificationService.label}</div>
+                    <div className="font-bold text-sm text-purple-700">{gamificationService.label}</div>
+                  </Link>
+                  <Link
+                    href="/thumbnail/editor"
+                    onClick={closeMenus}
+                    className="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 transition-all hover:scale-[1.02] border border-purple-100"
+                  >
+                    <thumbnailService.icon size={20} className={thumbnailService.color} />
+                    <div className="font-bold text-sm text-purple-700">{thumbnailService.label}</div>
+                  </Link>
+                  <Link
+                    href="/marketplace"
+                    onClick={closeMenus}
+                    className="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 transition-all hover:scale-[1.02] border border-purple-100"
+                  >
+                    <marketplaceService.icon size={20} className={marketplaceService.color} />
+                    <div className="font-bold text-sm text-purple-700">{marketplaceService.label}</div>
                   </Link>
                 </div>
               </div>

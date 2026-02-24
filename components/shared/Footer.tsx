@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Magnet, Sparkles, Building2, UserCircle, TrendingUp, Lightbulb, Heart, Calendar, ClipboardList, Gamepad2, BookOpen, Monitor, CalendarCheck, PenTool, MousePointerClick } from 'lucide-react';
+import { Magnet, Sparkles, Building2, UserCircle, TrendingUp, Lightbulb, Heart, Calendar, ClipboardList, Gamepad2, BookOpen, Monitor, CalendarCheck, PenTool, MousePointerClick, Crown, Image, Store } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
 interface FooterProps {
@@ -88,6 +88,22 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
                   セールスライター
                 </Link>
               </li>
+            </ul>
+          </div>
+
+          {/* PROプラン専用 */}
+          <div>
+            <h3 className="text-purple-300 font-bold mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
+              <Crown size={14} className="text-purple-400" />
+              PROプラン専用
+            </h3>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link href="/onboarding/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <MousePointerClick size={16} className="opacity-60 group-hover:opacity-100" />
+                  はじめかたメーカー
+                </Link>
+              </li>
               <li>
                 <Link href="/gamification/new" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Gamepad2 size={16} className="opacity-60 group-hover:opacity-100" />
@@ -95,9 +111,15 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
                 </Link>
               </li>
               <li>
-                <Link href="/onboarding/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <MousePointerClick size={16} className="opacity-60 group-hover:opacity-100" />
-                  はじめかたメーカー
+                <Link href="/thumbnail/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Image size={16} className="opacity-60 group-hover:opacity-100" />
+                  サムネイルメーカー
+                </Link>
+              </li>
+              <li>
+                <Link href="/marketplace" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Store size={16} className="opacity-60 group-hover:opacity-100" />
+                  スキルマーケット
                 </Link>
               </li>
             </ul>

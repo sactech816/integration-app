@@ -11,7 +11,7 @@ import { logAIUsage } from '@/lib/ai-usage';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// LP構造データの型定義
+// LP構造データの型定義（PASONA フレームワーク対応）
 interface BookLPData {
   hero: {
     catchcopy: string;
@@ -19,9 +19,29 @@ interface BookLPData {
     description: string;
   };
   pain_points: Array<{ title: string; description: string }>;
+  author_profile: {
+    name: string;
+    credentials: string;
+    story: string;
+  };
   benefits: Array<{ title: string; description: string }>;
+  key_takeaways: Array<{ number: number; title: string; description: string }>;
+  target_readers: {
+    heading: string;
+    items: string[];
+  };
+  transformation: {
+    before: string[];
+    after: string[];
+  };
   chapter_summaries: Array<{ chapter_title: string; summary: string }>;
+  social_proof: Array<{ quote: string; reviewer_name: string; rating: number }>;
+  bonus: Array<{ title: string; description: string }>;
   faq: Array<{ question: string; answer: string }>;
+  closing_message: {
+    title: string;
+    message: string;
+  };
   cta: {
     amazon_link: string;
     line_link: string;
@@ -60,6 +80,11 @@ function generateMockLPData(bookTitle: string, chapters: Array<{ title: string }
       { title: '時間がなくて学べない', description: '忙しい毎日の中でも、効率的に学べる方法をお伝えします。スキマ時間で実践可能です。' },
       { title: '続かない・挫折してしまう', description: 'モチベーション維持の仕組みと、小さな成功体験を積み重ねるメソッドを紹介しています。' },
     ],
+    author_profile: {
+      name: '著者名',
+      credentials: '10年以上の実務経験を持つ専門家。多数の企業でコンサルティングを手がけてきた実績あり。',
+      story: '私自身、かつては同じ悩みを抱えていました。何度も失敗を重ねる中で見つけた「本当に効果のある方法」を、この一冊に凝縮しました。',
+    },
     benefits: [
       { title: '体系的な知識が身につく', description: '基礎から応用まで、段階的に理解を深められる構成です。' },
       { title: '即実践できるノウハウ', description: '読んだその日から使える具体的なテクニックを多数収録。' },
@@ -67,15 +92,55 @@ function generateMockLPData(bookTitle: string, chapters: Array<{ title: string }
       { title: '挫折しないロードマップ', description: 'ステップバイステップで進められるので、迷うことがありません。' },
       { title: '最新の情報を網羅', description: '最新のトレンドと手法を反映した、今すぐ使える情報です。' },
     ],
+    key_takeaways: [
+      { number: 1, title: '成功の3ステップ', description: '誰でも再現できるシンプルな3ステップで、確実に成果を出す方法を解説。' },
+      { number: 2, title: '失敗しないための鉄則', description: '多くの人が陥りがちなミスとその回避法を具体例とともに紹介。' },
+      { number: 3, title: '継続のための仕組み化', description: '意志力に頼らず、自然と続けられる仕組みの作り方を伝授。' },
+    ],
+    target_readers: {
+      heading: 'この本はこんなあなたのための本です',
+      items: [
+        '何から始めればいいかわからず立ち止まっている方',
+        '独学で挑戦したが思うような成果が出ていない方',
+        '忙しい中でも効率的にスキルアップしたい方',
+        '基礎からしっかり学び直したい方',
+        '実践的なノウハウを求めている方',
+      ],
+    },
+    transformation: {
+      before: [
+        '何から手をつけていいかわからない',
+        '自己流で試してうまくいかない',
+        '情報に振り回されて消耗している',
+      ],
+      after: [
+        '明確なロードマップに沿って迷わず進める',
+        '体系的な知識で確実に成果が出せる',
+        '本当に必要な情報だけに集中できる',
+      ],
+    },
     chapter_summaries: chapters.slice(0, 8).map((ch) => ({
       chapter_title: ch.title,
       summary: `${ch.title}について、基本的な考え方から実践的な手法まで詳しく解説しています。`,
     })),
+    social_proof: [
+      { quote: '具体的な手順が書かれていて、読んだ翌日から実践できました。今までの悩みが嘘のように解消しました。', reviewer_name: 'T.K.さん（30代・会社員）', rating: 5 },
+      { quote: '同じテーマの本を何冊も読みましたが、この本が一番わかりやすく実践的です。', reviewer_name: 'M.S.さん（40代・フリーランス）', rating: 5 },
+      { quote: '著者の経験に基づいた内容なので説得力があります。何度も読み返しています。', reviewer_name: 'Y.A.さん（20代・学生）', rating: 4 },
+    ],
+    bonus: [
+      { title: '実践チェックリスト', description: '本書の内容をすぐに行動に移せる、ステップバイステップのチェックリスト。' },
+      { title: '重要ポイントまとめシート', description: '各章のエッセンスを1枚にまとめた、振り返り用のシート。' },
+    ],
     faq: [
       { question: '初心者でも理解できますか？', answer: 'はい、専門用語には丁寧な解説を添えており、初めての方でも安心して読み進められます。' },
       { question: 'すぐに成果が出ますか？', answer: '個人差はありますが、本書のステップに沿って実践すれば、早い方で数週間で変化を実感いただけます。' },
       { question: '他の本との違いは何ですか？', answer: '机上の空論ではなく、実際の経験に基づいた実践的な内容に特化しています。すぐに行動に移せる点が最大の特徴です。' },
     ],
+    closing_message: {
+      title: '最後に、あなたへのメッセージ',
+      message: 'この本を手に取ってくださったあなたは、すでに変わり始めています。あとは一歩踏み出すだけ。本書があなたの人生をより豊かにする一助となれば、著者としてこれほど嬉しいことはありません。',
+    },
     cta: {
       amazon_link: '',
       line_link: '',
@@ -84,35 +149,67 @@ function generateMockLPData(bookTitle: string, chapters: Array<{ title: string }
   };
 }
 
-const SYSTEM_PROMPT = `あなたは書籍のプロモーション用ランディングページ（LP）を作成するマーケティングコピーライターです。
-与えられた書籍の情報（タイトル、サブタイトル、ターゲット読者、目次、本文抜粋）を元に、
-読者の購買意欲を最大限に高めるLP構造をJSON形式で生成してください。
+const SYSTEM_PROMPT = `あなたは書籍販売に特化した一流のマーケティングコピーライターです。
+PASONAフレームワーク（Problem→Affinity→Solution→Offer→Narrowing→Action）を用いて、
+書籍の購買意欲を最大限に高める高コンバージョンLPをJSON形式で生成してください。
 
-＃ 出力ルール：
-1. hero.catchcopy: 20〜50文字の感情に訴えるキャッチコピー。読者の悩みや理想の未来を想起させる
-2. hero.subtitle: catchcopyを補足する1文。書籍の価値を端的に伝える
-3. hero.description: 2〜3文で書籍の魅力を凝縮した紹介文
-4. pain_points: 読者が抱える悩み・課題を3〜5個。titleは短く、descriptionで共感を示す
-5. benefits: この書籍を読むことで得られる具体的なメリットを5個。成果や変化にフォーカス
-6. chapter_summaries: 各章の要約を1〜2文で。読者にとっての価値が伝わるように
-7. faq: 購入を躊躇する読者の疑問に答える形で3〜5個
-8. cta.cta_text: 行動を促すボタンテキスト（10〜20文字）
+＃ PASONAフレームワークに基づくセクション設計：
+
+【P - Problem（問題提起）】
+1. hero.catchcopy: 20〜50文字。読者の理想の未来を描く感情的なキャッチコピー。「〜できる」「〜が変わる」等の変化を示唆
+2. hero.subtitle: catchcopyを補足する1文。書籍の核心的価値を端的に伝える
+3. hero.description: 2〜3文。書籍が解決する課題と、読後の変化を凝縮した紹介文
+4. pain_points: 3〜5個。読者が「まさに自分のことだ」と感じる悩み。titleは「〜していませんか？」形式で自己認識を促す。descriptionで深く共感を示す
+
+【A - Affinity（親近感・著者の信頼性）】
+5. author_profile.name: 著者名（書籍内容から推測。不明なら「著者」）
+6. author_profile.credentials: 1〜2文で専門性・実績を示す肩書き・経歴
+7. author_profile.story: 2〜3文。著者がかつて読者と同じ悩みを持っていたことを示す共感ストーリー
+
+【S - Solution（解決策）】
+8. benefits: 5個。この書籍を読むことで得られる具体的な成果・変化。「〜できるようになる」等、読者視点で
+9. key_takeaways: 3〜5個。numberは連番。書籍の核心的インサイト。titleはキャッチーに、descriptionで具体的に
+
+【O - Offer（提供内容）】
+10. chapter_summaries: 各章の要約。chapter_titleは章タイトル、summaryは読者が得られる価値を1〜2文で
+11. bonus: 2〜3個。読者への特典（チェックリスト、ワークシート、まとめ資料等）。titleとdescriptionで魅力を伝える
+
+【N - Narrowing（絞り込み）】
+12. target_readers.heading: 「この本はこんなあなたのための本です」等の見出し
+13. target_readers.items: 5〜7個の文字列配列。「〜な方」形式で具体的なターゲット像
+14. transformation.before: 3〜5個。読む前の読者の状態（ネガティブ）
+15. transformation.after: 3〜5個。beforeと対応する読後の変化（ポジティブ）。同じ順番で対比が明確になるように
+
+【A - Action（行動喚起）】
+16. social_proof: 3個。想定読者レビュー。quoteはリアルな感想文、reviewer_nameは「イニシャル＋属性」形式、ratingは4か5
+17. faq: 3〜5個。購入をためらう読者の疑問に対し、不安を解消する回答
+18. closing_message.title: 著者からの温かい締めくくりの見出し
+19. closing_message.message: 2〜3文。読者の背中を押す著者メッセージ
+20. cta.cta_text: 10〜20文字の行動を促すボタンテキスト
 
 ＃ 出力形式（JSON）：
 {
   "hero": { "catchcopy": "...", "subtitle": "...", "description": "..." },
   "pain_points": [{ "title": "...", "description": "..." }],
+  "author_profile": { "name": "...", "credentials": "...", "story": "..." },
   "benefits": [{ "title": "...", "description": "..." }],
+  "key_takeaways": [{ "number": 1, "title": "...", "description": "..." }],
+  "target_readers": { "heading": "...", "items": ["...", "..."] },
+  "transformation": { "before": ["...", "..."], "after": ["...", "..."] },
   "chapter_summaries": [{ "chapter_title": "...", "summary": "..." }],
+  "social_proof": [{ "quote": "...", "reviewer_name": "...", "rating": 5 }],
+  "bonus": [{ "title": "...", "description": "..." }],
   "faq": [{ "question": "...", "answer": "..." }],
+  "closing_message": { "title": "...", "message": "..." },
   "cta": { "cta_text": "..." }
 }
 
 ＃ 注意事項：
 - 日本語で出力すること
 - 読者の感情に寄り添い、具体的なベネフィットを示すこと
-- 誇大表現は避け、信頼感のあるトーンで
-- 必ず有効なJSON形式で出力すること`;
+- 誇大表現は避け、信頼感のあるトーンで書くこと
+- 書籍の実際の内容に基づいたコピーを生成すること（内容と乖離しないこと）
+- 必ず有効なJSON形式のみを出力すること（前後にテキストを含めないこと）`;
 
 export async function POST(request: Request) {
   try {
@@ -265,7 +362,7 @@ ${sampleContent ? `\n【本文抜粋】\n${sampleContent}` : ''}`;
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.7,
-        maxTokens: 4000,
+        maxTokens: 6000,
         responseFormat: 'json',
       },
       { service: 'kdl', phase: 'lp_generation', model, backupModel }
@@ -309,9 +406,16 @@ ${sampleContent ? `\n【本文抜粋】\n${sampleContent}` : ''}`;
           user_id: bookData.user_id,
           hero: lpData.hero,
           pain_points: lpData.pain_points,
+          author_profile: lpData.author_profile || {},
           benefits: lpData.benefits,
+          key_takeaways: lpData.key_takeaways || [],
+          target_readers: lpData.target_readers || {},
+          transformation: lpData.transformation || {},
           chapter_summaries: lpData.chapter_summaries,
+          social_proof: lpData.social_proof || [],
+          bonus: lpData.bonus || [],
           faq: lpData.faq,
+          closing_message: lpData.closing_message || {},
           cta: lpData.cta,
           ai_model_used: model,
           status: 'draft',
@@ -385,7 +489,7 @@ export async function GET(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { book_id, status, hero, pain_points, benefits, chapter_summaries, faq, cta } = body;
+    const { book_id, ...fields } = body;
 
     if (!book_id) {
       return NextResponse.json({ error: 'book_idを指定してください' }, { status: 400 });
@@ -397,17 +501,22 @@ export async function PUT(request: Request) {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    const allowedFields = [
+      'status', 'hero', 'pain_points', 'author_profile', 'benefits',
+      'key_takeaways', 'target_readers', 'transformation', 'chapter_summaries',
+      'social_proof', 'bonus', 'faq', 'closing_message', 'cta',
+      'theme_color', 'section_visibility', 'cover_image_url',
+    ];
+
     const updates: Record<string, any> = { updated_at: new Date().toISOString() };
-    if (status !== undefined) {
-      updates.status = status;
-      if (status === 'published') updates.published_at = new Date().toISOString();
+    for (const key of allowedFields) {
+      if (fields[key] !== undefined) {
+        updates[key] = fields[key];
+      }
     }
-    if (hero !== undefined) updates.hero = hero;
-    if (pain_points !== undefined) updates.pain_points = pain_points;
-    if (benefits !== undefined) updates.benefits = benefits;
-    if (chapter_summaries !== undefined) updates.chapter_summaries = chapter_summaries;
-    if (faq !== undefined) updates.faq = faq;
-    if (cta !== undefined) updates.cta = cta;
+    if (fields.status === 'published') {
+      updates.published_at = new Date().toISOString();
+    }
 
     const { error } = await supabase
       .from('kdl_book_lps')
