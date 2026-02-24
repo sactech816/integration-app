@@ -24,7 +24,8 @@ import {
   MousePointerClick,
   FileText,
   PenTool,
-  Gamepad2
+  Gamepad2,
+  BookOpen
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -70,6 +71,7 @@ const TABS: { type: ServiceType | 'all'; label: string; icon: React.ComponentTyp
   { type: 'survey', label: 'アンケート', icon: FileText },
   { type: 'salesletter', label: 'セールスレター', icon: PenTool },
   { type: 'gamification', label: 'ゲーミフィケーション', icon: Gamepad2 },
+  { type: 'onboarding', label: 'はじめかたガイド', icon: BookOpen },
 ];
 
 // サービスカラー取得
@@ -110,12 +112,19 @@ const getServiceColor = (type: ServiceType) => {
       gradient: 'from-rose-500 via-pink-500 to-purple-500',
       hoverText: 'group-hover:text-rose-600'
     },
-    gamification: { 
-      bg: 'bg-purple-50', 
-      text: 'text-purple-600', 
-      border: 'border-purple-200', 
+    gamification: {
+      bg: 'bg-purple-50',
+      text: 'text-purple-600',
+      border: 'border-purple-200',
       gradient: 'from-purple-500 via-pink-500 to-orange-500',
       hoverText: 'group-hover:text-purple-600'
+    },
+    onboarding: {
+      bg: 'bg-orange-50',
+      text: 'text-orange-600',
+      border: 'border-orange-200',
+      gradient: 'from-orange-400 via-amber-500 to-yellow-500',
+      hoverText: 'group-hover:text-orange-600'
     }
   };
   return colors[type] || colors.quiz;
@@ -129,7 +138,8 @@ const getServiceIcon = (type: ServiceType) => {
     business: Building2,
     survey: FileText,
     salesletter: PenTool,
-    gamification: Gamepad2
+    gamification: Gamepad2,
+    onboarding: BookOpen
   };
   return icons[type] || Sparkles;
 };
@@ -419,6 +429,29 @@ function PortalPageContent() {
             type: 'gamification' as ServiceType,
             views_count: 0,
             campaign_type: g.campaign_type
+          })));
+        }
+      }
+
+      // はじめかたガイド取得（show_in_portalがtrueのもののみ）
+      if (selectedTab === 'all' || selectedTab === 'onboarding') {
+        const { data: onboardings } = await supabase
+          .from('onboarding_modals')
+          .select('id, slug, title, description, created_at')
+          .eq('show_in_portal', true)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + ITEMS_PER_PAGE - 1);
+
+        if (onboardings) {
+          allItems.push(...onboardings.map((o) => ({
+            id: String(o.id),
+            slug: o.slug,
+            title: o.title || 'はじめかたガイド',
+            description: o.description,
+            imageUrl: undefined,
+            created_at: o.created_at,
+            type: 'onboarding' as ServiceType,
+            views_count: 0
           })));
         }
       }

@@ -81,7 +81,8 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
                   dangerouslySetInnerHTML={{ __html: block.data.htmlContent }}
                 />
                 <style jsx>{`
-                  .text-card-rich-content p { margin: 0.5rem 0; }
+                  .text-card-rich-content p { margin: 0.5rem 0; min-height: 1em; }
+                  .text-card-rich-content p:empty::before { content: '\\00a0'; visibility: hidden; }
                   .text-card-rich-content ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
                   .text-card-rich-content ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
                   .text-card-rich-content li { margin: 0.25rem 0; }
@@ -114,7 +115,8 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
                   dangerouslySetInnerHTML={{ __html: block.data.htmlContent }}
                 />
                 <style jsx>{`
-                  .text-card-rich-content p { margin: 0.5rem 0; }
+                  .text-card-rich-content p { margin: 0.5rem 0; min-height: 1em; }
+                  .text-card-rich-content p:empty::before { content: '\\00a0'; visibility: hidden; }
                   .text-card-rich-content ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
                   .text-card-rich-content ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
                   .text-card-rich-content li { margin: 0.25rem 0; }
@@ -988,6 +990,11 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
             }
             .sales-paragraph-content p {
               margin: 0.5rem 0;
+              min-height: 1em;
+            }
+            .sales-paragraph-content p:empty::before {
+              content: '\\00a0';
+              visibility: hidden;
             }
             .sales-paragraph-content ul {
               list-style-type: disc;
