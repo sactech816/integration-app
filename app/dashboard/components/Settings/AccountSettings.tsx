@@ -25,6 +25,8 @@ import {
   Coins,
   ToggleLeft,
   ToggleRight,
+  RotateCcw,
+  HelpCircle,
 } from 'lucide-react';
 import { fetchMakersSubscriptionStatus, MakersSubscriptionStatus } from '@/lib/subscription';
 import { 
@@ -225,6 +227,28 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
       ...prev,
       [key]: value,
     }));
+  };
+
+  // はじめてのガイドをリセット
+  const [resettingGuides, setResettingGuides] = useState(false);
+  const [guidesResetDone, setGuidesResetDone] = useState(false);
+
+  const handleResetGuides = () => {
+    setResettingGuides(true);
+    try {
+      const guideKeys = [
+        'sm_welcome_guide_banner',
+        'onboarding_editor_onboarding_dismissed',
+        'kdl_wizard_onboarding_dismissed',
+      ];
+      guideKeys.forEach((key) => localStorage.removeItem(key));
+      setGuidesResetDone(true);
+      showSuccess('はじめてのガイドをリセットしました。各ページを開くと再表示されます。');
+    } catch (error) {
+      showError('ガイドのリセットに失敗しました');
+    } finally {
+      setResettingGuides(false);
+    }
   };
 
   // アカウント削除
@@ -729,6 +753,31 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
             </button>
           </div>
         )}
+      </div>
+
+      {/* はじめてのガイド再表示 */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <HelpCircle size={20} className="text-orange-500" />
+          はじめてのガイド
+        </h2>
+        <p className="text-gray-600 mb-4">
+          各ツールで表示される「はじめてのガイド」を非表示にした場合、こちらからリセットして再表示できます。
+        </p>
+        <button
+          onClick={handleResetGuides}
+          disabled={resettingGuides || guidesResetDone}
+          className="bg-orange-500 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+        >
+          {resettingGuides ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : guidesResetDone ? (
+            <CheckCircle size={16} />
+          ) : (
+            <RotateCcw size={16} />
+          )}
+          {guidesResetDone ? 'リセット済み' : 'ガイドを再表示する'}
+        </button>
       </div>
 
       {/* アカウント削除 */}
