@@ -506,7 +506,9 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatePrompt, setGeneratePrompt] = useState('');
   const [showBlockSelector, setShowBlockSelector] = useState(false);
-  const [expandedBlock, setExpandedBlock] = useState<string | null>(initialBlocks[0]?.id || null);
+  const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(
+    new Set(initialBlocks[0]?.id ? [initialBlocks[0].id] : [])
+  );
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   const [isUploading, setIsUploading] = useState(false);
   const [savedSlug, setSavedSlug] = useState<string | null>(null);
@@ -837,7 +839,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
         content: newContent,
       };
     });
-    setExpandedBlock(newBlock.id);
+    setExpandedBlocks(prev => new Set(prev).add(newBlock.id));
     setShowBlockSelector(false);
     // プレビューはpostMessageで自動更新されるため、resetPreviewは不要
   };
@@ -2313,9 +2315,17 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                 totalBlocks={lp.content?.length || 0}
                 blockType={blockType}
                 Icon={Icon}
-                isExpanded={expandedBlock === block.id}
+                isExpanded={expandedBlocks.has(block.id)}
                 onToggle={() => {
-                  setExpandedBlock(expandedBlock === block.id ? null : block.id);
+                  setExpandedBlocks(prev => {
+                    const next = new Set(prev);
+                    if (next.has(block.id)) {
+                      next.delete(block.id);
+                    } else {
+                      next.add(block.id);
+                    }
+                    return next;
+                  });
                 }}
                 onMoveUp={() => moveBlock(block.id, 'up')}
                 onMoveDown={() => moveBlock(block.id, 'down')}
