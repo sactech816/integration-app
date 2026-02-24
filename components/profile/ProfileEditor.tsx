@@ -416,8 +416,8 @@ const ProfileBlockRenderer = ({ block }: { block: Block }) => {
               />
             </div>
           )}
-          <h1 className="text-2xl font-bold text-white mb-2">{block.data.name || '名前'}</h1>
-          <p className="text-white/80">{block.data.title || '肩書き'}</p>
+          <h1 className="text-2xl font-bold mb-2" style={{ color: block.data.nameColor || '#ffffff' }}>{block.data.name || '名前'}</h1>
+          <p style={{ color: block.data.titleColor || 'rgba(255,255,255,0.8)' }}>{block.data.title || '肩書き'}</p>
         </div>
       );
 
@@ -433,8 +433,9 @@ const ProfileBlockRenderer = ({ block }: { block: Block }) => {
                 className={`text-card-rich-content text-gray-700 ${block.data.align === 'center' ? 'text-center' : ''}`}
                 dangerouslySetInnerHTML={{ __html: block.data.htmlContent }}
               />
-              <style jsx>{`
-                .text-card-rich-content p { margin: 0.5rem 0; }
+              <style jsx global>{`
+                .text-card-rich-content p { margin: 0.5rem 0; min-height: 1em; }
+                .text-card-rich-content p:empty::before { content: '\\00a0'; visibility: hidden; }
                 .text-card-rich-content ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
                 .text-card-rich-content ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
                 .text-card-rich-content li { margin: 0.25rem 0; }
