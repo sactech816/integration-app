@@ -187,7 +187,7 @@ export default function KindleCoverGenerator({
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none"
                 placeholder="書籍のタイトル"
               />
             </div>
@@ -199,7 +199,7 @@ export default function KindleCoverGenerator({
                 type="text"
                 value={subtitle}
                 onChange={(e) => setSubtitle(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none"
                 placeholder="サブタイトル（任意）"
               />
             </div>
@@ -211,7 +211,7 @@ export default function KindleCoverGenerator({
                 type="text"
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none"
                 placeholder="著者名（任意）"
               />
             </div>
@@ -332,7 +332,7 @@ export default function KindleCoverGenerator({
                 value={additionalPrompt}
                 onChange={(e) => setAdditionalPrompt(e.target.value)}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none resize-none"
                 placeholder="例: 和風テイスト、山のイラスト入り、明るい雰囲気で..."
               />
             </div>
