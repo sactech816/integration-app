@@ -1125,7 +1125,7 @@ function KindleListPageContent() {
                           </a>
                         )}
                         <button
-                          onClick={() => router.push(`/kindle/editor/${book.id}${adminKeyParam}`)}
+                          onClick={() => router.push(`/kindle/${book.id}${adminKeyParam}`)}
                           className="flex items-center gap-1.5 px-3 py-2 text-sm bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition font-medium"
                         >
                           <Rocket size={15} />
