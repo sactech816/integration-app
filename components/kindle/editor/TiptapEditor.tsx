@@ -932,60 +932,68 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
         .ProseMirror h1 {
           font-size: 1.875rem;
           font-weight: 700;
-          margin: 1.5rem 0 1rem 0;
+          margin: 1.25rem 0 0.5rem 0;
           color: #1f2937;
         }
-        
+
         .ProseMirror h2 {
           font-size: 1.5rem;
           font-weight: 600;
-          margin: 1.25rem 0 0.75rem 0;
+          margin: 1rem 0 0.5rem 0;
           color: #374151;
         }
-        
+
         .ProseMirror h3 {
           font-size: 1.25rem;
           font-weight: 600;
-          margin: 1rem 0 0.5rem 0;
+          margin: 0.75rem 0 0.25rem 0;
           color: #4b5563;
         }
         
         .ProseMirror p {
-          margin: 0.5rem 0;
-          line-height: 1.75;
+          margin: 0.25rem 0;
+          line-height: 1.7;
           color: #374151;
         }
         
         .ProseMirror ul {
-          margin: 0.75rem 0;
+          margin: 0.5rem 0;
           padding-left: 1.5rem;
           list-style-type: disc;
+          color: #1f2937;
         }
 
         .ProseMirror ol {
-          margin: 0.75rem 0;
+          margin: 0.5rem 0;
           padding-left: 1.5rem;
           list-style-type: decimal;
+          color: #1f2937;
         }
-        
+
         .ProseMirror li {
-          margin: 0.25rem 0;
-          line-height: 1.75;
+          margin: 0.2rem 0;
+          line-height: 1.7;
+          color: #1f2937;
+        }
+
+        .ProseMirror li::marker {
+          color: #374151;
+          font-weight: 600;
         }
         
         .ProseMirror blockquote {
           border-left: 4px solid #f59e0b;
           padding-left: 1rem;
-          margin: 1rem 0;
+          margin: 0.75rem 0;
           color: #6b7280;
           font-style: italic;
           background-color: #fffbeb;
           padding: 0.75rem 1rem;
           border-radius: 0 0.5rem 0.5rem 0;
         }
-        
+
         .ProseMirror hr {
-          margin: 1.5rem 0;
+          margin: 1rem 0;
           border: none;
           border-top: 2px solid #e5e7eb;
         }
