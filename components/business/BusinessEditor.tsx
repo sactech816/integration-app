@@ -76,33 +76,33 @@ interface BusinessEditorProps {
 // ブロックタイプの定義 - プロフィールLP + ビジネスLP固有ブロック
 const blockTypes = [
   // 基本ブロック
-  { type: 'header', label: 'ヘッダー', icon: Users, description: 'プロフィール画像・名前・肩書き', category: 'basic' },
-  { type: 'text_card', label: 'テキスト', icon: Type, description: 'タイトル付きテキストカード', category: 'basic' },
-  { type: 'image', label: '画像', icon: ImageIcon, description: '画像とキャプション', category: 'basic' },
-  { type: 'links', label: 'リンク集', icon: LinkIcon, description: 'SNSなどのリンクボタン', category: 'basic' },
-  { type: 'youtube', label: 'YouTube', icon: Youtube, description: '動画埋め込み', category: 'basic' },
+  { type: 'header', label: 'ヘッダー', icon: Users, description: 'プロフィール画像・名前・肩書き', category: 'basic', color: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', icon: 'text-blue-500', hover: 'hover:bg-blue-100' } },
+  { type: 'text_card', label: 'テキスト', icon: Type, description: 'タイトル付きテキストカード', category: 'basic', color: { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700', icon: 'text-slate-500', hover: 'hover:bg-slate-100' } },
+  { type: 'image', label: '画像', icon: ImageIcon, description: '画像とキャプション', category: 'basic', color: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', icon: 'text-purple-500', hover: 'hover:bg-purple-100' } },
+  { type: 'links', label: 'リンク集', icon: LinkIcon, description: 'SNSなどのリンクボタン', category: 'basic', color: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', icon: 'text-green-500', hover: 'hover:bg-green-100' } },
+  { type: 'youtube', label: 'YouTube', icon: Youtube, description: '動画埋め込み', category: 'basic', color: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', icon: 'text-purple-500', hover: 'hover:bg-purple-100' } },
   // ビジネスLP専用ブロック
-  { type: 'hero', label: 'ヒーロー', icon: Zap, description: 'ファーストビュー・メインビジュアル', category: 'business' },
-  { type: 'hero_fullwidth', label: 'フルワイドヒーロー', icon: Layout, description: 'インパクトのあるファーストビュー', category: 'business' },
-  { type: 'features', label: '特徴・ベネフィット', icon: Star, description: 'サービスの特徴を3列表示', category: 'business' },
-  { type: 'problem_cards', label: '問題提起', icon: AlertTriangle, description: '顧客の悩みを可視化', category: 'business' },
-  { type: 'two_column', label: '2カラム', icon: Columns, description: '画像とテキストの組み合わせ', category: 'business' },
-  { type: 'cta_section', label: 'CTAセクション', icon: Target, description: 'コンバージョンポイント', category: 'business' },
-  { type: 'dark_section', label: 'ダークセクション', icon: Layout, description: 'コントラストのあるセクション', category: 'business' },
-  { type: 'case_study_cards', label: '事例紹介', icon: CheckSquare, description: '導入事例・実績紹介', category: 'business' },
-  { type: 'bonus_section', label: '特典セクション', icon: Gift, description: '購入特典・無料プレゼント', category: 'business' },
-  { type: 'checklist_section', label: 'チェックリスト', icon: List, description: '含まれるもの・条件一覧', category: 'business' },
+  { type: 'hero', label: 'ヒーロー', icon: Zap, description: 'ファーストビュー・メインビジュアル', category: 'business', color: { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', icon: 'text-rose-500', hover: 'hover:bg-rose-100' } },
+  { type: 'hero_fullwidth', label: 'フルワイドヒーロー', icon: Layout, description: 'インパクトのあるファーストビュー', category: 'business', color: { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', icon: 'text-rose-500', hover: 'hover:bg-rose-100' } },
+  { type: 'features', label: '特徴・ベネフィット', icon: Star, description: 'サービスの特徴を3列表示', category: 'business', color: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', icon: 'text-indigo-500', hover: 'hover:bg-indigo-100' } },
+  { type: 'problem_cards', label: '問題提起', icon: AlertTriangle, description: '顧客の悩みを可視化', category: 'business', color: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', icon: 'text-indigo-500', hover: 'hover:bg-indigo-100' } },
+  { type: 'two_column', label: '2カラム', icon: Columns, description: '画像とテキストの組み合わせ', category: 'business', color: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', icon: 'text-indigo-500', hover: 'hover:bg-indigo-100' } },
+  { type: 'cta_section', label: 'CTAセクション', icon: Target, description: 'コンバージョンポイント', category: 'business', color: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', icon: 'text-red-500', hover: 'hover:bg-red-100' } },
+  { type: 'dark_section', label: 'ダークセクション', icon: Layout, description: 'コントラストのあるセクション', category: 'business', color: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', icon: 'text-indigo-500', hover: 'hover:bg-indigo-100' } },
+  { type: 'case_study_cards', label: '事例紹介', icon: CheckSquare, description: '導入事例・実績紹介', category: 'business', color: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', icon: 'text-indigo-500', hover: 'hover:bg-indigo-100' } },
+  { type: 'bonus_section', label: '特典セクション', icon: Gift, description: '購入特典・無料プレゼント', category: 'business', color: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', icon: 'text-red-500', hover: 'hover:bg-red-100' } },
+  { type: 'checklist_section', label: 'チェックリスト', icon: List, description: '含まれるもの・条件一覧', category: 'business', color: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', icon: 'text-red-500', hover: 'hover:bg-red-100' } },
   // 共通ブロック
-  { type: 'testimonial', label: 'お客様の声', icon: MessageCircle, description: '推薦文・レビュー', category: 'common' },
-  { type: 'pricing', label: '料金表', icon: DollarSign, description: 'プラン・価格表示', category: 'common' },
-  { type: 'faq', label: 'FAQ', icon: HelpCircle, description: 'よくある質問', category: 'common' },
-  { type: 'lead_form', label: 'リードフォーム', icon: Mail, description: 'メールアドレス収集', category: 'common' },
-  { type: 'line_card', label: 'LINE', icon: MessageCircle, description: 'LINE公式アカウント誘導', category: 'common' },
-  { type: 'kindle', label: 'Kindle', icon: Book, description: '書籍紹介カード', category: 'common' },
-  { type: 'google_map', label: 'Googleマップ', icon: MapPin, description: '地図埋め込み', category: 'common' },
-  { type: 'quiz', label: '診断クイズ', icon: Brain, description: '診断クイズ埋め込み', category: 'common' },
-  { type: 'countdown', label: 'カウントダウン', icon: Timer, description: 'カウントダウンタイマー', category: 'common' },
-  { type: 'gallery', label: 'ギャラリー', icon: Images, description: '複数画像スライドショー', category: 'common' },
+  { type: 'testimonial', label: 'お客様の声', icon: MessageCircle, description: '推薦文・レビュー', category: 'common', color: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', icon: 'text-amber-500', hover: 'hover:bg-amber-100' } },
+  { type: 'pricing', label: '料金表', icon: DollarSign, description: 'プラン・価格表示', category: 'common', color: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-500', hover: 'hover:bg-orange-100' } },
+  { type: 'faq', label: 'FAQ', icon: HelpCircle, description: 'よくある質問', category: 'common', color: { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700', icon: 'text-slate-500', hover: 'hover:bg-slate-100' } },
+  { type: 'lead_form', label: 'リードフォーム', icon: Mail, description: 'メールアドレス収集', category: 'common', color: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-500', hover: 'hover:bg-orange-100' } },
+  { type: 'line_card', label: 'LINE', icon: MessageCircle, description: 'LINE公式アカウント誘導', category: 'common', color: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', icon: 'text-green-500', hover: 'hover:bg-green-100' } },
+  { type: 'kindle', label: 'Kindle', icon: Book, description: '書籍紹介カード', category: 'common', color: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', icon: 'text-amber-500', hover: 'hover:bg-amber-100' } },
+  { type: 'google_map', label: 'Googleマップ', icon: MapPin, description: '地図埋め込み', category: 'common', color: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-700', icon: 'text-teal-500', hover: 'hover:bg-teal-100' } },
+  { type: 'quiz', label: '診断クイズ', icon: Brain, description: '診断クイズ埋め込み', category: 'common', color: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-700', icon: 'text-teal-500', hover: 'hover:bg-teal-100' } },
+  { type: 'countdown', label: 'カウントダウン', icon: Timer, description: 'カウントダウンタイマー', category: 'common', color: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-500', hover: 'hover:bg-orange-100' } },
+  { type: 'gallery', label: 'ギャラリー', icon: Images, description: '複数画像スライドショー', category: 'common', color: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', icon: 'text-purple-500', hover: 'hover:bg-purple-100' } },
 ];
 
 // グラデーションプリセット
@@ -2881,7 +2881,7 @@ function EditorBlockItem({
   block: Block;
   index: number;
   totalBlocks: number;
-  blockType: { label: string; type: string } | undefined;
+  blockType: { label: string; type: string; color?: { bg: string; border: string; text: string; icon: string; hover: string } } | undefined;
   Icon: React.ElementType;
   isExpanded: boolean;
   onToggle: () => void;
@@ -2917,15 +2917,15 @@ function EditorBlockItem({
   }, [isExpanded, onToggle]);
 
   return (
-    <div ref={ref} className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+    <div ref={ref} className={`rounded-xl border overflow-hidden ${blockType?.color?.border || 'border-gray-200'} ${blockType?.color?.bg || 'bg-gray-50'}`}>
       <div
-        className="w-full flex items-center justify-between p-4 hover:bg-gray-100 cursor-pointer"
+        className={`w-full flex items-center justify-between p-4 cursor-pointer ${blockType?.color?.hover || 'hover:bg-gray-100'}`}
         onClick={handleToggle}
       >
         <div className="flex items-center gap-3 flex-1">
           <GripVertical size={18} className="text-gray-400" />
-          <Icon size={18} className="text-amber-600" />
-          <span className="font-medium text-gray-700">
+          <Icon size={18} className={blockType?.color?.icon || 'text-amber-600'} />
+          <span className={`font-medium ${blockType?.color?.text || 'text-gray-700'}`}>
             {blockType?.label || block.type}
           </span>
         </div>

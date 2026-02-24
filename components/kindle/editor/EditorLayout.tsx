@@ -7,9 +7,10 @@ import Link from 'next/link';
 import KdlHamburgerMenu, { type EditorActionItem } from '@/components/kindle/shared/KdlHamburgerMenu';
 import KdlUsageHeader, { type KdlUsageLimits } from '@/components/kindle/KdlUsageHeader';
 import BookLPPreview from '@/components/kindle/lp/BookLPPreview';
+import KindleCoverGenerator from '@/components/kindle/cover/KindleCoverGenerator';
 import { ChapterSidebar } from './ChapterSidebar';
 import { TiptapEditor, TiptapEditorRef } from './TiptapEditor';
-import { Home } from 'lucide-react';
+import { Home, Image as ImageIcon } from 'lucide-react';
 
 // トースト通知の型
 interface Toast {
@@ -151,6 +152,9 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   const [isGeneratingLP, setIsGeneratingLP] = useState(false);
   const [lpData, setLpData] = useState<any>(null);
   const [lpStatus, setLpStatus] = useState<'draft' | 'published'>('draft');
+
+  // 表紙生成関連
+  const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
 
   // 文体変換関連
   const [isStyleTransformOpen, setIsStyleTransformOpen] = useState(false);
@@ -1455,6 +1459,12 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 loadingLabel: 'LP 生成中...',
               },
               {
+                id: 'generate-cover',
+                label: '表紙作成（AI画像生成）',
+                icon: <ImageIcon size={20} />,
+                onClick: () => setIsCoverModalOpen(true),
+              },
+              {
                 id: 'style-transform',
                 label: '文体変換（執筆AI×節数）',
                 icon: <PenLine size={20} />,
@@ -2240,6 +2250,20 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
           onPublishToggle={handleLPPublishToggle}
           onUpdateField={handleLPUpdateField}
           onClose={() => setIsLPModalOpen(false)}
+        />
+      )}
+
+      {/* 表紙作成モーダル */}
+      {isCoverModalOpen && userId && (
+        <KindleCoverGenerator
+          bookId={book.id}
+          bookTitle={book.title}
+          bookSubtitle={book.subtitle}
+          userId={userId}
+          onClose={() => setIsCoverModalOpen(false)}
+          onCoverGenerated={(imageUrl) => {
+            showToast('success', '表紙画像を生成しました');
+          }}
         />
       )}
 

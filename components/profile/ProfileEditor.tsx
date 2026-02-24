@@ -72,21 +72,21 @@ interface ProfileEditorProps {
 
 // ブロックタイプの定義
 const blockTypes = [
-  { type: 'header', label: 'ヘッダー', icon: UserCircle, description: 'プロフィール画像・名前・肩書き' },
-  { type: 'text_card', label: 'テキスト', icon: Type, description: 'タイトル付きテキストカード' },
-  { type: 'image', label: '画像', icon: ImageIcon, description: '画像とキャプション' },
-  { type: 'links', label: 'リンク集', icon: LinkIcon, description: 'SNSなどのリンクボタン' },
-  { type: 'youtube', label: 'YouTube', icon: Youtube, description: '動画埋め込み' },
-  { type: 'kindle', label: 'Kindle', icon: Book, description: '書籍紹介カード' },
-  { type: 'line_card', label: 'LINE', icon: MessageCircle, description: 'LINE公式アカウント誘導' },
-  { type: 'faq', label: 'FAQ', icon: HelpCircle, description: 'よくある質問' },
-  { type: 'pricing', label: '料金表', icon: DollarSign, description: 'プラン・価格表示' },
-  { type: 'testimonial', label: 'お客様の声', icon: Star, description: '推薦文・レビュー' },
-  { type: 'lead_form', label: 'リードフォーム', icon: Mail, description: 'メールアドレス収集' },
-  { type: 'google_map', label: 'Googleマップ', icon: MapPin, description: '地図埋め込み' },
-  { type: 'quiz', label: '診断クイズ', icon: Brain, description: '診断クイズ埋め込み' },
-  { type: 'countdown', label: 'カウントダウン', icon: Timer, description: 'カウントダウンタイマー' },
-  { type: 'gallery', label: 'ギャラリー', icon: Images, description: '複数画像スライドショー' },
+  { type: 'header', label: 'ヘッダー', icon: UserCircle, description: 'プロフィール画像・名前・肩書き', color: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', icon: 'text-blue-500', hover: 'hover:bg-blue-100' } },
+  { type: 'text_card', label: 'テキスト', icon: Type, description: 'タイトル付きテキストカード', color: { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700', icon: 'text-slate-500', hover: 'hover:bg-slate-100' } },
+  { type: 'image', label: '画像', icon: ImageIcon, description: '画像とキャプション', color: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', icon: 'text-purple-500', hover: 'hover:bg-purple-100' } },
+  { type: 'links', label: 'リンク集', icon: LinkIcon, description: 'SNSなどのリンクボタン', color: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', icon: 'text-green-500', hover: 'hover:bg-green-100' } },
+  { type: 'youtube', label: 'YouTube', icon: Youtube, description: '動画埋め込み', color: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', icon: 'text-purple-500', hover: 'hover:bg-purple-100' } },
+  { type: 'kindle', label: 'Kindle', icon: Book, description: '書籍紹介カード', color: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', icon: 'text-amber-500', hover: 'hover:bg-amber-100' } },
+  { type: 'line_card', label: 'LINE', icon: MessageCircle, description: 'LINE公式アカウント誘導', color: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', icon: 'text-green-500', hover: 'hover:bg-green-100' } },
+  { type: 'faq', label: 'FAQ', icon: HelpCircle, description: 'よくある質問', color: { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700', icon: 'text-slate-500', hover: 'hover:bg-slate-100' } },
+  { type: 'pricing', label: '料金表', icon: DollarSign, description: 'プラン・価格表示', color: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-500', hover: 'hover:bg-orange-100' } },
+  { type: 'testimonial', label: 'お客様の声', icon: Star, description: '推薦文・レビュー', color: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', icon: 'text-amber-500', hover: 'hover:bg-amber-100' } },
+  { type: 'lead_form', label: 'リードフォーム', icon: Mail, description: 'メールアドレス収集', color: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-500', hover: 'hover:bg-orange-100' } },
+  { type: 'google_map', label: 'Googleマップ', icon: MapPin, description: '地図埋め込み', color: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-700', icon: 'text-teal-500', hover: 'hover:bg-teal-100' } },
+  { type: 'quiz', label: '診断クイズ', icon: Brain, description: '診断クイズ埋め込み', color: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-700', icon: 'text-teal-500', hover: 'hover:bg-teal-100' } },
+  { type: 'countdown', label: 'カウントダウン', icon: Timer, description: 'カウントダウンタイマー', color: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-500', hover: 'hover:bg-orange-100' } },
+  { type: 'gallery', label: 'ギャラリー', icon: Images, description: '複数画像スライドショー', color: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', icon: 'text-purple-500', hover: 'hover:bg-purple-100' } },
 ];
 
 // セールスレター用ブロックタイプの定義
@@ -2306,9 +2306,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
             const Icon = blockType?.icon || Type;
 
             return (
-              <div key={block.id} className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+              <div key={block.id} className={`rounded-xl border overflow-hidden ${blockType?.color?.border || 'border-gray-200'} ${blockType?.color?.bg || 'bg-gray-50'}`}>
                 <div
-                  className="w-full flex items-center justify-between p-4 hover:bg-gray-100 cursor-pointer"
+                  className={`w-full flex items-center justify-between p-4 cursor-pointer ${blockType?.color?.hover || 'hover:bg-gray-100'}`}
                   onClick={() => setExpandedBlocks(prev => {
                     const next = new Set(prev);
                     if (next.has(block.id)) {
@@ -2321,8 +2321,8 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 >
                   <div className="flex items-center gap-3 flex-1">
                     <GripVertical size={18} className="text-gray-400" />
-                    <Icon size={18} className="text-emerald-600" />
-                    <span className="font-medium text-gray-700">
+                    <Icon size={18} className={blockType?.color?.icon || 'text-emerald-600'} />
+                    <span className={`font-medium ${blockType?.color?.text || 'text-gray-700'}`}>
                       {blockType?.label || block.type}
                     </span>
                   </div>
