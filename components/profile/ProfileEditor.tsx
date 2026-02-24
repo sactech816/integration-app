@@ -796,7 +796,9 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
   const [isSaving, setIsSaving] = useState(false);
   const [showBlockSelector, setShowBlockSelector] = useState(false);
-  const [expandedBlock, setExpandedBlock] = useState<string | null>(initialBlocks[0]?.id || null);
+  const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(
+    new Set(initialBlocks[0]?.id ? [initialBlocks[0].id] : [])
+  );
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiTheme, setAiTheme] = useState('');
@@ -1037,7 +1039,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         content: newContent,
       };
     });
-    setExpandedBlock(newBlock.id);
+    setExpandedBlocks(prev => new Set(prev).add(newBlock.id));
     setShowBlockSelector(false);
     resetPreview();
   };
@@ -2307,7 +2309,15 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
               <div key={block.id} className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
                 <div
                   className="w-full flex items-center justify-between p-4 hover:bg-gray-100 cursor-pointer"
-                  onClick={() => setExpandedBlock(expandedBlock === block.id ? null : block.id)}
+                  onClick={() => setExpandedBlocks(prev => {
+                    const next = new Set(prev);
+                    if (next.has(block.id)) {
+                      next.delete(block.id);
+                    } else {
+                      next.add(block.id);
+                    }
+                    return next;
+                  })}
                 >
                   <div className="flex items-center gap-3 flex-1">
                     <GripVertical size={18} className="text-gray-400" />
@@ -2338,15 +2348,23 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                       <Trash2 size={16} />
                     </button>
                     <button
-                      onClick={() => setExpandedBlock(expandedBlock === block.id ? null : block.id)}
+                      onClick={() => setExpandedBlocks(prev => {
+                        const next = new Set(prev);
+                        if (next.has(block.id)) {
+                          next.delete(block.id);
+                        } else {
+                          next.add(block.id);
+                        }
+                        return next;
+                      })}
                       className="p-1 text-gray-400"
                     >
-                      {expandedBlock === block.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                      {expandedBlocks.has(block.id) ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                     </button>
                   </div>
                 </div>
 
-                {expandedBlock === block.id && (
+                {expandedBlocks.has(block.id) && (
                   <div className="p-4 border-t border-gray-200 bg-white">
                     {renderBlockEditor(block)}
                   </div>
