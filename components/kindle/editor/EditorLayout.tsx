@@ -152,6 +152,9 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   const [isGeneratingLP, setIsGeneratingLP] = useState(false);
   const [lpData, setLpData] = useState<any>(null);
   const [lpStatus, setLpStatus] = useState<'draft' | 'published'>('draft');
+  const [lpThemeColor, setLpThemeColor] = useState<string>('orange');
+  const [lpSectionVisibility, setLpSectionVisibility] = useState<any>({});
+  const [lpCoverImageUrl, setLpCoverImageUrl] = useState<string | undefined>(undefined);
 
   // 表紙生成関連
   const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
@@ -1107,12 +1110,22 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
         setLpData({
           hero: data.hero,
           pain_points: data.pain_points,
+          author_profile: data.author_profile,
           benefits: data.benefits,
+          key_takeaways: data.key_takeaways,
+          target_readers: data.target_readers,
+          transformation: data.transformation,
           chapter_summaries: data.chapter_summaries,
+          social_proof: data.social_proof,
+          bonus: data.bonus,
           faq: data.faq,
+          closing_message: data.closing_message,
           cta: data.cta,
         });
         setLpStatus(data.status || 'draft');
+        setLpThemeColor(data.theme_color || 'orange');
+        setLpSectionVisibility(data.section_visibility || {});
+        setLpCoverImageUrl(data.cover_image_url || undefined);
         return;
       }
       // 保存済みがない場合は生成を自動実行
@@ -1176,8 +1189,21 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
         body: JSON.stringify({ book_id: book.id, ...updates }),
       });
       if (!response.ok) throw new Error('更新に失敗しました');
-      setLpData((prev: any) => prev ? { ...prev, ...updates } : prev);
-      showToast('success', 'LPを更新しました');
+      // LP本体データの更新（theme_color等のメタデータは除外）
+      const dataKeys = ['hero', 'pain_points', 'author_profile', 'benefits', 'key_takeaways',
+        'target_readers', 'transformation', 'chapter_summaries', 'social_proof', 'bonus',
+        'faq', 'closing_message', 'cta'];
+      const lpUpdates: any = {};
+      for (const key of dataKeys) {
+        if (updates[key] !== undefined) lpUpdates[key] = updates[key];
+      }
+      if (Object.keys(lpUpdates).length > 0) {
+        setLpData((prev: any) => prev ? { ...prev, ...lpUpdates } : prev);
+      }
+      // メタデータの同期
+      if (updates.theme_color !== undefined) setLpThemeColor(updates.theme_color);
+      if (updates.section_visibility !== undefined) setLpSectionVisibility(updates.section_visibility);
+      if (updates.cover_image_url !== undefined) setLpCoverImageUrl(updates.cover_image_url);
     } catch (error: any) {
       showToast('error', error.message);
     }
@@ -2246,6 +2272,9 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
           lpData={lpData}
           lpStatus={lpStatus}
           isGenerating={isGeneratingLP}
+          themeColor={lpThemeColor as any}
+          sectionVisibility={lpSectionVisibility}
+          coverImageUrl={lpCoverImageUrl}
           onGenerate={handleGenerateLP}
           onPublishToggle={handleLPPublishToggle}
           onUpdateField={handleLPUpdateField}
