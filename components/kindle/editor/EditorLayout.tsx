@@ -1487,7 +1487,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
               {
                 id: 'generate-cover',
                 label: '表紙作成（AI画像生成）',
-                icon: <ImageIcon size={20} />,
+                icon: <ImageIcon size={20} className="!text-orange-500" />,
                 onClick: () => setIsCoverModalOpen(true),
               },
               {
