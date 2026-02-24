@@ -33,9 +33,9 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
   return (
     <footer className="bg-gray-900 text-gray-400 py-16 border-t border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           {/* ブランド */}
-          <div className="lg:col-span-1">
+          <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg">
                 <Magnet className="text-white" size={20} />
@@ -55,36 +55,36 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
             <ul className="space-y-3 text-sm">
               {services.map((service) => (
                 <li key={service.id}>
-                  <button 
-                    onClick={() => handleCreate(service.id)} 
+                  <button
+                    onClick={() => handleCreate(service.id)}
                     className="flex items-center gap-2 hover:text-white transition-colors group"
                   >
-                    <service.icon size={16} className="opacity-60 group-hover:opacity-100" />
+                    <service.icon size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                     <span>{service.label}を作成</span>
                   </button>
                 </li>
               ))}
               <li>
                 <Link href="/booking/new" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <Calendar size={16} className="opacity-60 group-hover:opacity-100" />
+                  <Calendar size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   予約メーカー
                 </Link>
               </li>
               <li>
                 <Link href="/attendance/new" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <CalendarCheck size={16} className="opacity-60 group-hover:opacity-100" />
+                  <CalendarCheck size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   出欠メーカー
                 </Link>
               </li>
               <li>
                 <Link href="/survey/new" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <ClipboardList size={16} className="opacity-60 group-hover:opacity-100" />
+                  <ClipboardList size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   アンケートメーカー
                 </Link>
               </li>
               <li>
                 <Link href="/salesletter/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <PenTool size={16} className="opacity-60 group-hover:opacity-100" />
+                  <PenTool size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   セールスライター
                 </Link>
               </li>
@@ -100,25 +100,25 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
             <ul className="space-y-3 text-sm">
               <li>
                 <Link href="/onboarding/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <MousePointerClick size={16} className="opacity-60 group-hover:opacity-100" />
+                  <MousePointerClick size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   はじめかたメーカー
                 </Link>
               </li>
               <li>
                 <Link href="/gamification/new" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <Gamepad2 size={16} className="opacity-60 group-hover:opacity-100" />
+                  <Gamepad2 size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   ゲーミフィケーション
                 </Link>
               </li>
               <li>
                 <Link href="/thumbnail/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <Image size={16} className="opacity-60 group-hover:opacity-100" />
+                  <Image size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   サムネイルメーカー
                 </Link>
               </li>
               <li>
                 <Link href="/marketplace" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <Store size={16} className="opacity-60 group-hover:opacity-100" />
+                  <Store size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   スキルマーケット
                 </Link>
               </li>
@@ -205,7 +205,7 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
             </ul>
           </div>
 
-          {/* Kindle出版 */}
+          {/* Kindle出版 & 集客ノウハウ */}
           <div>
             <h3 className="text-white font-bold mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
               <BookOpen size={14} className="text-amber-400" />
@@ -229,11 +229,8 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
                 </Link>
               </li>
             </ul>
-          </div>
 
-          {/* 集客ノウハウ */}
-          <div>
-            <h3 className="text-white font-bold mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
+            <h3 className="text-white font-bold mt-6 mb-3 text-sm uppercase tracking-wider flex items-center gap-2">
               <TrendingUp size={14} className="text-orange-400" />
               集客ノウハウ
             </h3>
@@ -258,13 +255,15 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
               </li>
             </ul>
           </div>
+        </div>
 
-          {/* サポート・規約 */}
-          <div>
-            <h3 className="text-white font-bold mb-4 text-sm uppercase tracking-wider">サポート・規約</h3>
-            <ul className="space-y-3 text-sm">
+        {/* サポート・規約 */}
+        <div className="mt-10 pt-8 border-t border-gray-800">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h3 className="text-white font-bold text-sm uppercase tracking-wider">サポート・規約</h3>
+            <ul className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
               <li>
-                <Link href="/donation" className="flex items-center gap-2 hover:text-white transition-colors group">
+                <Link href="/donation" className="flex items-center gap-1.5 hover:text-white transition-colors group">
                   <Heart size={14} className="text-rose-500 opacity-80 group-hover:opacity-100" />
                   開発支援・サポート
                 </Link>
