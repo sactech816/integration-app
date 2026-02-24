@@ -256,6 +256,28 @@ export default function AttendancePublicPage() {
                     filename={`attendance-${tableData.event.id}.ics`}
                     variant="purple"
                   />
+                  <details className="mt-3 text-left">
+                    <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600 text-center">
+                      .icsファイルのインポート方法
+                    </summary>
+                    <div className="mt-2 bg-gray-50 rounded-lg p-3 text-xs text-gray-500 space-y-2">
+                      <p>
+                        .icsファイル（iCalendar形式）は、主要なカレンダーアプリで予定をインポートするための標準形式です。
+                      </p>
+                      <div>
+                        <p className="font-semibold text-gray-600">Google カレンダー（PC）</p>
+                        <p>設定（歯車アイコン）→「インポート/エクスポート」→ ファイルを選択して「インポート」</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-600">Outlook</p>
+                        <p>「ファイル」→「開く/エクスポート」→「インポート/エクスポート」→ .icsファイルを選択</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-600">Apple カレンダー（Mac / iOS）</p>
+                        <p>ダウンロードしたファイルを開くだけで自動的にカレンダーに追加されます</p>
+                      </div>
+                    </div>
+                  </details>
                 </div>
               );
             })()}
