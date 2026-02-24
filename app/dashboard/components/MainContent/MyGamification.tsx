@@ -92,10 +92,23 @@ export default function MyGamification({ userId, planTier, isUnlocked = false, i
     }
   };
 
-  const handleCopyUrl = (campaignId: string) => {
-    const url = `${window.location.origin}/game/${campaignId}`;
+  const getGamePath = (campaignType: CampaignType, campaignId: string): string => {
+    const pathMap: Record<string, string> = {
+      gacha: 'gacha',
+      fukubiki: 'fukubiki',
+      scratch: 'scratch',
+      slot: 'slot',
+      stamp_rally: 'stamp-rally',
+      login_bonus: 'login-bonus',
+    };
+    const path = pathMap[campaignType] || 'gacha';
+    return `/${path}/${campaignId}`;
+  };
+
+  const handleCopyUrl = (campaign: GamificationCampaign) => {
+    const url = `${window.location.origin}${getGamePath(campaign.campaign_type, campaign.id)}`;
     navigator.clipboard.writeText(url);
-    setCopiedId(campaignId);
+    setCopiedId(campaign.id);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -437,12 +450,12 @@ export default function MyGamification({ userId, planTier, isUnlocked = false, i
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
-                        value={`${typeof window !== 'undefined' ? window.location.origin : ''}/game/${campaign.id}`}
+                        value={`${typeof window !== 'undefined' ? window.location.origin : ''}${getGamePath(campaign.campaign_type, campaign.id)}`}
                         readOnly
                         className="flex-1 text-xs bg-transparent border-none outline-none text-gray-600 truncate"
                       />
                       <button
-                        onClick={() => handleCopyUrl(campaign.id)}
+                        onClick={() => handleCopyUrl(campaign)}
                         className="text-indigo-600 hover:text-indigo-700 p-1"
                       >
                         {copiedId === campaign.id ? (
@@ -494,7 +507,7 @@ export default function MyGamification({ userId, planTier, isUnlocked = false, i
 
                       {/* プレビューボタン */}
                       <button
-                        onClick={() => window.open(`/game/${campaign.id}`, '_blank')}
+                        onClick={() => window.open(getGamePath(campaign.campaign_type, campaign.id), '_blank')}
                         className="w-full bg-green-500 text-white py-2.5 rounded-lg font-bold text-xs hover:bg-green-600 flex items-center justify-center gap-1 transition-colors"
                       >
                         <ExternalLink size={14} /> プレビュー

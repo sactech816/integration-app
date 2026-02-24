@@ -68,15 +68,39 @@ type UseDashboardDataReturn = {
 };
 
 // プロフィール名を取得
-const getProfileName = (profile: Profile | BusinessLP): string => {
+const getProfileName = (profile: Profile): string => {
   if (!profile.content || !Array.isArray(profile.content)) {
-    return (profile as BusinessLP).title || `プロフィール ${profile.slug}`;
+    return profile.nickname || `プロフィール ${profile.slug}`;
   }
   const headerBlock = profile.content.find((b: Block) => b.type === 'header');
   if (headerBlock && headerBlock.type === 'header') {
-    return headerBlock.data.name || (profile as BusinessLP).title || `プロフィール ${profile.slug}`;
+    return headerBlock.data.name || profile.nickname || `プロフィール ${profile.slug}`;
   }
-  return (profile as BusinessLP).title || `プロフィール ${profile.slug}`;
+  return profile.nickname || `プロフィール ${profile.slug}`;
+};
+
+// ビジネスLP名を取得（タイトルフォールバックチェーン）
+const getBusinessLPName = (lp: BusinessLP): string => {
+  // 1. title → 2. heroのheadline → 3. hero_fullwidthのheadline → 4. text_cardのtitle → 5. デフォルト
+  if (lp.title) return lp.title;
+  if (!lp.content || !Array.isArray(lp.content)) return `ビジネスLP ${lp.slug}`;
+  const heroBlock = lp.content.find((b: Block) => b.type === 'hero');
+  if (heroBlock?.data?.headline) return heroBlock.data.headline;
+  const heroFullwidthBlock = lp.content.find((b: Block) => b.type === 'hero_fullwidth');
+  if (heroFullwidthBlock?.data?.headline) return heroFullwidthBlock.data.headline;
+  const textCardBlock = lp.content.find((b: Block) => b.type === 'text_card');
+  if (textCardBlock?.data?.title) return textCardBlock.data.title;
+  return `ビジネスLP ${lp.slug}`;
+};
+
+// ビジネスLPのサムネイル画像を取得
+const getBusinessLPImage = (lp: BusinessLP): string | null => {
+  if (!lp.content || !Array.isArray(lp.content)) return null;
+  const heroBlock = lp.content.find((b: Block) => b.type === 'hero');
+  if (heroBlock?.data?.backgroundImage) return heroBlock.data.backgroundImage;
+  const heroFullwidthBlock = lp.content.find((b: Block) => b.type === 'hero_fullwidth');
+  if (heroFullwidthBlock?.data?.backgroundImage) return heroFullwidthBlock.data.backgroundImage;
+  return null;
 };
 
 export function useDashboardData(): UseDashboardDataReturn {
@@ -289,7 +313,7 @@ export function useDashboardData(): UseDashboardDataReturn {
                 return {
                   id: b.id,
                   slug: b.slug,
-                  title: getProfileName(b),
+                  title: getBusinessLPName(b),
                   description: b.description,
                   created_at: b.created_at,
                   updated_at: b.updated_at,
@@ -297,6 +321,7 @@ export function useDashboardData(): UseDashboardDataReturn {
                   user_id: b.user_id,
                   content: b.content,
                   settings: b.settings,
+                  image_url: getBusinessLPImage(b),
                   views_count: analytics?.views || 0,
                   clicks_count: analytics?.clicks || 0,
                   readRate: analytics?.readRate || 0,
@@ -317,22 +342,27 @@ export function useDashboardData(): UseDashboardDataReturn {
           const { data: salesLetters } = await query;
           if (salesLetters) {
             allContents.push(
-              ...salesLetters.map((s: SalesLetter) => ({
-                id: s.id,
-                slug: s.slug,
-                title: s.title || 'セールスレター',
-                created_at: s.created_at,
-                updated_at: s.updated_at,
-                type: 'salesletter' as ServiceType,
-                user_id: s.user_id,
-                content: s.content,
-                settings: s.settings as Record<string, unknown>,
-                views_count: s.views_count || 0,
-                clicks_count: 0,
-                readRate: 0,
-                avgTimeSpent: 0,
-                clickRate: 0,
-              }))
+              ...salesLetters.map((s: SalesLetter) => {
+                // タイトルフォールバック: title → 最初のsales_headlineのtext → デフォルト
+                const headlineBlock = s.content?.find((b: Block) => b.type === 'sales_headline');
+                const slTitle = s.title || headlineBlock?.data?.text || 'セールスレター';
+                return {
+                  id: s.id,
+                  slug: s.slug,
+                  title: slTitle,
+                  created_at: s.created_at,
+                  updated_at: s.updated_at,
+                  type: 'salesletter' as ServiceType,
+                  user_id: s.user_id,
+                  content: s.content,
+                  settings: s.settings as Record<string, unknown>,
+                  views_count: s.views_count || 0,
+                  clicks_count: 0,
+                  readRate: 0,
+                  avgTimeSpent: 0,
+                  clickRate: 0,
+                };
+              })
             );
           }
         }
