@@ -104,6 +104,8 @@ export type HeaderBlockData = {
   title: string;
   category?: string;
   avatarScale?: number; // 0.5〜2.0、デフォルト1.0
+  nameColor?: string;   // 名前の文字色（デフォルト: '#ffffff'）
+  titleColor?: string;  // 肩書きの文字色（デフォルト: 'rgba(255,255,255,0.8)'）
 };
 
 export type TextCardBlockData = {
@@ -1377,12 +1379,33 @@ export interface MarketplaceReview {
 
 export type ThumbnailPlatform = 'youtube' | 'instagram_post' | 'instagram_story' | 'twitter' | 'threads' | 'banner';
 
+// SVGテキスト要素（編集可能テキストモード用）
+export type SVGTextElement = {
+  id: string;
+  text: string;
+  x: number;           // パーセント (0-100)
+  y: number;           // パーセント (0-100)
+  fontSize: number;    // px (viewBox基準)
+  fontFamily: string;
+  fontWeight: number;  // 400, 500, 700, 900
+  color: string;       // hex
+  strokeColor?: string;
+  strokeWidth?: number;
+  textAlign?: 'left' | 'center' | 'right';
+};
+
+export type ThumbnailGenerationMode = 'ai_text' | 'editable_text';
+
 export type ThumbnailTextOverlay = {
   title?: string;
   subtitle?: string;
   colorTheme?: string;
   fontSize?: number;
   position?: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  // 編集可能テキストモード用
+  mode?: ThumbnailGenerationMode;
+  svgTextElements?: SVGTextElement[];
+  backgroundImageUrl?: string;
 };
 
 export interface ThumbnailSettings {

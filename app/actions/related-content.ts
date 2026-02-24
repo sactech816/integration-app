@@ -60,14 +60,15 @@ export async function getRelatedContents(
     } else if (contentType === 'profile') {
       const { data } = await supabase
         .from('profiles')
-        .select('slug, nickname, content')
-        .eq('show_in_portal', true)
+        .select('slug, nickname, content, settings')
+        .eq('featured_on_top', true)
         .neq('slug', currentSlug)
         .not('slug', 'is', null)
         .limit(limit);
 
       if (data) {
-        items.push(...data.map(p => {
+        const filtered = data.filter((p: any) => p.settings?.showInPortal !== false);
+        items.push(...filtered.map(p => {
           const headerBlock = p.content?.find((b: { type: string }) => b.type === 'header');
           return {
             slug: p.slug,
@@ -82,13 +83,13 @@ export async function getRelatedContents(
       const { data } = await supabase
         .from('business_projects')
         .select('slug, settings, content')
-        .eq('show_in_portal', true)
         .neq('slug', currentSlug)
         .not('slug', 'is', null)
-        .limit(limit);
+        .limit(limit + 5);
 
       if (data) {
-        items.push(...data.map(b => {
+        const filtered = data.filter((b: any) => b.settings?.showInPortal !== false);
+        items.push(...filtered.slice(0, limit).map(b => {
           const headerBlock = b.content?.find((block: { type: string }) => block.type === 'header');
           const heroBlock = b.content?.find((block: { type: string }) =>
             block.type === 'hero' || block.type === 'hero_fullwidth'

@@ -3,10 +3,10 @@
 import React, { Suspense, useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { 
+import {
   BookOpen, Plus, Loader2, Edit3, Trash2, Calendar, FileText,
   Crown, Sparkles, Zap, ArrowRight, X, Users, ChevronDown, ChevronUp, BarChart3, User,
-  Copy, AlertCircle, Tag, FolderTree, MessageSquare
+  Copy, AlertCircle, Tag, FolderTree, MessageSquare, Globe, ExternalLink, Rocket, Eye
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import AIUsageDisplay from '@/components/kindle/AIUsageDisplay';
@@ -439,6 +439,9 @@ function KindleListPageContent() {
         break;
       case 'discovery':
         router.push(`/kindle/discovery${adminKeyParam}`);
+        break;
+      case 'book-lps':
+        // 書籍LP一覧画面を表示（setActiveMenuItemで切り替え済み）
         break;
       case 'my-books':
         // 現在のページで書籍一覧にスクロール

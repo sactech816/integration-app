@@ -1338,7 +1338,47 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
               )}
             </div>
             <Input label="名前" val={block.data.name} onChange={(v) => updateBlock(block.id, { name: v })} ph="山田 太郎" />
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">名前の文字色</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={block.data.nameColor || '#ffffff'}
+                  onChange={(e) => updateBlock(block.id, { nameColor: e.target.value })}
+                  className="w-8 h-8 rounded cursor-pointer border border-gray-200"
+                />
+                <span className="text-xs text-gray-500">{block.data.nameColor || '#ffffff'}</span>
+                {block.data.nameColor && (
+                  <button
+                    onClick={() => updateBlock(block.id, { nameColor: undefined })}
+                    className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 rounded bg-gray-100"
+                  >
+                    リセット
+                  </button>
+                )}
+              </div>
+            </div>
             <Input label="肩書き・キャッチコピー" val={block.data.title} onChange={(v) => updateBlock(block.id, { title: v })} ph="Webデザイナー / クリエイター" />
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">肩書きの文字色</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={block.data.titleColor || '#cccccc'}
+                  onChange={(e) => updateBlock(block.id, { titleColor: e.target.value })}
+                  className="w-8 h-8 rounded cursor-pointer border border-gray-200"
+                />
+                <span className="text-xs text-gray-500">{block.data.titleColor || 'rgba(255,255,255,0.8)'}</span>
+                {block.data.titleColor && (
+                  <button
+                    onClick={() => updateBlock(block.id, { titleColor: undefined })}
+                    className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 rounded bg-gray-100"
+                  >
+                    リセット
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         );
 

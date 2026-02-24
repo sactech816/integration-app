@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { supabase, TABLES } from '@/lib/supabase';
 import { generateSlug } from '@/lib/utils';
-import { Thumbnail, ThumbnailPlatform } from '@/lib/types';
+import { Thumbnail, ThumbnailPlatform, ThumbnailGenerationMode, SVGTextElement } from '@/lib/types';
 import {
   PLATFORM_CATEGORIES,
   STYLE_CATEGORIES,
@@ -16,9 +16,12 @@ import {
   Sparkles, Download, Save, Loader2,
   RefreshCw, Check, Crown, Lock, Type,
   ChevronUp, ChevronDown, Monitor, Palette, Settings,
-  Edit3, Eye,
+  Edit3, Eye, Layers, FileImage,
 } from 'lucide-react';
 import AIEditChat from './AIEditChat';
+import SVGTextOverlay, { SVGTextOverlayRef } from './SVGTextOverlay';
+import TextEditPanel from './TextEditPanel';
+import { downloadSVG, downloadPNG, exportAsPNG } from '@/lib/thumbnail/exportSvg';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 
 interface ThumbnailEditorProps {
@@ -110,6 +113,21 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
   const [subtitle, setSubtitle] = useState(editingThumbnail?.text_overlay?.subtitle || '');
   const [selectedColorTheme, setSelectedColorTheme] = useState('');
 
+  // 生成モード
+  const [generationMode, setGenerationMode] = useState<ThumbnailGenerationMode>(
+    editingThumbnail?.text_overlay?.mode || 'ai_text'
+  );
+
+  // 編集可能テキストモード用
+  const svgOverlayRef = useRef<SVGTextOverlayRef>(null);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(
+    editingThumbnail?.text_overlay?.backgroundImageUrl || null
+  );
+  const [svgTextElements, setSvgTextElements] = useState<SVGTextElement[]>(
+    editingThumbnail?.text_overlay?.svgTextElements || []
+  );
+  const [selectedTextElementId, setSelectedTextElementId] = useState<string | null>(null);
+
   // 生成結果
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(editingThumbnail?.image_url || null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -163,12 +181,52 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
           platform: selectedPlatform,
           aspectRatio: currentAspectRatio,
           userId: user.id,
+          mode: generationMode,
         }),
       });
 
       const data = await res.json();
       if (data.success) {
-        setGeneratedImageUrl(data.imageUrl);
+        if (generationMode === 'editable_text') {
+          // 背景のみモード: SVGオーバーレイを初期化
+          setBackgroundImageUrl(data.imageUrl);
+          setGeneratedImageUrl(null);
+          const defaultElements: SVGTextElement[] = [
+            {
+              id: `title-${Date.now()}`,
+              text: title,
+              x: 50, y: 45,
+              fontSize: 64,
+              fontFamily: 'Noto Sans JP',
+              fontWeight: 900,
+              color: '#FFFFFF',
+              strokeColor: '#000000',
+              strokeWidth: 4,
+              textAlign: 'center',
+            },
+          ];
+          if (subtitle) {
+            defaultElements.push({
+              id: `subtitle-${Date.now()}`,
+              text: subtitle,
+              x: 50, y: 65,
+              fontSize: 36,
+              fontFamily: 'Noto Sans JP',
+              fontWeight: 700,
+              color: '#FFFFFF',
+              strokeColor: '#000000',
+              strokeWidth: 3,
+              textAlign: 'center',
+            });
+          }
+          setSvgTextElements(defaultElements);
+          setSelectedTextElementId(defaultElements[0].id);
+        } else {
+          // 通常モード
+          setGeneratedImageUrl(data.imageUrl);
+          setBackgroundImageUrl(null);
+          setSvgTextElements([]);
+        }
         // モバイルではプレビュータブに自動切り替え
         setMobileTab('preview');
       } else if (data.error === 'FREE_TRIAL_EXCEEDED') {
@@ -182,7 +240,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
     } finally {
       setIsGenerating(false);
     }
-  }, [title, subtitle, selectedTemplate, selectedColorTheme, selectedPlatform, currentAspectRatio, user, setShowAuth]);
+  }, [title, subtitle, selectedTemplate, selectedColorTheme, selectedPlatform, currentAspectRatio, user, setShowAuth, generationMode]);
 
   // 保存
   const handleSave = async () => {
@@ -191,19 +249,43 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
       setShowAuth(true);
       return;
     }
-    if (!generatedImageUrl) return;
+
+    // editable_textモードの場合は背景画像が必要、通常モードは生成画像が必要
+    const hasContent = generationMode === 'editable_text' ? backgroundImageUrl : generatedImageUrl;
+    if (!hasContent) return;
 
     setIsSaving(true);
     try {
+      // editable_textモードの場合、SVGからPNGをレンダリングしてアップロード
+      let imageUrlToSave = generatedImageUrl;
+      if (generationMode === 'editable_text' && svgOverlayRef.current?.getSVGElement()) {
+        const svgEl = svgOverlayRef.current.getSVGElement()!;
+        const [w, h] = currentAspectRatio === '9:16' ? [1080, 1920] : currentAspectRatio === '1:1' ? [1080, 1080] : [1280, 720];
+        const pngBlob = await exportAsPNG(svgEl, w, h);
+        const filePath = `${user.id}/${Date.now()}_composed.png`;
+        const { error: uploadErr } = await supabase.storage
+          .from('thumbnail-images')
+          .upload(filePath, pngBlob, { contentType: 'image/png' });
+        if (uploadErr) throw uploadErr;
+        const { data: urlData } = supabase.storage
+          .from('thumbnail-images')
+          .getPublicUrl(filePath);
+        imageUrlToSave = urlData.publicUrl;
+      }
+
       const slug = savedSlug || generateSlug();
       const thumbnailData = {
         slug,
         title: title || '新規サムネイル',
-        image_url: generatedImageUrl,
+        image_url: imageUrlToSave,
         platform: selectedPlatform,
         aspect_ratio: currentAspectRatio,
         template_id: selectedTemplate?.id || null,
-        text_overlay: { title, subtitle, colorTheme: selectedColorTheme },
+        text_overlay: {
+          title, subtitle, colorTheme: selectedColorTheme,
+          mode: generationMode,
+          ...(generationMode === 'editable_text' ? { svgTextElements, backgroundImageUrl } : {}),
+        },
         user_id: user.id,
         status: 'published',
       };
@@ -233,8 +315,16 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
     }
   };
 
-  // ダウンロード
+  // ダウンロード（通常モード: PNG直接 / 編集テキストモード: SVGまたはPNG）
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+
   const handleDownload = async () => {
+    if (generationMode === 'editable_text' && svgOverlayRef.current?.getSVGElement()) {
+      // editable_textモードの場合はメニュー表示
+      setShowDownloadMenu(!showDownloadMenu);
+      return;
+    }
+    // 通常モード
     if (!generatedImageUrl) return;
     try {
       const response = await fetch(generatedImageUrl);
@@ -252,10 +342,72 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
     }
   };
 
+  const handleDownloadSVG = async () => {
+    const svgEl = svgOverlayRef.current?.getSVGElement();
+    if (!svgEl) return;
+    try {
+      await downloadSVG(svgEl, `thumbnail_${title || 'image'}`);
+    } catch {
+      alert('SVGダウンロードに失敗しました');
+    }
+    setShowDownloadMenu(false);
+  };
+
+  const handleDownloadPNG = async () => {
+    const svgEl = svgOverlayRef.current?.getSVGElement();
+    if (!svgEl) return;
+    try {
+      const [w, h] = currentAspectRatio === '9:16' ? [1080, 1920] : currentAspectRatio === '1:1' ? [1080, 1080] : [1280, 720];
+      await downloadPNG(svgEl, w, h, `thumbnail_${title || 'image'}`);
+    } catch {
+      alert('PNGダウンロードに失敗しました');
+    }
+    setShowDownloadMenu(false);
+  };
+
   // AI編集後の画像URL更新
   const handleImageEdited = (newImageUrl: string) => {
-    setGeneratedImageUrl(newImageUrl);
+    if (generationMode === 'editable_text') {
+      setBackgroundImageUrl(newImageUrl);
+    } else {
+      setGeneratedImageUrl(newImageUrl);
+    }
   };
+
+  // SVGテキスト要素の操作
+  const handleUpdateTextElement = (id: string, updates: Partial<SVGTextElement>) => {
+    setSvgTextElements(prev => prev.map(el => el.id === id ? { ...el, ...updates } : el));
+  };
+
+  const handleAddTextElement = () => {
+    const newElement: SVGTextElement = {
+      id: `text-${Date.now()}`,
+      text: '新しいテキスト',
+      x: 50, y: 50,
+      fontSize: 40,
+      fontFamily: 'Noto Sans JP',
+      fontWeight: 700,
+      color: '#FFFFFF',
+      strokeColor: '#000000',
+      strokeWidth: 3,
+      textAlign: 'center',
+    };
+    setSvgTextElements(prev => [...prev, newElement]);
+    setSelectedTextElementId(newElement.id);
+  };
+
+  const handleDeleteTextElement = (id: string) => {
+    setSvgTextElements(prev => {
+      const filtered = prev.filter(el => el.id !== id);
+      if (selectedTextElementId === id) {
+        setSelectedTextElementId(filtered[0]?.id || null);
+      }
+      return filtered;
+    });
+  };
+
+  // 表示すべきコンテンツがあるか
+  const hasGeneratedContent = generationMode === 'editable_text' ? !!backgroundImageUrl : !!generatedImageUrl;
 
   // 選択中の情報サマリー
   const selectedPlatformLabel = PLATFORM_CATEGORIES.find(p => p.id === selectedPlatform)?.label || '';
@@ -509,6 +661,46 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
               )}
             </div>
 
+            {/* 生成モード切り替え */}
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <label className="block text-sm font-bold text-gray-700 mb-2">生成モード</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setGenerationMode('ai_text')}
+                  className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 transition-all text-left ${
+                    generationMode === 'ai_text'
+                      ? 'border-pink-400 bg-pink-50'
+                      : 'border-gray-200 hover:border-pink-200'
+                  }`}
+                >
+                  <FileImage size={18} className={generationMode === 'ai_text' ? 'text-pink-500' : 'text-gray-400'} />
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">AI テキスト</p>
+                    <p className="text-xs text-gray-500">画像に直接テキスト描画</p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setGenerationMode('editable_text')}
+                  className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 transition-all text-left ${
+                    generationMode === 'editable_text'
+                      ? 'border-pink-400 bg-pink-50'
+                      : 'border-gray-200 hover:border-pink-200'
+                  }`}
+                >
+                  <Layers size={18} className={generationMode === 'editable_text' ? 'text-pink-500' : 'text-gray-400'} />
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">編集可能テキスト</p>
+                    <p className="text-xs text-gray-500">生成後に文字を自由編集</p>
+                  </div>
+                </button>
+              </div>
+              {generationMode === 'editable_text' && (
+                <p className="text-xs text-purple-600 mt-2 bg-purple-50 px-3 py-2 rounded-lg">
+                  AIが背景画像のみを生成し、テキストは後から自由に編集（フォント・サイズ・色・位置）できます。SVG形式でのダウンロードも可能です。
+                </p>
+              )}
+            </div>
+
             {error && (
               <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm mt-4">{error}</div>
             )}
@@ -564,8 +756,26 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
 
             {/* プレビュー表示 */}
             <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-              {generatedImageUrl ? (
-                /* 生成済み画像 */
+              {generationMode === 'editable_text' && backgroundImageUrl ? (
+                /* 編集可能テキストモード: SVGオーバーレイ */
+                <div className="p-4">
+                  <div
+                    className="relative mx-auto"
+                    style={{ maxWidth: currentAspectRatio === '9:16' ? '320px' : '100%' }}
+                  >
+                    <SVGTextOverlay
+                      ref={svgOverlayRef}
+                      backgroundImageUrl={backgroundImageUrl}
+                      aspectRatio={currentAspectRatio}
+                      textElements={svgTextElements}
+                      onTextElementsChange={setSvgTextElements}
+                      selectedElementId={selectedTextElementId}
+                      onSelectElement={setSelectedTextElementId}
+                    />
+                  </div>
+                </div>
+              ) : generatedImageUrl ? (
+                /* 通常モード: 生成済み画像 */
                 <div className="p-4">
                   <div
                     className="relative mx-auto overflow-hidden rounded-xl bg-gray-100"
@@ -622,9 +832,9 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
               )}
 
               {/* アクションボタン（生成後のみ表示） */}
-              {generatedImageUrl && (
+              {hasGeneratedContent && (
                 <div className="px-4 pb-4 space-y-3">
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 relative">
                     <button
                       onClick={handleDownload}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl font-medium text-sm text-gray-700 hover:border-pink-300 hover:bg-pink-50 transition-all"
@@ -632,6 +842,26 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
                       <Download size={16} />
                       ダウンロード
                     </button>
+
+                    {/* SVG/PNGダウンロードメニュー（editable_textモード時） */}
+                    {showDownloadMenu && generationMode === 'editable_text' && (
+                      <div className="absolute top-full left-0 mt-1 bg-white rounded-xl border border-gray-200 shadow-lg z-10 w-48">
+                        <button
+                          onClick={handleDownloadPNG}
+                          className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-pink-50 transition-colors rounded-t-xl"
+                        >
+                          <FileImage size={16} className="text-pink-500" />
+                          PNG（画像）
+                        </button>
+                        <button
+                          onClick={handleDownloadSVG}
+                          className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 transition-colors rounded-b-xl border-t border-gray-100"
+                        >
+                          <Layers size={16} className="text-purple-500" />
+                          SVG（テキスト編集可能）
+                        </button>
+                      </div>
+                    )}
 
                     <button
                       onClick={handleSave}
@@ -646,6 +876,10 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
                   <button
                     onClick={() => {
                       setGeneratedImageUrl(null);
+                      setBackgroundImageUrl(null);
+                      setSvgTextElements([]);
+                      setSelectedTextElementId(null);
+                      setShowDownloadMenu(false);
                       setMobileTab('editor');
                       setOpenSections(prev => ({ ...prev, text: true }));
                     }}
@@ -658,21 +892,35 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
               )}
             </div>
 
-            {/* AI編集セクション（生成後のみ表示） */}
-            {generatedImageUrl && (
-              <>
-                {/* テキスト変更セクション */}
-                <TextChangeSection
-                  imageUrl={generatedImageUrl}
-                  aspectRatio={currentAspectRatio}
-                  userId={user?.id}
-                  isPro={isPro}
-                  onImageEdited={handleImageEdited}
-                />
+            {/* 編集可能テキストモード: テキスト編集パネル */}
+            {generationMode === 'editable_text' && backgroundImageUrl && (
+              <TextEditPanel
+                textElements={svgTextElements}
+                selectedElementId={selectedTextElementId}
+                onUpdateElement={handleUpdateTextElement}
+                onAddElement={handleAddTextElement}
+                onDeleteElement={handleDeleteTextElement}
+                onSelectElement={setSelectedTextElementId}
+              />
+            )}
 
-                {/* AI編集チャット */}
+            {/* AI編集セクション（生成後のみ表示） */}
+            {hasGeneratedContent && (
+              <>
+                {/* テキスト変更セクション（通常モードのみ） */}
+                {generationMode === 'ai_text' && generatedImageUrl && (
+                  <TextChangeSection
+                    imageUrl={generatedImageUrl}
+                    aspectRatio={currentAspectRatio}
+                    userId={user?.id}
+                    isPro={isPro}
+                    onImageEdited={handleImageEdited}
+                  />
+                )}
+
+                {/* AI編集チャット（背景画像の編集にも使える） */}
                 <AIEditChat
-                  imageUrl={generatedImageUrl}
+                  imageUrl={(generationMode === 'editable_text' ? backgroundImageUrl : generatedImageUrl) || ''}
                   aspectRatio={currentAspectRatio}
                   userId={user?.id}
                   onImageEdited={handleImageEdited}

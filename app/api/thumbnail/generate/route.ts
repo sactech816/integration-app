@@ -69,23 +69,41 @@ export async function POST(request: Request) {
 
     // テンプレートからプロンプト構築
     const template = templateId ? getTemplateById(templateId) : null;
-    let prompt = template?.promptTemplate ||
-      `Create a professional thumbnail image with the text "{{title}}" prominently displayed in large, bold Japanese text. Dynamic and eye-catching design. The text must be clearly readable.`;
+    let prompt: string;
 
-    prompt = prompt.replace(/\{\{title\}\}/g, title);
-    prompt = prompt.replace(/\{\{subtitle\}\}/g, subtitle ? `Subtitle text: "${subtitle}" displayed below the main text.` : '');
+    if (generationMode === 'editable_text') {
+      // 背景のみモード: テキストを含めない画像を生成
+      prompt = template?.promptTemplate ||
+        `Create a professional, visually striking thumbnail background design. Dynamic and eye-catching layout with rich visual elements.`;
 
-    // カラーテーマ適用
-    const colorTheme = template?.colorThemes.find(t => t.id === colorThemeId);
-    prompt = prompt.replace(/\{\{colorModifier\}\}/g, colorTheme?.promptModifier || '');
+      // テンプレートのプレースホルダーを除去し、テーマコンテキストのみ提供
+      prompt = prompt.replace(/\{\{title\}\}/g, '');
+      prompt = prompt.replace(/\{\{subtitle\}\}/g, '');
 
-    // 日本語テキスト描画の指示を強化
-    prompt += '\nCRITICAL: All Japanese text (日本語) must be rendered accurately and clearly. The text is the most important element of this image.';
+      const colorTheme = template?.colorThemes.find(t => t.id === colorThemeId);
+      prompt = prompt.replace(/\{\{colorModifier\}\}/g, colorTheme?.promptModifier || '');
 
-    // Gemini画像生成
+      // テーマの視覚的コンテキストだけ伝える（テキスト描画は禁止）
+      prompt += `\nVisual theme context (DO NOT render as text, use only for design inspiration): "${title}"`;
+      prompt += '\n\nCRITICAL: Do NOT include ANY text, letters, numbers, words, or characters in this image. This is a BACKGROUND-ONLY image. Generate only visual design elements, patterns, illustrations, gradients, and color compositions. Absolutely NO text whatsoever.';
+    } else {
+      // 通常モード: テキスト込みの画像を生成
+      prompt = template?.promptTemplate ||
+        `Create a professional thumbnail image with the text "{{title}}" prominently displayed in large, bold Japanese text. Dynamic and eye-catching design. The text must be clearly readable.`;
+
+      prompt = prompt.replace(/\{\{title\}\}/g, title);
+      prompt = prompt.replace(/\{\{subtitle\}\}/g, subtitle ? `Subtitle text: "${subtitle}" displayed below the main text.` : '');
+
+      const colorTheme = template?.colorThemes.find(t => t.id === colorThemeId);
+      prompt = prompt.replace(/\{\{colorModifier\}\}/g, colorTheme?.promptModifier || '');
+
+      prompt += '\nCRITICAL: All Japanese text (日本語) must be rendered accurately and clearly. The text is the most important element of this image.';
+    }
+
+    // Gemini 3 Pro Image で生成
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
+      model: 'gemini-3-pro-image-preview',
       contents: prompt,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
@@ -140,9 +158,9 @@ export async function POST(request: Request) {
         userId,
         actionType: 'thumbnail_generate',
         service: 'makers',
-        modelUsed: 'gemini-2.5-flash-image',
+        modelUsed: 'gemini-3-pro-image-preview',
         usageType: 'standard',
-        metadata: { templateId, platform, title, aspectRatio },
+        metadata: { templateId, platform, title, aspectRatio, mode: generationMode },
       }).catch(console.error);
     }
 
@@ -150,6 +168,7 @@ export async function POST(request: Request) {
       success: true,
       imageUrl: urlData.publicUrl,
       prompt,
+      mode: generationMode,
     });
   } catch (error) {
     console.error('Thumbnail generation error:', error);

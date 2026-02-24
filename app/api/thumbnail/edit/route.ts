@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     // Geminiにマルチモーダル入力（画像+修正指示）を送信
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
+      model: 'gemini-3-pro-image-preview',
       contents: [
         {
           role: 'user',
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
         userId,
         actionType: 'thumbnail_edit',
         service: 'makers',
-        modelUsed: 'gemini-2.5-flash-image',
+        modelUsed: 'gemini-3-pro-image-preview',
         usageType: 'standard',
         metadata: { editInstruction },
       }).catch(console.error);
