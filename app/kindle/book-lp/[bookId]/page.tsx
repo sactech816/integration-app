@@ -7,8 +7,8 @@ import type { ThemeKey } from '@/components/kindle/lp/BookLPDisplay';
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: { bookId: string };
-  searchParams: { preview?: string };
+  params: Promise<{ bookId: string }>;
+  searchParams: Promise<{ preview?: string }>;
 }
 
 async function getLPData(bookId: string, allowDraft: boolean = false) {
@@ -42,8 +42,10 @@ async function getLPData(bookId: string, allowDraft: boolean = false) {
 }
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
-  const isPreview = searchParams?.preview === 'true';
-  const result = await getLPData(params.bookId, isPreview);
+  const { bookId } = await params;
+  const { preview } = await searchParams;
+  const isPreview = preview === 'true';
+  const result = await getLPData(bookId, isPreview);
   if (!result) return { title: '書籍LP' };
 
   const { lpData, bookData } = result;
@@ -68,8 +70,10 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 }
 
 export default async function BookLPPage({ params, searchParams }: PageProps) {
-  const isPreview = searchParams?.preview === 'true';
-  const result = await getLPData(params.bookId, isPreview);
+  const { bookId } = await params;
+  const { preview } = await searchParams;
+  const isPreview = preview === 'true';
+  const result = await getLPData(bookId, isPreview);
   if (!result) notFound();
 
   const { lpData, bookData } = result;
