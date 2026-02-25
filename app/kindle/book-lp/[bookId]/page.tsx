@@ -8,21 +8,27 @@ export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: { bookId: string };
+  searchParams: { preview?: string };
 }
 
-async function getLPData(bookId: string) {
+async function getLPData(bookId: string, allowDraft: boolean = false) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !supabaseServiceKey) return null;
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  const { data: lpData } = await supabase
+  let query = supabase
     .from('kdl_book_lps')
     .select('*')
-    .eq('book_id', bookId)
-    .eq('status', 'published')
-    .single();
+    .eq('book_id', bookId);
+
+  // プレビューモードでなければ公開済みのみ表示
+  if (!allowDraft) {
+    query = query.eq('status', 'published');
+  }
+
+  const { data: lpData } = await query.single();
 
   if (!lpData) return null;
 
@@ -35,8 +41,9 @@ async function getLPData(bookId: string) {
   return { lpData, bookData };
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const result = await getLPData(params.bookId);
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
+  const isPreview = searchParams?.preview === 'true';
+  const result = await getLPData(params.bookId, isPreview);
   if (!result) return { title: '書籍LP' };
 
   const { lpData, bookData } = result;
@@ -60,8 +67,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function BookLPPage({ params }: PageProps) {
-  const result = await getLPData(params.bookId);
+export default async function BookLPPage({ params, searchParams }: PageProps) {
+  const isPreview = searchParams?.preview === 'true';
+  const result = await getLPData(params.bookId, isPreview);
   if (!result) notFound();
 
   const { lpData, bookData } = result;

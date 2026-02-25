@@ -95,6 +95,7 @@ interface EditorLayoutProps {
   readOnly?: boolean; // 閲覧専用モード（デモ用）
   adminKeyParam?: string; // admin_keyパラメータ（リンクに引き継ぐ用）
   userId?: string; // 使用量表示用
+  autoOpenLP?: boolean; // LP編集モーダルを自動で開く
 }
 
 export const EditorLayout: React.FC<EditorLayoutProps> = ({
@@ -108,6 +109,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   readOnly = false,
   adminKeyParam = '',
   userId,
+  autoOpenLP = false,
 }) => {
   // 初期値: 最初の章の最初の節
   const getInitialSectionId = () => {
@@ -152,6 +154,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   const [isGeneratingLP, setIsGeneratingLP] = useState(false);
   const [lpData, setLpData] = useState<any>(null);
   const [lpStatus, setLpStatus] = useState<'draft' | 'published'>('draft');
+  const [lpNotGenerated, setLpNotGenerated] = useState(false);
   const [lpThemeColor, setLpThemeColor] = useState<string>('orange');
   const [lpSectionVisibility, setLpSectionVisibility] = useState<any>({});
   const [lpCoverImageUrl, setLpCoverImageUrl] = useState<string | undefined>(undefined);
@@ -1128,13 +1131,20 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
         setLpCoverImageUrl(data.cover_image_url || undefined);
         return;
       }
-      // 保存済みがない場合は生成を自動実行
-      await handleGenerateLP();
+      // 保存済みがない場合は「LP作成」ボタンを表示（自動生成しない）
+      setLpNotGenerated(true);
     } catch (error: any) {
       console.error('Load LP error:', error);
       showToast('error', 'LP情報の取得に失敗しました');
     }
   }, [book.id, isGeneratingLP, lpData]);
+
+  // autoOpenLP: ページ読み込み時に自動でLPモーダルを開く
+  useEffect(() => {
+    if (autoOpenLP && !isLPModalOpen) {
+      handleShowLP();
+    }
+  }, [autoOpenLP]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleGenerateLP = useCallback(async () => {
     if (isGeneratingLP) return;
@@ -1155,6 +1165,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
       const data = await response.json();
       setLpData(data.lpData);
       setLpStatus('draft');
+      setLpNotGenerated(false);
       showToast('success', 'LPを生成しました');
       setUsageRefreshTrigger(prev => prev + 1);
     } catch (error: any) {
@@ -1320,6 +1331,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
       }
 
       // ローカルの状態を更新
+      // NOTE: propsの直接変更だが、親コンポーネントの再レンダリングまで表示を維持するため
       book.title = title;
       book.subtitle = subtitle;
 

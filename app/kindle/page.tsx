@@ -1114,7 +1114,7 @@ function KindleListPageContent() {
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {hasLP && (
                           <a
-                            href={`/kindle/book-lp/${book.id}`}
+                            href={`/kindle/book-lp/${book.id}?preview=true`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1.5 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition"
@@ -1125,7 +1125,7 @@ function KindleListPageContent() {
                           </a>
                         )}
                         <button
-                          onClick={() => router.push(`/kindle/${book.id}${adminKeyParam}`)}
+                          onClick={() => router.push(`/kindle/${book.id}${adminKeyParam ? adminKeyParam + '&' : '?'}openLP=true`)}
                           className="flex items-center gap-1.5 px-3 py-2 text-sm bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition font-medium"
                         >
                           <Rocket size={15} />

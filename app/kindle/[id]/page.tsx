@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { Suspense, useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, BookOpen, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
@@ -38,7 +38,7 @@ interface TargetProfile {
 
 type LoadingState = 'loading' | 'loaded' | 'error' | 'not-found';
 
-export default function KindleEditorPage() {
+function KindleEditorPageContent() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,6 +47,8 @@ export default function KindleEditorPage() {
   // admin_keyパラメータを取得（存在する場合はリンクに引き継ぐ）
   const adminKey = searchParams.get('admin_key');
   const adminKeyParam = adminKey ? `?admin_key=${adminKey}` : '';
+  // openLP=trueパラメータ: LP編集モーダルを自動で開く
+  const autoOpenLP = searchParams.get('openLP') === 'true';
 
   const [loadingState, setLoadingState] = useState<LoadingState>('loading');
   const [error, setError] = useState<string>('');
@@ -417,8 +419,23 @@ export default function KindleEditorPage() {
       onUpdateBookStatus={handleUpdateBookStatus}
       adminKeyParam={adminKeyParam}
       userId={userId}
+      autoOpenLP={autoOpenLP}
     />
   );
 }
 
-
+// エクスポートするページコンポーネント（Suspenseでラップ）
+export default function KindleEditorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="animate-spin text-amber-500 mx-auto mb-4" size={48} />
+          <p className="text-gray-600 font-medium">読み込み中...</p>
+        </div>
+      </div>
+    }>
+      <KindleEditorPageContent />
+    </Suspense>
+  );
+}
