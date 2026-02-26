@@ -26,6 +26,7 @@ import {
   ChevronRight,
   LayoutDashboard,
   Globe,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 export type KdlUserRole = 'user' | 'agency' | 'admin';
@@ -96,9 +97,16 @@ export default function KdlSidebarNav({
       roles: ['user', 'agency', 'admin'],
     },
     {
+      id: 'book-covers',
+      label: '表紙作成',
+      icon: ImageIcon,
+      section: 'main',
+      roles: ['user', 'agency', 'admin'],
+    },
+    {
       id: 'my-books',
-      label: 'マイブック', 
-      icon: BookOpen, 
+      label: 'マイブック',
+      icon: BookOpen,
       section: 'main',
       badge: bookCount,
       roles: ['user', 'agency', 'admin'],
