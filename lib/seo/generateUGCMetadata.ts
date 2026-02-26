@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 
-export type UGCType = 'quiz' | 'profile' | 'business' | 'survey' | 'salesletter'
+export type UGCType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'survey' | 'salesletter'
   | 'gacha' | 'fukubiki' | 'scratch' | 'slot' | 'stamp-rally' | 'login-bonus'
   | 'booking' | 'kindle' | 'point-quiz' | 'arcade' | 'attendance' | 'thumbnail';
 
@@ -25,6 +25,12 @@ const TYPE_CONFIG: Record<UGCType, {
     label: '診断クイズメーカー',
     defaultKeywords: ['診断クイズ', '性格診断', '心理テスト', '無料診断'],
     descriptionTemplate: (title) => `「${title}」であなたのタイプを無料診断。集客メーカーの診断クイズメーカーで作成された診断コンテンツです。`,
+  },
+  entertainment_quiz: {
+    pathPrefix: 'entertainment',
+    label: 'エンタメ診断メーカー',
+    defaultKeywords: ['エンタメ診断', '占い', '性格診断', '無料診断', '心理テスト', 'おもしろ診断'],
+    descriptionTemplate: (title) => `「${title}」で楽しく診断！SNSでシェアして友達と結果を比べよう。集客メーカーのエンタメ診断メーカーで作成されました。`,
   },
   profile: {
     pathPrefix: 'profile',

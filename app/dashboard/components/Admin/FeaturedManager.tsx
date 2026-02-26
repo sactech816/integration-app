@@ -143,6 +143,7 @@ export default function FeaturedManager() {
   const getServiceLabel = (type: ServiceType) => {
     const labels: Record<ServiceType, string> = {
       quiz: '診断クイズ',
+      entertainment_quiz: 'エンタメ診断',
       profile: 'プロフィールLP',
       business: 'ビジネスLP',
       salesletter: 'セールスレター',

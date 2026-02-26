@@ -5,10 +5,11 @@
 // -------------------------------------------
 // サービスタイプ
 // -------------------------------------------
-export type ServiceType = 'quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail';
+export type ServiceType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail';
 
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   quiz: '診断クイズ',
+  entertainment_quiz: 'エンタメ診断',
   profile: 'プロフィールLP',
   business: 'ビジネスLP',
   salesletter: 'セールスレター',
@@ -22,6 +23,7 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
 
 export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; text: string }> = {
   quiz: { primary: 'indigo', bg: 'bg-indigo-50', text: 'text-indigo-600' },
+  entertainment_quiz: { primary: 'pink', bg: 'bg-pink-50', text: 'text-pink-600' },
   profile: { primary: 'emerald', bg: 'bg-emerald-50', text: 'text-emerald-600' },
   business: { primary: 'amber', bg: 'bg-amber-50', text: 'text-amber-600' },
   salesletter: { primary: 'rose', bg: 'bg-rose-50', text: 'text-rose-600' },
@@ -61,6 +63,13 @@ export interface QuizResult {
   qrButtonText?: string;
 }
 
+export interface EntertainmentMeta {
+  resultImages?: Record<string, string>;
+  shareTemplate?: string;
+  ogStyle?: 'vibrant' | 'cute' | 'cool' | 'pop';
+  conversationLog?: Array<{ role: string; content: string }>;
+}
+
 export interface Quiz {
   id: number;
   slug: string;
@@ -73,14 +82,16 @@ export interface Quiz {
   user_id?: string | null;
   created_at?: string;
   updated_at?: string;
-  layout?: 'card' | 'chat';
+  layout?: 'card' | 'chat' | 'pop' | 'grid';
   image_url?: string | null;
   mode?: 'diagnosis' | 'test' | 'fortune';
   collect_email?: boolean;
-  theme?: 'standard' | 'cyberpunk' | 'japanese' | 'pastel' | 'monochrome';
-  hideFooter?: boolean; // フッター非表示（Proプラン特典）
-  hideRelatedContent?: boolean; // 関連コンテンツ非表示（Proプラン特典）
-  // アナリティクス関連（データベースから取得時に含まれる可能性あり）
+  theme?: 'standard' | 'cyberpunk' | 'japanese' | 'pastel' | 'monochrome' | 'vibrant' | 'kawaii' | 'galaxy';
+  hideFooter?: boolean;
+  hideRelatedContent?: boolean;
+  quiz_type?: 'business' | 'entertainment';
+  share_count?: number;
+  entertainment_meta?: EntertainmentMeta;
   views_count?: number;
   completions_count?: number;
   clicks_count?: number;

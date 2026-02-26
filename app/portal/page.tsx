@@ -162,6 +162,7 @@ function PortalPageContent() {
   const [totalCounts, setTotalCounts] = useState<Record<ServiceType | 'all', number>>({
     all: 0,
     quiz: 0,
+    entertainment_quiz: 0,
     profile: 0,
     business: 0,
     survey: 0,
@@ -224,6 +225,7 @@ function PortalPageContent() {
         setTotalCounts({
           all: Object.values(counts).reduce((a, b) => a + b, 0),
           quiz: counts.quiz || 0,
+          entertainment_quiz: counts.entertainment_quiz || 0,
           profile: counts.profile || 0,
           business: counts.lp || 0,  // LP = business_projects
           survey: counts.survey || 0,

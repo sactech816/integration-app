@@ -26,6 +26,7 @@ const getServiceIcon = (type: ServiceType) => {
 // モバイル用の短いラベル
 const SHORT_LABELS: Record<ServiceType, string> = {
   quiz: '診断',
+  entertainment_quiz: 'エンタメ',
   profile: 'プロフ',
   business: 'LP',
   salesletter: 'セールス',

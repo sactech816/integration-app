@@ -75,6 +75,7 @@ type ContentCardProps = {
 const getServiceIcon = (type: ServiceType) => {
   const icons: Record<ServiceType, React.ComponentType<{ size?: number; className?: string }>> = {
     quiz: Sparkles,
+    entertainment_quiz: Sparkles,
     profile: UserCircle,
     business: Building2,
     salesletter: PenTool,
@@ -91,6 +92,7 @@ const getServiceIcon = (type: ServiceType) => {
 const getServiceColor = (type: ServiceType) => {
   const colors: Record<ServiceType, { bg: string; text: string; border: string; gradient: string }> = {
     quiz: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200', gradient: 'from-indigo-500 to-purple-600' },
+    entertainment_quiz: { bg: 'bg-pink-50', text: 'text-pink-600', border: 'border-pink-200', gradient: 'from-pink-500 to-purple-600' },
     profile: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', gradient: 'from-emerald-500 to-teal-600' },
     business: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200', gradient: 'from-amber-500 to-orange-600' },
     salesletter: { bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-200', gradient: 'from-rose-500 to-pink-600' },

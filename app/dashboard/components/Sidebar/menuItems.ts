@@ -13,6 +13,7 @@ import {
   Users,
   Image,
   MousePointerClick,
+  PartyPopper,
   LucideIcon,
 } from 'lucide-react';
 
@@ -33,6 +34,14 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: '診断クイズ作成',
     color: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200' },
     href: '/quiz/editor',
+  },
+  {
+    id: 'entertainment',
+    label: 'エンタメ診断メーカー',
+    icon: PartyPopper,
+    description: 'エンタメ診断作成',
+    color: { bg: 'bg-pink-50', text: 'text-pink-600', border: 'border-pink-200' },
+    href: '/entertainment/create',
   },
   {
     id: 'profile',

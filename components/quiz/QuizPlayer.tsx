@@ -175,7 +175,7 @@ const ResultView = ({ quiz, result, onRetry, onBack, playableQuestions, answers,
   );
 };
 
-const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: () => void, isPreview?: boolean }) => {
+const QuizPlayer = ({ quiz, onBack, isPreview = false, onResult }: { quiz: any, onBack?: () => void, isPreview?: boolean, onResult?: (result: any) => void }) => {
   useEffect(() => { 
     if (!isPreview) {
       document.title = `${quiz.title} | 診断中`; 
@@ -261,7 +261,12 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
               }, 300);
           }
       } else {
-          setResult(calculateResult(finalAnswers, results, quiz.mode));
+          const calculatedResult = calculateResult(finalAnswers, results, quiz.mode);
+          if (onResult) {
+              onResult(calculatedResult);
+          } else {
+              setResult(calculatedResult);
+          }
       }
   };
 
@@ -341,7 +346,12 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false }: { quiz: any, onBack?: (
               await supabase.from('quiz_leads').insert([{ quiz_id: quiz.id, email: email }]);
           }
           setShowEmailForm(false);
-          setResult(calculateResult(answers, results, quiz.mode));
+          const calculatedResult = calculateResult(answers, results, quiz.mode);
+          if (onResult) {
+              onResult(calculatedResult);
+          } else {
+              setResult(calculatedResult);
+          }
       } catch(err) {
           console.error(err);
           alert('エラーが発生しました');

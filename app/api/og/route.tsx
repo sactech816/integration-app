@@ -27,6 +27,11 @@ export async function GET(request: NextRequest) {
       secondary: '#fbbf24',
       accent: '#fde68a',
     },
+    entertainment_quiz: {
+      primary: '#ec4899',
+      secondary: '#a855f7',
+      accent: '#f9a8d4',
+    },
     default: {
       primary: '#6366f1',
       secondary: '#8b5cf6',
@@ -41,6 +46,7 @@ export async function GET(request: NextRequest) {
     quiz: '診断クイズメーカー',
     profile: 'プロフィールメーカー',
     business: 'ビジネスLPメーカー',
+    entertainment_quiz: 'エンタメ診断メーカー',
     default: '集客メーカー',
   };
 
