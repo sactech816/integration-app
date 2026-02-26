@@ -17,6 +17,7 @@ export interface EntertainmentForm {
     title: string;
     description: string;
     image_url?: string;
+    imageHint?: string;
   }>;
   entertainment_meta: {
     shareTemplate?: string;
@@ -150,10 +151,11 @@ export function applyGeneratedData(
         score: opt.score,
       })),
     })),
-    results: quiz.results.map((r: { type: string; title: string; description: string }) => ({
+    results: quiz.results.map((r: { type: string; title: string; description: string; imageHint?: string }) => ({
       type: r.type,
       title: r.title,
       description: r.description,
+      ...(r.imageHint ? { imageHint: r.imageHint } : {}),
     })),
     entertainment_meta: {
       ...form.entertainment_meta,

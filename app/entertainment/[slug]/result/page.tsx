@@ -105,7 +105,6 @@ export default async function EntertainmentResultPage({ params, searchParams }: 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
   const quizUrl = `${siteUrl}/entertainment/${slug}`;
 
-  // スタイル別グラデーション
   const gradients: Record<string, { bg: string; card: string }> = {
     vibrant: { bg: 'from-red-400 via-pink-400 to-yellow-300', card: 'from-pink-500 to-orange-400' },
     cute: { bg: 'from-pink-300 via-purple-300 to-pink-200', card: 'from-pink-400 to-purple-400' },
@@ -117,73 +116,73 @@ export default async function EntertainmentResultPage({ params, searchParams }: 
 
   return (
     <div className={`min-h-screen bg-gradient-to-b ${g.bg}`}>
-      {/* 装飾 */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[10%] left-[5%] w-2 h-2 bg-white/40 rounded-full animate-pulse" />
-        <div className="absolute top-[15%] right-[10%] w-3 h-3 bg-white/30 rounded-full animate-pulse" />
-        <div className="absolute top-[25%] left-[15%] w-1.5 h-1.5 bg-white/50 rounded-full animate-pulse" />
+        <div className="absolute top-[8%] left-[5%] w-2 h-2 bg-white/40 rounded-full animate-pulse" />
+        <div className="absolute top-[12%] right-[8%] w-3 h-3 bg-white/30 rounded-full animate-pulse" />
       </div>
 
-      <div className="relative max-w-md mx-auto px-4 py-8 space-y-6">
+      <div className="relative max-w-md mx-auto px-4 py-6 space-y-5">
+
+        {/* ヘッダー */}
+        <div className="text-center pt-2">
+          <div className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-white/20 backdrop-blur-sm rounded-full mb-1">
+            <Sparkles className={`w-4 h-4 ${isDark ? 'text-purple-300' : 'text-white'}`} />
+            <span className={`text-sm font-bold ${isDark ? 'text-purple-200' : 'text-white'}`}>
+              {quiz.title}
+            </span>
+          </div>
+        </div>
+
         {result ? (
           <>
-            {/* ヘッダー */}
-            <div className="text-center">
-              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-white/20 backdrop-blur-sm rounded-full mb-3">
-                <Sparkles className={`w-4 h-4 ${isDark ? 'text-purple-300' : 'text-white'}`} />
-                <span className={`text-sm font-bold ${isDark ? 'text-purple-200' : 'text-white'}`}>
-                  {quiz.title}
-                </span>
-              </div>
-              <p className={`text-base font-semibold ${isDark ? 'text-purple-200' : 'text-white/90'}`}>
-                診断結果
-              </p>
-            </div>
-
-            {/* 結果カード: 画像メイン */}
-            <div className="relative">
-              <div className={`absolute inset-2 bg-gradient-to-br ${g.card} rounded-3xl blur-2xl opacity-40`} />
-              <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden">
-                {resultImage ? (
-                  <div className="relative w-full aspect-[4/5] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+            {/* 画像メイン */}
+            {resultImage ? (
+              <div className="relative">
+                <div className={`absolute inset-3 bg-gradient-to-br ${g.card} rounded-3xl blur-3xl opacity-50`} />
+                <div className="relative rounded-3xl shadow-2xl overflow-hidden ring-4 ring-white/20">
+                  <div className="relative w-full aspect-square bg-gray-200">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={resultImage}
                       alt={result.title}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      </div>
-                      <h2 className="text-3xl font-extrabold leading-tight drop-shadow-lg">
-                        {result.title}
-                      </h2>
-                    </div>
                   </div>
-                ) : (
-                  <div className={`relative w-full aspect-[4/3] bg-gradient-to-br ${g.card} flex items-center justify-center`}>
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(255,255,255,0.15),transparent_50%)]" />
-                    <div className="text-center px-8 relative z-10">
-                      <div className="text-6xl mb-4">
-                        {ogStyle === 'cool' ? '🌌' : ogStyle === 'cute' ? '🌸' : '🎉'}
-                      </div>
-                      <h2 className="text-3xl font-extrabold text-white leading-tight drop-shadow-lg">
-                        {result.title}
-                      </h2>
-                    </div>
-                  </div>
-                )}
-                <div className="p-6">
-                  <p className="text-base text-gray-700 leading-relaxed">{result.description}</p>
                 </div>
               </div>
+            ) : (
+              <div className="relative">
+                <div className={`absolute inset-3 bg-gradient-to-br ${g.card} rounded-3xl blur-3xl opacity-50`} />
+                <div className={`relative rounded-3xl shadow-2xl overflow-hidden bg-gradient-to-br ${g.card} aspect-square flex items-center justify-center`}>
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(255,255,255,0.15),transparent_50%)]" />
+                  <div className="text-8xl">
+                    {ogStyle === 'cool' ? '🌌' : ogStyle === 'cute' ? '🌸' : '🎉'}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* タイトル */}
+            <div className="text-center space-y-1">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Star className="w-5 h-5 text-yellow-300 fill-yellow-300 drop-shadow" />
+                <Star className="w-6 h-6 text-yellow-300 fill-yellow-300 drop-shadow" />
+                <Star className="w-5 h-5 text-yellow-300 fill-yellow-300 drop-shadow" />
+              </div>
+              <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-purple-300' : 'text-white/70'}`}>
+                わたしのタイプは
+              </p>
+              <h2 className="text-3xl font-extrabold text-white drop-shadow-lg leading-tight">
+                {result.title}
+              </h2>
             </div>
 
-            {/* CTA */}
+            {/* 説明 */}
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-lg">
+              <p className="text-sm text-gray-700 leading-relaxed">{result.description}</p>
+            </div>
+
+            {/* CTA: あなたも診断 */}
             <a
               href={quizUrl}
               className={`block w-full text-center px-6 py-4 bg-gradient-to-r ${g.card}
@@ -193,13 +192,9 @@ export default async function EntertainmentResultPage({ params, searchParams }: 
             </a>
           </>
         ) : (
-          <div className="text-center py-12">
-            <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-white'}`}>
-              {quiz.title}
-            </h2>
-            <p className={`mb-6 ${isDark ? 'text-purple-200' : 'text-white/80'}`}>
-              この診断に挑戦してみよう！
-            </p>
+          <div className="text-center py-12 space-y-6">
+            <h2 className="text-xl font-bold text-white">{quiz.title}</h2>
+            <p className={`${isDark ? 'text-purple-200' : 'text-white/80'}`}>この診断に挑戦してみよう！</p>
             <a
               href={quizUrl}
               className={`inline-block px-8 py-4 bg-gradient-to-r ${g.card}
@@ -210,12 +205,10 @@ export default async function EntertainmentResultPage({ params, searchParams }: 
           </div>
         )}
 
-        <div className="text-center py-4">
+        <div className="text-center py-3">
           <p className={`text-xs ${isDark ? 'text-white/40' : 'text-white/50'}`}>
             Powered by{' '}
-            <a href="https://makers.tokyo" className="hover:underline">
-              集客メーカー
-            </a>
+            <a href="https://makers.tokyo" className="hover:underline">集客メーカー</a>
           </p>
         </div>
       </div>

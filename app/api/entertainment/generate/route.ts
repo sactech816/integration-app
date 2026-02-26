@@ -223,7 +223,7 @@ async function handleGeneratePhase(
   const resultExamples = types
     .map(
       (type) =>
-        `    { "type": "${type}", "title": "結果タイトル", "description": "150文字程度の楽しい説明文" }`
+        `    { "type": "${type}", "title": "結果タイトル", "description": "150文字程度の楽しい説明文", "imageHint": "この結果のイラスト内容を英語で30語以内で描写" }`
     )
     .join(',\n');
 
@@ -233,6 +233,7 @@ async function handleGeneratePhase(
   }を作成してください。
 
 重要: エンタメ性を重視！面白くて、SNSでシェアしたくなる内容にしてください。
+結果画像が主役！各結果には imageHint（英語）を必ず含めてください。
 
 以下のJSON形式で返してください:
 {
@@ -258,6 +259,10 @@ ${resultExamples}
 - 結果パターン: ${resultCount}個（${types.join(', ')}）
 - 結果のtitleは具体的で面白いタイプ名にする（例: 「甘えん坊ネコ」「孤高のオオカミ」）
 - 結果のdescriptionは楽しく読めて、思わずシェアしたくなる内容に
+- imageHintは結果画像の生成に使用。テーマに合ったビジュアルを英語で具体的に描写する
+  例: どうぶつ占いなら "A sleepy cute calico cat curled up on a cushion"
+  例: 脳内メーカーなら "Brain cross-section filled with hearts, music notes, and sparkles"
+  例: 腸内メーカーなら "Colorful gut interior filled with dancing fire and lightning"
 - shareTemplateはSNS投稿用テンプレート。{{result_title}}と{{quiz_title}}が置換される`;
 
   const aiResponse = await aiProvider.generate({
