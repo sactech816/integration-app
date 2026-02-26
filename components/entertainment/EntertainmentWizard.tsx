@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, PartyPopper } from 'lucide-react';
+import { ArrowLeft, PartyPopper, Wand2 } from 'lucide-react';
 import WizardChat, { type ChatMessage, type QuickReplyOption } from './WizardChat';
 import WizardProgress, { type ProgressStep } from './WizardProgress';
 import EntertainmentPreview from './EntertainmentPreview';
@@ -10,7 +10,7 @@ import { supabase, TABLES } from '@/lib/supabase';
 import { generateSlug } from '@/lib/utils';
 import type { Quiz, QuizQuestion, QuizResult } from '@/lib/types';
 
-type WizardPhase = 'chatting' | 'generating' | 'complete';
+type WizardPhase = 'step_theme' | 'step_types' | 'step_style' | 'step_confirm' | 'generating' | 'complete';
 
 interface QuizConcept {
   theme: string;
@@ -19,119 +19,181 @@ interface QuizConcept {
   mode: 'diagnosis' | 'fortune';
 }
 
+const STYLE_OPTIONS: QuickReplyOption[] = [
+  { label: 'かわいい系', value: 'cute', emoji: '🐱' },
+  { label: 'クール系', value: 'cool', emoji: '🐺' },
+  { label: 'ポップ系', value: 'pop', emoji: '🎉' },
+  { label: 'ビビッド系', value: 'vibrant', emoji: '🌈' },
+];
+
+const TYPE_COUNT_OPTIONS: QuickReplyOption[] = [
+  { label: '4タイプ', value: '4', emoji: '🎯' },
+  { label: '6タイプ', value: '6', emoji: '🎲' },
+  { label: '3タイプ', value: '3', emoji: '✨' },
+];
+
 export default function EntertainmentWizard() {
   const router = useRouter();
-  const [phase, setPhase] = useState<WizardPhase>('chatting');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [phase, setPhase] = useState<WizardPhase>('step_theme');
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: 'ai-init',
+      role: 'ai',
+      content: 'こんにちは！✨ エンタメ診断メーカーへようこそ！\n\nどんな診断を作りたいですか？テーマを教えてください！\n\n例：「どうぶつ占い」「推しキャラ診断」「前世タイプ診断」「脳内メーカー」',
+      options: [
+        { label: 'どうぶつ占い', value: 'どうぶつ占い', emoji: '🐾' },
+        { label: '推しキャラ診断', value: '推しキャラ診断', emoji: '💫' },
+        { label: '前世診断', value: '前世タイプ診断', emoji: '🔮' },
+        { label: '脳内メーカー', value: '脳内メーカー', emoji: '🧠' },
+      ],
+      timestamp: new Date(),
+    },
+  ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [concept, setConcept] = useState<QuizConcept | null>(null);
+  const [concept, setConcept] = useState<Partial<QuizConcept>>({});
   const [generatedQuiz, setGeneratedQuiz] = useState<Quiz | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [progressSteps, setProgressSteps] = useState<ProgressStep[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // 初回表示でAIの挨拶を取得
-  const initializeChat = useCallback(async () => {
-    if (isInitialized) return;
-    setIsInitialized(true);
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/entertainment/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phase: 'collect', messages: [] }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        if (data.error === 'LOGIN_REQUIRED') {
-          setError('ログインが必要です。ログインしてから再度お試しください。');
-          return;
-        }
-        throw new Error(data.message || data.error);
-      }
-      const aiMessage: ChatMessage = {
-        id: `ai-${Date.now()}`,
-        role: 'ai',
-        content: data.reply,
-        options: data.options || [],
-        timestamp: new Date(),
-      };
-      setMessages([aiMessage]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '初期化に失敗しました');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isInitialized]);
+  const addAiMessage = (content: string, options?: QuickReplyOption[]) => {
+    const msg: ChatMessage = {
+      id: `ai-${Date.now()}`,
+      role: 'ai',
+      content,
+      options,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, msg]);
+  };
 
-  // 初回表示
-  useState(() => {
-    initializeChat();
-  });
-
-  const sendMessage = async (text: string) => {
-    setError(null);
-    const userMessage: ChatMessage = {
+  const addUserMessage = (text: string) => {
+    const msg: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
       content: text,
       timestamp: new Date(),
     };
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
+    setMessages((prev) => [...prev, msg]);
+  };
+
+  const handleSend = (text: string) => {
     setInputValue('');
-    setIsLoading(true);
-
-    try {
-      // AI側のメッセージ履歴を構築（roleをuser/assistantに変換）
-      const apiMessages = newMessages.map((m) => ({
-        role: m.role === 'ai' ? ('assistant' as const) : ('user' as const),
-        content: m.content,
-      }));
-
-      const res = await fetch('/api/entertainment/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phase: 'collect', messages: apiMessages }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || data.error);
-
-      const aiMessage: ChatMessage = {
-        id: `ai-${Date.now()}`,
-        role: 'ai',
-        content: data.reply,
-        options: data.options || [],
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-
-      // コンセプトが決まったらgenerate phaseへ
-      if (data.conceptReady && data.extractedConcept) {
-        setConcept(data.extractedConcept);
-        // 少し待ってから生成開始
-        setTimeout(() => {
-          startGeneration(data.extractedConcept);
-        }, 1500);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '送信に失敗しました');
-    } finally {
-      setIsLoading(false);
-    }
+    processStep(text);
   };
 
   const handleQuickReply = (option: QuickReplyOption) => {
-    sendMessage(option.value || option.label);
+    processStep(option.value || option.label, option.label);
+  };
+
+  const processStep = (value: string, displayText?: string) => {
+    addUserMessage(displayText || value);
+
+    switch (phase) {
+      case 'step_theme':
+        handleThemeStep(value);
+        break;
+      case 'step_types':
+        handleTypesStep(value);
+        break;
+      case 'step_style':
+        handleStyleStep(value);
+        break;
+      case 'step_confirm':
+        handleConfirmStep(value);
+        break;
+    }
+  };
+
+  const handleThemeStep = (theme: string) => {
+    setConcept((prev) => ({ ...prev, theme }));
+
+    // テーマに「占い」が含まれていたらmodeをfortuneに自動設定
+    const mode = theme.includes('占い') ? 'fortune' : 'diagnosis';
+    setConcept((prev) => ({ ...prev, theme, mode }));
+
+    setTimeout(() => {
+      addAiMessage(
+        `「${theme}」いいですね！🎉\n\n結果は何タイプにしますか？`,
+        TYPE_COUNT_OPTIONS
+      );
+      setPhase('step_types');
+    }, 400);
+  };
+
+  const handleTypesStep = (value: string) => {
+    const count = parseInt(value) || 4;
+    setConcept((prev) => ({ ...prev, resultCount: count }));
+
+    setTimeout(() => {
+      addAiMessage(
+        `${count}タイプですね！👍\n\n最後に、診断のテイスト（雰囲気）を選んでください！`,
+        STYLE_OPTIONS
+      );
+      setPhase('step_style');
+    }, 400);
+  };
+
+  const handleStyleStep = (value: string) => {
+    const style = ['cute', 'cool', 'pop', 'vibrant'].includes(value) ? value : 'pop';
+    const styleLabels: Record<string, string> = { cute: 'かわいい系', cool: 'クール系', pop: 'ポップ系', vibrant: 'ビビッド系' };
+
+    setConcept((prev) => ({ ...prev, style }));
+
+    const finalConcept = { ...concept, style } as QuizConcept;
+
+    setTimeout(() => {
+      addAiMessage(
+        `準備OKです！🚀\n\n📋 テーマ：${finalConcept.theme}\n🎯 結果：${finalConcept.resultCount}タイプ\n🎨 テイスト：${styleLabels[style]}\n\nこの内容で診断を作成しますか？`,
+        [
+          { label: '作成する！', value: 'yes', emoji: '✨' },
+          { label: 'やり直す', value: 'no', emoji: '🔄' },
+        ]
+      );
+      setPhase('step_confirm');
+    }, 400);
+  };
+
+  const handleConfirmStep = (value: string) => {
+    if (value === 'no' || value.includes('やり直')) {
+      // リセット
+      setConcept({});
+      setMessages([
+        {
+          id: `ai-reset-${Date.now()}`,
+          role: 'ai',
+          content: 'もう一度最初からやりましょう！✨\n\nどんな診断を作りたいですか？テーマを教えてください！',
+          options: [
+            { label: 'どうぶつ占い', value: 'どうぶつ占い', emoji: '🐾' },
+            { label: '推しキャラ診断', value: '推しキャラ診断', emoji: '💫' },
+            { label: '前世診断', value: '前世タイプ診断', emoji: '🔮' },
+            { label: '脳内メーカー', value: '脳内メーカー', emoji: '🧠' },
+          ],
+          timestamp: new Date(),
+        },
+      ]);
+      setPhase('step_theme');
+      return;
+    }
+
+    const finalConcept: QuizConcept = {
+      theme: concept.theme || '',
+      resultCount: concept.resultCount || 4,
+      style: concept.style || 'pop',
+      mode: concept.mode || 'diagnosis',
+    };
+
+    setTimeout(() => {
+      startGeneration(finalConcept);
+    }, 500);
   };
 
   const startGeneration = async (quizConcept: QuizConcept) => {
     setPhase('generating');
     setProgressSteps([
       { label: 'タイトル・説明文を生成', status: 'in_progress' },
-      { label: `質問5問を生成`, status: 'pending' },
+      { label: '質問5問を生成', status: 'pending' },
       { label: `結果${quizConcept.resultCount}タイプを生成`, status: 'pending' },
       { label: '結果画像を生成', status: 'pending' },
     ]);
@@ -223,7 +285,6 @@ export default function EntertainmentWizard() {
               ...quiz.entertainment_meta,
               resultImages: imgData.images,
             };
-            // 結果にimage_urlを設定
             quiz.results = quiz.results.map((r) => ({
               ...r,
               image_url: imgData.images[r.type] || undefined,
@@ -239,7 +300,7 @@ export default function EntertainmentWizard() {
       setPhase('complete');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'クイズ生成に失敗しました');
-      setPhase('chatting');
+      setPhase('step_theme');
     }
   };
 
@@ -276,7 +337,6 @@ export default function EntertainmentWizard() {
 
       if (dbError) throw dbError;
 
-      // ISRリバリデーション
       try {
         await fetch(`/api/revalidate?path=/entertainment/${slug}`);
       } catch {}
@@ -291,10 +351,11 @@ export default function EntertainmentWizard() {
 
   const handleEdit = () => {
     if (!generatedQuiz) return;
-    // クイズエディタに遷移（データをクエリパラメータ経由では渡せないので、localStorageに一時保存）
     localStorage.setItem('entertainment_draft', JSON.stringify(generatedQuiz));
     router.push('/quiz/editor?from=entertainment');
   };
+
+  const isChatPhase = phase === 'step_theme' || phase === 'step_types' || phase === 'step_style' || phase === 'step_confirm';
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 via-purple-50 to-white">
@@ -322,15 +383,14 @@ export default function EntertainmentWizard() {
           </div>
         )}
 
-        {phase === 'chatting' && (
+        {isChatPhase && (
           <WizardChat
             messages={messages}
             inputValue={inputValue}
             onInputChange={setInputValue}
-            onSend={sendMessage}
+            onSend={handleSend}
             onQuickReply={handleQuickReply}
             isLoading={isLoading}
-            disabled={!!concept}
           />
         )}
 
