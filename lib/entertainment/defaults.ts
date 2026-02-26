@@ -109,6 +109,7 @@ export function quizFromForm(form: EntertainmentForm): Quiz {
       id: `q-${i}`,
       text: q.text,
       options: q.options.map((o) => ({
+        label: o.label,
         text: o.label,
         score: o.score,
       })),

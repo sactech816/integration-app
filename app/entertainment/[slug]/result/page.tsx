@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { Metadata } from 'next';
-import { redirect } from 'next/navigation';
-import type { Quiz, QuizResult, EntertainmentMeta } from '@/lib/types';
+import type { QuizResult, EntertainmentMeta } from '@/lib/types';
+import { Sparkles, Star } from 'lucide-react';
 
 export const revalidate = 300;
 
@@ -100,64 +100,120 @@ export default async function EntertainmentResultPage({ params, searchParams }: 
   const result = type ? results.find((r) => r.type === type) : null;
   const meta = quiz.entertainment_meta as EntertainmentMeta | undefined;
   const resultImage = result ? (meta?.resultImages?.[result.type] || result.image_url) : null;
+  const ogStyle = (meta?.ogStyle as string) || 'vibrant';
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
   const quizUrl = `${siteUrl}/entertainment/${slug}`;
 
+  // スタイル別グラデーション
+  const gradients: Record<string, { bg: string; card: string }> = {
+    vibrant: { bg: 'from-red-400 via-pink-400 to-yellow-300', card: 'from-pink-500 to-orange-400' },
+    cute: { bg: 'from-pink-300 via-purple-300 to-pink-200', card: 'from-pink-400 to-purple-400' },
+    cool: { bg: 'from-indigo-900 via-purple-900 to-indigo-800', card: 'from-indigo-600 to-purple-600' },
+    pop: { bg: 'from-pink-400 via-purple-400 to-indigo-400', card: 'from-pink-500 to-purple-500' },
+  };
+  const g = gradients[ogStyle] || gradients.vibrant;
+  const isDark = ogStyle === 'cool';
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 via-purple-50 to-white">
-      <div className="max-w-md mx-auto px-4 py-8 space-y-6">
+    <div className={`min-h-screen bg-gradient-to-b ${g.bg}`}>
+      {/* 装飾 */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[10%] left-[5%] w-2 h-2 bg-white/40 rounded-full animate-pulse" />
+        <div className="absolute top-[15%] right-[10%] w-3 h-3 bg-white/30 rounded-full animate-pulse" />
+        <div className="absolute top-[25%] left-[15%] w-1.5 h-1.5 bg-white/50 rounded-full animate-pulse" />
+      </div>
+
+      <div className="relative max-w-md mx-auto px-4 py-8 space-y-6">
         {result ? (
           <>
-            {/* 結果カード */}
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden">
-              {resultImage && (
-                <div className="relative w-full aspect-square bg-gradient-to-br from-pink-100 to-purple-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={resultImage}
-                    alt={result.title}
-                    className="w-full h-full object-contain p-6"
-                  />
+            {/* ヘッダー */}
+            <div className="text-center">
+              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-white/20 backdrop-blur-sm rounded-full mb-3">
+                <Sparkles className={`w-4 h-4 ${isDark ? 'text-purple-300' : 'text-white'}`} />
+                <span className={`text-sm font-bold ${isDark ? 'text-purple-200' : 'text-white'}`}>
+                  {quiz.title}
+                </span>
+              </div>
+              <p className={`text-base font-semibold ${isDark ? 'text-purple-200' : 'text-white/90'}`}>
+                診断結果
+              </p>
+            </div>
+
+            {/* 結果カード: 画像メイン */}
+            <div className="relative">
+              <div className={`absolute inset-2 bg-gradient-to-br ${g.card} rounded-3xl blur-2xl opacity-40`} />
+              <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden">
+                {resultImage ? (
+                  <div className="relative w-full aspect-[4/5] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={resultImage}
+                      alt={result.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      </div>
+                      <h2 className="text-3xl font-extrabold leading-tight drop-shadow-lg">
+                        {result.title}
+                      </h2>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={`relative w-full aspect-[4/3] bg-gradient-to-br ${g.card} flex items-center justify-center`}>
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(255,255,255,0.15),transparent_50%)]" />
+                    <div className="text-center px-8 relative z-10">
+                      <div className="text-6xl mb-4">
+                        {ogStyle === 'cool' ? '🌌' : ogStyle === 'cute' ? '🌸' : '🎉'}
+                      </div>
+                      <h2 className="text-3xl font-extrabold text-white leading-tight drop-shadow-lg">
+                        {result.title}
+                      </h2>
+                    </div>
+                  </div>
+                )}
+                <div className="p-6">
+                  <p className="text-base text-gray-700 leading-relaxed">{result.description}</p>
                 </div>
-              )}
-              <div className="p-6 text-center">
-                <p className="text-xs font-semibold text-pink-500 uppercase tracking-wider mb-2">
-                  診断結果
-                </p>
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">{result.title}</h2>
-                <p className="text-sm text-gray-600 leading-relaxed">{result.description}</p>
               </div>
             </div>
 
             {/* CTA */}
             <a
               href={quizUrl}
-              className="block w-full text-center px-6 py-4 bg-gradient-to-r from-pink-500 to-purple-500
-                text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all min-h-[44px]"
+              className={`block w-full text-center px-6 py-4 bg-gradient-to-r ${g.card}
+                text-white font-bold text-lg rounded-2xl shadow-lg hover:shadow-xl transition-all min-h-[48px] active:scale-95`}
             >
               あなたも診断してみる
             </a>
           </>
         ) : (
           <div className="text-center py-12">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">{quiz.title}</h2>
-            <p className="text-gray-600 mb-6">この診断に挑戦してみよう！</p>
+            <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-white'}`}>
+              {quiz.title}
+            </h2>
+            <p className={`mb-6 ${isDark ? 'text-purple-200' : 'text-white/80'}`}>
+              この診断に挑戦してみよう！
+            </p>
             <a
               href={quizUrl}
-              className="inline-block px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500
-                text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all min-h-[44px]"
+              className={`inline-block px-8 py-4 bg-gradient-to-r ${g.card}
+                text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all min-h-[48px]`}
             >
               診断をはじめる
             </a>
           </div>
         )}
 
-        {/* フッター */}
         <div className="text-center py-4">
-          <p className="text-xs text-gray-400">
+          <p className={`text-xs ${isDark ? 'text-white/40' : 'text-white/50'}`}>
             Powered by{' '}
-            <a href="https://makers.tokyo" className="text-pink-500 hover:underline">
+            <a href="https://makers.tokyo" className="hover:underline">
               集客メーカー
             </a>
           </p>
