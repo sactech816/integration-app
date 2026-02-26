@@ -649,6 +649,10 @@ function PortalPageContent() {
                 <div className="text-2xl sm:text-3xl font-black">{totalCounts.gamification.toLocaleString()}</div>
                 <div className="text-xs sm:text-sm opacity-80">ゲーム</div>
               </div>
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{totalCounts.onboarding.toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">ガイド</div>
+              </div>
             </div>
           </div>
         </div>

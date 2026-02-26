@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 export default function StatsBar() {
   const [totalCounts, setTotalCounts] = useState<Record<string, number>>({
     all: 0, quiz: 0, profile: 0, business: 0, survey: 0,
-    booking: 0, attendance: 0, salesletter: 0, gamification: 0,
+    booking: 0, attendance: 0, salesletter: 0, gamification: 0, onboarding: 0,
   });
 
   const fetchTotalCounts = useCallback(async () => {
@@ -31,6 +31,7 @@ export default function StatsBar() {
           attendance: counts.attendance || 0,
           salesletter: counts.salesletter || 0,
           gamification: counts.game || 0,
+          onboarding: counts.onboarding || 0,
         });
       }
     } catch (error) { console.error('Count fetch error:', error); }
@@ -58,6 +59,7 @@ export default function StatsBar() {
             { label: '出欠', count: totalCounts.attendance },
             { label: 'セールス', count: totalCounts.salesletter },
             { label: 'ゲーム', count: totalCounts.gamification },
+            { label: 'ガイド', count: totalCounts.onboarding },
           ].map((item, i) => (
             <div key={i} className="text-center">
               <div className="text-lg sm:text-xl font-bold">{item.count.toLocaleString()}</div>
