@@ -6,7 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   BookOpen, Plus, Loader2, Edit3, Trash2, Calendar, FileText,
   Crown, Sparkles, Zap, ArrowRight, X, Users, ChevronDown, ChevronUp, BarChart3, User,
-  Copy, AlertCircle, Tag, FolderTree, MessageSquare, Globe, ExternalLink, Rocket, Eye
+  Copy, AlertCircle, Tag, FolderTree, MessageSquare, Globe, ExternalLink, Rocket, Eye,
+  Image as ImageIcon
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import AIUsageDisplay from '@/components/kindle/AIUsageDisplay';
@@ -21,6 +22,7 @@ import { AdminUserList, GuideBookManager, AnnouncementManager, KdlServiceManagem
 import { EducationContent } from '@/components/kindle/education';
 import { AnnouncementList } from '@/components/kindle/announcements';
 import AffiliateManager from '@/app/dashboard/components/Admin/AffiliateManager';
+import KindleCoverGenerator from '@/components/kindle/cover/KindleCoverGenerator';
 import AdminAIUsageStats from '@/components/shared/AdminAIUsageStats';
 import AdminFeatureLimitsSettings from '@/components/shared/AdminFeatureLimitsSettings';
 import SettingsHealthBadge from '@/components/shared/SettingsHealthBadge';
@@ -168,6 +170,10 @@ function KindleListPageContent() {
   // 書籍LP一覧用の状態
   const [bookLPs, setBookLPs] = useState<Record<string, any>>({});
   const [loadingBookLPs, setLoadingBookLPs] = useState(false);
+
+  // 表紙作成モーダル関連の状態
+  const [coverModalBookId, setCoverModalBookId] = useState<string | null>(null);
+  const [coverModalBook, setCoverModalBook] = useState<{ title: string; subtitle: string | null } | null>(null);
 
   // KDL使用量制限
   const [usageLimits, setUsageLimits] = useState<KdlUsageLimits | null>(null);
@@ -365,7 +371,7 @@ function KindleListPageContent() {
 
   // 書籍LP一覧: メニュー選択時にLP情報を一括取得
   useEffect(() => {
-    if (activeMenuItem !== 'book-lps') return;
+    if (activeMenuItem !== 'book-lps' && activeMenuItem !== 'book-covers') return;
     if (books.length === 0) return;
 
     const fetchBookLPs = async () => {
@@ -392,6 +398,12 @@ function KindleListPageContent() {
 
     fetchBookLPs();
   }, [activeMenuItem, books]);
+
+  // 表紙作成モーダルを開く
+  const handleOpenCoverModal = useCallback((book: Book) => {
+    setCoverModalBookId(book.id);
+    setCoverModalBook({ title: book.title, subtitle: book.subtitle });
+  }, []);
 
   const handleDelete = async (bookId: string) => {
     if (!confirm('この書籍を削除しますか？')) return;
@@ -476,6 +488,9 @@ function KindleListPageContent() {
         break;
       case 'book-lps':
         // 書籍LP一覧画面を表示（setActiveMenuItemで切り替え済み）
+        break;
+      case 'book-covers':
+        // 表紙作成一覧画面を表示（setActiveMenuItemで切り替え済み）
         break;
       case 'my-books':
         // 現在のページで書籍一覧にスクロール
@@ -658,6 +673,13 @@ function KindleListPageContent() {
               title="KDP情報"
             >
               <Sparkles size={20} />
+            </button>
+            <button
+              onClick={() => handleOpenCoverModal(book)}
+              className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+              title="表紙作成"
+            >
+              <ImageIcon size={20} />
             </button>
             <button
               onClick={() => handleDelete(book.id)}
@@ -1139,6 +1161,105 @@ function KindleListPageContent() {
             </div>
           )}
         </div>
+      ) : activeMenuItem === 'book-covers' ? (
+        /* 表紙作成一覧画面 */
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 mb-2">
+            <button
+              onClick={() => setActiveMenuItem('dashboard')}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ← ダッシュボードに戻る
+            </button>
+          </div>
+          <div className="flex items-center gap-3">
+            <ImageIcon size={28} className="text-orange-500" />
+            <h2 className="text-2xl font-bold text-gray-900">表紙作成</h2>
+          </div>
+          <p className="text-gray-500 text-sm">
+            各書籍のAI表紙画像を作成・管理できます。表紙作成ボタンからGemini AIが高品質な表紙を自動生成します。
+          </p>
+
+          {loadingBookLPs ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="animate-spin text-amber-500 mr-2" size={24} />
+              <span className="text-gray-600">表紙情報を取得中...</span>
+            </div>
+          ) : books.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+              <BookOpen size={48} className="mx-auto text-gray-300 mb-4" />
+              <p className="text-gray-500">書籍がまだありません。新規作成してから表紙を生成しましょう。</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {books.map((book) => {
+                const lp = bookLPs[book.id];
+                const coverUrl = lp?.cover_image_url;
+                const hasCover = !!coverUrl;
+
+                return (
+                  <div
+                    key={book.id}
+                    className={`bg-white rounded-xl border ${hasCover ? 'border-orange-200' : 'border-gray-200'} p-5 hover:shadow-md transition-shadow`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-4 flex-1 min-w-0">
+                        {hasCover ? (
+                          <div className="w-16 h-24 rounded-lg overflow-hidden border border-gray-200 shadow-sm flex-shrink-0">
+                            <img
+                              src={coverUrl}
+                              alt={`${book.title}の表紙`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-16 h-24 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center flex-shrink-0 bg-gray-50">
+                            <ImageIcon size={20} className="text-gray-300" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-gray-900 truncate">{book.title || '無題の書籍'}</h3>
+                          {book.subtitle && (
+                            <p className="text-sm text-gray-500 truncate mb-2">{book.subtitle}</p>
+                          )}
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                            hasCover
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {hasCover ? '表紙あり' : '表紙未作成'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {hasCover && (
+                          <a
+                            href={coverUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition"
+                            title="表紙画像を表示"
+                          >
+                            <Eye size={15} />
+                            <span className="hidden sm:inline">プレビュー</span>
+                          </a>
+                        )}
+                        <button
+                          onClick={() => handleOpenCoverModal(book)}
+                          className="flex items-center gap-1.5 px-3 py-2 text-sm bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg transition font-medium"
+                        >
+                          <Sparkles size={15} />
+                          <span className="hidden sm:inline">{hasCover ? '再生成' : '表紙作成'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       ) : (
         <>
       {/* 未加入者向けサブスク促進バナー - 一旦非表示 */}
@@ -1406,6 +1527,29 @@ function KindleListPageContent() {
         )}
       </div>
         </>
+      )}
+
+      {/* 表紙作成モーダル */}
+      {coverModalBookId && coverModalBook && user && (
+        <KindleCoverGenerator
+          bookId={coverModalBookId}
+          bookTitle={coverModalBook.title}
+          bookSubtitle={coverModalBook.subtitle}
+          userId={user.id}
+          onClose={() => {
+            setCoverModalBookId(null);
+            setCoverModalBook(null);
+          }}
+          onCoverGenerated={(imageUrl) => {
+            // bookLPsキャッシュを更新して表紙一覧に即反映
+            setBookLPs(prev => ({
+              ...prev,
+              [coverModalBookId]: { ...prev[coverModalBookId], cover_image_url: imageUrl },
+            }));
+            setCoverModalBookId(null);
+            setCoverModalBook(null);
+          }}
+        />
       )}
 
       {/* KDP情報モーダル */}
