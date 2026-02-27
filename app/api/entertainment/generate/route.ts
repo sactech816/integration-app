@@ -164,7 +164,24 @@ mode: "diagnosis"（タイプ診断）または "fortune"（占い系）
   } catch {
     const jsonMatch = aiResponse.content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      parsed = JSON.parse(jsonMatch[0]);
+      let jsonStr = jsonMatch[0];
+      try {
+        parsed = JSON.parse(jsonStr);
+      } catch {
+        jsonStr = jsonStr.replace(/,\s*([}\]])/g, '$1');
+        jsonStr = jsonStr.replace(/'/g, '"');
+        jsonStr = jsonStr.replace(/(?<!\\)\n/g, '\\n');
+        try {
+          parsed = JSON.parse(jsonStr);
+        } catch {
+          parsed = {
+            reply: 'すみません、もう一度お試しください。',
+            options: [],
+            conceptReady: false,
+            extractedConcept: null,
+          };
+        }
+      }
     } else {
       parsed = {
         reply: 'すみません、もう一度お試しください。',
@@ -263,7 +280,13 @@ ${resultExamples}
   例: どうぶつ占いなら "A sleepy cute calico cat curled up on a cushion"
   例: 脳内メーカーなら "Brain cross-section filled with hearts, music notes, and sparkles"
   例: 腸内メーカーなら "Colorful gut interior filled with dancing fire and lightning"
-- shareTemplateはSNS投稿用テンプレート。{{result_title}}と{{quiz_title}}が置換される`;
+- shareTemplateはSNS投稿用テンプレート。{{result_title}}と{{quiz_title}}が置換される
+
+重要な技術的制約:
+- 必ず有効なJSON形式で出力してください
+- 文字列値の中にダブルクォート(")を含めないでください。代わりに「」を使ってください
+- 改行は\\nでエスケープしてください
+- 末尾カンマは入れないでください`;
 
   const aiResponse = await aiProvider.generate({
     messages: [
@@ -278,11 +301,33 @@ ${resultExamples}
   try {
     quiz = JSON.parse(aiResponse.content);
   } catch {
+    // JSON抽出を試行
     const jsonMatch = aiResponse.content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      quiz = JSON.parse(jsonMatch[0]);
+      let jsonStr = jsonMatch[0];
+      try {
+        quiz = JSON.parse(jsonStr);
+      } catch {
+        // よくあるJSON不正を修復
+        // 1. 末尾カンマ除去
+        jsonStr = jsonStr.replace(/,\s*([}\]])/g, '$1');
+        // 2. シングルクォートをダブルクォートに
+        jsonStr = jsonStr.replace(/'/g, '"');
+        // 3. 改行文字がエスケープされていない場合の処理
+        jsonStr = jsonStr.replace(/(?<!\\)\n/g, '\\n');
+        // 4. 制御文字の除去
+        jsonStr = jsonStr.replace(/[\x00-\x1f\x7f]/g, (ch) =>
+          ch === '\n' || ch === '\r' || ch === '\t' ? ch : ''
+        );
+        try {
+          quiz = JSON.parse(jsonStr);
+        } catch (e2) {
+          console.error('JSON repair failed:', e2, 'Raw content:', aiResponse.content.substring(0, 500));
+          throw new Error('JSONの解析に失敗しました。もう一度お試しください。');
+        }
+      }
     } else {
-      throw new Error('JSONの解析に失敗しました');
+      throw new Error('AIからの応答にJSONが含まれていませんでした。もう一度お試しください。');
     }
   }
 
