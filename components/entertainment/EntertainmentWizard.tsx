@@ -83,6 +83,7 @@ export default function EntertainmentWizard({ form, setForm, onComplete, onSwitc
       );
 
       // 画像生成を試行
+      let imageGenSuccess = false;
       try {
         const imgRes = await fetch('/api/entertainment/generate-images', {
           method: 'POST',
@@ -93,9 +94,10 @@ export default function EntertainmentWizard({ form, setForm, onComplete, onSwitc
             theme: theme,
           }),
         });
+        const imgData = await imgRes.json();
         if (imgRes.ok) {
-          const imgData = await imgRes.json();
-          if (imgData.images) {
+          if (imgData.images && Object.keys(imgData.images).length > 0) {
+            imageGenSuccess = true;
             setForm((prev: EntertainmentForm) => ({
               ...prev,
               results: prev.results.map((r) => ({
@@ -108,9 +110,24 @@ export default function EntertainmentWizard({ form, setForm, onComplete, onSwitc
               },
             }));
           }
+          if (imgData.errors?.length) {
+            console.warn('画像生成エラー詳細:', imgData.errors);
+          }
+        } else {
+          console.warn('画像生成API失敗:', imgData);
         }
-      } catch {
-        // 画像生成失敗は無視
+      } catch (imgErr) {
+        console.warn('画像生成エラー:', imgErr);
+      }
+
+      if (!imageGenSuccess) {
+        setProgressSteps((prev) =>
+          prev.map((s, i) =>
+            i === 3
+              ? { ...s, status: 'completed', label: '画像生成（スキップ — エディタで生成可能）' }
+              : { ...s, status: 'completed' }
+          )
+        );
       }
 
       setProgressSteps((prev) => prev.map((s) => ({ ...s, status: 'completed' })));

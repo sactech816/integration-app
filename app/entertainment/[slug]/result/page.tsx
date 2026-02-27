@@ -155,31 +155,38 @@ export default async function EntertainmentResultPage({ params, searchParams }: 
                 <div className={`absolute inset-3 bg-gradient-to-br ${g.card} rounded-3xl blur-3xl opacity-50`} />
                 <div className={`relative rounded-3xl shadow-2xl overflow-hidden bg-gradient-to-br ${g.card} aspect-square flex items-center justify-center`}>
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(255,255,255,0.15),transparent_50%)]" />
-                  <div className="text-8xl">
-                    {ogStyle === 'cool' ? '🌌' : ogStyle === 'cute' ? '🌸' : '🎉'}
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.1),transparent_40%)]" />
+                  <div className="text-center px-8 relative z-10 space-y-4">
+                    <div className="flex items-center justify-center gap-2">
+                      <Star className="w-6 h-6 text-yellow-300 fill-yellow-300 drop-shadow" />
+                      <Star className="w-8 h-8 text-yellow-300 fill-yellow-300 drop-shadow" />
+                      <Star className="w-6 h-6 text-yellow-300 fill-yellow-300 drop-shadow" />
+                    </div>
+                    <p className="text-sm font-bold text-white/70 tracking-widest uppercase">
+                      わたしのタイプは
+                    </p>
+                    <h2 className="text-4xl font-black text-white drop-shadow-lg leading-tight">
+                      {result.title}
+                    </h2>
+                    <div className="w-16 h-1 bg-white/40 rounded-full mx-auto" />
                   </div>
                 </div>
               </div>
             )}
 
-            {/* タイトル */}
+            {/* タイトル + 説明（画像がメイン、テキストはサブ） */}
             <div className="text-center space-y-1">
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <Star className="w-5 h-5 text-yellow-300 fill-yellow-300 drop-shadow" />
-                <Star className="w-6 h-6 text-yellow-300 fill-yellow-300 drop-shadow" />
-                <Star className="w-5 h-5 text-yellow-300 fill-yellow-300 drop-shadow" />
-              </div>
               <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-purple-300' : 'text-white/70'}`}>
                 わたしのタイプは
               </p>
-              <h2 className="text-3xl font-extrabold text-white drop-shadow-lg leading-tight">
+              <h2 className="text-2xl font-extrabold text-white drop-shadow-lg leading-tight">
                 {result.title}
               </h2>
             </div>
 
-            {/* 説明 */}
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-lg">
-              <p className="text-sm text-gray-700 leading-relaxed">{result.description}</p>
+            {/* 説明（コンパクト） */}
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-md">
+              <p className="text-xs text-gray-600 leading-relaxed">{result.description}</p>
             </div>
 
             {/* CTA: あなたも診断 */}

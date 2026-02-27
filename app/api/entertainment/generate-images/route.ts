@@ -158,6 +158,7 @@ Square format, colorful gradient background, high quality digital art.`;
     }
 
     const images: Record<string, string> = {};
+    const errors: string[] = [];
 
     // 各結果に対して画像生成（最大6枚に制限）
     const limitedResults = results.slice(0, 6);
@@ -198,9 +199,15 @@ Square format, colorful gradient background, high quality digital art.`;
               .from('entertainment-images')
               .getPublicUrl(filePath);
             images[result.type] = urlData.publicUrl;
+          } else {
+            errors.push(`${result.type}: ストレージアップロード失敗 - ${uploadError.message}`);
           }
+        } else {
+          errors.push(`${result.type}: Geminiが画像を返しませんでした`);
         }
       } catch (imgErr) {
+        const errMsg = imgErr instanceof Error ? imgErr.message : '不明なエラー';
+        errors.push(`${result.type}: ${errMsg}`);
         console.warn(`画像生成スキップ (${result.type}):`, imgErr);
       }
     }
@@ -214,10 +221,15 @@ Square format, colorful gradient background, high quality digital art.`;
       modelUsed: 'gemini-3-pro-image-preview',
       inputTokens: 0,
       outputTokens: 0,
-      metadata: { imageCount: Object.keys(images).length, style, theme },
+      metadata: { imageCount: Object.keys(images).length, style, theme, errors: errors.length > 0 ? errors : undefined },
     });
 
-    return NextResponse.json({ images });
+    return NextResponse.json({
+      images,
+      generatedCount: Object.keys(images).length,
+      totalCount: limitedResults.length,
+      errors: errors.length > 0 ? errors : undefined,
+    });
   } catch (error: unknown) {
     console.error('Entertainment image generation error:', error);
     const message = error instanceof Error ? error.message : '不明なエラー';

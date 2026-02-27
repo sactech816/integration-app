@@ -240,9 +240,9 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
           theme: form.title,
         }),
       });
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
-        if (data.images) {
+        if (data.images && Object.keys(data.images).length > 0) {
           const updatedResults = form.results.map((r) => ({
             ...r,
             image_url: data.images[r.type] || r.image_url,
@@ -254,9 +254,17 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
               resultImages: data.images,
             },
           });
+          if (data.errors?.length) {
+            setError(`一部の画像生成に失敗: ${data.errors.join(', ')}`);
+          }
+        } else {
+          setError(`画像生成に失敗しました${data.errors?.length ? ': ' + data.errors[0] : '。もう一度お試しください。'}`);
         }
+      } else {
+        setError(`画像生成エラー: ${data.error || 'もう一度お試しください'}`);
       }
     } catch (err) {
+      setError('画像生成に失敗しました。ネットワークを確認してください。');
       console.warn('画像生成エラー:', err);
     } finally {
       setIsGeneratingImages(false);
