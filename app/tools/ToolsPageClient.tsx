@@ -17,6 +17,10 @@ import {
   ArrowRight,
   TrendingUp,
   PenTool,
+  Crown,
+  Image,
+  Store,
+  Lightbulb,
 } from 'lucide-react';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
@@ -94,6 +98,39 @@ const tools = [
     bgColor: 'bg-rose-50',
     textColor: 'text-rose-600',
     features: ['AI自動生成', '売れる文章', 'テンプレート', '無料'],
+  },
+  {
+    name: 'はじめかたメーカー',
+    description: 'サイトに埋め込めるはじめかたガイドを簡単作成。外部サイトへの埋め込みにも対応します。',
+    icon: Lightbulb,
+    href: '/onboarding',
+    color: 'from-orange-500 to-amber-600',
+    bgColor: 'bg-orange-50',
+    textColor: 'text-orange-600',
+    features: ['埋め込み対応', 'トリガー設定', 'JSスニペット', 'PRO'],
+    isPro: true,
+  },
+  {
+    name: 'サムネイルメーカー',
+    description: 'YouTube・ブログ・Kindle用のサムネイル画像をAIで自動生成。プロ品質のビジュアルを簡単に作成できます。',
+    icon: Image,
+    href: '/thumbnail',
+    color: 'from-slate-500 to-gray-700',
+    bgColor: 'bg-slate-50',
+    textColor: 'text-slate-600',
+    features: ['AI自動生成', 'YouTube対応', 'Kindle表紙', 'PRO'],
+    isPro: true,
+  },
+  {
+    name: 'スキルマーケット',
+    description: 'LP作成・診断クイズ・デザインなど集客のプロに依頼できるマーケット。ビジネスを加速させましょう。',
+    icon: Store,
+    href: '/marketplace',
+    color: 'from-violet-500 to-purple-600',
+    bgColor: 'bg-violet-50',
+    textColor: 'text-violet-600',
+    features: ['プロに依頼', 'LP制作', 'デザイン', 'PRO'],
+    isPro: true,
   },
 ];
 
@@ -239,6 +276,27 @@ export default function ToolsPageClient() {
         description: 'セールスレター・LP文章をAIで自動生成',
         url: `${siteUrl}/salesletter`,
       },
+      {
+        '@type': 'ListItem',
+        position: 8,
+        name: 'はじめかたメーカー',
+        description: 'サイトに埋め込めるはじめかたガイドを簡単作成',
+        url: `${siteUrl}/onboarding`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 9,
+        name: 'サムネイルメーカー',
+        description: 'YouTube・ブログ・Kindle用サムネイルをAIで自動生成',
+        url: `${siteUrl}/thumbnail`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 10,
+        name: 'スキルマーケット',
+        description: 'LP制作・診断クイズ・デザインなど集客のプロに依頼',
+        url: `${siteUrl}/marketplace`,
+      },
     ],
   };
 
@@ -305,8 +363,15 @@ export default function ToolsPageClient() {
                 <Link
                   key={index}
                   href={tool.href}
-                  className="group bg-white rounded-2xl border-2 border-gray-100 p-8 hover:border-transparent hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
+                  className="group relative bg-white rounded-2xl border-2 border-gray-100 p-8 hover:border-transparent hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
                 >
+                  {/* PROバッジ */}
+                  {tool.isPro && (
+                    <div className="absolute top-4 right-4 flex items-center gap-0.5 bg-purple-100 text-purple-700 px-2.5 py-1 rounded-full text-xs font-bold">
+                      <Crown size={11} className="mr-0.5" />PRO
+                    </div>
+                  )}
+
                   {/* アイコン */}
                   <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${tool.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg`}>
                     <Icon size={32} className="text-white" />

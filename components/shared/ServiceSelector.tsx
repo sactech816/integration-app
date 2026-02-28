@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb } from 'lucide-react';
+import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb, Crown, Image, Store } from 'lucide-react';
 import { ServiceType, SERVICE_LABELS } from '@/lib/types';
 import Link from 'next/link';
 
@@ -110,6 +110,20 @@ const serviceConfig = [
     borderColor: 'border-orange-200',
     hoverBg: 'hover:bg-orange-50',
     features: ['埋め込み対応', 'トリガー設定', 'JSスニペット'],
+    isPro: true,
+  },
+  {
+    id: 'thumbnail' as ServiceType,
+    icon: Image,
+    label: 'サムネイルメーカー',
+    description: 'YouTube・ブログ・Kindle用のサムネイル画像をAIで自動生成。プロ品質のビジュアルを簡単作成',
+    gradient: 'from-slate-500 to-gray-700',
+    bgLight: 'bg-slate-50',
+    textColor: 'text-slate-600',
+    borderColor: 'border-slate-200',
+    hoverBg: 'hover:bg-slate-50',
+    features: ['AI自動生成', 'YouTube対応', 'Kindle表紙'],
+    isPro: true,
   },
 ];
 
@@ -132,15 +146,22 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
               onClick={() => onSelect(service.id)}
               className={`
                 group relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300
-                ${selectedService === service.id 
-                  ? `${service.bgLight} ring-2 ring-offset-2 ${service.borderColor.replace('border', 'ring')}` 
+                ${selectedService === service.id
+                  ? `${service.bgLight} ring-2 ring-offset-2 ${service.borderColor.replace('border', 'ring')}`
                   : 'bg-white hover:shadow-xl border border-gray-100'
                 }
               `}
             >
+              {/* PROバッジ */}
+              {service.isPro && (
+                <div className="absolute top-3 right-3 flex items-center gap-0.5 bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-bold">
+                  <Crown size={10} />PRO
+                </div>
+              )}
+
               {/* 背景グラデーション（ホバー時） */}
               <div className={`
-                absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-0 
+                absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-0
                 group-hover:opacity-5 transition-opacity duration-300
               `} />
 
@@ -213,6 +234,34 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
             </div>
           </div>
         )}
+
+        {/* スキルマーケットへのリンク */}
+        <div className="mt-4 p-6 bg-gradient-to-r from-violet-50 via-purple-50 to-indigo-50 rounded-2xl border border-violet-100">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                <Store className="text-white" size={28} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-lg font-bold text-gray-900">スキルマーケット</h3>
+                  <span className="flex items-center gap-0.5 bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-bold">
+                    <Crown size={10} />PRO
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600">LP制作・診断クイズ・デザインなど、集客のプロに直接依頼できる</p>
+              </div>
+            </div>
+            <Link
+              href="/marketplace"
+              className="flex items-center gap-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:from-violet-600 hover:to-purple-700 transition-all whitespace-nowrap"
+            >
+              <Store size={20} />
+              詳しく見る
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
