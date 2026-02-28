@@ -12,22 +12,11 @@ interface FooterProps {
   setShowAuth?: (show: boolean) => void;
 }
 
-const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
-  // setPageが渡されない場合は直接リンクを使用
-  const handleCreate = (service: ServiceType) => {
-    if (onCreate) {
-      onCreate(service);
-    } else if (setPage) {
-      setPage(`${service}/editor`);
-    } else {
-      window.location.href = `/${service}/editor`;
-    }
-  };
-
+const Footer: React.FC<FooterProps> = () => {
   const services = [
-    { id: 'quiz' as ServiceType, label: '診断クイズメーカー', icon: Sparkles },
-    { id: 'profile' as ServiceType, label: 'プロフィールメーカー', icon: UserCircle },
-    { id: 'business' as ServiceType, label: 'LPメーカー', icon: Building2 },
+    { id: 'quiz' as ServiceType, label: '診断クイズメーカー', icon: Sparkles, href: '/quiz' },
+    { id: 'profile' as ServiceType, label: 'プロフィールメーカー', icon: UserCircle, href: '/profile' },
+    { id: 'business' as ServiceType, label: 'LPメーカー', icon: Building2, href: '/business' },
   ];
 
   return (
@@ -55,35 +44,35 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
             <ul className="space-y-3 text-sm">
               {services.map((service) => (
                 <li key={service.id}>
-                  <button
-                    onClick={() => handleCreate(service.id)}
+                  <Link
+                    href={service.href}
                     className="flex items-center gap-2 hover:text-white transition-colors group"
                   >
                     <service.icon size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                    <span>{service.label}を作成</span>
-                  </button>
+                    <span>{service.label}</span>
+                  </Link>
                 </li>
               ))}
               <li>
-                <Link href="/booking/new" className="flex items-center gap-2 hover:text-white transition-colors group">
+                <Link href="/booking" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Calendar size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   予約メーカー
                 </Link>
               </li>
               <li>
-                <Link href="/attendance/new" className="flex items-center gap-2 hover:text-white transition-colors group">
+                <Link href="/attendance" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <CalendarCheck size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   出欠メーカー
                 </Link>
               </li>
               <li>
-                <Link href="/survey/new" className="flex items-center gap-2 hover:text-white transition-colors group">
+                <Link href="/survey" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <ClipboardList size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   アンケートメーカー
                 </Link>
               </li>
               <li>
-                <Link href="/salesletter/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
+                <Link href="/salesletter" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <PenTool size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   セールスライター
                 </Link>
@@ -99,19 +88,19 @@ const Footer: React.FC<FooterProps> = ({ setPage, onCreate }) => {
             </h3>
             <ul className="space-y-3 text-sm">
               <li>
-                <Link href="/onboarding/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
+                <Link href="/onboarding" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <MousePointerClick size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   はじめかたメーカー
                 </Link>
               </li>
               <li>
-                <Link href="/gamification/new" className="flex items-center gap-2 hover:text-white transition-colors group">
+                <Link href="/gamification" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Gamepad2 size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   ゲーミフィケーション
                 </Link>
               </li>
               <li>
-                <Link href="/thumbnail/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
+                <Link href="/thumbnail" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Image size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   サムネイルメーカー
                 </Link>
