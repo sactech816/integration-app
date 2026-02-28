@@ -11,6 +11,7 @@ interface ServiceSelectorProps {
   variant?: 'cards' | 'tabs' | 'buttons';
   showDescription?: boolean;
   showGamification?: boolean;
+  ctaLabel?: string;
 }
 
 const serviceConfig = [
@@ -118,6 +119,7 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
   variant = 'cards',
   showDescription = true,
   showGamification = true,
+  ctaLabel = '作成する',
 }) => {
   // カード形式
   if (variant === 'cards') {
@@ -180,7 +182,7 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
                 flex items-center gap-1 ${service.textColor} font-semibold text-sm
                 group-hover:gap-2 transition-all duration-300
               `}>
-                <span>作成する</span>
+                <span>{ctaLabel}</span>
                 <ArrowRight size={16} />
               </div>
             </button>
@@ -201,11 +203,11 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
                 </div>
               </div>
               <Link
-                href="/gamification/new"
+                href="/gamification"
                 className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-xl font-bold hover:from-purple-600 hover:to-pink-600 transition-all"
               >
                 <Gamepad2 size={20} />
-                ゲームを作成
+                詳しく見る
                 <ArrowRight size={16} />
               </Link>
             </div>

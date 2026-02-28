@@ -86,9 +86,9 @@ const serviceListSchema = {
   '@context': 'https://schema.org', '@type': 'ItemList',
   name: '集客メーカーのサービス一覧', description: '集客メーカーで作成できるコンテンツタイプ',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: '診断クイズメーカー', description: '性格診断、適職診断、心理テスト、検定クイズ、占いなどをAIで自動生成', url: `${siteUrl}/quiz/editor` },
-    { '@type': 'ListItem', position: 2, name: 'プロフィールメーカー', description: 'SNSプロフィールに最適なリンクまとめページを作成。lit.link代替ツール', url: `${siteUrl}/profile/editor` },
-    { '@type': 'ListItem', position: 3, name: 'ビジネスLPメーカー', description: '商品・サービスのランディングページを無料で作成。CV最適化テンプレート搭載', url: `${siteUrl}/business/editor` },
+    { '@type': 'ListItem', position: 1, name: '診断クイズメーカー', description: '性格診断、適職診断、心理テスト、検定クイズ、占いなどをAIで自動生成', url: `${siteUrl}/quiz` },
+    { '@type': 'ListItem', position: 2, name: 'プロフィールメーカー', description: 'SNSプロフィールに最適なリンクまとめページを作成。lit.link代替ツール', url: `${siteUrl}/profile` },
+    { '@type': 'ListItem', position: 3, name: 'ビジネスLPメーカー', description: '商品・サービスのランディングページを無料で作成。CV最適化テンプレート搭載', url: `${siteUrl}/business` },
   ],
 };
 
