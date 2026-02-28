@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Send, Save, Eye, ArrowLeft, Loader2 } from 'lucide-react';
+import { Send, Save, ArrowLeft, Loader2, Monitor, Pencil } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface CampaignEditorProps {
@@ -27,8 +27,8 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showPreview, setShowPreview] = useState(false);
   const [sentCount, setSentCount] = useState(0);
+  const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
 
   useEffect(() => {
     const init = async () => {
@@ -74,9 +74,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   const handleSave = async () => {
     if (!userId || !subject || !listId) return;
     setSaving(true);
-
     const body = { userId, listId, subject, previewText, htmlContent };
-
     if (campaignId) {
       await fetch(`/api/newsletter-maker/campaigns/${campaignId}`, {
         method: 'PATCH',
@@ -100,14 +98,12 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   const handleSend = async () => {
     if (!userId || !campaignId) return;
     if (!confirm('このキャンペーンを全読者に送信しますか？送信後は編集できません。')) return;
-
     setSending(true);
     const res = await fetch(`/api/newsletter-maker/campaigns/${campaignId}/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId }),
     });
-
     if (res.ok) {
       const data = await res.json();
       setStatus('sent');
@@ -120,7 +116,6 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
     setSending(false);
   };
 
-  // テキストからシンプルなHTMLを生成
   const textToHtml = (text: string) => {
     return text
       .split('\n\n')
@@ -130,7 +125,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
       </div>
     );
@@ -139,113 +134,37 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   const isSent = status === 'sent';
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => router.push('/newsletter/dashboard')} className="p-2 text-gray-500 hover:text-gray-700 min-h-[44px] min-w-[44px] flex items-center justify-center">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900">
-          {isSent ? 'キャンペーン詳細' : campaignId ? 'キャンペーン編集' : '新しいキャンペーン'}
-        </h1>
-        {isSent && (
-          <span className="inline-flex items-center px-3 py-1 text-sm font-semibold bg-green-100 text-green-700 rounded-full">
-            送信済み（{sentCount}通）
-          </span>
-        )}
-      </div>
-
-      <div className="space-y-6">
-        {/* リスト選択 */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">配信先リスト</label>
-          <select
-            value={listId}
-            onChange={(e) => setListId(e.target.value)}
-            disabled={isSent}
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all disabled:bg-gray-100"
-          >
-            {lists.map((l) => (
-              <option key={l.id} value={l.id}>{l.name}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* 件名 */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">件名</label>
-          <input
-            type="text"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            disabled={isSent}
-            placeholder="メールの件名を入力"
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all disabled:bg-gray-100"
-          />
-        </div>
-
-        {/* プレビューテキスト */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">プレビューテキスト（任意）</label>
-          <input
-            type="text"
-            value={previewText}
-            onChange={(e) => setPreviewText(e.target.value)}
-            disabled={isSent}
-            placeholder="受信トレイに表示される短い説明文"
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all disabled:bg-gray-100"
-          />
-        </div>
-
-        {/* 本文エディタ */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-semibold text-gray-700">メール本文</label>
-            <button
-              onClick={() => setShowPreview(!showPreview)}
-              className="inline-flex items-center gap-1 text-sm text-violet-600 hover:text-violet-800 font-semibold transition-colors"
-            >
-              <Eye className="w-4 h-4" />
-              {showPreview ? 'エディタに戻る' : 'プレビュー'}
-            </button>
-          </div>
-
-          {showPreview ? (
-            <div className="border border-gray-300 rounded-xl p-6 bg-white min-h-[300px]">
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: htmlContent.startsWith('<') ? htmlContent : textToHtml(htmlContent),
-                }}
-              />
-            </div>
-          ) : (
-            <textarea
-              value={htmlContent}
-              onChange={(e) => setHtmlContent(e.target.value)}
-              disabled={isSent}
-              placeholder="メール本文を入力してください。&#10;&#10;改行はそのまま反映されます。&#10;HTMLタグも使用できます。"
-              rows={15}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all font-mono text-sm disabled:bg-gray-100"
-            />
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* ヘッダー */}
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+        <div className="flex items-center gap-3">
+          <button onClick={() => router.push('/newsletter/dashboard')} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-lg font-bold text-gray-900 truncate">
+            {isSent ? 'キャンペーン詳細' : campaignId ? 'キャンペーン編集' : '新しいキャンペーン'}
+          </h1>
+          {isSent && (
+            <span className="inline-flex items-center px-3 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded-full">
+              送信済み（{sentCount}通）
+            </span>
           )}
-          <p className="text-xs text-gray-500 mt-1">テキストで入力するとシンプルなHTML形式に変換されます。HTMLタグを直接入力することも可能です。</p>
         </div>
-
-        {/* アクションボタン */}
         {!isSent && (
-          <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
+          <div className="flex items-center gap-2">
             <button
               onClick={handleSave}
               disabled={saving || !subject}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 text-white font-semibold rounded-xl hover:bg-gray-900 disabled:opacity-50 transition-all shadow-md min-h-[44px]"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white text-sm font-semibold rounded-lg hover:bg-gray-900 disabled:opacity-50 transition-all shadow-md min-h-[44px]"
             >
               <Save className="w-4 h-4" />
-              {saving ? '保存中...' : '下書き保存'}
+              {saving ? '保存中...' : '保存'}
             </button>
             {campaignId && (
               <button
                 onClick={handleSend}
                 disabled={sending || !subject || !htmlContent}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-violet-600 text-white font-semibold rounded-xl hover:bg-violet-700 disabled:opacity-50 transition-all shadow-md min-h-[44px]"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-all shadow-md min-h-[44px]"
               >
                 <Send className="w-4 h-4" />
                 {sending ? '送信中...' : '一斉送信'}
@@ -253,6 +172,135 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
             )}
           </div>
         )}
+      </div>
+
+      {/* モバイルタブ */}
+      <div className="lg:hidden flex border-b border-gray-200 bg-white sticky top-[57px] z-30">
+        <button
+          onClick={() => setMobileTab('editor')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors ${
+            mobileTab === 'editor'
+              ? 'text-violet-600 border-b-2 border-violet-600 bg-violet-50'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Pencil className="w-4 h-4" />編集
+        </button>
+        <button
+          onClick={() => setMobileTab('preview')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors ${
+            mobileTab === 'preview'
+              ? 'text-violet-600 border-b-2 border-violet-600 bg-violet-50'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Monitor className="w-4 h-4" />プレビュー
+        </button>
+      </div>
+
+      {/* 左右パネル */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* 左パネル: 編集 */}
+        <div className={`w-full lg:w-1/2 overflow-y-auto p-4 md:p-6 bg-gray-50 ${mobileTab === 'preview' ? 'hidden lg:block' : ''}`}>
+          <div className="space-y-5">
+            {/* リスト選択 */}
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">配信先リスト</label>
+              <select
+                value={listId}
+                onChange={(e) => setListId(e.target.value)}
+                disabled={isSent}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all disabled:bg-gray-100"
+              >
+                {lists.map((l) => (
+                  <option key={l.id} value={l.id}>{l.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* 件名・プレビューテキスト */}
+            <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">件名 <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  disabled={isSent}
+                  placeholder="メールの件名を入力"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all disabled:bg-gray-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">プレビューテキスト（任意）</label>
+                <input
+                  type="text"
+                  value={previewText}
+                  onChange={(e) => setPreviewText(e.target.value)}
+                  disabled={isSent}
+                  placeholder="受信トレイに表示される短い説明文"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all disabled:bg-gray-100"
+                />
+              </div>
+            </div>
+
+            {/* 本文エディタ */}
+            <div className="bg-white border border-gray-200 rounded-xl p-5">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">メール本文</label>
+              <textarea
+                value={htmlContent}
+                onChange={(e) => setHtmlContent(e.target.value)}
+                disabled={isSent}
+                placeholder={'メール本文を入力してください。\n\n改行はそのまま反映されます。\nHTMLタグも使用できます。'}
+                rows={20}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all font-mono text-sm disabled:bg-gray-100"
+              />
+              <p className="text-xs text-gray-500 mt-2">テキストで入力するとシンプルなHTML形式に変換されます。HTMLタグを直接入力することも可能です。</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 右パネル: プレビュー */}
+        <div className={`w-full lg:w-1/2 lg:fixed lg:right-0 lg:top-[57px] lg:h-[calc(100vh-57px)] flex-col bg-gray-800 border-l border-gray-700 ${mobileTab === 'editor' ? 'hidden lg:flex' : 'flex'}`}>
+          {/* ブラウザ風ヘッダー */}
+          <div className="bg-gray-900 px-4 py-3 flex items-center gap-3">
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-red-500" />
+              <div className="w-3 h-3 rounded-full bg-yellow-500" />
+              <div className="w-3 h-3 rounded-full bg-green-500" />
+            </div>
+            <span className="text-gray-400 text-xs font-medium">メールプレビュー</span>
+          </div>
+          {/* プレビューコンテンツ */}
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="max-w-lg mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
+              <div className="p-6">
+                {subject ? (
+                  <h2 className="text-xl font-bold text-gray-900 mb-1">{subject}</h2>
+                ) : (
+                  <h2 className="text-xl font-bold text-gray-300 mb-1">件名を入力してください</h2>
+                )}
+                {previewText && (
+                  <p className="text-sm text-gray-500 mb-4">{previewText}</p>
+                )}
+                <hr className="my-4 border-gray-200" />
+                {htmlContent ? (
+                  <div
+                    className="prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{
+                      __html: htmlContent.startsWith('<') ? htmlContent : textToHtml(htmlContent),
+                    }}
+                  />
+                ) : (
+                  <p className="text-gray-300 text-center py-12">本文を入力すると、ここにプレビューが表示されます</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 右パネル用スペーサー */}
+        <div className="hidden lg:block lg:w-1/2 lg:flex-shrink-0 bg-gray-50" />
       </div>
     </div>
   );

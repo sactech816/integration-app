@@ -78,6 +78,7 @@ export default function FunnelDashboardPage() {
   }
 
   return (
+    <div className="min-h-screen bg-gray-50">
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -90,7 +91,7 @@ export default function FunnelDashboardPage() {
       </div>
 
       {funnels.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-8 text-center">
+        <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
           <GitBranch className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 mb-4">まだファネルがありません</p>
           <Link href="/funnel/new" className="inline-flex items-center gap-2 px-5 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-md transition-all min-h-[44px]">
@@ -100,7 +101,7 @@ export default function FunnelDashboardPage() {
       ) : (
         <div className="grid gap-4">
           {funnels.map((funnel) => (
-            <div key={funnel.id} className="bg-white border border-gray-200 rounded-2xl shadow-md p-5 hover:shadow-lg transition-shadow duration-200">
+            <div key={funnel.id} className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-lg transition-all duration-200">
               <div className="flex items-center justify-between">
                 <Link href={`/funnel/editor/${funnel.id}`} className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -131,6 +132,7 @@ export default function FunnelDashboardPage() {
           ))}
         </div>
       )}
+    </div>
     </div>
   );
 }

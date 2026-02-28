@@ -78,6 +78,7 @@ export default function NewsletterDashboard() {
   }
 
   return (
+    <div className="min-h-screen bg-gray-50">
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -96,11 +97,11 @@ export default function NewsletterDashboard() {
       {/* 読者リスト一覧 */}
       <section className="mb-10">
         <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Users className="w-5 h-5 text-violet-600" />
+          <span className="bg-violet-50 p-2 rounded-lg"><Users className="w-5 h-5 text-violet-600" /></span>
           読者リスト
         </h2>
         {lists.length === 0 ? (
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-8 text-center">
+          <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
             <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 mb-4">まだ読者リストがありません</p>
             <Link
@@ -114,7 +115,7 @@ export default function NewsletterDashboard() {
         ) : (
           <div className="grid gap-4">
             {lists.map((list) => (
-              <div key={list.id} className="bg-white border border-gray-200 rounded-2xl shadow-md p-5 hover:shadow-lg transition-shadow duration-200">
+              <div key={list.id} className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-lg transition-all duration-200">
                 <div className="flex items-center justify-between">
                   <Link href={`/newsletter/lists/${list.id}`} className="flex-1 min-w-0">
                     <h3 className="font-bold text-gray-900 text-lg truncate">{list.name}</h3>
@@ -161,7 +162,7 @@ export default function NewsletterDashboard() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-            <Send className="w-5 h-5 text-violet-600" />
+            <span className="bg-violet-50 p-2 rounded-lg"><Send className="w-5 h-5 text-violet-600" /></span>
             キャンペーン
           </h2>
           {lists.length > 0 && (
@@ -175,12 +176,12 @@ export default function NewsletterDashboard() {
           )}
         </div>
         {campaigns.length === 0 ? (
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-8 text-center">
+          <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
             <Send className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">まだキャンペーンがありません</p>
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-md overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
@@ -222,6 +223,7 @@ export default function NewsletterDashboard() {
           </div>
         )}
       </section>
+    </div>
     </div>
   );
 }

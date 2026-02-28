@@ -86,6 +86,7 @@ export default function OrderFormDashboardPage() {
   }
 
   return (
+    <div className="min-h-screen bg-gray-50">
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -103,7 +104,7 @@ export default function OrderFormDashboardPage() {
       </div>
 
       {forms.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-md p-8 text-center">
+        <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
           <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 mb-4">まだフォームがありません</p>
           <Link href="/order-form/new" className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-md transition-all min-h-[44px]">
@@ -113,7 +114,7 @@ export default function OrderFormDashboardPage() {
       ) : (
         <div className="grid gap-4">
           {forms.map((form) => (
-            <div key={form.id} className="bg-white border border-gray-200 rounded-2xl shadow-md p-5 hover:shadow-lg transition-shadow duration-200">
+            <div key={form.id} className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-lg transition-all duration-200">
               <div className="flex items-center justify-between">
                 <Link href={`/order-form/editor/${form.id}`} className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -150,6 +151,7 @@ export default function OrderFormDashboardPage() {
           ))}
         </div>
       )}
+    </div>
     </div>
   );
 }
