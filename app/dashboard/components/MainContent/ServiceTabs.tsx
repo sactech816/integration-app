@@ -36,6 +36,9 @@ const SHORT_LABELS: Record<ServiceType, string> = {
   booking: '予約',
   onboarding: 'モーダル',
   thumbnail: 'サムネ',
+  newsletter: 'メルマガ',
+  'order-form': 'フォーム',
+  funnel: 'ファネル',
 };
 
 const getServiceColor = (type: ServiceType) => {

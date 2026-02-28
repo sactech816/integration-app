@@ -5,7 +5,7 @@
 // -------------------------------------------
 // サービスタイプ
 // -------------------------------------------
-export type ServiceType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail';
+export type ServiceType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail' | 'newsletter' | 'order-form' | 'funnel';
 
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   quiz: '診断クイズ',
@@ -18,7 +18,10 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
   attendance: '出欠表',
   booking: '予約',
   onboarding: 'はじめかたガイド',
-  thumbnail: 'サムネイルメーカー'
+  thumbnail: 'サムネイルメーカー',
+  newsletter: 'メルマガ',
+  'order-form': '申し込みフォーム',
+  funnel: 'ファネル'
 };
 
 export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; text: string }> = {
@@ -32,7 +35,10 @@ export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; 
   attendance: { primary: 'purple', bg: 'bg-purple-50', text: 'text-purple-600' },
   booking: { primary: 'blue', bg: 'bg-blue-50', text: 'text-blue-600' },
   onboarding: { primary: 'orange', bg: 'bg-orange-50', text: 'text-orange-600' },
-  thumbnail: { primary: 'pink', bg: 'bg-pink-50', text: 'text-pink-600' }
+  thumbnail: { primary: 'pink', bg: 'bg-pink-50', text: 'text-pink-600' },
+  newsletter: { primary: 'violet', bg: 'bg-violet-50', text: 'text-violet-600' },
+  'order-form': { primary: 'emerald', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+  funnel: { primary: 'amber', bg: 'bg-amber-50', text: 'text-amber-600' }
 };
 
 // -------------------------------------------

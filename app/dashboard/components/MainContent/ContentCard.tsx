@@ -85,6 +85,9 @@ const getServiceIcon = (type: ServiceType) => {
     booking: Calendar,
     onboarding: MousePointerClick,
     thumbnail: Image,
+    newsletter: FileText,
+    'order-form': FileText,
+    funnel: FileText,
   };
   return icons[type] || Sparkles; // フォールバック
 };
@@ -102,6 +105,9 @@ const getServiceColor = (type: ServiceType) => {
     booking: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200', gradient: 'from-blue-500 to-indigo-600' },
     onboarding: { bg: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-200', gradient: 'from-sky-500 to-blue-600' },
     thumbnail: { bg: 'bg-pink-50', text: 'text-pink-600', border: 'border-pink-200', gradient: 'from-pink-500 to-rose-600' },
+    newsletter: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200', gradient: 'from-violet-500 to-purple-600' },
+    'order-form': { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', gradient: 'from-emerald-500 to-teal-600' },
+    funnel: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200', gradient: 'from-amber-500 to-orange-600' },
   };
   return colors[type] || colors.quiz; // フォールバック
 };

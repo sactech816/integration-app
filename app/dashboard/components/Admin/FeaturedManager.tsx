@@ -153,6 +153,9 @@ export default function FeaturedManager() {
       booking: '予約',
       onboarding: 'はじめかたガイド',
       thumbnail: 'サムネイル',
+      newsletter: 'メルマガ',
+      'order-form': '申し込みフォーム',
+      funnel: 'ファネル',
     };
     return labels[type] || type;
   };
