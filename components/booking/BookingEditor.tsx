@@ -28,6 +28,7 @@ import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { updateBookingSlot } from '@/app/actions/booking';
+import SalesTextEditor from '@/components/salesletter/SalesTextEditor';
 
 interface BookingEditorProps {
   userId?: string | null;
@@ -644,14 +645,10 @@ export default function BookingEditor({
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       説明（任意）
                     </label>
-                    <textarea
-                      value={formData.description || ''}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    <SalesTextEditor
+                      content={formData.description || ''}
+                      onChange={(html) => setFormData({ ...formData, description: html })}
                       placeholder="メニューの説明を入力してください"
-                      rows={3}
-                      className={`w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent transition-all resize-none text-gray-900 placeholder:text-gray-400 ${
-                        formData.type === 'adjustment' ? 'focus:ring-purple-500' : 'focus:ring-blue-500'
-                      }`}
                     />
                   </div>
 

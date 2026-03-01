@@ -102,6 +102,19 @@ export default function MonthlyCalendar({
   // テーマカラー
   const themeColor = menuType === 'adjustment' ? 'purple' : 'blue';
 
+  // 今月の空き枠数（readOnlyモードのみ）
+  const monthAvailableCount = useMemo(() => {
+    if (!readOnly) return 0;
+    const now = new Date();
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    return slots.filter((slot) => {
+      const d = new Date(slot.start_time);
+      return slot.is_available && d >= now &&
+        d.getFullYear() === year && d.getMonth() === month;
+    }).length;
+  }, [slots, currentMonth, readOnly]);
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       {/* ヘッダー: 月ナビゲーション */}
@@ -113,7 +126,7 @@ export default function MonthlyCalendar({
         >
           <ChevronLeft size={20} className="text-gray-600" />
         </button>
-        
+
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-bold text-gray-900">
             {currentMonth.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' })}
@@ -128,8 +141,13 @@ export default function MonthlyCalendar({
           >
             今月
           </button>
+          {readOnly && monthAvailableCount > 0 && (
+            <span className="text-xs font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+              空き{monthAvailableCount}件
+            </span>
+          )}
         </div>
-        
+
         <button
           onClick={nextMonth}
           className="p-2 hover:bg-gray-200 rounded-lg transition-colors"

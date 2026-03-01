@@ -500,12 +500,10 @@ export default function HomePage() {
         {/* ========== 16. Support (SSR) ========== */}
         <section className="py-16" style={{ backgroundColor: '#fffbf0' }}>
           <div className="container mx-auto px-4 max-w-2xl text-center">
-            <p className="text-sm mb-3" style={{ color: '#b08050' }}>ひとりで開発しています</p>
             <h3 className="text-xl md:text-2xl font-bold mb-4" style={{ color: '#5d4037' }}>
               集客メーカーの開発を応援しませんか？
             </h3>
             <p className="text-sm md:text-base leading-relaxed mb-6" style={{ color: '#8d6e63' }}>
-              集客メーカーは個人開発で運営しています。<br />
               「便利だな」と感じていただけたら、<br className="sm:hidden" />
               開発を続けるための応援をいただけるととても励みになります。
             </p>

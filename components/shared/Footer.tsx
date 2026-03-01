@@ -284,7 +284,7 @@ const Footer: React.FC<FooterProps> = () => {
         {/* コピーライト */}
         <div className="mt-12 pt-8 border-t border-gray-800 text-center">
           <p className="text-xs opacity-60">
-            &copy; {new Date().getFullYear()} 集客メーカー by ケイショウ株式会社. All rights reserved.
+            &copy; {new Date().getFullYear()} 集客メーカー. All rights reserved.
           </p>
         </div>
       </div>

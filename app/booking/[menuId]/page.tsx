@@ -18,7 +18,6 @@ import {
   AlertCircle,
   Copy,
   ExternalLink,
-  Plus,
   LayoutDashboard,
   Grid3X3,
   LayoutGrid,
@@ -188,6 +187,25 @@ export default function PublicBookingPage() {
       map[dateKey].push(slot);
     });
     return map;
+  }, [slots]);
+
+  // 月別の予約可能枠数を計算
+  const slotsByMonth = useMemo(() => {
+    const now = new Date();
+    const map: Record<string, number> = {};
+    slots.forEach((slot) => {
+      if (!slot.is_available) return;
+      const d = new Date(slot.start_time);
+      if (d < now) return;
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      map[key] = (map[key] || 0) + 1;
+    });
+    return Object.entries(map)
+      .map(([key, count]) => {
+        const [year, month] = key.split('-').map(Number);
+        return { year, month: month + 1, count };
+      })
+      .sort((a, b) => a.year - b.year || a.month - b.month);
   }, [slots]);
 
   // 選択日の枠
@@ -376,7 +394,7 @@ export default function PublicBookingPage() {
                 </span>
                 <h1 className="text-2xl font-bold text-gray-900">{menu?.title}</h1>
                 {menu?.description && (
-                  <p className="text-gray-600 mt-1">{menu.description}</p>
+                  <div className="text-gray-600 mt-1 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: menu.description }} />
                 )}
               </div>
             </div>
@@ -401,20 +419,22 @@ export default function PublicBookingPage() {
                   </button>
                 </>
               )}
-              <button
-                onClick={() => router.push('/booking/new')}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold"
-              >
-                <Plus size={18} />
-                <span className="hidden sm:inline">新規作成</span>
-              </button>
             </div>
           </div>
-          <div className="flex items-center gap-4 mt-4 text-sm text-gray-600">
+          <div className="flex items-center gap-4 mt-4 text-sm text-gray-600 flex-wrap">
             <div className="flex items-center gap-1">
               <Clock size={16} />
               <span>{menu?.duration_min}分</span>
             </div>
+            {slotsByMonth.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                {slotsByMonth.map(({ month, count }) => (
+                  <span key={`${month}`} className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold">
+                    {month}月<span className="text-blue-500">（{count}件）</span>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -755,7 +775,7 @@ export default function PublicBookingPage() {
                 {menu?.description && (
                   <div className="mb-3">
                     <p className="text-xs font-semibold text-gray-500 mb-1">説明</p>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{menu.description}</p>
+                    <div className="text-sm text-gray-700 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: menu.description }} />
                   </div>
                 )}
                 {menu?.contact_method && (
@@ -1122,6 +1142,21 @@ export default function PublicBookingPage() {
           </>
         )}
       </main>
+
+      {/* 予約メーカー案内 */}
+      {!isCreator && (
+        <div className="text-center py-6 border-t border-gray-100">
+          <p className="text-sm text-gray-500">
+            予約メーカーで予約ページを作成しませんか？{' '}
+            <a
+              href="/booking/new"
+              className="text-blue-600 hover:text-blue-700 font-semibold hover:underline transition-colors"
+            >
+              無料で作成する
+            </a>
+          </p>
+        </div>
+      )}
 
       {/* フッター */}
       <ContentFooter toolType="booking" variant="light" />
