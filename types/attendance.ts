@@ -46,6 +46,7 @@ export interface AttendanceResponse {
   participant_name: string;
   participant_email?: string | null;
   responses: Record<number, AttendanceStatus>; // {slot_index: 'yes'|'no'|'maybe'}
+  comment?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -56,6 +57,7 @@ export interface CreateAttendanceResponseInput {
   participant_name: string;
   participant_email?: string;
   responses: Record<number, AttendanceStatus>;
+  comment?: string;
 }
 
 // -------------------------------------------
@@ -120,3 +122,6 @@ export const ATTENDANCE_STATUS_COLORS: Record<AttendanceStatus, { bg: string; te
   no: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
   maybe: { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200' },
 };
+
+// 出欠表のレイアウト
+export type AttendanceTableLayout = 'horizontal' | 'vertical';

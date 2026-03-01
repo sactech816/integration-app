@@ -19,6 +19,7 @@ import {
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import SalesTextEditor from '@/components/salesletter/SalesTextEditor';
 import OnboardingModal, { type OnboardingPage } from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { supabase } from '@/lib/supabase';
@@ -299,7 +300,7 @@ function AttendanceEditorContent() {
     try {
       const inputData = {
         title: title.trim(),
-        description: description.trim() || undefined,
+        description: (description && description !== '<p></p>') ? description : undefined,
         slots,
       };
 
@@ -448,12 +449,10 @@ function AttendanceEditorContent() {
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       説明（任意）
                     </label>
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
+                    <SalesTextEditor
+                      content={description}
+                      onChange={(html) => setDescription(html)}
                       placeholder="補足情報があれば入力してください"
-                      rows={3}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none text-gray-900 placeholder:text-gray-400"
                     />
                   </div>
                 </div>

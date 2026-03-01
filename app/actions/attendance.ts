@@ -216,6 +216,7 @@ export async function submitAttendanceResponse(
         .update({
           participant_email: input.participant_email || null,
           responses: input.responses,
+          comment: input.comment || null,
         })
         .eq('id', existing.id)
         .select()
@@ -237,6 +238,7 @@ export async function submitAttendanceResponse(
         participant_name: input.participant_name,
         participant_email: input.participant_email || null,
         responses: input.responses,
+        comment: input.comment || null,
       })
       .select()
       .single();
