@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  Menu, X, BookOpen, Home, Plus, FileText, Rocket, CreditCard, LogOut, Lightbulb, Wrench
+  Menu, X, BookOpen, Home, Plus, FileText, Rocket, CreditCard, LogOut, Lightbulb, Wrench, Lock, Crown
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -16,6 +16,7 @@ export interface EditorActionItem {
   onClick: () => void;
   disabled?: boolean;
   loadingLabel?: string;
+  locked?: boolean; // 有料プラン限定（フリープランではロック表示）
 }
 
 interface KdlHamburgerMenuProps {
@@ -92,6 +93,16 @@ export default function KdlHamburgerMenu({
                 <span>執筆ツール</span>
               </div>
               {editorActions.map((action) => (
+                action.locked ? (
+                  <div
+                    key={action.id}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 cursor-not-allowed opacity-60"
+                  >
+                    <span className="flex-shrink-0">{action.icon}</span>
+                    <span className="flex-1">{action.label}</span>
+                    <Lock size={14} className="text-gray-400 flex-shrink-0" />
+                  </div>
+                ) : (
                 <button
                   key={action.id}
                   onClick={() => {
@@ -108,7 +119,17 @@ export default function KdlHamburgerMenu({
                   <span className="text-gray-400 flex-shrink-0">{action.icon}</span>
                   <span>{action.disabled && action.loadingLabel ? action.loadingLabel : action.label}</span>
                 </button>
+                )
               ))}
+              {editorActions.some(a => a.locked) && (
+                <a
+                  href="/kindle/lp#pricing"
+                  className="flex items-center gap-2 px-4 py-2 mt-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  <Crown size={14} />
+                  <span>有料プランで全機能を解放</span>
+                </a>
+              )}
               <div className="border-t border-gray-200 my-3" />
             </>
           )}

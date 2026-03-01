@@ -60,6 +60,7 @@ const getPlanDisplayName = (planTier?: string, planType?: string, isMonitor?: bo
     }
   }
   
+  if (planTier === 'none' || !planTier) return '無料プラン';
   return 'お試し';
 };
 
@@ -1262,31 +1263,31 @@ function KindleListPageContent() {
         </div>
       ) : (
         <>
-      {/* 未加入者向けサブスク促進バナー - 一旦非表示 */}
-      {/* {showBanner && !loadingSubscription && !subscriptionStatus?.hasActiveSubscription && !isAdmin && (
-        <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white rounded-xl mb-6">
+      {/* フリープラン向けアップグレード促進バナー */}
+      {showBanner && !loadingSubscription && !subscriptionStatus?.hasActiveSubscription && !isAdmin && (
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white rounded-xl mb-6">
           <div className="px-4 py-4">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="hidden sm:flex bg-white/20 p-2.5 rounded-xl">
-                  <Crown size={24} />
+                  <Sparkles size={24} />
                 </div>
                 <div>
                   <p className="font-bold text-sm sm:text-base">
-                    🚀 KDLプランに加入してフル機能を解放！
+                    無料プランで利用中
                   </p>
                   <p className="text-white/80 text-xs sm:text-sm mt-0.5">
-                    AI使用量無制限・Word出版エクスポート・優先サポート
+                    Word/EPUB出力・LP生成・表紙作成などはアップグレードで解放されます
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Link
-                  href="/kindle/lp"
-                  className="bg-white text-orange-600 font-bold px-4 py-2 rounded-lg text-sm hover:bg-orange-50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                  href="/kindle/lp#pricing"
+                  className="bg-white text-blue-700 font-bold px-4 py-2 rounded-lg text-sm hover:bg-blue-50 transition-colors flex items-center gap-1.5 whitespace-nowrap shadow-md"
                 >
-                  <Sparkles size={16} />
-                  <span className="hidden sm:inline">プランを見る</span>
+                  <Crown size={16} />
+                  <span className="hidden sm:inline">アップグレード</span>
                   <ArrowRight size={16} className="sm:hidden" />
                 </Link>
                 <button
@@ -1300,7 +1301,7 @@ function KindleListPageContent() {
             </div>
           </div>
         </div>
-      )} */}
+      )}
 
       {/* 加入者向けステータス表示 */}
       {!loadingSubscription && subscriptionStatus?.hasActiveSubscription && !isAdmin && (

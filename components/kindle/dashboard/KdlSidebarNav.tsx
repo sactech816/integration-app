@@ -27,6 +27,7 @@ import {
   LayoutDashboard,
   Globe,
   Image as ImageIcon,
+  Lock,
 } from 'lucide-react';
 
 export type KdlUserRole = 'user' | 'agency' | 'admin';
@@ -40,6 +41,7 @@ export type KdlMenuItem = {
   badge?: number;
   roles: KdlUserRole[]; // このメニューを表示するロール
   onClick?: () => void;
+  paidOnly?: boolean; // 有料プラン限定メニュー
 };
 
 type KdlAdminMenuGroup = {
@@ -56,6 +58,7 @@ type KdlSidebarNavProps = {
   onLogout: () => void;
   bookCount?: number;
   assignedUserCount?: number;
+  planTier?: string;
 };
 
 export default function KdlSidebarNav({
@@ -65,7 +68,9 @@ export default function KdlSidebarNav({
   onLogout,
   bookCount = 0,
   assignedUserCount = 0,
+  planTier,
 }: KdlSidebarNavProps) {
+  const isFreePlan = !planTier || planTier === 'none';
   const menuItems: KdlMenuItem[] = [
     // ユーザー向けメニュー（全員表示）
     { 
@@ -95,6 +100,7 @@ export default function KdlSidebarNav({
       icon: Globe,
       section: 'main',
       roles: ['user', 'agency', 'admin'],
+      paidOnly: true,
     },
     {
       id: 'book-covers',
@@ -102,6 +108,7 @@ export default function KdlSidebarNav({
       icon: ImageIcon,
       section: 'main',
       roles: ['user', 'agency', 'admin'],
+      paidOnly: true,
     },
     {
       id: 'my-books',
@@ -230,8 +237,10 @@ export default function KdlSidebarNav({
   const renderMenuItem = (item: KdlMenuItem) => {
     const Icon = item.icon;
     const isActive = activeItem === item.id;
+    const isLocked = isFreePlan && item.paidOnly;
 
     const handleClick = () => {
+      if (isLocked) return;
       if (item.onClick) {
         item.onClick();
       } else {
@@ -243,22 +252,30 @@ export default function KdlSidebarNav({
       <button
         key={item.id}
         onClick={handleClick}
+        disabled={isLocked}
         className={`
           w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all
-          ${isActive 
-            ? 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 font-bold' 
-            : 'text-gray-700 hover:bg-amber-50'
+          ${isLocked
+            ? 'text-gray-400 cursor-not-allowed opacity-60'
+            : isActive
+              ? 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 font-bold'
+              : 'text-gray-700 hover:bg-amber-50'
           }
         `}
       >
-        <Icon 
-          size={18} 
-          className={isActive ? 'text-amber-600' : 'text-gray-500'} 
+        <Icon
+          size={18}
+          className={isLocked ? 'text-gray-400' : isActive ? 'text-amber-600' : 'text-gray-500'}
         />
         <span className="flex-1 text-sm">{item.label}</span>
-        
+
+        {/* ロックバッジ */}
+        {isLocked && (
+          <Lock size={14} className="text-gray-400" />
+        )}
+
         {/* バッジ */}
-        {item.badge !== undefined && item.badge > 0 && (
+        {!isLocked && item.badge !== undefined && item.badge > 0 && (
           <span className={`
             text-xs px-2 py-0.5 rounded-full font-bold
             ${isActive ? 'bg-amber-200 text-amber-700' : 'bg-gray-200 text-gray-600'}

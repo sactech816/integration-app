@@ -102,6 +102,7 @@ export default function KdlSidebar({
         onLogout={onLogout}
         bookCount={bookCount}
         assignedUserCount={assignedUserCount}
+        planTier={planTier}
       />
 
       {/* 継続プラン案内バナー - 一旦非表示 */}

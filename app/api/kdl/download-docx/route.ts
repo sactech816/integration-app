@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getKdlPlanTier } from '@/lib/kdl/auth';
 import {
   Document,
   Packer,
@@ -778,7 +779,7 @@ export async function GET(request: NextRequest) {
     // 1. 本の情報を取得
     const { data: bookData, error: bookError } = await supabase
       .from('kdl_books')
-      .select('id, title, subtitle')
+      .select('id, title, subtitle, user_id')
       .eq('id', bookId)
       .single();
 
@@ -786,6 +787,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         error: `本が見つかりません${bookError ? ` (${bookError.code}: ${bookError.message})` : ''}`
       }, { status: 404 });
+    }
+
+    // プランチェック: 無料プランはWord出力不可
+    if (bookData.user_id) {
+      const planTier = await getKdlPlanTier(bookData.user_id, supabase);
+      if (planTier === 'none') {
+        return NextResponse.json({
+          error: 'FREE_PLAN_RESTRICTED',
+          message: 'Word出力は有料プランで利用できます',
+        }, { status: 403 });
+      }
     }
 
     // 2. 章を取得

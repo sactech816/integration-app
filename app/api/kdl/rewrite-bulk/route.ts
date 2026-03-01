@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { checkKdlLimits } from '@/lib/kdl-usage-check';
+import { getKdlPlanTier } from '@/lib/kdl/auth';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -67,6 +68,15 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+    }
+
+    // プランチェック: 無料プランは文体変換不可
+    const planTier = await getKdlPlanTier(user.id, supabase);
+    if (planTier === 'none') {
+      return NextResponse.json({
+        error: 'FREE_PLAN_RESTRICTED',
+        message: '文体変換は有料プランで利用できます',
+      }, { status: 403 });
     }
 
     // 使用量チェック

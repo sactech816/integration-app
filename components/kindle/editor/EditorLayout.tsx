@@ -96,6 +96,7 @@ interface EditorLayoutProps {
   adminKeyParam?: string; // admin_keyパラメータ（リンクに引き継ぐ用）
   userId?: string; // 使用量表示用
   autoOpenLP?: boolean; // LP編集モーダルを自動で開く
+  planTier?: string; // プラン制御用（'none' = 無料プラン）
 }
 
 export const EditorLayout: React.FC<EditorLayoutProps> = ({
@@ -110,7 +111,9 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   adminKeyParam = '',
   userId,
   autoOpenLP = false,
+  planTier,
 }) => {
+  const isFreePlan = !planTier || planTier === 'none';
   // 初期値: 最初の章の最初の節
   const getInitialSectionId = () => {
     for (const chapter of chapters) {
@@ -1471,6 +1474,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 onClick: handleShowKdpInfo,
                 disabled: isGeneratingKdp || isLoadingKdp,
                 loadingLabel: isGeneratingKdp ? 'KDP情報 生成中...' : 'KDP情報 読込中...',
+                locked: isFreePlan,
               },
               {
                 id: 'download-word',
@@ -1479,6 +1483,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 onClick: () => handleDownloadFile('docx'),
                 disabled: isDownloading,
                 loadingLabel: 'Word 生成中...',
+                locked: isFreePlan,
               },
               {
                 id: 'download-epub',
@@ -1487,6 +1492,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 onClick: () => handleDownloadFile('epub'),
                 disabled: isDownloading,
                 loadingLabel: 'EPUB 生成中...',
+                locked: isFreePlan,
               },
               {
                 id: 'lp-generate',
@@ -1495,12 +1501,14 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 onClick: handleShowLP,
                 disabled: isGeneratingLP,
                 loadingLabel: 'LP 生成中...',
+                locked: isFreePlan,
               },
               {
                 id: 'generate-cover',
                 label: '表紙作成（AI画像生成）',
                 icon: <ImageIcon size={20} className="!text-orange-500" />,
                 onClick: () => setIsCoverModalOpen(true),
+                locked: isFreePlan,
               },
               {
                 id: 'style-transform',
@@ -1509,6 +1517,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 onClick: () => setIsStyleTransformOpen(true),
                 disabled: rewriteProgress.isRunning,
                 loadingLabel: '文体変換中...',
+                locked: isFreePlan,
               },
             ] : undefined}
           />

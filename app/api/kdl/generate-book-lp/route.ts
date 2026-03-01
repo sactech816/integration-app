@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { checkKdlLimits } from '@/lib/kdl-usage-check';
+import { getKdlPlanTier } from '@/lib/kdl/auth';
 import {
   getProviderFromAdminSettings,
   generateWithFallback,
@@ -235,6 +236,16 @@ export async function POST(request: Request) {
 
       if (bookOwner?.user_id) {
         userId = bookOwner.user_id;
+
+        // プランチェック: 無料プランはLP生成不可
+        const planTier = await getKdlPlanTier(userId, supabaseForCheck);
+        if (planTier === 'none') {
+          return NextResponse.json({
+            error: 'FREE_PLAN_RESTRICTED',
+            message: 'LP生成は有料プランで利用できます',
+          }, { status: 403 });
+        }
+
         const limits = await checkKdlLimits(userId);
         if (!limits.outlineAi.canUse) {
           return NextResponse.json(

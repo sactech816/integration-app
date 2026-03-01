@@ -42,7 +42,7 @@ const DEFAULT_LIMITS = {
 
 // プラン別のデフォルト制限値（DBにデータがない場合のフォールバック）
 const PLAN_LIMITS: Record<string, { book: number; outline: number; writing: number; total: number }> = {
-  none: { book: 1, outline: 3, writing: 3, total: 5 },
+  none: { book: 1, outline: 10, writing: 10, total: 10 },
   initial_trial: { book: 3, outline: 20, writing: 30, total: 50 },
   initial_standard: { book: 10, outline: 40, writing: 80, total: 120 },
   initial_business: { book: -1, outline: -1, writing: -1, total: -1 },
@@ -134,36 +134,41 @@ export async function GET(request: NextRequest) {
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId);
 
-    // 4. 今日のAI使用量をカウント
+    // 4. AI使用量をカウント
+    // フリープラン（none）は全期間の累計、有料プランは日次カウント
+    const isFreePlan = planTier === 'none';
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayISO = today.toISOString();
 
     // 構成系AI
-    const { count: outlineCount } = await supabase
+    let outlineQuery = supabase
       .from('ai_usage_logs')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('service', 'kdl')
-      .in('action_type', OUTLINE_ACTION_TYPES)
-      .gte('created_at', todayISO);
+      .in('action_type', OUTLINE_ACTION_TYPES);
+    if (!isFreePlan) outlineQuery = outlineQuery.gte('created_at', todayISO);
+    const { count: outlineCount } = await outlineQuery;
 
     // 執筆系AI
-    const { count: writingCount } = await supabase
+    let writingQuery = supabase
       .from('ai_usage_logs')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('service', 'kdl')
-      .in('action_type', WRITING_ACTION_TYPES)
-      .gte('created_at', todayISO);
+      .in('action_type', WRITING_ACTION_TYPES);
+    if (!isFreePlan) writingQuery = writingQuery.gte('created_at', todayISO);
+    const { count: writingCount } = await writingQuery;
 
     // トータルAI
-    const { count: totalCount } = await supabase
+    let totalQuery = supabase
       .from('ai_usage_logs')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .eq('service', 'kdl')
-      .gte('created_at', todayISO);
+      .eq('service', 'kdl');
+    if (!isFreePlan) totalQuery = totalQuery.gte('created_at', todayISO);
+    const { count: totalCount } = await totalQuery;
 
     // 5. レスポンスを構築
     const bookUsed = bookCount || 0;

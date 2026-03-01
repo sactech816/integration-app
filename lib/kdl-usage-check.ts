@@ -40,7 +40,7 @@ const DEFAULT_LIMITS = {
 
 // プラン別のデフォルト制限値（DBにデータがない場合のフォールバック）
 const PLAN_LIMITS: Record<string, { book: number; outline: number; writing: number; total: number }> = {
-  none: { book: 1, outline: 3, writing: 3, total: 5 },
+  none: { book: 1, outline: 10, writing: 10, total: 10 },
   initial_trial: { book: 3, outline: 20, writing: 30, total: 50 },
   initial_standard: { book: 10, outline: 40, writing: 80, total: 120 },
   initial_business: { book: -1, outline: -1, writing: -1, total: -1 },
@@ -53,19 +53,25 @@ const PLAN_LIMITS: Record<string, { book: number; outline: number; writing: numb
 
 // エラーメッセージ
 const ERROR_MESSAGES = {
-  bookLimit: (limit: number) => 
+  bookLimit: (limit: number) =>
     `書籍作成数の上限（${limit}冊）に達しました。新しい書籍を作成するには、既存の書籍を削除するか、プランをアップグレードしてください。`,
-  outlineLimit: (remaining: number) => 
-    remaining === 0 
-      ? '本日の構成系AI（タイトル・目次生成など）の使用上限に達しました。明日になると回数がリセットされます。'
+  outlineLimit: (remaining: number, isFreePlan: boolean) =>
+    remaining === 0
+      ? isFreePlan
+        ? '無料プランの構成系AI（タイトル・目次生成など）の使用上限に達しました。有料プランにアップグレードすると制限が拡張されます。'
+        : '本日の構成系AI（タイトル・目次生成など）の使用上限に達しました。明日になると回数がリセットされます。'
       : '構成系AIの使用上限に達しています。',
-  writingLimit: (remaining: number) => 
-    remaining === 0 
-      ? '本日の執筆系AI（本文生成・書き換えなど）の使用上限に達しました。明日になると回数がリセットされます。'
+  writingLimit: (remaining: number, isFreePlan: boolean) =>
+    remaining === 0
+      ? isFreePlan
+        ? '無料プランの執筆系AI（本文生成・書き換えなど）の使用上限に達しました。有料プランにアップグレードすると制限が拡張されます。'
+        : '本日の執筆系AI（本文生成・書き換えなど）の使用上限に達しました。明日になると回数がリセットされます。'
       : '執筆系AIの使用上限に達しています。',
-  totalLimit: (remaining: number) => 
-    remaining === 0 
-      ? '本日のAI使用回数の上限に達しました。明日になると回数がリセットされます。'
+  totalLimit: (remaining: number, isFreePlan: boolean) =>
+    remaining === 0
+      ? isFreePlan
+        ? '無料プランのAI使用回数の上限に達しました。有料プランにアップグレードすると制限が拡張されます。'
+        : '本日のAI使用回数の上限に達しました。明日になると回数がリセットされます。'
       : 'AI使用回数の上限に達しています。',
 };
 
@@ -182,36 +188,41 @@ export async function checkKdlLimits(userId: string): Promise<KdlLimitCheckResul
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId);
 
-  // 4. 今日のAI使用量をカウント
+  // 4. AI使用量をカウント
+  // フリープラン（none）は全期間の累計、有料プランは日次カウント
+  const isFreePlan = planTier === 'none';
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayISO = today.toISOString();
 
   // 構成系AI
-  const { count: outlineCount } = await supabase
+  let outlineQuery = supabase
     .from('ai_usage_logs')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
     .eq('service', 'kdl')
-    .in('action_type', OUTLINE_ACTION_TYPES)
-    .gte('created_at', todayISO);
+    .in('action_type', OUTLINE_ACTION_TYPES);
+  if (!isFreePlan) outlineQuery = outlineQuery.gte('created_at', todayISO);
+  const { count: outlineCount } = await outlineQuery;
 
   // 執筆系AI
-  const { count: writingCount } = await supabase
+  let writingQuery = supabase
     .from('ai_usage_logs')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
     .eq('service', 'kdl')
-    .in('action_type', WRITING_ACTION_TYPES)
-    .gte('created_at', todayISO);
+    .in('action_type', WRITING_ACTION_TYPES);
+  if (!isFreePlan) writingQuery = writingQuery.gte('created_at', todayISO);
+  const { count: writingCount } = await writingQuery;
 
   // トータルAI
-  const { count: totalCount } = await supabase
+  let totalQuery = supabase
     .from('ai_usage_logs')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
-    .eq('service', 'kdl')
-    .gte('created_at', todayISO);
+    .eq('service', 'kdl');
+  if (!isFreePlan) totalQuery = totalQuery.gte('created_at', todayISO);
+  const { count: totalCount } = await totalQuery;
 
   // 5. 結果を構築
   const bookUsed = bookCount || 0;
@@ -246,28 +257,28 @@ export async function checkKdlLimits(userId: string): Promise<KdlLimitCheckResul
       canUse: outlineCanUse,
       used: outlineUsed,
       limit: limits.outline,
-      message: outlineCanUse ? undefined : 
+      message: outlineCanUse ? undefined :
         !canUseAiFlag ? aiDisabledMessage :
-        (limits.total !== -1 && totalUsed >= limits.total) 
-          ? ERROR_MESSAGES.totalLimit(0) 
-          : ERROR_MESSAGES.outlineLimit(limits.outline - outlineUsed),
+        (limits.total !== -1 && totalUsed >= limits.total)
+          ? ERROR_MESSAGES.totalLimit(0, isFreePlan)
+          : ERROR_MESSAGES.outlineLimit(limits.outline - outlineUsed, isFreePlan),
     },
     writingAi: {
       canUse: writingCanUse,
       used: writingUsed,
       limit: limits.writing,
-      message: writingCanUse ? undefined : 
+      message: writingCanUse ? undefined :
         !canUseAiFlag ? aiDisabledMessage :
-        (limits.total !== -1 && totalUsed >= limits.total) 
-          ? ERROR_MESSAGES.totalLimit(0) 
-          : ERROR_MESSAGES.writingLimit(limits.writing - writingUsed),
+        (limits.total !== -1 && totalUsed >= limits.total)
+          ? ERROR_MESSAGES.totalLimit(0, isFreePlan)
+          : ERROR_MESSAGES.writingLimit(limits.writing - writingUsed, isFreePlan),
     },
     totalAi: {
       canUse: totalCanUse,
       used: totalUsed,
       limit: limits.total,
-      message: totalCanUse ? undefined : 
-        !canUseAiFlag ? aiDisabledMessage : ERROR_MESSAGES.totalLimit(0),
+      message: totalCanUse ? undefined :
+        !canUseAiFlag ? aiDisabledMessage : ERROR_MESSAGES.totalLimit(0, isFreePlan),
     },
     planTier,
     isMonitor,

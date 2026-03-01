@@ -4,17 +4,19 @@ import { createClient } from '@supabase/supabase-js';
 
 /**
  * Kindle出版メーカーのアクセス制限Middleware
- * 
+ *
  * /kindle 配下のページへのアクセスを制御し、
- * 未ログイン・未課金ユーザーを /kindle/lp にリダイレクトします。
- * 
+ * 未ログインユーザーを /kindle/lp にリダイレクトします。
+ *
  * アクセス制御の優先順位:
  * 1. 公開パス（/kindle/lp, /kindle/guide等）は認証不要
  * 2. admin_keyパラメータ（管理者専用バイパス）
  * 3. 管理者（環境変数で指定されたメールアドレス）
  * 4. モニターユーザー（monitor_usersテーブルで有効期限内）
  * 5. 課金ユーザー（kdl_subscriptionsテーブルで有効なサブスクリプション）
- * 6. 上記以外は /kindle/lp#pricing にリダイレクト
+ * 6. 代理店ユーザー
+ * 7. ログイン済みユーザー → フリープラン（planTier=none）としてアクセス許可
+ * 8. 未ログインユーザー → /kindle/lp にリダイレクト
  */
 
 // 管理者メールアドレス（環境変数から取得、カンマ区切り）
@@ -36,6 +38,7 @@ const PUBLIC_PATHS = [
   '/kindle/book-lp',  // 書籍PR用LP（公開ページ）
   '/kindle/discovery',  // ネタ発掘診断（ページ側でKDLサブスクチェック）
   '/kindle/discovery/demo',  // ネタ発掘診断デモ版
+  '/kindle/free-trial',  // 無料体験LP（公開ページ）
 ];
 
 // デモモード用のパス（クエリパラメータ付き）
@@ -201,8 +204,9 @@ export async function middleware(request: NextRequest) {
       return response;
     }
 
-    // 未課金ユーザーはLPの料金セクションにリダイレクト
-    return NextResponse.redirect(new URL('/kindle/lp#pricing', request.url));
+    // ログイン済みユーザーはフリープラン（planTier=none）としてアクセス許可
+    // 機能制限はダッシュボード・エディタ・API側で制御する
+    return response;
 
   } catch {
     // エラーが発生した場合はLPにリダイレクト

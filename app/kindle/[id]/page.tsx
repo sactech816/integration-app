@@ -57,8 +57,9 @@ function KindleEditorPageContent() {
   const [targetProfile, setTargetProfile] = useState<TargetProfile | undefined>(undefined);
   const [tocPatternId, setTocPatternId] = useState<string | undefined>(undefined);
   const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [planTier, setPlanTier] = useState<string | undefined>(undefined);
 
-  // ユーザーIDを取得
+  // ユーザーIDとプラン情報を取得
   useEffect(() => {
     const fetchUser = async () => {
       if (!isSupabaseConfigured() || !supabase) return;
@@ -66,6 +67,16 @@ function KindleEditorPageContent() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           setUserId(session.user.id);
+          // プラン情報を取得
+          try {
+            const res = await fetch(`/api/subscription/status?userId=${session.user.id}`);
+            if (res.ok) {
+              const data = await res.json();
+              setPlanTier(data.planTier || 'none');
+            }
+          } catch {
+            setPlanTier('none');
+          }
         }
       } catch (err) {
         console.error('Failed to get user session:', err);
@@ -420,6 +431,7 @@ function KindleEditorPageContent() {
       adminKeyParam={adminKeyParam}
       userId={userId}
       autoOpenLP={autoOpenLP}
+      planTier={planTier}
     />
   );
 }

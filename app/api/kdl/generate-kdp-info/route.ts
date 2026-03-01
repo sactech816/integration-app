@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 import { checkKdlLimits } from '@/lib/kdl-usage-check';
+import { getKdlPlanTier } from '@/lib/kdl/auth';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -62,11 +63,20 @@ export async function POST(request: Request) {
         .single();
 
       if (bookOwner?.user_id) {
+        // プランチェック: 無料プランはKDP情報生成不可
+        const planTier = await getKdlPlanTier(bookOwner.user_id, supabaseForCheck);
+        if (planTier === 'none') {
+          return NextResponse.json({
+            error: 'FREE_PLAN_RESTRICTED',
+            message: 'KDP情報生成は有料プランで利用できます',
+          }, { status: 403 });
+        }
+
         const limits = await checkKdlLimits(bookOwner.user_id);
         if (!limits.outlineAi.canUse) {
           return NextResponse.json(
-            { 
-              error: limits.outlineAi.message, 
+            {
+              error: limits.outlineAi.message,
               code: 'OUTLINE_AI_LIMIT_EXCEEDED',
               used: limits.outlineAi.used,
               limit: limits.outlineAi.limit,
