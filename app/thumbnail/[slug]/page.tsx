@@ -18,18 +18,9 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+// ISRでオンデマンド生成（ビルド時間・デプロイサイズ削減のためビルド時の事前生成を無効化）
 export async function generateStaticParams() {
-  const supabase = getSupabase();
-  if (!supabase) return [];
-
-  const { data } = await supabase
-    .from('thumbnails')
-    .select('slug')
-    .eq('status', 'published')
-    .order('views_count', { ascending: false })
-    .limit(20);
-
-  return (data || []).map((item) => ({ slug: item.slug }));
+  return [];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

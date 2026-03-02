@@ -11,21 +11,9 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+// ISRでオンデマンド生成（ビルド時間・デプロイサイズ削減のためビルド時の事前生成を無効化）
 export async function generateStaticParams() {
-  if (!supabase) return [];
-
-  try {
-    const { data: quizzes } = await supabase
-      .from('quizzes')
-      .select('slug')
-      .eq('quiz_type', 'entertainment')
-      .eq('show_in_portal', true)
-      .not('slug', 'is', null);
-
-    return quizzes?.map((quiz) => ({ slug: quiz.slug })) || [];
-  } catch {
-    return [];
-  }
+  return [];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

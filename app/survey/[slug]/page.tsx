@@ -23,26 +23,9 @@ function getSupabaseClient() {
   return createClient(supabaseUrl, supabaseAnonKey);
 }
 
-// 静的パラメータ生成（SSG対応）
+// ISRでオンデマンド生成（ビルド時間・デプロイサイズ削減のためビルド時の事前生成を無効化）
 export async function generateStaticParams() {
-  const supabase = getSupabaseClient();
-  if (!supabase) {
-    return [];
-  }
-
-  try {
-    const { data: surveys } = await supabase
-      .from("surveys")
-      .select("slug")
-      .not("slug", "is", null);
-
-    return surveys?.map((survey) => ({
-      slug: survey.slug,
-    })) || [];
-  } catch (error) {
-    console.error('Failed to generate static params for surveys:', error);
-    return [];
-  }
+  return [];
 }
 
 // メタデータ生成

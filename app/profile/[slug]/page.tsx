@@ -14,26 +14,9 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// 静的パラメータ生成（SSG対応）
+// ISRでオンデマンド生成（ビルド時間・デプロイサイズ削減のためビルド時の事前生成を無効化）
 export async function generateStaticParams() {
-  if (!supabase) {
-    return [];
-  }
-
-  try {
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('slug')
-      .eq('featured_on_top', true)
-      .not('slug', 'is', null);
-
-    return profiles?.map((profile) => ({
-      slug: profile.slug,
-    })) || [];
-  } catch (error) {
-    console.error('Failed to generate static params for profiles:', error);
-    return [];
-  }
+  return [];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
