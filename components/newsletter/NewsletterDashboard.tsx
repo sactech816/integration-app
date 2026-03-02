@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Mail, Users, Send, Plus, Trash2, ChevronRight, Loader2, Crown, BarChart3 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 
 interface NewsletterList {
   id: string;
@@ -25,15 +24,15 @@ interface Campaign {
 }
 
 interface NewsletterDashboardProps {
+  userId: string;
   isProUser: boolean;
   planTier: 'guest' | 'free' | 'pro';
 }
 
-export default function NewsletterDashboard({ isProUser, planTier }: NewsletterDashboardProps) {
+export default function NewsletterDashboard({ userId, isProUser, planTier }: NewsletterDashboardProps) {
   const [lists, setLists] = useState<NewsletterList[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
   const [monthlyUsage, setMonthlyUsage] = useState<{ used: number; limit: number } | null>(null);
 
   const monthlyLimit = planTier === 'pro' ? 1000 : planTier === 'free' ? 100 : 0;
@@ -41,20 +40,15 @@ export default function NewsletterDashboard({ isProUser, planTier }: NewsletterD
 
   useEffect(() => {
     const init = async () => {
-      if (!supabase) return;
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-        await Promise.all([
-          fetchLists(user.id),
-          fetchCampaigns(user.id),
-          fetchUsage(user.id),
-        ]);
-      }
+      await Promise.all([
+        fetchLists(userId),
+        fetchCampaigns(userId),
+        fetchUsage(userId),
+      ]);
       setLoading(false);
     };
     init();
-  }, []);
+  }, [userId]);
 
   const fetchLists = async (uid: string) => {
     const res = await fetch(`/api/newsletter-maker/lists?userId=${uid}`);

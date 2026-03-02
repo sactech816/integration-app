@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import {
   Send, Save, ArrowLeft, Loader2, Monitor, Pencil,
   ChevronDown, ChevronUp, Settings, FileText, Paintbrush,
-  LayoutTemplate, Sparkles, Type
+  LayoutTemplate, Sparkles, Type, Code, Eye
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import Header from '@/components/shared/Header';
+import AuthModal from '@/components/shared/AuthModal';
 import { NEWSLETTER_TEMPLATES, type NewsletterTemplate } from '@/constants/templates/newsletter';
 
 interface CampaignEditorProps {
@@ -53,6 +55,35 @@ function Section({
   );
 }
 
+// HTML⇔ビジュアル切替トグル
+function ViewToggle({
+  mode, onChange,
+}: {
+  mode: 'visual' | 'html';
+  onChange: (mode: 'visual' | 'html') => void;
+}) {
+  return (
+    <div className="inline-flex items-center bg-gray-100 rounded-lg p-0.5 text-xs">
+      <button
+        onClick={() => onChange('visual')}
+        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md transition-all font-semibold ${
+          mode === 'visual' ? 'bg-white text-violet-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+        }`}
+      >
+        <Eye className="w-3 h-3" />ビジュアル
+      </button>
+      <button
+        onClick={() => onChange('html')}
+        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md transition-all font-semibold ${
+          mode === 'html' ? 'bg-white text-violet-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+        }`}
+      >
+        <Code className="w-3 h-3" />HTML
+      </button>
+    </div>
+  );
+}
+
 // HTMLからプレーンテキストを抽出
 function htmlToPlainText(html: string): string {
   return html
@@ -73,7 +104,8 @@ function htmlToPlainText(html: string): string {
 
 export default function CampaignEditor({ campaignId, defaultListId }: CampaignEditorProps) {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [showAuth, setShowAuth] = useState(false);
   const [lists, setLists] = useState<ListOption[]>([]);
   const [listId, setListId] = useState(defaultListId || '');
   const [subject, setSubject] = useState('');
@@ -88,10 +120,14 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   const [sentCount, setSentCount] = useState(0);
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
 
+  // 表示モード（HTML / ビジュアル）
+  const [headerViewMode, setHeaderViewMode] = useState<'visual' | 'html'>('visual');
+  const [bodyViewMode, setBodyViewMode] = useState<'visual' | 'html'>('visual');
+  const [footerViewMode, setFooterViewMode] = useState<'visual' | 'html'>('visual');
+
   // AI 関連
   const [aiGenerating, setAiGenerating] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
-  const [aiType, setAiType] = useState<'subject' | 'body'>('body');
   const [aiPurpose, setAiPurpose] = useState('announcement');
   const [aiKeyword, setAiKeyword] = useState('');
   const [aiResults, setAiResults] = useState<string[]>([]);
@@ -111,13 +147,17 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
 
   useEffect(() => {
     const init = async () => {
-      if (!supabase) return;
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-        await fetchLists(user.id);
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUser = session?.user || null;
+      setUser(currentUser);
+      if (currentUser) {
+        await fetchLists(currentUser.id);
         if (campaignId) {
-          await fetchCampaign(user.id);
+          await fetchCampaign(currentUser.id);
         }
       }
       setLoading(false);
@@ -160,10 +200,10 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   };
 
   const handleSave = async () => {
-    if (!userId || !subject || !listId) return;
+    if (!user || !subject || !listId) return;
     setSaving(true);
     const textContent = htmlToPlainText(getFullHtml());
-    const body = { userId, listId, subject, previewText, htmlContent: getFullHtml(), textContent };
+    const body = { userId: user.id, listId, subject, previewText, htmlContent: getFullHtml(), textContent };
     if (campaignId) {
       await fetch(`/api/newsletter-maker/campaigns/${campaignId}`, {
         method: 'PATCH',
@@ -185,7 +225,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   };
 
   const handleSend = async () => {
-    if (!userId || !campaignId) return;
+    if (!user || !campaignId) return;
     if (!confirm('このキャンペーンを全読者に送信しますか？送信後は編集できません。')) return;
     setSending(true);
     // 保存してから送信
@@ -193,13 +233,13 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
     await fetch(`/api/newsletter-maker/campaigns/${campaignId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, listId, subject, previewText, htmlContent: getFullHtml(), textContent }),
+      body: JSON.stringify({ userId: user.id, listId, subject, previewText, htmlContent: getFullHtml(), textContent }),
     });
 
     const res = await fetch(`/api/newsletter-maker/campaigns/${campaignId}/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId }),
+      body: JSON.stringify({ userId: user.id }),
     });
     if (res.ok) {
       const data = await res.json();
@@ -227,18 +267,19 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
     return parts.join('\n');
   };
 
-  // テンプレート適用
+  // テンプレート適用（件名も自動設定）
   const applyTemplate = (template: NewsletterTemplate) => {
-    if (htmlContent && !confirm('現在の本文を上書きしますか？')) return;
+    if (htmlContent && !confirm('現在の内容をテンプレートで上書きしますか？')) return;
     setHeaderHtml(template.header_html);
     setHtmlContent(template.body_html);
     setFooterHtml(template.footer_html);
+    if (!subject) setSubject(template.default_subject);
     setOpenSections((prev) => ({ ...prev, template: false, body: true }));
   };
 
-  // AI生成
+  // AI本文生成
   const handleAiGenerate = async () => {
-    if (!userId) return;
+    if (!user) return;
     setAiGenerating(true);
     setAiResults([]);
     try {
@@ -246,8 +287,8 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId,
-          type: aiType,
+          userId: user.id,
+          type: 'body',
           purpose: aiPurpose,
           keyword: aiKeyword,
           currentSubject: subject,
@@ -257,30 +298,44 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
       if (res.ok) {
         const data = await res.json();
         setAiResults(data.results || []);
+        if (!data.results?.length) {
+          alert('生成結果が空でした。キーワードを変更してお試しください。');
+        }
       } else {
         const err = await res.json();
         alert(err.error || 'AI生成に失敗しました');
       }
     } catch {
-      alert('AI生成に失敗しました');
+      alert('通信エラーが発生しました。しばらくしてからお試しください。');
     }
     setAiGenerating(false);
   };
 
   const applyAiResult = (result: string) => {
-    if (aiType === 'subject') {
-      setSubject(result);
-    } else {
-      setHtmlContent(result);
-    }
+    setHtmlContent(result);
     setShowAiModal(false);
     setAiResults([]);
+    setOpenSections((prev) => ({ ...prev, body: true }));
+  };
+
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+      setUser(null);
+    }
+  };
+
+  const navigateTo = (page: string) => {
+    window.location.href = page.startsWith('/') ? page : `/${page}`;
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
+      <div className="min-h-screen bg-gray-50">
+        <Header setPage={navigateTo} user={user} onLogout={handleLogout} setShowAuth={setShowAuth} currentService="newsletter" />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
+        </div>
       </div>
     );
   }
@@ -289,7 +344,11 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* ヘッダー */}
+      {/* 集客メーカーヘッダー */}
+      <Header setPage={navigateTo} user={user} onLogout={handleLogout} setShowAuth={setShowAuth} currentService="newsletter" />
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
+
+      {/* エディタヘッダー */}
       <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-3">
           <button onClick={() => router.push('/newsletter/dashboard')} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors">
@@ -379,23 +438,13 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                   </select>
                 </div>
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-semibold text-gray-700">件名 <span className="text-red-500">*</span></label>
-                    {!isSent && (
-                      <button
-                        onClick={() => { setAiType('subject'); setShowAiModal(true); }}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-violet-600 hover:text-violet-800 transition-colors"
-                      >
-                        <Sparkles className="w-3.5 h-3.5" />AIで生成
-                      </button>
-                    )}
-                  </div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">件名 <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     disabled={isSent}
-                    placeholder="メールの件名を入力"
+                    placeholder="メールの件名を入力（テンプレート選択で自動入力されます）"
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all disabled:bg-gray-100"
                   />
                 </div>
@@ -423,7 +472,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                 badge={`${NEWSLETTER_TEMPLATES.length}種類`}
               >
                 <div className="space-y-4">
-                  <p className="text-sm text-gray-600">テンプレートを選択すると、ヘッダー・本文・フッターが自動設定されます。</p>
+                  <p className="text-sm text-gray-600">テンプレートを選択すると、件名・ヘッダー・本文・フッターが自動設定されます。</p>
                   <div>
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">基本テンプレート</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -469,15 +518,28 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
               badge={headerHtml ? '設定済み' : undefined}
             >
               <div className="space-y-3">
-                <p className="text-sm text-gray-600">メール冒頭に表示されるヘッダーHTML。リスト設定から自動適用されます。</p>
-                <textarea
-                  value={headerHtml}
-                  onChange={(e) => setHeaderHtml(e.target.value)}
-                  disabled={isSent}
-                  placeholder="ヘッダーHTML（任意）"
-                  rows={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all font-mono text-sm disabled:bg-gray-100"
-                />
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-600">メール冒頭に表示されるヘッダー。</p>
+                  <ViewToggle mode={headerViewMode} onChange={setHeaderViewMode} />
+                </div>
+                {headerViewMode === 'html' ? (
+                  <textarea
+                    value={headerHtml}
+                    onChange={(e) => setHeaderHtml(e.target.value)}
+                    disabled={isSent}
+                    placeholder="ヘッダーHTML（任意）"
+                    rows={6}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all font-mono text-sm disabled:bg-gray-100"
+                  />
+                ) : (
+                  <div className="border border-gray-200 rounded-xl overflow-hidden bg-white min-h-[80px]">
+                    {headerHtml ? (
+                      <div dangerouslySetInnerHTML={{ __html: headerHtml }} />
+                    ) : (
+                      <p className="p-4 text-sm text-gray-400">ヘッダーが未設定です。テンプレートを選択すると自動設定されます。</p>
+                    )}
+                  </div>
+                )}
               </div>
             </Section>
 
@@ -489,25 +551,38 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
               onToggle={() => toggleSection('body')}
             >
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-600">メール本文を入力してください。HTMLタグも使用できます。</p>
-                  {!isSent && (
-                    <button
-                      onClick={() => { setAiType('body'); setShowAiModal(true); }}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-violet-600 bg-violet-50 rounded-lg hover:bg-violet-100 transition-colors"
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />AIで下書き生成
-                    </button>
-                  )}
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <p className="text-sm text-gray-600">メール本文を編集してください。</p>
+                  <div className="flex items-center gap-2">
+                    {!isSent && (
+                      <button
+                        onClick={() => setShowAiModal(true)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-violet-600 bg-violet-50 rounded-lg hover:bg-violet-100 transition-colors"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />AIで下書き生成
+                      </button>
+                    )}
+                    <ViewToggle mode={bodyViewMode} onChange={setBodyViewMode} />
+                  </div>
                 </div>
-                <textarea
-                  value={htmlContent}
-                  onChange={(e) => setHtmlContent(e.target.value)}
-                  disabled={isSent}
-                  placeholder={'メール本文を入力してください。\n\n改行はそのまま反映されます。\nHTMLタグも使用できます。'}
-                  rows={20}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all font-mono text-sm disabled:bg-gray-100"
-                />
+                {bodyViewMode === 'html' ? (
+                  <textarea
+                    value={htmlContent}
+                    onChange={(e) => setHtmlContent(e.target.value)}
+                    disabled={isSent}
+                    placeholder={'メール本文のHTMLを入力してください。\nテンプレートを選択すると自動設定されます。'}
+                    rows={20}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all font-mono text-sm disabled:bg-gray-100"
+                  />
+                ) : (
+                  <div className="border border-gray-200 rounded-xl overflow-hidden bg-white min-h-[200px]">
+                    {htmlContent ? (
+                      <div className="p-4" dangerouslySetInnerHTML={{ __html: htmlContent.startsWith('<') ? htmlContent : textToHtml(htmlContent) }} />
+                    ) : (
+                      <p className="p-4 text-sm text-gray-400">本文が未入力です。テンプレートを選択するか、HTMLモードで直接入力してください。</p>
+                    )}
+                  </div>
+                )}
               </div>
             </Section>
 
@@ -520,15 +595,28 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
               badge={footerHtml ? '設定済み' : undefined}
             >
               <div className="space-y-3">
-                <p className="text-sm text-gray-600">メール末尾に表示されるフッターHTML。配信停止リンクは自動追加されます。</p>
-                <textarea
-                  value={footerHtml}
-                  onChange={(e) => setFooterHtml(e.target.value)}
-                  disabled={isSent}
-                  placeholder="フッターHTML（任意）"
-                  rows={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all font-mono text-sm disabled:bg-gray-100"
-                />
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-600">メール末尾に表示されるフッター。</p>
+                  <ViewToggle mode={footerViewMode} onChange={setFooterViewMode} />
+                </div>
+                {footerViewMode === 'html' ? (
+                  <textarea
+                    value={footerHtml}
+                    onChange={(e) => setFooterHtml(e.target.value)}
+                    disabled={isSent}
+                    placeholder="フッターHTML（任意）"
+                    rows={6}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all font-mono text-sm disabled:bg-gray-100"
+                  />
+                ) : (
+                  <div className="border border-gray-200 rounded-xl overflow-hidden bg-white min-h-[80px]">
+                    {footerHtml ? (
+                      <div dangerouslySetInnerHTML={{ __html: footerHtml }} />
+                    ) : (
+                      <p className="p-4 text-sm text-gray-400">フッターが未設定です。テンプレートを選択すると自動設定されます。</p>
+                    )}
+                  </div>
+                )}
               </div>
             </Section>
           </div>
@@ -566,7 +654,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                     dangerouslySetInnerHTML={{ __html: getFullHtml() }}
                   />
                 ) : (
-                  <p className="text-gray-300 text-center py-16">本文を入力すると、ここにプレビューが表示されます</p>
+                  <p className="text-gray-300 text-center py-16">テンプレートを選択すると、ここにプレビューが表示されます</p>
                 )}
               </div>
             </div>
@@ -577,14 +665,14 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
         <div className="hidden lg:block lg:w-1/2 lg:flex-shrink-0 bg-gray-50" />
       </div>
 
-      {/* AI生成モーダル */}
+      {/* AI本文生成モーダル */}
       {showAiModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-violet-600" />
-                {aiType === 'subject' ? 'AIで件名を生成' : 'AIで本文を生成'}
+                AIで本文を生成
               </h2>
               <button
                 onClick={() => { setShowAiModal(false); setAiResults([]); }}
@@ -594,6 +682,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
               </button>
             </div>
             <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-600">用途とキーワードを入力すると、AIがメール本文のHTMLを生成します。（PROプラン限定）</p>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">用途</label>
                 <select
@@ -627,7 +716,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                 {aiGenerating ? (
                   <><Loader2 className="w-4 h-4 animate-spin" />生成中...</>
                 ) : (
-                  <><Sparkles className="w-4 h-4" />生成する</>
+                  <><Sparkles className="w-4 h-4" />本文を生成する</>
                 )}
               </button>
 
@@ -641,11 +730,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                       onClick={() => applyAiResult(result)}
                       className="w-full p-4 text-left border border-gray-200 rounded-xl hover:border-violet-300 hover:bg-violet-50 transition-all"
                     >
-                      {aiType === 'subject' ? (
-                        <p className="text-sm font-semibold text-gray-900">{result}</p>
-                      ) : (
-                        <div className="text-sm text-gray-700 line-clamp-4" dangerouslySetInnerHTML={{ __html: result }} />
-                      )}
+                      <div className="text-sm text-gray-700 line-clamp-4" dangerouslySetInnerHTML={{ __html: result }} />
                     </button>
                   ))}
                 </div>

@@ -115,8 +115,8 @@ BEGIN
     COUNT(DISTINCT p.id)::BIGINT as total_purchases,
     COALESCE(SUM(p.amount), 0)::BIGINT as total_donated
   FROM auth.users au
-  LEFT JOIN user_roles ur ON au.id = ur.user_id
-  LEFT JOIN purchases p ON au.id = p.user_id
+  LEFT JOIN public.user_roles ur ON au.id = ur.user_id
+  LEFT JOIN public.purchases p ON au.id = p.user_id
   GROUP BY au.id, au.email, ur.is_partner, ur.partner_since, ur.partner_note, au.created_at
   ORDER BY au.created_at DESC;
 END;
@@ -163,9 +163,9 @@ BEGIN
       COALESCE(upb.current_points, 0)::INTEGER as ucurrent_points,
       COALESCE(upb.total_accumulated_points, 0)::INTEGER as utotal_accumulated_points
     FROM auth.users au
-    LEFT JOIN user_roles ur ON au.id = ur.user_id
-    LEFT JOIN purchases p ON au.id = p.user_id
-    LEFT JOIN user_point_balances upb ON au.id = upb.user_id
+    LEFT JOIN public.user_roles ur ON au.id = ur.user_id
+    LEFT JOIN public.purchases p ON au.id = p.user_id
+    LEFT JOIN public.user_point_balances upb ON au.id = upb.user_id
     WHERE (p_search IS NULL OR p_search = '' OR au.email ILIKE '%' || p_search || '%')
     GROUP BY au.id, au.email, ur.is_partner, ur.partner_since, ur.partner_note, au.created_at, au.email_confirmed_at, upb.current_points, upb.total_accumulated_points
     ORDER BY au.created_at DESC

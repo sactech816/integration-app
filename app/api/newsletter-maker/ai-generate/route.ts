@@ -99,7 +99,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ results });
   } catch (error) {
     console.error('[Newsletter AI Generate] Error:', error);
-    return NextResponse.json({ error: 'AI生成に失敗しました' }, { status: 500 });
+    const errMsg = error instanceof Error ? error.message : 'AI生成に失敗しました';
+    // 具体的なエラーメッセージを返す
+    if (errMsg.includes('API key') || errMsg.includes('auth')) {
+      return NextResponse.json({ error: 'AI設定が正しく構成されていません。管理者にお問い合わせください。' }, { status: 500 });
+    }
+    return NextResponse.json({ error: `AI生成に失敗しました: ${errMsg}` }, { status: 500 });
   }
 }
 
@@ -125,12 +130,11 @@ ${currentContent ? `本文の概要: ${currentContent.substring(0, 200)}` : ''}
 
 上記の情報をもとに、メルマガの件名を3つ提案してください。`;
 
-  const provider = createAIProvider({
-    preferProvider: getProviderFromModelId(aiSettings.model),
-    model: aiSettings.model,
-  });
-
-  try {
+  const generateWithProvider = async (model: string) => {
+    const provider = createAIProvider({
+      preferProvider: getProviderFromModelId(model),
+      model: model,
+    });
     const response = await provider.generate({
       messages: [
         { role: 'system', content: systemPrompt },
@@ -140,28 +144,33 @@ ${currentContent ? `本文の概要: ${currentContent.substring(0, 200)}` : ''}
       maxTokens: 500,
       responseFormat: 'json',
     });
-
-    const parsed = JSON.parse(response.content);
+    const jsonStr = extractJson(response.content);
+    const parsed = JSON.parse(jsonStr);
     return parsed.subjects || [];
+  };
+
+  try {
+    return await generateWithProvider(aiSettings.model);
   } catch (err) {
     console.error('[Newsletter AI] Subject generation failed, trying backup:', err);
-    // バックアップモデルで再試行
-    const backup = createAIProvider({
-      preferProvider: getProviderFromModelId(aiSettings.backupModel),
-      model: aiSettings.backupModel,
-    });
-    const response = await backup.generate({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.8,
-      maxTokens: 500,
-      responseFormat: 'json',
-    });
-    const parsed = JSON.parse(response.content);
-    return parsed.subjects || [];
+    try {
+      return await generateWithProvider(aiSettings.backupModel);
+    } catch (backupErr) {
+      console.error('[Newsletter AI] Subject generation also failed with backup:', backupErr);
+      throw new Error('AIモデルからの応答を処理できませんでした。しばらくしてからお試しください。');
+    }
   }
+}
+
+// AIレスポンスからJSON部分を抽出するヘルパー
+function extractJson(content: string): string {
+  // コードブロック内のJSONを抽出
+  const codeBlockMatch = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+  if (codeBlockMatch) return codeBlockMatch[1].trim();
+  // { } で囲まれたJSONを抽出
+  const jsonMatch = content.match(/\{[\s\S]*\}/);
+  if (jsonMatch) return jsonMatch[0];
+  return content;
 }
 
 async function generateBody(
@@ -181,21 +190,20 @@ async function generateBody(
 - レスポンシブに配慮（固定幅は避ける）
 - 「{{送信者名}}」のようなプレースホルダーを使用
 
-JSON形式で1つの本文HTMLを返してください。
+必ずJSON形式で1つの本文HTMLを返してください。他のテキストは含めないでください。
 フォーマット: {"bodies": ["<div>...</div>"]}`;
 
   const userPrompt = `用途: ${purposeLabel}
 ${currentSubject ? `件名: ${currentSubject}` : ''}
 ${keyword ? `キーワード・補足情報: ${keyword}` : ''}
 
-上記の情報をもとに、メルマガ本文のHTMLを1つ生成してください。`;
+上記の情報をもとに、メルマガ本文のHTMLを1つ生成してください。JSONのみで回答してください。`;
 
-  const provider = createAIProvider({
-    preferProvider: getProviderFromModelId(aiSettings.model),
-    model: aiSettings.model,
-  });
-
-  try {
+  const generateWithProvider = async (model: string) => {
+    const provider = createAIProvider({
+      preferProvider: getProviderFromModelId(model),
+      model: model,
+    });
     const response = await provider.generate({
       messages: [
         { role: 'system', content: systemPrompt },
@@ -205,25 +213,20 @@ ${keyword ? `キーワード・補足情報: ${keyword}` : ''}
       maxTokens: 2000,
       responseFormat: 'json',
     });
+    const jsonStr = extractJson(response.content);
+    const parsed = JSON.parse(jsonStr);
+    return parsed.bodies || [];
+  };
 
-    const parsed = JSON.parse(response.content);
-    return parsed.bodies || [];
+  try {
+    return await generateWithProvider(aiSettings.model);
   } catch (err) {
-    console.error('[Newsletter AI] Body generation failed, trying backup:', err);
-    const backup = createAIProvider({
-      preferProvider: getProviderFromModelId(aiSettings.backupModel),
-      model: aiSettings.backupModel,
-    });
-    const response = await backup.generate({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.7,
-      maxTokens: 2000,
-      responseFormat: 'json',
-    });
-    const parsed = JSON.parse(response.content);
-    return parsed.bodies || [];
+    console.error('[Newsletter AI] Body generation failed with primary model, trying backup:', err);
+    try {
+      return await generateWithProvider(aiSettings.backupModel);
+    } catch (backupErr) {
+      console.error('[Newsletter AI] Body generation also failed with backup model:', backupErr);
+      throw new Error('AIモデルからの応答を処理できませんでした。しばらくしてからお試しください。');
+    }
   }
 }
