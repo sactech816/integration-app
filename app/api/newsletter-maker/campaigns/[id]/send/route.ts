@@ -120,9 +120,9 @@ export async function POST(
       })
       .eq('id', id);
 
-    // 送信ログを記録
+    // 送信ログを記録（月間送信数カウント用）
     if (sentCount > 0) {
-      await supabase
+      const { error: logError } = await supabase
         .from('newsletter_send_logs')
         .insert({
           user_id: userId,
@@ -130,6 +130,10 @@ export async function POST(
           sent_count: sentCount,
           sent_at: new Date().toISOString(),
         });
+
+      if (logError) {
+        console.error('[Newsletter Send] Failed to insert send log:', logError);
+      }
     }
 
     return NextResponse.json({
