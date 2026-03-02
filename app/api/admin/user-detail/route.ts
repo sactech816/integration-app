@@ -215,6 +215,7 @@ export async function GET(request: NextRequest) {
         email: user.email,
         createdAt: user.created_at,
         lastSignInAt: user.last_sign_in_at,
+        emailConfirmedAt: user.email_confirmed_at || null,
         isPartner: rolesResult.data?.is_partner || false,
         partnerSince: rolesResult.data?.partner_since,
         partnerNote: rolesResult.data?.partner_note,

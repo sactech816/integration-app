@@ -136,6 +136,7 @@ RETURNS TABLE (
   partner_since TIMESTAMPTZ,
   partner_note TEXT,
   user_created_at TIMESTAMPTZ,
+  email_confirmed_at TIMESTAMPTZ,
   total_purchases BIGINT,
   total_donated BIGINT,
   current_points INTEGER,
@@ -156,6 +157,7 @@ BEGIN
       ur.partner_since as upartner_since,
       ur.partner_note::TEXT as upartner_note,
       au.created_at as ucreated_at,
+      au.email_confirmed_at as uemail_confirmed_at,
       COUNT(DISTINCT p.id)::BIGINT as utotal_purchases,
       COALESCE(SUM(p.amount), 0)::BIGINT as utotal_donated,
       COALESCE(upb.current_points, 0)::INTEGER as ucurrent_points,
@@ -165,7 +167,7 @@ BEGIN
     LEFT JOIN purchases p ON au.id = p.user_id
     LEFT JOIN user_point_balances upb ON au.id = upb.user_id
     WHERE (p_search IS NULL OR p_search = '' OR au.email ILIKE '%' || p_search || '%')
-    GROUP BY au.id, au.email, ur.is_partner, ur.partner_since, ur.partner_note, au.created_at, upb.current_points, upb.total_accumulated_points
+    GROUP BY au.id, au.email, ur.is_partner, ur.partner_since, ur.partner_note, au.created_at, au.email_confirmed_at, upb.current_points, upb.total_accumulated_points
     ORDER BY au.created_at DESC
   )
   SELECT
@@ -175,6 +177,7 @@ BEGIN
     ud.upartner_since,
     ud.upartner_note,
     ud.ucreated_at,
+    ud.uemail_confirmed_at,
     ud.utotal_purchases,
     ud.utotal_donated,
     ud.ucurrent_points,

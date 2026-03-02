@@ -360,6 +360,7 @@ export async function getAllUsersWithRolesPaginated(
     partner_since: string | null;
     partner_note: string | null;
     user_created_at: string;
+    email_confirmed_at: string | null;
     total_purchases: number;
     total_donated: number;
     current_points: number;
@@ -466,6 +467,7 @@ export async function getAllUsersWithRolesPaginated(
       partner_since: row.partner_since as string | null,
       partner_note: row.partner_note as string | null,
       user_created_at: row.user_created_at as string,
+      email_confirmed_at: (row.email_confirmed_at as string) || null,
       total_purchases: row.total_purchases as number,
       total_donated: row.total_donated as number,
       current_points: row.current_points as number,

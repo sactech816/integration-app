@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Loader2, User, CreditCard, BarChart3, FileText, Shield, BookOpen, X } from 'lucide-react';
+import { Loader2, User, CreditCard, BarChart3, FileText, Shield, BookOpen, X, MailCheck, MailX } from 'lucide-react';
 
 type UserDetail = {
   user: {
@@ -10,6 +10,7 @@ type UserDetail = {
     email: string;
     createdAt: string;
     lastSignInAt: string | null;
+    emailConfirmedAt: string | null;
     isPartner: boolean;
     partnerSince: string | null;
     partnerNote: string | null;
@@ -82,6 +83,7 @@ export default function UserDetailPanel({ userId, onClose }: UserDetailPanelProp
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     fetchUserDetail();
@@ -109,6 +111,43 @@ export default function UserDetailPanel({ userId, onClose }: UserDetailPanelProp
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleManualVerify = async () => {
+    if (!confirm('このユーザーのメール認証を手動で完了しますか？')) return;
+    setVerifying(true);
+    try {
+      const session = await supabase?.auth.getSession();
+      const token = session?.data.session?.access_token;
+      if (!token) throw new Error('Not authenticated');
+
+      const response = await fetch('/api/admin/verify-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to verify email');
+      }
+
+      const result = await response.json();
+      if (result.success && data) {
+        setData({
+          ...data,
+          user: { ...data.user, emailConfirmedAt: result.emailConfirmedAt },
+        });
+      }
+      alert('メール認証を完了しました');
+    } catch (err) {
+      alert('エラー: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -186,18 +225,48 @@ export default function UserDetailPanel({ userId, onClose }: UserDetailPanelProp
       {/* タブコンテンツ */}
       <div className="p-4">
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard label="登録日" value={formatDate(data.user.createdAt)} />
-            <StatCard label="最終ログイン" value={formatDate(data.user.lastSignInAt)} />
-            <StatCard label="現在ポイント" value={`${data.points.current.toLocaleString()}pt`} highlight />
-            <StatCard label="累計ポイント" value={`${data.points.accumulated.toLocaleString()}pt`} />
-            <StatCard label="今日のAI使用" value={`${data.aiUsage.daily}回`} />
-            <StatCard label="今月のAI使用" value={`${data.aiUsage.monthly}回`} />
-            <StatCard label="AI費用(30日)" value={formatCost(data.aiUsage.totalCostJpy)} />
-            <StatCard
-              label="コンテンツ数"
-              value={`${data.content.quizCount + data.content.profileCount + data.content.businessCount + data.content.salesLetterCount}件`}
-            />
+          <div className="space-y-3">
+            {/* メール認証状態 */}
+            {!data.user.emailConfirmedAt && (
+              <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <MailX size={16} className="text-red-500" />
+                  <span className="text-sm font-bold text-red-700">メール未認証</span>
+                  <span className="text-xs text-red-500">確認メールが届いていない可能性があります</span>
+                </div>
+                <button
+                  onClick={handleManualVerify}
+                  disabled={verifying}
+                  className="bg-red-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+                >
+                  {verifying ? (
+                    <><Loader2 size={12} className="animate-spin" /> 処理中...</>
+                  ) : (
+                    <><MailCheck size={12} /> 手動で認証する</>
+                  )}
+                </button>
+              </div>
+            )}
+            {data.user.emailConfirmedAt && (
+              <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
+                <MailCheck size={14} className="text-green-600" />
+                <span className="text-xs font-bold text-green-700">メール認証済み</span>
+                <span className="text-xs text-green-500">{formatDate(data.user.emailConfirmedAt)}</span>
+              </div>
+            )}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <StatCard label="登録日" value={formatDate(data.user.createdAt)} />
+              <StatCard label="最終ログイン" value={formatDate(data.user.lastSignInAt)} />
+              <StatCard label="現在ポイント" value={`${data.points.current.toLocaleString()}pt`} highlight />
+              <StatCard label="累計ポイント" value={`${data.points.accumulated.toLocaleString()}pt`} />
+              <StatCard label="今日のAI使用" value={`${data.aiUsage.daily}回`} />
+              <StatCard label="今月のAI使用" value={`${data.aiUsage.monthly}回`} />
+              <StatCard label="AI費用(30日)" value={formatCost(data.aiUsage.totalCostJpy)} />
+              <StatCard
+                label="コンテンツ数"
+                value={`${data.content.quizCount + data.content.profileCount + data.content.businessCount + data.content.salesLetterCount}件`}
+              />
+            </div>
           </div>
         )}
 

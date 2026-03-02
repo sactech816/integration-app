@@ -19,6 +19,7 @@ type UserWithRoles = {
   is_monitor?: boolean;
   monitor_services?: string[];
   ai_monthly_usage?: number;
+  email_confirmed_at?: string | null;
 };
 
 type UserManagerProps = {
@@ -170,6 +171,11 @@ export default function UserManager({
                         <span>{usr.email}</span>
                       </button>
                       <div className="flex items-center gap-1.5 ml-5 mt-1">
+                        {!usr.email_confirmed_at && (
+                          <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                            未認証
+                          </span>
+                        )}
                         {usr.is_partner && (
                           <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-2 py-0.5 rounded-full text-[10px] font-bold">
                             パートナー
