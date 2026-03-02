@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { getMakersSubscriptionStatus, checkNewsletterSendLimit } from '@/lib/subscription';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -62,6 +63,15 @@ export async function POST(
       return NextResponse.json({ error: '有効な読者がいません' }, { status: 400 });
     }
 
+    // 送信制限チェック
+    const subStatus = await getMakersSubscriptionStatus(userId);
+    const limitCheck = await checkNewsletterSendLimit(userId, subStatus.planTier, subscribers.length);
+    if (!limitCheck.canSend) {
+      return NextResponse.json({
+        error: `月間送信上限に達しています（${limitCheck.used}/${limitCheck.limit}通使用済み、残り${limitCheck.remaining}通）。PROプランにアップグレードすると月1,000通まで送信できます。`,
+      }, { status: 403 });
+    }
+
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
     const fromName = campaign.newsletter_lists?.from_name || '集客メーカー';
     const fromEmail = campaign.newsletter_lists?.from_email || process.env.RESEND_FROM_EMAIL || 'noreply@makers.tokyo';
@@ -78,12 +88,18 @@ export async function POST(
 
     for (let i = 0; i < subscribers.length; i += batchSize) {
       const batch = subscribers.slice(i, i + batchSize);
-      const emails = batch.map((sub) => ({
-        from: `${fromName} <${fromEmail}>`,
-        to: [sub.email],
-        subject: campaign.subject,
-        html: addUnsubscribeLink(campaign.html_content, sub.email),
-      }));
+      const emails = batch.map((sub) => {
+        const emailPayload: { from: string; to: string[]; subject: string; html: string; text?: string } = {
+          from: `${fromName} <${fromEmail}>`,
+          to: [sub.email],
+          subject: campaign.subject,
+          html: addUnsubscribeLink(campaign.html_content, sub.email),
+        };
+        if (campaign.text_content) {
+          emailPayload.text = campaign.text_content;
+        }
+        return emailPayload;
+      });
 
       try {
         await resend.batch.send(emails);
@@ -103,6 +119,18 @@ export async function POST(
         updated_at: new Date().toISOString(),
       })
       .eq('id', id);
+
+    // 送信ログを記録
+    if (sentCount > 0) {
+      await supabase
+        .from('newsletter_send_logs')
+        .insert({
+          user_id: userId,
+          campaign_id: id,
+          sent_count: sentCount,
+          sent_at: new Date().toISOString(),
+        });
+    }
 
     return NextResponse.json({
       success: true,

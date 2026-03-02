@@ -670,6 +670,8 @@ export interface MakersPlanDefinition {
   canUseAffiliate: boolean;
   aiDailyLimit: number;
   gamificationLimit: number;
+  newsletterMonthlyLimit: number; // 月間メルマガ送信数制限（-1 = 無制限）
+  newsletterListLimit: number;    // メルマガリスト作成数制限（-1 = 無制限）
   features: string[];
 }
 
@@ -691,6 +693,8 @@ export const MAKERS_PLAN_DEFINITIONS: Record<MakersPlanTier, MakersPlanDefinitio
     canUseAffiliate: false,
     aiDailyLimit: 0,
     gamificationLimit: 0,
+    newsletterMonthlyLimit: 0,
+    newsletterListLimit: 0,
     features: ['新規作成', 'ポータル掲載', 'URL発行'],
   },
   free: {
@@ -710,7 +714,9 @@ export const MAKERS_PLAN_DEFINITIONS: Record<MakersPlanTier, MakersPlanDefinitio
     canUseAffiliate: false,
     aiDailyLimit: 0,
     gamificationLimit: 0,
-    features: ['新規作成', 'ポータル掲載', 'URL発行', '編集・更新', 'アフィリエイト機能'],
+    newsletterMonthlyLimit: 100,
+    newsletterListLimit: 1,
+    features: ['新規作成', 'ポータル掲載', 'URL発行', '編集・更新', 'アフィリエイト機能', 'メルマガ（月100通）'],
   },
   pro: {
     id: 'pro',
@@ -729,11 +735,14 @@ export const MAKERS_PLAN_DEFINITIONS: Record<MakersPlanTier, MakersPlanDefinitio
     canUseAffiliate: true,
     aiDailyLimit: -1, // 無制限
     gamificationLimit: -1, // 無制限
+    newsletterMonthlyLimit: 1000,
+    newsletterListLimit: -1, // 無制限
     features: [
       '新規作成', 'ポータル掲載', 'URL発行', '編集・更新',
       'アフィリエイト機能', 'アクセス解析', 'AI利用（優先）',
       'ゲーミフィケーション（無制限）', 'HTMLダウンロード',
       '埋め込みコード発行', 'コピーライト非表示',
+      'メルマガ（月1,000通）',
       'お問い合わせ', '各種セミナー参加', 'グループコンサル',
     ],
   },
@@ -783,4 +792,60 @@ export function getMakersFeatureLimits(planTier: MakersPlanTier): MakersPlanDefi
   return MAKERS_PLAN_DEFINITIONS[planTier] || MAKERS_PLAN_DEFINITIONS.guest;
 }
 
+// ========================================
+// メルマガ送信制限
+// ========================================
+
+/**
+ * 当月のメルマガ送信数を取得
+ */
+export async function getNewsletterUsage(userId: string): Promise<number> {
+  const supabase = getServiceClient();
+  if (!supabase) return 0;
+
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+  const { data } = await supabase
+    .from('newsletter_send_logs')
+    .select('sent_count')
+    .eq('user_id', userId)
+    .gte('sent_at', monthStart);
+
+  return (data || []).reduce((sum: number, log: { sent_count: number }) => sum + log.sent_count, 0);
+}
+
+/**
+ * メルマガ送信可否チェック（送信可能な残数を返す）
+ */
+export async function checkNewsletterSendLimit(
+  userId: string,
+  planTier: MakersPlanTier,
+  requestedCount: number
+): Promise<{ canSend: boolean; remaining: number; limit: number; used: number }> {
+  const plan = MAKERS_PLAN_DEFINITIONS[planTier] || MAKERS_PLAN_DEFINITIONS.free;
+  const limit = plan.newsletterMonthlyLimit;
+
+  if (limit === -1) {
+    return { canSend: true, remaining: -1, limit: -1, used: 0 };
+  }
+
+  if (limit === 0) {
+    return { canSend: false, remaining: 0, limit: 0, used: 0 };
+  }
+
+  const used = await getNewsletterUsage(userId);
+  const remaining = Math.max(0, limit - used);
+  const canSend = remaining >= requestedCount;
+
+  return { canSend, remaining, limit, used };
+}
+
+/**
+ * メルマガリスト作成数制限チェック
+ */
+export function getNewsletterListLimit(planTier: MakersPlanTier): number {
+  const plan = MAKERS_PLAN_DEFINITIONS[planTier] || MAKERS_PLAN_DEFINITIONS.free;
+  return plan.newsletterListLimit;
+}
 

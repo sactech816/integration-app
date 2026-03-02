@@ -83,6 +83,24 @@ export async function GET(request: NextRequest) {
       orderFormCount = count || 0;
     }
 
+    // 予約メーカーのゲストメール数
+    const { data: bookingMenus } = await supabase
+      .from('booking_menus')
+      .select('id')
+      .eq('user_id', userId);
+
+    let bookingCount = 0;
+    const menuIds = bookingMenus?.map((m: { id: string }) => m.id) || [];
+    if (menuIds.length > 0) {
+      const { count } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .in('menu_id', menuIds)
+        .not('guest_email', 'is', null)
+        .neq('guest_email', '');
+      bookingCount = count || 0;
+    }
+
     return NextResponse.json({
       leads: {
         quiz: quizCount,
@@ -91,6 +109,7 @@ export async function GET(request: NextRequest) {
         total: quizCount + profileCount + businessCount,
       },
       orderForms: orderFormCount,
+      bookings: bookingCount,
     });
   } catch (error) {
     console.error('[Newsletter Import Sources] Error:', error);

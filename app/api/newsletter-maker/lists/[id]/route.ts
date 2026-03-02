@@ -54,7 +54,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const { userId, name, description, fromName, fromEmail } = await request.json();
+    const { userId, name, description, fromName, fromEmail, headerHtml, footerHtml } = await request.json();
 
     if (!userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
@@ -70,6 +70,8 @@ export async function PATCH(
     if (description !== undefined) updateData.description = description;
     if (fromName !== undefined) updateData.from_name = fromName;
     if (fromEmail !== undefined) updateData.from_email = fromEmail;
+    if (headerHtml !== undefined) updateData.header_html = headerHtml;
+    if (footerHtml !== undefined) updateData.footer_html = footerHtml;
 
     const { data, error } = await supabase
       .from('newsletter_lists')

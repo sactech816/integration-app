@@ -189,12 +189,12 @@ export default function SlotModal({
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
-      <div 
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in"
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ヘッダー */}
-        <div className={`px-6 py-4 border-b border-gray-200 flex items-center justify-between ${
+        <div className={`px-6 py-3 border-b border-gray-200 flex items-center justify-between shrink-0 ${
           menuType === 'adjustment' ? 'bg-purple-50' : 'bg-blue-50'
         } rounded-t-2xl`}>
           <h3 className="text-lg font-bold text-gray-900">
@@ -209,27 +209,27 @@ export default function SlotModal({
         </div>
 
         {/* フォーム */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto min-h-0">
           {/* 日付表示 */}
           <div>
-            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
               <Calendar size={16} />
               日付
             </label>
             {mode === 'single' && selectedDate ? (
-              <div className={`px-4 py-3 rounded-xl font-medium text-gray-900 ${
+              <div className={`px-3 py-2.5 rounded-xl font-medium text-gray-900 ${
                 menuType === 'adjustment' ? 'bg-purple-50' : 'bg-blue-50'
               }`}>
                 {formatDate(selectedDate)}
               </div>
             ) : mode === 'bulk' && selectedDates.length > 0 ? (
-              <div className={`px-4 py-3 rounded-xl max-h-32 overflow-y-auto ${
+              <div className={`px-3 py-2.5 rounded-xl max-h-24 overflow-y-auto ${
                 menuType === 'adjustment' ? 'bg-purple-50' : 'bg-blue-50'
               }`}>
-                <div className="text-sm font-semibold text-gray-700 mb-2">
+                <div className="text-sm font-semibold text-gray-700 mb-1">
                   {selectedDates.length}日選択中
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   {selectedDates.sort((a, b) => a.getTime() - b.getTime()).map((date, idx) => (
                     <div key={idx} className="text-sm text-gray-700">
                       {formatDate(date)}
@@ -450,7 +450,7 @@ export default function SlotModal({
 
               {/* 開始時間 */}
               <div>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
                   <Clock size={16} />
                   開始時間
                 </label>
@@ -458,7 +458,7 @@ export default function SlotModal({
                   <select
                     value={startHour}
                     onChange={(e) => setStartHour(Number(e.target.value))}
-                    className={`flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent text-gray-900 ${
+                    className={`flex-1 px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent text-gray-900 ${
                       menuType === 'adjustment' ? 'focus:ring-purple-500' : 'focus:ring-blue-500'
                     }`}
                   >
@@ -472,7 +472,7 @@ export default function SlotModal({
                   <select
                     value={startMinute}
                     onChange={(e) => setStartMinute(Number(e.target.value))}
-                    className={`flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent text-gray-900 ${
+                    className={`flex-1 px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:border-transparent text-gray-900 ${
                       menuType === 'adjustment' ? 'focus:ring-purple-500' : 'focus:ring-blue-500'
                     }`}
                   >
@@ -487,10 +487,10 @@ export default function SlotModal({
 
               {/* 終了時間（表示のみ） */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                   終了時間（{durationMin}分後）
                 </label>
-                <div className="px-4 py-3 bg-gray-100 rounded-xl font-medium text-gray-700">
+                <div className="px-3 py-2.5 bg-gray-100 rounded-xl font-medium text-gray-700">
                   {endHour.toString().padStart(2, '0')}:{endMinute.toString().padStart(2, '0')}
                 </div>
               </div>
@@ -500,7 +500,7 @@ export default function SlotModal({
           {/* 最大予約数（予約タイプのみ） */}
           {menuType === 'reservation' && (
             <div>
-              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
                 <Users size={16} />
                 最大予約数
               </label>
@@ -510,7 +510,7 @@ export default function SlotModal({
                 max={100}
                 value={maxCapacity}
                 onChange={(e) => setMaxCapacity(Number(e.target.value))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               />
               <p className="text-xs text-gray-500 mt-1">
                 この枠に予約できる最大人数
@@ -533,7 +533,7 @@ export default function SlotModal({
           )}
 
           {/* ボタン */}
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-2 sticky bottom-0 bg-white pb-1">
             <button
               type="button"
               onClick={onClose}

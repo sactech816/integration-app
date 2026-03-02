@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { getMakersSubscriptionStatus, getNewsletterListLimit } from '@/lib/subscription';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -71,6 +72,21 @@ export async function POST(request: NextRequest) {
     const supabase = getServiceClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+    }
+
+    // リスト作成数制限チェック
+    const subStatus = await getMakersSubscriptionStatus(userId);
+    const listLimit = getNewsletterListLimit(subStatus.planTier);
+    if (listLimit !== -1) {
+      const { count } = await supabase
+        .from('newsletter_lists')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+      if ((count || 0) >= listLimit) {
+        return NextResponse.json({
+          error: `リスト作成数の上限（${listLimit}個）に達しています。PROプランにアップグレードすると無制限に作成できます。`,
+        }, { status: 403 });
+      }
     }
 
     // Resend Audience を作成

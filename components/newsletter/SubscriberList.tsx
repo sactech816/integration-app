@@ -10,6 +10,7 @@ interface Subscriber {
   email: string;
   name: string | null;
   status: string;
+  source: string | null;
   subscribed_at: string;
   unsubscribed_at: string | null;
 }
@@ -26,7 +27,19 @@ interface ListDetail {
 interface ImportSources {
   leads: { quiz: number; profile: number; business: number; total: number };
   orderForms: number;
+  bookings: number;
 }
+
+const SOURCE_LABELS: Record<string, string> = {
+  manual: '手動',
+  csv: 'CSV',
+  quiz: '診断クイズ',
+  profile: 'プロフィール',
+  business: 'ビジネスLP',
+  booking: '予約メーカー',
+  order_form: '申込フォーム',
+  subscribe_form: '登録フォーム',
+};
 
 export default function SubscriberList({ listId }: { listId: string }) {
   const [list, setList] = useState<ListDetail | null>(null);
@@ -160,6 +173,8 @@ export default function SubscriberList({ listId }: { listId: string }) {
       let body: Record<string, unknown> = { userId };
       if (source === 'order_forms') {
         body = { ...body, source: 'order_forms' };
+      } else if (source === 'booking') {
+        body = { ...body, source: 'booking' };
       } else {
         body = { ...body, source: 'leads', contentType: source };
       }
@@ -393,6 +408,7 @@ export default function SubscriberList({ listId }: { listId: string }) {
               <tr>
                 <th className="text-left px-5 py-3 text-sm font-semibold text-gray-700">メールアドレス</th>
                 <th className="text-left px-5 py-3 text-sm font-semibold text-gray-700">名前</th>
+                <th className="text-left px-5 py-3 text-sm font-semibold text-gray-700">登録元</th>
                 <th className="text-left px-5 py-3 text-sm font-semibold text-gray-700">ステータス</th>
                 <th className="text-left px-5 py-3 text-sm font-semibold text-gray-700">登録日</th>
                 <th className="text-right px-5 py-3 text-sm font-semibold text-gray-700"></th>
@@ -403,6 +419,11 @@ export default function SubscriberList({ listId }: { listId: string }) {
                 <tr key={sub.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-5 py-3 text-sm text-gray-900 font-medium">{sub.email}</td>
                   <td className="px-5 py-3 text-sm text-gray-600">{sub.name || '-'}</td>
+                  <td className="px-5 py-3">
+                    <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-md">
+                      {SOURCE_LABELS[sub.source || 'manual'] || sub.source || '手動'}
+                    </span>
+                  </td>
                   <td className="px-5 py-3">
                     {sub.status === 'subscribed' ? (
                       <span className="inline-flex items-center px-2.5 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded-full">購読中</span>
@@ -572,6 +593,24 @@ export default function SubscriberList({ listId }: { listId: string }) {
                         <div className="flex-1">
                           <span className="text-sm font-semibold text-gray-900">申し込みフォームの送信者</span>
                           <span className="ml-2 text-sm text-gray-500">({importSources.orderForms}件)</span>
+                        </div>
+                      </label>
+
+                      {/* 予約メーカー */}
+                      <label className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
+                        importSources.bookings === 0 ? 'opacity-50 cursor-not-allowed border-gray-100 bg-gray-50' :
+                        selectedSources.has('booking') ? 'border-violet-300 bg-violet-50' : 'border-gray-200 hover:border-violet-200 bg-white'
+                      }`}>
+                        <input
+                          type="checkbox"
+                          checked={selectedSources.has('booking')}
+                          onChange={() => toggleSource('booking')}
+                          disabled={importSources.bookings === 0}
+                          className="w-5 h-5 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                        />
+                        <div className="flex-1">
+                          <span className="text-sm font-semibold text-gray-900">予約メーカーのゲスト</span>
+                          <span className="ml-2 text-sm text-gray-500">({importSources.bookings}件)</span>
                         </div>
                       </label>
 

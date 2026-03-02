@@ -47,16 +47,23 @@ export async function POST(
 
     // ソースに応じてメールアドレスを収集
     let contacts: { email: string; name?: string }[] = [];
+    let subscriberSource = 'manual'; // newsletter_subscribers.source に記録する値
 
     if (source === 'leads') {
       contacts = await collectFromLeads(supabase, userId, contentType);
+      subscriberSource = contentType || 'quiz'; // 'quiz', 'profile', 'business'
     } else if (source === 'order_forms') {
       contacts = await collectFromOrderForms(supabase, userId, formIds);
+      subscriberSource = 'order_form';
+    } else if (source === 'booking') {
+      contacts = await collectFromBookings(supabase, userId);
+      subscriberSource = 'booking';
     } else if (source === 'csv') {
       if (!Array.isArray(data)) {
         return NextResponse.json({ error: 'CSV data は配列で送信してください' }, { status: 400 });
       }
       contacts = data.filter((d: { email?: string }) => d.email && isValidEmail(d.email));
+      subscriberSource = 'csv';
     } else {
       return NextResponse.json({ error: '無効なソースです' }, { status: 400 });
     }
@@ -102,6 +109,7 @@ export async function POST(
         status: 'subscribed',
         subscribed_at: new Date().toISOString(),
         unsubscribed_at: null,
+        source: subscriberSource,
       }));
 
       const { data: inserted, error } = await supabase
@@ -221,5 +229,35 @@ async function collectFromOrderForms(
   return (data || []).map((s: { email: string; name?: string }) => ({
     email: s.email,
     name: s.name,
+  }));
+}
+
+/**
+ * bookings テーブルからゲストメールを収集
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function collectFromBookings(
+  supabase: any,
+  userId: string
+): Promise<{ email: string; name?: string }[]> {
+  // ユーザーの予約メニューIDを取得
+  const { data: menus } = await supabase
+    .from('booking_menus')
+    .select('id')
+    .eq('user_id', userId);
+
+  const menuIds = menus?.map((m: { id: string }) => m.id) || [];
+  if (menuIds.length === 0) return [];
+
+  const { data } = await supabase
+    .from('bookings')
+    .select('guest_email, guest_name')
+    .in('menu_id', menuIds)
+    .not('guest_email', 'is', null)
+    .neq('guest_email', '');
+
+  return (data || []).map((b: { guest_email: string; guest_name?: string }) => ({
+    email: b.guest_email,
+    name: b.guest_name,
   }));
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Mail, Users, Send, Plus, Trash2, ChevronRight, Loader2 } from 'lucide-react';
+import { Mail, Users, Send, Plus, Trash2, ChevronRight, Loader2, Crown, BarChart3 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface NewsletterList {
@@ -24,11 +24,20 @@ interface Campaign {
   created_at: string;
 }
 
-export default function NewsletterDashboard() {
+interface NewsletterDashboardProps {
+  isProUser: boolean;
+  planTier: 'guest' | 'free' | 'pro';
+}
+
+export default function NewsletterDashboard({ isProUser, planTier }: NewsletterDashboardProps) {
   const [lists, setLists] = useState<NewsletterList[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [monthlyUsage, setMonthlyUsage] = useState<{ used: number; limit: number } | null>(null);
+
+  const monthlyLimit = planTier === 'pro' ? 1000 : planTier === 'free' ? 100 : 0;
+  const listLimit = planTier === 'pro' ? -1 : planTier === 'free' ? 1 : 0;
 
   useEffect(() => {
     const init = async () => {
@@ -36,7 +45,11 @@ export default function NewsletterDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
-        await Promise.all([fetchLists(user.id), fetchCampaigns(user.id)]);
+        await Promise.all([
+          fetchLists(user.id),
+          fetchCampaigns(user.id),
+          fetchUsage(user.id),
+        ]);
       }
       setLoading(false);
     };
@@ -59,15 +72,28 @@ export default function NewsletterDashboard() {
     }
   };
 
+  const fetchUsage = async (uid: string) => {
+    try {
+      const res = await fetch(`/api/newsletter-maker/usage?userId=${uid}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMonthlyUsage({ used: data.used || 0, limit: monthlyLimit });
+      }
+    } catch {
+      setMonthlyUsage({ used: 0, limit: monthlyLimit });
+    }
+  };
+
   const handleDeleteList = async (listId: string) => {
     if (!userId || !confirm('このリストを削除しますか？関連する読者・キャンペーンもすべて削除されます。')) return;
     const res = await fetch(`/api/newsletter-maker/lists/${listId}?userId=${userId}`, { method: 'DELETE' });
     if (res.ok) {
       setLists((prev) => prev.filter((l) => l.id !== listId));
-      setCampaigns((prev) => prev.filter((c) => c.id)); // refresh needed
       if (userId) fetchCampaigns(userId);
     }
   };
+
+  const canCreateList = listLimit === -1 || lists.length < listLimit;
 
   if (loading) {
     return (
@@ -80,18 +106,69 @@ export default function NewsletterDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
     <div className="max-w-5xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">メルマガダッシュボード</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">メルマガメーカー</h1>
           <p className="text-gray-600 mt-1">読者リスト管理・メルマガ配信</p>
         </div>
-        <Link
-          href="/newsletter/lists/new"
-          className="inline-flex items-center gap-2 px-5 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 min-h-[44px]"
-        >
-          <Plus className="w-4 h-4" />
-          新しいリスト
-        </Link>
+        {canCreateList ? (
+          <Link
+            href="/newsletter/lists/new"
+            className="inline-flex items-center gap-2 px-5 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 min-h-[44px]"
+          >
+            <Plus className="w-4 h-4" />
+            新しいリスト
+          </Link>
+        ) : (
+          <div className="text-sm text-gray-500">
+            リスト上限（{listLimit}個）に達しています
+          </div>
+        )}
+      </div>
+
+      {/* プラン情報 + 送信残数 */}
+      <div className="grid sm:grid-cols-2 gap-4 mb-8">
+        {/* プラン */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="bg-violet-50 p-2 rounded-lg"><Crown className="w-5 h-5 text-violet-600" /></span>
+            <div>
+              <p className="text-sm text-gray-600">現在のプラン</p>
+              <p className="font-bold text-gray-900">{isProUser ? 'PROプラン' : 'フリープラン'}</p>
+            </div>
+          </div>
+          {!isProUser && (
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-1 text-sm text-violet-600 hover:text-violet-800 font-semibold transition-colors"
+            >
+              PROにアップグレード →
+            </Link>
+          )}
+        </div>
+
+        {/* 月間送信数 */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="bg-violet-50 p-2 rounded-lg"><BarChart3 className="w-5 h-5 text-violet-600" /></span>
+            <div>
+              <p className="text-sm text-gray-600">今月の送信数</p>
+              <p className="font-bold text-gray-900">
+                {monthlyUsage ? `${monthlyUsage.used}` : '0'} / {monthlyLimit === -1 ? '無制限' : `${monthlyLimit}通`}
+              </p>
+            </div>
+          </div>
+          {monthlyLimit > 0 && monthlyUsage && (
+            <div className="w-full bg-gray-100 rounded-full h-2">
+              <div
+                className={`h-2 rounded-full transition-all ${
+                  monthlyUsage.used / monthlyLimit > 0.8 ? 'bg-amber-500' : 'bg-violet-500'
+                }`}
+                style={{ width: `${Math.min(100, (monthlyUsage.used / monthlyLimit) * 100)}%` }}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 読者リスト一覧 */}
@@ -104,13 +181,15 @@ export default function NewsletterDashboard() {
           <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
             <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 mb-4">まだ読者リストがありません</p>
-            <Link
-              href="/newsletter/lists/new"
-              className="inline-flex items-center gap-2 px-5 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl shadow-md transition-all min-h-[44px]"
-            >
-              <Plus className="w-4 h-4" />
-              最初のリストを作成
-            </Link>
+            {canCreateList && (
+              <Link
+                href="/newsletter/lists/new"
+                className="inline-flex items-center gap-2 px-5 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl shadow-md transition-all min-h-[44px]"
+              >
+                <Plus className="w-4 h-4" />
+                最初のリストを作成
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid gap-4">
