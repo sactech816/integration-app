@@ -39,6 +39,8 @@ const PUBLIC_PATHS = [
   '/kindle/discovery',  // ネタ発掘診断（ページ側でKDLサブスクチェック）
   '/kindle/discovery/demo',  // ネタ発掘診断デモ版
   '/kindle/free-trial',  // 無料体験LP（公開ページ）
+  '/kindle/upgrade',     // 有料プランアップグレードLP
+  '/kindle/optin',       // 広告用オプトインLP
 ];
 
 // デモモード用のパス（クエリパラメータ付き）

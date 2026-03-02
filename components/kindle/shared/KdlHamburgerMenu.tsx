@@ -123,7 +123,7 @@ export default function KdlHamburgerMenu({
               ))}
               {editorActions.some(a => a.locked) && (
                 <a
-                  href="/kindle/lp#pricing"
+                  href="/kindle/upgrade"
                   className="flex items-center gap-2 px-4 py-2 mt-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
                 >
                   <Crown size={14} />

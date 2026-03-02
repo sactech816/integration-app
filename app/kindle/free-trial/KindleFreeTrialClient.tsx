@@ -4,12 +4,10 @@ import React, { useState, useEffect } from 'react';
 import {
   BookOpen,
   Sparkles,
-  Check,
   ArrowRight,
   PenTool,
   Target,
   Layout,
-  Lock,
   Zap,
 } from 'lucide-react';
 import Header from '@/components/shared/Header';
@@ -81,16 +79,6 @@ export default function KindleFreeTrialClient() {
       title: 'AI執筆（制限あり）',
       description: '1冊・AI合計10回まで。1章分の下書きを体験',
     },
-  ];
-
-  const paidOnlyFeatures = [
-    'Word / EPUB エクスポート',
-    'KDP出版情報の自動生成',
-    '書籍LP（ランディングページ）作成',
-    '表紙デザイン生成（無制限）',
-    '文体変換（全章一括リライト）',
-    '複数冊の書籍管理',
-    'AI回数の大幅拡張',
   ];
 
   const steps = [
@@ -229,76 +217,6 @@ export default function KindleFreeTrialClient() {
                 )}
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 有料プランとの比較 */}
-      <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
-              無料 vs 有料プラン
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* 無料 */}
-            <div className="bg-white border-2 border-blue-200 rounded-2xl p-8 shadow-md">
-              <div className="text-center mb-6">
-                <span className="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                  無料プラン
-                </span>
-                <p className="text-4xl font-black text-gray-900 mt-4">
-                  ¥0
-                  <span className="text-base font-normal text-gray-500"> /月</span>
-                </p>
-              </div>
-              <ul className="space-y-3">
-                {[
-                  'AIタイトル生成',
-                  'サブタイトル生成',
-                  'ターゲット読者設計',
-                  '目次（章構成）作成',
-                  'AI執筆（累計10回まで）',
-                  '書籍 1冊まで',
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-gray-700">
-                    <Check size={18} className="text-blue-500 flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* 有料 */}
-            <div className="bg-gradient-to-br from-blue-900 to-indigo-900 text-white rounded-2xl p-8 shadow-xl">
-              <div className="text-center mb-6">
-                <span className="text-sm font-bold text-amber-300 bg-amber-500/20 px-3 py-1 rounded-full">
-                  有料プラン
-                </span>
-                <p className="text-4xl font-black mt-4">
-                  ¥2,980〜
-                  <span className="text-base font-normal opacity-70"> /月</span>
-                </p>
-              </div>
-              <ul className="space-y-3">
-                {paidOnlyFeatures.map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 opacity-90">
-                    <Lock size={16} className="text-amber-400 flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-6 pt-6 border-t border-white/20 text-center">
-                <a
-                  href="/kindle/lp#pricing"
-                  className="text-sm text-amber-300 hover:text-amber-200 underline underline-offset-4"
-                >
-                  有料プランの詳細を見る →
-                </a>
-              </div>
-            </div>
           </div>
         </div>
       </section>

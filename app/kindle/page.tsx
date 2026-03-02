@@ -1283,7 +1283,7 @@ function KindleListPageContent() {
               </div>
               <div className="flex items-center gap-2">
                 <Link
-                  href="/kindle/lp#pricing"
+                  href="/kindle/upgrade"
                   className="bg-white text-blue-700 font-bold px-4 py-2 rounded-lg text-sm hover:bg-blue-50 transition-colors flex items-center gap-1.5 whitespace-nowrap shadow-md"
                 >
                   <Crown size={16} />
