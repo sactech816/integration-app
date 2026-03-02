@@ -56,7 +56,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { userId, subject, previewText, htmlContent, listId } = body;
+    const { userId, subject, previewText, htmlContent, textContent, listId } = body;
 
     if (!userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
@@ -87,6 +87,7 @@ export async function PATCH(
     if (subject !== undefined) updateData.subject = subject;
     if (previewText !== undefined) updateData.preview_text = previewText;
     if (htmlContent !== undefined) updateData.html_content = htmlContent;
+    if (textContent !== undefined) updateData.text_content = textContent;
     if (listId !== undefined) updateData.list_id = listId;
 
     const { data, error } = await supabase

@@ -154,7 +154,7 @@ export default function NewsletterDashboard({ isProUser, planTier }: NewsletterD
             <div>
               <p className="text-sm text-gray-600">今月の送信数</p>
               <p className="font-bold text-gray-900">
-                {monthlyUsage ? `${monthlyUsage.used}` : '0'} / {monthlyLimit === -1 ? '無制限' : `${monthlyLimit}通`}
+                {monthlyUsage ? `${monthlyUsage.used}` : '0'} / {`${monthlyLimit}通`}
               </p>
             </div>
           </div>
