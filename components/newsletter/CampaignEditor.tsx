@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Send, Save, ArrowLeft, Loader2, Monitor, Pencil,
@@ -131,6 +131,14 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   const [aiPurpose, setAiPurpose] = useState('announcement');
   const [aiKeyword, setAiKeyword] = useState('');
   const [aiResults, setAiResults] = useState<string[]>([]);
+
+  // 件名候補
+  const [subjectSuggestions, setSubjectSuggestions] = useState<string[]>([]);
+
+  // contentEditable refs
+  const headerRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
 
   // セクション開閉
   const [openSections, setOpenSections] = useState({
@@ -267,13 +275,58 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
     return parts.join('\n');
   };
 
-  // テンプレート適用（件名も自動設定）
+  // プレースホルダー変数をプレビュー用に置換
+  const replacePlaceholders = useCallback((html: string) => {
+    const listName = lists.find((l) => l.id === listId)?.name || 'ニュースレター';
+    const today = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+    return html
+      .replace(/\{\{ニュースレター名\}\}/g, listName)
+      .replace(/\{\{送信者名\}\}/g, listName)
+      .replace(/\{\{日付\}\}/g, today);
+  }, [lists, listId]);
+
+  // contentEditable → state 同期（onBlur時）
+  const handleHeaderBlur = useCallback(() => {
+    if (headerRef.current) setHeaderHtml(headerRef.current.innerHTML);
+  }, []);
+  const handleBodyBlur = useCallback(() => {
+    if (bodyRef.current) setHtmlContent(bodyRef.current.innerHTML);
+  }, []);
+  const handleFooterBlur = useCallback(() => {
+    if (footerRef.current) setFooterHtml(footerRef.current.innerHTML);
+  }, []);
+
+  // ビジュアルモード切替時にrefのinnerHTMLをセット
+  useEffect(() => {
+    if (headerRef.current && headerViewMode === 'visual' && headerHtml) {
+      headerRef.current.innerHTML = headerHtml;
+    }
+  }, [headerViewMode]);
+
+  useEffect(() => {
+    if (bodyRef.current && bodyViewMode === 'visual') {
+      bodyRef.current.innerHTML = htmlContent.startsWith('<')
+        ? htmlContent
+        : textToHtml(htmlContent);
+    }
+  }, [bodyViewMode]);
+
+  useEffect(() => {
+    if (footerRef.current && footerViewMode === 'visual' && footerHtml) {
+      footerRef.current.innerHTML = footerHtml;
+    }
+  }, [footerViewMode]);
+
+  // テンプレート適用（件名候補も設定）
   const applyTemplate = (template: NewsletterTemplate) => {
     if (htmlContent && !confirm('現在の内容をテンプレートで上書きしますか？')) return;
     setHeaderHtml(template.header_html);
     setHtmlContent(template.body_html);
     setFooterHtml(template.footer_html);
-    if (!subject) setSubject(template.default_subject);
+    setSubjectSuggestions(template.subject_suggestions || []);
+    if (!subject && template.subject_suggestions?.length > 0) {
+      setSubject(template.subject_suggestions[0]);
+    }
     setOpenSections((prev) => ({ ...prev, template: false, body: true }));
   };
 
@@ -349,7 +402,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
 
       {/* エディタヘッダー */}
-      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between sticky top-16 z-40 shadow-sm">
         <div className="flex items-center gap-3">
           <button onClick={() => router.push('/newsletter/dashboard')} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors">
             <ArrowLeft className="w-5 h-5" />
@@ -388,7 +441,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
       </div>
 
       {/* モバイルタブ */}
-      <div className="lg:hidden flex border-b border-gray-200 bg-white sticky top-[57px] z-30">
+      <div className="lg:hidden flex border-b border-gray-200 bg-white sticky top-[121px] z-30">
         <button
           onClick={() => setMobileTab('editor')}
           className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors ${
@@ -439,6 +492,26 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">件名 <span className="text-red-500">*</span></label>
+                  {subjectSuggestions.length > 0 && !isSent && (
+                    <div className="mb-2">
+                      <p className="text-xs text-gray-500 mb-1.5">件名候補を選択:</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {subjectSuggestions.map((s, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setSubject(s)}
+                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all min-h-[32px] ${
+                              subject === s
+                                ? 'border-violet-400 bg-violet-50 text-violet-700'
+                                : 'border-gray-200 bg-white text-gray-600 hover:border-violet-300 hover:bg-violet-50'
+                            }`}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <input
                     type="text"
                     value={subject}
@@ -534,7 +607,14 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                 ) : (
                   <div className="border border-gray-200 rounded-xl overflow-hidden bg-white min-h-[80px]">
                     {headerHtml ? (
-                      <div dangerouslySetInnerHTML={{ __html: headerHtml }} />
+                      <div
+                        ref={headerRef}
+                        contentEditable={!isSent}
+                        suppressContentEditableWarning
+                        onBlur={handleHeaderBlur}
+                        className="min-h-[80px] focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-inset rounded-xl"
+                        dangerouslySetInnerHTML={{ __html: headerHtml }}
+                      />
                     ) : (
                       <p className="p-4 text-sm text-gray-400">ヘッダーが未設定です。テンプレートを選択すると自動設定されます。</p>
                     )}
@@ -577,7 +657,14 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                 ) : (
                   <div className="border border-gray-200 rounded-xl overflow-hidden bg-white min-h-[200px]">
                     {htmlContent ? (
-                      <div className="p-4" dangerouslySetInnerHTML={{ __html: htmlContent.startsWith('<') ? htmlContent : textToHtml(htmlContent) }} />
+                      <div
+                        ref={bodyRef}
+                        contentEditable={!isSent}
+                        suppressContentEditableWarning
+                        onBlur={handleBodyBlur}
+                        className="min-h-[200px] p-4 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-inset rounded-xl"
+                        dangerouslySetInnerHTML={{ __html: htmlContent.startsWith('<') ? htmlContent : textToHtml(htmlContent) }}
+                      />
                     ) : (
                       <p className="p-4 text-sm text-gray-400">本文が未入力です。テンプレートを選択するか、HTMLモードで直接入力してください。</p>
                     )}
@@ -611,7 +698,14 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                 ) : (
                   <div className="border border-gray-200 rounded-xl overflow-hidden bg-white min-h-[80px]">
                     {footerHtml ? (
-                      <div dangerouslySetInnerHTML={{ __html: footerHtml }} />
+                      <div
+                        ref={footerRef}
+                        contentEditable={!isSent}
+                        suppressContentEditableWarning
+                        onBlur={handleFooterBlur}
+                        className="min-h-[80px] focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-inset rounded-xl"
+                        dangerouslySetInnerHTML={{ __html: footerHtml }}
+                      />
                     ) : (
                       <p className="p-4 text-sm text-gray-400">フッターが未設定です。テンプレートを選択すると自動設定されます。</p>
                     )}
@@ -623,7 +717,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
         </div>
 
         {/* 右パネル: プレビュー */}
-        <div className={`w-full lg:w-1/2 lg:fixed lg:right-0 lg:top-[57px] lg:h-[calc(100vh-57px)] flex-col bg-gray-800 border-l border-gray-700 ${mobileTab === 'editor' ? 'hidden lg:flex' : 'flex'}`}>
+        <div className={`w-full lg:w-1/2 lg:fixed lg:right-0 lg:top-[138px] lg:h-[calc(100vh-138px)] flex-col bg-gray-800 border-l border-gray-700 ${mobileTab === 'editor' ? 'hidden lg:flex' : 'flex'}`}>
           {/* ブラウザ風ヘッダー */}
           <div className="bg-gray-900 px-4 py-3 flex items-center gap-3 border-b border-gray-700">
             <div className="flex gap-1.5">
@@ -651,7 +745,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
               <div className="p-0">
                 {(headerHtml || htmlContent || footerHtml) ? (
                   <div
-                    dangerouslySetInnerHTML={{ __html: getFullHtml() }}
+                    dangerouslySetInnerHTML={{ __html: replacePlaceholders(getFullHtml()) }}
                   />
                 ) : (
                   <p className="text-gray-300 text-center py-16">テンプレートを選択すると、ここにプレビューが表示されます</p>

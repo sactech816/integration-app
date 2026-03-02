@@ -9,7 +9,7 @@ export interface NewsletterTemplate {
   description: string;
   category: 'basic' | 'industry';
   icon: string;
-  default_subject: string;
+  subject_suggestions: string[];
   header_html: string;
   body_html: string;
   footer_html: string;
@@ -37,7 +37,7 @@ const announcement: NewsletterTemplate = {
   description: 'シンプルな告知・お知らせメール',
   category: 'basic',
   icon: '📢',
-  default_subject: '【お知らせ】',
+  subject_suggestions: ['【お知らせ】', '【重要】〇〇についてのご案内', '〇〇のお知らせ'],
   header_html: DEFAULT_HEADER,
   body_html: `<div style="padding:24px 16px;">
   <h2 style="margin:0 0 16px;font-size:18px;font-weight:bold;color:#1f2937;">お知らせのタイトル</h2>
@@ -61,7 +61,7 @@ const sale: NewsletterTemplate = {
   description: '限定オファー・割引案内メール',
   category: 'basic',
   icon: '🏷️',
-  default_subject: '【期間限定】特別セールのご案内',
+  subject_suggestions: ['【期間限定】特別セールのご案内', '今だけ！〇%OFFキャンペーン', '【数量限定】特別価格でご提供'],
   header_html: `<div style="text-align:center;padding:24px 16px;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#ffffff;">
   <h1 style="margin:0;font-size:24px;font-weight:bold;">🎉 期間限定セール開催中！</h1>
   <p style="margin:8px 0 0;font-size:14px;opacity:0.9;">今だけの特別価格をお見逃しなく</p>
@@ -92,7 +92,7 @@ const column: NewsletterTemplate = {
   description: '記事・コンテンツ配信メール',
   category: 'basic',
   icon: '📝',
-  default_subject: '【コラム】',
+  subject_suggestions: ['【コラム】', '〇〇について考えてみました', '今週のコラム：'],
   header_html: DEFAULT_HEADER,
   body_html: `<div style="padding:24px 16px;">
   <p style="margin:0 0 16px;font-size:14px;color:#6b7280;">Vol.XX ── {{日付}}</p>
@@ -124,7 +124,7 @@ const event: NewsletterTemplate = {
   description: 'セミナー・ワークショップ告知メール',
   category: 'basic',
   icon: '🎤',
-  default_subject: '【イベント案内】',
+  subject_suggestions: ['【イベント案内】', '【参加者募集】〇〇セミナー開催', '〇月〇日開催！〇〇のご案内'],
   header_html: DEFAULT_HEADER,
   body_html: `<div style="padding:24px 16px;">
   <h2 style="margin:0 0 8px;font-size:20px;font-weight:bold;color:#1f2937;">イベント名</h2>
@@ -153,7 +153,7 @@ const welcome: NewsletterTemplate = {
   description: '新規登録者向け挨拶メール',
   category: 'basic',
   icon: '👋',
-  default_subject: 'ご登録ありがとうございます！',
+  subject_suggestions: ['ご登録ありがとうございます！', 'ようこそ！〇〇へのご登録完了', 'はじめまして！〇〇です'],
   header_html: `<div style="text-align:center;padding:32px 16px;background-color:#f5f3ff;">
   <h1 style="margin:0;font-size:24px;font-weight:bold;color:#5b21b6;">ご登録ありがとうございます！</h1>
 </div>`,
@@ -188,7 +188,7 @@ const school: NewsletterTemplate = {
   description: 'レッスン案内・生徒向けお知らせ',
   category: 'industry',
   icon: '🏫',
-  default_subject: '【レッスン案内】今月のスケジュール',
+  subject_suggestions: ['【レッスン案内】今月のスケジュール', '〇月のレッスン情報', '【教室だより】今月のお知らせ'],
   header_html: DEFAULT_HEADER,
   body_html: `<div style="padding:24px 16px;">
   <p style="margin:0 0 16px;font-size:15px;line-height:1.8;color:#374151;">
@@ -222,7 +222,7 @@ const consulting: NewsletterTemplate = {
   description: 'ノウハウ共有・事例紹介メール',
   category: 'industry',
   icon: '💼',
-  default_subject: '【成功事例】',
+  subject_suggestions: ['【成功事例】', '【事例紹介】〇〇業界の成功ポイント', '売上〇%アップの秘訣'],
   header_html: DEFAULT_HEADER,
   body_html: `<div style="padding:24px 16px;">
   <p style="margin:0 0 16px;font-size:15px;line-height:1.8;color:#374151;">
@@ -259,7 +259,7 @@ const ecommerce: NewsletterTemplate = {
   description: '新商品・おすすめ紹介メール',
   category: 'industry',
   icon: '🛍️',
-  default_subject: '【新商品】今週のおすすめアイテム',
+  subject_suggestions: ['【新商品】今週のおすすめアイテム', '新着アイテムのお知らせ', '【限定入荷】〇〇のご紹介'],
   header_html: DEFAULT_HEADER,
   body_html: `<div style="padding:24px 16px;">
   <h2 style="margin:0 0 16px;font-size:20px;font-weight:bold;color:#1f2937;text-align:center;">🆕 新商品のお知らせ</h2>
