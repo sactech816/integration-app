@@ -13,9 +13,6 @@ const nextConfig = {
   // トレイリングスラッシュを追加しない（SEO最適化）
   trailingSlash: false,
   
-  // 静的生成の強制
-  output: 'standalone',
-  
   // ヘッダー設定（セキュリティとSEO）
   async headers() {
     return [
