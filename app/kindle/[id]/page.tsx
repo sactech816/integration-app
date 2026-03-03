@@ -38,6 +38,11 @@ interface TargetProfile {
 
 type LoadingState = 'loading' | 'loaded' | 'error' | 'not-found';
 
+// UUID v4 形式のバリデーション
+function isValidUUID(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
 function KindleEditorPageContent() {
   const params = useParams();
   const router = useRouter();
@@ -156,6 +161,12 @@ function KindleEditorPageContent() {
       return;
     }
 
+    // UUID形式でない場合は存在しないページとして扱う
+    if (!isValidUUID(bookId)) {
+      setLoadingState('not-found');
+      return;
+    }
+
     try {
       setLoadingState('loading');
       setError('');
@@ -172,7 +183,7 @@ function KindleEditorPageContent() {
           setLoadingState('not-found');
           return;
         }
-        throw new Error('本の取得に失敗しました: ' + bookError.message);
+        throw new Error('本のデータを読み込めませんでした。しばらくしてから再度お試しください。');
       }
 
       if (!bookData) {
@@ -209,7 +220,7 @@ function KindleEditorPageContent() {
         .order('order_index', { ascending: true });
 
       if (chaptersError) {
-        throw new Error('章の取得に失敗しました: ' + chaptersError.message);
+        throw new Error('章のデータを読み込めませんでした。しばらくしてから再度お試しください。');
       }
 
       // 3. 節を取得
@@ -224,7 +235,7 @@ function KindleEditorPageContent() {
           .order('order_index', { ascending: true });
 
         if (sectionsError) {
-          throw new Error('節の取得に失敗しました: ' + sectionsError.message);
+          throw new Error('節のデータを読み込めませんでした。しばらくしてから再度お試しください。');
         }
 
         sectionsData = sections || [];
@@ -265,7 +276,7 @@ function KindleEditorPageContent() {
 
     } catch (err: any) {
       console.error('Fetch error:', err);
-      setError(err.message || 'データの取得に失敗しました');
+      setError(err.message || 'データの読み込み中にエラーが発生しました。しばらくしてから再度お試しください。');
       setLoadingState('error');
     }
   }, [bookId]);
@@ -292,7 +303,7 @@ function KindleEditorPageContent() {
 
     if (error) {
       console.error('Update error:', error);
-      throw new Error('保存に失敗しました: ' + error.message);
+      throw new Error('保存に失敗しました。しばらくしてから再度お試しください。');
     }
   }, [bookId]);
 
@@ -319,7 +330,7 @@ function KindleEditorPageContent() {
 
     if (error) {
       console.error('Status update error:', error);
-      throw new Error('ステータスの更新に失敗しました: ' + error.message);
+      throw new Error('ステータスの更新に失敗しました。しばらくしてから再度お試しください。');
     }
 
     // ローカルの状態も更新
