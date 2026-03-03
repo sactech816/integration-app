@@ -99,6 +99,7 @@ export async function POST(
 
     // バッチ upsert（100件ずつ）
     let imported = 0;
+    let lastError: string | null = null;
     const batchSize = 100;
     for (let i = 0; i < newContacts.length; i += batchSize) {
       const batch = newContacts.slice(i, i + batchSize);
@@ -119,6 +120,29 @@ export async function POST(
 
       if (error) {
         console.error('[Newsletter Import] Batch upsert error:', error);
+        lastError = error.message;
+        // source カラムが存在しない場合、sourceなしでリトライ
+        if (error.message?.includes('source')) {
+          const rowsWithoutSource = batch.map((c) => ({
+            list_id: id,
+            email: c.email,
+            name: c.name || null,
+            status: 'subscribed',
+            subscribed_at: new Date().toISOString(),
+            unsubscribed_at: null,
+          }));
+          const { data: retryInserted, error: retryError } = await supabase
+            .from('newsletter_subscribers')
+            .upsert(rowsWithoutSource, { onConflict: 'list_id,email' })
+            .select();
+          if (!retryError) {
+            imported += retryInserted?.length || 0;
+            lastError = null;
+          } else {
+            console.error('[Newsletter Import] Retry upsert error:', retryError);
+            lastError = retryError.message;
+          }
+        }
       } else {
         imported += inserted?.length || 0;
       }
@@ -140,7 +164,12 @@ export async function POST(
       }
     }
 
-    return NextResponse.json({ imported, skipped, total: uniqueContacts.length });
+    return NextResponse.json({
+      imported,
+      skipped,
+      total: uniqueContacts.length,
+      ...(lastError && { error: lastError }),
+    });
   } catch (error) {
     console.error('[Newsletter Import] Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

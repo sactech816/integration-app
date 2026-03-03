@@ -60,7 +60,7 @@ export default function SubscriberList({ listId }: { listId: string }) {
   const [importSourcesLoading, setImportSourcesLoading] = useState(false);
   const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
   const [importing, setImporting] = useState(false);
-  const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null);
+  const [importResult, setImportResult] = useState<{ imported: number; skipped: number; error?: string } | null>(null);
   const [csvData, setCsvData] = useState<{ email: string; name?: string }[]>([]);
   const [csvFileName, setCsvFileName] = useState('');
   const [dragOver, setDragOver] = useState(false);
@@ -257,12 +257,16 @@ export default function SubscriberList({ listId }: { listId: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, source: 'csv', data: csvData }),
       });
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
-        setImportResult({ imported: data.imported, skipped: data.skipped });
+        setImportResult({ imported: data.imported, skipped: data.skipped, error: data.error });
         if (userId) fetchSubscribers(userId, filter);
+      } else {
+        setImportResult({ imported: 0, skipped: 0, error: data.error || 'インポートに失敗しました' });
       }
-    } catch {}
+    } catch {
+      setImportResult({ imported: 0, skipped: 0, error: 'ネットワークエラーが発生しました' });
+    }
     setImporting(false);
   };
 
@@ -496,15 +500,28 @@ export default function SubscriberList({ listId }: { listId: string }) {
             <div className="p-6">
               {/* 結果表示 */}
               {importResult && (
-                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div className={`mb-4 p-4 border rounded-xl flex items-start gap-3 ${
+                  importResult.error && importResult.imported === 0
+                    ? 'bg-red-50 border-red-200'
+                    : 'bg-green-50 border-green-200'
+                }`}>
+                  <CheckCircle2 className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                    importResult.error && importResult.imported === 0 ? 'text-red-600' : 'text-green-600'
+                  }`} />
                   <div>
-                    <p className="text-sm font-semibold text-green-800">
+                    <p className={`text-sm font-semibold ${
+                      importResult.error && importResult.imported === 0 ? 'text-red-800' : 'text-green-800'
+                    }`}>
                       {importResult.imported}件をインポートしました
                     </p>
                     {importResult.skipped > 0 && (
                       <p className="text-xs text-green-600 mt-1">
                         {importResult.skipped}件は重複のためスキップ
+                      </p>
+                    )}
+                    {importResult.error && (
+                      <p className="text-xs text-red-600 mt-1">
+                        エラー: {importResult.error}
                       </p>
                     )}
                   </div>
