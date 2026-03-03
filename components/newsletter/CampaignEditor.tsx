@@ -8,8 +8,6 @@ import {
   LayoutTemplate, Sparkles, Type, Code, Eye
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import Header from '@/components/shared/Header';
-import AuthModal from '@/components/shared/AuthModal';
 import { NEWSLETTER_TEMPLATES, type NewsletterTemplate } from '@/constants/templates/newsletter';
 
 interface CampaignEditorProps {
@@ -105,7 +103,6 @@ function htmlToPlainText(html: string): string {
 export default function CampaignEditor({ campaignId, defaultListId }: CampaignEditorProps) {
   const router = useRouter();
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
-  const [showAuth, setShowAuth] = useState(false);
   const [lists, setLists] = useState<ListOption[]>([]);
   const [listId, setListId] = useState(defaultListId || '');
   const [subject, setSubject] = useState('');
@@ -371,24 +368,10 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
     setOpenSections((prev) => ({ ...prev, body: true }));
   };
 
-  const handleLogout = async () => {
-    if (supabase) {
-      await supabase.auth.signOut();
-      setUser(null);
-    }
-  };
-
-  const navigateTo = (page: string) => {
-    window.location.href = page.startsWith('/') ? page : `/${page}`;
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header setPage={navigateTo} user={user} onLogout={handleLogout} setShowAuth={setShowAuth} currentService="newsletter" />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
       </div>
     );
   }
@@ -397,10 +380,6 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* 集客メーカーヘッダー */}
-      <Header setPage={navigateTo} user={user} onLogout={handleLogout} setShowAuth={setShowAuth} currentService="newsletter" />
-      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
-
       {/* エディタヘッダー */}
       <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between sticky top-16 z-40 shadow-sm">
         <div className="flex items-center gap-3">

@@ -11,6 +11,7 @@ import { fetchMakersSubscriptionStatus, MakersSubscriptionStatus } from '@/lib/s
 import { ContentItem } from '../components/MainContent/ContentCard';
 import { deleteContent } from '@/app/actions/content';
 import { setUserId } from '@/lib/gtag';
+import { getBookingMenuCount } from '@/app/actions/booking';
 
 type AnalyticsData = {
   views: number;
@@ -528,10 +529,8 @@ export function useDashboardData(): UseDashboardDataReturn {
         isAdmin
           ? supabase.from('sales_letters').select('id', { count: 'exact', head: true })
           : supabase.from('sales_letters').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
-        // 予約メニュー数
-        isAdmin
-          ? supabase.from('booking_menus').select('id', { count: 'exact', head: true })
-          : supabase.from('booking_menus').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // 予約メニュー数（サーバーアクション経由でRLSバイパス）
+        getBookingMenuCount(isAdmin ? undefined : user.id).then(count => ({ count })),
         // 出欠表イベント数
         isAdmin
           ? supabase.from('attendance_events').select('id', { count: 'exact', head: true })

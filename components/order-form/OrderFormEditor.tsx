@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import StripeConnectStatus from '@/components/order-form/StripeConnectStatus';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
-import LandingHeader from '@/components/shared/LandingHeader';
 
 interface Field {
   id?: string;
@@ -252,8 +251,6 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* 共通ヘッダー */}
-      <LandingHeader currentService="order-form" />
-
       {/* 完了モーダル */}
       <CreationCompleteModal
         isOpen={showCompleteModal}

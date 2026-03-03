@@ -731,6 +731,26 @@ export async function getAllBookingMenus(): Promise<BookingMenu[]> {
 }
 
 /**
+ * 予約メニュー数を取得（管理者用・全件 / 一般ユーザー用・自分のみ）
+ */
+export async function getBookingMenuCount(userId?: string): Promise<number> {
+  const supabase = getSupabaseServer();
+  if (!supabase) return 0;
+
+  let query = supabase.from('booking_menus').select('id', { count: 'exact', head: true });
+  if (userId) {
+    query = query.eq('user_id', userId);
+  }
+
+  const { count, error } = await query;
+  if (error) {
+    console.error('[Booking] Count error:', error);
+    return 0;
+  }
+  return count || 0;
+}
+
+/**
  * 予約メニューを複製
  */
 export async function duplicateBookingMenu(
