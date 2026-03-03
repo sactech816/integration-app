@@ -33,16 +33,18 @@ interface NewsletterDashboardProps {
   userId: string;
   isProUser: boolean;
   planTier: 'guest' | 'free' | 'pro';
+  isAdmin?: boolean;
 }
 
-export default function NewsletterDashboard({ userId, isProUser, planTier }: NewsletterDashboardProps) {
+export default function NewsletterDashboard({ userId, isProUser, planTier, isAdmin = false }: NewsletterDashboardProps) {
   const [lists, setLists] = useState<NewsletterList[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [monthlyUsage, setMonthlyUsage] = useState<{ used: number; limit: number } | null>(null);
 
-  const monthlyLimit = planTier === 'pro' ? 1000 : planTier === 'free' ? 100 : 0;
-  const listLimit = planTier === 'pro' ? -1 : planTier === 'free' ? 1 : 0;
+  // 管理者は送信数・リスト数ともに無制限
+  const monthlyLimit = isAdmin ? -1 : planTier === 'pro' ? 1000 : planTier === 'free' ? 100 : 0;
+  const listLimit = isAdmin ? -1 : planTier === 'pro' ? -1 : planTier === 'free' ? 1 : 0;
 
   // オンボーディング
   const { showOnboarding, setShowOnboarding } = useOnboarding(
@@ -124,6 +126,8 @@ export default function NewsletterDashboard({ userId, isProUser, planTier }: New
   const usagePercent = monthlyUsage && monthlyLimit > 0
     ? Math.min(100, (monthlyUsage.used / monthlyLimit) * 100)
     : 0;
+
+  const isUnlimitedPlan = isAdmin || monthlyLimit === -1;
 
   const totalSubscribers = lists.reduce((sum, l) => sum + l.subscriber_count, 0);
   const totalSent = campaigns.filter((c) => c.status === 'sent').length;
@@ -238,8 +242,8 @@ export default function NewsletterDashboard({ userId, isProUser, planTier }: New
               <span className="bg-violet-100 p-1.5 rounded-lg"><Crown className="w-4 h-4 text-violet-600" /></span>
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">プラン</span>
             </div>
-            <p className="text-lg font-bold text-gray-900">{isProUser ? 'PRO' : 'フリー'}</p>
-            {!isProUser && (
+            <p className="text-lg font-bold text-gray-900">{isAdmin ? '管理者' : isProUser ? 'PRO' : 'フリー'}</p>
+            {!isProUser && !isAdmin && (
               <Link href="/pricing" className="text-xs text-violet-600 hover:text-violet-800 font-semibold">
                 アップグレード →
               </Link>
@@ -253,9 +257,9 @@ export default function NewsletterDashboard({ userId, isProUser, planTier }: New
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">今月の送信</span>
             </div>
             <p className="text-lg font-bold text-gray-900">
-              {monthlyUsage ? monthlyUsage.used : 0}<span className="text-sm font-normal text-gray-500"> / {monthlyLimit}通</span>
+              {monthlyUsage ? monthlyUsage.used : 0}<span className="text-sm font-normal text-gray-500"> / {isUnlimitedPlan ? '無制限' : `${monthlyLimit}通`}</span>
             </p>
-            {monthlyLimit > 0 && (
+            {!isUnlimitedPlan && monthlyLimit > 0 && (
               <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2">
                 <div
                   className={`h-1.5 rounded-full transition-all ${usagePercent > 80 ? 'bg-amber-500' : 'bg-violet-500'}`}
@@ -476,7 +480,7 @@ export default function NewsletterDashboard({ userId, isProUser, planTier }: New
         </section>
 
         {/* PRO アップグレードバナー */}
-        {!isProUser && lists.length > 0 && (
+        {!isProUser && !isAdmin && lists.length > 0 && (
           <div className="mt-8 bg-gradient-to-r from-violet-600 to-purple-600 rounded-2xl p-6 text-white">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
