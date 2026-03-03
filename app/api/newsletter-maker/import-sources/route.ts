@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getAdminEmails } from '@/lib/constants';
 
 const getServiceClient = () => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -101,6 +102,23 @@ export async function GET(request: NextRequest) {
       bookingCount = count || 0;
     }
 
+    // 管理者チェック: 登録ユーザーのインポートは管理者のみ
+    let registeredUsersCount = 0;
+    const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
+    if (authUser?.email) {
+      const adminEmails = getAdminEmails();
+      const isAdmin = adminEmails.some(
+        (e: string) => e.toLowerCase() === authUser.email!.toLowerCase()
+      );
+      if (isAdmin) {
+        const { data: { users } } = await supabase.auth.admin.listUsers({ page: 1, perPage: 10000 });
+        // メールが確認済みのユーザーのみカウント
+        registeredUsersCount = (users || []).filter(
+          (u) => u.email && u.email_confirmed_at
+        ).length;
+      }
+    }
+
     return NextResponse.json({
       leads: {
         quiz: quizCount,
@@ -110,6 +128,7 @@ export async function GET(request: NextRequest) {
       },
       orderForms: orderFormCount,
       bookings: bookingCount,
+      registeredUsers: registeredUsersCount,
     });
   } catch (error) {
     console.error('[Newsletter Import Sources] Error:', error);

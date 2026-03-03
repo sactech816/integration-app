@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { getAdminEmails } from '@/lib/constants';
 
 // ========================================
 // サービス別プラン定義
@@ -823,6 +824,21 @@ export async function checkNewsletterSendLimit(
   planTier: MakersPlanTier,
   requestedCount: number
 ): Promise<{ canSend: boolean; remaining: number; limit: number; used: number }> {
+  // 管理者は無制限
+  const supabase = getServiceClient();
+  if (supabase) {
+    const { data: { user } } = await supabase.auth.admin.getUserById(userId);
+    if (user?.email) {
+      const adminEmails = getAdminEmails();
+      const isAdmin = adminEmails.some(
+        (e: string) => e.toLowerCase() === user.email!.toLowerCase()
+      );
+      if (isAdmin) {
+        return { canSend: true, remaining: -1, limit: -1, used: 0 };
+      }
+    }
+  }
+
   const plan = MAKERS_PLAN_DEFINITIONS[planTier] || MAKERS_PLAN_DEFINITIONS.free;
   const limit = plan.newsletterMonthlyLimit;
 

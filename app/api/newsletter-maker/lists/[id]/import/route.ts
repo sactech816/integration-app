@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { isValidEmail } from '@/lib/security/sanitize';
+import { getAdminEmails } from '@/lib/constants';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -58,6 +59,18 @@ export async function POST(
     } else if (source === 'booking') {
       contacts = await collectFromBookings(supabase, userId);
       subscriberSource = 'booking';
+    } else if (source === 'registered_users') {
+      // 管理者のみ: 集客メーカー登録ユーザーをインポート
+      const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
+      const adminEmails = getAdminEmails();
+      const isAdmin = authUser?.email && adminEmails.some(
+        (e: string) => e.toLowerCase() === authUser.email!.toLowerCase()
+      );
+      if (!isAdmin) {
+        return NextResponse.json({ error: '管理者のみ利用可能です' }, { status: 403 });
+      }
+      contacts = await collectRegisteredUsers(supabase);
+      subscriberSource = 'registered_users';
     } else if (source === 'csv') {
       if (!Array.isArray(data)) {
         return NextResponse.json({ error: 'CSV data は配列で送信してください' }, { status: 400 });
@@ -289,4 +302,28 @@ async function collectFromBookings(
     email: b.guest_email,
     name: b.guest_name,
   }));
+}
+
+/**
+ * 集客メーカー登録ユーザー（auth.users）からメールを収集（管理者専用）
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function collectRegisteredUsers(
+  supabase: any,
+): Promise<{ email: string; name?: string }[]> {
+  const { data: { users }, error } = await supabase.auth.admin.listUsers({
+    page: 1,
+    perPage: 10000,
+  });
+
+  if (error || !users) return [];
+
+  return users
+    .filter((u: { email?: string; email_confirmed_at?: string }) =>
+      u.email && u.email_confirmed_at
+    )
+    .map((u: { email: string; user_metadata?: { name?: string; full_name?: string } }) => ({
+      email: u.email,
+      name: u.user_metadata?.name || u.user_metadata?.full_name || undefined,
+    }));
 }

@@ -28,6 +28,7 @@ interface ImportSources {
   leads: { quiz: number; profile: number; business: number; total: number };
   orderForms: number;
   bookings: number;
+  registeredUsers: number;
 }
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -39,6 +40,7 @@ const SOURCE_LABELS: Record<string, string> = {
   booking: '予約メーカー',
   order_form: '申込フォーム',
   subscribe_form: '登録フォーム',
+  registered_users: '登録ユーザー',
 };
 
 export default function SubscriberList({ listId }: { listId: string }) {
@@ -175,6 +177,8 @@ export default function SubscriberList({ listId }: { listId: string }) {
         body = { ...body, source: 'order_forms' };
       } else if (source === 'booking') {
         body = { ...body, source: 'booking' };
+      } else if (source === 'registered_users') {
+        body = { ...body, source: 'registered_users' };
       } else {
         body = { ...body, source: 'leads', contentType: source };
       }
@@ -630,6 +634,25 @@ export default function SubscriberList({ listId }: { listId: string }) {
                           <span className="ml-2 text-sm text-gray-500">({importSources.bookings}件)</span>
                         </div>
                       </label>
+
+                      {/* 登録ユーザー（管理者のみ） */}
+                      {importSources.registeredUsers > 0 && (
+                        <label className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
+                          selectedSources.has('registered_users') ? 'border-amber-300 bg-amber-50' : 'border-gray-200 hover:border-amber-200 bg-white'
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={selectedSources.has('registered_users')}
+                            onChange={() => toggleSource('registered_users')}
+                            className="w-5 h-5 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                          />
+                          <div className="flex-1">
+                            <span className="text-sm font-semibold text-gray-900">集客メーカー登録ユーザー</span>
+                            <span className="ml-2 text-sm text-amber-600 font-semibold">管理者専用</span>
+                            <p className="text-xs text-gray-500 mt-0.5">メール確認済みの全登録ユーザー ({importSources.registeredUsers}件)</p>
+                          </div>
+                        </label>
+                      )}
 
                       <button
                         onClick={handleToolImport}
