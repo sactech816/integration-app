@@ -2,12 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Loader2, BookOpen, Crown, Zap, Sparkles, LayoutGrid, Lock } from 'lucide-react';
-import { ServiceType } from '@/lib/types';
-import ServiceTabs from './ServiceTabs';
-import AnalyticsSection from './AnalyticsSection';
-import ContentList from './ContentList';
-import { ContentItem } from './ContentCard';
+import { Loader2, BookOpen, Crown, Sparkles, LayoutGrid, Lock, Users, Play, Heart } from 'lucide-react';
 import { TOOL_ITEMS, TOOL_CATEGORIES } from '../Sidebar/menuItems';
 
 import { PlanTier } from '@/lib/subscription';
@@ -32,31 +27,9 @@ type DashboardHomeProps = {
   user: { id: string; email?: string } | null;
   isAdmin: boolean;
   isPartner: boolean;
-  selectedService: ServiceType;
-  onServiceChange: (service: ServiceType) => void;
-  contents: ContentItem[];
-  contentCounts: {
-    quiz: number;
-    profile: number;
-    business: number;
-    thumbnail: number;
-  };
-  isLoading: boolean;
-  proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
-  processingId: string | null;
-  copiedId: string | null;
   kdlSubscription: KdlSubscription | null;
   loadingKdlSubscription: boolean;
   userSubscription?: UserSubscription | null;
-  onEdit: (item: ContentItem) => void;
-  onDuplicate: (item: ContentItem) => void;
-  onDelete: (item: ContentItem) => void;
-  onView: (item: ContentItem) => void;
-  onCopyUrl: (item: ContentItem) => void;
-  onEmbed: (item: ContentItem, isUnlocked: boolean) => void;
-  onDownloadHtml: (item: ContentItem) => void;
-  onPurchase: (item: ContentItem) => void;
-  onCreateNew: () => void;
   onNavigate: (path: string, addAdminKey?: boolean) => void;
   onMenuItemClick?: (itemId: string) => void;
 };
@@ -65,34 +38,13 @@ export default function DashboardHome({
   user,
   isAdmin,
   isPartner,
-  selectedService,
-  onServiceChange,
-  contents,
-  contentCounts,
-  isLoading,
-  proAccessMap,
-  processingId,
-  copiedId,
   kdlSubscription,
   loadingKdlSubscription,
   userSubscription,
-  onEdit,
-  onDuplicate,
-  onDelete,
-  onView,
-  onCopyUrl,
-  onEmbed,
-  onDownloadHtml,
-  onPurchase,
-  onCreateNew,
   onNavigate,
   onMenuItemClick,
 }: DashboardHomeProps) {
-  // アナリティクス機能のアンロック判定
-  // 管理者、パートナー、集客メーカーProプラン加入者はアンロック
-  // 注: KDLサブスクではなく、集客メーカーのProプランをチェック
   const hasMakersProAccess = userSubscription?.planTier === 'pro';
-  const isAnalyticsUnlocked = isAdmin || isPartner || hasMakersProAccess;
   return (
     <div className="space-y-6">
       {/* KDLサブスクリプション状態（コンパクト版） */}
@@ -150,12 +102,47 @@ export default function DashboardHome({
         )}
       </div>
 
-      {/* サービス選択タブ */}
-      <ServiceTabs
-        selectedService={selectedService}
-        onServiceChange={onServiceChange}
-        contentCounts={contentCounts}
-      />
+      {/* バナーセクション */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <a
+          href="https://makers.tokyo/portal"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-all"
+        >
+          <div className="bg-white/20 p-2 rounded-full shrink-0">
+            <Users size={18} />
+          </div>
+          <div>
+            <p className="font-bold text-sm">みんなの作品を見る</p>
+            <p className="text-[11px] text-white/80">ポータルサイト</p>
+          </div>
+        </a>
+        <Link
+          href="/demos"
+          className="flex items-center gap-3 bg-gradient-to-r from-sky-500 to-cyan-500 text-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-all"
+        >
+          <div className="bg-white/20 p-2 rounded-full shrink-0">
+            <Play size={18} />
+          </div>
+          <div>
+            <p className="font-bold text-sm">デモを見る</p>
+            <p className="text-[11px] text-white/80">各ツールのサンプル</p>
+          </div>
+        </Link>
+        <button
+          onClick={() => onNavigate('donation')}
+          className="flex items-center gap-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-all text-left"
+        >
+          <div className="bg-white/20 p-2 rounded-full shrink-0">
+            <Heart size={18} />
+          </div>
+          <div>
+            <p className="font-bold text-sm">サービスを応援する</p>
+            <p className="text-[11px] text-white/80">開発支援</p>
+          </div>
+        </button>
+      </div>
 
       {/* すべてのツール（カテゴリ別） */}
       {onMenuItemClick && (
@@ -251,34 +238,6 @@ export default function DashboardHome({
         </div>
       )}
 
-      {/* アクセス解析 */}
-      <AnalyticsSection 
-        contents={contents} 
-        selectedService={selectedService} 
-        isUnlocked={isAnalyticsUnlocked}
-        onNavigate={onNavigate}
-      />
-
-      {/* コンテンツ一覧 */}
-      <ContentList
-        contents={contents}
-        selectedService={selectedService}
-        isLoading={isLoading}
-        isAdmin={isAdmin}
-        proAccessMap={proAccessMap}
-        processingId={processingId}
-        copiedId={copiedId}
-        isProUnlocked={isAnalyticsUnlocked}
-        onEdit={onEdit}
-        onDuplicate={onDuplicate}
-        onDelete={onDelete}
-        onView={onView}
-        onCopyUrl={onCopyUrl}
-        onEmbed={onEmbed}
-        onDownloadHtml={onDownloadHtml}
-        onPurchase={onPurchase}
-        onCreateNew={onCreateNew}
-      />
     </div>
   );
 }

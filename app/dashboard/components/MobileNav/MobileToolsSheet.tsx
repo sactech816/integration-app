@@ -39,7 +39,7 @@ export default function MobileToolsSheet({
       {/* 背景オーバーレイ */}
       <div
         className={`
-          fixed inset-0 bg-black/50 z-40 transition-opacity duration-300
+          fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 lg:hidden
           ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}
         onClick={onClose}
@@ -48,7 +48,7 @@ export default function MobileToolsSheet({
       {/* シート本体（ボトムナビの上に表示） */}
       <div
         className={`
-          fixed bottom-16 left-0 right-0 z-40
+          fixed bottom-16 left-0 right-0 z-40 lg:hidden
           bg-white rounded-t-2xl shadow-2xl
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-y-0' : 'translate-y-full'}

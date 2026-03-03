@@ -476,10 +476,11 @@ export default function SidebarNav({
 
   return (
     <nav className="flex-1 px-3 py-4 space-y-6">
-      {/* ダッシュボード（常に表示） */}
+      {/* ダッシュボード・お知らせ */}
       <div>
         <div className="space-y-1">
           {renderMenuItem({ id: 'dashboard', label: 'ダッシュボード', icon: Home, section: 'main' })}
+          {renderMenuItem({ id: 'announcements', label: 'お知らせ', icon: Bell, section: 'main' })}
         </div>
       </div>
 

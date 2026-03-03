@@ -8,6 +8,7 @@ import { ContentItem } from './ContentCard';
 import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
 import AccountSettings from '../Settings/AccountSettings';
 import MarketplaceSellerDashboard from './MarketplaceSellerDashboard';
+import AnnouncementList from './AnnouncementList';
 import BookingList from './BookingList';
 import AttendanceList from './AttendanceList';
 import SurveyList from './SurveyList';
@@ -18,6 +19,7 @@ import { PlanTier } from '@/lib/subscription';
 
 export type ActiveView =
   | 'dashboard'
+  | 'announcements'
   | 'quiz'
   | 'profile'
   | 'business'
@@ -176,34 +178,16 @@ export default function MainContent({
         user={user}
         isAdmin={isAdmin}
         isPartner={isPartner}
-        selectedService={selectedService}
-        onServiceChange={onServiceChange}
-        contents={contents}
-        contentCounts={{
-          quiz: contentCounts.quiz,
-          profile: contentCounts.profile,
-          business: contentCounts.business,
-          thumbnail: contentCounts.thumbnail,
-        }}
-        isLoading={isLoading}
-        proAccessMap={proAccessMap}
-        processingId={processingId}
-        copiedId={copiedId}
         kdlSubscription={kdlSubscription}
         loadingKdlSubscription={loadingKdlSubscription}
         userSubscription={userSubscription}
-        onEdit={onEdit}
-        onDuplicate={onDuplicate}
-        onDelete={onDelete}
-        onView={onView}
-        onCopyUrl={onCopyUrl}
-        onEmbed={onEmbed}
-        onDownloadHtml={onDownloadHtml}
-        onPurchase={onPurchase}
-        onCreateNew={onCreateNew}
         onNavigate={onNavigate}
         onMenuItemClick={onMenuItemClick}
       />
+      )}
+
+      {activeView === 'announcements' && (
+        <AnnouncementList />
       )}
 
       {['quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail'].includes(activeView) && (
@@ -334,7 +318,7 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'order-form', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks'].includes(activeView) && (
+      {!['dashboard', 'announcements', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'order-form', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>
