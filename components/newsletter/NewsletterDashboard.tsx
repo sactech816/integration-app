@@ -5,10 +5,11 @@ import Link from 'next/link';
 import {
   Mail, Users, Send, Plus, Trash2, ChevronRight, Loader2, Crown,
   BarChart3, Sparkles, BookOpen, ListPlus, Pencil, ExternalLink,
-  Layout, MousePointerClick, UserPlus, ArrowRight
+  Layout, MousePointerClick, UserPlus, ArrowRight, ArrowLeft, Copy, Link2
 } from 'lucide-react';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import OnboardingModal from '@/components/shared/OnboardingModal';
+import SubscriberList from '@/components/newsletter/SubscriberList';
 
 interface NewsletterList {
   id: string;
@@ -41,6 +42,8 @@ export default function NewsletterDashboard({ userId, isProUser, planTier, isAdm
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [monthlyUsage, setMonthlyUsage] = useState<{ used: number; limit: number } | null>(null);
+  const [selectedListId, setSelectedListId] = useState<string | null>(null);
+  const [copiedListId, setCopiedListId] = useState<string | null>(null);
 
   // 管理者は送信数・リスト数ともに無制限
   const monthlyLimit = isAdmin ? -1 : planTier === 'pro' ? 1000 : planTier === 'free' ? 100 : 0;
@@ -102,6 +105,16 @@ export default function NewsletterDashboard({ userId, isProUser, planTier, isAdm
 
   const canCreateList = listLimit === -1 || lists.length < listLimit;
 
+  const getSubscribeUrl = (listId: string) =>
+    typeof window !== 'undefined' ? `${window.location.origin}/newsletter/subscribe/${listId}` : '';
+
+  const handleCopySubscribeUrl = (listId: string) => {
+    const url = getSubscribeUrl(listId);
+    navigator.clipboard.writeText(url);
+    setCopiedListId(listId);
+    setTimeout(() => setCopiedListId(null), 2000);
+  };
+
   // 相対日時フォーマット
   const formatRelativeDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -135,6 +148,29 @@ export default function NewsletterDashboard({ userId, isProUser, planTier, isAdm
 
   // 初回ユーザー向け（リストがまだない場合）
   const isNewUser = lists.length === 0 && campaigns.length === 0;
+
+  // 読者管理サブビュー
+  if (selectedListId) {
+    const selectedList = lists.find(l => l.id === selectedListId);
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-5xl mx-auto px-4 pt-6">
+          <button
+            onClick={() => {
+              setSelectedListId(null);
+              // リスト情報を再取得（読者数が変わっている可能性）
+              fetchLists(userId);
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 hover:text-violet-700 hover:bg-violet-50 rounded-lg transition-colors min-h-[44px]"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            メルマガメーカーに戻る
+          </button>
+        </div>
+        <SubscriberList listId={selectedListId} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -359,7 +395,7 @@ export default function NewsletterDashboard({ userId, isProUser, planTier, isAdm
                       <Mail className="w-5 h-5 text-violet-600" />
                     </div>
                     {/* 情報 */}
-                    <Link href={`/newsletter/lists/${list.id}`} className="flex-1 min-w-0">
+                    <button onClick={() => setSelectedListId(list.id)} className="flex-1 min-w-0 text-left">
                       <h3 className="font-bold text-gray-900 truncate">{list.name}</h3>
                       <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
                         <span className="flex items-center gap-1">
@@ -374,7 +410,7 @@ export default function NewsletterDashboard({ userId, isProUser, planTier, isAdm
                           {formatRelativeDate(list.created_at)}
                         </span>
                       </div>
-                    </Link>
+                    </button>
                     {/* アクション */}
                     <div className="flex items-center gap-1.5 ml-3">
                       <Link
@@ -384,19 +420,48 @@ export default function NewsletterDashboard({ userId, isProUser, planTier, isAdm
                         <Pencil className="w-3.5 h-3.5" />
                         <span className="hidden sm:inline">配信作成</span>
                       </Link>
-                      <Link
-                        href={`/newsletter/lists/${list.id}`}
+                      <button
+                        onClick={() => setSelectedListId(list.id)}
                         className="inline-flex items-center gap-1 px-3 py-2 text-sm text-gray-600 hover:text-violet-700 hover:bg-gray-100 font-semibold rounded-lg transition-colors min-h-[44px]"
                       >
                         <Users className="w-3.5 h-3.5" />
                         <span className="hidden sm:inline">読者管理</span>
-                      </Link>
+                      </button>
                       <button
                         onClick={() => handleDeleteList(list.id)}
                         className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
+                    </div>
+                  </div>
+                  {/* 公開購読フォームURL */}
+                  <div className="px-4 sm:px-5 pb-3 pt-0">
+                    <div className="flex items-center gap-2 bg-violet-50 rounded-lg px-3 py-2">
+                      <Link2 className="w-3.5 h-3.5 text-violet-500 flex-shrink-0" />
+                      <span className="text-xs font-semibold text-violet-600 flex-shrink-0">購読フォーム</span>
+                      <input
+                        type="text"
+                        value={getSubscribeUrl(list.id)}
+                        readOnly
+                        className="flex-1 min-w-0 bg-transparent text-xs text-gray-600 truncate border-none outline-none p-0"
+                      />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleCopySubscribeUrl(list.id); }}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-violet-600 hover:text-violet-800 hover:bg-violet-100 rounded transition-colors min-h-[32px]"
+                      >
+                        <Copy className="w-3 h-3" />
+                        {copiedListId === list.id ? 'コピー済み' : 'コピー'}
+                      </button>
+                      <a
+                        href={getSubscribeUrl(list.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-1 text-violet-500 hover:text-violet-700 min-h-[32px] min-w-[32px] flex items-center justify-center"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
                     </div>
                   </div>
                 </div>

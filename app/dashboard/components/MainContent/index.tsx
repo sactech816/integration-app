@@ -244,6 +244,7 @@ export default function MainContent({
           userId={user.id}
           isProUser={userSubscription?.planTier === 'pro'}
           planTier={userSubscription?.planTier === 'pro' ? 'pro' : 'free'}
+          isAdmin={isAdmin}
         />
       )}
 

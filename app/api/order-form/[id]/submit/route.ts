@@ -138,48 +138,66 @@ export async function POST(
       // 2. フォーム作成者への通知メール
       if (form.notify_owner !== false && form.user_id) {
         try {
-          // オーナーのメールアドレスを取得
-          let targetEmail: string | null = null;
-          const { data: owner } = await supabase
-            .from('user_profiles')
-            .select('email')
-            .eq('user_id', form.user_id)
-            .single();
-          targetEmail = owner?.email || null;
+          // 通知先メールアドレスを収集
+          const notifyTargets: string[] = [];
 
-          if (!targetEmail) {
-            const { data: authUser } = await supabase.auth.admin.getUserById(form.user_id);
-            targetEmail = authUser?.user?.email || null;
+          // カスタム指定のメールアドレス
+          if (form.notify_emails) {
+            const customEmails = form.notify_emails
+              .split(',')
+              .map((e: string) => e.trim())
+              .filter((e: string) => e && e.includes('@'));
+            notifyTargets.push(...customEmails);
           }
 
-          if (targetEmail) {
+          // カスタム指定がない場合はオーナーのメールを使用
+          if (notifyTargets.length === 0) {
+            const { data: owner } = await supabase
+              .from('user_profiles')
+              .select('email')
+              .eq('user_id', form.user_id)
+              .single();
+            if (owner?.email) {
+              notifyTargets.push(owner.email);
+            } else {
+              const { data: authUser } = await supabase.auth.admin.getUserById(form.user_id);
+              if (authUser?.user?.email) notifyTargets.push(authUser.user.email);
+            }
+          }
+
+          if (notifyTargets.length > 0) {
             const fieldsHtml = fieldsData
               ? Object.entries(fieldsData as Record<string, string>)
                   .map(([key, val]) => `<tr><td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:14px;width:30%;">${escapeHtml(key)}</td><td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;color:#111827;font-size:14px;">${escapeHtml(String(val))}</td></tr>`)
                   .join('')
               : '';
 
-            await resend.emails.send({
-              from: fromEmail,
-              to: targetEmail,
-              subject: `【新規申し込み】${form.title}`,
-              html: `
-                <div style="max-width:600px;margin:0 auto;font-family:sans-serif;">
-                  <div style="background:linear-gradient(135deg,#2563eb,#3b82f6);padding:24px;border-radius:12px 12px 0 0;">
-                    <h1 style="color:#fff;font-size:20px;margin:0;">新しい申し込みがありました</h1>
-                  </div>
-                  <div style="padding:24px;background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
-                    <p style="color:#374151;font-size:16px;font-weight:600;margin:0 0 16px;">「${escapeHtml(form.title)}」に申し込みがありました。</p>
-                    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
-                      <tr><td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:14px;width:30%;">名前</td><td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;color:#111827;font-size:14px;">${escapeHtml(name || '未入力')}</td></tr>
-                      <tr><td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:14px;">メール</td><td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;color:#111827;font-size:14px;">${escapeHtml(email)}</td></tr>
-                      ${fieldsHtml}
-                    </table>
-                    ${!isFree ? `<p style="color:#6b7280;font-size:13px;">決済状況: 決済待ち / 金額: ${form.price.toLocaleString()}円</p>` : ''}
-                  </div>
-                  <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">Makers</p>
-                </div>`,
-            });
+            const notifyHtml = `
+              <div style="max-width:600px;margin:0 auto;font-family:sans-serif;">
+                <div style="background:linear-gradient(135deg,#2563eb,#3b82f6);padding:24px;border-radius:12px 12px 0 0;">
+                  <h1 style="color:#fff;font-size:20px;margin:0;">新しい申し込みがありました</h1>
+                </div>
+                <div style="padding:24px;background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+                  <p style="color:#374151;font-size:16px;font-weight:600;margin:0 0 16px;">「${escapeHtml(form.title)}」に申し込みがありました。</p>
+                  <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+                    <tr><td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:14px;width:30%;">名前</td><td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;color:#111827;font-size:14px;">${escapeHtml(name || '未入力')}</td></tr>
+                    <tr><td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:14px;">メール</td><td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;color:#111827;font-size:14px;">${escapeHtml(email)}</td></tr>
+                    ${fieldsHtml}
+                  </table>
+                  ${!isFree ? `<p style="color:#6b7280;font-size:13px;">決済状況: 決済待ち / 金額: ${form.price.toLocaleString()}円</p>` : ''}
+                </div>
+                <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">Makers</p>
+              </div>`;
+
+            // 各通知先にメール送信
+            await Promise.all(notifyTargets.map((targetEmail) =>
+              resend.emails.send({
+                from: fromEmail,
+                to: targetEmail,
+                subject: `【新規申し込み】${form.title}`,
+                html: notifyHtml,
+              })
+            ));
           }
         } catch (emailError) {
           console.error('[Order Form Submit] Owner notification error:', emailError);

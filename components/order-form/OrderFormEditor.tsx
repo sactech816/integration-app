@@ -140,6 +140,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
   const [replyEmailSubject, setReplyEmailSubject] = useState('お申し込みありがとうございます');
   const [replyEmailBody, setReplyEmailBody] = useState('');
   const [notifyOwner, setNotifyOwner] = useState(true);
+  const [notifyEmails, setNotifyEmails] = useState('');
 
   const [fields, setFields] = useState<Field[]>([
     { fieldType: 'text', label: 'お名前', placeholder: '山田太郎', required: true, options: null },
@@ -172,6 +173,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       if (f.reply_email_subject) setReplyEmailSubject(f.reply_email_subject);
       if (f.reply_email_body !== undefined) setReplyEmailBody(f.reply_email_body || '');
       if (f.notify_owner !== undefined) setNotifyOwner(f.notify_owner);
+      if (f.notify_emails) setNotifyEmails(f.notify_emails);
       if (f.order_form_fields?.length > 0) {
         setFields(f.order_form_fields.map((field: any) => ({
           id: field.id, fieldType: field.field_type, label: field.label,
@@ -201,7 +203,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       paymentType, paymentProvider: paymentType !== 'free' ? paymentProvider : null,
       stripePriceId: paymentProvider === 'stripe' ? stripePriceId : null,
       successMessage, status: publishStatus || status,
-      replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner,
+      replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails,
       fields: fields.map((f) => ({
         field_type: f.fieldType, label: f.label, placeholder: f.placeholder,
         required: f.required, options: f.fieldType === 'select' ? f.options : null,
@@ -453,11 +455,18 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                     </div>
                   </>
                 )}
-                <div className="border-t border-gray-100 pt-4">
+                <div className="border-t border-gray-100 pt-4 space-y-3">
                   <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
                     <input type="checkbox" checked={notifyOwner} onChange={(e) => setNotifyOwner(e.target.checked)} className="w-4 h-4 text-emerald-600 rounded" />
-                    <span className="text-sm font-semibold text-gray-700">自分（フォーム作成者）に通知メールを送る</span>
+                    <span className="text-sm font-semibold text-gray-700">申し込み通知メールを送る</span>
                   </label>
+                  {notifyOwner && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">通知先メールアドレス（任意）</label>
+                      <input type="text" value={notifyEmails} onChange={(e) => setNotifyEmails(e.target.value)} placeholder="空欄の場合はログイン中のメールアドレスに送信されます" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" />
+                      <p className="text-xs text-gray-500 mt-1">複数の場合はカンマ区切り（例: a@example.com, b@example.com）</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </Section>
