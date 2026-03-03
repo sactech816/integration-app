@@ -251,6 +251,109 @@ export async function POST(request: Request) {
 }
 
 /**
+ * PATCH: モニターユーザーを編集（プラン変更・期間延長・メモ更新）
+ */
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const {
+      adminUserId,
+      monitorId,
+      monitorPlanType,
+      monitorExpiresAt,
+      extendDays,
+      notes,
+    } = body;
+
+    if (!adminUserId) {
+      return NextResponse.json({ error: '管理者IDが必要です' }, { status: 400 });
+    }
+
+    if (!monitorId) {
+      return NextResponse.json({ error: 'モニターIDが必要です' }, { status: 400 });
+    }
+
+    // 管理者権限チェック
+    const hasAdminAccess = await isAdmin(adminUserId);
+    if (!hasAdminAccess) {
+      return NextResponse.json({ error: '管理者権限が必要です' }, { status: 403 });
+    }
+
+    // 既存レコードを取得
+    const { data: existing, error: fetchError } = await supabase
+      .from('monitor_users')
+      .select('*')
+      .eq('id', monitorId)
+      .single();
+
+    if (fetchError || !existing) {
+      return NextResponse.json({ error: 'モニターレコードが見つかりません' }, { status: 404 });
+    }
+
+    // 更新データを構築
+    const updateData: Record<string, unknown> = {};
+
+    // プラン変更
+    if (monitorPlanType) {
+      const validPlanTypes = [
+        'lite', 'standard', 'pro', 'business', 'enterprise',
+        'initial_trial', 'initial_standard', 'initial_business'
+      ];
+      if (!validPlanTypes.includes(monitorPlanType)) {
+        return NextResponse.json({ error: '有効なプラン種別を指定してください' }, { status: 400 });
+      }
+      updateData.monitor_plan_type = monitorPlanType;
+    }
+
+    // 期限延長（日数追加）
+    if (extendDays && extendDays > 0) {
+      const currentExpires = new Date(existing.monitor_expires_at);
+      const baseDate = currentExpires > new Date() ? currentExpires : new Date();
+      const newExpires = new Date(baseDate.getTime() + extendDays * 24 * 60 * 60 * 1000);
+      updateData.monitor_expires_at = newExpires.toISOString();
+    }
+    // 期限を直接指定
+    else if (monitorExpiresAt) {
+      const newExpires = new Date(monitorExpiresAt);
+      if (isNaN(newExpires.getTime())) {
+        return NextResponse.json({ error: '有効な日付を指定してください' }, { status: 400 });
+      }
+      updateData.monitor_expires_at = newExpires.toISOString();
+    }
+
+    // メモ更新
+    if (notes !== undefined) {
+      updateData.notes = notes || null;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: '更新する項目がありません' }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from('monitor_users')
+      .update(updateData)
+      .eq('id', monitorId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('モニター権限更新エラー:', error);
+      return NextResponse.json({ error: 'モニター権限の更新に失敗しました' }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'モニター権限を更新しました',
+      monitor: data,
+    });
+  } catch (error) {
+    console.error('PATCH /api/admin/monitor-users エラー:', error);
+    return NextResponse.json({ error: 'サーバーエラーが発生しました' }, { status: 500 });
+  }
+}
+
+/**
  * DELETE: モニターユーザーを削除（強制終了）
  */
 export async function DELETE(request: Request) {

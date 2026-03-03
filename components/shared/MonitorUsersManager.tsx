@@ -7,7 +7,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { User, Clock, Shield, Trash2, PlusCircle, AlertCircle, Loader2, Search, CheckCircle, BookOpen, Sparkles } from 'lucide-react';
+import { User, Clock, Shield, Trash2, PlusCircle, AlertCircle, Loader2, Search, CheckCircle, BookOpen, Sparkles, Pencil, Save, X, CalendarPlus } from 'lucide-react';
 import { PlanTier, PLAN_DEFINITIONS, MakersPlanTier, MAKERS_PLAN_DEFINITIONS } from '@/lib/subscription';
 
 // サービス種別
@@ -56,6 +56,13 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
   const [formNotes, setFormNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // 編集モード
+  const [editingMonitorId, setEditingMonitorId] = useState<string | null>(null);
+  const [editPlan, setEditPlan] = useState<PlanTier | MakersPlanTier>('pro');
+  const [editExtendDays, setEditExtendDays] = useState<number>(0);
+  const [editNotes, setEditNotes] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
 
   // サービス変更時にプランをリセット
   useEffect(() => {
@@ -131,6 +138,60 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
       setMessage({ type: 'error', text: 'エラーが発生しました' });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // 編集モードを開始
+  const startEditing = (monitor: MonitorUser) => {
+    setEditingMonitorId(monitor.id);
+    setEditPlan(monitor.monitor_plan_type);
+    setEditExtendDays(0);
+    setEditNotes(monitor.notes || '');
+  };
+
+  // 編集をキャンセル
+  const cancelEditing = () => {
+    setEditingMonitorId(null);
+    setEditExtendDays(0);
+  };
+
+  // モニターユーザーを更新
+  const handleUpdateMonitor = async (monitorId: string) => {
+    setIsEditing(true);
+    setMessage(null);
+
+    try {
+      const body: Record<string, unknown> = {
+        adminUserId,
+        monitorId,
+        monitorPlanType: editPlan,
+        notes: editNotes,
+      };
+
+      if (editExtendDays > 0) {
+        body.extendDays = editExtendDays;
+      }
+
+      const response = await fetch('/api/admin/monitor-users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage({ type: 'success', text: data.message });
+        setEditingMonitorId(null);
+        fetchMonitors();
+      } else {
+        setMessage({ type: 'error', text: data.error || '更新に失敗しました' });
+      }
+    } catch (error) {
+      console.error('モニターユーザー更新エラー:', error);
+      setMessage({ type: 'error', text: 'エラーが発生しました' });
+    } finally {
+      setIsEditing(false);
     }
   };
 
@@ -475,6 +536,7 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
             const daysRemaining = getDaysRemaining(monitor.monitor_expires_at);
             const isExpired = daysRemaining < 0;
             const isExpiringSoon = daysRemaining <= 7 && !isExpired;
+            const isEditingThis = editingMonitorId === monitor.id;
 
             return (
               <div
@@ -482,6 +544,8 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
                 className={`p-4 border rounded-lg ${
                   isExpired
                     ? 'bg-gray-50 border-gray-300 opacity-60'
+                    : isEditingThis
+                    ? 'bg-purple-50 border-purple-300'
                     : isExpiringSoon
                     ? 'bg-yellow-50 border-yellow-300'
                     : 'bg-white border-gray-200'
@@ -504,8 +568,8 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
                           </span>
                           {monitor.service && (
                             <span className={`text-xs px-2 py-0.5 rounded-full ${
-                              monitor.service === 'kdl' 
-                                ? 'bg-amber-100 text-amber-700' 
+                              monitor.service === 'kdl'
+                                ? 'bg-amber-100 text-amber-700'
                                 : 'bg-indigo-100 text-indigo-700'
                             }`}>
                               {monitor.service === 'kdl' ? 'Kindle' : '集客メーカー'}
@@ -537,21 +601,139 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
                       </div>
                     </div>
 
-                    {monitor.notes && (
+                    {!isEditingThis && monitor.notes && (
                       <div className="mt-2 text-sm text-gray-600 ml-13">
                         <span className="font-bold">メモ:</span> {monitor.notes}
                       </div>
                     )}
                   </div>
 
-                  <button
-                    onClick={() => handleDeleteMonitor(monitor.id)}
-                    className="flex items-center gap-2 text-red-600 hover:text-red-700 font-bold px-4 py-2 rounded-lg hover:bg-red-50 transition-colors"
-                  >
-                    <Trash2 size={18} />
-                    削除
-                  </button>
+                  {!isEditingThis && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => startEditing(monitor)}
+                        className="flex items-center gap-2 text-purple-600 hover:text-purple-700 font-bold px-4 py-2 rounded-lg hover:bg-purple-50 transition-colors"
+                      >
+                        <Pencil size={18} />
+                        編集
+                      </button>
+                      <button
+                        onClick={() => handleDeleteMonitor(monitor.id)}
+                        className="flex items-center gap-2 text-red-600 hover:text-red-700 font-bold px-4 py-2 rounded-lg hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 size={18} />
+                        削除
+                      </button>
+                    </div>
+                  )}
                 </div>
+
+                {/* インライン編集フォーム */}
+                {isEditingThis && (
+                  <div className="mt-4 pt-4 border-t border-purple-200 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* プラン変更 */}
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-1">
+                          プラン
+                        </label>
+                        {(monitor.service || selectedService) === 'kdl' ? (
+                          <select
+                            value={editPlan}
+                            onChange={(e) => setEditPlan(e.target.value as PlanTier)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-900"
+                          >
+                            <optgroup label="初回プラン（一括）">
+                              <option value="initial_trial">トライアル</option>
+                              <option value="initial_standard">スタンダード</option>
+                              <option value="initial_business">ビジネス</option>
+                            </optgroup>
+                            <optgroup label="継続プラン（月額）">
+                              <option value="lite">ライト</option>
+                              <option value="standard">スタンダード</option>
+                              <option value="pro">プロ</option>
+                              <option value="business">ビジネス</option>
+                              <option value="enterprise">エンタープライズ</option>
+                            </optgroup>
+                          </select>
+                        ) : (
+                          <select
+                            value={editPlan}
+                            onChange={(e) => setEditPlan(e.target.value as MakersPlanTier)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-900"
+                          >
+                            <option value="pro">Pro - {MAKERS_PLAN_DEFINITIONS.pro.nameJa}</option>
+                          </select>
+                        )}
+                      </div>
+
+                      {/* 期間延長 */}
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-1">
+                          <CalendarPlus size={14} className="inline mr-1" />
+                          期間延長（日数）
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={editExtendDays}
+                            onChange={(e) => setEditExtendDays(Number(e.target.value))}
+                            min={0}
+                            max={365}
+                            placeholder="0"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-900 placeholder:text-gray-400"
+                          />
+                          <span className="text-sm text-gray-600 whitespace-nowrap">日追加</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          0なら期限変更なし。現在の期限から加算されます
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* メモ */}
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">
+                        管理者メモ
+                      </label>
+                      <textarea
+                        value={editNotes}
+                        onChange={(e) => setEditNotes(e.target.value)}
+                        placeholder="付与理由など"
+                        rows={2}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none bg-white text-gray-900 placeholder:text-gray-400"
+                      />
+                    </div>
+
+                    {/* ボタン */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleUpdateMonitor(monitor.id)}
+                        disabled={isEditing}
+                        className="flex items-center gap-2 bg-purple-600 text-white px-5 py-2 rounded-lg hover:bg-purple-700 transition-colors font-bold disabled:opacity-50"
+                      >
+                        {isEditing ? (
+                          <>
+                            <Loader2 className="animate-spin" size={18} />
+                            更新中...
+                          </>
+                        ) : (
+                          <>
+                            <Save size={18} />
+                            更新する
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={cancelEditing}
+                        className="flex items-center gap-2 px-5 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors font-bold text-gray-700 bg-white"
+                      >
+                        <X size={18} />
+                        キャンセル
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
