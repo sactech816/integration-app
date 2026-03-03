@@ -63,6 +63,7 @@ type SidebarNavProps = {
     onboarding: number;
     thumbnail: number;
     newsletter: number;
+    order_form: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態
@@ -107,6 +108,7 @@ export default function SidebarNav({
     onboarding: contentCounts.onboarding,
     thumbnail: contentCounts.thumbnail,
     newsletter: contentCounts.newsletter,
+    'order-form': contentCounts.order_form,
   };
 
   // ツールアイテムをMenuItemに変換
@@ -123,6 +125,13 @@ export default function SidebarNav({
     if (tool.id === 'thumbnail') {
       item.isDisabled = thumbnailLocked;
       item.disabledBadge = thumbnailLocked ? 'Pro' : undefined;
+    }
+
+    // 申し込みフォームのPro制限
+    if (tool.id === 'order-form') {
+      const orderFormLocked = !hasMakersProAccess && !isAdmin;
+      item.isDisabled = orderFormLocked;
+      item.disabledBadge = orderFormLocked ? 'Pro' : undefined;
     }
 
     // Kindle の課金制限

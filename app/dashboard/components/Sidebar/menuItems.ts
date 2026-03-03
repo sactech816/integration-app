@@ -18,6 +18,7 @@ import {
   PenTool,
   Megaphone,
   DollarSign,
+  ClipboardCheck,
   LucideIcon,
 } from 'lucide-react';
 
@@ -171,6 +172,15 @@ export const TOOL_ITEMS: ToolItem[] = [
   },
 
   // 収益化
+  {
+    id: 'order-form',
+    label: '申し込みフォーム',
+    icon: ClipboardCheck,
+    description: '申し込み・決済フォーム',
+    color: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200' },
+    href: '/order-form/dashboard',
+    category: 'monetization',
+  },
   {
     id: 'my-games',
     label: 'ゲーミフィケーション',

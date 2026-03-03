@@ -14,7 +14,7 @@ interface ConnectStatus {
   platformFeePercent: number;
 }
 
-export default function StripeConnectStatus({ userId }: { userId: string }) {
+export default function StripeConnectStatus({ userId, compact = false }: { userId: string; compact?: boolean }) {
   const [status, setStatus] = useState<ConnectStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -76,11 +76,23 @@ export default function StripeConnectStatus({ userId }: { userId: string }) {
   };
 
   if (loading) {
+    if (compact) return <span className="text-sm text-gray-400">...</span>;
     return (
       <div className="flex items-center justify-center py-4">
         <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
       </div>
     );
+  }
+
+  // コンパクトモード（統計カード用）
+  if (compact) {
+    if (!status?.connected) {
+      return <span className="text-sm font-bold text-gray-400">未接続</span>;
+    }
+    if (!status.chargesEnabled || !status.detailsSubmitted) {
+      return <span className="text-sm font-bold text-amber-600">設定中</span>;
+    }
+    return <span className="text-sm font-bold text-green-600">接続済み</span>;
   }
 
   // 未接続

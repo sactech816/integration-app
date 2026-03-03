@@ -22,6 +22,7 @@ type SidebarProps = {
     onboarding: number;
     thumbnail: number;
     newsletter: number;
+    order_form: number;
   };
   totalViews: number;
   onLogout: () => void;

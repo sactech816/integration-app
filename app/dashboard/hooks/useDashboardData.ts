@@ -45,6 +45,7 @@ type UseDashboardDataReturn = {
     onboarding: number;
     thumbnail: number;
     newsletter: number;
+    order_form: number;
   };
   totalViews: number;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -120,6 +121,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     onboarding: 0,
     thumbnail: 0,
     newsletter: 0,
+    order_form: 0,
   });
   const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
   const [purchases, setPurchases] = useState<string[]>([]);
@@ -509,7 +511,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult] = await Promise.all([
+      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, orderFormResult] = await Promise.all([
         // 診断クイズ数
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true })
@@ -550,6 +552,10 @@ export function useDashboardData(): UseDashboardDataReturn {
           : supabase.from(TABLES.THUMBNAILS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         // メルマガリスト数
         supabase.from('newsletter_lists').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // 申し込みフォーム数
+        isAdmin
+          ? supabase.from('order_forms').select('id', { count: 'exact', head: true })
+          : supabase.from('order_forms').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
       ]);
 
       setContentCounts({
@@ -564,6 +570,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         onboarding: onboardingResult.count || 0,
         thumbnail: thumbnailResult.count || 0,
         newsletter: newsletterResult.count || 0,
+        order_form: orderFormResult.count || 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);

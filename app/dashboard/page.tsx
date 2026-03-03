@@ -97,7 +97,7 @@ function DashboardContent() {
   // URLパラメータからビューを設定
   useEffect(() => {
     const view = searchParams?.get('view');
-    if (view && ['booking', 'attendance', 'survey', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'newsletter', 'affiliate', 'settings'].includes(view)) {
+    if (view && ['booking', 'attendance', 'survey', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'newsletter', 'order-form', 'affiliate', 'settings'].includes(view)) {
       setActiveView(view as ActiveView);
       // URLパラメータをクリア
       window.history.replaceState({}, '', '/dashboard');
@@ -284,6 +284,16 @@ function DashboardContent() {
     if (itemId === 'kindle-discovery') {
       const adminKey = isAdmin ? `?admin_key=${process.env.NEXT_PUBLIC_ADMIN_KEY || ''}` : '';
       router.push(`/kindle/discovery${adminKey}`);
+      return;
+    }
+
+    // 申し込みフォームはPro限定チェック
+    if (itemId === 'order-form') {
+      if (!isAdmin && !hasMakersProAccess) {
+        router.push('/pricing');
+        return;
+      }
+      setActiveView('order-form' as ActiveView);
       return;
     }
 

@@ -83,6 +83,27 @@ Apple HIG ベースのデザイン哲学。ブランドカラーは青（blue-50
 - サーバーサイド操作: Service Role Key で RLS バイパス
 - 詳細: `.claude/supabase_document.md` 参照
 
+## ダッシュボード ツール追加ルール
+新しいツールをダッシュボードに追加する際は、以下のファイルを必ず更新すること:
+
+1. **`app/dashboard/components/Sidebar/menuItems.ts`** — `TOOL_ITEMS` 配列にツールを追加（`category` 必須: `'content'` | `'marketing'` | `'publishing'` | `'monetization'`）
+2. **`app/dashboard/components/Sidebar/SidebarNav.tsx`** — `contentCounts` 型にツールのカウント用キーを追加
+3. **`app/dashboard/components/Sidebar/index.tsx`** — `contentCounts` 型に同じキーを追加
+4. **`app/dashboard/hooks/useDashboardData.ts`** — `contentCounts` の型・初期値・`fetchAllContentCounts` のクエリに追加
+5. **`app/dashboard/components/MainContent/index.tsx`** — `ActiveView` 型にビュー名追加、コンテンツ表示の条件分岐追加、デフォルトビュー除外リストに追加
+6. **`app/dashboard/page.tsx`** — URLパラメータのビューリストに追加（必要なら handleMenuItemClick にハンドラ追加）
+
+### カテゴリ構成
+- **コンテンツ作成** (`content`): 診断クイズ、エンタメ診断、プロフィール、LP、セールスライター、はじめかた、サムネイル
+- **集客・運営** (`marketing`): 予約、出欠、アンケート、メルマガ
+- **執筆・出版** (`publishing`): Kindle、ネタ発掘
+- **収益化** (`monetization`): ゲーミフィケーション、アフィリエイト、スキルマーケット
+
+### Pro/課金制限がある場合
+- `menuItems.ts` の `ToolItem` にはアクセス制限フラグを持たせない（サイドバー側で判定）
+- `SidebarNav.tsx` で `isDisabled` / `disabledBadge` を設定
+- `page.tsx` の `handleMenuItemClick` でアクセスチェック（リダイレクト or モーダル表示）
+
 ## 禁止事項 / 注意点
 - `any` 型の乱用禁止
 - 大きなファイルのインライン化は避ける
