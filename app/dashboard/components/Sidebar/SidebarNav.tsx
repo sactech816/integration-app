@@ -3,14 +3,6 @@
 import React, { useState, useMemo } from 'react';
 import {
   Home,
-  Sparkles,
-  UserCircle,
-  Building2,
-  Calendar,
-  ClipboardList,
-  Gamepad2,
-  BookOpen,
-  Share2,
   Settings,
   LogOut,
   Users,
@@ -20,7 +12,6 @@ import {
   Shield,
   Cpu,
   Trash2,
-  FileText,
   ArrowRightLeft,
   ChevronDown,
   ChevronRight,
@@ -28,12 +19,11 @@ import {
   Wrench,
   DollarSign,
   LayoutDashboard,
-  Lightbulb,
   MessageSquareHeart,
-  Store,
-  Image,
-  MousePointerClick,
+  Share2,
+  Gamepad2,
 } from 'lucide-react';
+import { TOOL_ITEMS, TOOL_CATEGORIES } from './menuItems';
 
 export type MenuSection = 'main' | 'settings' | 'admin';
 export type MenuItem = {
@@ -72,6 +62,7 @@ type SidebarNavProps = {
     gamification: number;
     onboarding: number;
     thumbnail: number;
+    newsletter: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態
@@ -95,7 +86,7 @@ export default function SidebarNav({
   const kdlDisabled = !hasKdlSubscription && !isAdmin;
   // サムネイルメーカーはPro限定（管理者は常にアクセス可能）
   const thumbnailLocked = !hasMakersProAccess && !isAdmin;
-  
+
   // KDLバッジの表示内容
   const getKdlBadge = () => {
     if (kdlDisabled) return '未加入';
@@ -103,43 +94,63 @@ export default function SidebarNav({
     return undefined;
   };
 
-  const menuItems: MenuItem[] = [
-    // メインメニュー
-    { id: 'dashboard', label: 'ダッシュボード', icon: Home, section: 'main' },
-    { id: 'quiz', label: '診断クイズメーカー', icon: Sparkles, section: 'main', badge: contentCounts.quiz },
-    { id: 'profile', label: 'プロフィールメーカー', icon: UserCircle, section: 'main', badge: contentCounts.profile },
-    { id: 'business', label: 'LPメーカー', icon: Building2, section: 'main', badge: contentCounts.business },
-    { id: 'salesletter', label: 'セールスライター', icon: FileText, section: 'main', badge: contentCounts.salesletter },
-    { id: 'booking', label: '予約メーカー', icon: Calendar, section: 'main', badge: contentCounts.booking },
-    { id: 'attendance', label: '出欠メーカー', icon: Users, section: 'main', badge: contentCounts.attendance },
-    { id: 'survey', label: 'アンケートメーカー', icon: ClipboardList, section: 'main', badge: contentCounts.survey },
-    { id: 'my-games', label: 'ゲーミフィケーション', icon: Gamepad2, section: 'main', badge: contentCounts.gamification },
-    { id: 'onboarding', label: 'はじめかたメーカー', icon: MousePointerClick, section: 'main', badge: contentCounts.onboarding },
-    {
-      id: 'thumbnail',
-      label: 'サムネイルメーカー',
-      icon: Image,
-      section: 'main',
-      badge: contentCounts.thumbnail,
-      isDisabled: thumbnailLocked,
-      disabledBadge: thumbnailLocked ? 'Pro' : undefined,
-    },
-    {
-      id: 'kindle', 
-      label: 'Kindle執筆 (KDL)', 
-      icon: BookOpen, 
-      section: 'main',
-      isDisabled: kdlDisabled,
-      disabledBadge: getKdlBadge(),
-    },
-    { id: 'kindle-discovery', label: 'ネタ発掘診断', icon: Lightbulb, section: 'main' },
-    { id: 'affiliate', label: 'アフィリエイト', icon: Share2, section: 'main' },
-    { id: 'marketplace-seller', label: 'スキルマーケット管理', icon: Store, section: 'main' },
+  // コンテンツ数のマッピング
+  const countMap: Record<string, number | undefined> = {
+    quiz: contentCounts.quiz,
+    profile: contentCounts.profile,
+    business: contentCounts.business,
+    salesletter: contentCounts.salesletter,
+    booking: contentCounts.booking,
+    attendance: contentCounts.attendance,
+    survey: contentCounts.survey,
+    'my-games': contentCounts.gamification,
+    onboarding: contentCounts.onboarding,
+    thumbnail: contentCounts.thumbnail,
+    newsletter: contentCounts.newsletter,
+  };
 
-    // 設定メニュー
+  // ツールアイテムをMenuItemに変換
+  const toolMenuItems: MenuItem[] = TOOL_ITEMS.map((tool) => {
+    const item: MenuItem = {
+      id: tool.id,
+      label: tool.label,
+      icon: tool.icon,
+      section: 'main',
+      badge: countMap[tool.id],
+    };
+
+    // サムネイルメーカーのPro制限
+    if (tool.id === 'thumbnail') {
+      item.isDisabled = thumbnailLocked;
+      item.disabledBadge = thumbnailLocked ? 'Pro' : undefined;
+    }
+
+    // Kindle の課金制限
+    if (tool.id === 'kindle') {
+      item.isDisabled = kdlDisabled;
+      item.disabledBadge = getKdlBadge();
+    }
+
+    return item;
+  });
+
+  // カテゴリごとにグループ化
+  const categoryGroups = useMemo(() => {
+    return TOOL_CATEGORIES.map((cat) => ({
+      id: cat.id,
+      label: cat.label,
+      icon: cat.icon,
+      items: toolMenuItems.filter((item) => {
+        const toolDef = TOOL_ITEMS.find((t) => t.id === item.id);
+        return toolDef?.category === cat.id;
+      }),
+    }));
+  }, [toolMenuItems]);
+
+  // 設定メニュー
+  const settingsItems: MenuItem[] = [
     { id: 'settings', label: 'アカウント設定', icon: Settings, section: 'settings' },
     { id: 'logout', label: 'ログアウト', icon: LogOut, section: 'settings', onClick: onLogout },
-    
   ];
 
   // 管理者メニューグループ
@@ -200,7 +211,8 @@ export default function SidebarNav({
     const isActive = activeItem === item.id;
     const isDisabled = item.isDisabled;
     // 件数が0のコンテンツ系メニューはグレーアウト（ただしクリックは可能）
-    const hasNoContent = item.badge === 0 && ['quiz', 'profile', 'business', 'salesletter', 'booking', 'attendance', 'survey', 'onboarding'].includes(item.id);
+    const contentToolIds = ['quiz', 'profile', 'business', 'salesletter', 'booking', 'attendance', 'survey', 'onboarding', 'newsletter'];
+    const hasNoContent = item.badge === 0 && contentToolIds.includes(item.id);
 
     const handleClick = () => {
       if (item.onClick) {
@@ -245,7 +257,7 @@ export default function SidebarNav({
       >
         <Icon size={18} className={getIconStyles()} />
         <span className="flex-1 text-[13px] leading-tight">{item.label}</span>
-        
+
         {/* ステータスバッジ（KDL未加入・モニターなど） */}
         {item.disabledBadge && (
           <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
@@ -258,7 +270,7 @@ export default function SidebarNav({
             {item.disabledBadge}
           </span>
         )}
-        
+
         {/* コンテンツ件数バッジ */}
         {!item.disabledBadge && item.badge !== undefined && item.badge > 0 && (
           <span className={`
@@ -277,11 +289,17 @@ export default function SidebarNav({
     );
   };
 
-  const mainItems = menuItems.filter(item => item.section === 'main');
-  const settingsItems = menuItems.filter(item => item.section === 'settings');
+  // アクティブなアイテムが含まれるカテゴリ/管理グループを特定
+  const activeCategoryId = useMemo(() => {
+    for (const group of categoryGroups) {
+      if (group.items.some(item => item.id === activeItem)) {
+        return group.id;
+      }
+    }
+    return null;
+  }, [activeItem, categoryGroups]);
 
-  // アクティブなアイテムが含まれるグループを特定して自動展開
-  const activeGroupId = useMemo(() => {
+  const activeAdminGroupId = useMemo(() => {
     for (const group of adminGroups) {
       if (group.items.some(item => item.id === activeItem)) {
         return group.id;
@@ -290,19 +308,44 @@ export default function SidebarNav({
     return null;
   }, [activeItem, adminGroups]);
 
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    new Set(activeGroupId ? [activeGroupId] : [])
+  // カテゴリグループ: デフォルトは全展開
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set(TOOL_CATEGORIES.map(c => c.id))
   );
 
-  // activeGroupIdが変わったら自動展開
-  React.useEffect(() => {
-    if (activeGroupId && !expandedGroups.has(activeGroupId)) {
-      setExpandedGroups(prev => new Set([...prev, activeGroupId]));
-    }
-  }, [activeGroupId]);
+  // 管理者グループ
+  const [expandedAdminGroups, setExpandedAdminGroups] = useState<Set<string>>(
+    new Set(activeAdminGroupId ? [activeAdminGroupId] : [])
+  );
 
-  const toggleGroup = (groupId: string) => {
-    setExpandedGroups(prev => {
+  // activeAdminGroupIdが変わったら自動展開
+  React.useEffect(() => {
+    if (activeAdminGroupId && !expandedAdminGroups.has(activeAdminGroupId)) {
+      setExpandedAdminGroups(prev => new Set([...prev, activeAdminGroupId]));
+    }
+  }, [activeAdminGroupId]);
+
+  // activeCategoryIdが変わったら自動展開
+  React.useEffect(() => {
+    if (activeCategoryId && !expandedCategories.has(activeCategoryId)) {
+      setExpandedCategories(prev => new Set([...prev, activeCategoryId]));
+    }
+  }, [activeCategoryId]);
+
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+      return next;
+    });
+  };
+
+  const toggleAdminGroup = (groupId: string) => {
+    setExpandedAdminGroups(prev => {
       const next = new Set(prev);
       if (next.has(groupId)) {
         next.delete(groupId);
@@ -313,15 +356,53 @@ export default function SidebarNav({
     });
   };
 
+  const renderCategoryGroup = (group: { id: string; label: string; icon: LucideIcon; items: MenuItem[] }) => {
+    const isExpanded = expandedCategories.has(group.id);
+    const hasActiveItem = group.items.some(item => item.id === activeItem);
+    const GroupIcon = group.icon;
+    // カテゴリ内の合計件数
+    const totalCount = group.items.reduce((sum, item) => sum + (item.badge || 0), 0);
+
+    return (
+      <div key={group.id}>
+        <button
+          onClick={() => toggleCategory(group.id)}
+          className={`
+            w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all text-[13px]
+            ${hasActiveItem ? 'text-indigo-700 font-bold' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}
+          `}
+        >
+          <GroupIcon size={14} className={hasActiveItem ? 'text-indigo-500' : 'text-gray-400'} />
+          <span className="flex-1">{group.label}</span>
+          {totalCount > 0 && !isExpanded && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-400 font-bold">
+              {totalCount}
+            </span>
+          )}
+          {isExpanded ? (
+            <ChevronDown size={14} className="text-gray-400" />
+          ) : (
+            <ChevronRight size={14} className="text-gray-400" />
+          )}
+        </button>
+        {isExpanded && (
+          <div className="ml-3 pl-2 border-l border-gray-200 space-y-0.5 mt-0.5">
+            {group.items.map(renderMenuItem)}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderAdminGroup = (group: AdminMenuGroup) => {
-    const isExpanded = expandedGroups.has(group.id);
+    const isExpanded = expandedAdminGroups.has(group.id);
     const hasActiveItem = group.items.some(item => item.id === activeItem);
     const GroupIcon = group.icon;
 
     return (
       <div key={group.id}>
         <button
-          onClick={() => toggleGroup(group.id)}
+          onClick={() => toggleAdminGroup(group.id)}
           className={`
             w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all text-[13px]
             ${hasActiveItem ? 'text-red-600 font-bold' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}
@@ -346,13 +427,20 @@ export default function SidebarNav({
 
   return (
     <nav className="flex-1 px-3 py-4 space-y-6">
-      {/* メインメニュー */}
+      {/* ダッシュボード（常に表示） */}
+      <div>
+        <div className="space-y-1">
+          {renderMenuItem({ id: 'dashboard', label: 'ダッシュボード', icon: Home, section: 'main' })}
+        </div>
+      </div>
+
+      {/* メインメニュー（カテゴリ別グループ） */}
       <div>
         <h3 className="px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
-          メイン
+          ツール
         </h3>
         <div className="space-y-1">
-          {mainItems.map(renderMenuItem)}
+          {categoryGroups.map(renderCategoryGroup)}
         </div>
       </div>
 

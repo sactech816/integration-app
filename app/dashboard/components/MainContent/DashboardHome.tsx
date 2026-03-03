@@ -8,7 +8,7 @@ import ServiceTabs from './ServiceTabs';
 import AnalyticsSection from './AnalyticsSection';
 import ContentList from './ContentList';
 import { ContentItem } from './ContentCard';
-import { TOOL_ITEMS } from '../Sidebar/menuItems';
+import { TOOL_ITEMS, TOOL_CATEGORIES } from '../Sidebar/menuItems';
 
 import { PlanTier } from '@/lib/subscription';
 
@@ -157,80 +157,94 @@ export default function DashboardHome({
         contentCounts={contentCounts}
       />
 
-      {/* すべてのツール */}
+      {/* すべてのツール（カテゴリ別） */}
       {onMenuItemClick && (
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
-          <h3 className="font-bold text-gray-900 text-sm mb-3 flex items-center gap-2">
+          <h3 className="font-bold text-gray-900 text-sm mb-4 flex items-center gap-2">
             <LayoutGrid size={16} className="text-gray-500" />
             すべてのツール
           </h3>
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-            {TOOL_ITEMS.filter(
-              (tool) => !['quiz', 'profile', 'business'].includes(tool.id)
-            ).map((tool) => {
-              const Icon = tool.icon;
-              // サムネイルメーカーはPro限定
-              const isProOnly = tool.id === 'thumbnail';
-              const isProLocked = isProOnly && !hasMakersProAccess && !isAdmin && !isPartner;
-
-              const content = (
-                <div className="relative">
-                  <div className={`p-2 rounded-lg ${tool.color.bg}`}>
-                    <Icon size={20} className={tool.color.text} />
-                  </div>
-                  {isProLocked && (
-                    <div className="absolute -top-1 -right-1 bg-pink-500 text-white rounded-full p-0.5">
-                      <Lock size={10} />
-                    </div>
-                  )}
-                </div>
+          <div className="space-y-4">
+            {TOOL_CATEGORIES.map((category) => {
+              const CategoryIcon = category.icon;
+              const categoryTools = TOOL_ITEMS.filter(
+                (tool) => tool.category === category.id && !['quiz', 'profile', 'business'].includes(tool.id)
               );
-
-              const label = (
-                <span className="text-[11px] font-bold text-gray-600 text-center leading-tight">
-                  {tool.description}
-                  {isProOnly && (
-                    <span className="block text-[9px] font-medium text-pink-500 mt-0.5">Pro</span>
-                  )}
-                </span>
-              );
-
-              // Pro未加入の場合はPricingページへ誘導
-              if (isProLocked) {
-                return (
-                  <Link
-                    key={tool.id}
-                    href="/pricing"
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-pink-50 active:bg-pink-100 transition-all opacity-75 hover:opacity-100"
-                  >
-                    {content}
-                    {label}
-                  </Link>
-                );
-              }
-
-              if (tool.href) {
-                return (
-                  <Link
-                    key={tool.id}
-                    href={tool.href}
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-all"
-                  >
-                    {content}
-                    {label}
-                  </Link>
-                );
-              }
+              if (categoryTools.length === 0) return null;
 
               return (
-                <button
-                  key={tool.id}
-                  onClick={() => onMenuItemClick(tool.id)}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-all"
-                >
-                  {content}
-                  {label}
-                </button>
+                <div key={category.id}>
+                  <p className="text-xs font-bold text-gray-400 mb-2 flex items-center gap-1.5 px-1">
+                    <CategoryIcon size={12} />
+                    {category.label}
+                  </p>
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                    {categoryTools.map((tool) => {
+                      const Icon = tool.icon;
+                      const isProOnly = tool.id === 'thumbnail';
+                      const isProLocked = isProOnly && !hasMakersProAccess && !isAdmin && !isPartner;
+
+                      const iconContent = (
+                        <div className="relative">
+                          <div className={`p-2 rounded-lg ${tool.color.bg}`}>
+                            <Icon size={20} className={tool.color.text} />
+                          </div>
+                          {isProLocked && (
+                            <div className="absolute -top-1 -right-1 bg-pink-500 text-white rounded-full p-0.5">
+                              <Lock size={10} />
+                            </div>
+                          )}
+                        </div>
+                      );
+
+                      const label = (
+                        <span className="text-[11px] font-bold text-gray-600 text-center leading-tight">
+                          {tool.description}
+                          {isProOnly && (
+                            <span className="block text-[9px] font-medium text-pink-500 mt-0.5">Pro</span>
+                          )}
+                        </span>
+                      );
+
+                      if (isProLocked) {
+                        return (
+                          <Link
+                            key={tool.id}
+                            href="/pricing"
+                            className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-pink-50 active:bg-pink-100 transition-all opacity-75 hover:opacity-100"
+                          >
+                            {iconContent}
+                            {label}
+                          </Link>
+                        );
+                      }
+
+                      if (tool.href) {
+                        return (
+                          <Link
+                            key={tool.id}
+                            href={tool.href}
+                            className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-all"
+                          >
+                            {iconContent}
+                            {label}
+                          </Link>
+                        );
+                      }
+
+                      return (
+                        <button
+                          key={tool.id}
+                          onClick={() => onMenuItemClick(tool.id)}
+                          className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-all"
+                        >
+                          {iconContent}
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
           </div>

@@ -21,6 +21,7 @@ type SidebarProps = {
     gamification: number;
     onboarding: number;
     thumbnail: number;
+    newsletter: number;
   };
   totalViews: number;
   onLogout: () => void;

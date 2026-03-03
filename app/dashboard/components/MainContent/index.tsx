@@ -12,6 +12,7 @@ import BookingList from './BookingList';
 import AttendanceList from './AttendanceList';
 import SurveyList from './SurveyList';
 import MyGamification from './MyGamification';
+import NewsletterDashboard from '@/components/newsletter/NewsletterDashboard';
 import { PlanTier } from '@/lib/subscription';
 
 export type ActiveView =
@@ -27,6 +28,7 @@ export type ActiveView =
   | 'onboarding'
   | 'thumbnail'
   | 'kindle'
+  | 'newsletter'
   | 'affiliate'
   | 'marketplace-seller'
   | 'settings'
@@ -78,6 +80,7 @@ type MainContentProps = {
     gamification: number;
     onboarding: number;
     thumbnail: number;
+    newsletter: number;
   };
   isLoading: boolean;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -237,6 +240,15 @@ export default function MainContent({
         <SurveyList userId={user.id} isAdmin={isAdmin} userEmail={user.email} isUnlocked={isUnlocked} />
       )}
 
+      {/* メルマガメーカー */}
+      {activeView === 'newsletter' && user && (
+        <NewsletterDashboard
+          userId={user.id}
+          isProUser={userSubscription?.planTier === 'pro'}
+          planTier={userSubscription?.planTier === 'pro' ? 'pro' : 'free'}
+        />
+      )}
+
       {/* ゲーム作成（全ユーザー） */}
       {activeView === 'my-games' && user && (
         <MyGamification 
@@ -314,7 +326,7 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'booking', 'attendance', 'survey', 'my-games', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks'].includes(activeView) && (
+      {!['dashboard', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>

@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
-import { TOOL_ITEMS } from '../Sidebar/menuItems';
+import { TOOL_ITEMS, TOOL_CATEGORIES } from '../Sidebar/menuItems';
 
 type MobileToolsSheetProps = {
   isOpen: boolean;
@@ -53,7 +53,7 @@ export default function MobileToolsSheet({
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-y-0' : 'translate-y-full'}
         `}
-        style={{ maxHeight: '60vh' }}
+        style={{ maxHeight: '70vh' }}
       >
         {/* ヘッダー */}
         <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-100 px-4 pt-3 pb-2">
@@ -72,37 +72,53 @@ export default function MobileToolsSheet({
           </div>
         </div>
 
-        {/* ツールグリッド */}
-        <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(60vh - 70px)' }}>
-          <div className="grid grid-cols-3 gap-3">
-            {TOOL_ITEMS.map((tool) => {
-              const Icon = tool.icon;
-              const isActive = activeView === tool.id;
+        {/* ツールグリッド（カテゴリ別） */}
+        <div className="overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(70vh - 70px)' }}>
+          {TOOL_CATEGORIES.map((category) => {
+            const CategoryIcon = category.icon;
+            const categoryTools = TOOL_ITEMS.filter(
+              (tool) => tool.category === category.id
+            );
+            if (categoryTools.length === 0) return null;
 
-              return (
-                <button
-                  key={tool.id}
-                  onClick={() => handleItemClick(tool.id)}
-                  className={`
-                    flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all
-                    ${isActive
-                      ? `${tool.color.bg} ${tool.color.border} border-2`
-                      : 'border-2 border-transparent hover:bg-gray-50'
-                    }
-                  `}
-                >
-                  <div className={`p-2.5 rounded-xl ${tool.color.bg}`}>
-                    <Icon size={22} className={tool.color.text} />
-                  </div>
-                  <span className={`text-[11px] font-bold text-center leading-tight ${
-                    isActive ? tool.color.text : 'text-gray-600'
-                  }`}>
-                    {tool.description}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+            return (
+              <div key={category.id}>
+                <p className="text-xs font-bold text-gray-400 mb-2 flex items-center gap-1.5 px-1">
+                  <CategoryIcon size={12} />
+                  {category.label}
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  {categoryTools.map((tool) => {
+                    const Icon = tool.icon;
+                    const isActive = activeView === tool.id;
+
+                    return (
+                      <button
+                        key={tool.id}
+                        onClick={() => handleItemClick(tool.id)}
+                        className={`
+                          flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all
+                          ${isActive
+                            ? `${tool.color.bg} ${tool.color.border} border-2`
+                            : 'border-2 border-transparent hover:bg-gray-50'
+                          }
+                        `}
+                      >
+                        <div className={`p-2.5 rounded-xl ${tool.color.bg}`}>
+                          <Icon size={22} className={tool.color.text} />
+                        </div>
+                        <span className={`text-[11px] font-bold text-center leading-tight ${
+                          isActive ? tool.color.text : 'text-gray-600'
+                        }`}>
+                          {tool.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </>

@@ -97,7 +97,7 @@ function DashboardContent() {
   // URLパラメータからビューを設定
   useEffect(() => {
     const view = searchParams?.get('view');
-    if (view && ['booking', 'attendance', 'survey', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'affiliate', 'settings'].includes(view)) {
+    if (view && ['booking', 'attendance', 'survey', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'newsletter', 'affiliate', 'settings'].includes(view)) {
       setActiveView(view as ActiveView);
       // URLパラメータをクリア
       window.history.replaceState({}, '', '/dashboard');
