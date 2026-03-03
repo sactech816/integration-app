@@ -36,7 +36,15 @@
       "Bash(npm run test:*)",
       "Bash(npm run build:*)",
       "Bash(npm ls:*)",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "Bash(du -sh .next/standalone/node_modules/*)",
+      "Bash(du -sh .next/*/)",
+      "Bash(node -e \"const pkg = require\\(''./package.json''\\); console.log\\(''In dependencies:'', !!pkg.dependencies?.typescript\\); console.log\\(''In devDependencies:'', !!pkg.devDependencies?.typescript\\);\")",
+      "Bash(node -e \"const pkg = require\\(''./package.json''\\); console.log\\(''In dependencies:'', ''typescript'' in \\(pkg.dependencies || {}\\)\\); console.log\\(''In devDependencies:'', ''typescript'' in \\(pkg.devDependencies || {}\\)\\);\")",
+      "Bash(node -e \"const nft = JSON.parse\\(require\\(''fs''\\).readFileSync\\(''.next/server/app/page.js.nft.json'', ''utf8''\\)\\); console.log\\(''Traced files count:'', nft.files.length\\); const large = nft.files.filter\\(function\\(f\\) { return f.includes\\(''node_modules''\\); }\\).slice\\(0, 20\\); console.log\\(''Sample traced node_modules:''\\); large.forEach\\(function\\(f\\) { console.log\\(''  '', f\\); }\\);\")",
+      "Bash(du -sh .next/server/app/*.segments .next/server/app/**/*.segments)",
+      "Bash(sort -k5 -h -r)",
+      "Bash(du -sh public/*/)"
     ],
     "deny": [
       "Bash(sudo:*)",
