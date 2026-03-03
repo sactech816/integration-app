@@ -212,7 +212,31 @@ export default function SidebarNav({
     },
   ];
 
-  const renderMenuItem = (item: MenuItem) => {
+  // カテゴリごとのアイコン色
+  const categoryIconColors: Record<string, { normal: string; active: string }> = {
+    content: { normal: 'text-indigo-400', active: 'text-indigo-600' },
+    marketing: { normal: 'text-emerald-400', active: 'text-emerald-600' },
+    publishing: { normal: 'text-amber-500', active: 'text-amber-600' },
+    monetization: { normal: 'text-purple-400', active: 'text-purple-600' },
+  };
+
+  // カテゴリごとのアクティブ時背景・テキスト色
+  const categoryActiveStyles: Record<string, string> = {
+    content: 'bg-indigo-50 text-indigo-700 font-bold',
+    marketing: 'bg-emerald-50 text-emerald-700 font-bold',
+    publishing: 'bg-amber-50 text-amber-700 font-bold',
+    monetization: 'bg-purple-50 text-purple-700 font-bold',
+  };
+
+  // カテゴリごとのバッジアクティブ色
+  const categoryBadgeStyles: Record<string, string> = {
+    content: 'bg-indigo-200 text-indigo-700',
+    marketing: 'bg-emerald-200 text-emerald-700',
+    publishing: 'bg-amber-200 text-amber-700',
+    monetization: 'bg-purple-200 text-purple-700',
+  };
+
+  const renderMenuItem = (item: MenuItem, category?: string) => {
     // 管理者専用項目は管理者以外には表示しない
     if (item.adminOnly && !isAdmin) return null;
 
@@ -237,7 +261,9 @@ export default function SidebarNav({
         return 'text-gray-400 cursor-pointer hover:bg-gray-50 opacity-60';
       }
       if (isActive) {
-        return 'bg-indigo-50 text-indigo-700 font-bold';
+        return category && categoryActiveStyles[category]
+          ? categoryActiveStyles[category]
+          : 'bg-indigo-50 text-indigo-700 font-bold';
       }
       if (hasNoContent) {
         return 'text-gray-400 hover:bg-gray-100';
@@ -249,10 +275,11 @@ export default function SidebarNav({
       if (isDisabled || hasNoContent) {
         return 'text-gray-300';
       }
+      const colors = category ? categoryIconColors[category] : null;
       if (isActive) {
-        return 'text-indigo-600';
+        return colors?.active || 'text-indigo-600';
       }
-      return 'text-gray-500';
+      return colors?.normal || 'text-gray-500';
     };
 
     return (
@@ -265,7 +292,7 @@ export default function SidebarNav({
         `}
       >
         <Icon size={18} className={getIconStyles()} />
-        <span className="flex-1 text-[13px] leading-tight">{item.label}</span>
+        <span className="flex-1 text-xs leading-tight">{item.label}</span>
 
         {/* ステータスバッジ（KDL未加入・モニターなど） */}
         {item.disabledBadge && (
@@ -284,7 +311,9 @@ export default function SidebarNav({
         {!item.disabledBadge && item.badge !== undefined && item.badge > 0 && (
           <span className={`
             text-xs px-2 py-0.5 rounded-full font-bold
-            ${isActive ? 'bg-indigo-200 text-indigo-700' : 'bg-gray-200 text-gray-600'}
+            ${isActive
+              ? (category && categoryBadgeStyles[category] ? categoryBadgeStyles[category] : 'bg-indigo-200 text-indigo-700')
+              : 'bg-gray-200 text-gray-600'}
           `}>
             {item.badge}
           </span>
@@ -365,23 +394,34 @@ export default function SidebarNav({
     });
   };
 
+  // カテゴリヘッダーのアクティブ時テキスト色
+  const categoryHeaderActiveText: Record<string, string> = {
+    content: 'text-indigo-700 font-bold',
+    marketing: 'text-emerald-700 font-bold',
+    publishing: 'text-amber-700 font-bold',
+    monetization: 'text-purple-700 font-bold',
+  };
+
   const renderCategoryGroup = (group: { id: string; label: string; icon: LucideIcon; items: MenuItem[] }) => {
     const isExpanded = expandedCategories.has(group.id);
     const hasActiveItem = group.items.some(item => item.id === activeItem);
     const GroupIcon = group.icon;
     // カテゴリ内の合計件数
     const totalCount = group.items.reduce((sum, item) => sum + (item.badge || 0), 0);
+    const headerActiveStyle = categoryHeaderActiveText[group.id] || 'text-indigo-700 font-bold';
+    const headerIconActive = categoryIconColors[group.id]?.active || 'text-indigo-500';
+    const headerIconNormal = categoryIconColors[group.id]?.normal || 'text-gray-400';
 
     return (
       <div key={group.id}>
         <button
           onClick={() => toggleCategory(group.id)}
           className={`
-            w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all text-[13px]
-            ${hasActiveItem ? 'text-indigo-700 font-bold' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}
+            w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all text-xs
+            ${hasActiveItem ? headerActiveStyle : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}
           `}
         >
-          <GroupIcon size={14} className={hasActiveItem ? 'text-indigo-500' : 'text-gray-400'} />
+          <GroupIcon size={14} className={hasActiveItem ? headerIconActive : headerIconNormal} />
           <span className="flex-1">{group.label}</span>
           {totalCount > 0 && !isExpanded && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-400 font-bold">
@@ -396,7 +436,7 @@ export default function SidebarNav({
         </button>
         {isExpanded && (
           <div className="ml-3 pl-2 border-l border-gray-200 space-y-0.5 mt-0.5">
-            {group.items.map(renderMenuItem)}
+            {group.items.map(item => renderMenuItem(item, group.id))}
           </div>
         )}
       </div>
@@ -427,7 +467,7 @@ export default function SidebarNav({
         </button>
         {isExpanded && (
           <div className="ml-3 pl-2 border-l border-gray-200 space-y-0.5 mt-0.5">
-            {group.items.map(renderMenuItem)}
+            {group.items.map(item => renderMenuItem(item))}
           </div>
         )}
       </div>
@@ -459,7 +499,7 @@ export default function SidebarNav({
           設定
         </h3>
         <div className="space-y-1">
-          {settingsItems.map(renderMenuItem)}
+          {settingsItems.map(item => renderMenuItem(item))}
         </div>
       </div>
 

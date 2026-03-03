@@ -73,8 +73,10 @@ export async function POST(
       }];
     }
 
-    // Stripe Connect: フォームオーナーが接続済みの場合、売上を直接送金
-    if (sessionConfig.mode === 'payment' && form.user_id) {
+    // Stripe Connect (Direct charges): 売り手が直接決済を回収
+    let stripeAccountId: string | null = null;
+
+    if (form.user_id) {
       const { data: connectData } = await supabase
         .from('user_stripe_connect')
         .select('stripe_account_id, charges_enabled, platform_fee_percent')
@@ -83,18 +85,64 @@ export async function POST(
         .single();
 
       if (connectData) {
-        const feePercent = connectData.platform_fee_percent || 5;
+        stripeAccountId = connectData.stripe_account_id;
+
+        // Proプラン判定: Pro会員は手数料0%
+        let feePercent = connectData.platform_fee_percent || 5;
+
+        const { data: subscription } = await supabase
+          .from('subscriptions')
+          .select('status, plan_tier, plan_name')
+          .eq('user_id', form.user_id)
+          .eq('service', 'makers')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        const now = new Date().toISOString();
+        const { data: monitor } = await supabase
+          .from('monitor_users')
+          .select('monitor_plan_type')
+          .eq('user_id', form.user_id)
+          .eq('service', 'makers')
+          .lte('monitor_start_at', now)
+          .gt('monitor_expires_at', now)
+          .limit(1)
+          .maybeSingle();
+
+        const isProUser = !!monitor ||
+          (subscription?.status === 'active' && (
+            subscription.plan_tier === 'pro' ||
+            subscription.plan_name?.toLowerCase().includes('pro') ||
+            subscription.plan_name?.toLowerCase().includes('プロ')
+          ));
+
+        if (isProUser) {
+          feePercent = 0;
+        }
+
         const applicationFee = Math.round(form.price * (feePercent / 100));
-        sessionConfig.payment_intent_data = {
-          transfer_data: {
-            destination: connectData.stripe_account_id,
-          },
-          application_fee_amount: applicationFee,
-        };
+        if (applicationFee > 0) {
+          if (sessionConfig.mode === 'subscription') {
+            sessionConfig.subscription_data = {
+              ...sessionConfig.subscription_data,
+              application_fee_percent: feePercent,
+            };
+          } else {
+            sessionConfig.payment_intent_data = {
+              ...sessionConfig.payment_intent_data,
+              application_fee_amount: applicationFee,
+            };
+          }
+        }
       }
     }
 
-    const session = await stripe.checkout.sessions.create(sessionConfig);
+    // Direct charges: 接続済みアカウントで直接決済、未接続はプラットフォームで決済
+    const session = stripeAccountId
+      ? await stripe.checkout.sessions.create(sessionConfig, { stripeAccount: stripeAccountId })
+      : await stripe.checkout.sessions.create(sessionConfig);
 
     // submissionにStripeセッションIDを記録
     await supabase
