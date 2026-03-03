@@ -72,7 +72,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, univapayConfig, successMessage, status, fields } = body;
+    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, univapayConfig, successMessage, status, fields, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner } = body;
 
     if (!userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
@@ -94,6 +94,10 @@ export async function PATCH(
     if (univapayConfig !== undefined) updateData.univapay_config = univapayConfig;
     if (successMessage !== undefined) updateData.success_message = successMessage;
     if (status !== undefined) updateData.status = status;
+    if (replyEmailEnabled !== undefined) updateData.reply_email_enabled = replyEmailEnabled;
+    if (replyEmailSubject !== undefined) updateData.reply_email_subject = replyEmailSubject;
+    if (replyEmailBody !== undefined) updateData.reply_email_body = replyEmailBody;
+    if (notifyOwner !== undefined) updateData.notify_owner = notifyOwner;
 
     const { data, error } = await supabase
       .from('order_forms')

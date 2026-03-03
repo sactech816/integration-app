@@ -6,10 +6,11 @@ import { supabase } from '@/lib/supabase';
 import {
   ArrowLeft, Save, Plus, Trash2, GripVertical, Loader2,
   Globe, CreditCard, Monitor, Pencil, ChevronDown, ChevronUp,
-  Settings, ListPlus, CheckCircle,
+  Settings, ListPlus, CheckCircle, Mail,
 } from 'lucide-react';
 import StripeConnectStatus from '@/components/order-form/StripeConnectStatus';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import LandingHeader from '@/components/shared/LandingHeader';
 
 interface Field {
   id?: string;
@@ -134,6 +135,12 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
   const [status, setStatus] = useState('draft');
   const [slug, setSlug] = useState('');
 
+  // メール設定
+  const [replyEmailEnabled, setReplyEmailEnabled] = useState(true);
+  const [replyEmailSubject, setReplyEmailSubject] = useState('お申し込みありがとうございます');
+  const [replyEmailBody, setReplyEmailBody] = useState('');
+  const [notifyOwner, setNotifyOwner] = useState(true);
+
   const [fields, setFields] = useState<Field[]>([
     { fieldType: 'text', label: 'お名前', placeholder: '山田太郎', required: true, options: null },
     { fieldType: 'email', label: 'メールアドレス', placeholder: 'you@example.com', required: true, options: null },
@@ -161,6 +168,10 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       setPrice(f.price || 0); setPaymentType(f.payment_type || 'free');
       setPaymentProvider(f.payment_provider || ''); setStripePriceId(f.stripe_price_id || '');
       setSuccessMessage(f.success_message || ''); setStatus(f.status); setSlug(f.slug);
+      if (f.reply_email_enabled !== undefined) setReplyEmailEnabled(f.reply_email_enabled);
+      if (f.reply_email_subject) setReplyEmailSubject(f.reply_email_subject);
+      if (f.reply_email_body !== undefined) setReplyEmailBody(f.reply_email_body || '');
+      if (f.notify_owner !== undefined) setNotifyOwner(f.notify_owner);
       if (f.order_form_fields?.length > 0) {
         setFields(f.order_form_fields.map((field: any) => ({
           id: field.id, fieldType: field.field_type, label: field.label,
@@ -190,6 +201,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       paymentType, paymentProvider: paymentType !== 'free' ? paymentProvider : null,
       stripePriceId: paymentProvider === 'stripe' ? stripePriceId : null,
       successMessage, status: publishStatus || status,
+      replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner,
       fields: fields.map((f) => ({
         field_type: f.fieldType, label: f.label, placeholder: f.placeholder,
         required: f.required, options: f.fieldType === 'select' ? f.options : null,
@@ -223,6 +235,9 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* 共通ヘッダー */}
+      <LandingHeader currentService="order-form" />
+
       {/* 完了モーダル */}
       <CreationCompleteModal
         isOpen={showCompleteModal}
@@ -400,11 +415,50 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                           <input type="text" value={stripePriceId} onChange={(e) => setStripePriceId(e.target.value)} placeholder="price_xxx" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 text-sm placeholder:text-gray-400" />
                           <p className="text-xs text-gray-500 mt-1">空欄の場合は金額から自動生成します</p>
                         </div>
+                        {paymentType === 'subscription' && (
+                          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                            <p className="text-xs text-amber-800 font-semibold">サブスクリプションにはStripe Price IDが必須です。</p>
+                            <p className="text-xs text-amber-700 mt-1">Stripeダッシュボードで定期課金用のPrice IDを作成し、上のフィールドに入力してください。</p>
+                          </div>
+                        )}
                         {userId && <StripeConnectStatus userId={userId} />}
                       </>
                     )}
                   </>
                 )}
+              </div>
+            </Section>
+
+            {/* メール設定 */}
+            <Section
+              title="メール設定"
+              icon={<span className="bg-purple-50 p-1.5 rounded-lg"><Mail className="w-4 h-4 text-purple-600" /></span>}
+              defaultOpen={false}
+            >
+              <div className="space-y-4 pt-4">
+                <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                  <input type="checkbox" checked={replyEmailEnabled} onChange={(e) => setReplyEmailEnabled(e.target.checked)} className="w-4 h-4 text-emerald-600 rounded" />
+                  <span className="text-sm font-semibold text-gray-700">申し込み者に自動返信メールを送る</span>
+                </label>
+                {replyEmailEnabled && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">件名</label>
+                      <input type="text" value={replyEmailSubject} onChange={(e) => setReplyEmailSubject(e.target.value)} placeholder="お申し込みありがとうございます" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">本文（任意）</label>
+                      <textarea value={replyEmailBody} onChange={(e) => setReplyEmailBody(e.target.value)} placeholder="空欄の場合はデフォルトの確認メールが送信されます。&#10;&#10;{name} = 申し込み者名&#10;{email} = メールアドレス&#10;{form_title} = フォームタイトル" rows={5} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" />
+                      <p className="text-xs text-gray-500 mt-1">変数: {'{name}'}, {'{email}'}, {'{form_title}'} が使えます</p>
+                    </div>
+                  </>
+                )}
+                <div className="border-t border-gray-100 pt-4">
+                  <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                    <input type="checkbox" checked={notifyOwner} onChange={(e) => setNotifyOwner(e.target.checked)} className="w-4 h-4 text-emerald-600 rounded" />
+                    <span className="text-sm font-semibold text-gray-700">自分（フォーム作成者）に通知メールを送る</span>
+                  </label>
+                </div>
               </div>
             </Section>
           </div>
