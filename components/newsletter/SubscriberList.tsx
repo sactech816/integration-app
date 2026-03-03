@@ -62,7 +62,7 @@ export default function SubscriberList({ listId }: { listId: string }) {
   const [importSourcesLoading, setImportSourcesLoading] = useState(false);
   const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
   const [importing, setImporting] = useState(false);
-  const [importResult, setImportResult] = useState<{ imported: number; skipped: number; error?: string } | null>(null);
+  const [importResult, setImportResult] = useState<{ imported: number; skipped: number; skippedUnsubscribed?: number; error?: string } | null>(null);
   const [csvData, setCsvData] = useState<{ email: string; name?: string }[]>([]);
   const [csvFileName, setCsvFileName] = useState('');
   const [dragOver, setDragOver] = useState(false);
@@ -170,6 +170,7 @@ export default function SubscriberList({ listId }: { listId: string }) {
     setImportResult(null);
     let totalImported = 0;
     let totalSkipped = 0;
+    let totalSkippedUnsubscribed = 0;
 
     for (const source of selectedSources) {
       let body: Record<string, unknown> = { userId };
@@ -193,11 +194,12 @@ export default function SubscriberList({ listId }: { listId: string }) {
           const data = await res.json();
           totalImported += data.imported || 0;
           totalSkipped += data.skipped || 0;
+          totalSkippedUnsubscribed += data.skippedUnsubscribed || 0;
         }
       } catch {}
     }
 
-    setImportResult({ imported: totalImported, skipped: totalSkipped });
+    setImportResult({ imported: totalImported, skipped: totalSkipped, skippedUnsubscribed: totalSkippedUnsubscribed });
     setImporting(false);
     if (userId) fetchSubscribers(userId, filter);
   };
@@ -263,7 +265,7 @@ export default function SubscriberList({ listId }: { listId: string }) {
       });
       const data = await res.json();
       if (res.ok) {
-        setImportResult({ imported: data.imported, skipped: data.skipped, error: data.error });
+        setImportResult({ imported: data.imported, skipped: data.skipped, skippedUnsubscribed: data.skippedUnsubscribed, error: data.error });
         if (userId) fetchSubscribers(userId, filter);
       } else {
         setImportResult({ imported: 0, skipped: 0, error: data.error || 'インポートに失敗しました' });
@@ -521,6 +523,7 @@ export default function SubscriberList({ listId }: { listId: string }) {
                     {importResult.skipped > 0 && (
                       <p className="text-xs text-green-600 mt-1">
                         {importResult.skipped}件は重複のためスキップ
+                        {importResult.skippedUnsubscribed ? `（うち${importResult.skippedUnsubscribed}件は配信停止済み）` : ''}
                       </p>
                     )}
                     {importResult.error && (

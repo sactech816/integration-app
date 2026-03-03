@@ -95,19 +95,21 @@ export async function POST(
     }
     const uniqueContacts = Array.from(uniqueMap.values());
 
-    // 既存購読者を取得して差分を計算
+    // 既存購読者を取得して差分を計算（配信停止済みも含めて重複チェック）
     const { data: existing } = await supabase
       .from('newsletter_subscribers')
-      .select('email')
-      .eq('list_id', id)
-      .eq('status', 'subscribed');
+      .select('email, status')
+      .eq('list_id', id);
 
-    const existingEmails = new Set((existing || []).map((s: { email: string }) => s.email.toLowerCase()));
+    const existingEmails = new Map<string, string>(
+      (existing || []).map((s: { email: string; status: string }) => [s.email.toLowerCase(), s.status])
+    );
     const newContacts = uniqueContacts.filter((c) => !existingEmails.has(c.email));
+    const skippedUnsubscribed = uniqueContacts.filter((c) => existingEmails.get(c.email) === 'unsubscribed').length;
     const skipped = uniqueContacts.length - newContacts.length;
 
     if (newContacts.length === 0) {
-      return NextResponse.json({ imported: 0, skipped, total: uniqueContacts.length });
+      return NextResponse.json({ imported: 0, skipped, skippedUnsubscribed, total: uniqueContacts.length });
     }
 
     // バッチ upsert（100件ずつ）
@@ -180,6 +182,7 @@ export async function POST(
     return NextResponse.json({
       imported,
       skipped,
+      skippedUnsubscribed,
       total: uniqueContacts.length,
       ...(lastError && { error: lastError }),
     });
