@@ -124,6 +124,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
   // 完了モーダル
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
+  const [currentFormId, setCurrentFormId] = useState<string | null>(formId || null);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -153,15 +154,17 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
-        if (formId) await fetchForm(user.id);
+        if (currentFormId) await fetchForm(user.id, currentFormId);
       }
       setLoading(false);
     };
     init();
-  }, [formId]);
+  }, [currentFormId]);
 
-  const fetchForm = async (uid: string) => {
-    const res = await fetch(`/api/order-form/${formId}?userId=${uid}`);
+  const fetchForm = async (uid: string, fId?: string) => {
+    const targetId = fId || currentFormId;
+    if (!targetId) return;
+    const res = await fetch(`/api/order-form/${targetId}?userId=${uid}`);
     if (res.ok) {
       const data = await res.json();
       const f = data.form;
@@ -197,7 +200,6 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
   const handleSave = async (publishStatus?: string) => {
     if (!userId || !title) return;
     setSaving(true);
-    const isNewCreation = !formId;
     const body = {
       userId, title, description, price: paymentType === 'free' ? 0 : price,
       paymentType, paymentProvider: paymentType !== 'free' ? paymentProvider : null,
@@ -209,8 +211,8 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
         required: f.required, options: f.fieldType === 'select' ? f.options : null,
       })),
     };
-    if (formId) {
-      const res = await fetch(`/api/order-form/${formId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (currentFormId) {
+      const res = await fetch(`/api/order-form/${currentFormId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (res.ok) {
         if (publishStatus) setStatus(publishStatus);
         setSaveSuccess(true);
@@ -221,8 +223,11 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       if (res.ok) {
         const data = await res.json();
         setCreatedSlug(data.form.slug);
+        setSlug(data.form.slug);
+        setCurrentFormId(data.form.id);
         setShowCompleteModal(true);
-        router.push(`/order-form/editor/${data.form.id}`);
+        // URLをブラウザ履歴に反映（ページ遷移なし）
+        window.history.replaceState(null, '', `/order-form/editor/${data.form.id}`);
       }
     }
     setSaving(false);
@@ -256,7 +261,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
           <button onClick={() => router.push('/dashboard?view=order-form')} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-lg font-bold text-gray-900 truncate">{formId ? 'フォーム編集' : '新しいフォーム'}</h1>
+          <h1 className="text-lg font-bold text-gray-900 truncate">{currentFormId ? 'フォーム編集' : '新しいフォーム'}</h1>
           {slug && status === 'published' && (
             <a href={publicUrl} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1 text-xs text-emerald-600 hover:underline">
               <Globe className="w-3 h-3" />公開中
@@ -273,7 +278,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
           <button onClick={() => handleSave()} disabled={saving || !title} className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white text-sm font-semibold rounded-lg hover:bg-gray-900 disabled:opacity-50 transition-all shadow-md min-h-[44px]">
             <Save className="w-4 h-4" />{saving ? '保存中...' : '保存'}
           </button>
-          {formId && (
+          {currentFormId && (
             <button onClick={() => handleSave(status === 'published' ? 'draft' : 'published')} disabled={saving || !title} className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-md min-h-[44px]">
               <Globe className="w-4 h-4" />{status === 'published' ? '非公開' : '公開'}
             </button>
@@ -282,7 +287,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       </div>
 
       {/* モバイルタブ */}
-      <div className="lg:hidden flex border-b border-gray-200 bg-white sticky top-[121px] z-30">
+      <div className="lg:hidden flex border-b border-gray-200 bg-white sticky top-[133px] z-30">
         <button onClick={() => setMobileTab('editor')} className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors ${mobileTab === 'editor' ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50' : 'text-gray-500 hover:text-gray-700'}`}>
           <Pencil className="w-4 h-4" />編集
         </button>
@@ -474,7 +479,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
         </div>
 
         {/* 右パネル: プレビュー */}
-        <div className={`w-full lg:w-1/2 lg:fixed lg:right-0 lg:top-[121px] lg:h-[calc(100vh-121px)] flex-col bg-gray-800 border-l border-gray-700 ${mobileTab === 'editor' ? 'hidden lg:flex' : 'flex'}`}>
+        <div className={`w-full lg:w-1/2 lg:fixed lg:right-0 lg:top-[133px] lg:h-[calc(100vh-133px)] flex-col bg-gray-800 border-l border-gray-700 ${mobileTab === 'editor' ? 'hidden lg:flex' : 'flex'}`}>
           <div className="bg-gray-900 px-4 py-3 flex items-center gap-3">
             <div className="flex gap-1.5">
               <div className="w-3 h-3 rounded-full bg-red-500" />
