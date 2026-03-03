@@ -5,6 +5,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { getAdminEmails } from '@/lib/constants';
 import { BookingMenu, BookingSlotWithAvailability, UpdateBookingMenuInput, CreateBookingSlotInput } from '@/types/booking';
 import { 
   getBookingMenu, 
@@ -51,10 +52,15 @@ export default function EditBookingMenuPage() {
         return;
       }
 
-      // 認証チェック: ユーザーIDまたは編集キー
-      const isAuthorized = 
+      // 認証チェック: ユーザーID、編集キー、または管理者
+      const adminEmails = getAdminEmails();
+      const isAdminUser = user?.email
+        ? adminEmails.some((email: string) => user.email?.toLowerCase() === email.toLowerCase())
+        : false;
+      const isAuthorized =
         (user && menuData.user_id === user.id) ||
-        (editKey && menuData.edit_key === editKey);
+        (editKey && menuData.edit_key === editKey) ||
+        isAdminUser;
 
       if (!isAuthorized) {
         alert('このメニューを編集する権限がありません');

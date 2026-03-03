@@ -28,6 +28,8 @@ type BookingListProps = {
   isUnlocked?: boolean;
 };
 
+const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim();
+
 export default function BookingList({ userId, isAdmin, isUnlocked = false }: BookingListProps) {
   const router = useRouter();
   const [menus, setMenus] = useState<BookingMenu[]>([]);
@@ -326,7 +328,7 @@ export default function BookingList({ userId, isAdmin, isUnlocked = false }: Boo
               <div className="p-5">
                 <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-1">{menu.title}</h3>
                 {menu.description && (
-                  <p className="text-sm text-gray-500 mb-3 line-clamp-2">{menu.description}</p>
+                  <p className="text-sm text-gray-500 mb-3 line-clamp-2">{stripHtml(menu.description)}</p>
                 )}
 
                 <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">

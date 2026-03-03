@@ -36,6 +36,8 @@ type AttendanceListProps = {
   isUnlocked?: boolean;
 };
 
+const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim();
+
 export default function AttendanceList({ userId, isAdmin, isUnlocked = false }: AttendanceListProps) {
   const router = useRouter();
   const [events, setEvents] = useState<AttendanceEvent[]>([]);
@@ -235,7 +237,7 @@ export default function AttendanceList({ userId, isAdmin, isUnlocked = false }: 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">{selectedEvent.title}</h2>
           {selectedEvent.description && (
-            <p className="text-sm text-gray-500 mb-4">{selectedEvent.description}</p>
+            <p className="text-sm text-gray-500 mb-4">{stripHtml(selectedEvent.description)}</p>
           )}
 
           {tableData.slots.length === 0 ? (
@@ -437,7 +439,7 @@ export default function AttendanceList({ userId, isAdmin, isUnlocked = false }: 
               <div className="p-5">
                 <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-1">{event.title}</h3>
                 {event.description && (
-                  <p className="text-sm text-gray-500 mb-3 line-clamp-2">{event.description}</p>
+                  <p className="text-sm text-gray-500 mb-3 line-clamp-2">{stripHtml(event.description)}</p>
                 )}
 
                 <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
