@@ -385,6 +385,8 @@ function DashboardContent() {
               setPointsReason={adminData.setPointsReason}
               onTogglePartner={adminData.handleTogglePartner}
               onAwardPoints={adminData.handleAwardPoints}
+              deletingUser={adminData.deletingUser}
+              onDeleteUser={adminData.handleDeleteUser}
             />
           </div>
         ),

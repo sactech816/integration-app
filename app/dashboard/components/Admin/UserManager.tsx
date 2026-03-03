@@ -43,6 +43,8 @@ type UserManagerProps = {
   setPointsReason: React.Dispatch<React.SetStateAction<string>>;
   onTogglePartner: (userId: string, currentStatus: boolean, note?: string) => Promise<void>;
   onAwardPoints: (userId: string) => Promise<void>;
+  deletingUser: string | null;
+  onDeleteUser: (userId: string, userEmail: string) => Promise<void>;
 };
 
 const USERS_PER_PAGE = 10;
@@ -79,11 +81,16 @@ export default function UserManager({
   setPointsReason,
   onTogglePartner,
   onAwardPoints,
+  deletingUser,
+  onDeleteUser,
 }: UserManagerProps) {
   const totalUserPages = Math.ceil(userTotalCount / USERS_PER_PAGE);
   const [searchInput, setSearchInput] = useState(userSearch);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  const [deleteConfirmUserId, setDeleteConfirmUserId] = useState<string | null>(null);
+  const [deleteConfirmEmail, setDeleteConfirmEmail] = useState('');
+  const [deleteTargetEmail, setDeleteTargetEmail] = useState('');
 
   // デボウンス付き検索
   useEffect(() => {
@@ -308,6 +315,16 @@ export default function UserManager({
                               >
                                 Pt付与
                               </button>
+                              <button
+                                onClick={() => {
+                                  setDeleteConfirmUserId(usr.user_id);
+                                  setDeleteTargetEmail(usr.email);
+                                  setDeleteConfirmEmail('');
+                                }}
+                                className="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded text-xs font-bold transition-colors ml-auto"
+                              >
+                                削除
+                              </button>
                               <span className="text-xs text-gray-400 ml-2">
                                 累計: {usr.total_accumulated_points?.toLocaleString() || 0}pt / 支援額: ¥{usr.total_donated.toLocaleString()} / 購入: {usr.total_purchases}件
                               </span>
@@ -358,6 +375,64 @@ export default function UserManager({
               </button>
             </div>
           )}
+        </div>
+      )}
+      {/* ユーザー削除確認ダイアログ */}
+      {deleteConfirmUserId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-red-700 mb-2">ユーザー削除</h3>
+            <p className="text-sm text-gray-700 mb-1">
+              以下のユーザーを完全に削除します。この操作は取り消せません。
+            </p>
+            <p className="text-sm font-bold text-gray-900 mb-4 bg-red-50 p-2 rounded-lg">
+              {deleteTargetEmail}
+            </p>
+            <p className="text-sm text-gray-600 mb-2">
+              確認のため、上記のメールアドレスを入力してください:
+            </p>
+            <input
+              type="email"
+              placeholder="メールアドレスを入力..."
+              value={deleteConfirmEmail}
+              onChange={(e) => setDeleteConfirmEmail(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all mb-4"
+            />
+            <div className="flex items-center gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setDeleteConfirmUserId(null);
+                  setDeleteConfirmEmail('');
+                  setDeleteTargetEmail('');
+                }}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-200 transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={async () => {
+                  if (deleteConfirmEmail.toLowerCase() !== deleteTargetEmail.toLowerCase()) {
+                    alert('メールアドレスが一致しません');
+                    return;
+                  }
+                  await onDeleteUser(deleteConfirmUserId, deleteConfirmEmail);
+                  setDeleteConfirmUserId(null);
+                  setDeleteConfirmEmail('');
+                  setDeleteTargetEmail('');
+                }}
+                disabled={
+                  deleteConfirmEmail.toLowerCase() !== deleteTargetEmail.toLowerCase() ||
+                  deletingUser === deleteConfirmUserId
+                }
+                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center gap-2 shadow-md"
+              >
+                {deletingUser === deleteConfirmUserId && (
+                  <Loader2 size={14} className="animate-spin" />
+                )}
+                削除する
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -56,6 +56,8 @@ type UseAdminDataReturn = {
   fetchUsersPage: (page: number, search?: string) => Promise<void>;
   handleTogglePartner: (userId: string, currentStatus: boolean, note?: string) => Promise<void>;
   handleAwardPoints: (userId: string) => Promise<void>;
+  deletingUser: string | null;
+  handleDeleteUser: (userId: string, userEmail: string) => Promise<void>;
 
   // お知らせ管理
   announcements: Announcement[];
@@ -109,6 +111,7 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
   const [awardingPoints, setAwardingPoints] = useState<string | null>(null);
   const [pointsToAward, setPointsToAward] = useState<number>(0);
   const [pointsReason, setPointsReason] = useState<string>('');
+  const [deletingUser, setDeletingUser] = useState<string | null>(null);
 
   // お知らせ管理
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -280,6 +283,51 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
       }
     },
     [pointsToAward, pointsReason, fetchAllUsers]
+  );
+
+  // ユーザー削除処理
+  const handleDeleteUser = useCallback(
+    async (userId: string, userEmail: string) => {
+      if (!supabase) return;
+
+      setDeletingUser(userId);
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const token = session?.access_token;
+
+        if (!token) throw new Error('認証トークンがありません');
+
+        const response = await fetch('/api/admin/delete-user', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userId,
+            confirmEmail: userEmail,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'ユーザー削除に失敗しました');
+        }
+
+        const result = await response.json();
+        alert(result.message || 'ユーザーを削除しました');
+
+        await fetchUsersPage(userPage, userSearch);
+      } catch (error) {
+        console.error('Delete user error:', error);
+        alert('ユーザー削除エラー: ' + (error instanceof Error ? error.message : '不明なエラー'));
+      } finally {
+        setDeletingUser(null);
+      }
+    },
+    [fetchUsersPage, userPage, userSearch]
   );
 
   // お知らせを取得
@@ -497,6 +545,8 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
     fetchUsersPage,
     handleTogglePartner,
     handleAwardPoints,
+    deletingUser,
+    handleDeleteUser,
 
     // お知らせ管理
     announcements,
