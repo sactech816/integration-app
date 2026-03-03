@@ -242,6 +242,13 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
   const publicUrl = slug ? `${typeof window !== 'undefined' ? window.location.origin : ''}/order-form/${slug}` : '';
   const completeUrl = createdSlug ? `${typeof window !== 'undefined' ? window.location.origin : ''}/order-form/${createdSlug}` : publicUrl;
 
+  const handleCopyUrl = () => {
+    if (!publicUrl) return;
+    navigator.clipboard.writeText(publicUrl);
+    setUrlCopied(true);
+    setTimeout(() => setUrlCopied(false), 2000);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* 共通ヘッダー */}
@@ -263,7 +270,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
           <button onClick={() => router.push('/dashboard?view=order-form')} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-lg font-bold text-gray-900 truncate">{currentFormId ? 'フォーム編集' : '新しいフォーム'}</h1>
+          <h1 className="text-lg font-bold text-gray-900 truncate">{savedFormId ? 'フォーム編集' : '新しいフォーム'}</h1>
           {slug && status === 'published' && (
             <a href={publicUrl} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1 text-xs text-emerald-600 hover:underline">
               <Globe className="w-3 h-3" />公開中
@@ -271,20 +278,30 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
           )}
         </div>
         <div className="flex items-center gap-2">
-          {/* 保存成功トースト */}
+          {/* トースト */}
           {saveSuccess && (
             <span className="inline-flex items-center gap-1 text-sm text-emerald-600 font-semibold animate-fade-in">
               <CheckCircle className="w-4 h-4" />保存しました
             </span>
           )}
-          <button onClick={() => handleSave()} disabled={saving || !title} className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white text-sm font-semibold rounded-lg hover:bg-gray-900 disabled:opacity-50 transition-all shadow-md min-h-[44px]">
-            <Save className="w-4 h-4" />{saving ? '保存中...' : '保存'}
-          </button>
-          {currentFormId && (
-            <button onClick={() => handleSave(status === 'published' ? 'draft' : 'published')} disabled={saving || !title} className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-md min-h-[44px]">
-              <Globe className="w-4 h-4" />{status === 'published' ? '非公開' : '公開'}
+          {urlCopied && (
+            <span className="inline-flex items-center gap-1 text-sm text-emerald-600 font-semibold animate-fade-in">
+              <CheckCircle className="w-4 h-4" />URLコピー済み
+            </span>
+          )}
+          {savedFormId && (
+            <button onClick={() => setShowCompleteModal(true)} className="hidden sm:flex bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-3 sm:px-4 py-2 rounded-lg font-bold items-center gap-2 hover:from-emerald-700 hover:to-teal-700 whitespace-nowrap transition-all shadow-md text-sm sm:text-base min-h-[44px]">
+              <Trophy className="w-4 h-4" /> <span className="hidden md:inline">作成完了画面</span><span className="md:hidden">完了</span>
             </button>
           )}
+          {slug && (
+            <button onClick={handleCopyUrl} className="hidden sm:flex bg-green-50 border border-green-200 text-green-700 px-3 sm:px-4 py-2 rounded-lg font-bold items-center gap-2 whitespace-nowrap text-sm sm:text-base min-h-[44px]">
+              <Share2 className="w-4 h-4" /> <span className="hidden md:inline">公開URL</span><span className="md:hidden">URL</span>
+            </button>
+          )}
+          <button onClick={() => handleSave()} disabled={saving || !title} className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-md min-h-[44px]">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} <span className="hidden sm:inline">{saving ? '保存中...' : '保存'}</span>
+          </button>
         </div>
       </div>
 
@@ -321,6 +338,23 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                   <label className="block text-sm font-semibold text-gray-700 mb-1">完了メッセージ</label>
                   <input type="text" value={successMessage} onChange={(e) => setSuccessMessage(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" />
                 </div>
+                {savedFormId && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">公開状態</label>
+                    <button
+                      onClick={() => handleSave(status === 'published' ? 'draft' : 'published')}
+                      disabled={saving}
+                      className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm min-h-[44px] transition-all shadow-sm ${
+                        status === 'published'
+                          ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
+                          : 'bg-gray-100 text-gray-600 border border-gray-300'
+                      }`}
+                    >
+                      <Globe className="w-4 h-4" />
+                      {status === 'published' ? '公開中' : '非公開（下書き）'}
+                    </button>
+                  </div>
+                )}
               </div>
             </Section>
 
