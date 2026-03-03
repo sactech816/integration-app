@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import {
   ArrowLeft, Save, Plus, Trash2, GripVertical, Loader2,
   Globe, CreditCard, Monitor, Pencil, ChevronDown, ChevronUp,
-  Settings, ListPlus, CheckCircle, Mail,
+  Settings, ListPlus, CheckCircle, Mail, Trophy, Share2,
 } from 'lucide-react';
 import StripeConnectStatus from '@/components/order-form/StripeConnectStatus';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
@@ -124,7 +124,8 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
   // 完了モーダル
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
-  const [currentFormId, setCurrentFormId] = useState<string | null>(formId || null);
+  const [savedFormId, setSavedFormId] = useState<string | null>(formId || null);
+  const [urlCopied, setUrlCopied] = useState(false);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -154,15 +155,16 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
-        if (currentFormId) await fetchForm(user.id, currentFormId);
+        if (formId) await fetchForm(user.id, formId);
       }
       setLoading(false);
     };
     init();
-  }, [currentFormId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fetchForm = async (uid: string, fId?: string) => {
-    const targetId = fId || currentFormId;
+    const targetId = fId || savedFormId;
     if (!targetId) return;
     const res = await fetch(`/api/order-form/${targetId}?userId=${uid}`);
     if (res.ok) {
@@ -211,8 +213,8 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
         required: f.required, options: f.fieldType === 'select' ? f.options : null,
       })),
     };
-    if (currentFormId) {
-      const res = await fetch(`/api/order-form/${currentFormId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (savedFormId) {
+      const res = await fetch(`/api/order-form/${savedFormId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (res.ok) {
         if (publishStatus) setStatus(publishStatus);
         setSaveSuccess(true);
@@ -224,7 +226,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
         const data = await res.json();
         setCreatedSlug(data.form.slug);
         setSlug(data.form.slug);
-        setCurrentFormId(data.form.id);
+        setSavedFormId(data.form.id);
         setShowCompleteModal(true);
         // URLをブラウザ履歴に反映（ページ遷移なし）
         window.history.replaceState(null, '', `/order-form/editor/${data.form.id}`);

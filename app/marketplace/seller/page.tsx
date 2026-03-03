@@ -7,18 +7,15 @@ import { MarketplaceProfile, MarketplaceListing } from '@/lib/types';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
-import ProGate from '@/components/marketplace/ProGate';
 import SellerProfileCard from '@/components/marketplace/SellerProfileCard';
-import { Plus, Edit3, Eye, EyeOff, Trash2, ArrowLeft, Loader2, UserCog } from 'lucide-react';
+import { Plus, Edit3, Eye, EyeOff, Trash2, ArrowLeft, Loader2, UserCog, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { CATEGORY_MAP, ORDER_STATUS_LABELS } from '@/constants/marketplace';
-import { getAdminEmails } from '@/lib/constants';
 
 export default function SellerDashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [accessToken, setAccessToken] = useState('');
-  const [planTier, setPlanTier] = useState('free');
   const [loading, setLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
@@ -33,9 +30,6 @@ export default function SellerDashboardPage() {
 
       setUser(session.user);
       setAccessToken(session.access_token);
-
-      const planRes = await fetch(`/api/user/plan?userId=${session.user.id}`);
-      if (planRes.ok) { const d = await planRes.json(); setPlanTier(d.planTier); }
 
       // プロフィール取得
       const profileRes = await fetch('/api/marketplace/profiles', {
@@ -100,14 +94,27 @@ export default function SellerDashboardPage() {
     );
   }
 
-  const adminEmails = getAdminEmails();
-  const isAdmin = user?.email && adminEmails.some((email: string) => email.toLowerCase() === user.email?.toLowerCase());
-
-  if (!user || (planTier !== 'pro' && !isAdmin)) {
+  if (!user) {
     return (
       <>
         <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuthModal} />
-        <main className="min-h-screen bg-gray-50 pt-16"><ProGate /></main>
+        <main className="min-h-screen bg-gray-50 pt-16">
+          <div className="min-h-[60vh] flex items-center justify-center px-4">
+            <div className="max-w-md text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <LogIn className="w-8 h-8 text-blue-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">ログインが必要です</h2>
+              <p className="text-gray-600 mb-6">スキルマーケットで出品するには、ログインまたは新規登録が必要です。</p>
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-md"
+              >
+                ログイン / 新規登録
+              </button>
+            </div>
+          </div>
+        </main>
         <Footer />
         {showAuthModal && <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} setUser={setUser} />}
       </>
