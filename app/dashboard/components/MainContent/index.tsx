@@ -9,6 +9,7 @@ import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
 import AccountSettings from '../Settings/AccountSettings';
 import MarketplaceSellerDashboard from './MarketplaceSellerDashboard';
 import AnnouncementList from './AnnouncementList';
+import AnalyticsSection from './AnalyticsSection';
 import BookingList from './BookingList';
 import AttendanceList from './AttendanceList';
 import SurveyList from './SurveyList';
@@ -191,25 +192,35 @@ export default function MainContent({
       )}
 
       {['quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail'].includes(activeView) && (
-      <ContentList
-        contents={contents}
-        selectedService={activeView as ServiceType}
-        isLoading={isLoading}
-        isAdmin={isAdmin}
-        proAccessMap={proAccessMap}
-        processingId={processingId}
-        copiedId={copiedId}
-        isProUnlocked={isUnlocked}
-        onEdit={onEdit}
-        onDuplicate={onDuplicate}
-        onDelete={onDelete}
-        onView={onView}
-        onCopyUrl={onCopyUrl}
-        onEmbed={onEmbed}
-        onDownloadHtml={onDownloadHtml}
-        onPurchase={onPurchase}
-        onCreateNew={onCreateNew}
-      />
+      <div className="space-y-6">
+        <ContentList
+          contents={contents}
+          selectedService={activeView as ServiceType}
+          isLoading={isLoading}
+          isAdmin={isAdmin}
+          proAccessMap={proAccessMap}
+          processingId={processingId}
+          copiedId={copiedId}
+          isProUnlocked={isUnlocked}
+          onEdit={onEdit}
+          onDuplicate={onDuplicate}
+          onDelete={onDelete}
+          onView={onView}
+          onCopyUrl={onCopyUrl}
+          onEmbed={onEmbed}
+          onDownloadHtml={onDownloadHtml}
+          onPurchase={onPurchase}
+          onCreateNew={onCreateNew}
+        />
+        {['quiz', 'profile', 'business'].includes(activeView) && (
+          <AnalyticsSection
+            contents={contents}
+            selectedService={activeView as ServiceType}
+            isUnlocked={isUnlocked}
+            onNavigate={onNavigate}
+          />
+        )}
+      </div>
       )}
 
       {/* 予約メーカー */}
