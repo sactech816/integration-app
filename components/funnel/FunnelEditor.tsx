@@ -200,7 +200,7 @@ export default function FunnelEditor({ funnelId }: { funnelId?: string }) {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* ヘッダー */}
-      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between sticky top-16 z-40 shadow-sm">
         <div className="flex items-center gap-3">
           <button onClick={() => router.push('/funnel/dashboard')} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors">
             <ArrowLeft className="w-5 h-5" />
@@ -225,7 +225,7 @@ export default function FunnelEditor({ funnelId }: { funnelId?: string }) {
       </div>
 
       {/* モバイルタブ */}
-      <div className="lg:hidden flex border-b border-gray-200 bg-white sticky top-[57px] z-30">
+      <div className="lg:hidden flex border-b border-gray-200 bg-white sticky top-[121px] z-30">
         <button onClick={() => setMobileTab('editor')} className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors ${mobileTab === 'editor' ? 'text-amber-600 border-b-2 border-amber-600 bg-amber-50' : 'text-gray-500 hover:text-gray-700'}`}>
           <Pencil className="w-4 h-4" />編集
         </button>
@@ -351,7 +351,7 @@ export default function FunnelEditor({ funnelId }: { funnelId?: string }) {
         </div>
 
         {/* 右パネル: フロープレビュー */}
-        <div className={`w-full lg:w-1/2 lg:fixed lg:right-0 lg:top-[57px] lg:h-[calc(100vh-57px)] flex-col bg-gray-800 border-l border-gray-700 ${mobileTab === 'editor' ? 'hidden lg:flex' : 'flex'}`}>
+        <div className={`w-full lg:w-1/2 lg:fixed lg:right-0 lg:top-[138px] lg:h-[calc(100vh-138px)] flex-col bg-gray-800 border-l border-gray-700 ${mobileTab === 'editor' ? 'hidden lg:flex' : 'flex'}`}>
           <div className="bg-gray-900 px-4 py-3 flex items-center gap-3">
             <div className="flex gap-1.5">
               <div className="w-3 h-3 rounded-full bg-red-500" />

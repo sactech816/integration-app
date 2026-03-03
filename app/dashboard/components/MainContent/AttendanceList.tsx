@@ -252,7 +252,7 @@ export default function AttendanceList({ userId, isAdmin, isUnlocked = false }: 
                       <th
                         key={slotSummary.slot_index}
                         className={`text-center p-2 font-semibold text-gray-700 border-l border-gray-200 min-w-[80px] ${
-                          tableData.best_slot_index === slotSummary.slot_index ? 'bg-green-50' : ''
+                          tableData.best_slot_indices.includes(slotSummary.slot_index) ? 'bg-green-50' : ''
                         }`}
                       >
                         <div className="text-xs">
@@ -263,7 +263,7 @@ export default function AttendanceList({ userId, isAdmin, isUnlocked = false }: 
                             {slotSummary.slot.start_time}
                           </div>
                         )}
-                        {tableData.best_slot_index === slotSummary.slot_index && (
+                        {tableData.best_slot_indices.includes(slotSummary.slot_index) && (
                           <div className="text-[10px] text-green-600 font-bold">★候補</div>
                         )}
                       </th>

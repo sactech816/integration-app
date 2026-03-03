@@ -597,7 +597,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
       />
 
       {/* ヘッダー */}
-      <div className="bg-white border-b px-4 md:px-6 py-4 flex justify-between sticky top-0 z-40 shadow-sm">
+      <div className="bg-white border-b px-4 md:px-6 py-4 flex justify-between sticky top-16 z-40 shadow-sm">
         <div className="flex items-center gap-3">
           <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full text-gray-700">
             <ArrowLeft />
@@ -635,7 +635,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
       </div>
 
       {/* モバイル用タブ */}
-      <div className="lg:hidden bg-white border-b border-gray-200 sticky top-[57px] z-40">
+      <div className="lg:hidden bg-white border-b border-gray-200 sticky top-[121px] z-40">
         <div className="flex">
           <button
             onClick={() => setMobileTab("editor")}
@@ -1230,7 +1230,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
 
         {/* 右側: プレビュー */}
         <div
-          className={`w-full lg:sticky lg:top-0 lg:w-1/2 lg:h-screen lg:max-h-[calc(100vh-64px)] flex-col bg-gray-800 border-l border-gray-700 ${
+          className={`w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] flex-col bg-gray-800 border-l border-gray-700 ${
             mobileTab === "editor" ? "hidden lg:flex" : "flex"
           }`}
         >
@@ -1267,6 +1267,8 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
             </div>
           </div>
         </div>
+        {/* PC用スペーサー */}
+        <div className="hidden lg:block lg:w-1/2 lg:flex-shrink-0"></div>
       </div>
 
       {/* はじめかたガイド */}

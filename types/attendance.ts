@@ -80,7 +80,7 @@ export interface AttendanceTableData {
   event: AttendanceEvent;
   slots: SlotSummary[];
   participants: AttendanceResponse[];
-  best_slot_index?: number; // 最も参加可能な人が多いスロット
+  best_slot_indices: number[]; // 最も参加可能な人が多いスロット（複数候補対応）
 }
 
 // -------------------------------------------

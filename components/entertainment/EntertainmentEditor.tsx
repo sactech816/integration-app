@@ -383,7 +383,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
       />
 
       {/* ヘッダー */}
-      <div className="bg-white border-b px-4 md:px-6 py-4 flex justify-between sticky top-0 z-40 shadow-sm">
+      <div className="bg-white border-b px-4 md:px-6 py-4 flex justify-between sticky top-16 z-40 shadow-sm">
         <div className="flex items-center gap-3">
           <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full text-gray-700">
             <ArrowLeft size={20} />
@@ -420,7 +420,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
       </div>
 
       {/* モバイルタブ */}
-      <div className="lg:hidden bg-white border-b border-gray-200 sticky top-[57px] z-40">
+      <div className="lg:hidden bg-white border-b border-gray-200 sticky top-[121px] z-40">
         <div className="flex">
           <button
             onClick={() => setMobileTab('editor')}
@@ -895,7 +895,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
 
         {/* 右側: プレビュー */}
         <div
-          className={`w-full lg:fixed lg:right-0 lg:top-[57px] lg:w-1/2 lg:h-[calc(100vh-57px)] flex-col bg-gray-800 border-l border-gray-700 ${
+          className={`w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] flex-col bg-gray-800 border-l border-gray-700 ${
             mobileTab === 'editor' ? 'hidden lg:flex' : 'flex'
           }`}
         >

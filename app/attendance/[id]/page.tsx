@@ -267,12 +267,14 @@ export default function AttendancePublicPage() {
               ご回答ありがとうございます。
             </p>
             {/* カレンダーに追加（ベスト候補日） */}
-            {tableData && tableData.best_slot_index !== undefined && (() => {
-              const bestSlotSummary = tableData.slots.find(
-                s => s.slot_index === tableData.best_slot_index
+            {tableData && tableData.best_slot_indices.length > 0 && (() => {
+              const bestSlots = tableData.slots.filter(
+                s => tableData.best_slot_indices.includes(s.slot_index)
               );
-              if (!bestSlotSummary) return null;
-              const slot = bestSlotSummary.slot;
+              if (bestSlots.length === 0) return null;
+              // カレンダー追加は最初の候補日を使用
+              const firstBest = bestSlots[0];
+              const slot = firstBest.slot;
               const hasTime = !!slot.start_time && !!slot.end_time;
               const startDate = hasTime
                 ? new Date(`${slot.date}T${slot.start_time}:00`)
@@ -284,8 +286,13 @@ export default function AttendancePublicPage() {
               return (
                 <div className="mb-6">
                   <p className="text-xs text-gray-500 mb-2">
-                    ★ 有力候補日：{formatDate(slot.date)}
-                    {hasTime && ` ${slot.start_time} - ${slot.end_time}`}
+                    ★ 有力候補日：{bestSlots.map(s => {
+                      const label = formatDate(s.slot.date);
+                      const time = s.slot.start_time && s.slot.end_time
+                        ? ` ${s.slot.start_time} - ${s.slot.end_time}`
+                        : '';
+                      return label + time;
+                    }).join('、')}
                   </p>
                   <AddToCalendarButton
                     event={{
@@ -380,7 +387,7 @@ export default function AttendancePublicPage() {
                         <th
                           key={slotSummary.slot_index}
                           className={`text-center p-3 font-semibold text-gray-700 border-l border-gray-200 min-w-[100px] ${
-                            tableData.best_slot_index === slotSummary.slot_index
+                            tableData.best_slot_indices.includes(slotSummary.slot_index)
                               ? 'bg-green-50 border-green-300'
                               : ''
                           }`}
@@ -393,7 +400,7 @@ export default function AttendancePublicPage() {
                               {formatTime(slotSummary.slot.start_time)} - {formatTime(slotSummary.slot.end_time)}
                             </div>
                           )}
-                          {tableData.best_slot_index === slotSummary.slot_index && (
+                          {tableData.best_slot_indices.includes(slotSummary.slot_index) && (
                             <div className="text-xs text-green-600 font-bold mt-1">★ 候補</div>
                           )}
                         </th>
@@ -496,7 +503,7 @@ export default function AttendancePublicPage() {
                   </thead>
                   <tbody>
                     {tableData.slots.map((slotSummary) => {
-                      const isBest = tableData.best_slot_index === slotSummary.slot_index;
+                      const isBest = tableData.best_slot_indices.includes(slotSummary.slot_index);
                       return (
                         <tr key={slotSummary.slot_index} className={`border-b border-gray-100 ${isBest ? 'bg-green-50' : 'hover:bg-gray-50'}`}>
                           <td className={`p-3 font-semibold text-gray-900 sticky left-0 z-10 ${isBest ? 'bg-green-50' : 'bg-white'}`}>

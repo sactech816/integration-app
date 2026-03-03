@@ -335,21 +335,33 @@ export async function getAttendanceTableData(
       };
     });
 
-    // 最も参加可能な人が多いスロットを特定
-    let best_slot_index: number | undefined;
+    // 最も参加可能な人が多いスロットを特定（同数の場合は○が多い方を優先、完全同条件は複数候補）
     let maxAvailable = 0;
-    slots.forEach((slotSummary) => {
-      if (slotSummary.available_count > maxAvailable) {
-        maxAvailable = slotSummary.available_count;
-        best_slot_index = slotSummary.slot_index;
+    let maxYes = 0;
+
+    // 1. 最大値を求める
+    slots.forEach((s) => {
+      if (
+        s.available_count > maxAvailable ||
+        (s.available_count === maxAvailable && s.yes_count > maxYes)
+      ) {
+        maxAvailable = s.available_count;
+        maxYes = s.yes_count;
       }
     });
+
+    // 2. 最大値と一致するスロットを全て候補日とする
+    const best_slot_indices = maxAvailable > 0
+      ? slots
+          .filter((s) => s.available_count === maxAvailable && s.yes_count === maxYes)
+          .map((s) => s.slot_index)
+      : [];
 
     return {
       event,
       slots,
       participants,
-      best_slot_index: maxAvailable > 0 ? best_slot_index : undefined,
+      best_slot_indices,
     };
   } catch (err) {
     console.error('Error getting attendance table data:', err);

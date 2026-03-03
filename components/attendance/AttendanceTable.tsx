@@ -61,7 +61,7 @@ export default function AttendanceTable({ data }: AttendanceTableProps) {
                 <th
                   key={slotSummary.slot_index}
                   className={`text-center p-3 font-semibold text-gray-700 border-l border-gray-200 min-w-[100px] ${
-                    data.best_slot_index === slotSummary.slot_index
+                    data.best_slot_indices.includes(slotSummary.slot_index)
                       ? 'bg-green-50 border-green-300'
                       : ''
                   }`}
@@ -72,7 +72,7 @@ export default function AttendanceTable({ data }: AttendanceTableProps) {
                       {formatTime(slotSummary.slot.start_time)} - {formatTime(slotSummary.slot.end_time)}
                     </div>
                   )}
-                  {data.best_slot_index === slotSummary.slot_index && (
+                  {data.best_slot_indices.includes(slotSummary.slot_index) && (
                     <div className="text-xs text-green-600 font-bold mt-1">★ 候補</div>
                   )}
                 </th>

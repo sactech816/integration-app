@@ -741,7 +741,7 @@ export default function SalesLetterEditor({
           </div>
 
           {/* 右パネル: プレビュー */}
-          <div className={`w-full lg:w-1/2 bg-gray-200 min-h-screen lg:sticky lg:top-32 lg:max-h-[calc(100vh-8rem)] overflow-y-auto ${activeTab === 'edit' ? 'hidden lg:block' : ''}`}>
+          <div className={`w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] bg-gray-200 overflow-y-auto ${activeTab === 'edit' ? 'hidden lg:block' : ''}`} id="salesletter-preview-panel">
             {/* プレビューヘッダー */}
             <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between sticky top-0 z-10">
               <div className="flex items-center gap-2">
@@ -799,7 +799,7 @@ export default function SalesLetterEditor({
             {/* スクロールトップボタン */}
             <button
               onClick={() => {
-                const previewContainer = document.querySelector('.lg\\:max-h-\\[calc\\(100vh-8rem\\)\\]');
+                const previewContainer = document.getElementById('salesletter-preview-panel');
                 if (previewContainer) previewContainer.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className="fixed bottom-4 right-4 lg:right-[calc(50%-2rem)] z-20 p-3 bg-rose-500 text-white rounded-full shadow-lg hover:bg-rose-600 transition-colors"
@@ -808,6 +808,8 @@ export default function SalesLetterEditor({
               <ChevronUp size={24} />
             </button>
           </div>
+          {/* PC用スペーサー */}
+          <div className="hidden lg:block lg:w-1/2 lg:flex-shrink-0"></div>
         </div>
       </div>
 
