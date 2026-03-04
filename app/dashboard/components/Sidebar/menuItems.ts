@@ -19,6 +19,7 @@ import {
   Megaphone,
   DollarSign,
   ClipboardCheck,
+  GitBranch,
   LucideIcon,
 } from 'lucide-react';
 
@@ -148,6 +149,15 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: 'メルマガ配信',
     color: { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
     href: '/newsletter/dashboard',
+    category: 'marketing',
+  },
+  {
+    id: 'funnel',
+    label: 'ファネルメーカー',
+    icon: GitBranch,
+    description: 'ファネル構築',
+    color: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' },
+    href: '/funnel/dashboard',
     category: 'marketing',
   },
 

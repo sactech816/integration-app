@@ -97,7 +97,7 @@ function DashboardContent() {
   // URLパラメータからビューを設定
   useEffect(() => {
     const view = searchParams?.get('view');
-    if (view && ['announcements', 'booking', 'attendance', 'survey', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'newsletter', 'order-form', 'affiliate', 'settings'].includes(view)) {
+    if (view && ['announcements', 'booking', 'attendance', 'survey', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'newsletter', 'order-form', 'funnel', 'affiliate', 'settings'].includes(view)) {
       setActiveView(view as ActiveView);
       // URLパラメータをクリア
       window.history.replaceState({}, '', '/dashboard');
@@ -294,6 +294,12 @@ function DashboardContent() {
         return;
       }
       setActiveView('order-form' as ActiveView);
+      return;
+    }
+
+    // ファネルはダッシュボード内で表示
+    if (itemId === 'funnel') {
+      setActiveView('funnel' as ActiveView);
       return;
     }
 

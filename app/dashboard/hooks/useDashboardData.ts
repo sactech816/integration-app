@@ -47,6 +47,7 @@ type UseDashboardDataReturn = {
     thumbnail: number;
     newsletter: number;
     order_form: number;
+    funnel: number;
   };
   totalViews: number;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -123,6 +124,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     thumbnail: 0,
     newsletter: 0,
     order_form: 0,
+    funnel: 0,
   });
   const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
   const [purchases, setPurchases] = useState<string[]>([]);
@@ -512,7 +514,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, orderFormResult] = await Promise.all([
+      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, orderFormResult, funnelResult] = await Promise.all([
         // 診断クイズ数
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true })
@@ -555,6 +557,10 @@ export function useDashboardData(): UseDashboardDataReturn {
         isAdmin
           ? supabase.from('order_forms').select('id', { count: 'exact', head: true })
           : supabase.from('order_forms').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // ファネル数
+        isAdmin
+          ? supabase.from('funnels').select('id', { count: 'exact', head: true })
+          : supabase.from('funnels').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
       ]);
 
       setContentCounts({
@@ -570,6 +576,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         thumbnail: thumbnailResult.count || 0,
         newsletter: newsletterResult.count || 0,
         order_form: orderFormResult.count || 0,
+        funnel: funnelResult.count || 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);

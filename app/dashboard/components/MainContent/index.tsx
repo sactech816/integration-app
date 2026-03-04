@@ -16,6 +16,7 @@ import SurveyList from './SurveyList';
 import MyGamification from './MyGamification';
 import NewsletterDashboard from '@/components/newsletter/NewsletterDashboard';
 import OrderFormList from './OrderFormList';
+import FunnelList from './FunnelList';
 import { PlanTier } from '@/lib/subscription';
 
 export type ActiveView =
@@ -34,6 +35,7 @@ export type ActiveView =
   | 'kindle'
   | 'newsletter'
   | 'order-form'
+  | 'funnel'
   | 'affiliate'
   | 'marketplace-seller'
   | 'settings'
@@ -87,6 +89,7 @@ type MainContentProps = {
     thumbnail: number;
     newsletter: number;
     order_form: number;
+    funnel: number;
   };
   isLoading: boolean;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -251,6 +254,11 @@ export default function MainContent({
       {/* 申し込みフォーム */}
       {activeView === 'order-form' && user && (
         <OrderFormList userId={user.id} isAdmin={isAdmin} isUnlocked={isUnlocked} />
+      )}
+
+      {/* ファネル */}
+      {activeView === 'funnel' && user && (
+        <FunnelList userId={user.id} isAdmin={isAdmin} />
       )}
 
       {/* ゲーム作成（全ユーザー） */}

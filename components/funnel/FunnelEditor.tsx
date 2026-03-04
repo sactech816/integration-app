@@ -17,13 +17,13 @@ interface Step {
 }
 
 const STEP_TYPES = [
-  { value: 'profile_lp', label: 'プロフィールLP', refType: 'slug', placeholder: 'プロフィールのスラッグ' },
-  { value: 'quiz', label: '診断クイズ', refType: 'slug', placeholder: 'クイズのスラッグ' },
-  { value: 'order_form', label: '申し込みフォーム', refType: 'slug', placeholder: 'フォームのスラッグ' },
-  { value: 'newsletter', label: 'メルマガ登録', refType: 'id', placeholder: 'リストID' },
-  { value: 'booking', label: '予約ページ', refType: 'slug', placeholder: '予約のスラッグ' },
-  { value: 'custom_url', label: '外部URL', refType: 'url', placeholder: 'https://...' },
-  { value: 'thank_you', label: 'サンキューページ', refType: 'none', placeholder: '' },
+  { value: 'profile_lp', label: 'プロフィールLP', refType: 'slug', placeholder: '例: taro-yamada', hint: 'プロフィールLPのURLの末尾部分です（/profile/●●● の ●●● 部分）。各ツールの編集画面やダッシュボードで確認できます。' },
+  { value: 'quiz', label: '診断クイズ', refType: 'slug', placeholder: '例: career-quiz', hint: '診断クイズのURLの末尾部分です（/quiz/●●● の ●●● 部分）。クイズ編集画面の公開URLで確認できます。' },
+  { value: 'order_form', label: '申し込みフォーム', refType: 'slug', placeholder: '例: consulting-form', hint: '申し込みフォームのURLの末尾部分です（/order-form/●●● の ●●● 部分）。フォーム編集画面で確認できます。' },
+  { value: 'newsletter', label: 'メルマガ登録', refType: 'id', placeholder: '例: abc123-def456', hint: 'メルマガリストのIDです。メルマガダッシュボードの各リストの設定画面で確認できます。' },
+  { value: 'booking', label: '予約ページ', refType: 'slug', placeholder: '例: free-consultation', hint: '予約ページのURLの末尾部分です（/booking/●●● の ●●● 部分）。予約メニューの編集画面で確認できます。' },
+  { value: 'custom_url', label: '外部URL', refType: 'url', placeholder: 'https://example.com', hint: '外部サイトのURLをそのまま入力してください。' },
+  { value: 'thank_you', label: 'サンキューページ', refType: 'none', placeholder: '', hint: '' },
 ];
 
 const STEP_ICONS: Record<string, React.ReactNode> = {
@@ -287,7 +287,7 @@ export default function FunnelEditor({ funnelId }: { funnelId?: string }) {
                             <button onClick={() => removeStep(i)} className="p-1 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
                           </div>
                         </div>
-                        <div className="grid sm:grid-cols-3 gap-2">
+                        <div className="grid sm:grid-cols-2 gap-2">
                           <div>
                             <label className="block text-xs font-semibold text-gray-500 mb-1">タイプ</label>
                             <select value={step.stepType} onChange={(e) => updateStep(i, { stepType: e.target.value, contentRef: null })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm">
@@ -295,7 +295,7 @@ export default function FunnelEditor({ funnelId }: { funnelId?: string }) {
                             </select>
                           </div>
                           {typeConfig?.refType !== 'none' && (
-                            <div>
+                            <div className="sm:col-span-2">
                               <label className="block text-xs font-semibold text-gray-500 mb-1">{typeConfig?.refType === 'url' ? 'URL' : 'スラッグ / ID'}</label>
                               <input
                                 type="text"
@@ -307,6 +307,9 @@ export default function FunnelEditor({ funnelId }: { funnelId?: string }) {
                                 placeholder={typeConfig?.placeholder}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400"
                               />
+                              {typeConfig?.hint && (
+                                <p className="text-xs text-gray-400 mt-1 leading-relaxed">{typeConfig.hint}</p>
+                              )}
                             </div>
                           )}
                           <div>
