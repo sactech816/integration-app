@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Magnet, Sparkles, Building2, UserCircle, TrendingUp, Lightbulb, Heart, Calendar, ClipboardList, Gamepad2, BookOpen, Monitor, CalendarCheck, PenTool, MousePointerClick, Crown, Image, Store } from 'lucide-react';
+import { Magnet, Sparkles, Building2, UserCircle, TrendingUp, Lightbulb, Heart, Calendar, ClipboardList, Gamepad2, BookOpen, Monitor, CalendarCheck, PenTool, MousePointerClick, Crown, Image, Store, PartyPopper, Mail, GitBranch, Video, ClipboardCheck } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
 interface FooterProps {
@@ -75,6 +75,36 @@ const Footer: React.FC<FooterProps> = () => {
                 <Link href="/salesletter" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <PenTool size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   セールスライター
+                </Link>
+              </li>
+              <li>
+                <Link href="/entertainment/create" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <PartyPopper size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  エンタメ診断メーカー
+                </Link>
+              </li>
+              <li>
+                <Link href="/newsletter/dashboard" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Mail size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  メルマガメーカー
+                </Link>
+              </li>
+              <li>
+                <Link href="/funnel/dashboard" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <GitBranch size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  ファネルメーカー
+                </Link>
+              </li>
+              <li>
+                <Link href="/webinar/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Video size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  ウェビナーLPメーカー
+                </Link>
+              </li>
+              <li>
+                <Link href="/order-form/dashboard" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <ClipboardCheck size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  フォームメーカー
                 </Link>
               </li>
             </ul>

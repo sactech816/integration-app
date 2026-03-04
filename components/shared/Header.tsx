@@ -37,7 +37,11 @@ import {
   Store,
   MousePointerClick,
   Lock,
-  Image
+  Image,
+  PartyPopper,
+  GitBranch,
+  Video,
+  ClipboardCheck
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -128,6 +132,21 @@ const Header: React.FC<HeaderProps> = ({
   // スキルマーケット
   const marketplaceService = { id: 'marketplace', label: 'スキルマーケット', icon: Store, color: 'text-indigo-600', bg: 'bg-indigo-50' };
 
+  // エンタメ診断
+  const entertainmentService = { id: 'entertainment', label: 'エンタメ診断メーカー', icon: PartyPopper, color: 'text-pink-600', bg: 'bg-pink-50' };
+
+  // メルマガ
+  const newsletterService = { id: 'newsletter', label: 'メルマガメーカー', icon: Mail, color: 'text-cyan-600', bg: 'bg-cyan-50' };
+
+  // ファネル
+  const funnelService = { id: 'funnel', label: 'ファネルメーカー', icon: GitBranch, color: 'text-amber-600', bg: 'bg-amber-50' };
+
+  // ウェビナーLP
+  const webinarService = { id: 'webinar', label: 'ウェビナーLPメーカー', icon: Video, color: 'text-violet-600', bg: 'bg-violet-50' };
+
+  // フォームメーカー
+  const orderFormService = { id: 'order-form', label: 'フォームメーカー', icon: ClipboardCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' };
+
   return (
     <>
     <header className={`${headerClassName || 'bg-white/80'} backdrop-blur-md border-b border-gray-100 sticky top-0 z-[100]`}>
@@ -200,6 +219,16 @@ const Header: React.FC<HeaderProps> = ({
                               </div>
                               <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{salesletterService.label}</span>
                             </Link>
+                            <Link
+                              href="/entertainment/create"
+                              onClick={closeMenus}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${entertainmentService.bg} shrink-0`}>
+                                <entertainmentService.icon size={16} className={entertainmentService.color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{entertainmentService.label}</span>
+                            </Link>
                           </div>
                         </div>
 
@@ -236,6 +265,46 @@ const Header: React.FC<HeaderProps> = ({
                                 <surveyService.icon size={16} className={surveyService.color} />
                               </div>
                               <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{surveyService.label}</span>
+                            </Link>
+                            <Link
+                              href="/newsletter/dashboard"
+                              onClick={closeMenus}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${newsletterService.bg} shrink-0`}>
+                                <newsletterService.icon size={16} className={newsletterService.color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{newsletterService.label}</span>
+                            </Link>
+                            <Link
+                              href="/funnel/dashboard"
+                              onClick={closeMenus}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${funnelService.bg} shrink-0`}>
+                                <funnelService.icon size={16} className={funnelService.color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{funnelService.label}</span>
+                            </Link>
+                            <Link
+                              href="/webinar/editor"
+                              onClick={closeMenus}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${webinarService.bg} shrink-0`}>
+                                <webinarService.icon size={16} className={webinarService.color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{webinarService.label}</span>
+                            </Link>
+                            <Link
+                              href="/order-form/dashboard"
+                              onClick={closeMenus}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${orderFormService.bg} shrink-0`}>
+                                <orderFormService.icon size={16} className={orderFormService.color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{orderFormService.label}</span>
                             </Link>
                           </div>
                         </div>
@@ -692,6 +761,14 @@ const Header: React.FC<HeaderProps> = ({
                     <salesletterService.icon size={20} className={salesletterService.color} />
                     <div className={`font-bold text-sm ${salesletterService.color}`}>{salesletterService.label}</div>
                   </Link>
+                  <Link
+                    href="/entertainment/create"
+                    onClick={closeMenus}
+                    className={`flex items-center gap-2.5 p-3 rounded-xl ${entertainmentService.bg} transition-all hover:scale-[1.02]`}
+                  >
+                    <entertainmentService.icon size={20} className={entertainmentService.color} />
+                    <div className={`font-bold text-sm ${entertainmentService.color}`}>{entertainmentService.label}</div>
+                  </Link>
                 </div>
               </div>
 
@@ -722,6 +799,38 @@ const Header: React.FC<HeaderProps> = ({
                   >
                     <surveyService.icon size={20} className={surveyService.color} />
                     <div className={`font-bold text-sm ${surveyService.color}`}>{surveyService.label}</div>
+                  </Link>
+                  <Link
+                    href="/newsletter/dashboard"
+                    onClick={closeMenus}
+                    className={`flex items-center gap-2.5 p-3 rounded-xl ${newsletterService.bg} transition-all hover:scale-[1.02]`}
+                  >
+                    <newsletterService.icon size={20} className={newsletterService.color} />
+                    <div className={`font-bold text-sm ${newsletterService.color}`}>{newsletterService.label}</div>
+                  </Link>
+                  <Link
+                    href="/funnel/dashboard"
+                    onClick={closeMenus}
+                    className={`flex items-center gap-2.5 p-3 rounded-xl ${funnelService.bg} transition-all hover:scale-[1.02]`}
+                  >
+                    <funnelService.icon size={20} className={funnelService.color} />
+                    <div className={`font-bold text-sm ${funnelService.color}`}>{funnelService.label}</div>
+                  </Link>
+                  <Link
+                    href="/webinar/editor"
+                    onClick={closeMenus}
+                    className={`flex items-center gap-2.5 p-3 rounded-xl ${webinarService.bg} transition-all hover:scale-[1.02]`}
+                  >
+                    <webinarService.icon size={20} className={webinarService.color} />
+                    <div className={`font-bold text-sm ${webinarService.color}`}>{webinarService.label}</div>
+                  </Link>
+                  <Link
+                    href="/order-form/dashboard"
+                    onClick={closeMenus}
+                    className={`flex items-center gap-2.5 p-3 rounded-xl ${orderFormService.bg} transition-all hover:scale-[1.02]`}
+                  >
+                    <orderFormService.icon size={20} className={orderFormService.color} />
+                    <div className={`font-bold text-sm ${orderFormService.color}`}>{orderFormService.label}</div>
                   </Link>
                 </div>
               </div>

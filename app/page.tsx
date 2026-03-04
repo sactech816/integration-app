@@ -21,6 +21,11 @@ import {
   Stamp,
   PenTool,
   BookOpen,
+  PartyPopper,
+  Mail,
+  GitBranch,
+  Video,
+  ClipboardCheck,
 } from 'lucide-react';
 
 // Client Components
@@ -225,6 +230,11 @@ export default function HomePage() {
                   { icon: UserCircle, text: 'プロフィール', color: 'text-emerald-500' },
                   { icon: Building2, text: 'LP', color: 'text-amber-500' },
                   { icon: PenTool, text: 'セールスライター', color: 'text-rose-500' },
+                  { icon: PartyPopper, text: 'エンタメ診断', color: 'text-pink-500' },
+                  { icon: Mail, text: 'メルマガ', color: 'text-cyan-500' },
+                  { icon: GitBranch, text: 'ファネル', color: 'text-amber-500' },
+                  { icon: Video, text: 'ウェビナーLP', color: 'text-violet-500' },
+                  { icon: ClipboardCheck, text: 'フォーム', color: 'text-emerald-500' },
                   { icon: Gift, text: '福引き', color: 'text-pink-500' },
                   { icon: Gamepad2, text: 'ガチャ', color: 'text-purple-500' },
                   { icon: Star, text: 'スロット', color: 'text-yellow-500' },

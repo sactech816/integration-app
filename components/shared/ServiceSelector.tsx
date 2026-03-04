@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb, Crown, Image, Store } from 'lucide-react';
+import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb, Crown, Image, Store, PartyPopper, Mail, GitBranch, Video, ClipboardCheck } from 'lucide-react';
 import { ServiceType, SERVICE_LABELS } from '@/lib/types';
 import Link from 'next/link';
 
@@ -98,6 +98,66 @@ const serviceConfig = [
     borderColor: 'border-rose-200',
     hoverBg: 'hover:bg-rose-50',
     features: ['AI自動生成', '売れる文章', 'テンプレート'],
+  },
+  {
+    id: 'entertainment' as ServiceType,
+    icon: PartyPopper,
+    label: 'エンタメ診断メーカー',
+    description: 'バズるエンタメ系診断コンテンツをAIで簡単作成。SNSで拡散される楽しい診断',
+    gradient: 'from-pink-500 to-rose-600',
+    bgLight: 'bg-pink-50',
+    textColor: 'text-pink-600',
+    borderColor: 'border-pink-200',
+    hoverBg: 'hover:bg-pink-50',
+    features: ['AI自動生成', 'SNSバズ', 'エンタメ系'],
+  },
+  {
+    id: 'newsletter' as ServiceType,
+    icon: Mail,
+    label: 'メルマガメーカー',
+    description: 'メールマガジンの作成・配信・管理を一元化。ステップメール配信にも対応',
+    gradient: 'from-cyan-500 to-blue-600',
+    bgLight: 'bg-cyan-50',
+    textColor: 'text-cyan-600',
+    borderColor: 'border-cyan-200',
+    hoverBg: 'hover:bg-cyan-50',
+    features: ['メール配信', '読者管理', 'ステップメール'],
+  },
+  {
+    id: 'funnel' as ServiceType,
+    icon: GitBranch,
+    label: 'ファネルメーカー',
+    description: '集客から成約までのセールスファネルを簡単構築。マーケティング自動化',
+    gradient: 'from-amber-500 to-orange-600',
+    bgLight: 'bg-amber-50',
+    textColor: 'text-amber-600',
+    borderColor: 'border-amber-200',
+    hoverBg: 'hover:bg-amber-50',
+    features: ['ファネル構築', 'マーケ自動化', '成約率UP'],
+  },
+  {
+    id: 'webinar' as ServiceType,
+    icon: Video,
+    label: 'ウェビナーLPメーカー',
+    description: 'ウェビナー・オンラインセミナーの集客LPを簡単作成。申し込みフォーム付き',
+    gradient: 'from-violet-500 to-purple-600',
+    bgLight: 'bg-violet-50',
+    textColor: 'text-violet-600',
+    borderColor: 'border-violet-200',
+    hoverBg: 'hover:bg-violet-50',
+    features: ['LP作成', '申込フォーム', '参加者管理'],
+  },
+  {
+    id: 'order-form' as ServiceType,
+    icon: ClipboardCheck,
+    label: 'フォームメーカー',
+    description: '申し込み・決済フォームを簡単作成。Stripe連携でオンライン決済にも対応',
+    gradient: 'from-emerald-500 to-green-600',
+    bgLight: 'bg-emerald-50',
+    textColor: 'text-emerald-600',
+    borderColor: 'border-emerald-200',
+    hoverBg: 'hover:bg-emerald-50',
+    features: ['申込フォーム', '決済連携', 'カスタマイズ'],
   },
   {
     id: 'onboarding' as ServiceType,
