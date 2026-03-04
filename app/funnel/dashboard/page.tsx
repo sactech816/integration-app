@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { useUserPlan } from '@/lib/hooks/useUserPlan';
-import { GitBranch, Plus, Trash2, ChevronRight, Lock, Loader2, Eye } from 'lucide-react';
+import Header from '@/components/shared/Header';
+import AuthModal from '@/components/shared/AuthModal';
+import { GitBranch, Plus, Trash2, ChevronRight, Loader2, Eye } from 'lucide-react';
 
 interface Funnel {
   id: string;
@@ -16,23 +17,47 @@ interface Funnel {
 }
 
 export default function FunnelDashboardPage() {
-  const [userId, setUserId] = useState<string | null>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [showAuth, setShowAuth] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
-  const { userPlan, isLoading: planLoading } = useUserPlan(userId);
   const [funnels, setFunnels] = useState<Funnel[]>([]);
 
   useEffect(() => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
     const init = async () => {
-      if (!supabase) return;
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-        await fetchFunnels(user.id);
+      if (!supabase) {
+        setAuthLoading(false);
+        return;
+      }
+
+      const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((_, session) => {
+        setUser(session?.user || null);
+      });
+      subscription = sub;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const currentUser = session?.user || null;
+      setUser(currentUser);
+      if (currentUser) {
+        await fetchFunnels(currentUser.id);
       }
       setAuthLoading(false);
     };
     init();
+    return () => { subscription?.unsubscribe(); };
   }, []);
+
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+      setUser(null);
+    }
+  };
+
+  const navigateTo = (page: string) => {
+    window.location.href = page.startsWith('/') ? page : `/${page}`;
+  };
 
   const fetchFunnels = async (uid: string) => {
     const res = await fetch(`/api/funnel?userId=${uid}`);
@@ -43,35 +68,32 @@ export default function FunnelDashboardPage() {
   };
 
   const handleDelete = async (funnelId: string) => {
-    if (!userId || !confirm('このファネルを削除しますか？')) return;
-    const res = await fetch(`/api/funnel/${funnelId}?userId=${userId}`, { method: 'DELETE' });
+    if (!user || !confirm('このファネルを削除しますか？')) return;
+    const res = await fetch(`/api/funnel/${funnelId}?userId=${user.id}`, { method: 'DELETE' });
     if (res.ok) setFunnels((prev) => prev.filter((f) => f.id !== funnelId));
   };
 
-  if (authLoading || planLoading) {
+  if (authLoading) {
     return <div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-amber-500" /></div>;
   }
 
-  if (!userId) {
+  if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen px-4">
-        <div className="max-w-md text-center">
-          <GitBranch className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">ログインが必要です</h2>
-          <Link href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-amber-600 text-white font-semibold rounded-xl shadow-md hover:bg-amber-700 transition-all min-h-[44px]">ログインページへ</Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (!userPlan.isProUser) {
-    return (
-      <div className="flex items-center justify-center min-h-screen px-4">
-        <div className="max-w-md text-center">
-          <Lock className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">PROプラン限定機能</h2>
-          <p className="text-gray-600 mb-6">ファネル機能はPROプラン（月額3,980円）でご利用いただけます。</p>
-          <Link href="/funnel" className="inline-flex items-center gap-2 px-6 py-3 bg-amber-600 text-white font-semibold rounded-xl shadow-md hover:bg-amber-700 transition-all min-h-[44px]">詳しく見る</Link>
+      <div className="min-h-screen bg-gray-50">
+        <Header
+          setPage={navigateTo}
+          user={null}
+          onLogout={handleLogout}
+          setShowAuth={setShowAuth}
+          currentService="funnel"
+        />
+        <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} onNavigate={navigateTo} />
+        <div className="flex items-center justify-center min-h-[60vh] px-4">
+          <div className="max-w-md text-center">
+            <GitBranch className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">ログインが必要です</h2>
+            <button onClick={() => setShowAuth(true)} className="inline-flex items-center gap-2 px-6 py-3 bg-amber-600 text-white font-semibold rounded-xl shadow-md hover:bg-amber-700 transition-all min-h-[44px]">ログインする</button>
+          </div>
         </div>
       </div>
     );
@@ -79,6 +101,14 @@ export default function FunnelDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+    <Header
+      setPage={navigateTo}
+      user={user}
+      onLogout={handleLogout}
+      setShowAuth={setShowAuth}
+      currentService="funnel"
+    />
+    <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} onNavigate={navigateTo} />
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
