@@ -27,4 +27,5 @@ export const TABLES = {
   ONBOARDING_MODALS: 'onboarding_modals',
   THUMBNAILS: 'thumbnails',
   WEBINAR_LPS: 'webinar_lps',
+  SNS_POSTS: 'sns_posts',
 } as const;

@@ -37,6 +37,7 @@ export type ActiveView =
   | 'order-form'
   | 'funnel'
   | 'webinar'
+  | 'sns-post'
   | 'affiliate'
   | 'marketplace-seller'
   | 'settings'
@@ -92,6 +93,7 @@ type MainContentProps = {
     order_form: number;
     funnel: number;
     webinar: number;
+    sns_post: number;
   };
   isLoading: boolean;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -196,7 +198,7 @@ export default function MainContent({
         <AnnouncementList />
       )}
 
-      {['quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar'].includes(activeView) && (
+      {['quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post'].includes(activeView) && (
       <div className="space-y-6">
         <ContentList
           contents={contents}
@@ -340,7 +342,7 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'announcements', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'order-form', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks'].includes(activeView) && (
+      {!['dashboard', 'announcements', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'order-form', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>

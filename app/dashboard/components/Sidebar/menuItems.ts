@@ -21,6 +21,7 @@ import {
   ClipboardCheck,
   GitBranch,
   Video,
+  Send,
   LucideIcon,
 } from 'lucide-react';
 
@@ -168,6 +169,15 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: 'ウェビナーLP作成',
     color: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200' },
     href: '/webinar/editor',
+    category: 'marketing',
+  },
+  {
+    id: 'sns-post',
+    label: 'SNS投稿メーカー',
+    icon: Send,
+    description: 'SNS投稿作成',
+    color: { bg: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-200' },
+    href: '/sns-post/editor',
     category: 'marketing',
   },
 

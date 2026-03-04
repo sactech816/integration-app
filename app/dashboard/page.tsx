@@ -97,7 +97,7 @@ function DashboardContent() {
   // URLパラメータからビューを設定
   useEffect(() => {
     const view = searchParams?.get('view');
-    if (view && ['announcements', 'booking', 'attendance', 'survey', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'newsletter', 'order-form', 'funnel', 'webinar', 'affiliate', 'settings'].includes(view)) {
+    if (view && ['announcements', 'booking', 'attendance', 'survey', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'newsletter', 'order-form', 'funnel', 'webinar', 'sns-post', 'affiliate', 'settings'].includes(view)) {
       setActiveView(view as ActiveView);
       // URLパラメータをクリア
       window.history.replaceState({}, '', '/dashboard');
@@ -257,7 +257,7 @@ function DashboardContent() {
     setActiveView(itemId as ActiveView);
 
     // サービス選択の場合はselectedServiceも更新
-    if (['quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail'].includes(itemId)) {
+    if (['quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'sns-post'].includes(itemId)) {
       // サムネイルはPro限定チェック
       if (itemId === 'thumbnail' && !isAdmin && !hasMakersProAccess) {
         router.push('/pricing');

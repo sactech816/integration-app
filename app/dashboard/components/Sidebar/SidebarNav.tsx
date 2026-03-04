@@ -66,6 +66,7 @@ type SidebarNavProps = {
     order_form: number;
     funnel: number;
     webinar: number;
+    sns_post: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態
@@ -112,6 +113,7 @@ export default function SidebarNav({
     newsletter: contentCounts.newsletter,
     'order-form': contentCounts.order_form,
     funnel: contentCounts.funnel,
+    'sns-post': contentCounts.sns_post,
   };
 
   // ツールアイテムをMenuItemに変換

@@ -49,6 +49,7 @@ type UseDashboardDataReturn = {
     order_form: number;
     funnel: number;
     webinar: number;
+    sns_post: number;
   };
   totalViews: number;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -127,6 +128,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     order_form: 0,
     funnel: 0,
     webinar: 0,
+    sns_post: 0,
   });
   const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
   const [purchases, setPurchases] = useState<string[]>([]);
@@ -458,6 +460,32 @@ export function useDashboardData(): UseDashboardDataReturn {
           }
         }
 
+        // SNS投稿取得
+        if (selectedService === 'sns-post') {
+          const query = isAdmin
+            ? supabase.from(TABLES.SNS_POSTS).select('*').order('created_at', { ascending: false })
+            : supabase.from(TABLES.SNS_POSTS).select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+
+          const { data: snsPosts } = await query;
+          if (snsPosts) {
+            allContents.push(
+              ...snsPosts.map((p: any) => ({
+                id: p.id,
+                slug: p.slug,
+                title: p.title || 'SNS投稿',
+                created_at: p.created_at,
+                updated_at: p.updated_at,
+                type: 'sns-post' as ServiceType,
+                user_id: p.user_id,
+                content: p.content,
+                settings: p.settings,
+                views_count: p.views_count || 0,
+                clicks_count: 0,
+              }))
+            );
+          }
+        }
+
         // 作成日時でソート
         allContents.sort((a, b) => {
           const dateA = new Date(a.created_at || 0);
@@ -547,7 +575,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, orderFormResult, funnelResult, webinarResult] = await Promise.all([
+      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, orderFormResult, funnelResult, webinarResult, snsPostResult] = await Promise.all([
         // 診断クイズ数
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true })
@@ -598,6 +626,10 @@ export function useDashboardData(): UseDashboardDataReturn {
         isAdmin
           ? supabase.from(TABLES.WEBINAR_LPS).select('id', { count: 'exact', head: true })
           : supabase.from(TABLES.WEBINAR_LPS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // SNS投稿数
+        isAdmin
+          ? supabase.from(TABLES.SNS_POSTS).select('id', { count: 'exact', head: true })
+          : supabase.from(TABLES.SNS_POSTS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
       ]);
 
       setContentCounts({
@@ -615,6 +647,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         order_form: orderFormResult.count || 0,
         funnel: funnelResult.count || 0,
         webinar: webinarResult.count || 0,
+        sns_post: snsPostResult.count || 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);
