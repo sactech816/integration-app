@@ -2,7 +2,8 @@ import { Metadata } from 'next';
 
 export type UGCType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'survey' | 'salesletter'
   | 'gacha' | 'fukubiki' | 'scratch' | 'slot' | 'stamp-rally' | 'login-bonus'
-  | 'booking' | 'kindle' | 'point-quiz' | 'arcade' | 'attendance' | 'thumbnail';
+  | 'booking' | 'kindle' | 'point-quiz' | 'arcade' | 'attendance' | 'thumbnail'
+  | 'funnel' | 'order-form' | 'newsletter';
 
 interface UGCMetadataInput {
   title: string;
@@ -127,6 +128,24 @@ const TYPE_CONFIG: Record<UGCType, {
     label: 'サムネイルメーカー',
     defaultKeywords: ['サムネイル', 'サムネイル作成', 'AI画像生成'],
     descriptionTemplate: (title) => `「${title}」のサムネイル。集客メーカーのサムネイルメーカーでAI生成されたサムネイル画像です。`,
+  },
+  funnel: {
+    pathPrefix: 'funnel',
+    label: 'ファネルメーカー',
+    defaultKeywords: ['ファネル', 'セールスファネル', 'マーケティングファネル', 'コンバージョン', '集客導線'],
+    descriptionTemplate: (title) => `「${title}」の集客ファネル。各ステップのコンバージョン率を可視化して改善に活かせます。`,
+  },
+  'order-form': {
+    pathPrefix: 'order-form',
+    label: '申し込みフォームメーカー',
+    defaultKeywords: ['申し込みフォーム', '決済フォーム', 'オンライン決済', 'フォーム作成'],
+    descriptionTemplate: (title) => `「${title}」の申し込みフォーム。決済機能付きで簡単に申し込みを受付できます。`,
+  },
+  newsletter: {
+    pathPrefix: 'newsletter/subscribe',
+    label: 'メルマガメーカー',
+    defaultKeywords: ['メルマガ', 'メールマガジン', 'ニュースレター', 'メール配信'],
+    descriptionTemplate: (title) => `「${title}」のメルマガに登録。最新情報をメールでお届けします。`,
   },
 };
 

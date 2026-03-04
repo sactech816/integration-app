@@ -210,6 +210,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.6,
     },
+    // 新ツールランディングページ
+    {
+      url: `${BASE_URL}/funnel`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/order-form`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/newsletter`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/entertainment`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
     // AEO対策 - llms.txt
     {
       url: `${BASE_URL}/llms.txt`,
@@ -227,6 +252,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let bookingPages: MetadataRoute.Sitemap = [];
   let salesLetterPages: MetadataRoute.Sitemap = [];
   let gamificationPages: MetadataRoute.Sitemap = [];
+  let funnelPages: MetadataRoute.Sitemap = [];
+  let orderFormPages: MetadataRoute.Sitemap = [];
+  let entertainmentPages: MetadataRoute.Sitemap = [];
 
   if (supabase) {
     try {
@@ -342,6 +370,48 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           };
         });
       }
+      // アクティブなファネルを取得
+      const { data: funnels } = await supabase
+        .from('funnels')
+        .select('slug, updated_at')
+        .eq('status', 'active')
+        .not('slug', 'is', null);
+
+      funnelPages = funnels?.map(funnel => ({
+        url: `${BASE_URL}/funnel/${funnel.slug}`,
+        lastModified: new Date(funnel.updated_at),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })) || [];
+
+      // 公開されている申し込みフォームを取得
+      const { data: orderForms } = await supabase
+        .from('order_forms')
+        .select('slug, updated_at')
+        .eq('status', 'published')
+        .not('slug', 'is', null);
+
+      orderFormPages = orderForms?.map(form => ({
+        url: `${BASE_URL}/order-form/${form.slug}`,
+        lastModified: new Date(form.updated_at),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })) || [];
+
+      // 公開されているエンタメ診断を取得
+      const { data: entertainmentQuizzes } = await supabase
+        .from('quizzes')
+        .select('slug, updated_at')
+        .eq('quiz_type', 'entertainment')
+        .eq('show_in_portal', true)
+        .not('slug', 'is', null);
+
+      entertainmentPages = entertainmentQuizzes?.map(quiz => ({
+        url: `${BASE_URL}/entertainment/${quiz.slug}`,
+        lastModified: new Date(quiz.updated_at),
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })) || [];
     } catch (error) {
       console.error('Sitemap: Failed to fetch dynamic content', error);
     }
@@ -356,5 +426,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...bookingPages,
     ...salesLetterPages,
     ...gamificationPages,
+    ...funnelPages,
+    ...orderFormPages,
+    ...entertainmentPages,
   ];
 }

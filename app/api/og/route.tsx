@@ -32,6 +32,21 @@ export async function GET(request: NextRequest) {
       secondary: '#a855f7',
       accent: '#f9a8d4',
     },
+    funnel: {
+      primary: '#d97706',
+      secondary: '#f59e0b',
+      accent: '#fde68a',
+    },
+    order_form: {
+      primary: '#059669',
+      secondary: '#10b981',
+      accent: '#a7f3d0',
+    },
+    newsletter: {
+      primary: '#7c3aed',
+      secondary: '#8b5cf6',
+      accent: '#c4b5fd',
+    },
     default: {
       primary: '#6366f1',
       secondary: '#8b5cf6',
@@ -47,6 +62,9 @@ export async function GET(request: NextRequest) {
     profile: 'プロフィールメーカー',
     business: 'ビジネスLPメーカー',
     entertainment_quiz: 'エンタメ診断メーカー',
+    funnel: 'ファネルメーカー',
+    order_form: '申し込みフォームメーカー',
+    newsletter: 'メルマガメーカー',
     default: '集客メーカー',
   };
 
