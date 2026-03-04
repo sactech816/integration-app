@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { getAuthenticatedUser } from '@/lib/auth-server';
 
 // サーバーサイドでService Roleキーを使用（RLSバイパス）
 function getSupabaseAdmin() {
@@ -53,10 +54,16 @@ const USER_ID_COLUMN_MAP: Record<string, string> = {
 export async function deleteContent(
   contentType: 'quiz' | 'profile' | 'business' | 'salesletter' | 'onboarding' | 'thumbnail',
   contentId: string | number,
-  userId: string,
-  isAdmin?: boolean
+  userId: string
 ): Promise<DeleteResponse> {
-  console.log('[Content] deleteContent called:', { contentType, contentId, userId, isAdmin });
+  console.log('[Content] deleteContent called:', { contentType, contentId, userId });
+
+  // サーバーサイドで認証・管理者チェック
+  const authUser = await getAuthenticatedUser();
+  if (!authUser) {
+    return { success: false, error: '認証が必要です' };
+  }
+  const isAdmin = authUser.isAdmin;
 
   const supabase = getSupabaseAdmin();
   if (!supabase) {
@@ -91,8 +98,8 @@ export async function deleteContent(
       return { success: false, error: 'コンテンツが見つかりません' };
     }
 
-    if (!isAdmin && content[userIdColumn] !== userId) {
-      console.log('[Content] Authorization failed:', { ownerId: content[userIdColumn], userId, isAdmin });
+    if (!isAdmin && content[userIdColumn] !== authUser.id) {
+      console.log('[Content] Authorization failed:', { ownerId: content[userIdColumn], userId: authUser.id, isAdmin });
       return { success: false, error: '削除権限がありません' };
     }
 

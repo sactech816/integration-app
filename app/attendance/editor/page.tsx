@@ -308,7 +308,7 @@ function AttendanceEditorContent() {
       
       if (isEditMode && editId && user?.id) {
         // 更新
-        result = await updateAttendanceEvent(editId, inputData, user.id, isAdmin);
+        result = await updateAttendanceEvent(editId, inputData, user.id);
         if (result.success && result.data) {
           setCreatedEventId(result.data.id);
           setShowCompleteModal(true);

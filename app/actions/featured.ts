@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { unstable_noStore as noStore, revalidatePath } from 'next/cache';
 import { ContentType } from './analytics';
+import { requireAdmin } from '@/lib/auth-server';
 
 // サーバーサイド用Supabaseクライアント
 function getSupabaseServer() {
@@ -86,6 +87,9 @@ export async function addFeaturedContent(
   contentType: ContentType
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // 管理者権限チェック
+    await requireAdmin();
+
     const supabase = getSupabaseServer();
     if (!supabase) {
       return { success: false, error: 'Supabase not configured' };
@@ -143,6 +147,9 @@ export async function removeFeaturedContent(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // 管理者権限チェック
+    await requireAdmin();
+
     const supabase = getSupabaseServer();
     if (!supabase) {
       return { success: false, error: 'Supabase not configured' };

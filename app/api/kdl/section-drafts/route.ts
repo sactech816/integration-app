@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getAuthenticatedUserFromRequest } from '@/lib/auth-server';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -7,6 +8,12 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 // GET: セクションのドラフト一覧を取得
 export async function GET(request: Request) {
   try {
+    // 認証チェック
+    const authUser = await getAuthenticatedUserFromRequest(request);
+    if (!authUser) {
+      return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const section_id = searchParams.get('section_id');
 
@@ -50,6 +57,12 @@ export async function GET(request: Request) {
 // POST: 新しいドラフトを作成
 export async function POST(request: Request) {
   try {
+    // 認証チェック
+    const authUser = await getAuthenticatedUserFromRequest(request);
+    if (!authUser) {
+      return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+    }
+
     const { section_id, book_id, label, content, tab_type } = await request.json();
 
     if (!section_id || !book_id) {
@@ -108,6 +121,12 @@ export async function POST(request: Request) {
 // PUT: ドラフトを更新
 export async function PUT(request: Request) {
   try {
+    // 認証チェック
+    const authUser = await getAuthenticatedUserFromRequest(request);
+    if (!authUser) {
+      return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+    }
+
     const { id, content, label } = await request.json();
 
     if (!id) {
@@ -154,6 +173,12 @@ export async function PUT(request: Request) {
 // DELETE: ドラフトを削除
 export async function DELETE(request: Request) {
   try {
+    // 認証チェック
+    const authUser = await getAuthenticatedUserFromRequest(request);
+    if (!authUser) {
+      return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

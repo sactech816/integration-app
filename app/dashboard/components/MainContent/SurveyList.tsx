@@ -90,7 +90,7 @@ export default function SurveyList({ userId, isAdmin, userEmail, isUnlocked = fa
   const handleDelete = async (id: number) => {
     setDeletingId(id);
     try {
-      const result = await deleteSurvey(id, userId, isAdmin);
+      const result = await deleteSurvey(id, userId);
       if (result.success) {
         setSurveys((prev) => prev.filter((s) => s.id !== id));
       } else {
@@ -169,7 +169,7 @@ export default function SurveyList({ userId, isAdmin, userEmail, isUnlocked = fa
     setBulkDeleting(true);
     try {
       const deletePromises = Array.from(selectedIds).map((id) =>
-        deleteSurvey(id, userId, isAdmin)
+        deleteSurvey(id, userId)
       );
       const results = await Promise.all(deletePromises);
       

@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { getAuthenticatedUser } from '@/lib/auth-server';
 
 // サーバーサイドでService Roleキーを使用（RLSバイパス）
 function getSupabaseAdmin() {
@@ -33,10 +34,16 @@ type SurveyResponse<T> = {
  */
 export async function deleteSurvey(
   surveyId: number,
-  userId: string,
-  isAdmin?: boolean
+  userId: string
 ): Promise<SurveyResponse<{ deleted: boolean }>> {
-  console.log('[Survey] deleteSurvey called:', { surveyId, userId, isAdmin });
+  console.log('[Survey] deleteSurvey called:', { surveyId, userId });
+
+  // サーバーサイドで認証・管理者チェック
+  const authUser = await getAuthenticatedUser();
+  if (!authUser) {
+    return { success: false, error: '認証が必要です' };
+  }
+  const isAdmin = authUser.isAdmin;
 
   const supabase = getSupabaseAdmin();
   if (!supabase) {
@@ -63,8 +70,8 @@ export async function deleteSurvey(
       return { success: false, error: 'アンケートが見つかりません' };
     }
 
-    if (!isAdmin && survey.user_id !== userId) {
-      console.log('[Survey] Authorization failed:', { ownerId: survey.user_id, userId, isAdmin });
+    if (!isAdmin && survey.user_id !== authUser.id) {
+      console.log('[Survey] Authorization failed:', { ownerId: survey.user_id, userId: authUser.id, isAdmin });
       return { success: false, error: '削除権限がありません' };
     }
 

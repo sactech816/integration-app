@@ -4,6 +4,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, FileDown, Loader2, Save, Check, X, AlertCircle, CheckCircle, Info, Sparkles, Copy, Tag, FileText, FolderTree, Lightbulb, BookOpen, Rocket, PlayCircle, Crown, Menu, Plus, Trash2, PenLine, StickyNote, ArrowRightToLine } from 'lucide-react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 import KdlHamburgerMenu, { type EditorActionItem } from '@/components/kindle/shared/KdlHamburgerMenu';
 import KdlUsageHeader, { type KdlUsageLimits } from '@/components/kindle/KdlUsageHeader';
 import BookLPPreview from '@/components/kindle/lp/BookLPPreview';
@@ -97,6 +98,16 @@ interface EditorLayoutProps {
   userId?: string; // 使用量表示用
   autoOpenLP?: boolean; // LP編集モーダルを自動で開く
   planTier?: string; // プラン制御用（'none' = 無料プラン）
+}
+
+// KDL API用の認証ヘッダーを取得
+async function getKdlAuthHeaders(): Promise<HeadersInit> {
+  const session = await supabase?.auth.getSession();
+  const token = session?.data.session?.access_token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 }
 
 export const EditorLayout: React.FC<EditorLayoutProps> = ({
@@ -262,7 +273,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
       try {
         const response = await fetch('/api/kdl/section-drafts', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: await getKdlAuthHeaders(),
           body: JSON.stringify({
             section_id: sectionId,
             book_id: book.id,
@@ -285,7 +296,9 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   const fetchDrafts = useCallback(async (sectionId: string) => {
     setIsDraftsLoading(true);
     try {
-      const response = await fetch(`/api/kdl/section-drafts?section_id=${sectionId}`);
+      const response = await fetch(`/api/kdl/section-drafts?section_id=${sectionId}`, {
+        headers: await getKdlAuthHeaders(),
+      });
       if (response.ok) {
         const data = await response.json();
         const existing = data.drafts || [];
@@ -319,7 +332,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       await fetch('/api/kdl/section-drafts', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({ id: draftId, content }),
       });
       // ローカル状態も更新
@@ -358,7 +371,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
 
       const response = await fetch('/api/kdl/section-drafts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({
           section_id: activeSectionId,
           book_id: book.id,
@@ -388,6 +401,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       const response = await fetch(`/api/kdl/section-drafts?id=${draftId}`, {
         method: 'DELETE',
+        headers: await getKdlAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -425,7 +439,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       await fetch('/api/kdl/section-drafts', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({ id: draftId, label: newLabel }),
       });
       setDrafts(prev => prev.map(d => d.id === draftId ? { ...d, label: newLabel } : d));
@@ -662,7 +676,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       const response = await fetch('/api/kdl/structure/add', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({
           type: 'chapter',
           bookId: book.id,
@@ -706,7 +720,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       const response = await fetch('/api/kdl/structure/add', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({
           type: 'section',
           bookId: book.id,
@@ -763,7 +777,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       const response = await fetch('/api/kdl/structure/update', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({
           type: 'chapter',
           chapterId,
@@ -793,7 +807,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       const response = await fetch('/api/kdl/structure/update', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({
           type: 'section',
           sectionId,
@@ -826,7 +840,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       const response = await fetch('/api/kdl/structure/delete', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({
           type: 'chapter',
           chapterId,
@@ -871,7 +885,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       const response = await fetch('/api/kdl/structure/delete', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({
           type: 'section',
           sectionId,
@@ -943,7 +957,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       const response = await fetch('/api/kdl/structure/move', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({
           type: 'chapter',
           chapterId,
@@ -994,7 +1008,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       const response = await fetch('/api/kdl/structure/move', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({
           type: 'section',
           sectionId,
@@ -1077,7 +1091,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       const response = await fetch('/api/kdl/generate-kdp-info', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({ book_id: book.id }),
       });
 
@@ -1156,7 +1170,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       const response = await fetch('/api/kdl/generate-book-lp', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({ book_id: book.id }),
       });
 
@@ -1184,7 +1198,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       const response = await fetch('/api/kdl/generate-book-lp', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({ book_id: book.id, status: newStatus }),
       });
       if (!response.ok) throw new Error('更新に失敗しました');
@@ -1199,7 +1213,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       const response = await fetch('/api/kdl/generate-book-lp', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({ book_id: book.id, ...updates }),
       });
       if (!response.ok) throw new Error('更新に失敗しました');
@@ -1231,7 +1245,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
       // 1. ブックコピー＆セクション一覧取得
       const initResponse = await fetch('/api/kdl/rewrite-bulk', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({ book_id: book.id, target_style: selectedTargetStyle }),
       });
 
@@ -1265,7 +1279,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
         try {
           const response = await fetch('/api/kdl/rewrite-section', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await getKdlAuthHeaders(),
             body: JSON.stringify({
               book_id: newBookId,
               section_id: section.id,
@@ -1320,7 +1334,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     try {
       const response = await fetch('/api/kdl/update-book', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await getKdlAuthHeaders(),
         body: JSON.stringify({
           bookId: book.id,
           title,

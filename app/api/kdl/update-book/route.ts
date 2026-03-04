@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getAuthenticatedUserFromRequest } from '@/lib/auth-server';
 
 // サーバーサイド用のSupabaseクライアント
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -7,6 +8,12 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export async function PUT(request: NextRequest) {
   try {
+    // 認証チェック
+    const authUser = await getAuthenticatedUserFromRequest(request);
+    if (!authUser) {
+      return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+    }
+
     const { bookId, title, subtitle } = await request.json();
 
     if (!bookId) {

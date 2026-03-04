@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { headers } from 'next/headers';
+import { getAuthenticatedUser } from '@/lib/auth-server';
 import {
   AttendanceEvent,
   AttendanceResponse,
@@ -139,9 +140,15 @@ export async function getAttendanceEvent(
 export async function updateAttendanceEvent(
   eventId: string,
   input: CreateAttendanceEventInput,
-  userId: string,
-  isAdmin?: boolean
+  userId: string
 ): Promise<AttendanceApiResponse<AttendanceEvent>> {
+  // サーバーサイドで認証・管理者チェック
+  const authUser = await getAuthenticatedUser();
+  if (!authUser) {
+    return { success: false, error: '認証が必要です' };
+  }
+  const isAdmin = authUser.isAdmin;
+
   const supabase = getSupabaseClient();
   if (!supabase) {
     return { success: false, error: 'データベースが設定されていません' };
@@ -160,7 +167,7 @@ export async function updateAttendanceEvent(
     }
 
     // 管理者または所有者のみ更新可能
-    if (!isAdmin && existingEvent.user_id !== userId) {
+    if (!isAdmin && existingEvent.user_id !== authUser.id) {
       return { success: false, error: '更新権限がありません' };
     }
 
@@ -375,12 +382,40 @@ export async function getAttendanceTableData(
 export async function deleteAttendanceResponse(
   responseId: string
 ): Promise<AttendanceApiResponse<null>> {
+  // 認証チェック（ログインユーザーのみ削除可能）
+  const authUser = await getAuthenticatedUser();
+  if (!authUser) {
+    return { success: false, error: '認証が必要です' };
+  }
+
   const supabase = getSupabaseClient();
   if (!supabase) {
     return { success: false, error: 'データベースが設定されていません' };
   }
 
   try {
+    // 回答のイベント所有者かチェック
+    const { data: response, error: fetchError } = await supabase
+      .from('attendance_responses')
+      .select('id, event_id')
+      .eq('id', responseId)
+      .single();
+
+    if (fetchError || !response) {
+      return { success: false, error: '回答が見つかりません' };
+    }
+
+    const { data: event } = await supabase
+      .from('attendance_events')
+      .select('user_id')
+      .eq('id', response.event_id)
+      .single();
+
+    // イベント所有者または管理者のみ削除可能
+    if (!authUser.isAdmin && event?.user_id !== authUser.id) {
+      return { success: false, error: '削除権限がありません' };
+    }
+
     const { error } = await supabase
       .from('attendance_responses')
       .delete()
@@ -456,10 +491,16 @@ export async function getAllAttendanceEvents(): Promise<AttendanceEvent[]> {
 // -------------------------------------------
 export async function deleteAttendanceEvent(
   eventId: string,
-  userId: string,
-  isAdmin?: boolean
+  userId: string
 ): Promise<AttendanceApiResponse<null>> {
-  console.log('[Attendance] deleteAttendanceEvent called:', { eventId, userId, isAdmin });
+  console.log('[Attendance] deleteAttendanceEvent called:', { eventId, userId });
+
+  // サーバーサイドで認証・管理者チェック
+  const authUser = await getAuthenticatedUser();
+  if (!authUser) {
+    return { success: false, error: '認証が必要です' };
+  }
+  const isAdmin = authUser.isAdmin;
 
   const supabase = getSupabaseClient();
   if (!supabase) {
@@ -486,8 +527,8 @@ export async function deleteAttendanceEvent(
       return { success: false, error: 'イベントが見つかりません' };
     }
 
-    if (!isAdmin && event.user_id !== userId) {
-      console.log('[Attendance] Authorization failed:', { ownerId: event.user_id, userId, isAdmin });
+    if (!isAdmin && event.user_id !== authUser.id) {
+      console.log('[Attendance] Authorization failed:', { ownerId: event.user_id, userId: authUser.id, isAdmin });
       return { success: false, error: '削除権限がありません' };
     }
 

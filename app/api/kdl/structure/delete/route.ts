@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getAuthenticatedUserFromRequest } from '@/lib/auth-server';
 
 // サーバーサイド用のSupabaseクライアント
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -21,6 +22,12 @@ type DeleteRequest = DeleteChapterRequest | DeleteSectionRequest;
 
 export async function DELETE(request: Request) {
   try {
+    // 認証チェック
+    const authUser = await getAuthenticatedUserFromRequest(request);
+    if (!authUser) {
+      return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+    }
+
     const body: DeleteRequest = await request.json();
 
     if (!supabaseUrl || !supabaseServiceKey) {

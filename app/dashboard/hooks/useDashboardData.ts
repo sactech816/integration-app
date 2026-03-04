@@ -693,7 +693,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     });
 
     try {
-      const result = await deleteContent(contentType, contentId, user.id, isAdmin);
+      const result = await deleteContent(contentType, contentId, user.id);
 
       console.log('[Dashboard] deleteContent result:', result);
 

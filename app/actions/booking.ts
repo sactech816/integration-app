@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { getAuthenticatedUser } from '@/lib/auth-server';
 import { Resend } from 'resend';
 import {
   BookingMenu,
@@ -990,10 +991,13 @@ export async function updateBookingMenu(
 export async function deleteBookingMenu(
   menuId: string,
   userId: string | null,
-  editKey?: string,
-  isAdmin?: boolean
+  editKey?: string
 ): Promise<BookingResponse<{ deleted: boolean }>> {
-  console.log('[Booking] deleteBookingMenu called:', { menuId, userId, isAdmin });
+  console.log('[Booking] deleteBookingMenu called:', { menuId, userId });
+
+  // サーバーサイドで認証・管理者チェック
+  const authUser = await getAuthenticatedUser();
+  const isAdmin = authUser?.isAdmin || false;
 
   const supabase = getSupabaseServer();
   if (!supabase) {
@@ -1009,17 +1013,17 @@ export async function deleteBookingMenu(
     return { success: false, error: 'Menu not found', code: 'MENU_NOT_FOUND' };
   }
 
-  // 認証チェック: 管理者、ユーザーID、または編集キーで認証
-  const isAuthorized = 
+  // 認証チェック: 管理者、認証済みユーザー（所有者）、または編集キーで認証
+  const isAuthorized =
     isAdmin ||
-    (userId && existingMenu.user_id === userId) ||
+    (authUser && existingMenu.user_id === authUser.id) ||
     (editKey && existingMenu.edit_key === editKey);
 
-  console.log('[Booking] Authorization check:', { 
-    isAdmin, 
-    userId, 
-    menuUserId: existingMenu.user_id, 
-    isAuthorized 
+  console.log('[Booking] Authorization check:', {
+    isAdmin,
+    userId: authUser?.id,
+    menuUserId: existingMenu.user_id,
+    isAuthorized
   });
 
   if (!isAuthorized) {

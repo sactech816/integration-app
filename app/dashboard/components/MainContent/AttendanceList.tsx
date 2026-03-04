@@ -87,7 +87,7 @@ export default function AttendanceList({ userId, isAdmin, isUnlocked = false }: 
   const handleDelete = async (eventId: string) => {
     setDeletingId(eventId);
     try {
-      const result = await deleteAttendanceEvent(eventId, userId, isAdmin);
+      const result = await deleteAttendanceEvent(eventId, userId);
       if (result.success) {
         setEvents((prev) => prev.filter((e) => e.id !== eventId));
       } else {
@@ -153,7 +153,7 @@ export default function AttendanceList({ userId, isAdmin, isUnlocked = false }: 
     setBulkDeleting(true);
     try {
       const deletePromises = Array.from(selectedIds).map((id) =>
-        deleteAttendanceEvent(id, userId, isAdmin)
+        deleteAttendanceEvent(id, userId)
       );
       const results = await Promise.all(deletePromises);
       

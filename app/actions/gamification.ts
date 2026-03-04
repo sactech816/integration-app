@@ -155,21 +155,39 @@ export async function updateCampaign(
   campaignId: string,
   updates: Partial<Pick<GamificationCampaign, 'title' | 'description' | 'status' | 'animation_type' | 'settings' | 'start_date' | 'end_date'>>
 ): Promise<{ success: boolean; error?: string }> {
+  // 認証チェック
+  const authUser = await getAuthenticatedUser();
+  if (!authUser) {
+    return { success: false, error: '認証が必要です' };
+  }
+
   const supabase = getSupabaseServer();
   if (!supabase) {
     return { success: false, error: 'Database not configured' };
   }
-  
+
+  // 所有者チェック（管理者はスキップ）
+  if (!authUser.isAdmin) {
+    const { data: campaign } = await supabase
+      .from('gamification_campaigns')
+      .select('owner_id')
+      .eq('id', campaignId)
+      .single();
+    if (!campaign || campaign.owner_id !== authUser.id) {
+      return { success: false, error: '権限がありません' };
+    }
+  }
+
   const { error } = await supabase
     .from('gamification_campaigns')
     .update(updates)
     .eq('id', campaignId);
-  
+
   if (error) {
     console.error('[Gamification] Update campaign error:', error);
     return { success: false, error: error.message };
   }
-  
+
   return { success: true };
 }
 
@@ -179,24 +197,42 @@ export async function updateCampaign(
 export async function deleteCampaign(campaignId: string): Promise<{ success: boolean; error?: string }> {
   console.log('[Gamification] deleteCampaign called:', { campaignId });
 
+  // 認証チェック
+  const authUser = await getAuthenticatedUser();
+  if (!authUser) {
+    return { success: false, error: '認証が必要です' };
+  }
+
   const supabase = getSupabaseServer();
   if (!supabase) {
     console.error('[Gamification] Failed to get Supabase server client');
     return { success: false, error: 'Database not configured' };
   }
-  
+
+  // 所有者チェック（管理者はスキップ）
+  if (!authUser.isAdmin) {
+    const { data: campaign } = await supabase
+      .from('gamification_campaigns')
+      .select('owner_id')
+      .eq('id', campaignId)
+      .single();
+    if (!campaign || campaign.owner_id !== authUser.id) {
+      return { success: false, error: '権限がありません' };
+    }
+  }
+
   const { error } = await supabase
     .from('gamification_campaigns')
     .delete()
     .eq('id', campaignId);
-  
+
   console.log('[Gamification] Delete result:', { error });
 
   if (error) {
     console.error('[Gamification] Delete campaign error:', error);
     return { success: false, error: error.message };
   }
-  
+
   console.log('[Gamification] Delete successful:', campaignId);
   return { success: true };
 }
@@ -631,11 +667,29 @@ export async function addGachaPrize(
     displayOrder?: number;
   }
 ): Promise<{ success: boolean; prize?: GachaPrize; error?: string }> {
+  // 認証チェック
+  const authUser = await getAuthenticatedUser();
+  if (!authUser) {
+    return { success: false, error: '認証が必要です' };
+  }
+
   const supabase = getSupabaseServer();
   if (!supabase) {
     return { success: false, error: 'Database not configured' };
   }
-  
+
+  // キャンペーン所有者チェック（管理者はスキップ）
+  if (!authUser.isAdmin) {
+    const { data: campaign } = await supabase
+      .from('gamification_campaigns')
+      .select('owner_id')
+      .eq('id', campaignId)
+      .single();
+    if (!campaign || campaign.owner_id !== authUser.id) {
+      return { success: false, error: '権限がありません' };
+    }
+  }
+
   const { data, error } = await supabase
     .from('gacha_prizes')
     .insert({
@@ -650,12 +704,12 @@ export async function addGachaPrize(
     })
     .select()
     .single();
-  
+
   if (error) {
     console.error('[Gamification] Add gacha prize error:', error);
     return { success: false, error: error.message };
   }
-  
+
   return { success: true, prize: data };
 }
 
@@ -666,21 +720,47 @@ export async function updateGachaPrize(
   prizeId: string,
   updates: Partial<Pick<GachaPrize, 'name' | 'description' | 'image_url' | 'probability' | 'is_winning' | 'stock' | 'display_order'>>
 ): Promise<{ success: boolean; error?: string }> {
+  // 認証チェック
+  const authUser = await getAuthenticatedUser();
+  if (!authUser) {
+    return { success: false, error: '認証が必要です' };
+  }
+
   const supabase = getSupabaseServer();
   if (!supabase) {
     return { success: false, error: 'Database not configured' };
   }
-  
+
+  // 景品のキャンペーン所有者チェック（管理者はスキップ）
+  if (!authUser.isAdmin) {
+    const { data: prize } = await supabase
+      .from('gacha_prizes')
+      .select('campaign_id')
+      .eq('id', prizeId)
+      .single();
+    if (!prize) {
+      return { success: false, error: '景品が見つかりません' };
+    }
+    const { data: campaign } = await supabase
+      .from('gamification_campaigns')
+      .select('owner_id')
+      .eq('id', prize.campaign_id)
+      .single();
+    if (!campaign || campaign.owner_id !== authUser.id) {
+      return { success: false, error: '権限がありません' };
+    }
+  }
+
   const { error } = await supabase
     .from('gacha_prizes')
     .update(updates)
     .eq('id', prizeId);
-  
+
   if (error) {
     console.error('[Gamification] Update gacha prize error:', error);
     return { success: false, error: error.message };
   }
-  
+
   return { success: true };
 }
 
@@ -688,21 +768,47 @@ export async function updateGachaPrize(
  * ガチャ景品を削除
  */
 export async function deleteGachaPrize(prizeId: string): Promise<{ success: boolean; error?: string }> {
+  // 認証チェック
+  const authUser = await getAuthenticatedUser();
+  if (!authUser) {
+    return { success: false, error: '認証が必要です' };
+  }
+
   const supabase = getSupabaseServer();
   if (!supabase) {
     return { success: false, error: 'Database not configured' };
   }
-  
+
+  // 景品のキャンペーン所有者チェック（管理者はスキップ）
+  if (!authUser.isAdmin) {
+    const { data: prize } = await supabase
+      .from('gacha_prizes')
+      .select('campaign_id')
+      .eq('id', prizeId)
+      .single();
+    if (!prize) {
+      return { success: false, error: '景品が見つかりません' };
+    }
+    const { data: campaign } = await supabase
+      .from('gamification_campaigns')
+      .select('owner_id')
+      .eq('id', prize.campaign_id)
+      .single();
+    if (!campaign || campaign.owner_id !== authUser.id) {
+      return { success: false, error: '権限がありません' };
+    }
+  }
+
   const { error } = await supabase
     .from('gacha_prizes')
     .delete()
     .eq('id', prizeId);
-  
+
   if (error) {
     console.error('[Gamification] Delete gacha prize error:', error);
     return { success: false, error: error.message };
   }
-  
+
   return { success: true };
 }
 

@@ -83,7 +83,7 @@ export default function BookingList({ userId, isAdmin, isUnlocked = false }: Boo
   const handleDelete = async (menuId: string) => {
     setDeletingId(menuId);
     try {
-      const result = await deleteBookingMenu(menuId, userId, undefined, isAdmin);
+      const result = await deleteBookingMenu(menuId, userId);
       if (result.success) {
         setMenus((prev) => prev.filter((m) => m.id !== menuId));
       } else {
@@ -150,7 +150,7 @@ export default function BookingList({ userId, isAdmin, isUnlocked = false }: Boo
     setBulkDeleting(true);
     try {
       const deletePromises = Array.from(selectedIds).map((id) =>
-        deleteBookingMenu(id, userId, undefined, isAdmin)
+        deleteBookingMenu(id, userId)
       );
       const results = await Promise.all(deletePromises);
       

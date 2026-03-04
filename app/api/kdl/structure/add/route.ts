@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getAuthenticatedUserFromRequest } from '@/lib/auth-server';
 
 // サーバーサイド用のSupabaseクライアント（Service Role Keyを使用してRLSをバイパス）
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -24,6 +25,12 @@ type AddRequest = AddChapterRequest | AddSectionRequest;
 
 export async function POST(request: Request) {
   try {
+    // 認証チェック
+    const authUser = await getAuthenticatedUserFromRequest(request);
+    if (!authUser) {
+      return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+    }
+
     const body: AddRequest = await request.json();
 
     // デモモード判定（Supabase未設定、またはbookIdがdemo-で始まる場合）
