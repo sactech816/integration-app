@@ -157,6 +157,7 @@ export default function FeaturedManager() {
       'order-form': '申し込みフォーム',
       funnel: 'ファネル',
       webinar: 'ウェビナーLP',
+      'sns-post': 'SNS投稿',
     };
     return labels[type] || type;
   };

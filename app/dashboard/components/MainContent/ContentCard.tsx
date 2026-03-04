@@ -25,6 +25,7 @@ import {
   Calendar,
   Image,
   MousePointerClick,
+  Send,
 } from 'lucide-react';
 import { ServiceType, SERVICE_LABELS, Block } from '@/lib/types';
 
@@ -89,6 +90,7 @@ const getServiceIcon = (type: ServiceType) => {
     'order-form': FileText,
     funnel: FileText,
     webinar: FileText,
+    'sns-post': Send,
   };
   return icons[type] || Sparkles; // フォールバック
 };
@@ -110,6 +112,7 @@ const getServiceColor = (type: ServiceType) => {
     'order-form': { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', gradient: 'from-emerald-500 to-teal-600' },
     funnel: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200', gradient: 'from-amber-500 to-orange-600' },
     webinar: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200', gradient: 'from-violet-500 to-purple-600' },
+    'sns-post': { bg: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-200', gradient: 'from-sky-500 to-blue-600' },
   };
   return colors[type] || colors.quiz; // フォールバック
 };
