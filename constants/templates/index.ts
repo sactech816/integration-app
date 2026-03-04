@@ -47,6 +47,12 @@ export {
   STYLE_CATEGORIES,
 } from './thumbnail';
 
+// 申し込みフォームテンプレート
+export {
+  ORDER_FORM_TEMPLATES,
+} from './order-form';
+export type { OrderFormTemplate } from './order-form';
+
 // ===========================================
 // 後方互換性のためのエイリアス
 // ===========================================
