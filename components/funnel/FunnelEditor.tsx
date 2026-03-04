@@ -13,7 +13,7 @@ import {
 interface Step {
   name: string;
   stepType: string;
-  contentRef: { type: string; slug?: string; url?: string } | null;
+  contentRef: { type: string; slug?: string; url?: string; message?: string; nextAction?: string; ctaText?: string; ctaUrl?: string } | null;
   ctaLabel: string;
 }
 
@@ -114,18 +114,18 @@ function FunnelFlowPreview({ steps, analytics }: { steps: Step[]; analytics: Fun
 }
 
 /* ── メインエディタ ── */
-export default function FunnelEditor({ funnelId }: { funnelId?: string }) {
+export default function FunnelEditor({ funnelId, initialSteps, initialName }: { funnelId?: string; initialSteps?: Step[]; initialName?: string }) {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
 
-  const [name, setName] = useState('');
+  const [name, setName] = useState(initialName || '');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('draft');
   const [slug, setSlug] = useState('');
-  const [steps, setSteps] = useState<Step[]>([]);
+  const [steps, setSteps] = useState<Step[]>(initialSteps || []);
   const [analytics, setAnalytics] = useState<FunnelAnalyticsData[]>([]);
 
   useEffect(() => {
@@ -299,7 +299,7 @@ export default function FunnelEditor({ funnelId }: { funnelId?: string }) {
                               {STEP_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                             </select>
                           </div>
-                          {typeConfig?.refType !== 'none' && (
+                          {typeConfig?.refType !== 'none' && step.stepType !== 'thank_you' && (
                             <div className="sm:col-span-2">
                               <label className="block text-xs font-semibold text-gray-500 mb-1">{typeConfig?.refType === 'url' ? 'URL' : 'スラッグ / ID'}</label>
                               <input
@@ -317,6 +317,55 @@ export default function FunnelEditor({ funnelId }: { funnelId?: string }) {
                               )}
                             </div>
                           )}
+                          {/* サンキューページ専用フォーム */}
+                          {step.stepType === 'thank_you' && (
+                            <div className="sm:col-span-2 space-y-3 bg-green-50 border border-green-200 rounded-lg p-3">
+                              <p className="text-xs font-semibold text-green-700 mb-1">サンキューページの内容</p>
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">メッセージ本文</label>
+                                <textarea
+                                  value={(step.contentRef as any)?.message || ''}
+                                  onChange={(e) => updateStep(i, { contentRef: { ...step.contentRef, type: 'thank_you', message: e.target.value } })}
+                                  placeholder="例: お申し込みありがとうございます。確認メールをお送りしましたのでご確認ください。"
+                                  rows={3}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">次のアクション案内（任意）</label>
+                                <input
+                                  type="text"
+                                  value={(step.contentRef as any)?.nextAction || ''}
+                                  onChange={(e) => updateStep(i, { contentRef: { ...step.contentRef, type: 'thank_you', nextAction: e.target.value } })}
+                                  placeholder="例: メールを確認してください / LINEを友だち追加してください"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400"
+                                />
+                              </div>
+                              <div className="grid sm:grid-cols-2 gap-2">
+                                <div>
+                                  <label className="block text-xs font-semibold text-gray-500 mb-1">ボタンテキスト（任意）</label>
+                                  <input
+                                    type="text"
+                                    value={(step.contentRef as any)?.ctaText || ''}
+                                    onChange={(e) => updateStep(i, { contentRef: { ...step.contentRef, type: 'thank_you', ctaText: e.target.value } })}
+                                    placeholder="例: LINEを追加する"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-semibold text-gray-500 mb-1">ボタンリンク先（任意）</label>
+                                  <input
+                                    type="text"
+                                    value={(step.contentRef as any)?.ctaUrl || ''}
+                                    onChange={(e) => updateStep(i, { contentRef: { ...step.contentRef, type: 'thank_you', ctaUrl: e.target.value } })}
+                                    placeholder="https://..."
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          {step.stepType !== 'thank_you' && (
                           <div>
                             <label className="block text-xs font-semibold text-gray-500 mb-1">CTAボタン（次のステップへの遷移ボタン）</label>
                             <input type="text" value={step.ctaLabel} onChange={(e) => updateStep(i, { ctaLabel: e.target.value })} placeholder="次へ進む" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400" />
@@ -324,6 +373,7 @@ export default function FunnelEditor({ funnelId }: { funnelId?: string }) {
                               <p className="text-xs text-amber-600 mt-1">{typeConfig.ctaNote}</p>
                             )}
                           </div>
+                          )}
                         </div>
                       </div>
                     );

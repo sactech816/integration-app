@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Loader2, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Loader2, CheckCircle2, ExternalLink } from 'lucide-react';
 
 interface Step {
   id: string;
@@ -132,12 +132,35 @@ export default function FunnelStepViewer({ slug, stepIndex }: Props) {
 
   // サンキューページ
   if (isThankYou) {
+    const ref = step.content_ref as any;
+    const headline = step.name || 'ありがとうございます！';
+    const message = ref?.message || '最後までご覧いただきありがとうございます。';
+    const nextAction = ref?.nextAction;
+    const ctaText = ref?.ctaText;
+    const ctaUrl = ref?.ctaUrl;
+
     return (
-      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white border border-gray-200 rounded-2xl shadow-lg p-8 text-center">
+      <div className="min-h-screen bg-gradient-to-b from-green-50 to-white flex items-center justify-center px-4">
+        <div className="max-w-lg w-full bg-white border border-gray-200 rounded-2xl shadow-lg p-8 sm:p-10 text-center">
           <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{step.name || 'ありがとうございます！'}</h2>
-          <p className="text-gray-600">最後までご覧いただきありがとうございます。</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">{headline}</h2>
+          <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{message}</p>
+          {nextAction && (
+            <div className="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <p className="text-sm font-semibold text-amber-800">{nextAction}</p>
+            </div>
+          )}
+          {ctaText && ctaUrl && (
+            <a
+              href={ctaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-flex items-center gap-2 px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]"
+            >
+              {ctaText}
+              <ExternalLink className="w-5 h-5" />
+            </a>
+          )}
         </div>
       </div>
     );
