@@ -45,7 +45,7 @@ export default function NewListPage() {
 
     if (res.ok) {
       const data = await res.json();
-      router.push(`/newsletter/lists/${data.list.id}`);
+      router.push('/dashboard?view=newsletter');
     } else {
       const err = await res.json().catch(() => null);
       alert(err?.error || 'リスト作成に失敗しました');

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Mail, Users, Send, Plus, Trash2, ChevronRight, Loader2, Crown,
@@ -38,6 +39,7 @@ interface NewsletterDashboardProps {
 }
 
 export default function NewsletterDashboard({ userId, isProUser, planTier, isAdmin = false }: NewsletterDashboardProps) {
+  const router = useRouter();
   const [lists, setLists] = useState<NewsletterList[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,7 +130,16 @@ export default function NewsletterDashboard({ userId, isProUser, planTier, isAdm
     return date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
   };
 
-  if (loading) {
+  // コンテンツ0件の場合は新規作成画面へリダイレクト
+  const isNewUser = lists.length === 0 && campaigns.length === 0;
+
+  useEffect(() => {
+    if (!loading && isNewUser) {
+      router.replace('/newsletter/lists/new');
+    }
+  }, [loading, isNewUser, router]);
+
+  if (loading || isNewUser) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
@@ -145,9 +156,6 @@ export default function NewsletterDashboard({ userId, isProUser, planTier, isAdm
   const totalSubscribers = lists.reduce((sum, l) => sum + l.subscriber_count, 0);
   const totalSent = campaigns.filter((c) => c.status === 'sent').length;
   const draftCount = campaigns.filter((c) => c.status === 'draft').length;
-
-  // 初回ユーザー向け（リストがまだない場合）
-  const isNewUser = lists.length === 0 && campaigns.length === 0;
 
   // 読者管理サブビュー
   if (selectedListId) {

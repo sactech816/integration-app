@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ClipboardCheck, Plus, Trash2, ChevronRight, Globe, Lock, Loader2,
@@ -65,6 +66,7 @@ export default function OrderFormList({
   isAdmin: boolean;
   isUnlocked: boolean;
 }) {
+  const router = useRouter();
   const [forms, setForms] = useState<OrderForm[]>([]);
   const [loading, setLoading] = useState(true);
   const { showOnboarding, setShowOnboarding } = useOnboarding('order-form-onboarding-dismissed');
@@ -90,6 +92,21 @@ export default function OrderFormList({
       setForms((prev) => prev.filter((f) => f.id !== formId));
     }
   };
+
+  // コンテンツ0件の場合は新規作成画面へリダイレクト
+  useEffect(() => {
+    if (!loading && forms.length === 0) {
+      router.replace('/order-form/new');
+    }
+  }, [loading, forms.length, router]);
+
+  if (loading || forms.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+      </div>
+    );
+  }
 
   const totalSubmissions = forms.reduce((sum, f) => sum + f.submission_count, 0);
   const publishedCount = forms.filter((f) => f.status === 'published').length;
