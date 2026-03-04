@@ -127,8 +127,6 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
   const [savedFormId, setSavedFormId] = useState<string | null>(formId || null);
   const [urlCopied, setUrlCopied] = useState(false);
 
-  const [showTemplates, setShowTemplates] = useState(!formId);
-
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState(0);
@@ -190,21 +188,8 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
     }
   };
 
-  const DEFAULT_FIELDS: Field[] = [
-    { fieldType: 'text', label: 'お名前', placeholder: '山田太郎', required: true, options: null },
-    { fieldType: 'email', label: 'メールアドレス', placeholder: 'you@example.com', required: true, options: null },
-  ];
-
-  const hasUserModifiedForm = (): boolean => {
-    if (title || description) return true;
-    if (fields.length !== DEFAULT_FIELDS.length) return true;
-    return fields.some((f, i) => f.label !== DEFAULT_FIELDS[i]?.label || f.fieldType !== DEFAULT_FIELDS[i]?.fieldType);
-  };
-
   const handleApplyTemplate = (template: OrderFormTemplate) => {
-    if (hasUserModifiedForm()) {
-      if (!confirm(`「${template.name}」テンプレートを適用しますか？\n現在の内容は上書きされます。`)) return;
-    }
+    if (!confirm(`「${template.name}」テンプレートを適用しますか？`)) return;
     setTitle(template.title);
     setDescription(template.formDescription);
     setPaymentType(template.paymentType);
@@ -212,7 +197,6 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
     setSuccessMessage(template.successMessage);
     setReplyEmailSubject(template.replyEmailSubject);
     setFields(template.fields.map(f => ({ ...f })));
-    setShowTemplates(false);
   };
 
   const addField = () => setFields([...fields, { fieldType: 'text', label: '', placeholder: '', required: false, options: null }]);
@@ -346,7 +330,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
         <div className={`w-full lg:w-1/2 overflow-y-auto p-4 md:p-6 bg-gray-50 ${mobileTab === 'preview' ? 'hidden lg:block' : ''}`}>
           <div className="space-y-4">
             {/* テンプレート選択 - 新規作成時のみ表示 */}
-            {showTemplates && !formId && (
+            {!formId && (
               <div className="bg-white border border-emerald-200 rounded-xl overflow-hidden shadow-sm">
                 <div className="flex items-center justify-between px-5 py-4 bg-emerald-50">
                   <div className="flex items-center gap-2">
@@ -355,13 +339,6 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                     </span>
                     <h2 className="font-bold text-gray-900">テンプレートから作成</h2>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowTemplates(false)}
-                    className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-white/60 transition-colors"
-                  >
-                    閉じる
-                  </button>
                 </div>
                 <div className="px-5 pb-5 border-t border-emerald-100">
                   <p className="text-sm text-gray-600 mt-4 mb-3">
