@@ -7,8 +7,9 @@ import {
   ArrowLeft, Save, Plus, Trash2, ArrowUp, ArrowDown, Globe, Loader2,
   GitBranch, BarChart3, Monitor, Pencil, ChevronDown,
   User, HelpCircle, FileText, Mail, Calendar, ExternalLink, Heart,
-  Building2, PenTool,
+  Building2, PenTool, ArrowRight, X,
 } from 'lucide-react';
+import { FUNNEL_TEMPLATES } from '@/constants/templates/funnel';
 
 interface Step {
   name: string;
@@ -244,6 +245,49 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
         {/* 左パネル: 編集 */}
         <div className={`w-full lg:w-1/2 overflow-y-auto p-4 md:p-6 bg-gray-50 ${mobileTab === 'preview' ? 'hidden lg:block' : ''}`}>
           <div className="space-y-5">
+            {/* テンプレート選択（新規作成時のみ） */}
+            {!funnelId && (
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="font-bold text-gray-900 flex items-center gap-2">
+                    <span className="bg-amber-100 p-1.5 rounded-lg"><GitBranch className="w-4 h-4 text-amber-600" /></span>テンプレートから作成
+                  </h2>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">テンプレートを選ぶと、ステップが自動追加されます</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {FUNNEL_TEMPLATES.map((template) => (
+                    <button
+                      key={template.id}
+                      onClick={() => {
+                        const msg = steps.length > 0
+                          ? `「${template.name}」を適用すると、現在のステップが置き換わります。適用しますか？`
+                          : `「${template.name}」テンプレートを適用しますか？`;
+                        if (!confirm(msg)) return;
+                        setName(template.name);
+                        setSteps(template.steps.map((s) => ({
+                          name: s.name,
+                          stepType: s.stepType,
+                          contentRef: s.contentRef,
+                          ctaLabel: s.ctaLabel,
+                        })));
+                      }}
+                      className="bg-white border border-gray-200 rounded-lg p-3 text-left hover:shadow-md hover:border-amber-300 transition-all duration-200 group"
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xl">{template.emoji}</span>
+                        <span className="font-bold text-sm text-gray-900 group-hover:text-amber-700 transition-colors">{template.name}</span>
+                      </div>
+                      <p className="text-xs text-gray-500 mb-2 line-clamp-2">{template.description}</p>
+                      <div className="flex items-center gap-1 text-xs font-semibold text-amber-600">
+                        {template.steps.length}ステップ
+                        <ArrowRight className="w-3 h-3" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* 基本設定 */}
             <div className="bg-white border border-gray-200 rounded-xl p-5">
               <h2 className="font-bold text-gray-900 mb-4">基本設定</h2>
