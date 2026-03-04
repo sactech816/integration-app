@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Magnet, Sparkles, Building2, UserCircle, TrendingUp, Lightbulb, Heart, Calendar, ClipboardList, Gamepad2, BookOpen, Monitor, CalendarCheck, PenTool, MousePointerClick, Crown, Image, Store, PartyPopper, Mail, GitBranch, Video, ClipboardCheck } from 'lucide-react';
+import { Magnet, Sparkles, Building2, UserCircle, TrendingUp, Lightbulb, Heart, Calendar, ClipboardList, Gamepad2, BookOpen, Monitor, CalendarCheck, PenTool, MousePointerClick, Image, Store, PartyPopper, Mail, GitBranch, Video, ClipboardCheck, Share2, Gift } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
 interface FooterProps {
@@ -13,12 +13,6 @@ interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = () => {
-  const services = [
-    { id: 'quiz' as ServiceType, label: '診断クイズメーカー', icon: Sparkles, href: '/quiz' },
-    { id: 'profile' as ServiceType, label: 'プロフィールメーカー', icon: UserCircle, href: '/profile' },
-    { id: 'business' as ServiceType, label: 'LPメーカー', icon: Building2, href: '/business' },
-  ];
-
   return (
     <footer className="bg-gray-900 text-gray-400 py-16 border-t border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,21 +32,75 @@ const Footer: React.FC<FooterProps> = () => {
             </p>
           </div>
 
-          {/* サービス */}
+          {/* LP・ページ + 診断・ライティング */}
           <div>
-            <h3 className="text-white font-bold mb-4 text-sm uppercase tracking-wider">サービス</h3>
+            <h3 className="text-white font-bold mb-4 text-sm uppercase tracking-wider">LP・ページ作成</h3>
             <ul className="space-y-3 text-sm">
-              {services.map((service) => (
-                <li key={service.id}>
-                  <Link
-                    href={service.href}
-                    className="flex items-center gap-2 hover:text-white transition-colors group"
-                  >
-                    <service.icon size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                    <span>{service.label}</span>
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link href="/profile" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <UserCircle size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  プロフィールメーカー
+                </Link>
+              </li>
+              <li>
+                <Link href="/business" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Building2 size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  LPメーカー
+                </Link>
+              </li>
+              <li>
+                <Link href="/webinar/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Video size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  ウェビナーLPメーカー
+                </Link>
+              </li>
+              <li>
+                <Link href="/onboarding" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <MousePointerClick size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  はじめかたメーカー
+                </Link>
+              </li>
+            </ul>
+
+            <h3 className="text-white font-bold mt-6 mb-3 text-sm uppercase tracking-wider">診断・ライティング</h3>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link href="/quiz" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Sparkles size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  診断クイズメーカー
+                </Link>
+              </li>
+              <li>
+                <Link href="/entertainment/create" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <PartyPopper size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  エンタメ診断メーカー
+                </Link>
+              </li>
+              <li>
+                <Link href="/salesletter" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <PenTool size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  セールスライター
+                </Link>
+              </li>
+              <li>
+                <Link href="/thumbnail" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Image size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  サムネイルメーカー
+                </Link>
+              </li>
+              <li>
+                <Link href="/kindle/free-trial" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Gift size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  Kindle体験版
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* 集客・イベント + 収益化 */}
+          <div>
+            <h3 className="text-white font-bold mb-4 text-sm uppercase tracking-wider">集客・イベント</h3>
+            <ul className="space-y-3 text-sm">
               <li>
                 <Link href="/booking" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Calendar size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
@@ -72,18 +120,6 @@ const Footer: React.FC<FooterProps> = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/salesletter" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <PenTool size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  セールスライター
-                </Link>
-              </li>
-              <li>
-                <Link href="/entertainment/create" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <PartyPopper size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  エンタメ診断メーカー
-                </Link>
-              </li>
-              <li>
                 <Link href="/newsletter/dashboard" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Mail size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   メルマガメーカー
@@ -95,32 +131,14 @@ const Footer: React.FC<FooterProps> = () => {
                   ファネルメーカー
                 </Link>
               </li>
-              <li>
-                <Link href="/webinar/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <Video size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  ウェビナーLPメーカー
-                </Link>
-              </li>
+            </ul>
+
+            <h3 className="text-white font-bold mt-6 mb-3 text-sm uppercase tracking-wider">収益化・販売</h3>
+            <ul className="space-y-3 text-sm">
               <li>
                 <Link href="/order-form/dashboard" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <ClipboardCheck size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   フォームメーカー
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* PROプラン専用 */}
-          <div>
-            <h3 className="text-purple-300 font-bold mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
-              <Crown size={14} className="text-purple-400" />
-              PROプラン専用
-            </h3>
-            <ul className="space-y-3 text-sm">
-              <li>
-                <Link href="/onboarding" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <MousePointerClick size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  はじめかたメーカー
                 </Link>
               </li>
               <li>
@@ -130,15 +148,15 @@ const Footer: React.FC<FooterProps> = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/thumbnail" className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <Image size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  サムネイルメーカー
-                </Link>
-              </li>
-              <li>
                 <Link href="/marketplace" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Store size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   スキルマーケット
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard?view=affiliate" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Share2 size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  アフィリエイト
                 </Link>
               </li>
             </ul>
@@ -237,6 +255,12 @@ const Footer: React.FC<FooterProps> = () => {
                 </Link>
               </li>
               <li>
+                <Link href="/kindle/free-trial" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Gift size={14} className="text-amber-500 opacity-60 group-hover:opacity-100" />
+                  Kindle体験版
+                </Link>
+              </li>
+              <li>
                 <Link href="/kindle/agency" className="hover:text-white transition-colors">
                   代理店パートナー募集
                 </Link>
@@ -284,7 +308,7 @@ const Footer: React.FC<FooterProps> = () => {
               <li>
                 <Link href="/donation" className="flex items-center gap-1.5 hover:text-white transition-colors group">
                   <Heart size={14} className="text-rose-500 opacity-80 group-hover:opacity-100" />
-                  開発支援・サポート
+                  開発支援
                 </Link>
               </li>
               <li>

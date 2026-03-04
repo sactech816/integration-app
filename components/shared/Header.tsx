@@ -20,7 +20,6 @@ import {
   Building2,
   UserCircle,
   ChevronDown,
-  Home,
   Magnet,
   TrendingUp,
   Lightbulb,
@@ -33,15 +32,15 @@ import {
   Monitor,
   CalendarCheck,
   PenTool,
-  Crown,
   Store,
   MousePointerClick,
-  Lock,
   Image,
   PartyPopper,
   GitBranch,
   Video,
-  ClipboardCheck
+  ClipboardCheck,
+  Share2,
+  Gift
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -147,6 +146,12 @@ const Header: React.FC<HeaderProps> = ({
   // フォームメーカー
   const orderFormService = { id: 'order-form', label: 'フォームメーカー', icon: ClipboardCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' };
 
+  // アフィリエイト
+  const affiliateService = { id: 'affiliate', label: 'アフィリエイト', icon: Share2, color: 'text-green-600', bg: 'bg-green-50' };
+
+  // Kindle体験版
+  const kindleFreeTrialService = { id: 'kindle-free-trial', label: 'Kindle体験版', icon: Gift, color: 'text-amber-600', bg: 'bg-amber-50' };
+
   return (
     <>
     <header className={`${headerClassName || 'bg-white/80'} backdrop-blur-md border-b border-gray-100 sticky top-0 z-[100]`}>
@@ -192,23 +197,80 @@ const Header: React.FC<HeaderProps> = ({
                   <div className="absolute top-full -left-20 pt-2 w-[980px] z-[120]">
                     <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-5 animate-fade-in">
                       <div className="grid grid-cols-4 gap-8">
-                        {/* コンテンツ作成ツール */}
+                        {/* LP・ページ作成 */}
                         <div>
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">コンテンツ作成</p>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">LP・ページ作成</p>
                           <div className="space-y-1">
-                            {services.map((service) => (
-                              <Link
-                                key={service.id}
-                                href={`/${service.id}/editor`}
-                                onClick={(e) => handleServiceClick(e, service.id)}
-                                className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                              >
-                                <div className={`p-1.5 rounded-lg ${service.bg} shrink-0`}>
-                                  <service.icon size={16} className={service.color} />
-                                </div>
-                                <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{service.label}</span>
-                              </Link>
-                            ))}
+                            <Link
+                              href="/profile/editor"
+                              onClick={(e) => handleServiceClick(e, 'profile')}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${services[1].bg} shrink-0`}>
+                                <UserCircle size={16} className={services[1].color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{services[1].label}</span>
+                            </Link>
+                            <Link
+                              href="/business/editor"
+                              onClick={(e) => handleServiceClick(e, 'business')}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${services[2].bg} shrink-0`}>
+                                <Building2 size={16} className={services[2].color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{services[2].label}</span>
+                            </Link>
+                            <Link
+                              href="/webinar/editor"
+                              onClick={closeMenus}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${webinarService.bg} shrink-0`}>
+                                <webinarService.icon size={16} className={webinarService.color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{webinarService.label}</span>
+                            </Link>
+                            <Link
+                              href="/onboarding/editor"
+                              onClick={(e) => handleServiceClick(e, 'onboarding')}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${onboardingService.bg} shrink-0`}>
+                                <onboardingService.icon size={16} className={onboardingService.color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{onboardingService.label}</span>
+                            </Link>
+                          </div>
+                        </div>
+
+                        {/* 診断・ライティング */}
+                        <div>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">診断・ライティング</p>
+                          <div className="space-y-1">
+                            <Link
+                              href="/quiz/editor"
+                              onClick={(e) => handleServiceClick(e, 'quiz')}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${services[0].bg} shrink-0`}>
+                                <Sparkles size={16} className={services[0].color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{services[0].label}</span>
+                            </Link>
+                            <Link
+                              href="/entertainment/create"
+                              onClick={closeMenus}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${entertainmentService.bg} shrink-0`}>
+                                <entertainmentService.icon size={16} className={entertainmentService.color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">
+                                {entertainmentService.label}
+                                <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">PRO</span>
+                              </span>
+                            </Link>
                             <Link
                               href="/salesletter/editor"
                               onClick={closeMenus}
@@ -220,19 +282,32 @@ const Header: React.FC<HeaderProps> = ({
                               <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{salesletterService.label}</span>
                             </Link>
                             <Link
-                              href="/entertainment/create"
+                              href="/thumbnail/editor"
                               onClick={closeMenus}
                               className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                              <div className={`p-1.5 rounded-lg ${entertainmentService.bg} shrink-0`}>
-                                <entertainmentService.icon size={16} className={entertainmentService.color} />
+                              <div className={`p-1.5 rounded-lg ${thumbnailService.bg} shrink-0`}>
+                                <thumbnailService.icon size={16} className={thumbnailService.color} />
                               </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{entertainmentService.label}</span>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">
+                                {thumbnailService.label}
+                                <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">PRO</span>
+                              </span>
+                            </Link>
+                            <Link
+                              href="/kindle/free-trial"
+                              onClick={closeMenus}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${kindleFreeTrialService.bg} shrink-0`}>
+                                <kindleFreeTrialService.icon size={16} className={kindleFreeTrialService.color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{kindleFreeTrialService.label}</span>
                             </Link>
                           </div>
                         </div>
 
-                        {/* 集客・イベントツール */}
+                        {/* 集客・イベント */}
                         <div>
                           <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">集客・イベント</p>
                           <div className="space-y-1">
@@ -274,7 +349,10 @@ const Header: React.FC<HeaderProps> = ({
                               <div className={`p-1.5 rounded-lg ${newsletterService.bg} shrink-0`}>
                                 <newsletterService.icon size={16} className={newsletterService.color} />
                               </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{newsletterService.label}</span>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">
+                                {newsletterService.label}
+                                <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">PRO</span>
+                              </span>
                             </Link>
                             <Link
                               href="/funnel/dashboard"
@@ -286,16 +364,13 @@ const Header: React.FC<HeaderProps> = ({
                               </div>
                               <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{funnelService.label}</span>
                             </Link>
-                            <Link
-                              href="/webinar/editor"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${webinarService.bg} shrink-0`}>
-                                <webinarService.icon size={16} className={webinarService.color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{webinarService.label}</span>
-                            </Link>
+                          </div>
+                        </div>
+
+                        {/* 収益化・販売 */}
+                        <div>
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">収益化・販売</p>
+                          <div className="space-y-1">
                             <Link
                               href="/order-form/dashboard"
                               onClick={closeMenus}
@@ -304,81 +379,15 @@ const Header: React.FC<HeaderProps> = ({
                               <div className={`p-1.5 rounded-lg ${orderFormService.bg} shrink-0`}>
                                 <orderFormService.icon size={16} className={orderFormService.color} />
                               </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{orderFormService.label}</span>
-                            </Link>
-                          </div>
-                        </div>
-
-                        {/* デモ・作品・料金 */}
-                        <div>
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">デモ・作品</p>
-                          <div className="space-y-1">
-                            <Link
-                              href="/portal"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className="p-1.5 rounded-lg bg-purple-50 shrink-0">
-                                <LayoutGrid size={16} className="text-purple-600" />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">作品集（ポータル）</span>
-                            </Link>
-                            <Link
-                              href="/demos"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className="p-1.5 rounded-lg bg-indigo-50 shrink-0">
-                                <Monitor size={16} className="text-indigo-600" />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">デモ一覧</span>
-                            </Link>
-                            <Link
-                              href="/tools"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className="p-1.5 rounded-lg bg-gray-100 shrink-0">
-                                <LayoutGrid size={16} className="text-gray-600" />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">ツール一覧</span>
-                            </Link>
-                          </div>
-                          <div className="border-t border-gray-100 mt-3 pt-3">
-                            <Link
-                              href="/pricing"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors"
-                            >
-                              <div className="p-1.5 rounded-lg bg-purple-50 shrink-0">
-                                <Crown size={16} className="text-purple-600" />
-                              </div>
-                              <span className="font-medium text-purple-700 text-sm whitespace-nowrap">料金プラン</span>
-                            </Link>
-                          </div>
-                        </div>
-
-                        {/* PROプラン専用 */}
-                        <div>
-                          <p className="text-xs font-bold text-purple-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                            <Crown size={12} className="text-purple-500" />
-                            PROプラン専用
-                          </p>
-                          <div className="space-y-1">
-                            <Link
-                              href="/onboarding/editor"
-                              onClick={(e) => handleServiceClick(e, 'onboarding')}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${onboardingService.bg} shrink-0`}>
-                                <onboardingService.icon size={16} className={onboardingService.color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{onboardingService.label}</span>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">
+                                {orderFormService.label}
+                                <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">PRO</span>
+                              </span>
                             </Link>
                             <Link
                               href="/gamification/new"
                               onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors"
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                             >
                               <div className={`p-1.5 rounded-lg ${gamificationService.bg} shrink-0`}>
                                 <gamificationService.icon size={16} className={gamificationService.color} />
@@ -386,27 +395,56 @@ const Header: React.FC<HeaderProps> = ({
                               <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{gamificationService.label}</span>
                             </Link>
                             <Link
-                              href="/thumbnail/editor"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${thumbnailService.bg} shrink-0`}>
-                                <thumbnailService.icon size={16} className={thumbnailService.color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{thumbnailService.label}</span>
-                            </Link>
-                            <Link
                               href="/marketplace"
                               onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors"
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                             >
                               <div className={`p-1.5 rounded-lg ${marketplaceService.bg} shrink-0`}>
                                 <marketplaceService.icon size={16} className={marketplaceService.color} />
                               </div>
                               <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{marketplaceService.label}</span>
                             </Link>
+                            <Link
+                              href="/dashboard?view=affiliate"
+                              onClick={closeMenus}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className={`p-1.5 rounded-lg ${affiliateService.bg} shrink-0`}>
+                                <affiliateService.icon size={16} className={affiliateService.color} />
+                              </div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{affiliateService.label}</span>
+                            </Link>
                           </div>
                         </div>
+                      </div>
+
+                      {/* 下部リンクバー */}
+                      <div className="mt-4 pt-3 border-t border-gray-100 flex items-center gap-4 flex-wrap">
+                        <Link href="/portal" onClick={closeMenus}
+                          className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                          <LayoutGrid size={13} />
+                          <span>作品集（ポータル）</span>
+                        </Link>
+                        <Link href="/demos" onClick={closeMenus}
+                          className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                          <Monitor size={13} />
+                          <span>デモ一覧</span>
+                        </Link>
+                        <Link href="/tools" onClick={closeMenus}
+                          className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                          <LayoutGrid size={13} />
+                          <span>ツール一覧</span>
+                        </Link>
+                        <Link href="/pricing" onClick={closeMenus}
+                          className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                          <Sparkles size={13} />
+                          <span>料金プラン</span>
+                        </Link>
+                        <Link href="/donation" onClick={closeMenus}
+                          className="flex items-center gap-1.5 text-xs font-medium text-rose-400 hover:text-rose-600 transition-colors">
+                          <Heart size={13} />
+                          <span>開発支援</span>
+                        </Link>
                       </div>
 
                       {!user && (
@@ -738,346 +776,135 @@ const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
 
-              {/* ===== コンテンツ作成ツール（2段グリッド） ===== */}
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">コンテンツ作成</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {services.map((service) => (
-                    <Link
-                      key={service.id}
-                      href={`/${service.id}/editor`}
-                      onClick={(e) => handleServiceClick(e, service.id)}
-                      className={`flex items-center gap-2.5 p-3 rounded-xl ${service.bg} transition-all hover:scale-[1.02]`}
-                    >
-                      <service.icon size={20} className={service.color} />
-                      <div className={`font-bold text-sm ${service.color}`}>{service.label}</div>
-                    </Link>
-                  ))}
-                  <Link
-                    href="/salesletter/editor"
-                    onClick={closeMenus}
-                    className={`flex items-center gap-2.5 p-3 rounded-xl ${salesletterService.bg} transition-all hover:scale-[1.02]`}
-                  >
-                    <salesletterService.icon size={20} className={salesletterService.color} />
-                    <div className={`font-bold text-sm ${salesletterService.color}`}>{salesletterService.label}</div>
-                  </Link>
-                  <Link
-                    href="/entertainment/create"
-                    onClick={closeMenus}
-                    className={`flex items-center gap-2.5 p-3 rounded-xl ${entertainmentService.bg} transition-all hover:scale-[1.02]`}
-                  >
-                    <entertainmentService.icon size={20} className={entertainmentService.color} />
-                    <div className={`font-bold text-sm ${entertainmentService.color}`}>{entertainmentService.label}</div>
-                  </Link>
-                </div>
+              {/* ===== ナビゲーション ===== */}
+              <div className="space-y-1">
+                <Link href="/tools" onClick={closeMenus}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+                  <LayoutGrid size={18} className="text-gray-500" />
+                  <span className="font-medium text-gray-700 text-sm">ツール一覧</span>
+                </Link>
+                <Link href="/portal" onClick={closeMenus}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+                  <LayoutGrid size={18} className="text-purple-600" />
+                  <span className="font-medium text-gray-700 text-sm">作品集（ポータル）</span>
+                </Link>
+                <Link href="/marketplace" onClick={closeMenus}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Store size={18} className="text-indigo-600" />
+                  <span className="font-medium text-gray-700 text-sm">スキルマーケット</span>
+                </Link>
+                <Link href="/kindle/free-trial" onClick={closeMenus}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Gift size={18} className="text-amber-600" />
+                  <span className="font-medium text-gray-700 text-sm">Kindle体験版</span>
+                </Link>
+                <Link href="/demos" onClick={closeMenus}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Monitor size={18} className="text-indigo-600" />
+                  <span className="font-medium text-gray-700 text-sm">デモ一覧</span>
+                </Link>
+                <Link href="/announcements" onClick={closeMenus}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Bell size={18} className="text-orange-500" />
+                  <span className="font-medium text-gray-700 text-sm">お知らせ</span>
+                </Link>
               </div>
 
-              {/* ===== 集客・イベントツール（2段グリッド） ===== */}
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">集客・イベント</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    href="/booking/new"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 p-3 rounded-xl bg-blue-50 transition-all hover:scale-[1.02]"
-                  >
-                    <Calendar size={20} className="text-blue-600" />
-                    <div className="font-bold text-sm text-blue-600">予約メーカー</div>
-                  </Link>
-                  <Link
-                    href="/attendance/new"
-                    onClick={closeMenus}
-                    className={`flex items-center gap-2.5 p-3 rounded-xl ${attendanceService.bg} transition-all hover:scale-[1.02]`}
-                  >
-                    <attendanceService.icon size={20} className={attendanceService.color} />
-                    <div className={`font-bold text-sm ${attendanceService.color}`}>{attendanceService.label}</div>
-                  </Link>
-                  <Link
-                    href="/survey/new"
-                    onClick={closeMenus}
-                    className={`flex items-center gap-2.5 p-3 rounded-xl ${surveyService.bg} transition-all hover:scale-[1.02]`}
-                  >
-                    <surveyService.icon size={20} className={surveyService.color} />
-                    <div className={`font-bold text-sm ${surveyService.color}`}>{surveyService.label}</div>
-                  </Link>
-                  <Link
-                    href="/newsletter/dashboard"
-                    onClick={closeMenus}
-                    className={`flex items-center gap-2.5 p-3 rounded-xl ${newsletterService.bg} transition-all hover:scale-[1.02]`}
-                  >
-                    <newsletterService.icon size={20} className={newsletterService.color} />
-                    <div className={`font-bold text-sm ${newsletterService.color}`}>{newsletterService.label}</div>
-                  </Link>
-                  <Link
-                    href="/funnel/dashboard"
-                    onClick={closeMenus}
-                    className={`flex items-center gap-2.5 p-3 rounded-xl ${funnelService.bg} transition-all hover:scale-[1.02]`}
-                  >
-                    <funnelService.icon size={20} className={funnelService.color} />
-                    <div className={`font-bold text-sm ${funnelService.color}`}>{funnelService.label}</div>
-                  </Link>
-                  <Link
-                    href="/webinar/editor"
-                    onClick={closeMenus}
-                    className={`flex items-center gap-2.5 p-3 rounded-xl ${webinarService.bg} transition-all hover:scale-[1.02]`}
-                  >
-                    <webinarService.icon size={20} className={webinarService.color} />
-                    <div className={`font-bold text-sm ${webinarService.color}`}>{webinarService.label}</div>
-                  </Link>
-                  <Link
-                    href="/order-form/dashboard"
-                    onClick={closeMenus}
-                    className={`flex items-center gap-2.5 p-3 rounded-xl ${orderFormService.bg} transition-all hover:scale-[1.02]`}
-                  >
-                    <orderFormService.icon size={20} className={orderFormService.color} />
-                    <div className={`font-bold text-sm ${orderFormService.color}`}>{orderFormService.label}</div>
-                  </Link>
-                </div>
-              </div>
-
-              {/* ===== PROプラン専用（2段グリッド） ===== */}
-              <div>
-                <p className="text-xs font-bold text-purple-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Crown size={12} className="text-purple-500" />
-                  PROプラン専用
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    href="/onboarding/editor"
-                    onClick={(e) => handleServiceClick(e, 'onboarding')}
-                    className="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 transition-all hover:scale-[1.02] border border-purple-100"
-                  >
-                    <onboardingService.icon size={20} className={onboardingService.color} />
-                    <div className="font-bold text-sm text-purple-700">{onboardingService.label}</div>
-                  </Link>
-                  <Link
-                    href="/gamification/new"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 transition-all hover:scale-[1.02] border border-purple-100"
-                  >
-                    <gamificationService.icon size={20} className={gamificationService.color} />
-                    <div className="font-bold text-sm text-purple-700">{gamificationService.label}</div>
-                  </Link>
-                  <Link
-                    href="/thumbnail/editor"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 transition-all hover:scale-[1.02] border border-purple-100"
-                  >
-                    <thumbnailService.icon size={20} className={thumbnailService.color} />
-                    <div className="font-bold text-sm text-purple-700">{thumbnailService.label}</div>
-                  </Link>
-                  <Link
-                    href="/marketplace"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 transition-all hover:scale-[1.02] border border-purple-100"
-                  >
-                    <marketplaceService.icon size={20} className={marketplaceService.color} />
-                    <div className="font-bold text-sm text-purple-700">{marketplaceService.label}</div>
-                  </Link>
-                </div>
-              </div>
-
-              {/* ===== メニュー（2段グリッド） ===== */}
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">メニュー</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    href="/"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <Home size={18} className="text-gray-500" />
-                    <span className="font-medium text-gray-700 text-sm">トップページ</span>
-                  </Link>
-                  <Link
-                    href="/announcements"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <Bell size={18} className="text-orange-500" />
-                    <span className="font-medium text-gray-700 text-sm">お知らせ</span>
-                  </Link>
-                  <Link
-                    href="/portal"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 transition-colors"
-                  >
-                    <LayoutGrid size={18} className="text-purple-600" />
-                    <span className="font-medium text-purple-700 text-sm">作品集（ポータル）</span>
-                  </Link>
-                  <Link
-                    href="/marketplace"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg bg-gradient-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 transition-colors"
-                  >
-                    <Store size={18} className="text-indigo-600" />
-                    <span className="font-medium text-indigo-700 text-sm">スキルマーケット</span>
-                  </Link>
-                  <Link
-                    href="/demos"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <Monitor size={18} className="text-indigo-600" />
-                    <span className="font-medium text-gray-700 text-sm">デモ一覧</span>
-                  </Link>
-                  <Link
-                    href="/tools"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <LayoutGrid size={18} className="text-gray-500" />
-                    <span className="font-medium text-gray-700 text-sm">ツール一覧</span>
-                  </Link>
-                  <Link
-                    href="/pricing"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 transition-colors"
-                  >
-                    <Crown size={18} className="text-purple-600" />
-                    <span className="font-medium text-purple-700 text-sm">料金プラン</span>
-                  </Link>
-                  <Link
-                    href="/kindle/lp"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 transition-colors"
-                  >
-                    <BookOpen size={18} className="text-amber-600" />
-                    <span className="font-medium text-amber-700 text-sm">Kindle出版</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* ===== 集客ノウハウ（2段グリッド） ===== */}
+              {/* ===== 活用ガイド ===== */}
               <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                   <TrendingUp size={12} className="text-orange-500" />
-                  集客ノウハウ
+                  活用ガイド
                 </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    href="/howto"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition-colors"
-                  >
+                <div className="space-y-1">
+                  <Link href="/howto" onClick={closeMenus}
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
                     <FileText size={18} className="text-blue-500" />
                     <span className="font-medium text-gray-700 text-sm">使い方・機能一覧</span>
                   </Link>
-                  <Link
-                    href="/effective-use"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg bg-gradient-to-r from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100 transition-colors"
-                  >
+                  <Link href="/effective-use" onClick={closeMenus}
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
                     <Lightbulb size={18} className="text-yellow-500" />
                     <span className="font-medium text-gray-700 text-sm">効果的な活用法9選</span>
                   </Link>
-                  <Link
-                    href="/selling-content"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 transition-colors"
-                  >
+                  <Link href="/selling-content" onClick={closeMenus}
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
                     <TrendingUp size={18} className="text-green-500" />
                     <span className="font-medium text-gray-700 text-sm">売れるコンテンツの作り方</span>
                   </Link>
-                  <Link
-                    href="/gamification/effective-use"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 transition-colors"
-                  >
+                  <Link href="/gamification/effective-use" onClick={closeMenus}
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
                     <Gamepad2 size={18} className="text-purple-500" />
                     <span className="font-medium text-gray-700 text-sm">ゲーミフィケーション活用法</span>
                   </Link>
                 </div>
               </div>
 
-              {/* ===== Kindleコンテンツ（2段グリッド） ===== */}
+              {/* ===== 料金・開発支援 ===== */}
+              <div className="space-y-1">
+                <Link href="/pricing" onClick={closeMenus}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Sparkles size={18} className="text-purple-600" />
+                  <span className="font-medium text-gray-700 text-sm">料金プラン</span>
+                </Link>
+                <Link href="/donation" onClick={closeMenus}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg bg-gradient-to-r from-rose-50 to-pink-50 hover:from-rose-100 hover:to-pink-100 transition-colors">
+                  <Heart size={18} className="text-rose-500" />
+                  <span className="font-medium text-rose-700 text-sm">開発支援</span>
+                </Link>
+              </div>
+
+              {/* ===== サポート ===== */}
               <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <BookOpen size={12} className="text-amber-500" />
-                  Kindleコンテンツ
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    href="/kindle/lp"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <BookOpen size={18} className="text-amber-500" />
-                    <span className="font-medium text-gray-700 text-sm">Kindle出版LP</span>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">サポート</p>
+                <div className="space-y-1">
+                  <Link href="/faq" onClick={closeMenus}
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <HelpCircle size={18} className="text-gray-500" />
+                    <span className="font-medium text-gray-700 text-sm">よくある質問</span>
                   </Link>
-                  <Link
-                    href="/kindle/agency"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <Building2 size={18} className="text-blue-500" />
-                    <span className="font-medium text-gray-700 text-sm">代理店パートナー募集</span>
-                  </Link>
-                  <Link
-                    href="/kindle/discovery"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 hover:from-yellow-100 hover:to-amber-100 transition-colors col-span-2 sm:col-span-1"
-                  >
-                    <Lightbulb size={18} className="text-yellow-500" />
-                    <span className="font-medium text-gray-700 text-sm">ネタ発掘診断</span>
+                  <Link href="/contact" onClick={closeMenus}
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <Mail size={18} className="text-gray-500" />
+                    <span className="font-medium text-gray-700 text-sm">お問い合わせ</span>
                   </Link>
                 </div>
               </div>
 
-              {/* ===== サポート（2段グリッド） ===== */}
+              {/* ===== 法的情報 ===== */}
               <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">サポート・その他</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    href="/donation"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg bg-gradient-to-r from-rose-50 to-pink-50 hover:from-rose-100 hover:to-pink-100 transition-colors"
-                  >
-                    <Heart size={18} className="text-rose-500" />
-                    <span className="font-medium text-rose-700 text-sm">開発支援・サポート</span>
-                  </Link>
-                  <Link
-                    href="/contact"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <Mail size={18} className="text-gray-500" />
-                    <span className="font-medium text-gray-700 text-sm">お問い合わせ</span>
-                  </Link>
-                  <Link
-                    href="/faq"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <HelpCircle size={18} className="text-gray-500" />
-                    <span className="font-medium text-gray-700 text-sm">よくある質問</span>
-                  </Link>
-                  <Link
-                    href="/sitemap-html"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <FileText size={18} className="text-gray-500" />
-                    <span className="font-medium text-gray-700 text-sm">サイトマップ</span>
-                  </Link>
-                  <Link
-                    href="/legal"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">法的情報</p>
+                <div className="space-y-1">
+                  <Link href="/legal" onClick={closeMenus}
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
                     <Scale size={16} className="text-gray-400" />
-                    <span className="text-gray-600 text-sm">特定商取引法</span>
+                    <span className="text-gray-600 text-sm">特定商取引法に基づく表記</span>
                   </Link>
-                  <Link
-                    href="/privacy"
-                    onClick={closeMenus}
-                    className="flex items-center gap-2.5 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
+                  <Link href="/privacy" onClick={closeMenus}
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
                     <Shield size={16} className="text-gray-400" />
                     <span className="text-gray-600 text-sm">プライバシーポリシー</span>
                   </Link>
+                  <Link href="/sitemap-html" onClick={closeMenus}
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <FileText size={16} className="text-gray-400" />
+                    <span className="text-gray-600 text-sm">サイトマップ</span>
+                  </Link>
                 </div>
               </div>
+
+              {/* ===== ログアウト ===== */}
+              {user && (
+                <div className="pt-2 border-t border-gray-100">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-center gap-2 border border-red-200 text-red-600 py-2.5 rounded-xl font-medium hover:bg-red-50 transition-colors text-sm"
+                  >
+                    <LogOut size={16} />
+                    ログアウト
+                  </button>
+                </div>
+              )}
 
             </div>
           </div>
