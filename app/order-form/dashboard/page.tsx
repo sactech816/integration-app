@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { useUserPlan } from '@/lib/hooks/useUserPlan';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import {
-  ClipboardCheck, Plus, Trash2, ChevronRight, Globe, Lock, Loader2,
+  ClipboardCheck, Plus, Trash2, ChevronRight, Globe, Loader2,
   CreditCard, Eye, FileText, BarChart3, BookOpen, Layout,
   ListPlus, Send, Link2,
 } from 'lucide-react';
@@ -61,7 +60,6 @@ const ONBOARDING_PAGES = [
 export default function OrderFormDashboardPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const { userPlan, isLoading: planLoading } = useUserPlan(userId);
   const [forms, setForms] = useState<OrderForm[]>([]);
   const [formsLoading, setFormsLoading] = useState(false);
   const { showOnboarding, setShowOnboarding } = useOnboarding('order-form-onboarding-dismissed');
@@ -97,30 +95,17 @@ export default function OrderFormDashboardPage() {
     }
   };
 
-  if (authLoading || planLoading) {
-    return <div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
+  if (authLoading) {
+    return <div className="flex items-center justify-center min-h-screen bg-gray-50"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
   }
 
   if (!userId) {
     return (
-      <div className="flex items-center justify-center min-h-screen px-4">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
         <div className="max-w-md text-center">
           <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">ログインが必要です</h2>
           <Link href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-semibold rounded-xl shadow-md hover:bg-emerald-700 transition-all min-h-[44px]">ログインページへ</Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (!userPlan.isProUser) {
-    return (
-      <div className="flex items-center justify-center min-h-screen px-4">
-        <div className="max-w-md text-center">
-          <Lock className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">PROプラン限定機能</h2>
-          <p className="text-gray-600 mb-6">申し込みフォーム機能はPROプラン（月額3,980円）でご利用いただけます。</p>
-          <Link href="/order-form" className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-semibold rounded-xl shadow-md hover:bg-emerald-700 transition-all min-h-[44px]">詳しく見る</Link>
         </div>
       </div>
     );
