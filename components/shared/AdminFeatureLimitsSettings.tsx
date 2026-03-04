@@ -3,6 +3,16 @@
 import { useState, useEffect } from 'react';
 import { Activity, Loader2, Save, BookOpen, Sparkles, Infinity } from 'lucide-react';
 import type { PlanTier, MakersPlanTier } from '@/lib/subscription';
+import { supabase } from '@/lib/supabase';
+
+async function getAuthHeaders(): Promise<HeadersInit> {
+  const session = await supabase?.auth.getSession();
+  const token = session?.data.session?.access_token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
 
 type ServiceType = 'kdl' | 'makers';
 
@@ -47,7 +57,8 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
       
       for (const plan of currentPlans) {
         try {
-          const response = await fetch(`/api/admin/ai-settings?planTier=${plan}&service=${selectedService}`);
+          const headers = await getAuthHeaders();
+          const response = await fetch(`/api/admin/ai-settings?planTier=${plan}&service=${selectedService}`, { headers });
           
           if (!response.ok) {
             console.error(`Failed to fetch settings for ${plan}:`, response.status);
@@ -123,15 +134,15 @@ export default function AdminFeatureLimitsSettings({ userId }: AdminFeatureLimit
   const handleSave = async (planTier: string) => {
     try {
       setSavingPlan(planTier);
+      const headers = await getAuthHeaders();
       const response = await fetch('/api/admin/ai-settings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           planTier,
           selectedPreset: 'custom',
           featureLimits: featureLimits[planTier],
           service: selectedService,
-          userId,
         }),
       });
 

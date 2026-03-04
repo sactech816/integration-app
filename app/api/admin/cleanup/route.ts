@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { requireAdminFromRequest } from '@/lib/auth-server';
 
 // サービスロールクライアント
 const getServiceClient = () => {
@@ -61,6 +62,9 @@ interface CleanupLog {
  */
 export async function GET(request: Request) {
   try {
+    const [, authError] = await requireAdminFromRequest(request);
+    if (authError) return authError;
+
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action') || 'settings';
 
@@ -185,8 +189,12 @@ export async function GET(request: Request) {
  */
 export async function POST(request: Request) {
   try {
+    const [adminUser, authError] = await requireAdminFromRequest(request);
+    if (authError) return authError;
+
     const body = await request.json();
-    const { action, userId } = body;
+    const { action } = body;
+    const userId = adminUser!.id;
 
     const supabase = getServiceClient();
     if (!supabase) {

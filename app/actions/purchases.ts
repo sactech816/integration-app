@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { ContentType } from './analytics';
+import { requireAdmin } from '@/lib/auth-server';
 
 // サーバーサイド用Supabaseクライアント
 function getSupabaseServer() {
@@ -270,6 +271,9 @@ export async function setPartnerStatus(
   note?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // 管理者権限チェック
+    await requireAdmin();
+
     const supabase = getSupabaseServer();
     if (!supabase) {
       return { success: false, error: 'Supabase not configured' };
@@ -311,6 +315,9 @@ export async function getAllUsersWithRoles(): Promise<{
   error?: string;
 }> {
   try {
+    // 管理者権限チェック
+    await requireAdmin();
+
     const supabase = getSupabaseServer();
     if (!supabase) {
       return { users: [], error: 'Supabase not configured' };
@@ -374,6 +381,9 @@ export async function getAllUsersWithRolesPaginated(
   error?: string;
 }> {
   try {
+    // 管理者権限チェック
+    await requireAdmin();
+
     const supabase = getSupabaseServer();
     if (!supabase) {
       return { users: [], totalCount: 0, error: 'Supabase not configured' };

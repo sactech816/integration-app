@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { PLAN_AI_PRESETS, AVAILABLE_AI_MODELS, DEFAULT_AI_MODELS } from '@/lib/ai-provider';
 import type { PlanTier } from '@/lib/subscription';
+import { requireAdminFromRequest } from '@/lib/auth-server';
 
 const getServiceClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -21,6 +22,9 @@ const getServiceClient = () => {
  */
 export async function GET(request: Request) {
   try {
+    const [, authError] = await requireAdminFromRequest(request);
+    if (authError) return authError;
+
     const { searchParams } = new URL(request.url);
     const planTier = searchParams.get('planTier') as PlanTier;
     const service = searchParams.get('service') || 'kdl';
@@ -238,6 +242,9 @@ export async function GET(request: Request) {
  */
 export async function POST(request: Request) {
   try {
+    const [adminUser, authError] = await requireAdminFromRequest(request);
+    if (authError) return authError;
+
     const body = await request.json();
     const {
       planTier,
@@ -258,9 +265,9 @@ export async function POST(request: Request) {
       customOutlineModel,
       customWritingModel,
       featureLimits,
-      userId,
       service = 'kdl'
     } = body;
+    const userId = adminUser!.id;
 
     if (!planTier) {
       return NextResponse.json(

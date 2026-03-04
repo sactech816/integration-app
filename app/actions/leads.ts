@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { ContentType } from './analytics';
+import { requireAuth } from '@/lib/auth-server';
 
 // サーバーサイド用Supabaseクライアント
 function getSupabaseServer() {
@@ -100,6 +101,9 @@ export async function getLeads(
   contentType: ContentType
 ): Promise<Lead[]> {
   try {
+    // 認証チェック（ログインユーザーのみ）
+    await requireAuth();
+
     const supabase = getSupabaseServer();
     if (!supabase) {
       return [];
@@ -206,6 +210,9 @@ export async function exportLeadsAsCsv(
   contentId: string,
   contentType: ContentType
 ): Promise<{ csv: string; count: number }> {
+  // 認証チェック（ログインユーザーのみ）
+  await requireAuth();
+
   const leads = await getLeads(contentId, contentType);
   
   if (leads.length === 0) {

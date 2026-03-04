@@ -5,8 +5,8 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getAdminEmails } from '@/lib/constants';
 import { calculateEstimatedCostJpy } from '@/lib/ai-usage';
+import { requireAdminFromRequest } from '@/lib/auth-server';
 
 const getServiceClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -24,6 +24,9 @@ const getServiceClient = () => {
  */
 export async function GET(request: Request) {
   try {
+    const [, authError] = await requireAdminFromRequest(request);
+    if (authError) return authError;
+
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate') || getDefaultStartDate();
     const endDate = searchParams.get('endDate') || new Date().toISOString().split('T')[0];

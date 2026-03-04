@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { getOrCreateSessionId, getSessionId } from '@/lib/session';
+import { requireAdmin, getAuthenticatedUser } from '@/lib/auth-server';
 import {
   GamificationCampaign,
   UserPointBalance,
@@ -279,7 +280,18 @@ export async function updatePoints(
     console.error('[Gamification] Database not configured');
     return { success: false, error: 'Database not configured' };
   }
-  
+
+  // userIdが指定されている場合、認証ユーザーが本人であることを確認
+  if (options?.userId) {
+    const authUser = await getAuthenticatedUser();
+    if (!authUser) {
+      return { success: false, error: '認証が必要です' };
+    }
+    if (authUser.id !== options.userId && !authUser.isAdmin) {
+      return { success: false, error: '権限がありません' };
+    }
+  }
+
   const sessionId = options?.userId ? null : await getOrCreateSessionId();
   
   // デバッグログ
@@ -945,9 +957,12 @@ export async function updateAdminGamificationSetting(
   settingValue: Record<string, unknown>,
   updatedBy: string
 ): Promise<boolean> {
+  // 管理者権限チェック
+  await requireAdmin();
+
   const supabase = getSupabaseServer();
   if (!supabase) return false;
-  
+
   const { error } = await supabase.rpc('update_admin_gamification_setting', {
     p_setting_key: settingKey,
     p_setting_value: settingValue,

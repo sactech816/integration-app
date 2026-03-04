@@ -6,10 +6,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  BarChart3, TrendingUp, DollarSign, Users, Loader2, 
+import {
+  BarChart3, TrendingUp, DollarSign, Users, Loader2,
   RefreshCw, Calendar, Zap, BookOpen, Sparkles, ChevronDown, ChevronRight
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface ServiceStats {
   service: string;
@@ -65,8 +66,11 @@ export default function AdminAIUsageStats({ userId }: AdminAIUsageStatsProps) {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
       
+      const session = await supabase?.auth.getSession();
+      const token = session?.data.session?.access_token;
       const response = await fetch(
-        `/api/admin/ai-usage-stats?startDate=${startDate.toISOString().split('T')[0]}&endDate=${new Date().toISOString().split('T')[0]}`
+        `/api/admin/ai-usage-stats?startDate=${startDate.toISOString().split('T')[0]}&endDate=${new Date().toISOString().split('T')[0]}`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
 
       if (!response.ok) {

@@ -15,6 +15,17 @@ import {
   Download,
   Shield,
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+
+// 認証ヘッダーを取得
+async function getAuthHeaders(): Promise<HeadersInit> {
+  const session = await supabase?.auth.getSession();
+  const token = session?.data.session?.access_token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
 
 // 型定義
 interface CleanupSettings {
@@ -126,7 +137,8 @@ export default function CleanupManager({ userId }: CleanupManagerProps) {
   const fetchSettings = useCallback(async () => {
     setLoadingSettings(true);
     try {
-      const res = await fetch('/api/admin/cleanup?action=settings');
+      const headers = await getAuthHeaders();
+      const res = await fetch('/api/admin/cleanup?action=settings', { headers });
       const data = await res.json();
       if (data.settings) {
         setSettings(data.settings);
@@ -142,7 +154,8 @@ export default function CleanupManager({ userId }: CleanupManagerProps) {
   const fetchPreview = useCallback(async () => {
     setLoadingPreview(true);
     try {
-      const res = await fetch('/api/admin/cleanup?action=preview');
+      const headers = await getAuthHeaders();
+      const res = await fetch('/api/admin/cleanup?action=preview', { headers });
       const data = await res.json();
       setTargets(data.targets || []);
       setStats(data.stats || null);
@@ -157,7 +170,8 @@ export default function CleanupManager({ userId }: CleanupManagerProps) {
   const fetchLogs = useCallback(async () => {
     setLoadingLogs(true);
     try {
-      const res = await fetch('/api/admin/cleanup?action=logs');
+      const headers = await getAuthHeaders();
+      const res = await fetch('/api/admin/cleanup?action=logs', { headers });
       const data = await res.json();
       setLogs(data.logs || []);
     } catch (error) {
@@ -187,13 +201,13 @@ export default function CleanupManager({ userId }: CleanupManagerProps) {
     
     setSavingSettings(true);
     try {
+      const headers = await getAuthHeaders();
       const res = await fetch('/api/admin/cleanup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           action: 'update_settings',
           settings,
-          userId,
         }),
       });
       const data = await res.json();
@@ -221,13 +235,13 @@ export default function CleanupManager({ userId }: CleanupManagerProps) {
 
     setExecuting(true);
     try {
+      const headers = await getAuthHeaders();
       const res = await fetch('/api/admin/cleanup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           action: 'execute',
           dryRun,
-          userId,
         }),
       });
       const data = await res.json();
@@ -250,15 +264,15 @@ export default function CleanupManager({ userId }: CleanupManagerProps) {
   // 除外リストに追加
   const addToExclusion = async (target: CleanupTarget) => {
     try {
+      const headers = await getAuthHeaders();
       const res = await fetch('/api/admin/cleanup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           action: 'add_exclusion',
           tableName: target.table_name,
           recordId: target.record_id,
           reason: '管理者による手動除外',
-          userId,
         }),
       });
       const data = await res.json();

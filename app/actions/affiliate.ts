@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { requireAdmin } from '@/lib/auth-server';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -262,6 +263,8 @@ export async function getAllAffiliates(): Promise<{
   error?: string;
 }> {
   try {
+    await requireAdmin();
+
     const { data, error } = await supabase
       .from('affiliates')
       .select(`
@@ -294,6 +297,8 @@ export async function updateCommissionRate(
   newRate: number
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
+
     const { error } = await supabase
       .from('affiliates')
       .update({ commission_rate: newRate })
@@ -313,6 +318,8 @@ export async function confirmConversion(
   conversionId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
+
     const { error } = await supabase
       .from('affiliate_conversions')
       .update({
@@ -335,6 +342,8 @@ export async function markConversionPaid(
   conversionId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
+
     // 成果情報を取得
     const { data: conversion, error: fetchError } = await supabase
       .from('affiliate_conversions')
@@ -511,6 +520,8 @@ export async function updateAffiliateServiceSetting(
   updates: Partial<Pick<AffiliateServiceSetting, 'commission_rate' | 'signup_points' | 'enabled' | 'description'>>
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireAdmin();
+
     const { error } = await supabase
       .from('affiliate_service_settings')
       .update({

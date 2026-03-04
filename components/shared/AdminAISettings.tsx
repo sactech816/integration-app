@@ -4,6 +4,16 @@ import { useState, useEffect, useMemo } from 'react';
 import { Settings, Loader2, Save, BookOpen, Sparkles, Shield, ChevronDown } from 'lucide-react';
 import type { PlanTier, MakersPlanTier } from '@/lib/subscription';
 import { AVAILABLE_AI_MODELS, DEFAULT_AI_MODELS, getModelsByProvider, type AIModelInfo } from '@/lib/ai-provider';
+import { supabase } from '@/lib/supabase';
+
+async function getAuthHeaders(): Promise<HeadersInit> {
+  const session = await supabase?.auth.getSession();
+  const token = session?.data.session?.access_token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
 
 type ServiceType = 'kdl' | 'makers';
 
@@ -46,7 +56,8 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
       setLoading(true);
 
       // 一括取得API呼び出し（1リクエストで全プラン分取得）
-      const response = await fetch(`/api/admin/ai-settings?allPlans=true&service=${selectedService}`);
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/admin/ai-settings?allPlans=true&service=${selectedService}`, { headers });
 
       if (!response.ok) {
         console.error('Failed to fetch all AI settings:', response.status);
@@ -81,9 +92,10 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
       setSavingPlan(planTier);
       const planSettings = settings[planTier];
       
+      const headers = await getAuthHeaders();
       const response = await fetch('/api/admin/ai-settings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           planTier,
           outlineModel: planSettings.outlineModel,
@@ -91,7 +103,6 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
           backupOutlineModel: planSettings.backupOutlineModel,
           backupWritingModel: planSettings.backupWritingModel,
           service: selectedService,
-          userId,
         }),
       });
 

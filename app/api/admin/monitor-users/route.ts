@@ -5,59 +5,30 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getAdminEmails } from '@/lib/constants';
+import { requireAdminFromRequest } from '@/lib/auth-server';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// 管理者権限チェック（メールアドレスベース）
-async function isAdmin(userId: string): Promise<boolean> {
-  try {
-    // ユーザーのメールアドレスを取得
-    const { data: userData } = await supabase.auth.admin.getUserById(userId);
-    
-    if (!userData?.user?.email) {
-      return false;
-    }
-
-    // 管理者メールリストと照合
-    const adminEmails = getAdminEmails();
-    return adminEmails.some(
-      (email) => userData.user.email?.toLowerCase() === email.toLowerCase()
-    );
-  } catch (error) {
-    console.error('管理者チェックエラー:', error);
-    return false;
-  }
-}
-
 /**
  * GET: モニターユーザー一覧を取得
  */
 export async function GET(request: Request) {
   try {
+    const [adminUser, authError] = await requireAdminFromRequest(request);
+    if (authError) return authError;
+
     const { searchParams } = new URL(request.url);
-    const adminUserId = searchParams.get('adminUserId');
     const showExpired = searchParams.get('showExpired') === 'true';
-    const service = searchParams.get('service') || 'kdl'; // サービス種別
-
-    if (!adminUserId) {
-      return NextResponse.json({ error: '管理者IDが必要です' }, { status: 400 });
-    }
-
-    // 管理者権限チェック
-    const hasAdminAccess = await isAdmin(adminUserId);
-    if (!hasAdminAccess) {
-      return NextResponse.json({ error: '管理者権限が必要です' }, { status: 403 });
-    }
+    const service = searchParams.get('service') || 'kdl';
 
     // モニターユーザー一覧を取得
     let query = supabase
       .from('monitor_users')
       .select('*')
-      .eq('service', service) // サービスでフィルタリング
+      .eq('service', service)
       .order('created_at', { ascending: false });
 
     // 期限切れを含めるかどうか
@@ -75,11 +46,10 @@ export async function GET(request: Request) {
     // ユーザー情報を取得（Admin API使用）
     const enrichedMonitors = [];
     if (monitors && monitors.length > 0) {
-      // 全ユーザーを一度に取得
       const { data: usersData } = await supabase.auth.admin.listUsers({
         perPage: 1000,
       });
-      
+
       const usersMap = new Map<string, { id: string; email: string }>();
       if (usersData?.users && Array.isArray(usersData.users)) {
         (usersData.users as Array<{ id: string; email?: string }>).forEach((u) => {
@@ -111,20 +81,20 @@ export async function GET(request: Request) {
  */
 export async function POST(request: Request) {
   try {
+    const [adminUser, authError] = await requireAdminFromRequest(request);
+    if (authError) return authError;
+
+    const adminUserId = adminUser!.id;
+
     const body = await request.json();
     const {
-      adminUserId,
       userEmail,
       userId,
       monitorPlanType,
       durationDays,
       notes,
-      service = 'kdl', // サービス種別（デフォルト: kdl）
+      service = 'kdl',
     } = body;
-
-    if (!adminUserId) {
-      return NextResponse.json({ error: '管理者IDが必要です' }, { status: 400 });
-    }
 
     if (!userEmail && !userId) {
       return NextResponse.json({ error: 'ユーザーのEmailまたはIDが必要です' }, { status: 400 });
@@ -148,16 +118,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '有効な期間（日数）を指定してください' }, { status: 400 });
     }
 
-    // 管理者権限チェック
-    const hasAdminAccess = await isAdmin(adminUserId);
-    if (!hasAdminAccess) {
-      return NextResponse.json({ error: '管理者権限が必要です' }, { status: 403 });
-    }
-
     // ユーザーIDの取得（Emailから検索する場合）
     let targetUserId = userId;
     if (!targetUserId && userEmail) {
-      // Supabase Admin APIでユーザーを検索
       const { data: usersData, error: listError } = await supabase.auth.admin.listUsers({
         perPage: 1000,
       });
@@ -167,7 +130,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'ユーザー検索に失敗しました' }, { status: 500 });
       }
 
-      // メールアドレスで検索（大文字小文字を区別しない）
       const users = (usersData?.users || []) as Array<{ id: string; email?: string }>;
       const foundUser = users.find(
         (u) => u.email?.toLowerCase() === userEmail.toLowerCase()
@@ -193,7 +155,6 @@ export async function POST(request: Request) {
       .single();
 
     if (existingMonitor) {
-      // 既存のモニター権限を更新
       const { data, error } = await supabase
         .from('monitor_users')
         .update({
@@ -218,7 +179,6 @@ export async function POST(request: Request) {
         monitor: data,
       });
     } else {
-      // 新規モニター権限を追加
       const { data, error } = await supabase
         .from('monitor_users')
         .insert({
@@ -228,7 +188,7 @@ export async function POST(request: Request) {
           monitor_start_at: now.toISOString(),
           monitor_expires_at: expiresAt.toISOString(),
           notes: notes || null,
-          service: service, // サービス種別を保存
+          service: service,
         })
         .select()
         .single();
@@ -255,9 +215,11 @@ export async function POST(request: Request) {
  */
 export async function PATCH(request: Request) {
   try {
+    const [, authError] = await requireAdminFromRequest(request);
+    if (authError) return authError;
+
     const body = await request.json();
     const {
-      adminUserId,
       monitorId,
       monitorPlanType,
       monitorExpiresAt,
@@ -265,18 +227,8 @@ export async function PATCH(request: Request) {
       notes,
     } = body;
 
-    if (!adminUserId) {
-      return NextResponse.json({ error: '管理者IDが必要です' }, { status: 400 });
-    }
-
     if (!monitorId) {
       return NextResponse.json({ error: 'モニターIDが必要です' }, { status: 400 });
-    }
-
-    // 管理者権限チェック
-    const hasAdminAccess = await isAdmin(adminUserId);
-    if (!hasAdminAccess) {
-      return NextResponse.json({ error: '管理者権限が必要です' }, { status: 403 });
     }
 
     // 既存レコードを取得
@@ -358,22 +310,14 @@ export async function PATCH(request: Request) {
  */
 export async function DELETE(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const adminUserId = searchParams.get('adminUserId');
-    const monitorId = searchParams.get('monitorId');
+    const [, authError] = await requireAdminFromRequest(request);
+    if (authError) return authError;
 
-    if (!adminUserId) {
-      return NextResponse.json({ error: '管理者IDが必要です' }, { status: 400 });
-    }
+    const { searchParams } = new URL(request.url);
+    const monitorId = searchParams.get('monitorId');
 
     if (!monitorId) {
       return NextResponse.json({ error: 'モニターIDが必要です' }, { status: 400 });
-    }
-
-    // 管理者権限チェック
-    const hasAdminAccess = await isAdmin(adminUserId);
-    if (!hasAdminAccess) {
-      return NextResponse.json({ error: '管理者権限が必要です' }, { status: 403 });
     }
 
     // モニター権限を削除
@@ -396,4 +340,3 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'サーバーエラーが発生しました' }, { status: 500 });
   }
 }
-

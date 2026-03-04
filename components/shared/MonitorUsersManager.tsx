@@ -9,6 +9,16 @@
 import React, { useState, useEffect } from 'react';
 import { User, Clock, Shield, Trash2, PlusCircle, AlertCircle, Loader2, Search, CheckCircle, BookOpen, Sparkles, Pencil, Save, X, CalendarPlus } from 'lucide-react';
 import { PlanTier, PLAN_DEFINITIONS, MakersPlanTier, MAKERS_PLAN_DEFINITIONS } from '@/lib/subscription';
+import { supabase } from '@/lib/supabase';
+
+async function getAuthHeaders(): Promise<HeadersInit> {
+  const session = await supabase?.auth.getSession();
+  const token = session?.data.session?.access_token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
 
 // サービス種別
 type ServiceType = 'kdl' | 'makers';
@@ -77,8 +87,10 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
   const fetchMonitors = async () => {
     setIsLoading(true);
     try {
+      const headers = await getAuthHeaders();
       const response = await fetch(
-        `/api/admin/monitor-users?adminUserId=${adminUserId}&showExpired=${showExpired}&service=${selectedService}`
+        `/api/admin/monitor-users?showExpired=${showExpired}&service=${selectedService}`,
+        { headers }
       );
       const data = await response.json();
 
@@ -106,11 +118,11 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
     setMessage(null);
 
     try {
+      const headers = await getAuthHeaders();
       const response = await fetch('/api/admin/monitor-users', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
-          adminUserId,
           userEmail: formEmail,
           monitorPlanType: formPlan,
           durationDays: formDuration,
@@ -162,7 +174,6 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
 
     try {
       const body: Record<string, unknown> = {
-        adminUserId,
         monitorId,
         monitorPlanType: editPlan,
         notes: editNotes,
@@ -172,9 +183,10 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
         body.extendDays = editExtendDays;
       }
 
+      const headers = await getAuthHeaders();
       const response = await fetch('/api/admin/monitor-users', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(body),
       });
 
@@ -200,9 +212,10 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
     if (!confirm('このモニター権限を削除してもよろしいですか?')) return;
 
     try {
+      const headers = await getAuthHeaders();
       const response = await fetch(
-        `/api/admin/monitor-users?adminUserId=${adminUserId}&monitorId=${monitorId}`,
-        { method: 'DELETE' }
+        `/api/admin/monitor-users?monitorId=${monitorId}`,
+        { method: 'DELETE', headers }
       );
 
       const data = await response.json();
