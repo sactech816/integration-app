@@ -7,6 +7,7 @@ import {
   ArrowLeft, Save, Plus, Trash2, ArrowUp, ArrowDown, Globe, Loader2,
   GitBranch, BarChart3, Monitor, Pencil, ChevronDown,
   User, HelpCircle, FileText, Mail, Calendar, ExternalLink, Heart,
+  Building2, PenTool,
 } from 'lucide-react';
 
 interface Step {
@@ -17,17 +18,21 @@ interface Step {
 }
 
 const STEP_TYPES = [
-  { value: 'profile_lp', label: 'プロフィールLP', refType: 'slug', placeholder: '例: taro-yamada', hint: 'プロフィールLPのURLの末尾部分です（/profile/●●● の ●●● 部分）。各ツールの編集画面やダッシュボードで確認できます。' },
-  { value: 'quiz', label: '診断クイズ', refType: 'slug', placeholder: '例: career-quiz', hint: '診断クイズのURLの末尾部分です（/quiz/●●● の ●●● 部分）。クイズ編集画面の公開URLで確認できます。' },
-  { value: 'order_form', label: '申し込みフォーム', refType: 'slug', placeholder: '例: consulting-form', hint: '申し込みフォームのURLの末尾部分です（/order-form/●●● の ●●● 部分）。フォーム編集画面で確認できます。' },
-  { value: 'newsletter', label: 'メルマガ登録', refType: 'id', placeholder: '例: abc123-def456', hint: 'メルマガリストのIDです。メルマガダッシュボードの各リストの設定画面で確認できます。' },
-  { value: 'booking', label: '予約ページ', refType: 'slug', placeholder: '例: free-consultation', hint: '予約ページのURLの末尾部分です（/booking/●●● の ●●● 部分）。予約メニューの編集画面で確認できます。' },
-  { value: 'custom_url', label: '外部URL', refType: 'url', placeholder: 'https://example.com', hint: '外部サイトのURLをそのまま入力してください。' },
-  { value: 'thank_you', label: 'サンキューページ', refType: 'none', placeholder: '', hint: '' },
+  { value: 'profile_lp', label: 'プロフィールLP', refType: 'slug', placeholder: '例: taro-yamada', hint: 'プロフィールLPのURLの末尾部分です（/profile/●●● の ●●● 部分）。各ツールの編集画面やダッシュボードで確認できます。', ctaNote: '閲覧後にファネルCTAで次のステップへ進みます' },
+  { value: 'business_lp', label: 'ビジネスLP', refType: 'slug', placeholder: '例: my-service-lp', hint: 'ビジネスLPのURLの末尾部分です（/business/●●● の ●●● 部分）。LP編集画面で確認できます。', ctaNote: 'オプトインLPやセールスLPとして使えます。閲覧後にファネルCTAで次へ進みます' },
+  { value: 'salesletter', label: 'セールスレター', refType: 'slug', placeholder: '例: my-salesletter', hint: 'セールスレターのURLの末尾部分です（/salesletter/●●● の ●●● 部分）。セールスライター編集画面で確認できます。', ctaNote: 'セールスLPとして使えます。閲覧後にファネルCTAで次へ進みます' },
+  { value: 'quiz', label: '診断クイズ', refType: 'slug', placeholder: '例: career-quiz', hint: '診断クイズのURLの末尾部分です（/quiz/●●● の ●●● 部分）。クイズ編集画面の公開URLで確認できます。', ctaNote: 'クイズ完了後にファネルCTAで次のステップへ進みます' },
+  { value: 'order_form', label: '申し込みフォーム', refType: 'slug', placeholder: '例: consulting-form', hint: '申し込みフォームのURLの末尾部分です（/order-form/●●● の ●●● 部分）。フォーム編集画面で確認できます。', ctaNote: 'フォーム送信・決済がこのステップ内で完了します' },
+  { value: 'newsletter', label: 'メルマガ登録', refType: 'id', placeholder: '例: abc123-def456', hint: 'メルマガリストのIDです。メルマガダッシュボードの各リストの設定画面で確認できます。', ctaNote: 'メルマガ登録がこのステップ内で完了します' },
+  { value: 'booking', label: '予約ページ', refType: 'slug', placeholder: '例: free-consultation', hint: '予約ページのURLの末尾部分です（/booking/●●● の ●●● 部分）。予約メニューの編集画面で確認できます。', ctaNote: '予約完了がこのステップ内で行われます' },
+  { value: 'custom_url', label: '外部URL', refType: 'url', placeholder: 'https://example.com', hint: '外部サイトのURLをそのまま入力してください。', ctaNote: '外部ページを表示します。ファネルCTAで次へ進みます' },
+  { value: 'thank_you', label: 'サンキューページ', refType: 'none', placeholder: '', hint: '', ctaNote: 'ファネルの最終ステップです' },
 ];
 
 const STEP_ICONS: Record<string, React.ReactNode> = {
   profile_lp: <User className="w-4 h-4" />,
+  business_lp: <Building2 className="w-4 h-4" />,
+  salesletter: <PenTool className="w-4 h-4" />,
   quiz: <HelpCircle className="w-4 h-4" />,
   order_form: <FileText className="w-4 h-4" />,
   newsletter: <Mail className="w-4 h-4" />,
@@ -313,8 +318,11 @@ export default function FunnelEditor({ funnelId }: { funnelId?: string }) {
                             </div>
                           )}
                           <div>
-                            <label className="block text-xs font-semibold text-gray-500 mb-1">CTAボタン</label>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">CTAボタン（次のステップへの遷移ボタン）</label>
                             <input type="text" value={step.ctaLabel} onChange={(e) => updateStep(i, { ctaLabel: e.target.value })} placeholder="次へ進む" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400" />
+                            {typeConfig?.ctaNote && (
+                              <p className="text-xs text-amber-600 mt-1">{typeConfig.ctaNote}</p>
+                            )}
                           </div>
                         </div>
                       </div>

@@ -113,6 +113,8 @@ export default function FunnelStepPage({ params }: { params: Promise<{ slug: str
 
     switch (step.step_type) {
       case 'profile_lp': return `/profile/${ref.slug}`;
+      case 'business_lp': return `/business/${ref.slug}`;
+      case 'salesletter': return `/salesletter/${ref.slug}`;
       case 'quiz': return `/quiz/${ref.slug}`;
       case 'order_form': return `/order-form/${ref.slug}`;
       case 'newsletter': return `/newsletter/subscribe/${ref.slug || ref.id}`;
