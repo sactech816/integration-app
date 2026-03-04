@@ -65,6 +65,7 @@ type SidebarNavProps = {
     newsletter: number;
     order_form: number;
     funnel: number;
+    webinar: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態

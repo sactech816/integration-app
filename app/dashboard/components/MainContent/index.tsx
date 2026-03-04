@@ -36,6 +36,7 @@ export type ActiveView =
   | 'newsletter'
   | 'order-form'
   | 'funnel'
+  | 'webinar'
   | 'affiliate'
   | 'marketplace-seller'
   | 'settings'
@@ -90,6 +91,7 @@ type MainContentProps = {
     newsletter: number;
     order_form: number;
     funnel: number;
+    webinar: number;
   };
   isLoading: boolean;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -194,7 +196,7 @@ export default function MainContent({
         <AnnouncementList />
       )}
 
-      {['quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail'].includes(activeView) && (
+      {['quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar'].includes(activeView) && (
       <div className="space-y-6">
         <ContentList
           contents={contents}

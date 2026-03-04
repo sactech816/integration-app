@@ -156,6 +156,7 @@ export default function FeaturedManager() {
       newsletter: 'メルマガ',
       'order-form': '申し込みフォーム',
       funnel: 'ファネル',
+      webinar: 'ウェビナーLP',
     };
     return labels[type] || type;
   };

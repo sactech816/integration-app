@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 export type UGCType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'survey' | 'salesletter'
   | 'gacha' | 'fukubiki' | 'scratch' | 'slot' | 'stamp-rally' | 'login-bonus'
   | 'booking' | 'kindle' | 'point-quiz' | 'arcade' | 'attendance' | 'thumbnail'
-  | 'funnel' | 'order-form' | 'newsletter';
+  | 'funnel' | 'order-form' | 'newsletter' | 'webinar';
 
 interface UGCMetadataInput {
   title: string;
@@ -146,6 +146,12 @@ const TYPE_CONFIG: Record<UGCType, {
     label: 'メルマガメーカー',
     defaultKeywords: ['メルマガ', 'メールマガジン', 'ニュースレター', 'メール配信'],
     descriptionTemplate: (title) => `「${title}」のメルマガに登録。最新情報をメールでお届けします。`,
+  },
+  webinar: {
+    pathPrefix: 'webinar',
+    label: 'ウェビナーLPメーカー',
+    defaultKeywords: ['ウェビナー', 'オンラインセミナー', 'Webセミナー', 'ランディングページ'],
+    descriptionTemplate: (title) => `「${title}」ウェビナーの詳細・お申し込みページ。オンラインで参加できます。`,
   },
 };
 

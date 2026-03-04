@@ -88,6 +88,7 @@ const getServiceIcon = (type: ServiceType) => {
     newsletter: FileText,
     'order-form': FileText,
     funnel: FileText,
+    webinar: FileText,
   };
   return icons[type] || Sparkles; // フォールバック
 };
@@ -108,6 +109,7 @@ const getServiceColor = (type: ServiceType) => {
     newsletter: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200', gradient: 'from-violet-500 to-purple-600' },
     'order-form': { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', gradient: 'from-emerald-500 to-teal-600' },
     funnel: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200', gradient: 'from-amber-500 to-orange-600' },
+    webinar: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200', gradient: 'from-violet-500 to-purple-600' },
   };
   return colors[type] || colors.quiz; // フォールバック
 };

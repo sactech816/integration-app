@@ -26,4 +26,5 @@ export const TABLES = {
   GAMIFICATION_CAMPAIGNS: 'gamification_campaigns',
   ONBOARDING_MODALS: 'onboarding_modals',
   THUMBNAILS: 'thumbnails',
+  WEBINAR_LPS: 'webinar_lps',
 } as const;

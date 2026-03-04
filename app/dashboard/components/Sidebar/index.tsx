@@ -24,6 +24,7 @@ type SidebarProps = {
     newsletter: number;
     order_form: number;
     funnel: number;
+    webinar: number;
   };
   totalViews: number;
   onLogout: () => void;

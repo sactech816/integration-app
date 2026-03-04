@@ -39,6 +39,7 @@ const SHORT_LABELS: Record<ServiceType, string> = {
   newsletter: 'メルマガ',
   'order-form': 'フォーム',
   funnel: 'ファネル',
+  webinar: 'ウェビナー',
 };
 
 const getServiceColor = (type: ServiceType) => {

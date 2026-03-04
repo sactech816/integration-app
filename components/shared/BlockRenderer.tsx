@@ -1246,9 +1246,98 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
         </div>
       );
 
+    // --- ウェビナーLP専用ブロック ---
+    case 'speaker':
+      return (
+        <section className="py-12 px-6">
+          <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center gap-8 bg-white/10 backdrop-blur rounded-2xl p-8">
+            {block.data.image && (
+              <div className="w-32 h-32 rounded-full overflow-hidden shadow-lg flex-shrink-0 border-4 border-white/20">
+                <img src={block.data.image} alt={block.data.name} className="w-full h-full object-cover" />
+              </div>
+            )}
+            <div className="text-center md:text-left">
+              <h3 className="text-2xl font-bold text-white mb-1">{block.data.name}</h3>
+              {block.data.title && (
+                <p className="text-white/70 text-sm mb-3">{block.data.title}</p>
+              )}
+              {block.data.bio && (
+                <p className="text-white/80 leading-relaxed whitespace-pre-wrap">{block.data.bio}</p>
+              )}
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'agenda':
+      return (
+        <section className="py-12 px-6">
+          <div className="max-w-3xl mx-auto">
+            {block.data.title && (
+              <h3 className="text-2xl font-bold text-white text-center mb-8">{block.data.title}</h3>
+            )}
+            <div className="space-y-4">
+              {block.data.items?.map((item, index) => (
+                <div key={index} className="flex gap-4 items-start bg-white/10 backdrop-blur rounded-xl p-5">
+                  <div className="w-8 h-8 rounded-full bg-violet-500 text-white flex items-center justify-center font-bold flex-shrink-0 text-sm">
+                    {index + 1}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-white text-lg">{item.title}</h4>
+                    {item.description && (
+                      <p className="text-white/70 mt-1">{item.description}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'delayed_cta':
+      return <DelayedCtaRenderer block={block} onLinkClick={handleLinkClick} />;
+
     default:
       return null;
   }
+}
+
+// Delayed CTA Renderer Component
+function DelayedCtaRenderer({ block, onLinkClick }: { block: Extract<Block, { type: 'delayed_cta' }>; onLinkClick?: (url: string) => void }) {
+  const [isVisible, setIsVisible] = useState(block.data.delaySeconds === 0);
+
+  useEffect(() => {
+    if (block.data.delaySeconds > 0) {
+      const timer = setTimeout(() => setIsVisible(true), block.data.delaySeconds * 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [block.data.delaySeconds]);
+
+  if (!isVisible) return null;
+
+  const buttonColor = block.data.buttonColor || '#7c3aed';
+  const buttonTextColor = block.data.buttonTextColor || '#ffffff';
+
+  return (
+    <section className="py-12 px-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="max-w-xl mx-auto text-center">
+        {block.data.title && (
+          <h3 className="text-xl font-bold text-white mb-6">{block.data.title}</h3>
+        )}
+        <a
+          href={block.data.buttonUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => onLinkClick?.(block.data.buttonUrl)}
+          className="inline-block px-10 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+          style={{ backgroundColor: buttonColor, color: buttonTextColor }}
+        >
+          {block.data.buttonText}
+        </a>
+      </div>
+    </section>
+  );
 }
 
 // Countdown Block Renderer Component

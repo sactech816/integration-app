@@ -48,6 +48,7 @@ type UseDashboardDataReturn = {
     newsletter: number;
     order_form: number;
     funnel: number;
+    webinar: number;
   };
   totalViews: number;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -125,6 +126,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     newsletter: 0,
     order_form: 0,
     funnel: 0,
+    webinar: 0,
   });
   const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
   const [purchases, setPurchases] = useState<string[]>([]);
@@ -425,6 +427,37 @@ export function useDashboardData(): UseDashboardDataReturn {
           }
         }
 
+        // ウェビナーLP取得
+        if (selectedService === 'webinar') {
+          const query = isAdmin
+            ? supabase.from(TABLES.WEBINAR_LPS).select('*').order('created_at', { ascending: false })
+            : supabase.from(TABLES.WEBINAR_LPS).select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+
+          const { data: webinarLps } = await query;
+          if (webinarLps) {
+            allContents.push(
+              ...webinarLps.map((w: any) => {
+                const heroBlock = w.content?.find((b: any) => b.type === 'hero');
+                const wTitle = w.title || heroBlock?.data?.headline || 'ウェビナーLP';
+                return {
+                  id: w.id,
+                  slug: w.slug,
+                  title: wTitle,
+                  description: w.description,
+                  created_at: w.created_at,
+                  updated_at: w.updated_at,
+                  type: 'webinar' as ServiceType,
+                  user_id: w.user_id,
+                  content: w.content,
+                  settings: w.settings,
+                  views_count: 0,
+                  clicks_count: 0,
+                };
+              })
+            );
+          }
+        }
+
         // 作成日時でソート
         allContents.sort((a, b) => {
           const dateA = new Date(a.created_at || 0);
@@ -514,7 +547,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, orderFormResult, funnelResult] = await Promise.all([
+      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, orderFormResult, funnelResult, webinarResult] = await Promise.all([
         // 診断クイズ数
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true })
@@ -561,6 +594,10 @@ export function useDashboardData(): UseDashboardDataReturn {
         isAdmin
           ? supabase.from('funnels').select('id', { count: 'exact', head: true })
           : supabase.from('funnels').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // ウェビナーLP数
+        isAdmin
+          ? supabase.from(TABLES.WEBINAR_LPS).select('id', { count: 'exact', head: true })
+          : supabase.from(TABLES.WEBINAR_LPS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
       ]);
 
       setContentCounts({
@@ -577,6 +614,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         newsletter: newsletterResult.count || 0,
         order_form: orderFormResult.count || 0,
         funnel: funnelResult.count || 0,
+        webinar: webinarResult.count || 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);

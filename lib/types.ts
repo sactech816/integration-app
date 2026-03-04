@@ -5,7 +5,7 @@
 // -------------------------------------------
 // サービスタイプ
 // -------------------------------------------
-export type ServiceType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail' | 'newsletter' | 'order-form' | 'funnel';
+export type ServiceType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail' | 'newsletter' | 'order-form' | 'funnel' | 'webinar';
 
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   quiz: '診断クイズ',
@@ -21,7 +21,8 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
   thumbnail: 'サムネイルメーカー',
   newsletter: 'メルマガ',
   'order-form': '申し込みフォーム',
-  funnel: 'ファネル'
+  funnel: 'ファネル',
+  webinar: 'ウェビナーLP'
 };
 
 export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; text: string }> = {
@@ -38,7 +39,8 @@ export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; 
   thumbnail: { primary: 'pink', bg: 'bg-pink-50', text: 'text-pink-600' },
   newsletter: { primary: 'violet', bg: 'bg-violet-50', text: 'text-violet-600' },
   'order-form': { primary: 'emerald', bg: 'bg-emerald-50', text: 'text-emerald-600' },
-  funnel: { primary: 'amber', bg: 'bg-amber-50', text: 'text-amber-600' }
+  funnel: { primary: 'amber', bg: 'bg-amber-50', text: 'text-amber-600' },
+  webinar: { primary: 'violet', bg: 'bg-violet-50', text: 'text-violet-600' }
 };
 
 // -------------------------------------------
@@ -520,6 +522,29 @@ export type GalleryBlockData = {
   showCaptions?: boolean;
 };
 
+// --- ウェビナーLP専用ブロック型定義 ---
+
+export type SpeakerBlockData = {
+  name: string;
+  title: string;
+  image: string;
+  bio: string;
+};
+
+export type AgendaBlockData = {
+  title?: string;
+  items: { title: string; description?: string }[];
+};
+
+export type DelayedCtaBlockData = {
+  title?: string;
+  buttonText: string;
+  buttonUrl: string;
+  delaySeconds: number;
+  buttonColor?: string;
+  buttonTextColor?: string;
+};
+
 // ブロックの型定義（Union型）
 export type Block = 
   | { id: string; type: 'header'; data: HeaderBlockData }
@@ -557,7 +582,11 @@ export type Block =
   | { id: string; type: 'sales_divider'; data: SalesDividerBlockData }
   | { id: string; type: 'sales_countdown'; data: SalesCountdownBlockData }
   | { id: string; type: 'sales_youtube'; data: SalesYoutubeBlockData }
-  | { id: string; type: 'sales_faq'; data: SalesFaqBlockData };
+  | { id: string; type: 'sales_faq'; data: SalesFaqBlockData }
+  // ウェビナーLP専用ブロック
+  | { id: string; type: 'speaker'; data: SpeakerBlockData }
+  | { id: string; type: 'agenda'; data: AgendaBlockData }
+  | { id: string; type: 'delayed_cta'; data: DelayedCtaBlockData };
 
 // トラッキング設定の型定義
 export type TrackingSettings = {
@@ -609,6 +638,23 @@ export interface BusinessLP {
   updated_at?: string;
   settings?: ProfileSettings;
   template_id?: string;
+}
+
+// -------------------------------------------
+// ウェビナーLP関連の型定義
+// -------------------------------------------
+export interface WebinarLP {
+  id: string;
+  slug: string;
+  title: string;
+  description?: string;
+  content: Block[];
+  user_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  settings?: ProfileSettings;
+  template_id?: string;
+  status?: string;
 }
 
 // -------------------------------------------

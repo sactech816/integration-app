@@ -20,6 +20,7 @@ import {
   DollarSign,
   ClipboardCheck,
   GitBranch,
+  Video,
   LucideIcon,
 } from 'lucide-react';
 
@@ -158,6 +159,15 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: 'ファネル構築',
     color: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' },
     href: '/funnel/dashboard',
+    category: 'marketing',
+  },
+  {
+    id: 'webinar',
+    label: 'ウェビナーLPメーカー',
+    icon: Video,
+    description: 'ウェビナーLP作成',
+    color: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200' },
+    href: '/webinar/editor',
     category: 'marketing',
   },
 

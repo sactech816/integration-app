@@ -27,7 +27,7 @@ export type RelatedItem = {
  * 同じカテゴリの関連コンテンツを取得（現在のコンテンツを除外）
  */
 export async function getRelatedContents(
-  contentType: 'quiz' | 'profile' | 'business' | 'survey' | 'salesletter',
+  contentType: 'quiz' | 'profile' | 'business' | 'survey' | 'salesletter' | 'webinar',
   currentSlug: string,
   limit: number = 4
 ): Promise<{ success: boolean; data?: RelatedItem[]; error?: string }> {
@@ -138,6 +138,30 @@ export async function getRelatedContents(
           type: 'salesletter',
           views_count: s.views_count,
         })));
+      }
+    } else if (contentType === 'webinar') {
+      const { data } = await supabase
+        .from('webinar_lps')
+        .select('slug, title, description, content, settings')
+        .neq('slug', currentSlug)
+        .not('slug', 'is', null)
+        .eq('status', 'published')
+        .limit(limit + 5);
+
+      if (data) {
+        const filtered = data.filter((w: any) => w.settings?.showInPortal !== false);
+        items.push(...filtered.slice(0, limit).map(w => {
+          const heroBlock = w.content?.find((block: { type: string }) =>
+            block.type === 'hero' || block.type === 'hero_fullwidth'
+          );
+          return {
+            slug: w.slug,
+            title: w.title || heroBlock?.data?.headline || 'ウェビナーLP',
+            description: w.description || '',
+            imageUrl: heroBlock?.data?.backgroundImage,
+            type: 'webinar',
+          };
+        }));
       }
     }
 

@@ -175,6 +175,7 @@ function PortalPageContent() {
     newsletter: 0,
     'order-form': 0,
     funnel: 0,
+    webinar: 0,
   });
   const [featuredContents, setFeaturedContents] = useState<FeaturedContentWithDetails[]>([]);
   const [popularContents, setPopularContents] = useState<PopularContent[]>([]);
@@ -241,6 +242,7 @@ function PortalPageContent() {
           newsletter: counts.newsletter || 0,
           'order-form': counts['order-form'] || 0,
           funnel: counts.funnel || 0,
+          webinar: counts.webinar || 0,
         });
       }
     } catch (error) {
