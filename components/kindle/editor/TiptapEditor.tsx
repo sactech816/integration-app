@@ -907,7 +907,7 @@ export const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(({
       )}
 
       {/* エディタ本体 */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-16">
         <EditorContent editor={editor} />
       </div>
 
