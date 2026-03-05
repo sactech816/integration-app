@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, Loader2, Trophy, ExternalLink, MessageCircle, QrCode, RefreshCw, Home, Twitter, Share2, CheckCircle, XCircle, Sparkles, Mail } from 'lucide-react';
 import SEO from './SEO';
@@ -178,7 +178,7 @@ const ResultView = ({ quiz, result, onRetry, onBack, playableQuestions, answers,
   );
 };
 
-const QuizPlayer = ({ quiz, onBack, isPreview = false, onResult }: { quiz: any, onBack?: () => void, isPreview?: boolean, onResult?: (result: any) => void }) => {
+const QuizPlayerInner = ({ quiz, onBack, isPreview = false, onResult }: { quiz: any, onBack?: () => void, isPreview?: boolean, onResult?: (result: any) => void }) => {
   const searchParams = useSearchParams();
   const isFunnel = searchParams.get('funnel') === 'true';
 
@@ -895,6 +895,15 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false, onResult }: { quiz: any, 
         </div>
       </div>
     </div>
+  );
+};
+
+// Suspenseラッパー（Next.js 16でuseSearchParamsにSuspense必須）
+const QuizPlayer = (props: { quiz: any, onBack?: () => void, isPreview?: boolean, onResult?: (result: any) => void }) => {
+  return (
+    <Suspense>
+      <QuizPlayerInner {...props} />
+    </Suspense>
   );
 };
 

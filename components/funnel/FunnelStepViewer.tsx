@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight, Loader2, CheckCircle2, ExternalLink } from 'lucide-react';
@@ -26,7 +26,7 @@ interface Props {
   stepIndex: string;
 }
 
-export default function FunnelStepViewer({ slug, stepIndex }: Props) {
+function FunnelStepViewerInner({ slug, stepIndex }: Props) {
   const [funnel, setFunnel] = useState<FunnelData | null>(null);
   const [loading, setLoading] = useState(true);
   const [sessionId] = useState(() => typeof window !== 'undefined'
@@ -233,5 +233,14 @@ export default function FunnelStepViewer({ slug, stepIndex }: Props) {
         </div>
       )}
     </div>
+  );
+}
+
+// Suspenseラッパー（Next.js 16でuseSearchParamsにSuspense必須）
+export default function FunnelStepViewer(props: Props) {
+  return (
+    <Suspense>
+      <FunnelStepViewerInner {...props} />
+    </Suspense>
   );
 }

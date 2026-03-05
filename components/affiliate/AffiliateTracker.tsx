@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 const COOKIE_NAME = 'makers_ref';
@@ -10,7 +10,16 @@ type Props = {
   serviceType?: string;
 };
 
-export default function AffiliateTracker({ serviceType = 'kdl' }: Props) {
+// Suspenseラッパー（Next.js 16でuseSearchParamsにSuspense必須）
+export default function AffiliateTracker(props: Props) {
+  return (
+    <Suspense>
+      <AffiliateTrackerInner {...props} />
+    </Suspense>
+  );
+}
+
+function AffiliateTrackerInner({ serviceType = 'kdl' }: Props) {
   const searchParams = useSearchParams();
 
   useEffect(() => {
