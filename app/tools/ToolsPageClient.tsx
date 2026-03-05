@@ -48,6 +48,7 @@ type ToolDef = {
   textColor: string;
   features: string[];
   isPro?: boolean;
+  isDemo?: boolean;
   category: ToolCategoryId;
 };
 
@@ -157,7 +158,7 @@ const tools: ToolDef[] = [
     name: 'SNS投稿メーカー',
     description: 'SNS投稿文をAIで自動生成。X・Instagram・Facebook等に最適な投稿を簡単作成。',
     icon: Send,
-    href: '/sns-post/editor',
+    href: '/sns-post',
     color: 'from-amber-500 to-orange-500',
     bgColor: 'bg-amber-50',
     textColor: 'text-amber-600',
@@ -168,18 +169,20 @@ const tools: ToolDef[] = [
     name: 'Kindle執筆体験版',
     description: 'AIでKindle本を執筆体験。書籍執筆の第一歩をサポートします。',
     icon: BookOpen,
-    href: '/demos',
+    href: '/kindle/demo',
     color: 'from-amber-500 to-orange-600',
     bgColor: 'bg-amber-50',
     textColor: 'text-amber-600',
     features: ['AI執筆', '体験版', '書籍作成', '無料'],
+    isDemo: true,
     category: 'writing',
   },
   {
     name: 'ネタ発掘診断',
     description: 'あなたに合った執筆ネタをAIが診断。書籍・ブログのテーマ探しに最適。',
     icon: Lightbulb,
-    href: '/demos',
+    href: '/kindle/discovery/demo',
+    isDemo: true,
     color: 'from-amber-400 to-yellow-500',
     bgColor: 'bg-amber-50',
     textColor: 'text-amber-600',
@@ -479,10 +482,15 @@ export default function ToolsPageClient() {
                   href={tool.href}
                   className={`group relative ${tool.bgColor} rounded-2xl border-2 border-gray-100 p-8 hover:bg-white hover:border-transparent hover:shadow-2xl transition-all duration-300 hover:-translate-y-2`}
                 >
-                  {/* PROバッジ */}
+                  {/* PROバッジ / デモバッジ */}
                   {tool.isPro && (
                     <div className="absolute top-4 right-4 flex items-center gap-0.5 bg-purple-100 text-purple-700 px-2.5 py-1 rounded-full text-xs font-bold">
                       <Crown size={11} className="mr-0.5" />PRO
+                    </div>
+                  )}
+                  {tool.isDemo && !tool.isPro && (
+                    <div className="absolute top-4 right-4 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold">
+                      デモ
                     </div>
                   )}
 

@@ -146,7 +146,7 @@ const serviceConfig = [
     hoverBg: 'hover:bg-amber-50',
     features: ['AI自動生成', 'SNS最適化', 'マルチ対応'],
     category: 'writing' as ServiceCategoryId,
-    href: '/sns-post/editor',
+    href: '/sns-post',
   },
   {
     id: 'kindle' as ServiceType,
@@ -160,7 +160,8 @@ const serviceConfig = [
     hoverBg: 'hover:bg-amber-50',
     features: ['AI執筆', '体験版', '無料'],
     category: 'writing' as ServiceCategoryId,
-    href: '/demos',
+    href: '/kindle/demo',
+    isDemo: true,
   },
   {
     id: 'kindle-discovery' as ServiceType,
@@ -174,7 +175,8 @@ const serviceConfig = [
     hoverBg: 'hover:bg-amber-50',
     features: ['AI診断', 'ネタ発掘', '無料'],
     category: 'writing' as ServiceCategoryId,
-    href: '/demos',
+    href: '/kindle/discovery/demo',
+    isDemo: true,
   },
   // 集客・イベント
   {
@@ -337,10 +339,15 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
 
             const cardContent = (
               <>
-                {/* PROバッジ */}
+                {/* PROバッジ / デモバッジ */}
                 {service.isPro && (
                   <div className="absolute top-3 right-3 flex items-center gap-0.5 bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-bold">
                     <Crown size={10} />PRO
+                  </div>
+                )}
+                {'isDemo' in service && service.isDemo && !service.isPro && (
+                  <div className="absolute top-3 right-3 bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-xs font-bold">
+                    デモ
                   </div>
                 )}
 

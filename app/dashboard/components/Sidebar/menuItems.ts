@@ -146,7 +146,7 @@ export const TOOL_ITEMS: ToolItem[] = [
     icon: BookOpen,
     description: 'AI書籍執筆',
     color: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' },
-    href: '/demos',
+    href: '/kindle/demo',
     category: 'writing',
   },
   {
@@ -155,7 +155,7 @@ export const TOOL_ITEMS: ToolItem[] = [
     icon: Lightbulb,
     description: '執筆ネタ発掘',
     color: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' },
-    href: '/demos',
+    href: '/kindle/discovery/demo',
     category: 'writing',
   },
 
