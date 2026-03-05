@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 // ツール種別の定義
-export type ContentToolType = 
+export type ContentToolType =
   | 'quiz'           // 診断クイズ
   | 'profile'        // プロフィールLP
   | 'business'       // ビジネスLP
@@ -42,31 +42,22 @@ interface ContentFooterProps {
   className?: string;
 }
 
-/**
- * ユーザー作成コンテンツ用の共通フッターコンポーネント
- * 
- * 表示形式:
- * [ツール名]で作成しました  ← https://makers.tokyo/tools へリンク
- * @2026 集客メーカー        ← https://makers.tokyo/ へリンク
- */
-const ContentFooter: React.FC<ContentFooterProps> = ({
+// useSearchParamsを使う内部コンポーネント（Next.js 16でSuspense必須のため分離）
+function ContentFooterInner({
   hideFooter = false,
   toolType,
   variant = 'light',
   className = '',
-}) => {
-  // ファネルモード（iframe内）ではフッター非表示
+}: ContentFooterProps) {
   const searchParams = useSearchParams();
   const isFunnel = searchParams.get('funnel') === 'true';
 
-  // フッター非表示の場合は何も表示しない
   if (hideFooter || isFunnel) {
     return null;
   }
 
   const toolName = TOOL_NAMES[toolType];
 
-  // バリアントに応じたスタイル
   const variantStyles = {
     light: {
       container: 'bg-gray-50 border-t border-gray-100',
@@ -98,7 +89,7 @@ const ContentFooter: React.FC<ContentFooterProps> = ({
       >
         {toolName}で作成しました
       </a>
-      
+
       {/* 2行目: コピーライト */}
       <div className="mt-1">
         <a
@@ -111,6 +102,21 @@ const ContentFooter: React.FC<ContentFooterProps> = ({
         </a>
       </div>
     </footer>
+  );
+}
+
+/**
+ * ユーザー作成コンテンツ用の共通フッターコンポーネント
+ *
+ * 表示形式:
+ * [ツール名]で作成しました  ← https://makers.tokyo/tools へリンク
+ * @2026 集客メーカー        ← https://makers.tokyo/ へリンク
+ */
+const ContentFooter: React.FC<ContentFooterProps> = (props) => {
+  return (
+    <Suspense>
+      <ContentFooterInner {...props} />
+    </Suspense>
   );
 };
 
