@@ -6,8 +6,10 @@ import {
   Send, Save, ArrowLeft, Loader2, Monitor, Pencil,
   ChevronDown, ChevronUp, Settings, FileText, Paintbrush,
   LayoutTemplate, Sparkles, Type, Code, Eye, Mail, AlertTriangle,
-  CheckCircle2, Users, X, SendHorizonal, Plus
+  CheckCircle2, Users, X, SendHorizonal, Plus, UserPlus, UserMinus,
+  Upload, FileUp
 } from 'lucide-react';
+import { isValidEmail } from '@/lib/security/sanitize';
 import { supabase } from '@/lib/supabase';
 import { NEWSLETTER_TEMPLATES, type NewsletterTemplate } from '@/constants/templates/newsletter';
 
@@ -128,6 +130,364 @@ function ViewToggle({
       >
         <Code className="w-3 h-3" />HTML
       </button>
+    </div>
+  );
+}
+
+// 読者管理モーダル
+function SubscriberManageModal({
+  listId, userId, onClose, onCountChange,
+}: {
+  listId: string;
+  userId: string;
+  onClose: () => void;
+  onCountChange: (count: number) => void;
+}) {
+  const [subscribers, setSubscribers] = useState<{ id: string; email: string; name: string | null; status: string; source: string | null; subscribed_at: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [newEmail, setNewEmail] = useState('');
+  const [newName, setNewName] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [tab, setTab] = useState<'list' | 'import'>('list');
+  const [csvData, setCsvData] = useState<{ email: string; name?: string }[]>([]);
+  const [csvFileName, setCsvFileName] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ imported: number; skipped: number; error?: string } | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const SOURCE_LABELS: Record<string, string> = {
+    manual: '手動', csv: 'CSV', quiz: '診断クイズ', profile: 'プロフィール',
+    business: 'ビジネスLP', booking: '予約メーカー', order_form: '申込フォーム',
+    subscribe_form: '登録フォーム', registered_users: '登録ユーザー',
+  };
+
+  const fetchSubscribers = useCallback(async () => {
+    const res = await fetch(`/api/newsletter-maker/lists/${listId}/subscribers?userId=${userId}&status=subscribed`);
+    if (res.ok) {
+      const data = await res.json();
+      setSubscribers(data.subscribers || []);
+      onCountChange((data.subscribers || []).length);
+    }
+    setLoading(false);
+  }, [listId, userId, onCountChange]);
+
+  useEffect(() => { fetchSubscribers(); }, [fetchSubscribers]);
+
+  const handleAdd = async () => {
+    if (!newEmail) return;
+    if (!isValidEmail(newEmail)) { alert('有効なメールアドレスを入力してください'); return; }
+    setAdding(true);
+    const res = await fetch(`/api/newsletter-maker/lists/${listId}/subscribers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, email: newEmail, name: newName || undefined }),
+    });
+    if (res.ok) {
+      setNewEmail('');
+      setNewName('');
+      await fetchSubscribers();
+    }
+    setAdding(false);
+  };
+
+  const handleUnsubscribe = async (email: string) => {
+    if (!confirm(`${email} の配信を停止しますか？`)) return;
+    await fetch(`/api/newsletter-maker/lists/${listId}/subscribers`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, email }),
+    });
+    await fetchSubscribers();
+  };
+
+  // CSVパース
+  const parseCsv = (text: string) => {
+    const lines = text.trim().split('\n');
+    if (lines.length < 2) return [];
+    const header = lines[0].split(',').map((h) => h.trim().replace(/^"|"$/g, '').toLowerCase());
+    const emailIdx = header.findIndex((h) => h === 'email' || h === 'メールアドレス' || h === 'mail');
+    const nameIdx = header.findIndex((h) => h === 'name' || h === '名前' || h === '氏名');
+    if (emailIdx === -1) return [];
+    const result: { email: string; name?: string }[] = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',').map((c) => c.trim().replace(/^"|"$/g, ''));
+      const email = cols[emailIdx];
+      if (email && isValidEmail(email)) {
+        result.push({ email, name: nameIdx >= 0 ? cols[nameIdx] : undefined });
+      }
+    }
+    return result;
+  };
+
+  const handleFileSelect = (file: File) => {
+    setCsvFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      setCsvData(parseCsv(text));
+    };
+    reader.readAsText(file, 'UTF-8');
+  };
+
+  const handleCsvImport = async () => {
+    if (csvData.length === 0) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const res = await fetch(`/api/newsletter-maker/lists/${listId}/import`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, source: 'csv', data: csvData }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setImportResult({ imported: data.imported, skipped: data.skipped });
+        await fetchSubscribers();
+      } else {
+        setImportResult({ imported: 0, skipped: 0, error: data.error || 'インポートに失敗しました' });
+      }
+    } catch {
+      setImportResult({ imported: 0, skipped: 0, error: 'ネットワークエラーが発生しました' });
+    }
+    setImporting(false);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        {/* ヘッダー */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+          <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <Users className="w-5 h-5 text-violet-600" />
+            読者管理
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* タブ */}
+        <div className="flex border-b border-gray-200 flex-shrink-0">
+          <button
+            onClick={() => setTab('list')}
+            className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+              tab === 'list' ? 'text-violet-600 border-b-2 border-violet-600' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            読者一覧・追加
+          </button>
+          <button
+            onClick={() => { setTab('import'); setImportResult(null); }}
+            className={`flex-1 py-3 text-sm font-semibold transition-colors ${
+              tab === 'import' ? 'text-violet-600 border-b-2 border-violet-600' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            CSVインポート
+          </button>
+        </div>
+
+        {/* コンテンツ */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {tab === 'list' && (
+            <div className="space-y-4">
+              {/* 手動追加フォーム */}
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
+                  <UserPlus className="w-4 h-4 text-violet-500" />
+                  読者を追加
+                </p>
+                <div className="grid sm:grid-cols-[1fr_1fr_auto] gap-2">
+                  <input
+                    type="email"
+                    placeholder="メールアドレス"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
+                    className="px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
+                  />
+                  <input
+                    type="text"
+                    placeholder="名前（任意）"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
+                    className="px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
+                  />
+                  <button
+                    onClick={handleAdd}
+                    disabled={adding || !newEmail}
+                    className="px-5 py-3 bg-violet-600 text-white font-semibold rounded-xl hover:bg-violet-700 disabled:opacity-50 transition-all min-h-[44px] shadow-sm"
+                  >
+                    {adding ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : '追加'}
+                  </button>
+                </div>
+              </div>
+
+              {/* 読者一覧 */}
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+                </div>
+              ) : subscribers.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">まだ読者がいません</p>
+                  <p className="text-gray-400 text-xs mt-1">上のフォームから追加するか、CSVインポートを使ってください</p>
+                </div>
+              ) : (
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <p className="text-xs font-semibold text-gray-600">購読中の読者（{subscribers.length}人）</p>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto divide-y divide-gray-100">
+                    {subscribers.map((sub) => (
+                      <div key={sub.id} className="flex items-center px-4 py-2.5 hover:bg-gray-50 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{sub.email}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            {sub.name && <span className="text-xs text-gray-500">{sub.name}</span>}
+                            <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-500 rounded">
+                              {SOURCE_LABELS[sub.source || 'manual'] || sub.source || '手動'}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleUnsubscribe(sub.email)}
+                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+                          title="配信停止"
+                        >
+                          <UserMinus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {tab === 'import' && (
+            <div className="space-y-4">
+              {/* 結果表示 */}
+              {importResult && (
+                <div className={`p-4 border rounded-xl flex items-start gap-3 ${
+                  importResult.error && importResult.imported === 0
+                    ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
+                }`}>
+                  <CheckCircle2 className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                    importResult.error && importResult.imported === 0 ? 'text-red-600' : 'text-green-600'
+                  }`} />
+                  <div>
+                    <p className={`text-sm font-semibold ${
+                      importResult.error && importResult.imported === 0 ? 'text-red-800' : 'text-green-800'
+                    }`}>
+                      {importResult.imported}件をインポートしました
+                    </p>
+                    {importResult.skipped > 0 && (
+                      <p className="text-xs text-green-600 mt-1">{importResult.skipped}件は重複のためスキップ</p>
+                    )}
+                    {importResult.error && (
+                      <p className="text-xs text-red-600 mt-1">エラー: {importResult.error}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <p className="text-sm text-gray-600">
+                CSVファイルから購読者を一括インポートします。<br />
+                <span className="text-gray-500">ヘッダー行に「email」または「メールアドレス」列が必要です。</span>
+              </p>
+
+              {/* ドロップゾーン */}
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragOver(false);
+                  const file = e.dataTransfer.files[0];
+                  if (file && (file.name.endsWith('.csv') || file.type === 'text/csv')) handleFileSelect(file);
+                }}
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+                  dragOver ? 'border-violet-400 bg-violet-50'
+                    : csvFileName ? 'border-green-300 bg-green-50'
+                    : 'border-gray-300 hover:border-violet-300 hover:bg-violet-50'
+                }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileSelect(file); }}
+                />
+                {csvFileName ? (
+                  <>
+                    <FileUp className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-green-700">{csvFileName}</p>
+                    <p className="text-xs text-green-600 mt-1">{csvData.length}件の有効なメールアドレスを検出</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-gray-600">CSVファイルをドラッグ＆ドロップ</p>
+                    <p className="text-xs text-gray-400 mt-1">またはクリックして選択</p>
+                  </>
+                )}
+              </div>
+
+              {/* プレビュー */}
+              {csvData.length > 0 && (
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <p className="text-xs font-semibold text-gray-600">プレビュー（先頭5件）</p>
+                  </div>
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="text-left px-4 py-2 text-xs font-semibold text-gray-600">メールアドレス</th>
+                        <th className="text-left px-4 py-2 text-xs font-semibold text-gray-600">名前</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {csvData.slice(0, 5).map((row, i) => (
+                        <tr key={i}>
+                          <td className="px-4 py-2 text-gray-900">{row.email}</td>
+                          <td className="px-4 py-2 text-gray-600">{row.name || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {csvData.length > 5 && (
+                    <div className="px-4 py-2 bg-gray-50 text-xs text-gray-500 text-center border-t border-gray-100">
+                      ...他 {csvData.length - 5}件
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <button
+                onClick={handleCsvImport}
+                disabled={importing || csvData.length === 0}
+                className="w-full px-4 py-3 bg-violet-600 text-white font-semibold rounded-xl hover:bg-violet-700 disabled:opacity-50 transition-all min-h-[44px]"
+              >
+                {importing ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />インポート中...
+                  </span>
+                ) : (
+                  `${csvData.length}件をインポート`
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -339,7 +699,13 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   // リスト新規作成
   const [showNewList, setShowNewList] = useState(false);
   const [newListName, setNewListName] = useState('');
+  const [newListDescription, setNewListDescription] = useState('');
+  const [newListFromName, setNewListFromName] = useState('');
+  const [newListFromEmail, setNewListFromEmail] = useState('');
   const [creatingList, setCreatingList] = useState(false);
+
+  // 読者管理モーダル
+  const [showSubscriberModal, setShowSubscriberModal] = useState(false);
 
   // 保存完了
   const [savedCampaignId, setSavedCampaignId] = useState<string | null>(campaignId || null);
@@ -440,13 +806,22 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
       const res = await fetch('/api/newsletter-maker/lists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, name: newListName.trim() }),
+        body: JSON.stringify({
+          userId: user.id,
+          name: newListName.trim(),
+          description: newListDescription.trim() || undefined,
+          fromName: newListFromName.trim() || undefined,
+          fromEmail: newListFromEmail.trim() || undefined,
+        }),
       });
       if (res.ok) {
         const data = await res.json();
         setLists((prev) => [data.list, ...prev]);
         setListId(data.list.id);
         setNewListName('');
+        setNewListDescription('');
+        setNewListFromName('');
+        setNewListFromEmail('');
         setShowNewList(false);
       } else {
         const err = await res.json();
@@ -774,28 +1149,67 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                   )}
                   {!isSent && (
                     <>
+                      {/* 読者管理ボタン */}
+                      {listId && (
+                        <button
+                          onClick={() => setShowSubscriberModal(true)}
+                          className="mt-2 inline-flex items-center gap-1.5 px-3 py-2 text-sm bg-violet-50 text-violet-700 font-semibold rounded-lg hover:bg-violet-100 transition-colors min-h-[36px]"
+                        >
+                          <Users className="w-3.5 h-3.5" />
+                          読者管理
+                        </button>
+                      )}
+
+                      {/* リスト新規作成 */}
                       {showNewList ? (
-                        <div className="mt-3 flex items-center gap-2">
+                        <div className="mt-3 bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-semibold text-blue-700 flex items-center gap-1.5">
+                              <Plus className="w-4 h-4" />新しいリストを作成
+                            </p>
+                            <button
+                              onClick={() => { setShowNewList(false); setNewListName(''); setNewListDescription(''); setNewListFromName(''); setNewListFromEmail(''); }}
+                              className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
                           <input
                             type="text"
                             value={newListName}
                             onChange={(e) => setNewListName(e.target.value)}
-                            placeholder="新しいリスト名"
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            onKeyDown={(e) => { if (e.key === 'Enter') handleCreateList(); }}
+                            placeholder="リスト名 *"
+                            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                           />
+                          <input
+                            type="text"
+                            value={newListDescription}
+                            onChange={(e) => setNewListDescription(e.target.value)}
+                            placeholder="説明（任意・購読フォームに表示）"
+                            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              value={newListFromName}
+                              onChange={(e) => setNewListFromName(e.target.value)}
+                              placeholder="差出人名（任意）"
+                              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            />
+                            <input
+                              type="email"
+                              value={newListFromEmail}
+                              onChange={(e) => setNewListFromEmail(e.target.value)}
+                              placeholder="差出人メール（任意）"
+                              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            />
+                          </div>
                           <button
                             onClick={handleCreateList}
                             disabled={creatingList || !newListName.trim()}
-                            className="px-3 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-all min-h-[36px] shadow-sm"
+                            className="w-full px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-all min-h-[44px] shadow-sm flex items-center justify-center gap-2"
                           >
-                            {creatingList ? <Loader2 className="w-4 h-4 animate-spin" /> : '作成'}
-                          </button>
-                          <button
-                            onClick={() => { setShowNewList(false); setNewListName(''); }}
-                            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                          >
-                            <X className="w-4 h-4" />
+                            {creatingList ? <><Loader2 className="w-4 h-4 animate-spin" />作成中...</> : <><Plus className="w-4 h-4" />リストを作成</>}
                           </button>
                         </div>
                       ) : (
@@ -1081,6 +1495,16 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
         {/* 右パネル用スペーサー */}
         <div className="hidden lg:block lg:w-1/2 lg:flex-shrink-0 bg-gray-50" />
       </div>
+
+      {/* 読者管理モーダル */}
+      {showSubscriberModal && listId && user && (
+        <SubscriberManageModal
+          listId={listId}
+          userId={user.id}
+          onClose={() => setShowSubscriberModal(false)}
+          onCountChange={(count) => setSubscriberCount(count)}
+        />
+      )}
 
       {/* 送信確認モーダル */}
       {showSendConfirm && (
