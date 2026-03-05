@@ -7,7 +7,7 @@ import {
   ChevronDown, ChevronUp, Settings, FileText, Paintbrush,
   LayoutTemplate, Sparkles, Type, Code, Eye, Mail, AlertTriangle,
   CheckCircle2, Users, X, SendHorizonal, Plus, UserPlus, UserMinus,
-  Upload, FileUp
+  Upload, FileUp, Link2, Trash2
 } from 'lucide-react';
 import { isValidEmail } from '@/lib/security/sanitize';
 import { supabase } from '@/lib/supabase';
@@ -707,6 +707,9 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   // 読者管理モーダル
   const [showSubscriberModal, setShowSubscriberModal] = useState(false);
 
+  // CTAリンク（任意で複数追加可能）
+  const [ctaLinks, setCtaLinks] = useState<{ label: string; url: string }[]>([]);
+
   // 保存完了
   const [savedCampaignId, setSavedCampaignId] = useState<string | null>(campaignId || null);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -847,11 +850,27 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
     }
   };
 
+  // CTAリンクをHTMLに適用（保存・送信時）
+  const applyCtaLinks = useCallback((html: string) => {
+    if (ctaLinks.length === 0) return html;
+    let linkIndex = 0;
+    return html.replace(/href="#"/g, () => {
+      if (linkIndex < ctaLinks.length && ctaLinks[linkIndex].url) {
+        const url = ctaLinks[linkIndex].url;
+        linkIndex++;
+        return `href="${url}"`;
+      }
+      linkIndex++;
+      return 'href="#"';
+    });
+  }, [ctaLinks]);
+
   const handleSave = async () => {
     if (!user || !subject || !listId) return;
     setSaving(true);
-    const textContent = htmlToPlainText(getFullHtml());
-    const body = { userId: user.id, listId, subject, previewText, htmlContent: getFullHtml(), textContent };
+    const finalHtml = applyCtaLinks(getFullHtml());
+    const textContent = htmlToPlainText(finalHtml);
+    const body = { userId: user.id, listId, subject, previewText, htmlContent: finalHtml, textContent };
     if (savedCampaignId) {
       await fetch(`/api/newsletter-maker/campaigns/${savedCampaignId}`, {
         method: 'PATCH',
@@ -881,11 +900,12 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
     if (!user || !savedCampaignId) return;
     setSending(true);
     // 保存してから送信
-    const textContent = htmlToPlainText(getFullHtml());
+    const finalHtml = applyCtaLinks(getFullHtml());
+    const textContent = htmlToPlainText(finalHtml);
     await fetch(`/api/newsletter-maker/campaigns/${savedCampaignId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.id, listId, subject, previewText, htmlContent: getFullHtml(), textContent }),
+      body: JSON.stringify({ userId: user.id, listId, subject, previewText, htmlContent: finalHtml, textContent }),
     });
 
     const res = await fetch(`/api/newsletter-maker/campaigns/${savedCampaignId}/send`, {
@@ -925,20 +945,21 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   const replacePlaceholders = useCallback((html: string) => {
     const listName = lists.find((l) => l.id === listId)?.name || 'ニュースレター';
     const today = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
-    return html
+    const result = html
       .replace(/\{\{ニュースレター名\}\}/g, listName)
       .replace(/\{\{送信者名\}\}/g, listName)
       .replace(/\{\{日付\}\}/g, today);
-  }, [lists, listId]);
+    return applyCtaLinks(result);
+  }, [lists, listId, applyCtaLinks]);
 
-  // contentEditable → state 同期（onBlur時）
-  const handleHeaderBlur = useCallback(() => {
+  // contentEditable → state 同期（onInput でリアルタイム更新）
+  const handleHeaderInput = useCallback(() => {
     if (headerRef.current) setHeaderHtml(headerRef.current.innerHTML);
   }, []);
-  const handleBodyBlur = useCallback(() => {
+  const handleBodyInput = useCallback(() => {
     if (bodyRef.current) setHtmlContent(bodyRef.current.innerHTML);
   }, []);
-  const handleFooterBlur = useCallback(() => {
+  const handleFooterInput = useCallback(() => {
     if (footerRef.current) setFooterHtml(footerRef.current.innerHTML);
   }, []);
 
@@ -1265,6 +1286,61 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100"
                   />
                 </div>
+
+                {/* CTAリンク設定 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <span className="flex items-center gap-1.5">
+                      <Link2 className="w-4 h-4" />
+                      リンクURL（任意）
+                    </span>
+                  </label>
+                  <p className="text-xs text-gray-500 mb-3">テンプレートのボタンに設定するURLです。上から順にボタンに適用されます。</p>
+                  {ctaLinks.map((link, index) => (
+                    <div key={index} className="flex gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={link.label}
+                        onChange={(e) => {
+                          const updated = [...ctaLinks];
+                          updated[index] = { ...updated[index], label: e.target.value };
+                          setCtaLinks(updated);
+                        }}
+                        disabled={isSent}
+                        placeholder="ラベル（例: 詳しくはこちら）"
+                        className="w-1/3 px-3 py-2.5 border border-gray-300 rounded-xl text-gray-900 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100"
+                      />
+                      <input
+                        type="url"
+                        value={link.url}
+                        onChange={(e) => {
+                          const updated = [...ctaLinks];
+                          updated[index] = { ...updated[index], url: e.target.value };
+                          setCtaLinks(updated);
+                        }}
+                        disabled={isSent}
+                        placeholder="https://example.com"
+                        className="flex-1 px-3 py-2.5 border border-gray-300 rounded-xl text-gray-900 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100"
+                      />
+                      {!isSent && (
+                        <button
+                          onClick={() => setCtaLinks(ctaLinks.filter((_, i) => i !== index))}
+                          className="p-2 text-gray-400 hover:text-red-500 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {!isSent && (
+                    <button
+                      onClick={() => setCtaLinks([...ctaLinks, { label: '', url: '' }])}
+                      className="inline-flex items-center gap-1 text-xs text-blue-600 font-semibold hover:text-blue-700 transition-colors mt-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" />リンクを追加
+                    </button>
+                  )}
+                </div>
               </div>
             </Section>
 
@@ -1346,7 +1422,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                         ref={headerRef}
                         contentEditable={!isSent}
                         suppressContentEditableWarning
-                        onBlur={handleHeaderBlur}
+                        onInput={handleHeaderInput}
                         className="min-h-[80px] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-inset rounded-xl"
                         dangerouslySetInnerHTML={{ __html: headerHtml }}
                       />
@@ -1397,7 +1473,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                         ref={bodyRef}
                         contentEditable={!isSent}
                         suppressContentEditableWarning
-                        onBlur={handleBodyBlur}
+                        onInput={handleBodyInput}
                         className="min-h-[200px] p-4 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-inset rounded-xl"
                         dangerouslySetInnerHTML={{ __html: htmlContent.startsWith('<') ? htmlContent : textToHtml(htmlContent) }}
                       />
@@ -1439,7 +1515,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                         ref={footerRef}
                         contentEditable={!isSent}
                         suppressContentEditableWarning
-                        onBlur={handleFooterBlur}
+                        onInput={handleFooterInput}
                         className="min-h-[80px] focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-inset rounded-xl"
                         dangerouslySetInnerHTML={{ __html: footerHtml }}
                       />

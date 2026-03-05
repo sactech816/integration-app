@@ -190,7 +190,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState(0);
   const [paymentType, setPaymentType] = useState<'free' | 'one_time' | 'subscription'>('free');
-  const [paymentProvider, setPaymentProvider] = useState<'stripe' | 'univapay' | ''>('');
+  const [paymentProvider, setPaymentProvider] = useState<'stripe' | ''>('stripe');
   const [stripePriceId, setStripePriceId] = useState('');
   const [successMessage, setSuccessMessage] = useState('お申し込みありがとうございます。');
   const [status, setStatus] = useState('draft');
@@ -235,7 +235,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       const f = data.form;
       setTitle(f.title); setDescription(f.description || '');
       setPrice(f.price || 0); setPaymentType(f.payment_type || 'free');
-      setPaymentProvider(f.payment_provider || ''); setStripePriceId(f.stripe_price_id || '');
+      setPaymentProvider('stripe'); setStripePriceId(f.stripe_price_id || '');
       setSuccessMessage(f.success_message || ''); setStatus(f.status); setSlug(f.slug);
       if (f.reply_email_enabled !== undefined) setReplyEmailEnabled(f.reply_email_enabled);
       if (f.reply_email_subject) setReplyEmailSubject(f.reply_email_subject);
@@ -629,29 +629,17 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                       <input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} min={0} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900" />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">決済プロバイダ</label>
-                      <select value={paymentProvider} onChange={(e) => setPaymentProvider(e.target.value as 'stripe' | 'univapay' | '')} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900">
-                        <option value="">選択してください</option>
-                        <option value="stripe">Stripe</option>
-                        <option value="univapay">UnivaPay</option>
-                      </select>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Stripe Price ID（任意）</label>
+                      <input type="text" value={stripePriceId} onChange={(e) => setStripePriceId(e.target.value)} placeholder="price_xxx" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 text-sm placeholder:text-gray-400" />
+                      <p className="text-xs text-gray-500 mt-1">空欄の場合は金額から自動生成します</p>
                     </div>
-                    {paymentProvider === 'stripe' && (
-                      <>
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">Stripe Price ID（任意）</label>
-                          <input type="text" value={stripePriceId} onChange={(e) => setStripePriceId(e.target.value)} placeholder="price_xxx" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 text-sm placeholder:text-gray-400" />
-                          <p className="text-xs text-gray-500 mt-1">空欄の場合は金額から自動生成します</p>
-                        </div>
-                        {paymentType === 'subscription' && (
-                          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                            <p className="text-xs text-amber-800 font-semibold">サブスクリプションにはStripe Price IDが必須です。</p>
-                            <p className="text-xs text-amber-700 mt-1">Stripeダッシュボードで定期課金用のPrice IDを作成し、上のフィールドに入力してください。</p>
-                          </div>
-                        )}
-                        {userId && <StripeConnectStatus userId={userId} />}
-                      </>
+                    {paymentType === 'subscription' && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                        <p className="text-xs text-amber-800 font-semibold">サブスクリプションにはStripe Price IDが必須です。</p>
+                        <p className="text-xs text-amber-700 mt-1">Stripeダッシュボードで定期課金用のPrice IDを作成し、上のフィールドに入力してください。</p>
+                      </div>
                     )}
+                    {userId && <StripeConnectStatus userId={userId} />}
                   </>
                 )}
               </div>
