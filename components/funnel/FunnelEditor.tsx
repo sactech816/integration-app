@@ -345,9 +345,13 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
       const res = await fetch('/api/funnel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (res.ok) {
         const data = await res.json();
+        // ステップ保存 + 公開状態にする（公開URLがすぐ使えるように）
         if (steps.length > 0) {
-          await fetch(`/api/funnel/${data.funnel.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, steps }) });
+          await fetch(`/api/funnel/${data.funnel.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, steps, status: 'active' }) });
+        } else {
+          await fetch(`/api/funnel/${data.funnel.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, status: 'active' }) });
         }
+        setStatus('active');
         setCreatedSlug(data.funnel.slug);
         setSlug(data.funnel.slug);
         setSavedFunnelId(data.funnel.id);
