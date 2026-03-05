@@ -169,7 +169,7 @@ export default function OrderFormLandingPage() {
           <div className="bg-gradient-to-br from-emerald-600 to-green-700 rounded-3xl p-10 sm:p-14 text-center shadow-2xl">
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">決済付きフォームで申し込みを効率化</h2>
             <p className="text-emerald-100 mb-8 text-lg">PROプランで申し込みフォーム作成＋決済機能が使えます。</p>
-            <Link href="/order-form/dashboard" className="inline-flex items-center gap-2 px-10 py-4 bg-white text-emerald-700 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
+            <Link href="/order-form/new" className="inline-flex items-center gap-2 px-10 py-4 bg-white text-emerald-700 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
               <FileText className="w-5 h-5" />フォームを作成する
             </Link>
           </div>

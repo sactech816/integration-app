@@ -120,13 +120,13 @@ const Footer: React.FC<FooterProps> = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/newsletter/dashboard" className="flex items-center gap-2 hover:text-white transition-colors group">
+                <Link href="/newsletter/campaigns/new" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Mail size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   メルマガメーカー
                 </Link>
               </li>
               <li>
-                <Link href="/funnel/dashboard" className="flex items-center gap-2 hover:text-white transition-colors group">
+                <Link href="/funnel/new" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <GitBranch size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   ファネルメーカー
                 </Link>
@@ -136,7 +136,7 @@ const Footer: React.FC<FooterProps> = () => {
             <h3 className="text-white font-bold mt-6 mb-3 text-sm uppercase tracking-wider">収益化・販売</h3>
             <ul className="space-y-3 text-sm">
               <li>
-                <Link href="/order-form/dashboard" className="flex items-center gap-2 hover:text-white transition-colors group">
+                <Link href="/order-form/new" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <ClipboardCheck size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   フォームメーカー
                 </Link>

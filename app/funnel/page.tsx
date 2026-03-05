@@ -166,7 +166,7 @@ export default function FunnelLandingPage() {
           <div className="bg-gradient-to-br from-amber-600 to-orange-700 rounded-3xl p-10 sm:p-14 text-center shadow-2xl">
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">集客ファネルでCVRを最大化</h2>
             <p className="text-amber-100 mb-8 text-lg">PROプランで利用可能。既存ページを繋いでファネルを構築し、データに基づいた改善を。</p>
-            <Link href="/funnel/dashboard" className="inline-flex items-center gap-2 px-10 py-4 bg-white text-amber-700 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
+            <Link href="/funnel/new" className="inline-flex items-center gap-2 px-10 py-4 bg-white text-amber-700 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
               <GitBranch className="w-5 h-5" />ファネルを作成する
             </Link>
           </div>

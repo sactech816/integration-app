@@ -295,85 +295,107 @@ export default function WeeklyCalendar({
                       }
                     }}
                   >
-                    {/* 既存の枠を表示 */}
-                    {cellSlots.map((slot) => (
-                      <div
-                        key={slot.id}
-                        className={`group relative mb-1 p-1.5 rounded text-xs font-medium cursor-pointer ${
-                          menuType === 'adjustment'
-                            ? 'bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200'
-                            : slot.is_available
-                              ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200'
-                              : 'bg-red-100 text-red-700 border border-red-200 hover:bg-red-200'
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // 編集モードではスロット編集モーダルを開く
-                          if (!readOnly && onSlotEdit) {
-                            onSlotEdit(slot);
-                          }
-                          // readOnlyモードでも、空きのある枠はクリック可能（予約画面用）
-                          if (readOnly && slot.is_available && onSlotClick) {
-                            onSlotClick(day, hour);
-                          }
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span>
-                            {new Date(slot.start_time).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                          {!readOnly && onSlotDelete && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onSlotDelete(slot.id, false);
-                              }}
-                              className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-200 rounded transition-all"
-                              title="削除"
-                            >
-                              <Trash2 size={12} className="text-red-600" />
-                            </button>
-                          )}
-                        </div>
-                        {menuType === 'reservation' && (
-                          <div className="text-[10px] opacity-75">
-                            {slot.current_bookings}/{slot.max_capacity}
+                    {/* 既存の枠を表示（同時刻のスロットをグループ化） */}
+                    {(() => {
+                      // 同じ開始時刻のスロットをグループ化
+                      const grouped: Record<string, BookingSlotWithAvailability[]> = {};
+                      cellSlots.forEach((slot) => {
+                        const timeKey = new Date(slot.start_time).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+                        if (!grouped[timeKey]) grouped[timeKey] = [];
+                        grouped[timeKey].push(slot);
+                      });
+
+                      return Object.entries(grouped).map(([timeKey, groupSlots]) => {
+                        const totalCapacity = groupSlots.reduce((sum, s) => sum + s.max_capacity, 0);
+                        const totalBookings = groupSlots.reduce((sum, s) => sum + s.current_bookings, 0);
+                        const hasAvailable = groupSlots.some(s => s.is_available);
+                        const firstSlot = groupSlots[0];
+
+                        return (
+                          <div
+                            key={firstSlot.id}
+                            className={`group relative mb-1 p-1.5 rounded text-xs font-medium cursor-pointer ${
+                              menuType === 'adjustment'
+                                ? 'bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200'
+                                : hasAvailable
+                                  ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200'
+                                  : 'bg-red-100 text-red-700 border border-red-200 hover:bg-red-200'
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!readOnly && onSlotEdit) {
+                                onSlotEdit(firstSlot);
+                              }
+                              if (readOnly && hasAvailable && onSlotClick) {
+                                onSlotClick(day, hour);
+                              }
+                            }}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span>{timeKey}</span>
+                              {!readOnly && onSlotDelete && groupSlots.length === 1 && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onSlotDelete(firstSlot.id, false);
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-200 rounded transition-all"
+                                  title="削除"
+                                >
+                                  <Trash2 size={12} className="text-red-600" />
+                                </button>
+                              )}
+                            </div>
+                            {menuType === 'reservation' && (
+                              <div className="text-[10px] opacity-75">
+                                {totalBookings}/{totalCapacity}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    ))}
+                        );
+                      });
+                    })()}
                     
-                    {/* ローカル（未保存）の枠を表示 */}
-                    {cellLocalSlots.map((slot) => (
-                      <div
-                        key={slot.id}
-                        className={`group relative mb-1 p-1.5 rounded text-xs font-medium border-2 border-dashed ${
-                          menuType === 'adjustment'
-                            ? 'bg-purple-50 text-purple-600 border-purple-300'
-                            : 'bg-blue-50 text-blue-600 border-blue-300'
-                        }`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span>
-                            {slot.startHour.toString().padStart(2, '0')}:{slot.startMinute.toString().padStart(2, '0')}
-                          </span>
-                          {!readOnly && onSlotDelete && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onSlotDelete(slot.id, true);
-                              }}
-                              className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-200 rounded transition-all"
-                              title="削除"
-                            >
-                              <Trash2 size={12} className="text-red-600" />
-                            </button>
-                          )}
+                    {/* ローカル（未保存）の枠を表示（同時刻をグループ化） */}
+                    {(() => {
+                      const localGrouped: Record<string, LocalSlot[]> = {};
+                      cellLocalSlots.forEach((slot) => {
+                        const timeKey = `${slot.startHour.toString().padStart(2, '0')}:${slot.startMinute.toString().padStart(2, '0')}`;
+                        if (!localGrouped[timeKey]) localGrouped[timeKey] = [];
+                        localGrouped[timeKey].push(slot);
+                      });
+
+                      return Object.entries(localGrouped).map(([timeKey, groupSlots]) => (
+                        <div
+                          key={groupSlots[0].id}
+                          className={`group relative mb-1 p-1.5 rounded text-xs font-medium border-2 border-dashed ${
+                            menuType === 'adjustment'
+                              ? 'bg-purple-50 text-purple-600 border-purple-300'
+                              : 'bg-blue-50 text-blue-600 border-blue-300'
+                          }`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span>{timeKey}</span>
+                            {!readOnly && onSlotDelete && groupSlots.length === 1 && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onSlotDelete(groupSlots[0].id, true);
+                                }}
+                                className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-200 rounded transition-all"
+                                title="削除"
+                              >
+                                <Trash2 size={12} className="text-red-600" />
+                              </button>
+                            )}
+                          </div>
+                          <div className="text-[10px] opacity-75">
+                            未保存{groupSlots.length > 1 ? ` x${groupSlots.length}` : ''}
+                          </div>
                         </div>
-                        <div className="text-[10px] opacity-75">未保存</div>
-                      </div>
-                    ))}
+                      ));
+                    })()}
                     
                     {/* 空セルにプラスアイコン表示（ホバー時） */}
                     {!isPast && !readOnly && cellSlots.length === 0 && cellLocalSlots.length === 0 && (

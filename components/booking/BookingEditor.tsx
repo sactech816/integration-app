@@ -857,7 +857,7 @@ export default function BookingEditor({
               {/* 保存ボタン */}
               <button
                 type="submit"
-                disabled={submitting || !formData.title.trim() || (mode === 'create' && localSlots.length === 0)}
+                disabled={submitting}
                 className={`w-full py-4 text-white rounded-xl font-bold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg ${
                   formData.type === 'adjustment'
                     ? 'bg-purple-600 hover:bg-purple-700 shadow-purple-200'

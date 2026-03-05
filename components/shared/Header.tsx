@@ -291,14 +291,14 @@ const Header: React.FC<HeaderProps> = ({
                               <div className="p-1 rounded-md bg-cyan-50 shrink-0"><ClipboardList size={14} className="text-cyan-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">アンケート</span>
                             </Link>
-                            <Link href="/newsletter/dashboard" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-cyan-50 transition-colors">
+                            <Link href="/newsletter/campaigns/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-cyan-50 transition-colors">
                               <div className="p-1 rounded-md bg-cyan-50 shrink-0"><Mail size={14} className="text-cyan-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
                                 メルマガ
                                 <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full ml-1">PRO</span>
                               </span>
                             </Link>
-                            <Link href="/funnel/dashboard" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-cyan-50 transition-colors">
+                            <Link href="/funnel/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-cyan-50 transition-colors">
                               <div className="p-1 rounded-md bg-cyan-50 shrink-0"><GitBranch size={14} className="text-cyan-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ファネル</span>
                             </Link>
@@ -309,7 +309,7 @@ const Header: React.FC<HeaderProps> = ({
                         <div>
                           <p className="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-2">収益化・販売</p>
                           <div className="space-y-0.5">
-                            <Link href="/order-form/dashboard" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-purple-50 transition-colors">
+                            <Link href="/order-form/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-purple-50 transition-colors">
                               <div className="p-1 rounded-md bg-purple-50 shrink-0"><ClipboardCheck size={14} className="text-purple-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
                                 フォーム

@@ -193,7 +193,7 @@ export const TOOL_ITEMS: ToolItem[] = [
     icon: Mail,
     description: 'メルマガ配信',
     color: { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
-    href: '/newsletter/dashboard',
+    href: '/newsletter/campaigns/new',
     category: 'marketing',
   },
   {
@@ -202,7 +202,7 @@ export const TOOL_ITEMS: ToolItem[] = [
     icon: GitBranch,
     description: 'ファネル構築',
     color: { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
-    href: '/funnel/dashboard',
+    href: '/funnel/new',
     category: 'marketing',
   },
 
@@ -213,7 +213,7 @@ export const TOOL_ITEMS: ToolItem[] = [
     icon: ClipboardCheck,
     description: '申し込み・決済フォーム',
     color: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200' },
-    href: '/order-form/dashboard',
+    href: '/order-form/new',
     category: 'monetization',
   },
   {

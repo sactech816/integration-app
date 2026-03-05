@@ -161,8 +161,8 @@ export default function NewsletterLandingPage() {
               ))}
             </div>
             <div className="text-center mt-12">
-              <Link href="/newsletter/dashboard" className="inline-flex items-center gap-2 px-8 py-4 bg-violet-600 hover:bg-violet-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
-                <Mail className="w-5 h-5" />メルマガを始める（PROプラン）
+              <Link href="/newsletter/campaigns/new" className="inline-flex items-center gap-2 px-8 py-4 bg-violet-600 hover:bg-violet-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
+                <Mail className="w-5 h-5" />メルマガを作成する（PROプラン）
               </Link>
             </div>
           </div>
@@ -214,8 +214,8 @@ export default function NewsletterLandingPage() {
           <div className="bg-gradient-to-br from-violet-600 to-purple-700 rounded-3xl p-10 sm:p-14 text-center shadow-2xl">
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">メルマガで集客を加速しよう</h2>
             <p className="text-violet-100 mb-8 text-lg">PROプランに含まれる機能です。読者リスト作成から一斉配信まで簡単に始められます。</p>
-            <Link href="/newsletter/dashboard" className="inline-flex items-center gap-2 px-10 py-4 bg-white text-violet-700 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
-              <Mail className="w-5 h-5" />メルマガを始める
+            <Link href="/newsletter/campaigns/new" className="inline-flex items-center gap-2 px-10 py-4 bg-white text-violet-700 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
+              <Mail className="w-5 h-5" />メルマガを作成する
             </Link>
             <p className="text-violet-200 text-sm mt-4">PROプラン（月額3,980円）で利用可能</p>
           </div>
