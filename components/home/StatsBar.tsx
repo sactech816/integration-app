@@ -7,6 +7,7 @@ export default function StatsBar() {
   const [totalCounts, setTotalCounts] = useState<Record<string, number>>({
     all: 0, quiz: 0, profile: 0, business: 0, survey: 0,
     booking: 0, attendance: 0, salesletter: 0, gamification: 0, onboarding: 0,
+    thumbnail: 0, newsletter: 0, order_form: 0, funnel: 0, webinar: 0, sns_post: 0,
   });
 
   const fetchTotalCounts = useCallback(async () => {
@@ -32,6 +33,12 @@ export default function StatsBar() {
           salesletter: counts.salesletter || 0,
           gamification: counts.game || 0,
           onboarding: counts.onboarding || 0,
+          thumbnail: counts.thumbnail || 0,
+          newsletter: counts.newsletter || 0,
+          order_form: counts['order-form'] || 0,
+          funnel: counts.funnel || 0,
+          webinar: counts.webinar || 0,
+          sns_post: counts['sns-post'] || 0,
         });
       }
     } catch (error) { console.error('Count fetch error:', error); }
@@ -60,6 +67,12 @@ export default function StatsBar() {
             { label: 'セールス', count: totalCounts.salesletter },
             { label: 'ゲーム', count: totalCounts.gamification },
             { label: 'ガイド', count: totalCounts.onboarding },
+            { label: 'サムネ', count: totalCounts.thumbnail },
+            { label: 'メルマガ', count: totalCounts.newsletter },
+            { label: '申込', count: totalCounts.order_form },
+            { label: 'ファネル', count: totalCounts.funnel },
+            { label: 'ウェビナー', count: totalCounts.webinar },
+            { label: 'SNS', count: totalCounts.sns_post },
           ].map((item, i) => (
             <div key={i} className="text-center">
               <div className="text-lg sm:text-xl font-bold">{item.count.toLocaleString()}</div>

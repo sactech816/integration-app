@@ -691,6 +691,29 @@ export async function getBookingMenus(userId: string): Promise<BookingMenu[]> {
 }
 
 /**
+ * 公開用: 同一ユーザーの有効な予約メニュー一覧を取得
+ */
+export async function getPublicBookingMenusByUser(userId: string): Promise<BookingMenu[]> {
+  const supabase = getSupabaseServer();
+  if (!supabase || !userId) return [];
+
+  const { data, error } = await supabase
+    .from('booking_menus')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .eq('type', 'reservation')
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('[Booking] Get public menus error:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
+/**
  * 予約メニューを取得（単一）
  */
 export async function getBookingMenu(menuId: string): Promise<BookingMenu | null> {

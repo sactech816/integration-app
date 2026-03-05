@@ -435,6 +435,15 @@ export default function PublicBookingPage() {
                 ))}
               </div>
             )}
+            {menu?.user_id && menu?.type === 'reservation' && (
+              <Link
+                href={`/booking/plans/${menu.user_id}`}
+                className="inline-flex items-center gap-1 px-3 py-1 bg-green-50 border border-green-200 text-green-700 rounded-full text-xs font-semibold hover:bg-green-100 transition-colors"
+              >
+                <CalendarCheck size={14} />
+                他のメニューを見る
+              </Link>
+            )}
           </div>
         </div>
       </header>

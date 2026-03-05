@@ -258,11 +258,6 @@ function DashboardContent() {
 
     // サービス選択の場合はselectedServiceも更新
     if (['quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'sns-post'].includes(itemId)) {
-      // サムネイルはPro限定チェック
-      if (itemId === 'thumbnail' && !isAdmin && !hasMakersProAccess) {
-        router.push('/pricing');
-        return;
-      }
       setSelectedService(itemId as ServiceType);
       fetchContents(itemId as ServiceType);
     }
@@ -287,12 +282,8 @@ function DashboardContent() {
       return;
     }
 
-    // 申し込みフォームはPro限定チェック
+    // 申し込みフォームはダッシュボード内で表示（全ユーザー利用可能、無料は手数料5%）
     if (itemId === 'order-form') {
-      if (!isAdmin && !hasMakersProAccess) {
-        router.push('/pricing');
-        return;
-      }
       setActiveView('order-form' as ActiveView);
       return;
     }

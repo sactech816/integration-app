@@ -32,9 +32,11 @@ function formatRelativeDate(dateStr: string): string {
 export default function FunnelList({
   userId,
   isAdmin,
+  hasMakersProAccess = false,
 }: {
   userId: string;
   isAdmin: boolean;
+  hasMakersProAccess?: boolean;
 }) {
   const router = useRouter();
   const [funnels, setFunnels] = useState<Funnel[]>([]);
@@ -79,6 +81,8 @@ export default function FunnelList({
 
   const activeCount = funnels.filter((f) => f.status === 'active').length;
   const totalSteps = funnels.reduce((sum, f) => sum + f.step_count, 0);
+  const funnelLimit = (isAdmin || hasMakersProAccess) ? -1 : 1;
+  const isAtLimit = funnelLimit !== -1 && funnels.length >= funnelLimit;
 
   return (
     <div className="space-y-6">
@@ -93,12 +97,21 @@ export default function FunnelList({
           </h2>
           <p className="text-gray-600 mt-1 text-sm">集客ファネルの作成・管理</p>
         </div>
-        <Link
-          href="/funnel/new"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all min-h-[44px]"
-        >
-          <Plus className="w-4 h-4" />新しいファネル
-        </Link>
+        {isAtLimit ? (
+          <Link
+            href="/pricing"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-400 text-white font-semibold rounded-xl shadow-md transition-all min-h-[44px]"
+          >
+            <Plus className="w-4 h-4" />上限に達しました（Pro で無制限）
+          </Link>
+        ) : (
+          <Link
+            href="/funnel/new"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all min-h-[44px]"
+          >
+            <Plus className="w-4 h-4" />新しいファネル
+          </Link>
+        )}
       </div>
 
       {/* 統計カード */}

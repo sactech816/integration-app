@@ -665,6 +665,30 @@ function PortalPageContent() {
                 <div className="text-2xl sm:text-3xl font-black">{totalCounts.onboarding.toLocaleString()}</div>
                 <div className="text-xs sm:text-sm opacity-80">ガイド</div>
               </div>
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{totalCounts.thumbnail.toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">サムネ</div>
+              </div>
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{totalCounts.newsletter.toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">メルマガ</div>
+              </div>
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{(totalCounts['order-form'] || 0).toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">申込</div>
+              </div>
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{totalCounts.funnel.toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">ファネル</div>
+              </div>
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{totalCounts.webinar.toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">ウェビナー</div>
+              </div>
+              <div className="min-w-[60px]">
+                <div className="text-2xl sm:text-3xl font-black">{(totalCounts['sns-post'] || 0).toLocaleString()}</div>
+                <div className="text-xs sm:text-sm opacity-80">SNS</div>
+              </div>
             </div>
           </div>
         </div>

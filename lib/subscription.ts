@@ -673,6 +673,9 @@ export interface MakersPlanDefinition {
   gamificationLimit: number;
   newsletterMonthlyLimit: number; // 月間メルマガ送信数制限（-1 = 無制限）
   newsletterListLimit: number;    // メルマガリスト作成数制限（-1 = 無制限）
+  funnelLimit: number;            // ファネル作成数制限（-1 = 無制限）
+  entertainmentQuizLimit: number; // エンタメ診断作成数制限（-1 = 無制限）
+  thumbnailLimit: number;         // サムネイル作成数制限（-1 = 無制限）
   features: string[];
 }
 
@@ -696,6 +699,9 @@ export const MAKERS_PLAN_DEFINITIONS: Record<MakersPlanTier, MakersPlanDefinitio
     gamificationLimit: 0,
     newsletterMonthlyLimit: 0,
     newsletterListLimit: 0,
+    funnelLimit: 0,
+    entertainmentQuizLimit: 0,
+    thumbnailLimit: 0,
     features: ['新規作成', 'ポータル掲載', 'URL発行'],
   },
   free: {
@@ -715,9 +721,12 @@ export const MAKERS_PLAN_DEFINITIONS: Record<MakersPlanTier, MakersPlanDefinitio
     canUseAffiliate: false,
     aiDailyLimit: 0,
     gamificationLimit: 0,
-    newsletterMonthlyLimit: 100,
+    newsletterMonthlyLimit: 30,
     newsletterListLimit: 1,
-    features: ['新規作成', 'ポータル掲載', 'URL発行', '編集・更新', 'アフィリエイト機能', 'メルマガ（月100通）'],
+    funnelLimit: 1,
+    entertainmentQuizLimit: 1,
+    thumbnailLimit: 1,
+    features: ['新規作成', 'ポータル掲載', 'URL発行', '編集・更新', 'アフィリエイト機能', 'メルマガ（月30通）'],
   },
   pro: {
     id: 'pro',
@@ -738,6 +747,9 @@ export const MAKERS_PLAN_DEFINITIONS: Record<MakersPlanTier, MakersPlanDefinitio
     gamificationLimit: -1, // 無制限
     newsletterMonthlyLimit: 1000,
     newsletterListLimit: -1, // 無制限
+    funnelLimit: -1, // 無制限
+    entertainmentQuizLimit: -1, // 無制限
+    thumbnailLimit: -1, // 無制限
     features: [
       '新規作成', 'ポータル掲載', 'URL発行', '編集・更新',
       'アフィリエイト機能', 'アクセス解析', 'AI利用（優先）',
@@ -863,5 +875,29 @@ export async function checkNewsletterSendLimit(
 export function getNewsletterListLimit(planTier: MakersPlanTier): number {
   const plan = MAKERS_PLAN_DEFINITIONS[planTier] || MAKERS_PLAN_DEFINITIONS.free;
   return plan.newsletterListLimit;
+}
+
+/**
+ * ファネル作成数制限チェック
+ */
+export function getFunnelLimit(planTier: MakersPlanTier): number {
+  const plan = MAKERS_PLAN_DEFINITIONS[planTier] || MAKERS_PLAN_DEFINITIONS.free;
+  return plan.funnelLimit;
+}
+
+/**
+ * エンタメ診断作成数制限チェック
+ */
+export function getEntertainmentQuizLimit(planTier: MakersPlanTier): number {
+  const plan = MAKERS_PLAN_DEFINITIONS[planTier] || MAKERS_PLAN_DEFINITIONS.free;
+  return plan.entertainmentQuizLimit;
+}
+
+/**
+ * サムネイル作成数制限チェック
+ */
+export function getThumbnailLimit(planTier: MakersPlanTier): number {
+  const plan = MAKERS_PLAN_DEFINITIONS[planTier] || MAKERS_PLAN_DEFINITIONS.free;
+  return plan.thumbnailLimit;
 }
 

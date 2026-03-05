@@ -239,7 +239,7 @@ export default function WeeklyCalendar({
                       : isToday 
                         ? menuType === 'adjustment' ? 'bg-purple-50' : 'bg-blue-50'
                         : 'bg-gray-50'
-                  } ${isPast ? 'opacity-50' : multiSelect ? 'cursor-pointer hover:bg-gray-100' : ''}`}
+                  } ${isPast ? 'opacity-60 bg-gray-100' : multiSelect ? 'cursor-pointer hover:bg-gray-100' : ''}`}
                 >
                   <div className={`text-xs font-semibold ${
                     dayOfWeek === 0 ? 'text-red-500' : dayOfWeek === 6 ? 'text-blue-500' : 'text-gray-600'
@@ -282,12 +282,13 @@ export default function WeeklyCalendar({
                   <div
                     key={dayIndex}
                     className={`min-h-[60px] p-1 border-r border-gray-100 last:border-r-0 transition-colors ${
-                      isPast 
-                        ? 'bg-gray-50 cursor-not-allowed' 
-                        : readOnly 
+                      isPast
+                        ? 'bg-gray-200/60 cursor-not-allowed'
+                        : readOnly
                           ? 'bg-white'
                           : `bg-white hover:bg-${themeColor}-50 cursor-pointer`
-                    } ${dayOfWeek === 0 ? 'bg-red-50/30' : dayOfWeek === 6 ? 'bg-blue-50/30' : ''}`}
+                    } ${!isPast && dayOfWeek === 0 ? 'bg-red-50/30' : !isPast && dayOfWeek === 6 ? 'bg-blue-50/30' : ''}`}
+                    style={isPast ? { backgroundImage: 'repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(0,0,0,0.04) 4px, rgba(0,0,0,0.04) 5px)' } : undefined}
                     onClick={() => {
                       if (!isPast && !readOnly && onSlotClick) {
                         onSlotClick(day, hour);
@@ -407,6 +408,10 @@ export default function WeeklyCalendar({
             <span>日程候補</span>
           </div>
         )}
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 rounded bg-gray-200/60" style={{ backgroundImage: 'repeating-linear-gradient(135deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 3px)' }} />
+          <span>予約不可</span>
+        </div>
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded bg-blue-50 border-2 border-dashed border-blue-300" />
           <span>未保存</span>

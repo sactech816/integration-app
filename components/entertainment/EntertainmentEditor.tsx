@@ -306,6 +306,29 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
         if (dbError) throw dbError;
         result = data;
       } else {
+        // 新規作成時: エンタメ診断の作成数制限チェック
+        if (user?.id) {
+          try {
+            const res = await fetch(`/api/makers/subscription-status?userId=${user.id}`);
+            const subData = res.ok ? await res.json() : null;
+            const isPro = subData?.planTier === 'pro';
+            if (!isPro) {
+              const { count } = await supabase
+                .from(TABLES.QUIZZES)
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+                .eq('quiz_type', 'entertainment');
+              if ((count || 0) >= 1) {
+                setError('フリープランではエンタメ診断は1つまで作成できます。プロプランにアップグレードすると無制限に作成できます。');
+                setIsSaving(false);
+                return;
+              }
+            }
+          } catch (e) {
+            console.warn('制限チェックエラー:', e);
+          }
+        }
+
         let attempts = 0;
         let insertError: any = null;
         while (attempts < 5) {

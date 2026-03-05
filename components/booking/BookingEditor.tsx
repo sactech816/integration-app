@@ -885,27 +885,55 @@ export default function BookingEditor({
 
               {/* 編集モード時の公開URLコピー */}
               {mode === 'edit' && existingMenu && (
-                <div className="bg-white rounded-2xl shadow-lg p-5">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">公開URL</h3>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={`${typeof window !== 'undefined' ? window.location.origin : ''}/booking/${existingMenu.id}`}
-                      readOnly
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={copyUrl}
-                      className={`p-2 text-white rounded-lg transition-colors ${
-                        formData.type === 'adjustment'
-                          ? 'bg-purple-600 hover:bg-purple-700'
-                          : 'bg-blue-600 hover:bg-blue-700'
-                      }`}
-                    >
-                      {copied ? <Check size={18} /> : <Copy size={18} />}
-                    </button>
+                <div className="bg-white rounded-2xl shadow-lg p-5 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-700 mb-2">公開URL</h3>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={`${typeof window !== 'undefined' ? window.location.origin : ''}/booking/${existingMenu.id}`}
+                        readOnly
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={copyUrl}
+                        className={`p-2 text-white rounded-lg transition-colors ${
+                          formData.type === 'adjustment'
+                            ? 'bg-purple-600 hover:bg-purple-700'
+                            : 'bg-blue-600 hover:bg-blue-700'
+                        }`}
+                      >
+                        {copied ? <Check size={18} /> : <Copy size={18} />}
+                      </button>
+                    </div>
                   </div>
+                  {userId && formData.type !== 'adjustment' && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-700 mb-2">メニュー一覧URL（プラン選択）</h3>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={`${typeof window !== 'undefined' ? window.location.origin : ''}/booking/plans/${userId}`}
+                          readOnly
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const url = `${window.location.origin}/booking/plans/${userId}`;
+                            navigator.clipboard.writeText(url);
+                          }}
+                          className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                        >
+                          <Copy size={18} />
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        複数の予約メニューをプランとして一覧表示します
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

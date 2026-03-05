@@ -262,7 +262,7 @@ export default function MainContent({
 
       {/* ファネル */}
       {activeView === 'funnel' && user && (
-        <FunnelList userId={user.id} isAdmin={isAdmin} />
+        <FunnelList userId={user.id} isAdmin={isAdmin} hasMakersProAccess={userSubscription?.planTier === 'pro'} />
       )}
 
       {/* ゲーム作成（全ユーザー） */}

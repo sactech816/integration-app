@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getMakersSubscriptionStatus, getFunnelLimit } from '@/lib/subscription';
 
 const getServiceClient = () => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -61,6 +62,22 @@ export async function POST(request: NextRequest) {
     const supabase = getServiceClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+    }
+
+    // ファネル作成数制限チェック
+    const subscription = await getMakersSubscriptionStatus(userId);
+    const limit = getFunnelLimit(subscription.planTier);
+    if (limit !== -1) {
+      const { count } = await supabase
+        .from('funnels')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+      if ((count || 0) >= limit) {
+        return NextResponse.json(
+          { error: `フリープランではファネルは${limit}つまで作成できます。プロプランにアップグレードすると無制限に作成できます。` },
+          { status: 403 }
+        );
+      }
     }
 
     const slug = `funnel-${Date.now().toString(36)}`;

@@ -58,8 +58,8 @@ export default function DashboardHome({
 
   const renderToolCard = (tool: typeof TOOL_ITEMS[0]) => {
     const Icon = tool.icon;
-    const isProOnly = tool.id === 'thumbnail';
-    const isProLocked = isProOnly && !hasMakersProAccess && !isAdmin && !isPartner;
+    const isProOnly = false; // サムネイルも含め全ツールを開放（制限はエディタ側で管理）
+    const isProLocked = false;
 
     const iconContent = (
       <div className="relative">

@@ -88,8 +88,6 @@ export default function SidebarNav({
 }: SidebarNavProps) {
   // KDLの状態判定（管理者は常にアクセス可能）
   const kdlDisabled = !hasKdlSubscription && !isAdmin;
-  // サムネイルメーカーはPro限定（管理者は常にアクセス可能）
-  const thumbnailLocked = !hasMakersProAccess && !isAdmin;
 
   // KDLバッジの表示内容
   const getKdlBadge = () => {
@@ -126,18 +124,9 @@ export default function SidebarNav({
       badge: countMap[tool.id],
     };
 
-    // サムネイルメーカーのPro制限
-    if (tool.id === 'thumbnail') {
-      item.isDisabled = thumbnailLocked;
-      item.disabledBadge = thumbnailLocked ? 'Pro' : undefined;
-    }
+    // サムネイルメーカーは全ユーザー利用可能（無料は1回お試し、Proは無制限）
 
-    // 申し込みフォームのPro制限
-    if (tool.id === 'order-form') {
-      const orderFormLocked = !hasMakersProAccess && !isAdmin;
-      item.isDisabled = orderFormLocked;
-      item.disabledBadge = orderFormLocked ? 'Pro' : undefined;
-    }
+    // 申し込みフォームは全ユーザー利用可能（無料ユーザーは手数料5%、Proは手数料0%）
 
     // Kindle の課金制限
     if (tool.id === 'kindle') {
