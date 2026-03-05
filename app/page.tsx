@@ -164,7 +164,7 @@ export default function HomePage() {
               パソコン苦手でも大丈夫！ ずっと0円
             </span>
             <h1 className="text-4xl lg:text-6xl font-black leading-tight mb-6" style={{ color: '#5d4037' }}>
-              仕事に役立つ集客ツール<br />全12種類が、ぜーんぶ<br />
+              仕事に役立つ集客ツール<br />全17種類が、ぜーんぶ<br />
               <span style={{ color: '#f97316' }}>作り放題！</span><br />
                <span style={{ color: '#ff000d' }}>しかも、月額0円～</span><br />
             </h1>
@@ -223,24 +223,29 @@ export default function HomePage() {
             <div className="marquee-right inline-flex py-2">
               {[...Array(2)].flatMap((_, setIdx) =>
                 [
-                  { icon: Sparkles, text: '診断クイズ', color: 'text-pink-500' },
-                  { icon: FileText, text: 'アンケート', color: 'text-teal-500' },
-                  { icon: Users, text: '出欠表', color: 'text-purple-500' },
-                  { icon: Calendar, text: '予約', color: 'text-blue-500' },
-                  { icon: UserCircle, text: 'プロフィール', color: 'text-emerald-500' },
-                  { icon: Building2, text: 'LP', color: 'text-amber-500' },
-                  { icon: PenTool, text: 'セールスライター', color: 'text-rose-500' },
-                  { icon: PartyPopper, text: 'エンタメ診断', color: 'text-pink-500' },
+                  // LP・ページ作成
+                  { icon: UserCircle, text: 'プロフィール', color: 'text-indigo-500' },
+                  { icon: Building2, text: 'LP', color: 'text-indigo-500' },
+                  { icon: Video, text: 'ウェビナーLP', color: 'text-indigo-500' },
+                  // 診断・クイズ
+                  { icon: Sparkles, text: '診断クイズ', color: 'text-emerald-500' },
+                  { icon: PartyPopper, text: 'エンタメ診断', color: 'text-emerald-500' },
+                  // ライティング・制作
+                  { icon: PenTool, text: 'セールスライター', color: 'text-amber-500' },
+                  { icon: FileText, text: 'SNS投稿', color: 'text-amber-500' },
+                  // 集客・イベント
+                  { icon: Calendar, text: '予約', color: 'text-cyan-500' },
+                  { icon: Users, text: '出欠表', color: 'text-cyan-500' },
                   { icon: Mail, text: 'メルマガ', color: 'text-cyan-500' },
-                  { icon: GitBranch, text: 'ファネル', color: 'text-amber-500' },
-                  { icon: Video, text: 'ウェビナーLP', color: 'text-violet-500' },
-                  { icon: ClipboardCheck, text: 'フォーム', color: 'text-emerald-500' },
+                  { icon: GitBranch, text: 'ファネル', color: 'text-cyan-500' },
+                  // 収益化・販売
+                  { icon: ClipboardCheck, text: 'フォーム', color: 'text-purple-500' },
+                  // ゲーミフィケーション
                   { icon: Gift, text: '福引き', color: 'text-pink-500' },
                   { icon: Gamepad2, text: 'ガチャ', color: 'text-purple-500' },
                   { icon: Star, text: 'スロット', color: 'text-yellow-500' },
                   { icon: Ticket, text: 'スクラッチ', color: 'text-cyan-500' },
                   { icon: Stamp, text: 'スタンプラリー', color: 'text-green-500' },
-                  { icon: BookOpen, text: 'Kindle出版', color: 'text-orange-500' },
                 ].map((tool, i) => (
                   <div key={`${setIdx}-${i}`} className="w-[160px] flex-shrink-0 bg-white border border-orange-100 rounded-2xl p-4 flex flex-col items-center justify-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300 mx-2">
                     <div className={`${tool.color} mb-1`}><tool.icon size={28} /></div>

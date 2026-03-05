@@ -33,159 +33,213 @@ import { supabase } from '@/lib/supabase';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
-const tools = [
-  {
-    name: '診断クイズメーカー',
-    description: '性格診断、適職診断、心理テスト、検定クイズなどをAIで簡単作成。SNSでバズる診断コンテンツを無料で作れます。',
-    icon: Sparkles,
-    href: '/quiz',
-    color: 'from-indigo-500 to-purple-600',
-    bgColor: 'bg-indigo-50',
-    textColor: 'text-indigo-600',
-    features: ['AI自動生成', 'SNSシェア', '分析機能', '無制限作成'],
-  },
-  {
-    name: 'アンケートメーカー',
-    description: 'オンラインアンケート・投票・フィードバック収集を無料で作成。Googleフォームの代替として使えます。',
-    icon: FileText,
-    href: '/survey',
-    color: 'from-teal-500 to-cyan-600',
-    bgColor: 'bg-teal-50',
-    textColor: 'text-teal-600',
-    features: ['簡単作成', '集計機能', 'リアルタイム更新', '無料'],
-  },
-  {
-    name: '出欠表メーカー',
-    description: '飲み会・イベントの日程調整を簡単に。調整さん風の出欠表を無料で何度でも作成できます。',
-    icon: Users,
-    href: '/attendance',
-    color: 'from-purple-500 to-indigo-600',
-    bgColor: 'bg-purple-50',
-    textColor: 'text-purple-600',
-    features: ['ログイン不要', '無制限作成', 'リアルタイム集計', '無料'],
-  },
-  {
-    name: '予約メーカー',
-    description: 'ビジネス向け予約管理システム。スプレッドシート連動やExcelエクスポートで効率的な予約管理が可能。',
-    icon: Calendar,
-    href: '/booking',
-    color: 'from-blue-500 to-indigo-600',
-    bgColor: 'bg-blue-50',
-    textColor: 'text-blue-600',
-    features: ['カレンダー連携', 'Excel出力', '通知機能', '高機能'],
-  },
+type ToolCategoryId = 'page' | 'quiz' | 'writing' | 'marketing' | 'monetization';
+
+type ToolDef = {
+  name: string;
+  description: string;
+  icon: typeof Sparkles;
+  href: string;
+  color: string;
+  bgColor: string;
+  textColor: string;
+  features: string[];
+  isPro?: boolean;
+  category: ToolCategoryId;
+};
+
+const toolCategories: { id: ToolCategoryId; label: string; color: string }[] = [
+  { id: 'page', label: 'LP・ページ作成', color: 'text-indigo-600' },
+  { id: 'quiz', label: '診断・クイズ', color: 'text-emerald-600' },
+  { id: 'writing', label: 'ライティング・制作', color: 'text-amber-600' },
+  { id: 'marketing', label: '集客・イベント', color: 'text-cyan-600' },
+  { id: 'monetization', label: '収益化・販売', color: 'text-purple-600' },
+];
+
+const tools: ToolDef[] = [
+  // LP・ページ作成
   {
     name: 'プロフィールメーカー',
     description: 'SNSプロフィールに最適なリンクまとめページを作成。lit.linkの代替として無料で使えます。',
     icon: UserCircle,
     href: '/profile',
-    color: 'from-emerald-500 to-green-600',
-    bgColor: 'bg-emerald-50',
-    textColor: 'text-emerald-600',
+    color: 'from-indigo-500 to-blue-600',
+    bgColor: 'bg-indigo-50',
+    textColor: 'text-indigo-600',
     features: ['リンクまとめ', 'デザインテンプレート', 'アクセス解析', '無料'],
+    category: 'page',
   },
   {
     name: 'LPメーカー',
     description: '商品・サービスのランディングページを無料で作成。CV最適化されたテンプレートで簡単にLPを作れます。',
     icon: Building2,
     href: '/business',
-    color: 'from-amber-500 to-orange-600',
-    bgColor: 'bg-amber-50',
-    textColor: 'text-amber-600',
+    color: 'from-indigo-500 to-purple-600',
+    bgColor: 'bg-indigo-50',
+    textColor: 'text-indigo-600',
     features: ['テンプレート豊富', 'CV最適化', 'レスポンシブ', '無料'],
-  },
-  {
-    name: 'セールスライター',
-    description: 'セールスレター・LP文章をAIで自動生成。売れるコピーライティングを誰でも簡単に作成できます。',
-    icon: PenTool,
-    href: '/salesletter',
-    color: 'from-rose-500 to-pink-600',
-    bgColor: 'bg-rose-50',
-    textColor: 'text-rose-600',
-    features: ['AI自動生成', '売れる文章', 'テンプレート', '無料'],
-  },
-  {
-    name: 'エンタメ診断メーカー',
-    description: 'バズるエンタメ系診断コンテンツをAIで簡単作成。SNSで拡散される楽しい診断を作れます。',
-    icon: PartyPopper,
-    href: '/entertainment/create',
-    color: 'from-pink-500 to-rose-600',
-    bgColor: 'bg-pink-50',
-    textColor: 'text-pink-600',
-    features: ['AI自動生成', 'SNSバズ', 'エンタメ系', '簡単作成'],
-  },
-  {
-    name: 'メルマガメーカー',
-    description: 'メールマガジンの作成・配信・管理を一元化。読者リスト管理からステップメール配信まで対応。',
-    icon: Mail,
-    href: '/newsletter/dashboard',
-    color: 'from-cyan-500 to-blue-600',
-    bgColor: 'bg-cyan-50',
-    textColor: 'text-cyan-600',
-    features: ['メール配信', '読者管理', 'ステップメール', '無料'],
-  },
-  {
-    name: 'ファネルメーカー',
-    description: '集客から成約までのセールスファネルを簡単構築。マーケティング自動化で売上アップ。',
-    icon: GitBranch,
-    href: '/funnel/dashboard',
-    color: 'from-amber-500 to-orange-600',
-    bgColor: 'bg-amber-50',
-    textColor: 'text-amber-600',
-    features: ['ファネル構築', 'マーケ自動化', '成約率UP', '無料'],
+    category: 'page',
   },
   {
     name: 'ウェビナーLPメーカー',
     description: 'ウェビナー・オンラインセミナーの集客LPを簡単作成。申し込みフォーム付きで参加者管理も楽々。',
     icon: Video,
     href: '/webinar/editor',
-    color: 'from-violet-500 to-purple-600',
-    bgColor: 'bg-violet-50',
-    textColor: 'text-violet-600',
+    color: 'from-indigo-400 to-violet-600',
+    bgColor: 'bg-indigo-50',
+    textColor: 'text-indigo-600',
     features: ['LP作成', '申込フォーム', '参加者管理', '無料'],
-  },
-  {
-    name: 'フォームメーカー',
-    description: '申し込み・決済フォームを簡単作成。Stripe連携でオンライン決済にも対応。',
-    icon: ClipboardCheck,
-    href: '/order-form/dashboard',
-    color: 'from-emerald-500 to-green-600',
-    bgColor: 'bg-emerald-50',
-    textColor: 'text-emerald-600',
-    features: ['申込フォーム', '決済連携', 'カスタマイズ', '無料'],
+    category: 'page',
   },
   {
     name: 'はじめかたメーカー',
     description: 'サイトに埋め込めるはじめかたガイドを簡単作成。外部サイトへの埋め込みにも対応します。',
     icon: Lightbulb,
     href: '/onboarding',
-    color: 'from-orange-500 to-amber-600',
-    bgColor: 'bg-orange-50',
-    textColor: 'text-orange-600',
+    color: 'from-indigo-400 to-blue-600',
+    bgColor: 'bg-indigo-50',
+    textColor: 'text-indigo-600',
     features: ['埋め込み対応', 'トリガー設定', 'JSスニペット', 'PRO'],
     isPro: true,
+    category: 'page',
+  },
+  // 診断・クイズ
+  {
+    name: '診断クイズメーカー',
+    description: '性格診断、適職診断、心理テスト、検定クイズなどをAIで簡単作成。SNSでバズる診断コンテンツを無料で作れます。',
+    icon: Sparkles,
+    href: '/quiz',
+    color: 'from-emerald-500 to-teal-600',
+    bgColor: 'bg-emerald-50',
+    textColor: 'text-emerald-600',
+    features: ['AI自動生成', 'SNSシェア', '分析機能', '無制限作成'],
+    category: 'quiz',
+  },
+  {
+    name: 'エンタメ診断メーカー',
+    description: 'バズるエンタメ系診断コンテンツをAIで簡単作成。SNSで拡散される楽しい診断を作れます。',
+    icon: PartyPopper,
+    href: '/entertainment/create',
+    color: 'from-emerald-400 to-green-600',
+    bgColor: 'bg-emerald-50',
+    textColor: 'text-emerald-600',
+    features: ['AI自動生成', 'SNSバズ', 'エンタメ系', '簡単作成'],
+    category: 'quiz',
+  },
+  // ライティング・制作
+  {
+    name: 'セールスライター',
+    description: 'セールスレター・LP文章をAIで自動生成。売れるコピーライティングを誰でも簡単に作成できます。',
+    icon: PenTool,
+    href: '/salesletter',
+    color: 'from-amber-500 to-orange-600',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-600',
+    features: ['AI自動生成', '売れる文章', 'テンプレート', '無料'],
+    category: 'writing',
   },
   {
     name: 'サムネイルメーカー',
     description: 'YouTube・ブログ・Kindle用のサムネイル画像をAIで自動生成。プロ品質のビジュアルを簡単に作成できます。',
     icon: Image,
     href: '/thumbnail',
-    color: 'from-slate-500 to-gray-700',
-    bgColor: 'bg-slate-50',
-    textColor: 'text-slate-600',
+    color: 'from-amber-400 to-yellow-600',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-600',
     features: ['AI自動生成', 'YouTube対応', 'Kindle表紙', 'PRO'],
     isPro: true,
+    category: 'writing',
+  },
+  {
+    name: 'SNS投稿メーカー',
+    description: 'SNS投稿文をAIで自動生成。X・Instagram・Facebook等に最適な投稿を簡単作成。',
+    icon: FileText,
+    href: '/sns-post/editor',
+    color: 'from-amber-500 to-orange-500',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-600',
+    features: ['AI自動生成', 'SNS最適化', 'マルチプラットフォーム', '無料'],
+    category: 'writing',
+  },
+  // 集客・イベント
+  {
+    name: '予約メーカー',
+    description: 'ビジネス向け予約管理システム。スプレッドシート連動やExcelエクスポートで効率的な予約管理が可能。',
+    icon: Calendar,
+    href: '/booking',
+    color: 'from-cyan-500 to-blue-600',
+    bgColor: 'bg-cyan-50',
+    textColor: 'text-cyan-600',
+    features: ['カレンダー連携', 'Excel出力', '通知機能', '高機能'],
+    category: 'marketing',
+  },
+  {
+    name: '出欠表メーカー',
+    description: '飲み会・イベントの日程調整を簡単に。調整さん風の出欠表を無料で何度でも作成できます。',
+    icon: Users,
+    href: '/attendance',
+    color: 'from-cyan-400 to-teal-600',
+    bgColor: 'bg-cyan-50',
+    textColor: 'text-cyan-600',
+    features: ['ログイン不要', '無制限作成', 'リアルタイム集計', '無料'],
+    category: 'marketing',
+  },
+  {
+    name: 'アンケートメーカー',
+    description: 'オンラインアンケート・投票・フィードバック収集を無料で作成。Googleフォームの代替として使えます。',
+    icon: FileText,
+    href: '/survey',
+    color: 'from-cyan-500 to-sky-600',
+    bgColor: 'bg-cyan-50',
+    textColor: 'text-cyan-600',
+    features: ['簡単作成', '集計機能', 'リアルタイム更新', '無料'],
+    category: 'marketing',
+  },
+  {
+    name: 'メルマガメーカー',
+    description: 'メールマガジンの作成・配信・管理を一元化。読者リスト管理からステップメール配信まで対応。',
+    icon: Mail,
+    href: '/newsletter/dashboard',
+    color: 'from-cyan-400 to-blue-600',
+    bgColor: 'bg-cyan-50',
+    textColor: 'text-cyan-600',
+    features: ['メール配信', '読者管理', 'ステップメール', '無料'],
+    category: 'marketing',
+  },
+  {
+    name: 'ファネルメーカー',
+    description: '集客から成約までのセールスファネルを簡単構築。マーケティング自動化で売上アップ。',
+    icon: GitBranch,
+    href: '/funnel/dashboard',
+    color: 'from-cyan-500 to-teal-600',
+    bgColor: 'bg-cyan-50',
+    textColor: 'text-cyan-600',
+    features: ['ファネル構築', 'マーケ自動化', '成約率UP', '無料'],
+    category: 'marketing',
+  },
+  // 収益化・販売
+  {
+    name: 'フォームメーカー',
+    description: '申し込み・決済フォームを簡単作成。Stripe連携でオンライン決済にも対応。',
+    icon: ClipboardCheck,
+    href: '/order-form/dashboard',
+    color: 'from-purple-500 to-violet-600',
+    bgColor: 'bg-purple-50',
+    textColor: 'text-purple-600',
+    features: ['申込フォーム', '決済連携', 'カスタマイズ', '無料'],
+    category: 'monetization',
   },
   {
     name: 'スキルマーケット',
     description: 'LP作成・診断クイズ・デザインなど集客のプロに依頼できるマーケット。ビジネスを加速させましょう。',
     icon: Store,
     href: '/marketplace',
-    color: 'from-violet-500 to-purple-600',
-    bgColor: 'bg-violet-50',
-    textColor: 'text-violet-600',
+    color: 'from-purple-400 to-indigo-600',
+    bgColor: 'bg-purple-50',
+    textColor: 'text-purple-600',
     features: ['プロに依頼', 'LP制作', 'デザイン', 'PRO'],
     isPro: true,
+    category: 'monetization',
   },
 ];
 
@@ -237,6 +291,7 @@ const gamificationTools = [
 export default function ToolsPageClient() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [activeTab, setActiveTab] = useState<'all' | ToolCategoryId>('all');
 
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | null = null;
@@ -281,113 +336,13 @@ export default function ToolsPageClient() {
     '@type': 'ItemList',
     name: '集客メーカーの無料ツール一覧',
     description: '集客メーカーで利用できる全ツール',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: '診断クイズメーカー',
-        description: '性格診断、適職診断、心理テスト、検定クイズなどをAIで簡単作成',
-        url: `${siteUrl}/quiz`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'アンケートメーカー',
-        description: 'オンラインアンケート・投票・フィードバック収集を無料で作成',
-        url: `${siteUrl}/survey`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 3,
-        name: '出欠表メーカー',
-        description: '飲み会・イベントの日程調整を簡単に。無料で何度でも作成可能',
-        url: `${siteUrl}/attendance`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 4,
-        name: '予約メーカー',
-        description: 'ビジネス向け高機能予約管理システム',
-        url: `${siteUrl}/booking`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 5,
-        name: 'プロフィールメーカー',
-        description: 'SNSプロフィールに最適なリンクまとめページを作成',
-        url: `${siteUrl}/profile`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 6,
-        name: 'LPメーカー',
-        description: '商品・サービスのランディングページを無料で作成',
-        url: `${siteUrl}/business`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 7,
-        name: 'セールスライター',
-        description: 'セールスレター・LP文章をAIで自動生成',
-        url: `${siteUrl}/salesletter`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 8,
-        name: 'エンタメ診断メーカー',
-        description: 'バズるエンタメ系診断コンテンツをAIで簡単作成',
-        url: `${siteUrl}/entertainment/create`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 9,
-        name: 'メルマガメーカー',
-        description: 'メールマガジンの作成・配信・管理を一元化',
-        url: `${siteUrl}/newsletter/dashboard`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 10,
-        name: 'ファネルメーカー',
-        description: '集客から成約までのセールスファネルを簡単構築',
-        url: `${siteUrl}/funnel/dashboard`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 11,
-        name: 'ウェビナーLPメーカー',
-        description: 'ウェビナー・オンラインセミナーの集客LPを簡単作成',
-        url: `${siteUrl}/webinar/editor`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 12,
-        name: 'フォームメーカー',
-        description: '申し込み・決済フォームを簡単作成',
-        url: `${siteUrl}/order-form/dashboard`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 13,
-        name: 'はじめかたメーカー',
-        description: 'サイトに埋め込めるはじめかたガイドを簡単作成',
-        url: `${siteUrl}/onboarding`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 14,
-        name: 'サムネイルメーカー',
-        description: 'YouTube・ブログ・Kindle用サムネイルをAIで自動生成',
-        url: `${siteUrl}/thumbnail`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 15,
-        name: 'スキルマーケット',
-        description: 'LP制作・診断クイズ・デザインなど集客のプロに依頼',
-        url: `${siteUrl}/marketplace`,
-      },
-    ],
+    itemListElement: tools.map((tool, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: tool.name,
+      description: tool.description,
+      url: `${siteUrl}${tool.href}`,
+    })),
   };
 
   return (
@@ -437,7 +392,7 @@ export default function ToolsPageClient() {
 
         {/* メインツール */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
               主要ツール
             </h2>
@@ -446,8 +401,41 @@ export default function ToolsPageClient() {
             </p>
           </div>
 
+          {/* カテゴリタブ */}
+          <div className="flex gap-2 overflow-x-auto pb-4 mb-8 justify-center flex-wrap">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
+                activeTab === 'all'
+                  ? 'bg-gray-800 text-white'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              }`}
+            >
+              すべて
+            </button>
+            {toolCategories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveTab(cat.id)}
+                className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
+                  activeTab === cat.id
+                    ? cat.id === 'page' ? 'bg-indigo-100 text-indigo-700 border border-indigo-300'
+                    : cat.id === 'quiz' ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
+                    : cat.id === 'writing' ? 'bg-amber-100 text-amber-700 border border-amber-300'
+                    : cat.id === 'marketing' ? 'bg-cyan-100 text-cyan-700 border border-cyan-300'
+                    : 'bg-purple-100 text-purple-700 border border-purple-300'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {tools.map((tool, index) => {
+            {tools
+              .filter((tool) => activeTab === 'all' || tool.category === activeTab)
+              .map((tool, index) => {
               const Icon = tool.icon;
               return (
                 <Link
