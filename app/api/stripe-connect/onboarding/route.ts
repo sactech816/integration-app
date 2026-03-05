@@ -18,6 +18,10 @@ const getServiceClient = () => {
  */
 export async function POST(request: NextRequest) {
   try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json({ error: 'STRIPE_SECRET_KEY が設定されていません' }, { status: 500 });
+    }
+
     const { userId } = await request.json();
     if (!userId) {
       return NextResponse.json({ error: 'userId は必須です' }, { status: 400 });
@@ -31,11 +35,20 @@ export async function POST(request: NextRequest) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
     // 既存の Connect レコード確認
-    const { data: existing } = await supabase
+    const { data: existing, error: selectError } = await supabase
       .from('user_stripe_connect')
       .select('*')
       .eq('user_id', userId)
       .single();
+
+    // テーブルが存在しない場合のエラーチェック（PGRST116 = no rows found は正常）
+    if (selectError && selectError.code !== 'PGRST116') {
+      console.error('[Stripe Connect] DB select error:', selectError);
+      return NextResponse.json(
+        { error: `データベースエラー: ${selectError.message}` },
+        { status: 500 }
+      );
+    }
 
     let stripeAccountId: string;
 
@@ -60,13 +73,17 @@ export async function POST(request: NextRequest) {
       stripeAccountId = account.id;
 
       // DB に保存
-      await supabase.from('user_stripe_connect').insert({
+      const { error: insertError } = await supabase.from('user_stripe_connect').insert({
         user_id: userId,
         stripe_account_id: account.id,
         charges_enabled: false,
         payouts_enabled: false,
         details_submitted: false,
       });
+      if (insertError) {
+        console.error('[Stripe Connect] DB insert error:', insertError);
+        // Stripeアカウントは作成済みなのでオンボーディングは続行
+      }
     }
 
     // オンボーディング URL 生成
@@ -80,9 +97,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: accountLink.url });
   } catch (error: any) {
     console.error('[Stripe Connect Onboarding] Error:', error);
-    const message = error?.type === 'StripeInvalidRequestError'
-      ? `Stripe エラー: ${error.message}`
-      : 'Stripe Connect のセットアップに失敗しました';
+    let message = 'Stripe Connect のセットアップに失敗しました';
+    if (error?.type?.startsWith('Stripe')) {
+      message = `Stripe エラー: ${error.message}`;
+    } else if (error?.message) {
+      message = `エラー: ${error.message}`;
+    }
     return NextResponse.json(
       { error: message },
       { status: 500 }
