@@ -120,9 +120,16 @@ export default function FunnelStepViewer({ slug, stepIndex }: Props) {
       case 'business_lp': return `/business/${ref.slug}`;
       case 'salesletter': return `/salesletter/${ref.slug}`;
       case 'quiz': return `/quiz/${ref.slug}`;
+      case 'entertainment_quiz': return `/quiz/${ref.slug}`;
       case 'order_form': return `/order-form/${ref.slug}`;
       case 'newsletter': return `/newsletter/subscribe/${ref.slug || ref.id}`;
-      case 'booking': return `/booking/${ref.slug}`;
+      case 'booking': return `/booking/${ref.slug || ref.id}`;
+      case 'survey': return `/survey/${ref.slug}`;
+      case 'webinar': return `/webinar/${ref.slug}`;
+      case 'attendance': return `/attendance/${ref.slug || ref.id}`;
+      case 'onboarding': return `/onboarding/${ref.slug}`;
+      case 'gamification': return `/gamification/${ref.slug || ref.id}`;
+      case 'sns_post': return `/sns-post/${ref.slug}`;
       case 'custom_url': return ref.url || null;
       default: return null;
     }

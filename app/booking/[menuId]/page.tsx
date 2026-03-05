@@ -208,15 +208,45 @@ export default function PublicBookingPage() {
       .sort((a, b) => a.year - b.year || a.month - b.month);
   }, [slots]);
 
-  // 選択日の枠
+  // 選択日の枠（同じ時間帯をグループ化）
   const selectedDateSlots = useMemo(() => {
     if (!selectedDate) return [];
-    return (slotsByDate[selectedDate.toDateString()] || [])
+    const daySlots = (slotsByDate[selectedDate.toDateString()] || [])
       .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+
+    // 同じ start_time + end_time のスロットをグループ化
+    const groupMap = new Map<string, { slots: BookingSlotWithAvailability[]; totalRemaining: number }>();
+    for (const slot of daySlots) {
+      const key = `${slot.start_time}_${slot.end_time}`;
+      const group = groupMap.get(key);
+      if (group) {
+        group.slots.push(slot);
+        group.totalRemaining += slot.remaining_capacity;
+      } else {
+        groupMap.set(key, { slots: [slot], totalRemaining: slot.remaining_capacity });
+      }
+    }
+
+    // グループごとに代表スロットを返す（remaining_capacity を合算値に上書き）
+    return Array.from(groupMap.values()).map(({ slots, totalRemaining }) => ({
+      ...slots[0],
+      remaining_capacity: totalRemaining,
+      _groupedSlots: slots, // 予約時に空きのあるスロットを選ぶため
+    }));
   }, [selectedDate, slotsByDate]);
 
-  const handleSelectSlot = (slot: BookingSlotWithAvailability) => {
-    setSelectedSlot(slot);
+  const handleSelectSlot = (slot: BookingSlotWithAvailability & { _groupedSlots?: BookingSlotWithAvailability[] }) => {
+    // グループ化されたスロットの場合、空きのあるスロットを選ぶ
+    if (slot._groupedSlots && slot._groupedSlots.length > 1) {
+      const availableSlot = slot._groupedSlots.find(s => s.remaining_capacity > 0);
+      if (availableSlot) {
+        setSelectedSlot(availableSlot);
+      } else {
+        setSelectedSlot(slot._groupedSlots[0]);
+      }
+    } else {
+      setSelectedSlot(slot);
+    }
     setStep('form');
     setError(null);
   };
@@ -1033,10 +1063,12 @@ export default function PublicBookingPage() {
                       const isToday = isSameDay(date, new Date());
                       const dayOfWeek = date.getDay();
 
-                      // 予約モードでは空き枠数を計算
-                      const availableCount = menu?.type === 'reservation' 
+                      // 予約モードでは空き枠数を計算（同じ時間帯をグループ化）
+                      const availableCount = menu?.type === 'reservation'
                         ? daySlots.reduce((sum, slot) => sum + (slot.remaining_capacity || 0), 0)
                         : daySlots.length;
+                      // ユニークな時間帯の数
+                      const uniqueTimeSlots = new Set(daySlots.map(s => `${s.start_time}_${s.end_time}`)).size;
 
                       return (
                         <button
@@ -1078,7 +1110,7 @@ export default function PublicBookingPage() {
                                   isSelected ? 'text-blue-100' : 'text-green-600'
                                 }`}
                               >
-                                {menu?.type === 'reservation' ? `空${availableCount}` : `${availableCount}枠`}
+                                {menu?.type === 'reservation' ? `空${availableCount}` : `${uniqueTimeSlots}枠`}
                               </div>
                               {daySlots.length > 0 && (
                                 <div

@@ -8,6 +8,7 @@ import {
   GitBranch, BarChart3, Monitor, Pencil, ChevronDown,
   User, HelpCircle, FileText, Mail, Calendar, ExternalLink, Heart,
   Building2, PenTool, ArrowRight, X, Trophy, Share2, CheckCircle,
+  Sparkles, ClipboardList, Megaphone, Users, Image, BookOpen, MessageSquare,
 } from 'lucide-react';
 import { FUNNEL_TEMPLATES } from '@/constants/templates/funnel';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
@@ -15,33 +16,80 @@ import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 interface Step {
   name: string;
   stepType: string;
-  contentRef: { type: string; slug?: string; url?: string; message?: string; nextAction?: string; ctaText?: string; ctaUrl?: string } | null;
+  contentRef: { type: string; slug?: string; url?: string; id?: string; message?: string; nextAction?: string; ctaText?: string; ctaUrl?: string } | null;
   ctaLabel: string;
 }
 
+interface ContentItem {
+  id: string;
+  label: string;
+  slug?: string;
+}
+
+// ステップタイプ定義（カラー情報付き）
 const STEP_TYPES = [
-  { value: 'profile_lp', label: 'プロフィールLP', refType: 'slug', placeholder: '例: taro-yamada', hint: 'プロフィールLPのURLの末尾部分です（/profile/●●● の ●●● 部分）。各ツールの編集画面やダッシュボードで確認できます。', ctaNote: '閲覧後にファネルCTAで次のステップへ進みます' },
-  { value: 'business_lp', label: 'ビジネスLP', refType: 'slug', placeholder: '例: my-service-lp', hint: 'ビジネスLPのURLの末尾部分です（/business/●●● の ●●● 部分）。LP編集画面で確認できます。', ctaNote: 'オプトインLPやセールスLPとして使えます。閲覧後にファネルCTAで次へ進みます' },
-  { value: 'salesletter', label: 'セールスレター', refType: 'slug', placeholder: '例: my-salesletter', hint: 'セールスレターのURLの末尾部分です（/salesletter/●●● の ●●● 部分）。セールスライター編集画面で確認できます。', ctaNote: 'セールスLPとして使えます。閲覧後にファネルCTAで次へ進みます' },
-  { value: 'quiz', label: '診断クイズ', refType: 'slug', placeholder: '例: career-quiz', hint: '診断クイズのURLの末尾部分です（/quiz/●●● の ●●● 部分）。クイズ編集画面の公開URLで確認できます。', ctaNote: 'クイズ完了後にファネルCTAで次のステップへ進みます' },
-  { value: 'order_form', label: '申し込みフォーム', refType: 'slug', placeholder: '例: consulting-form', hint: '申し込みフォームのURLの末尾部分です（/order-form/●●● の ●●● 部分）。フォーム編集画面で確認できます。', ctaNote: 'フォーム送信・決済がこのステップ内で完了します' },
-  { value: 'newsletter', label: 'メルマガ登録', refType: 'id', placeholder: '例: abc123-def456', hint: 'メルマガリストのIDです。メルマガダッシュボードの各リストの設定画面で確認できます。', ctaNote: 'メルマガ登録がこのステップ内で完了します' },
-  { value: 'booking', label: '予約ページ', refType: 'slug', placeholder: '例: free-consultation', hint: '予約ページのURLの末尾部分です（/booking/●●● の ●●● 部分）。予約メニューの編集画面で確認できます。', ctaNote: '予約完了がこのステップ内で行われます' },
-  { value: 'custom_url', label: '外部URL', refType: 'url', placeholder: 'https://example.com', hint: '外部サイトのURLをそのまま入力してください。', ctaNote: '外部ページを表示します。ファネルCTAで次へ進みます' },
-  { value: 'thank_you', label: 'サンキューページ', refType: 'none', placeholder: '', hint: '', ctaNote: 'ファネルの最終ステップです' },
+  { value: 'profile_lp', label: 'プロフィールLP', refType: 'slug', placeholder: '例: taro-yamada', hint: 'プロフィールLPのURLの末尾部分', ctaNote: '閲覧後にファネルCTAで次のステップへ進みます', color: 'emerald', hasContent: true },
+  { value: 'business_lp', label: 'ビジネスLP', refType: 'slug', placeholder: '例: my-service-lp', hint: 'ビジネスLPのURLの末尾部分', ctaNote: '閲覧後にファネルCTAで次へ進みます', color: 'amber', hasContent: true },
+  { value: 'salesletter', label: 'セールスレター', refType: 'slug', placeholder: '例: my-salesletter', hint: 'セールスレターのURLの末尾部分', ctaNote: '閲覧後にファネルCTAで次へ進みます', color: 'rose', hasContent: true },
+  { value: 'quiz', label: '診断クイズ', refType: 'slug', placeholder: '例: career-quiz', hint: '診断クイズのURLの末尾部分', ctaNote: 'クイズ完了後にファネルCTAで次のステップへ進みます', color: 'indigo', hasContent: true },
+  { value: 'entertainment_quiz', label: 'エンタメ診断', refType: 'slug', placeholder: '例: personality-check', hint: 'エンタメ診断のURLの末尾部分', ctaNote: '診断完了後にファネルCTAで次のステップへ進みます', color: 'pink', hasContent: true },
+  { value: 'order_form', label: '申し込みフォーム', refType: 'slug', placeholder: '例: consulting-form', hint: '申し込みフォームのURLの末尾部分', ctaNote: 'フォーム送信・決済がこのステップ内で完了します', color: 'teal', hasContent: true },
+  { value: 'newsletter', label: 'メルマガ登録', refType: 'id', placeholder: '例: abc123-def456', hint: 'メルマガリストのID', ctaNote: 'メルマガ登録がこのステップ内で完了します', color: 'violet', hasContent: true },
+  { value: 'booking', label: '予約ページ', refType: 'id', placeholder: '例: free-consultation', hint: '予約メニューのID', ctaNote: '予約完了がこのステップ内で行われます', color: 'blue', hasContent: true },
+  { value: 'survey', label: 'アンケート', refType: 'slug', placeholder: '例: customer-survey', hint: 'アンケートのURLの末尾部分', ctaNote: 'アンケート回答後にファネルCTAで次へ進みます', color: 'cyan', hasContent: true },
+  { value: 'webinar', label: 'ウェビナーLP', refType: 'slug', placeholder: '例: seminar-lp', hint: 'ウェビナーLPのURLの末尾部分', ctaNote: '閲覧後にファネルCTAで次へ進みます', color: 'purple', hasContent: true },
+  { value: 'attendance', label: '出欠表', refType: 'id', placeholder: '例: event-id', hint: '出欠表のID', ctaNote: '回答後にファネルCTAで次へ進みます', color: 'orange', hasContent: true },
+  { value: 'onboarding', label: 'はじめかたガイド', refType: 'slug', placeholder: '例: getting-started', hint: 'はじめかたガイドのURLの末尾部分', ctaNote: '閲覧後にファネルCTAで次へ進みます', color: 'lime', hasContent: true },
+  { value: 'gamification', label: 'ゲーミフィケーション', refType: 'id', placeholder: '例: campaign-id', hint: 'キャンペーンのID', ctaNote: '参加後にファネルCTAで次へ進みます', color: 'fuchsia', hasContent: true },
+  { value: 'sns_post', label: 'SNS投稿', refType: 'slug', placeholder: '例: my-post', hint: 'SNS投稿のURLの末尾部分', ctaNote: '閲覧後にファネルCTAで次へ進みます', color: 'sky', hasContent: true },
+  { value: 'custom_url', label: '外部URL', refType: 'url', placeholder: 'https://example.com', hint: '外部サイトのURLをそのまま入力', ctaNote: '外部ページを表示します', color: 'gray', hasContent: false },
+  { value: 'thank_you', label: 'サンキューページ', refType: 'none', placeholder: '', hint: '', ctaNote: 'ファネルの最終ステップです', color: 'green', hasContent: false },
 ];
 
+// タイプ別アイコン
 const STEP_ICONS: Record<string, React.ReactNode> = {
   profile_lp: <User className="w-4 h-4" />,
   business_lp: <Building2 className="w-4 h-4" />,
   salesletter: <PenTool className="w-4 h-4" />,
   quiz: <HelpCircle className="w-4 h-4" />,
+  entertainment_quiz: <Sparkles className="w-4 h-4" />,
   order_form: <FileText className="w-4 h-4" />,
   newsletter: <Mail className="w-4 h-4" />,
   booking: <Calendar className="w-4 h-4" />,
+  survey: <ClipboardList className="w-4 h-4" />,
+  webinar: <Megaphone className="w-4 h-4" />,
+  attendance: <Users className="w-4 h-4" />,
+  onboarding: <BookOpen className="w-4 h-4" />,
+  gamification: <Trophy className="w-4 h-4" />,
+  sns_post: <MessageSquare className="w-4 h-4" />,
   custom_url: <ExternalLink className="w-4 h-4" />,
   thank_you: <Heart className="w-4 h-4" />,
 };
+
+// タイプ別カラー設定
+const STEP_COLORS: Record<string, { bg: string; text: string; border: string; light: string; badge: string; cta: string }> = {
+  emerald:  { bg: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-300', light: 'bg-emerald-50', badge: 'bg-emerald-500', cta: 'bg-emerald-600' },
+  amber:    { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-300', light: 'bg-amber-50', badge: 'bg-amber-500', cta: 'bg-amber-600' },
+  rose:     { bg: 'bg-rose-100', text: 'text-rose-700', border: 'border-rose-300', light: 'bg-rose-50', badge: 'bg-rose-500', cta: 'bg-rose-600' },
+  indigo:   { bg: 'bg-indigo-100', text: 'text-indigo-700', border: 'border-indigo-300', light: 'bg-indigo-50', badge: 'bg-indigo-500', cta: 'bg-indigo-600' },
+  pink:     { bg: 'bg-pink-100', text: 'text-pink-700', border: 'border-pink-300', light: 'bg-pink-50', badge: 'bg-pink-500', cta: 'bg-pink-600' },
+  teal:     { bg: 'bg-teal-100', text: 'text-teal-700', border: 'border-teal-300', light: 'bg-teal-50', badge: 'bg-teal-500', cta: 'bg-teal-600' },
+  violet:   { bg: 'bg-violet-100', text: 'text-violet-700', border: 'border-violet-300', light: 'bg-violet-50', badge: 'bg-violet-500', cta: 'bg-violet-600' },
+  blue:     { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300', light: 'bg-blue-50', badge: 'bg-blue-500', cta: 'bg-blue-600' },
+  cyan:     { bg: 'bg-cyan-100', text: 'text-cyan-700', border: 'border-cyan-300', light: 'bg-cyan-50', badge: 'bg-cyan-500', cta: 'bg-cyan-600' },
+  purple:   { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-300', light: 'bg-purple-50', badge: 'bg-purple-500', cta: 'bg-purple-600' },
+  orange:   { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-300', light: 'bg-orange-50', badge: 'bg-orange-500', cta: 'bg-orange-600' },
+  lime:     { bg: 'bg-lime-100', text: 'text-lime-700', border: 'border-lime-300', light: 'bg-lime-50', badge: 'bg-lime-500', cta: 'bg-lime-600' },
+  fuchsia:  { bg: 'bg-fuchsia-100', text: 'text-fuchsia-700', border: 'border-fuchsia-300', light: 'bg-fuchsia-50', badge: 'bg-fuchsia-500', cta: 'bg-fuchsia-600' },
+  sky:      { bg: 'bg-sky-100', text: 'text-sky-700', border: 'border-sky-300', light: 'bg-sky-50', badge: 'bg-sky-500', cta: 'bg-sky-600' },
+  gray:     { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-300', light: 'bg-gray-50', badge: 'bg-gray-500', cta: 'bg-gray-600' },
+  green:    { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300', light: 'bg-green-50', badge: 'bg-green-500', cta: 'bg-green-600' },
+};
+
+function getStepColor(stepType: string) {
+  const config = STEP_TYPES.find((t) => t.value === stepType);
+  return STEP_COLORS[config?.color || 'gray'];
+}
 
 interface FunnelAnalyticsData {
   name: string;
@@ -49,7 +97,7 @@ interface FunnelAnalyticsData {
   clicks: number;
 }
 
-/* ── ファネルフロープレビュー ── */
+/* -- ファネルフロープレビュー（カラフル版） -- */
 function FunnelFlowPreview({ steps, analytics }: { steps: Step[]; analytics: FunnelAnalyticsData[] }) {
   if (steps.length === 0) {
     return (
@@ -66,6 +114,7 @@ function FunnelFlowPreview({ steps, analytics }: { steps: Step[]; analytics: Fun
       {steps.map((step, i) => {
         const icon = STEP_ICONS[step.stepType] || <ExternalLink className="w-4 h-4" />;
         const typeLabel = STEP_TYPES.find((t) => t.value === step.stepType)?.label || step.stepType;
+        const colors = getStepColor(step.stepType);
         const analyticsData = analytics[i];
         const prevViews = i > 0 ? analytics[i - 1]?.views : 0;
         const cvr = i > 0 && prevViews > 0 && analyticsData
@@ -75,19 +124,24 @@ function FunnelFlowPreview({ steps, analytics }: { steps: Step[]; analytics: Fun
         return (
           <div key={i} className="w-full max-w-xs">
             {/* ステップカード */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-md p-4">
+            <div className={`rounded-xl border-2 ${colors.border} shadow-md p-4 ${colors.light}`}>
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className={`w-9 h-9 ${colors.bg} ${colors.text} rounded-lg flex items-center justify-center flex-shrink-0`}>
                   {icon}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-gray-900 truncate">{step.name || `ステップ ${i + 1}`}</p>
-                  <p className="text-xs text-gray-500">{typeLabel}</p>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${colors.bg} ${colors.text}`}>
+                    {typeLabel}
+                  </span>
                 </div>
+                <span className={`w-7 h-7 ${colors.badge} text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0`}>
+                  {i + 1}
+                </span>
               </div>
               {step.ctaLabel && step.stepType !== 'thank_you' && (
                 <div className="mt-3">
-                  <div className="w-full px-3 py-2 bg-amber-600 text-white text-xs font-semibold rounded-lg text-center">
+                  <div className={`w-full px-3 py-2 ${colors.cta} text-white text-xs font-semibold rounded-lg text-center`}>
                     {step.ctaLabel}
                   </div>
                 </div>
@@ -115,7 +169,81 @@ function FunnelFlowPreview({ steps, analytics }: { steps: Step[]; analytics: Fun
   );
 }
 
-/* ── メインエディタ ── */
+/* -- コンテンツ選択ドロップダウン -- */
+function ContentPicker({
+  stepType,
+  items,
+  loading,
+  value,
+  onChange,
+  fallbackPlaceholder,
+}: {
+  stepType: string;
+  items: ContentItem[];
+  loading: boolean;
+  value: string;
+  onChange: (value: string, slug?: string) => void;
+  fallbackPlaceholder: string;
+}) {
+  const [manualMode, setManualMode] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-400">
+        <Loader2 className="w-3 h-3 animate-spin" />読み込み中...
+      </div>
+    );
+  }
+
+  if (items.length === 0 || manualMode) {
+    return (
+      <div className="space-y-1">
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={fallbackPlaceholder}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400"
+        />
+        {items.length > 0 && (
+          <button onClick={() => setManualMode(false)} className="text-xs text-blue-600 hover:underline">
+            一覧から選ぶ
+          </button>
+        )}
+        {items.length === 0 && (
+          <p className="text-xs text-gray-400">まだ作成済みのコンテンツがありません。スラッグ/IDを直接入力してください。</p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <select
+        value={value}
+        onChange={(e) => {
+          const selected = items.find((item) =>
+            item.slug ? item.slug === e.target.value : item.id === e.target.value
+          );
+          onChange(e.target.value, selected?.slug);
+        }}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm bg-white"
+      >
+        <option value="">-- 作成済みから選ぶ --</option>
+        {items.map((item) => (
+          <option key={item.id} value={item.slug || item.id}>
+            {item.label}{item.slug ? ` (${item.slug})` : ''}
+          </option>
+        ))}
+      </select>
+      <button onClick={() => setManualMode(true)} className="text-xs text-blue-600 hover:underline">
+        手動で入力する
+      </button>
+    </div>
+  );
+}
+
+/* -- メインエディタ -- */
 export default function FunnelEditor({ funnelId, initialSteps, initialName }: { funnelId?: string; initialSteps?: Step[]; initialName?: string }) {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
@@ -130,6 +258,10 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
   const [steps, setSteps] = useState<Step[]>(initialSteps || []);
   const [analytics, setAnalytics] = useState<FunnelAnalyticsData[]>([]);
 
+  // ユーザーの作成済みコンテンツ
+  const [userContents, setUserContents] = useState<Record<string, ContentItem[]>>({});
+  const [contentsLoading, setContentsLoading] = useState(false);
+
   // 完了モーダル
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [createdSlug, setCreatedSlug] = useState<string | null>(null);
@@ -143,6 +275,7 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
+        fetchUserContents(user.id);
         if (funnelId) {
           await fetchFunnel(user.id);
           await fetchAnalytics(user.id);
@@ -152,6 +285,20 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
     };
     init();
   }, [funnelId]);
+
+  const fetchUserContents = async (uid: string) => {
+    setContentsLoading(true);
+    try {
+      const res = await fetch(`/api/funnel/user-contents?userId=${uid}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUserContents(data.contents || {});
+      }
+    } catch {
+      // silently fail
+    }
+    setContentsLoading(false);
+  };
 
   const fetchFunnel = async (uid: string) => {
     const res = await fetch(`/api/funnel/${funnelId}?userId=${uid}`);
@@ -212,6 +359,14 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
   };
 
   const getStepTypeConfig = (type: string) => STEP_TYPES.find((t) => t.value === type);
+
+  // コンテンツピッカー用のキー（stepTypeからuserContentsのキーへのマッピング）
+  const getContentKey = (stepType: string): string => {
+    // APIのキーと一致させる
+    if (stepType === 'order_form') return 'order_form';
+    if (stepType === 'sns_post') return 'sns_post';
+    return stepType;
+  };
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen bg-gray-50"><Loader2 className="w-8 h-8 animate-spin text-amber-500" /></div>;
@@ -379,42 +534,98 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
                 <div className="space-y-3">
                   {steps.map((step, i) => {
                     const typeConfig = getStepTypeConfig(step.stepType);
+                    const colors = getStepColor(step.stepType);
+                    const contentKey = getContentKey(step.stepType);
+                    const contentItems = userContents[contentKey] || [];
+
                     return (
-                      <div key={i} className="border border-gray-200 rounded-lg p-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="w-7 h-7 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">{i + 1}</span>
-                          <input type="text" value={step.name} onChange={(e) => updateStep(i, { name: e.target.value })} placeholder="ステップ名" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400" />
+                      <div key={i} className={`border-2 ${colors.border} rounded-xl p-4 ${colors.light} transition-all duration-200`}>
+                        {/* ステップヘッダー */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className={`w-8 h-8 ${colors.badge} text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0`}>
+                            {i + 1}
+                          </span>
+                          <div className={`w-7 h-7 ${colors.bg} ${colors.text} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                            {STEP_ICONS[step.stepType] || <ExternalLink className="w-3.5 h-3.5" />}
+                          </div>
+                          <input type="text" value={step.name} onChange={(e) => updateStep(i, { name: e.target.value })} placeholder="ステップ名" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white" />
                           <div className="flex items-center gap-1">
-                            <button onClick={() => moveStep(i, 'up')} disabled={i === 0} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ArrowUp className="w-4 h-4" /></button>
-                            <button onClick={() => moveStep(i, 'down')} disabled={i === steps.length - 1} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ArrowDown className="w-4 h-4" /></button>
-                            <button onClick={() => removeStep(i)} className="p-1 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                            <button onClick={() => moveStep(i, 'up')} disabled={i === 0} className="p-1.5 text-gray-400 hover:text-gray-600 disabled:opacity-30 rounded hover:bg-white/60"><ArrowUp className="w-4 h-4" /></button>
+                            <button onClick={() => moveStep(i, 'down')} disabled={i === steps.length - 1} className="p-1.5 text-gray-400 hover:text-gray-600 disabled:opacity-30 rounded hover:bg-white/60"><ArrowDown className="w-4 h-4" /></button>
+                            <button onClick={() => removeStep(i)} className="p-1.5 text-gray-400 hover:text-red-500 rounded hover:bg-white/60"><Trash2 className="w-4 h-4" /></button>
                           </div>
                         </div>
+
                         <div className="grid sm:grid-cols-2 gap-2">
+                          {/* タイプ選択 */}
                           <div>
                             <label className="block text-xs font-semibold text-gray-500 mb-1">タイプ</label>
-                            <select value={step.stepType} onChange={(e) => updateStep(i, { stepType: e.target.value, contentRef: null })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm">
-                              {STEP_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            <select value={step.stepType} onChange={(e) => updateStep(i, { stepType: e.target.value, contentRef: null })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm bg-white">
+                              <optgroup label="LP・ページ">
+                                {STEP_TYPES.filter(t => ['profile_lp', 'business_lp', 'webinar', 'onboarding'].includes(t.value)).map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                              </optgroup>
+                              <optgroup label="診断・クイズ">
+                                {STEP_TYPES.filter(t => ['quiz', 'entertainment_quiz'].includes(t.value)).map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                              </optgroup>
+                              <optgroup label="ライティング">
+                                {STEP_TYPES.filter(t => ['salesletter', 'sns_post'].includes(t.value)).map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                              </optgroup>
+                              <optgroup label="集客・イベント">
+                                {STEP_TYPES.filter(t => ['newsletter', 'booking', 'survey', 'attendance'].includes(t.value)).map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                              </optgroup>
+                              <optgroup label="収益化">
+                                {STEP_TYPES.filter(t => ['order_form', 'gamification'].includes(t.value)).map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                              </optgroup>
+                              <optgroup label="その他">
+                                {STEP_TYPES.filter(t => ['custom_url', 'thank_you'].includes(t.value)).map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                              </optgroup>
                             </select>
                           </div>
-                          {typeConfig?.refType !== 'none' && step.stepType !== 'thank_you' && (
+
+                          {/* コンテンツ選択 */}
+                          {typeConfig?.hasContent && typeConfig?.refType !== 'none' && (
                             <div className="sm:col-span-2">
-                              <label className="block text-xs font-semibold text-gray-500 mb-1">{typeConfig?.refType === 'url' ? 'URL' : 'スラッグ / ID'}</label>
-                              <input
-                                type="text"
-                                value={typeConfig?.refType === 'url' ? step.contentRef?.url || '' : step.contentRef?.slug || ''}
-                                onChange={(e) => {
-                                  const ref = typeConfig?.refType === 'url' ? { type: step.stepType, url: e.target.value } : { type: step.stepType, slug: e.target.value };
+                              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                                {typeConfig.label}を選択
+                              </label>
+                              <ContentPicker
+                                stepType={step.stepType}
+                                items={contentItems}
+                                loading={contentsLoading}
+                                value={
+                                  typeConfig.refType === 'url'
+                                    ? step.contentRef?.url || ''
+                                    : typeConfig.refType === 'id'
+                                      ? step.contentRef?.id || step.contentRef?.slug || ''
+                                      : step.contentRef?.slug || ''
+                                }
+                                onChange={(val) => {
+                                  const ref = typeConfig.refType === 'url'
+                                    ? { type: step.stepType, url: val }
+                                    : typeConfig.refType === 'id'
+                                      ? { type: step.stepType, id: val, slug: val }
+                                      : { type: step.stepType, slug: val };
                                   updateStep(i, { contentRef: ref });
                                 }}
-                                placeholder={typeConfig?.placeholder}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400"
+                                fallbackPlaceholder={typeConfig.placeholder}
                               />
-                              {typeConfig?.hint && (
-                                <p className="text-xs text-gray-400 mt-1 leading-relaxed">{typeConfig.hint}</p>
-                              )}
                             </div>
                           )}
+
+                          {/* 外部URL入力 */}
+                          {step.stepType === 'custom_url' && (
+                            <div className="sm:col-span-2">
+                              <label className="block text-xs font-semibold text-gray-500 mb-1">URL</label>
+                              <input
+                                type="text"
+                                value={step.contentRef?.url || ''}
+                                onChange={(e) => updateStep(i, { contentRef: { type: 'custom_url', url: e.target.value } })}
+                                placeholder="https://example.com"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white"
+                              />
+                            </div>
+                          )}
+
                           {/* サンキューページ専用フォーム */}
                           {step.stepType === 'thank_you' && (
                             <div className="sm:col-span-2 space-y-3 bg-green-50 border border-green-200 rounded-lg p-3">
@@ -426,7 +637,7 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
                                   onChange={(e) => updateStep(i, { contentRef: { ...step.contentRef, type: 'thank_you', message: e.target.value } })}
                                   placeholder="例: お申し込みありがとうございます。確認メールをお送りしましたのでご確認ください。"
                                   rows={3}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white"
                                 />
                               </div>
                               <div>
@@ -436,7 +647,7 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
                                   value={(step.contentRef as any)?.nextAction || ''}
                                   onChange={(e) => updateStep(i, { contentRef: { ...step.contentRef, type: 'thank_you', nextAction: e.target.value } })}
                                   placeholder="例: メールを確認してください / LINEを友だち追加してください"
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white"
                                 />
                               </div>
                               <div className="grid sm:grid-cols-2 gap-2">
@@ -447,7 +658,7 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
                                     value={(step.contentRef as any)?.ctaText || ''}
                                     onChange={(e) => updateStep(i, { contentRef: { ...step.contentRef, type: 'thank_you', ctaText: e.target.value } })}
                                     placeholder="例: LINEを追加する"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white"
                                   />
                                 </div>
                                 <div>
@@ -457,18 +668,20 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
                                     value={(step.contentRef as any)?.ctaUrl || ''}
                                     onChange={(e) => updateStep(i, { contentRef: { ...step.contentRef, type: 'thank_you', ctaUrl: e.target.value } })}
                                     placeholder="https://..."
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white"
                                   />
                                 </div>
                               </div>
                             </div>
                           )}
+
+                          {/* CTAボタン設定 */}
                           {step.stepType !== 'thank_you' && (
                           <div>
-                            <label className="block text-xs font-semibold text-gray-500 mb-1">CTAボタン（次のステップへの遷移ボタン）</label>
-                            <input type="text" value={step.ctaLabel} onChange={(e) => updateStep(i, { ctaLabel: e.target.value })} placeholder="次へ進む" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400" />
+                            <label className="block text-xs font-semibold text-gray-500 mb-1">CTAボタン</label>
+                            <input type="text" value={step.ctaLabel} onChange={(e) => updateStep(i, { ctaLabel: e.target.value })} placeholder="次へ進む" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white" />
                             {typeConfig?.ctaNote && (
-                              <p className="text-xs text-amber-600 mt-1">{typeConfig.ctaNote}</p>
+                              <p className={`text-xs ${colors.text} mt-1`}>{typeConfig.ctaNote}</p>
                             )}
                           </div>
                           )}
@@ -491,6 +704,7 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
                     const maxViews = Math.max(...analytics.map((x) => x.views), 1);
                     const widthPercent = (a.views / maxViews) * 100;
                     const cvr = i > 0 && analytics[i - 1].views > 0 ? ((a.views / analytics[i - 1].views) * 100).toFixed(1) : '100.0';
+                    const stepColor = steps[i] ? getStepColor(steps[i].stepType) : STEP_COLORS.amber;
                     return (
                       <div key={i}>
                         <div className="flex items-center justify-between text-sm mb-1">
@@ -498,7 +712,7 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
                           <span className="text-gray-500">{a.views} PV {i > 0 && <span className="text-amber-600 font-semibold">({cvr}%)</span>}</span>
                         </div>
                         <div className="w-full bg-gray-100 rounded-full h-5">
-                          <div className="bg-amber-500 rounded-full h-5 transition-all duration-500" style={{ width: `${widthPercent}%` }} />
+                          <div className={`${stepColor.badge} rounded-full h-5 transition-all duration-500`} style={{ width: `${widthPercent}%` }} />
                         </div>
                       </div>
                     );

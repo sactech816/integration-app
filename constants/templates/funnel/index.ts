@@ -60,7 +60,7 @@ export const FUNNEL_TEMPLATES: FunnelTemplate[] = [
     steps: [
       { name: 'ウェビナー紹介LP', stepType: 'business_lp', contentRef: null, ctaLabel: '詳しく知る' },
       { name: 'メルマガ登録', stepType: 'newsletter', contentRef: null, ctaLabel: '登録する' },
-      { name: 'セミナー案内LP', stepType: 'business_lp', contentRef: null, ctaLabel: '参加を申し込む' },
+      { name: 'セミナー案内LP', stepType: 'webinar', contentRef: null, ctaLabel: '参加を申し込む' },
       { name: '参加申し込み', stepType: 'order_form', contentRef: null, ctaLabel: '申し込む' },
       { name: 'お申し込みありがとうございます', stepType: 'thank_you', contentRef: { type: 'thank_you', message: 'お申し込みありがとうございます！\n当日の参加方法をメールでお送りしました。', nextAction: 'メールに記載のZoomリンクからご参加ください' }, ctaLabel: '' },
     ],
