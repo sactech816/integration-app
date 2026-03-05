@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb, Crown, Image, Store, PartyPopper, Mail, GitBranch, Video, ClipboardCheck, Send } from 'lucide-react';
+import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb, Crown, Image, Store, PartyPopper, Mail, GitBranch, Video, ClipboardCheck, Send, BookOpen, Share2 } from 'lucide-react';
 import { ServiceType, SERVICE_LABELS } from '@/lib/types';
 import Link from 'next/link';
 
@@ -134,6 +134,48 @@ const serviceConfig = [
     isPro: true,
     category: 'writing' as ServiceCategoryId,
   },
+  {
+    id: 'sns-post' as ServiceType,
+    icon: Send,
+    label: 'SNS投稿メーカー',
+    description: 'SNS投稿文をAIで自動生成。X・Instagram・Facebook等に最適な投稿を簡単作成',
+    gradient: 'from-amber-500 to-orange-500',
+    bgLight: 'bg-amber-50',
+    textColor: 'text-amber-600',
+    borderColor: 'border-amber-200',
+    hoverBg: 'hover:bg-amber-50',
+    features: ['AI自動生成', 'SNS最適化', 'マルチ対応'],
+    category: 'writing' as ServiceCategoryId,
+    href: '/sns-post/editor',
+  },
+  {
+    id: 'kindle' as ServiceType,
+    icon: BookOpen,
+    label: 'Kindle執筆体験版',
+    description: 'AIでKindle本を執筆体験。書籍執筆の第一歩をサポート',
+    gradient: 'from-amber-500 to-orange-600',
+    bgLight: 'bg-amber-50',
+    textColor: 'text-amber-600',
+    borderColor: 'border-amber-200',
+    hoverBg: 'hover:bg-amber-50',
+    features: ['AI執筆', '体験版', '無料'],
+    category: 'writing' as ServiceCategoryId,
+    href: '/demos',
+  },
+  {
+    id: 'kindle-discovery' as ServiceType,
+    icon: Lightbulb,
+    label: 'ネタ発掘診断',
+    description: 'あなたに合った執筆ネタをAIが診断。書籍・ブログのテーマ探しに',
+    gradient: 'from-amber-400 to-yellow-500',
+    bgLight: 'bg-amber-50',
+    textColor: 'text-amber-600',
+    borderColor: 'border-amber-200',
+    hoverBg: 'hover:bg-amber-50',
+    features: ['AI診断', 'ネタ発掘', '無料'],
+    category: 'writing' as ServiceCategoryId,
+    href: '/demos',
+  },
   // 集客・イベント
   {
     id: 'booking' as ServiceType,
@@ -214,6 +256,20 @@ const serviceConfig = [
     features: ['申込フォーム', '決済連携', 'カスタマイズ'],
     category: 'monetization' as ServiceCategoryId,
   },
+  {
+    id: 'affiliate' as ServiceType,
+    icon: Share2,
+    label: 'アフィリエイト',
+    description: '集客メーカーを紹介して報酬を獲得。紹介プログラムで収益化',
+    gradient: 'from-purple-400 to-indigo-600',
+    bgLight: 'bg-purple-50',
+    textColor: 'text-purple-600',
+    borderColor: 'border-purple-200',
+    hoverBg: 'hover:bg-purple-50',
+    features: ['紹介報酬', '簡単登録', '収益化'],
+    category: 'monetization' as ServiceCategoryId,
+    href: '/affiliate',
+  },
 ];
 
 const categoryTabStyles: Record<ServiceCategoryId, string> = {
@@ -270,74 +326,88 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredServices.map((service) => (
-            <button
-              key={service.id}
-              onClick={() => onSelect(service.id)}
-              className={`
-                group relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300
-                ${selectedService === service.id
-                  ? `${service.bgLight} ring-2 ring-offset-2 ${service.borderColor.replace('border', 'ring')}`
-                  : `${service.bgLight} hover:bg-white hover:shadow-xl border border-gray-100`
-                }
-              `}
-            >
-              {/* PROバッジ */}
-              {service.isPro && (
-                <div className="absolute top-3 right-3 flex items-center gap-0.5 bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-bold">
-                  <Crown size={10} />PRO
+          {filteredServices.map((service) => {
+            const cardClassName = `
+              group relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300
+              ${selectedService === service.id
+                ? `${service.bgLight} ring-2 ring-offset-2 ${service.borderColor.replace('border', 'ring')}`
+                : `${service.bgLight} hover:bg-white hover:shadow-xl border border-gray-100`
+              }
+            `;
+
+            const cardContent = (
+              <>
+                {/* PROバッジ */}
+                {service.isPro && (
+                  <div className="absolute top-3 right-3 flex items-center gap-0.5 bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-bold">
+                    <Crown size={10} />PRO
+                  </div>
+                )}
+
+                {/* 背景グラデーション（ホバー時） */}
+                <div className={`
+                  absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-0
+                  group-hover:opacity-5 transition-opacity duration-300
+                `} />
+
+                {/* アイコン */}
+                <div className={`
+                  w-14 h-14 rounded-xl bg-gradient-to-br ${service.gradient}
+                  flex items-center justify-center mb-4
+                  group-hover:scale-110 transition-transform duration-300
+                `}>
+                  <service.icon className="text-white" size={28} />
                 </div>
-              )}
 
-              {/* 背景グラデーション（ホバー時） */}
-              <div className={`
-                absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-0
-                group-hover:opacity-5 transition-opacity duration-300
-              `} />
+                {/* タイトル */}
+                <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-gray-800">
+                  {service.label}
+                </h3>
 
-              {/* アイコン */}
-              <div className={`
-                w-14 h-14 rounded-xl bg-gradient-to-br ${service.gradient} 
-                flex items-center justify-center mb-4 
-                group-hover:scale-110 transition-transform duration-300
-              `}>
-                <service.icon className="text-white" size={28} />
-              </div>
+                {/* 説明 */}
+                {showDescription && (
+                  <p className="text-sm text-gray-600 mb-4 leading-relaxed line-clamp-2">
+                    {service.description}
+                  </p>
+                )}
 
-              {/* タイトル */}
-              <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-gray-800">
-                {service.label}
-              </h3>
+                {/* 機能タグ */}
+                <div className="flex flex-wrap gap-1 mb-4">
+                  {service.features.slice(0, 2).map((feature) => (
+                    <span
+                      key={feature}
+                      className={`text-xs px-2 py-1 rounded-full ${service.bgLight} ${service.textColor} font-medium`}
+                    >
+                      {feature}
+                    </span>
+                  ))}
+                </div>
 
-              {/* 説明 */}
-              {showDescription && (
-                <p className="text-sm text-gray-600 mb-4 leading-relaxed line-clamp-2">
-                  {service.description}
-                </p>
-              )}
+                {/* CTA */}
+                <div className={`
+                  flex items-center gap-1 ${service.textColor} font-semibold text-sm
+                  group-hover:gap-2 transition-all duration-300
+                `}>
+                  <span>{ctaLabel}</span>
+                  <ArrowRight size={16} />
+                </div>
+              </>
+            );
 
-              {/* 機能タグ */}
-              <div className="flex flex-wrap gap-1 mb-4">
-                {service.features.slice(0, 2).map((feature) => (
-                  <span 
-                    key={feature}
-                    className={`text-xs px-2 py-1 rounded-full ${service.bgLight} ${service.textColor} font-medium`}
-                  >
-                    {feature}
-                  </span>
-                ))}
-              </div>
+            if ('href' in service && service.href) {
+              return (
+                <Link key={service.id} href={service.href} className={cardClassName}>
+                  {cardContent}
+                </Link>
+              );
+            }
 
-              {/* CTA */}
-              <div className={`
-                flex items-center gap-1 ${service.textColor} font-semibold text-sm
-                group-hover:gap-2 transition-all duration-300
-              `}>
-                <span>{ctaLabel}</span>
-                <ArrowRight size={16} />
-              </div>
-            </button>
-          ))}
+            return (
+              <button key={service.id} onClick={() => onSelect(service.id)} className={cardClassName}>
+                {cardContent}
+              </button>
+            );
+          })}
         </div>
 
         {/* ゲーミフィケーションへのリンク */}

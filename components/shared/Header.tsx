@@ -195,9 +195,9 @@ const Header: React.FC<HeaderProps> = ({
               {isServiceMenuOpen && (
                 <>
                   <div className="absolute top-full left-0 w-full h-2" />
-                  <div className="absolute top-full -left-20 pt-2 w-[1100px] z-[120]">
+                  <div className="absolute top-full -left-20 pt-2 w-[960px] z-[120]">
                     <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-5 animate-fade-in">
-                      <div className="grid grid-cols-5 gap-6">
+                      <div className="grid grid-cols-5 gap-4">
                         {/* LP・ページ作成 */}
                         <div>
                           <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-3">LP・ページ作成</p>
@@ -260,7 +260,11 @@ const Header: React.FC<HeaderProps> = ({
                             </Link>
                             <Link href="/kindle/free-trial" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-amber-50 transition-colors">
                               <div className="p-1.5 rounded-lg bg-amber-50 shrink-0"><Gift size={16} className="text-amber-600" /></div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">Kindle体験版</span>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">Kindle執筆体験版</span>
+                            </Link>
+                            <Link href="/demos" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-amber-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-amber-50 shrink-0"><Lightbulb size={16} className="text-amber-600" /></div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">ネタ発掘診断</span>
                             </Link>
                           </div>
                         </div>

@@ -26,6 +26,9 @@ import {
   GitBranch,
   Video,
   ClipboardCheck,
+  Send,
+  BookOpen,
+  Share2,
 } from 'lucide-react';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
@@ -153,12 +156,34 @@ const tools: ToolDef[] = [
   {
     name: 'SNS投稿メーカー',
     description: 'SNS投稿文をAIで自動生成。X・Instagram・Facebook等に最適な投稿を簡単作成。',
-    icon: FileText,
+    icon: Send,
     href: '/sns-post/editor',
     color: 'from-amber-500 to-orange-500',
     bgColor: 'bg-amber-50',
     textColor: 'text-amber-600',
     features: ['AI自動生成', 'SNS最適化', 'マルチプラットフォーム', '無料'],
+    category: 'writing',
+  },
+  {
+    name: 'Kindle執筆体験版',
+    description: 'AIでKindle本を執筆体験。書籍執筆の第一歩をサポートします。',
+    icon: BookOpen,
+    href: '/demos',
+    color: 'from-amber-500 to-orange-600',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-600',
+    features: ['AI執筆', '体験版', '書籍作成', '無料'],
+    category: 'writing',
+  },
+  {
+    name: 'ネタ発掘診断',
+    description: 'あなたに合った執筆ネタをAIが診断。書籍・ブログのテーマ探しに最適。',
+    icon: Lightbulb,
+    href: '/demos',
+    color: 'from-amber-400 to-yellow-500',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-600',
+    features: ['AI診断', 'ネタ発掘', 'テーマ探し', '無料'],
     category: 'writing',
   },
   // 集客・イベント
@@ -239,6 +264,17 @@ const tools: ToolDef[] = [
     textColor: 'text-purple-600',
     features: ['プロに依頼', 'LP制作', 'デザイン', 'PRO'],
     isPro: true,
+    category: 'monetization',
+  },
+  {
+    name: 'アフィリエイト',
+    description: '集客メーカーを紹介して報酬を獲得。紹介プログラムで簡単に収益化できます。',
+    icon: Share2,
+    href: '/affiliate',
+    color: 'from-purple-400 to-indigo-600',
+    bgColor: 'bg-purple-50',
+    textColor: 'text-purple-600',
+    features: ['紹介報酬', '簡単登録', '収益化', '無料'],
     category: 'monetization',
   },
 ];
