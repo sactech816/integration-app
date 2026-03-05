@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb, Crown, Image, Store, PartyPopper, Mail, GitBranch, Video, ClipboardCheck, Send } from 'lucide-react';
 import { ServiceType, SERVICE_LABELS } from '@/lib/types';
 import Link from 'next/link';
@@ -216,6 +216,14 @@ const serviceConfig = [
   },
 ];
 
+const categoryTabStyles: Record<ServiceCategoryId, string> = {
+  page: 'bg-indigo-100 text-indigo-700 border border-indigo-300',
+  quiz: 'bg-emerald-100 text-emerald-700 border border-emerald-300',
+  writing: 'bg-amber-100 text-amber-700 border border-amber-300',
+  marketing: 'bg-cyan-100 text-cyan-700 border border-cyan-300',
+  monetization: 'bg-purple-100 text-purple-700 border border-purple-300',
+};
+
 const ServiceSelector: React.FC<ServiceSelectorProps> = ({
   onSelect,
   selectedService,
@@ -224,12 +232,45 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
   showGamification = true,
   ctaLabel = '作成する',
 }) => {
+  const [activeCategory, setActiveCategory] = useState<'all' | ServiceCategoryId>('all');
+
   // カード形式
   if (variant === 'cards') {
+    const filteredServices = activeCategory === 'all'
+      ? serviceConfig
+      : serviceConfig.filter(s => s.category === activeCategory);
+
     return (
       <div>
+        {/* カテゴリタブ */}
+        <div className="flex gap-2 overflow-x-auto pb-4 mb-6 justify-center flex-wrap">
+          <button
+            onClick={() => setActiveCategory('all')}
+            className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
+              activeCategory === 'all'
+                ? 'bg-gray-800 text-white'
+                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+            }`}
+          >
+            すべて
+          </button>
+          {serviceCategories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
+                activeCategory === cat.id
+                  ? categoryTabStyles[cat.id]
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {serviceConfig.map((service) => (
+          {filteredServices.map((service) => (
             <button
               key={service.id}
               onClick={() => onSelect(service.id)}
@@ -237,7 +278,7 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
                 group relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300
                 ${selectedService === service.id
                   ? `${service.bgLight} ring-2 ring-offset-2 ${service.borderColor.replace('border', 'ring')}`
-                  : 'bg-white hover:shadow-xl border border-gray-100'
+                  : `${service.bgLight} hover:bg-white hover:shadow-xl border border-gray-100`
                 }
               `}
             >

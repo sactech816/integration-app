@@ -441,7 +441,7 @@ export default function ToolsPageClient() {
                 <Link
                   key={index}
                   href={tool.href}
-                  className="group relative bg-white rounded-2xl border-2 border-gray-100 p-8 hover:border-transparent hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
+                  className={`group relative ${tool.bgColor} rounded-2xl border-2 border-gray-100 p-8 hover:bg-white hover:border-transparent hover:shadow-2xl transition-all duration-300 hover:-translate-y-2`}
                 >
                   {/* PROバッジ */}
                   {tool.isPro && (

@@ -40,7 +40,8 @@ import {
   Video,
   ClipboardCheck,
   Share2,
-  Gift
+  Gift,
+  Send
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -194,225 +195,128 @@ const Header: React.FC<HeaderProps> = ({
               {isServiceMenuOpen && (
                 <>
                   <div className="absolute top-full left-0 w-full h-2" />
-                  <div className="absolute top-full -left-20 pt-2 w-[980px] z-[120]">
+                  <div className="absolute top-full -left-20 pt-2 w-[1100px] z-[120]">
                     <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-5 animate-fade-in">
-                      <div className="grid grid-cols-4 gap-8">
+                      <div className="grid grid-cols-5 gap-6">
                         {/* LP・ページ作成 */}
                         <div>
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">LP・ページ作成</p>
+                          <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-3">LP・ページ作成</p>
                           <div className="space-y-1">
-                            <Link
-                              href="/profile/editor"
-                              onClick={(e) => handleServiceClick(e, 'profile')}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${services[1].bg} shrink-0`}>
-                                <UserCircle size={16} className={services[1].color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{services[1].label}</span>
+                            <Link href="/profile/editor" onClick={(e) => handleServiceClick(e, 'profile')} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-indigo-50 shrink-0"><UserCircle size={16} className="text-indigo-600" /></div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">プロフィールメーカー</span>
                             </Link>
-                            <Link
-                              href="/business/editor"
-                              onClick={(e) => handleServiceClick(e, 'business')}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${services[2].bg} shrink-0`}>
-                                <Building2 size={16} className={services[2].color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{services[2].label}</span>
+                            <Link href="/business/editor" onClick={(e) => handleServiceClick(e, 'business')} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-indigo-50 shrink-0"><Building2 size={16} className="text-indigo-600" /></div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">LPメーカー</span>
                             </Link>
-                            <Link
-                              href="/webinar/editor"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${webinarService.bg} shrink-0`}>
-                                <webinarService.icon size={16} className={webinarService.color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{webinarService.label}</span>
+                            <Link href="/webinar/editor" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-indigo-50 shrink-0"><Video size={16} className="text-indigo-600" /></div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">ウェビナーLPメーカー</span>
                             </Link>
-                            <Link
-                              href="/onboarding/editor"
-                              onClick={(e) => handleServiceClick(e, 'onboarding')}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${onboardingService.bg} shrink-0`}>
-                                <onboardingService.icon size={16} className={onboardingService.color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{onboardingService.label}</span>
+                            <Link href="/onboarding/editor" onClick={(e) => handleServiceClick(e, 'onboarding')} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-indigo-50 shrink-0"><MousePointerClick size={16} className="text-indigo-600" /></div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">はじめかたメーカー</span>
                             </Link>
                           </div>
                         </div>
 
-                        {/* 診断・ライティング */}
+                        {/* 診断・クイズ */}
                         <div>
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">診断・ライティング</p>
+                          <p className="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-3">診断・クイズ</p>
                           <div className="space-y-1">
-                            <Link
-                              href="/quiz/editor"
-                              onClick={(e) => handleServiceClick(e, 'quiz')}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${services[0].bg} shrink-0`}>
-                                <Sparkles size={16} className={services[0].color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{services[0].label}</span>
+                            <Link href="/quiz/editor" onClick={(e) => handleServiceClick(e, 'quiz')} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-emerald-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-emerald-50 shrink-0"><Sparkles size={16} className="text-emerald-600" /></div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">診断クイズメーカー</span>
                             </Link>
-                            <Link
-                              href="/entertainment/create"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${entertainmentService.bg} shrink-0`}>
-                                <entertainmentService.icon size={16} className={entertainmentService.color} />
-                              </div>
+                            <Link href="/entertainment/create" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-emerald-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-emerald-50 shrink-0"><PartyPopper size={16} className="text-emerald-600" /></div>
                               <span className="font-medium text-gray-900 text-sm whitespace-nowrap">
-                                {entertainmentService.label}
+                                エンタメ診断メーカー
                                 <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">PRO</span>
                               </span>
                             </Link>
-                            <Link
-                              href="/salesletter/editor"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${salesletterService.bg} shrink-0`}>
-                                <salesletterService.icon size={16} className={salesletterService.color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{salesletterService.label}</span>
+                          </div>
+                        </div>
+
+                        {/* ライティング・制作 */}
+                        <div>
+                          <p className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-3">ライティング・制作</p>
+                          <div className="space-y-1">
+                            <Link href="/salesletter/editor" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-amber-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-amber-50 shrink-0"><PenTool size={16} className="text-amber-600" /></div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">セールスライター</span>
                             </Link>
-                            <Link
-                              href="/thumbnail/editor"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${thumbnailService.bg} shrink-0`}>
-                                <thumbnailService.icon size={16} className={thumbnailService.color} />
-                              </div>
+                            <Link href="/thumbnail/editor" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-amber-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-amber-50 shrink-0"><Image size={16} className="text-amber-600" /></div>
                               <span className="font-medium text-gray-900 text-sm whitespace-nowrap">
-                                {thumbnailService.label}
+                                サムネイルメーカー
                                 <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">PRO</span>
                               </span>
                             </Link>
-                            <Link
-                              href="/kindle/free-trial"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${kindleFreeTrialService.bg} shrink-0`}>
-                                <kindleFreeTrialService.icon size={16} className={kindleFreeTrialService.color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{kindleFreeTrialService.label}</span>
+                            <Link href="/sns-post/editor" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-amber-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-amber-50 shrink-0"><Send size={16} className="text-amber-600" /></div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">SNS投稿メーカー</span>
+                            </Link>
+                            <Link href="/kindle/free-trial" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-amber-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-amber-50 shrink-0"><Gift size={16} className="text-amber-600" /></div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">Kindle体験版</span>
                             </Link>
                           </div>
                         </div>
 
                         {/* 集客・イベント */}
                         <div>
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">集客・イベント</p>
+                          <p className="text-xs font-bold text-cyan-500 uppercase tracking-wider mb-3">集客・イベント</p>
                           <div className="space-y-1">
-                            <Link
-                              href="/booking/new"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className="p-1.5 rounded-lg bg-blue-50 shrink-0">
-                                <Calendar size={16} className="text-blue-600" />
-                              </div>
+                            <Link href="/booking/new" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-cyan-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-cyan-50 shrink-0"><Calendar size={16} className="text-cyan-600" /></div>
                               <span className="font-medium text-gray-900 text-sm whitespace-nowrap">予約メーカー</span>
                             </Link>
-                            <Link
-                              href="/attendance/new"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${attendanceService.bg} shrink-0`}>
-                                <attendanceService.icon size={16} className={attendanceService.color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{attendanceService.label}</span>
+                            <Link href="/attendance/new" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-cyan-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-cyan-50 shrink-0"><CalendarCheck size={16} className="text-cyan-600" /></div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">出欠メーカー</span>
                             </Link>
-                            <Link
-                              href="/survey/new"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${surveyService.bg} shrink-0`}>
-                                <surveyService.icon size={16} className={surveyService.color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{surveyService.label}</span>
+                            <Link href="/survey/new" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-cyan-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-cyan-50 shrink-0"><ClipboardList size={16} className="text-cyan-600" /></div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">アンケートメーカー</span>
                             </Link>
-                            <Link
-                              href="/newsletter/dashboard"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${newsletterService.bg} shrink-0`}>
-                                <newsletterService.icon size={16} className={newsletterService.color} />
-                              </div>
+                            <Link href="/newsletter/dashboard" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-cyan-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-cyan-50 shrink-0"><Mail size={16} className="text-cyan-600" /></div>
                               <span className="font-medium text-gray-900 text-sm whitespace-nowrap">
-                                {newsletterService.label}
+                                メルマガメーカー
                                 <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">PRO</span>
                               </span>
                             </Link>
-                            <Link
-                              href="/funnel/dashboard"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${funnelService.bg} shrink-0`}>
-                                <funnelService.icon size={16} className={funnelService.color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{funnelService.label}</span>
+                            <Link href="/funnel/dashboard" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-cyan-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-cyan-50 shrink-0"><GitBranch size={16} className="text-cyan-600" /></div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">ファネルメーカー</span>
                             </Link>
                           </div>
                         </div>
 
                         {/* 収益化・販売 */}
                         <div>
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">収益化・販売</p>
+                          <p className="text-xs font-bold text-purple-500 uppercase tracking-wider mb-3">収益化・販売</p>
                           <div className="space-y-1">
-                            <Link
-                              href="/order-form/dashboard"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${orderFormService.bg} shrink-0`}>
-                                <orderFormService.icon size={16} className={orderFormService.color} />
-                              </div>
+                            <Link href="/order-form/dashboard" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-purple-50 shrink-0"><ClipboardCheck size={16} className="text-purple-600" /></div>
                               <span className="font-medium text-gray-900 text-sm whitespace-nowrap">
-                                {orderFormService.label}
+                                フォームメーカー
                                 <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">PRO</span>
                               </span>
                             </Link>
-                            <Link
-                              href="/gamification/new"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${gamificationService.bg} shrink-0`}>
-                                <gamificationService.icon size={16} className={gamificationService.color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{gamificationService.label}</span>
+                            <Link href="/gamification/new" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-purple-50 shrink-0"><Gamepad2 size={16} className="text-purple-600" /></div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">ゲーミフィケーション</span>
                             </Link>
-                            <Link
-                              href="/marketplace"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${marketplaceService.bg} shrink-0`}>
-                                <marketplaceService.icon size={16} className={marketplaceService.color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{marketplaceService.label}</span>
+                            <Link href="/marketplace" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-purple-50 shrink-0"><Store size={16} className="text-purple-600" /></div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">スキルマーケット</span>
                             </Link>
-                            <Link
-                              href="/dashboard?view=affiliate"
-                              onClick={closeMenus}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className={`p-1.5 rounded-lg ${affiliateService.bg} shrink-0`}>
-                                <affiliateService.icon size={16} className={affiliateService.color} />
-                              </div>
-                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">{affiliateService.label}</span>
+                            <Link href="/dashboard?view=affiliate" onClick={closeMenus} className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors">
+                              <div className="p-1.5 rounded-lg bg-purple-50 shrink-0"><Share2 size={16} className="text-purple-600" /></div>
+                              <span className="font-medium text-gray-900 text-sm whitespace-nowrap">アフィリエイト</span>
                             </Link>
                           </div>
                         </div>
