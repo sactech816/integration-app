@@ -6,7 +6,7 @@ import {
   Send, Save, ArrowLeft, Loader2, Monitor, Pencil,
   ChevronDown, ChevronUp, Settings, FileText, Paintbrush,
   LayoutTemplate, Sparkles, Type, Code, Eye, Mail, AlertTriangle,
-  CheckCircle2, Users, X, SendHorizonal
+  CheckCircle2, Users, X, SendHorizonal, Plus
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { NEWSLETTER_TEMPLATES, type NewsletterTemplate } from '@/constants/templates/newsletter';
@@ -336,6 +336,15 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const [subscriberCount, setSubscriberCount] = useState(0);
 
+  // リスト新規作成
+  const [showNewList, setShowNewList] = useState(false);
+  const [newListName, setNewListName] = useState('');
+  const [creatingList, setCreatingList] = useState(false);
+
+  // 保存完了
+  const [savedCampaignId, setSavedCampaignId] = useState<string | null>(campaignId || null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
   // モーダル
   const [showSendConfirm, setShowSendConfirm] = useState(false);
   const [showTestSend, setShowTestSend] = useState(false);
@@ -422,6 +431,31 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
         setListId(data.lists[0].id);
       }
     }
+  };
+
+  const handleCreateList = async () => {
+    if (!user || !newListName.trim()) return;
+    setCreatingList(true);
+    try {
+      const res = await fetch('/api/newsletter-maker/lists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, name: newListName.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLists((prev) => [data.list, ...prev]);
+        setListId(data.list.id);
+        setNewListName('');
+        setShowNewList(false);
+      } else {
+        const err = await res.json();
+        alert(err.error || 'リスト作成に失敗しました');
+      }
+    } catch {
+      alert('通信エラーが発生しました');
+    }
+    setCreatingList(false);
   };
 
   const fetchCampaign = async (uid: string) => {
@@ -619,7 +653,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
       {/* エディタヘッダー */}
       <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between sticky top-16 z-40 shadow-sm">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/newsletter/dashboard')} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors">
+          <button onClick={() => router.push('/dashboard?view=newsletter')} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-lg font-bold text-gray-900 truncate">
@@ -708,21 +742,61 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">配信先リスト</label>
-                  <select
-                    value={listId}
-                    onChange={(e) => setListId(e.target.value)}
-                    disabled={isSent}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100"
-                  >
-                    {lists.map((l) => (
-                      <option key={l.id} value={l.id}>{l.name}</option>
-                    ))}
-                  </select>
+                  {lists.length > 0 ? (
+                    <select
+                      value={listId}
+                      onChange={(e) => setListId(e.target.value)}
+                      disabled={isSent}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100"
+                    >
+                      {lists.map((l) => (
+                        <option key={l.id} value={l.id}>{l.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="text-sm text-gray-500 py-2">リストがまだありません。下のボタンから作成してください。</p>
+                  )}
                   {subscriberCount > 0 && (
                     <p className="mt-1.5 text-xs text-blue-600 font-medium flex items-center gap-1">
                       <Users className="w-3 h-3" />
                       {subscriberCount}人の読者に配信されます
                     </p>
+                  )}
+                  {!isSent && (
+                    <>
+                      {showNewList ? (
+                        <div className="mt-3 flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={newListName}
+                            onChange={(e) => setNewListName(e.target.value)}
+                            placeholder="新しいリスト名"
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            onKeyDown={(e) => { if (e.key === 'Enter') handleCreateList(); }}
+                          />
+                          <button
+                            onClick={handleCreateList}
+                            disabled={creatingList || !newListName.trim()}
+                            className="px-3 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-all min-h-[36px] shadow-sm"
+                          >
+                            {creatingList ? <Loader2 className="w-4 h-4 animate-spin" /> : '作成'}
+                          </button>
+                          <button
+                            onClick={() => { setShowNewList(false); setNewListName(''); }}
+                            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setShowNewList(true)}
+                          className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 font-semibold hover:text-blue-700 transition-colors"
+                        >
+                          <Plus className="w-3.5 h-3.5" />新しいリストを作成
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
                 <div>

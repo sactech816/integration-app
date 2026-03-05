@@ -105,9 +105,9 @@ export default function NewsletterLandingPage() {
               メルマガ運用に必要なすべてを集客メーカーで完結。
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/newsletter/dashboard" className="inline-flex items-center gap-2 px-8 py-4 bg-violet-600 hover:bg-violet-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
+              <Link href="/newsletter/campaigns/new" className="inline-flex items-center gap-2 px-8 py-4 bg-violet-600 hover:bg-violet-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
                 <Mail className="w-5 h-5" />
-                メルマガを始める
+                メルマガを作成する
               </Link>
               <Link href="/demos" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-violet-600 font-semibold text-lg rounded-xl border border-violet-200 shadow hover:shadow-md transition-all duration-200 min-h-[44px]">
                 デモを見る <ArrowRight className="w-5 h-5" />

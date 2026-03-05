@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, univapayConfig, successMessage, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails } = body;
+    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, univapayConfig, successMessage, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, designLayout, designColor } = body;
 
     if (!userId || !title) {
       return NextResponse.json({ error: 'userId と title は必須です' }, { status: 400 });
@@ -93,6 +93,8 @@ export async function POST(request: NextRequest) {
         reply_email_body: replyEmailBody || null,
         notify_owner: notifyOwner !== undefined ? notifyOwner : true,
         notify_emails: notifyEmails || null,
+        design_layout: designLayout || 'standard',
+        design_color: designColor || 'emerald',
         status: 'draft',
       })
       .select()

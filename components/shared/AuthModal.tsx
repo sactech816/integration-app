@@ -140,31 +140,6 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
             if (!isLogin && data.user) {
                 // セッションがない場合は確認メールが送信された
                 if (!data.session) {
-                    // ユーザー体験優先: 既存ユーザーかどうか確認
-                    try {
-                        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-                            email,
-                            password
-                        });
-
-                        if (!loginError && loginData.user) {
-                            // ユーザーが既に存在し、パスワードが合っている
-                            alert('このメールアドレスは既に登録されています。\n\n自動的にログインしました。');
-                            await claimGuestContentIfAny(loginData.user.id);
-                            setUser(loginData.user);
-                            if (setShowPasswordReset) {
-                                setShowPasswordReset(false);
-                            }
-                            onClose();
-                            setLoading(false);
-                            return;
-                        }
-                    } catch (loginCheckError) {
-                        // signInWithPasswordが失敗しても、signUp自体は成功しているので問題ない
-                        console.log('既存ユーザー確認中にエラー（登録自体は成功）:', loginCheckError);
-                    }
-
-                    // 新規登録で確認メールが送信された
                     alert('確認メールを送信しました。\n\nメール内のリンクをクリックして認証を完了させてください。');
                     setLoading(false);
                     return;

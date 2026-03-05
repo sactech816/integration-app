@@ -7,9 +7,10 @@ import {
   ArrowLeft, Save, Plus, Trash2, ArrowUp, ArrowDown, Globe, Loader2,
   GitBranch, BarChart3, Monitor, Pencil, ChevronDown,
   User, HelpCircle, FileText, Mail, Calendar, ExternalLink, Heart,
-  Building2, PenTool, ArrowRight, X,
+  Building2, PenTool, ArrowRight, X, Trophy, Share2, CheckCircle,
 } from 'lucide-react';
 import { FUNNEL_TEMPLATES } from '@/constants/templates/funnel';
+import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 
 interface Step {
   name: string;
@@ -129,6 +130,13 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
   const [steps, setSteps] = useState<Step[]>(initialSteps || []);
   const [analytics, setAnalytics] = useState<FunnelAnalyticsData[]>([]);
 
+  // 完了モーダル
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [createdSlug, setCreatedSlug] = useState<string | null>(null);
+  const [savedFunnelId, setSavedFunnelId] = useState<string | null>(funnelId || null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [urlCopied, setUrlCopied] = useState(false);
+
   useEffect(() => {
     const init = async () => {
       if (!supabase) return;
@@ -179,9 +187,13 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
     if (!userId || !name) return;
     setSaving(true);
     const body = { userId, name, description, status: newStatus || status, steps };
-    if (funnelId) {
-      const res = await fetch(`/api/funnel/${funnelId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (res.ok && newStatus) setStatus(newStatus);
+    if (savedFunnelId) {
+      const res = await fetch(`/api/funnel/${savedFunnelId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (res.ok) {
+        if (newStatus) setStatus(newStatus);
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 2000);
+      }
     } else {
       const res = await fetch('/api/funnel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (res.ok) {
@@ -189,7 +201,11 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
         if (steps.length > 0) {
           await fetch(`/api/funnel/${data.funnel.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, steps }) });
         }
-        router.push(`/funnel/editor/${data.funnel.id}`);
+        setCreatedSlug(data.funnel.slug);
+        setSlug(data.funnel.slug);
+        setSavedFunnelId(data.funnel.id);
+        setShowCompleteModal(true);
+        window.history.replaceState(null, '', `/funnel/editor/${data.funnel.id}`);
       }
     }
     setSaving(false);
@@ -202,16 +218,34 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
   }
 
   const publicUrl = slug ? `${typeof window !== 'undefined' ? window.location.origin : ''}/funnel/${slug}` : '';
+  const completeUrl = createdSlug ? `${typeof window !== 'undefined' ? window.location.origin : ''}/funnel/${createdSlug}` : publicUrl;
+
+  const handleCopyUrl = () => {
+    if (!publicUrl) return;
+    navigator.clipboard.writeText(publicUrl);
+    setUrlCopied(true);
+    setTimeout(() => setUrlCopied(false), 2000);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* 完了モーダル */}
+      <CreationCompleteModal
+        isOpen={showCompleteModal}
+        onClose={() => setShowCompleteModal(false)}
+        title="ファネル"
+        publicUrl={completeUrl}
+        contentTitle={`${name}のファネル`}
+        theme="amber"
+      />
+
       {/* ヘッダー */}
       <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between sticky top-16 z-40 shadow-sm">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/funnel/dashboard')} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors">
+          <button onClick={() => router.push('/dashboard?view=funnel')} className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-lg font-bold text-gray-900 truncate">{funnelId ? 'ファネル編集' : '新しいファネル'}</h1>
+          <h1 className="text-lg font-bold text-gray-900 truncate">{savedFunnelId ? 'ファネル編集' : '新しいファネル'}</h1>
           {slug && status === 'active' && (
             <a href={publicUrl} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1 text-xs text-amber-600 hover:underline">
               <Globe className="w-3 h-3" />公開中
@@ -219,10 +253,30 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
           )}
         </div>
         <div className="flex items-center gap-2">
+          {saveSuccess && (
+            <span className="inline-flex items-center gap-1 text-sm text-amber-600 font-semibold animate-fade-in">
+              <CheckCircle className="w-4 h-4" />保存しました
+            </span>
+          )}
+          {urlCopied && (
+            <span className="inline-flex items-center gap-1 text-sm text-amber-600 font-semibold animate-fade-in">
+              <CheckCircle className="w-4 h-4" />URLコピー済み
+            </span>
+          )}
+          {savedFunnelId && (
+            <button onClick={() => setShowCompleteModal(true)} className="hidden sm:flex bg-gradient-to-r from-amber-600 to-orange-600 text-white px-3 sm:px-4 py-2 rounded-lg font-bold items-center gap-2 hover:from-amber-700 hover:to-orange-700 whitespace-nowrap transition-all shadow-md text-sm sm:text-base min-h-[44px]">
+              <Trophy className="w-4 h-4" /> <span className="hidden md:inline">作成完了画面</span><span className="md:hidden">完了</span>
+            </button>
+          )}
+          {slug && (
+            <button onClick={handleCopyUrl} className="hidden sm:flex bg-green-50 border border-green-200 text-green-700 px-3 sm:px-4 py-2 rounded-lg font-bold items-center gap-2 whitespace-nowrap text-sm sm:text-base min-h-[44px]">
+              <Share2 className="w-4 h-4" /> <span className="hidden md:inline">公開URL</span><span className="md:hidden">URL</span>
+            </button>
+          )}
           <button onClick={() => handleSave()} disabled={saving || !name} className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white text-sm font-semibold rounded-lg hover:bg-gray-900 disabled:opacity-50 transition-all shadow-md min-h-[44px]">
             <Save className="w-4 h-4" />{saving ? '保存中...' : '保存'}
           </button>
-          {funnelId && (
+          {savedFunnelId && (
             <button onClick={() => handleSave(status === 'active' ? 'draft' : 'active')} disabled={saving || !name || steps.length === 0} className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 disabled:opacity-50 transition-all shadow-md min-h-[44px]">
               <Globe className="w-4 h-4" />{status === 'active' ? '非公開' : '公開'}
             </button>
@@ -246,7 +300,7 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
         <div className={`w-full lg:w-1/2 overflow-y-auto p-4 md:p-6 bg-gray-50 ${mobileTab === 'preview' ? 'hidden lg:block' : ''}`}>
           <div className="space-y-5">
             {/* テンプレート選択（新規作成時のみ） */}
-            {!funnelId && (
+            {!savedFunnelId && (
               <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-5">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="font-bold text-gray-900 flex items-center gap-2">

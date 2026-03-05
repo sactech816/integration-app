@@ -7,8 +7,13 @@ import {
   ArrowLeft, Save, Plus, Trash2, GripVertical, Loader2,
   Globe, CreditCard, Monitor, Pencil, ChevronDown, ChevronUp,
   Settings, ListPlus, CheckCircle, Mail, Trophy, Share2, Sparkles,
+  Palette, Layout, Briefcase, PartyPopper,
 } from 'lucide-react';
 import { ORDER_FORM_TEMPLATES, type OrderFormTemplate } from '@/constants/templates/order-form';
+import {
+  ORDER_FORM_LAYOUTS, ORDER_FORM_COLORS, ORDER_FORM_COLOR_IDS,
+  getOrderFormColor, type OrderFormColorTheme,
+} from '@/constants/orderFormThemes';
 import StripeConnectStatus from '@/components/order-form/StripeConnectStatus';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 
@@ -60,54 +65,108 @@ function Section({ title, icon, defaultOpen = true, children, badge }: {
 }
 
 /* ── フォームプレビュー ── */
-function OrderFormPreview({ title, description, price, paymentType, fields }: {
+function OrderFormPreview({ title, description, price, paymentType, fields, designLayout, designColor }: {
   title: string; description: string; price: number; paymentType: string; fields: Field[];
+  designLayout: string; designColor: string;
 }) {
+  const color = getOrderFormColor(designColor);
+  const isBusiness = designLayout === 'business';
+  const isEntertainment = designLayout === 'entertainment';
+
   return (
-    <div className="p-6 space-y-5">
-      {title ? (
-        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-      ) : (
-        <h2 className="text-xl font-bold text-gray-300">タイトルを入力してください</h2>
-      )}
-      {description && <p className="text-sm text-gray-600">{description}</p>}
-      {paymentType !== 'free' && price > 0 && (
-        <div className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-700 text-sm font-semibold rounded-full">
-          <CreditCard className="w-4 h-4" />
-          {price.toLocaleString()}円
-        </div>
-      )}
-      <div className="space-y-4">
-        {fields.map((field, i) => (
-          <div key={i}>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              {field.label || '(ラベル未設定)'}
-              {field.required && <span className="text-red-500 ml-1">*</span>}
-            </label>
-            {field.fieldType === 'textarea' ? (
-              <div className="w-full h-20 px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-400 text-sm">{field.placeholder}</div>
-            ) : field.fieldType === 'select' ? (
-              <select disabled className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-400 text-sm">
-                <option>{field.placeholder || '選択してください'}</option>
-                {(field.options || []).map((o, j) => <option key={j}>{o}</option>)}
-              </select>
-            ) : field.fieldType === 'checkbox' ? (
-              <label className="flex items-center gap-2">
-                <input type="checkbox" disabled className="w-4 h-4 rounded" />
-                <span className="text-sm text-gray-600">{field.label || 'チェックボックス'}</span>
-              </label>
-            ) : (
-              <input type="text" disabled placeholder={field.placeholder} className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-400 text-sm placeholder:text-gray-400" />
+    <div className="min-h-[500px] p-6" style={{ background: color.background }}>
+      <div
+        className={`mx-auto overflow-hidden ${isBusiness ? 'rounded-lg' : isEntertainment ? 'rounded-3xl' : 'rounded-2xl'}`}
+        style={{ backgroundColor: color.cardBg, border: color.cardBorder, maxWidth: '440px' }}
+      >
+        {/* ヘッダー (business / entertainment) */}
+        {isBusiness && (
+          <div className="px-6 py-5" style={{ background: color.headerBg }}>
+            <h2 className="text-lg font-bold" style={{ color: color.headerText }}>
+              {title || 'タイトルを入力してください'}
+            </h2>
+            {description && <p className="text-sm mt-1 opacity-90" style={{ color: color.headerText }}>{description}</p>}
+          </div>
+        )}
+        {isEntertainment && (
+          <div className="px-6 py-6 text-center" style={{ background: color.headerBg }}>
+            <h2 className="text-xl font-black tracking-wide" style={{ color: color.headerText }}>
+              {title || 'タイトルを入力してください'}
+            </h2>
+            {description && <p className="text-sm mt-2 opacity-90" style={{ color: color.headerText }}>{description}</p>}
+            {paymentType !== 'free' && price > 0 && (
+              <div className="inline-flex items-center gap-1 mt-3 px-4 py-1.5 rounded-full text-sm font-bold"
+                style={{ backgroundColor: 'rgba(255,255,255,0.25)', color: color.headerText }}>
+                <CreditCard className="w-4 h-4" />
+                {price.toLocaleString()}円
+              </div>
             )}
           </div>
-        ))}
+        )}
+
+        <div className={`space-y-5 ${isBusiness ? 'px-6 py-5' : isEntertainment ? 'px-6 py-6' : 'p-6'}`}>
+          {/* standard layout title */}
+          {designLayout === 'standard' && (
+            <>
+              <h2 className="text-xl font-bold" style={{ color: title ? color.textPrimary : '#d1d5db' }}>
+                {title || 'タイトルを入力してください'}
+              </h2>
+              {description && <p className="text-sm" style={{ color: color.textSecondary }}>{description}</p>}
+            </>
+          )}
+
+          {/* business description below header */}
+          {/* price badge (standard / business) */}
+          {(designLayout === 'standard' || isBusiness) && paymentType !== 'free' && price > 0 && (
+            <div className="inline-flex items-center gap-1 px-3 py-1 text-sm font-semibold rounded-full"
+              style={{ backgroundColor: color.badgeBg, color: color.badgeText }}>
+              <CreditCard className="w-4 h-4" />
+              {price.toLocaleString()}円
+            </div>
+          )}
+
+          {/* fields */}
+          <div className="space-y-4">
+            {fields.map((field, i) => (
+              <div key={i}>
+                <label className="block text-sm font-semibold mb-1" style={{ color: color.textPrimary }}>
+                  {field.label || '(ラベル未設定)'}
+                  {field.required && <span className="text-red-500 ml-1">*</span>}
+                </label>
+                {field.fieldType === 'textarea' ? (
+                  <div className="w-full h-20 px-4 py-3 rounded-xl text-sm"
+                    style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }}>
+                    {field.placeholder}
+                  </div>
+                ) : field.fieldType === 'select' ? (
+                  <select disabled className="w-full px-4 py-3 rounded-xl text-sm"
+                    style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }}>
+                    <option>{field.placeholder || '選択してください'}</option>
+                    {(field.options || []).map((o, j) => <option key={j}>{o}</option>)}
+                  </select>
+                ) : field.fieldType === 'checkbox' ? (
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" disabled className="w-4 h-4 rounded" style={{ accentColor: color.accentColor }} />
+                    <span className="text-sm" style={{ color: color.textSecondary }}>{field.label || 'チェックボックス'}</span>
+                  </label>
+                ) : (
+                  <input type="text" disabled placeholder={field.placeholder} className="w-full px-4 py-3 rounded-xl text-sm placeholder:text-gray-400"
+                    style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
+                )}
+              </div>
+            ))}
+          </div>
+
+          {fields.length === 0 && (
+            <p className="text-center py-8" style={{ color: '#d1d5db' }}>フィールドを追加すると、ここにプレビューが表示されます</p>
+          )}
+
+          <button disabled className={`w-full px-6 py-3 font-semibold shadow-md min-h-[44px] transition-all ${isEntertainment ? 'rounded-full text-base font-black' : isBusiness ? 'rounded-lg' : 'rounded-xl'}`}
+            style={{ backgroundColor: color.buttonBg, color: color.buttonText }}>
+            {paymentType === 'free' ? '申し込む' : '申し込み・決済へ'}
+          </button>
+        </div>
       </div>
-      {fields.length === 0 && (
-        <p className="text-gray-300 text-center py-8">フィールドを追加すると、ここにプレビューが表示されます</p>
-      )}
-      <button disabled className="w-full px-6 py-3 bg-emerald-600 text-white font-semibold rounded-xl shadow-md min-h-[44px]">
-        {paymentType === 'free' ? '申し込む' : '申し込み・決済へ'}
-      </button>
     </div>
   );
 }
@@ -144,6 +203,10 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
   const [notifyOwner, setNotifyOwner] = useState(true);
   const [notifyEmails, setNotifyEmails] = useState('');
 
+  // デザイン設定
+  const [designLayout, setDesignLayout] = useState('standard');
+  const [designColor, setDesignColor] = useState('emerald');
+
   const [fields, setFields] = useState<Field[]>([
     { fieldType: 'text', label: 'お名前', placeholder: '山田太郎', required: true, options: null },
     { fieldType: 'email', label: 'メールアドレス', placeholder: 'you@example.com', required: true, options: null },
@@ -179,6 +242,8 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       if (f.reply_email_body !== undefined) setReplyEmailBody(f.reply_email_body || '');
       if (f.notify_owner !== undefined) setNotifyOwner(f.notify_owner);
       if (f.notify_emails) setNotifyEmails(f.notify_emails);
+      if (f.design_layout) setDesignLayout(f.design_layout);
+      if (f.design_color) setDesignColor(f.design_color);
       if (f.order_form_fields?.length > 0) {
         setFields(f.order_form_fields.map((field: any) => ({
           id: field.id, fieldType: field.field_type, label: field.label,
@@ -219,6 +284,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       stripePriceId: paymentProvider === 'stripe' ? stripePriceId : null,
       successMessage, status: publishStatus || status,
       replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails,
+      designLayout, designColor,
       fields: fields.map((f) => ({
         field_type: f.fieldType, label: f.label, placeholder: f.placeholder,
         required: f.required, options: f.fieldType === 'select' ? f.options : null,
@@ -419,6 +485,64 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
               </div>
             </Section>
 
+            {/* デザイン設定 */}
+            <Section
+              title="デザイン設定"
+              icon={<span className="bg-pink-50 p-1.5 rounded-lg"><Palette className="w-4 h-4 text-pink-600" /></span>}
+              defaultOpen={false}
+            >
+              <div className="space-y-5 pt-4">
+                {/* レイアウト選択 */}
+                <div>
+                  <label className="text-sm font-bold text-gray-900 block mb-2">レイアウト</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'standard', name: 'スタンダード', icon: Layout, desc: 'シンプル' },
+                      { id: 'business', name: 'ビジネス', icon: Briefcase, desc: '企業・法人向け' },
+                      { id: 'entertainment', name: 'エンタメ', icon: PartyPopper, desc: 'イベント向け' },
+                    ].map(l => {
+                      const Icon = l.icon;
+                      return (
+                        <button
+                          key={l.id}
+                          type="button"
+                          onClick={() => setDesignLayout(l.id)}
+                          className={`p-3 rounded-xl border-2 text-center transition-all ${designLayout === l.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                        >
+                          <Icon className={`w-5 h-5 mx-auto mb-1 ${designLayout === l.id ? 'text-blue-600' : 'text-gray-400'}`} />
+                          <p className="font-bold text-xs text-gray-900">{l.name}</p>
+                          <p className="text-[10px] text-gray-500 mt-0.5">{l.desc}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* カラー選択 */}
+                <div>
+                  <label className="text-sm font-bold text-gray-900 block mb-2">カラーテーマ</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {ORDER_FORM_COLOR_IDS.map(cid => {
+                      const c = ORDER_FORM_COLORS[cid];
+                      return (
+                        <button
+                          key={cid}
+                          type="button"
+                          onClick={() => setDesignColor(cid)}
+                          className={`p-2.5 rounded-xl border-2 text-left transition-all ${designColor === cid ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 rounded-full flex-shrink-0 shadow-inner" style={{ backgroundColor: c.swatch }} />
+                            <span className="font-bold text-xs text-gray-900 truncate">{c.name}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </Section>
+
             {/* フィールド設定 */}
             <Section
               title="フォームフィールド"
@@ -587,7 +711,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             <div className="max-w-md mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
-              <OrderFormPreview title={title} description={description} price={price} paymentType={paymentType} fields={fields} />
+              <OrderFormPreview title={title} description={description} price={price} paymentType={paymentType} fields={fields} designLayout={designLayout} designColor={designColor} />
             </div>
           </div>
         </div>

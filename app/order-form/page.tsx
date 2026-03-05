@@ -71,7 +71,7 @@ export default function OrderFormLandingPage() {
               セミナー・講座・コンサルの申し込み受付を効率化。
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/order-form/dashboard" className="inline-flex items-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
+              <Link href="/order-form/new" className="inline-flex items-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
                 <FileText className="w-5 h-5" />
                 フォームを作成する
               </Link>
