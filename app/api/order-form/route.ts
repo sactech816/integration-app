@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, univapayConfig, successMessage, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, designLayout, designColor } = body;
+    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, successMessage, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody, designLayout, designColor, ctaButton } = body;
 
     if (!userId || !title) {
       return NextResponse.json({ error: 'userId と title は必須です' }, { status: 400 });
@@ -86,15 +86,17 @@ export async function POST(request: NextRequest) {
         payment_type: paymentType || 'free',
         payment_provider: paymentProvider || null,
         stripe_price_id: stripePriceId || null,
-        univapay_config: univapayConfig || null,
         success_message: successMessage || 'お申し込みありがとうございます。',
         reply_email_enabled: replyEmailEnabled !== undefined ? replyEmailEnabled : true,
         reply_email_subject: replyEmailSubject || 'お申し込みありがとうございます',
         reply_email_body: replyEmailBody || null,
         notify_owner: notifyOwner !== undefined ? notifyOwner : true,
         notify_emails: notifyEmails || null,
+        notify_email_subject: notifyEmailSubject || null,
+        notify_email_body: notifyEmailBody || null,
         design_layout: designLayout || 'standard',
         design_color: designColor || 'emerald',
+        cta_button: ctaButton || null,
         status: 'draft',
       })
       .select()

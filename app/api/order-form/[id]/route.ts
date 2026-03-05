@@ -72,7 +72,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, univapayConfig, successMessage, status, fields, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, designLayout, designColor } = body;
+    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, successMessage, status, fields, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody, designLayout, designColor, ctaButton } = body;
 
     if (!userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
@@ -91,7 +91,6 @@ export async function PATCH(
     if (paymentType !== undefined) updateData.payment_type = paymentType;
     if (paymentProvider !== undefined) updateData.payment_provider = paymentProvider;
     if (stripePriceId !== undefined) updateData.stripe_price_id = stripePriceId;
-    if (univapayConfig !== undefined) updateData.univapay_config = univapayConfig;
     if (successMessage !== undefined) updateData.success_message = successMessage;
     if (status !== undefined) updateData.status = status;
     if (replyEmailEnabled !== undefined) updateData.reply_email_enabled = replyEmailEnabled;
@@ -99,8 +98,11 @@ export async function PATCH(
     if (replyEmailBody !== undefined) updateData.reply_email_body = replyEmailBody;
     if (notifyOwner !== undefined) updateData.notify_owner = notifyOwner;
     if (notifyEmails !== undefined) updateData.notify_emails = notifyEmails;
+    if (notifyEmailSubject !== undefined) updateData.notify_email_subject = notifyEmailSubject;
+    if (notifyEmailBody !== undefined) updateData.notify_email_body = notifyEmailBody;
     if (designLayout !== undefined) updateData.design_layout = designLayout;
     if (designColor !== undefined) updateData.design_color = designColor;
+    if (ctaButton !== undefined) updateData.cta_button = ctaButton;
 
     const { data, error } = await supabase
       .from('order_forms')

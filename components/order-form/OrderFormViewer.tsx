@@ -13,6 +13,16 @@ interface Field {
   options: string[] | null;
 }
 
+interface CtaButtonSettings {
+  text?: string;
+  bgColor?: string;
+  textColor?: string;
+  borderRadius?: 'sm' | 'md' | 'lg' | 'full';
+  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  animation?: 'none' | 'pulse' | 'shimmer' | 'bounce';
+  size?: 'md' | 'lg';
+}
+
 interface FormData {
   id: string;
   title: string;
@@ -23,7 +33,16 @@ interface FormData {
   success_message: string;
   design_layout?: string;
   design_color?: string;
+  cta_button?: CtaButtonSettings | null;
   order_form_fields: Field[];
+}
+
+function getCtaClasses(cta: CtaButtonSettings) {
+  const radius = cta.borderRadius === 'sm' ? 'rounded-lg' : cta.borderRadius === 'md' ? 'rounded-xl' : cta.borderRadius === 'lg' ? 'rounded-2xl' : cta.borderRadius === 'full' ? 'rounded-full' : 'rounded-xl';
+  const shadow = cta.shadow === 'sm' ? 'shadow-sm' : cta.shadow === 'md' ? 'shadow-md' : cta.shadow === 'lg' ? 'shadow-lg' : cta.shadow === 'xl' ? 'shadow-xl' : '';
+  const size = cta.size === 'lg' ? 'px-8 py-4 text-lg' : 'px-6 py-3 text-base';
+  const anim = cta.animation === 'pulse' ? 'cta-pulse' : cta.animation === 'bounce' ? 'cta-bounce' : '';
+  return { radius, shadow, size, anim, hasShimmer: cta.animation === 'shimmer' };
 }
 
 export default function OrderFormViewer({ slug }: { slug: string }) {
@@ -141,6 +160,13 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
   const isEntertainment = layout === 'entertainment';
   const isFree = form.payment_type === 'free' || form.price === 0;
 
+  // CTA button settings (fallback to theme defaults)
+  const cta = form.cta_button || {};
+  const ctaBgColor = cta.bgColor || color.buttonBg;
+  const ctaTextColor = cta.textColor || color.buttonText;
+  const ctaText = cta.text || (isFree ? '申し込む' : `${form.price.toLocaleString()}円で申し込む`);
+  const { radius, shadow, size, anim, hasShimmer } = getCtaClasses(cta);
+
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4" style={{ background: color.background }}>
@@ -155,12 +181,26 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
 
   return (
     <div className="min-h-screen py-12 px-4" style={{ background: color.background }}>
+      {/* CTA animation styles */}
+      <style jsx global>{`
+        @keyframes cta-shimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        .cta-shimmer {
+          background-size: 200% auto;
+          background-image: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+          animation: cta-shimmer 2s ease-in-out infinite;
+        }
+        .cta-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .cta-bounce { animation: bounce 1s infinite; }
+      `}</style>
+
       <div className="max-w-lg mx-auto">
         <div
           className={`shadow-lg overflow-hidden ${isBusiness ? 'rounded-lg' : isEntertainment ? 'rounded-3xl' : 'rounded-2xl'}`}
           style={{ backgroundColor: color.cardBg, border: color.cardBorder }}
         >
-          {/* ヘッダー部分 (business / entertainment) */}
           {isBusiness && (
             <div className="px-8 py-6" style={{ background: color.headerBg }}>
               <h1 className="text-xl font-bold" style={{ color: color.headerText }}>{form.title}</h1>
@@ -189,7 +229,6 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
           )}
 
           <div className={`${isBusiness ? 'px-8 py-6' : isEntertainment ? 'px-8 py-8' : 'p-8'}`}>
-            {/* standard layout header */}
             {layout === 'standard' && (
               <div className="text-center mb-6">
                 <h1 className="text-2xl font-bold mb-2" style={{ color: color.textPrimary }}>{form.title}</h1>
@@ -263,23 +302,28 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
 
               {error && <p className="text-red-600 text-sm font-medium">{error}</p>}
 
-              <button
-                type="submit"
-                disabled={submitting}
-                className={`w-full inline-flex items-center justify-center gap-2 px-6 py-3 font-bold shadow-lg hover:shadow-xl disabled:opacity-50 transition-all min-h-[44px] ${isEntertainment ? 'rounded-full text-base font-black' : isBusiness ? 'rounded-lg' : 'rounded-xl'}`}
-                style={{ backgroundColor: color.buttonBg, color: color.buttonText }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = color.buttonHover; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = color.buttonBg; }}
-              >
-                {submitting ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : isFree ? (
-                  <FileText className="w-5 h-5" />
-                ) : (
-                  <CreditCard className="w-5 h-5" />
-                )}
-                {submitting ? '送信中...' : isFree ? '申し込む' : `${form.price.toLocaleString()}円で申し込む`}
-              </button>
+              <div className="relative">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className={`w-full inline-flex items-center justify-center gap-2 font-bold disabled:opacity-50 transition-all min-h-[44px] hover:opacity-90 ${radius} ${shadow} ${size} ${anim}`}
+                  style={{ backgroundColor: ctaBgColor, color: ctaTextColor }}
+                >
+                  {hasShimmer && (
+                    <span className="absolute inset-0 cta-shimmer" style={{ borderRadius: 'inherit' }} />
+                  )}
+                  <span className="relative inline-flex items-center gap-2">
+                    {submitting ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : isFree ? (
+                      <FileText className="w-5 h-5" />
+                    ) : (
+                      <CreditCard className="w-5 h-5" />
+                    )}
+                    {submitting ? '送信中...' : ctaText}
+                  </span>
+                </button>
+              </div>
             </form>
           </div>
         </div>

@@ -4,15 +4,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import {
-  ArrowLeft, Save, Plus, Trash2, GripVertical, Loader2,
+  ArrowLeft, Save, Plus, Trash2, Loader2,
   Globe, CreditCard, Monitor, Pencil, ChevronDown, ChevronUp,
-  Settings, ListPlus, CheckCircle, Mail, Trophy, Share2, Sparkles,
-  Palette, Layout, Briefcase, PartyPopper,
+  Settings, ListPlus, CheckCircle, Trophy, Share2, Sparkles,
+  Palette, Layout, Briefcase, PartyPopper, MousePointerClick,
+  Send, Bell,
 } from 'lucide-react';
-import { ORDER_FORM_TEMPLATES, type OrderFormTemplate } from '@/constants/templates/order-form';
+import { ORDER_FORM_TEMPLATES, type OrderFormTemplate, type OrderFormCtaButton } from '@/constants/templates/order-form';
 import {
-  ORDER_FORM_LAYOUTS, ORDER_FORM_COLORS, ORDER_FORM_COLOR_IDS,
-  getOrderFormColor, type OrderFormColorTheme,
+  ORDER_FORM_COLORS, ORDER_FORM_COLOR_IDS,
+  getOrderFormColor,
 } from '@/constants/orderFormThemes';
 import StripeConnectStatus from '@/components/order-form/StripeConnectStatus';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
@@ -26,6 +27,48 @@ interface Field {
   options: string[] | null;
 }
 
+interface CtaButtonSettings {
+  text: string;
+  bgColor: string;
+  textColor: string;
+  borderRadius: 'sm' | 'md' | 'lg' | 'full';
+  shadow: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  animation: 'none' | 'pulse' | 'shimmer' | 'bounce';
+  size: 'md' | 'lg';
+}
+
+const DEFAULT_CTA: CtaButtonSettings = {
+  text: '',
+  bgColor: '#2563eb',
+  textColor: '#ffffff',
+  borderRadius: 'lg',
+  shadow: 'lg',
+  animation: 'none',
+  size: 'md',
+};
+
+const BORDER_RADIUS_OPTIONS = [
+  { value: 'sm', label: '角丸 小', preview: 'rounded-lg' },
+  { value: 'md', label: '角丸 中', preview: 'rounded-xl' },
+  { value: 'lg', label: '角丸 大', preview: 'rounded-2xl' },
+  { value: 'full', label: 'ピル型', preview: 'rounded-full' },
+];
+
+const SHADOW_OPTIONS = [
+  { value: 'none', label: 'なし' },
+  { value: 'sm', label: '小' },
+  { value: 'md', label: '中' },
+  { value: 'lg', label: '大' },
+  { value: 'xl', label: '特大' },
+];
+
+const ANIMATION_OPTIONS = [
+  { value: 'none', label: 'なし' },
+  { value: 'pulse', label: 'パルス' },
+  { value: 'shimmer', label: 'シマー' },
+  { value: 'bounce', label: 'バウンス' },
+];
+
 const FIELD_TYPES = [
   { value: 'text', label: 'テキスト' },
   { value: 'email', label: 'メールアドレス' },
@@ -36,21 +79,51 @@ const FIELD_TYPES = [
   { value: 'checkbox', label: 'チェックボックス' },
 ];
 
-/* ── 折りたたみセクション ── */
-function Section({ title, icon, defaultOpen = true, children, badge }: {
+const PRESET_COLORS = [
+  '#2563eb', '#7c3aed', '#dc2626', '#ea580c', '#16a34a',
+  '#0891b2', '#db2777', '#4f46e5', '#ca8a04', '#0d9488',
+];
+
+/* ── CTA Button Animations CSS ── */
+function CtaAnimationStyles() {
+  return (
+    <style jsx global>{`
+      @keyframes cta-shimmer {
+        0% { background-position: -200% center; }
+        100% { background-position: 200% center; }
+      }
+      .cta-shimmer {
+        background-size: 200% auto;
+        background-image: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+        animation: cta-shimmer 2s ease-in-out infinite;
+      }
+      .cta-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      .cta-bounce {
+        animation: bounce 1s infinite;
+      }
+    `}</style>
+  );
+}
+
+/* ── 折りたたみセクション（色付き） ── */
+function Section({ title, icon, defaultOpen = true, children, badge, borderColor = 'border-gray-200', headerBg = '' }: {
   title: string;
   icon?: React.ReactNode;
   defaultOpen?: boolean;
   children: React.ReactNode;
   badge?: React.ReactNode;
+  borderColor?: string;
+  headerBg?: string;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+    <div className={`bg-white border ${borderColor} rounded-xl overflow-hidden shadow-sm`}>
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+        className={`w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors ${headerBg}`}
       >
         <div className="flex items-center gap-2">
           {icon}
@@ -64,14 +137,45 @@ function Section({ title, icon, defaultOpen = true, children, badge }: {
   );
 }
 
+/* ── CTAボタンプレビュー ── */
+function CtaButtonPreview({ cta, label }: { cta: CtaButtonSettings; label: string }) {
+  const radiusClass = cta.borderRadius === 'sm' ? 'rounded-lg' : cta.borderRadius === 'md' ? 'rounded-xl' : cta.borderRadius === 'lg' ? 'rounded-2xl' : 'rounded-full';
+  const shadowClass = cta.shadow === 'none' ? '' : cta.shadow === 'sm' ? 'shadow-sm' : cta.shadow === 'md' ? 'shadow-md' : cta.shadow === 'lg' ? 'shadow-lg' : 'shadow-xl';
+  const sizeClass = cta.size === 'lg' ? 'px-8 py-4 text-lg' : 'px-6 py-3 text-base';
+  const animClass = cta.animation === 'pulse' ? 'cta-pulse' : cta.animation === 'bounce' ? 'cta-bounce' : '';
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        disabled
+        className={`w-full font-bold min-h-[44px] transition-all ${radiusClass} ${shadowClass} ${sizeClass} ${animClass}`}
+        style={{ backgroundColor: cta.bgColor, color: cta.textColor }}
+      >
+        {cta.animation === 'shimmer' && (
+          <span className="absolute inset-0 cta-shimmer" style={{ borderRadius: 'inherit' }} />
+        )}
+        <span className="relative">{cta.text || label}</span>
+      </button>
+    </div>
+  );
+}
+
 /* ── フォームプレビュー ── */
-function OrderFormPreview({ title, description, price, paymentType, fields, designLayout, designColor }: {
+function OrderFormPreview({ title, description, price, paymentType, fields, designLayout, designColor, ctaButton }: {
   title: string; description: string; price: number; paymentType: string; fields: Field[];
-  designLayout: string; designColor: string;
+  designLayout: string; designColor: string; ctaButton: CtaButtonSettings;
 }) {
   const color = getOrderFormColor(designColor);
   const isBusiness = designLayout === 'business';
   const isEntertainment = designLayout === 'entertainment';
+  const isFree = paymentType === 'free';
+  const defaultText = isFree ? '申し込む' : `${price.toLocaleString()}円で申し込む`;
+
+  const radiusClass = ctaButton.borderRadius === 'sm' ? 'rounded-lg' : ctaButton.borderRadius === 'md' ? 'rounded-xl' : ctaButton.borderRadius === 'lg' ? 'rounded-2xl' : 'rounded-full';
+  const shadowClass = ctaButton.shadow === 'none' ? '' : ctaButton.shadow === 'sm' ? 'shadow-sm' : ctaButton.shadow === 'md' ? 'shadow-md' : ctaButton.shadow === 'lg' ? 'shadow-lg' : 'shadow-xl';
+  const sizeClass = ctaButton.size === 'lg' ? 'px-8 py-4 text-lg' : 'px-6 py-3 text-base';
+  const animClass = ctaButton.animation === 'pulse' ? 'cta-pulse' : ctaButton.animation === 'bounce' ? 'cta-bounce' : '';
 
   return (
     <div className="min-h-[500px] p-6" style={{ background: color.background }}>
@@ -79,7 +183,6 @@ function OrderFormPreview({ title, description, price, paymentType, fields, desi
         className={`mx-auto overflow-hidden ${isBusiness ? 'rounded-lg' : isEntertainment ? 'rounded-3xl' : 'rounded-2xl'}`}
         style={{ backgroundColor: color.cardBg, border: color.cardBorder, maxWidth: '440px' }}
       >
-        {/* ヘッダー (business / entertainment) */}
         {isBusiness && (
           <div className="px-6 py-5" style={{ background: color.headerBg }}>
             <h2 className="text-lg font-bold" style={{ color: color.headerText }}>
@@ -105,7 +208,6 @@ function OrderFormPreview({ title, description, price, paymentType, fields, desi
         )}
 
         <div className={`space-y-5 ${isBusiness ? 'px-6 py-5' : isEntertainment ? 'px-6 py-6' : 'p-6'}`}>
-          {/* standard layout title */}
           {designLayout === 'standard' && (
             <>
               <h2 className="text-xl font-bold" style={{ color: title ? color.textPrimary : '#d1d5db' }}>
@@ -115,8 +217,6 @@ function OrderFormPreview({ title, description, price, paymentType, fields, desi
             </>
           )}
 
-          {/* business description below header */}
-          {/* price badge (standard / business) */}
           {(designLayout === 'standard' || isBusiness) && paymentType !== 'free' && price > 0 && (
             <div className="inline-flex items-center gap-1 px-3 py-1 text-sm font-semibold rounded-full"
               style={{ backgroundColor: color.badgeBg, color: color.badgeText }}>
@@ -125,7 +225,6 @@ function OrderFormPreview({ title, description, price, paymentType, fields, desi
             </div>
           )}
 
-          {/* fields */}
           <div className="space-y-4">
             {fields.map((field, i) => (
               <div key={i}>
@@ -161,10 +260,19 @@ function OrderFormPreview({ title, description, price, paymentType, fields, desi
             <p className="text-center py-8" style={{ color: '#d1d5db' }}>フィールドを追加すると、ここにプレビューが表示されます</p>
           )}
 
-          <button disabled className={`w-full px-6 py-3 font-semibold shadow-md min-h-[44px] transition-all ${isEntertainment ? 'rounded-full text-base font-black' : isBusiness ? 'rounded-lg' : 'rounded-xl'}`}
-            style={{ backgroundColor: color.buttonBg, color: color.buttonText }}>
-            {paymentType === 'free' ? '申し込む' : '申し込み・決済へ'}
-          </button>
+          {/* CTA Button with custom settings */}
+          <div className="relative">
+            <button disabled className={`w-full font-bold min-h-[44px] transition-all ${radiusClass} ${shadowClass} ${sizeClass} ${animClass}`}
+              style={{ backgroundColor: ctaButton.bgColor, color: ctaButton.textColor }}>
+              {ctaButton.animation === 'shimmer' && (
+                <span className="absolute inset-0 cta-shimmer" style={{ borderRadius: 'inherit' }} />
+              )}
+              <span className="relative inline-flex items-center gap-2">
+                {isFree ? <Settings className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
+                {ctaButton.text || defaultText}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -202,10 +310,16 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
   const [replyEmailBody, setReplyEmailBody] = useState('');
   const [notifyOwner, setNotifyOwner] = useState(true);
   const [notifyEmails, setNotifyEmails] = useState('');
+  const [notifyEmailSubject, setNotifyEmailSubject] = useState('');
+  const [notifyEmailBody, setNotifyEmailBody] = useState('');
 
   // デザイン設定
   const [designLayout, setDesignLayout] = useState('standard');
   const [designColor, setDesignColor] = useState('emerald');
+
+  // CTAボタン設定
+  const [ctaButton, setCtaButton] = useState<CtaButtonSettings>({ ...DEFAULT_CTA });
+  const updateCta = (updates: Partial<CtaButtonSettings>) => setCtaButton(prev => ({ ...prev, ...updates }));
 
   const [fields, setFields] = useState<Field[]>([
     { fieldType: 'text', label: 'お名前', placeholder: '山田太郎', required: true, options: null },
@@ -242,8 +356,13 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       if (f.reply_email_body !== undefined) setReplyEmailBody(f.reply_email_body || '');
       if (f.notify_owner !== undefined) setNotifyOwner(f.notify_owner);
       if (f.notify_emails) setNotifyEmails(f.notify_emails);
+      if (f.notify_email_subject) setNotifyEmailSubject(f.notify_email_subject);
+      if (f.notify_email_body) setNotifyEmailBody(f.notify_email_body);
       if (f.design_layout) setDesignLayout(f.design_layout);
       if (f.design_color) setDesignColor(f.design_color);
+      if (f.cta_button) {
+        setCtaButton({ ...DEFAULT_CTA, ...f.cta_button });
+      }
       if (f.order_form_fields?.length > 0) {
         setFields(f.order_form_fields.map((field: any) => ({
           id: field.id, fieldType: field.field_type, label: field.label,
@@ -262,6 +381,9 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
     setSuccessMessage(template.successMessage);
     setReplyEmailSubject(template.replyEmailSubject);
     setFields(template.fields.map(f => ({ ...f })));
+    if (template.ctaButton) {
+      setCtaButton({ ...DEFAULT_CTA, ...template.ctaButton });
+    }
   };
 
   const addField = () => setFields([...fields, { fieldType: 'text', label: '', placeholder: '', required: false, options: null }]);
@@ -283,8 +405,10 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       paymentType, paymentProvider: paymentType !== 'free' ? paymentProvider : null,
       stripePriceId: paymentProvider === 'stripe' ? stripePriceId : null,
       successMessage, status: publishStatus || status,
-      replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails,
+      replyEmailEnabled, replyEmailSubject, replyEmailBody,
+      notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody,
       designLayout, designColor,
+      ctaButton,
       fields: fields.map((f) => ({
         field_type: f.fieldType, label: f.label, placeholder: f.placeholder,
         required: f.required, options: f.fieldType === 'select' ? f.options : null,
@@ -305,7 +429,6 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
         setSlug(data.form.slug);
         setSavedFormId(data.form.id);
         setShowCompleteModal(true);
-        // URLをブラウザ履歴に反映（ページ遷移なし）
         window.history.replaceState(null, '', `/order-form/editor/${data.form.id}`);
       }
     }
@@ -326,10 +449,12 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
     setTimeout(() => setUrlCopied(false), 2000);
   };
 
+  const isFreeForm = paymentType === 'free';
+  const defaultCtaText = isFreeForm ? '申し込む' : `${price.toLocaleString()}円で申し込む`;
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* 共通ヘッダー */}
-      {/* 完了モーダル */}
+      <CtaAnimationStyles />
       <CreationCompleteModal
         isOpen={showCompleteModal}
         onClose={() => setShowCompleteModal(false)}
@@ -353,7 +478,6 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
           )}
         </div>
         <div className="flex items-center gap-2">
-          {/* トースト */}
           {saveSuccess && (
             <span className="inline-flex items-center gap-1 text-sm text-emerald-600 font-semibold animate-fade-in">
               <CheckCircle className="w-4 h-4" />保存しました
@@ -395,7 +519,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
         {/* 左パネル: 編集 */}
         <div className={`w-full lg:w-1/2 overflow-y-auto p-4 md:p-6 bg-gray-50 ${mobileTab === 'preview' ? 'hidden lg:block' : ''}`}>
           <div className="space-y-4">
-            {/* テンプレート選択 - 新規作成時のみ表示 */}
+            {/* テンプレート選択 */}
             {!formId && (
               <div className="bg-white border border-emerald-200 rounded-xl overflow-hidden shadow-sm">
                 <div className="flex items-center justify-between px-5 py-4 bg-emerald-50">
@@ -447,23 +571,24 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
               </div>
             )}
 
-            {/* 基本設定 */}
+            {/* ── 基本設定 ── */}
             <Section
               title="基本設定"
               icon={<span className="bg-emerald-50 p-1.5 rounded-lg"><Settings className="w-4 h-4 text-emerald-600" /></span>}
+              borderColor="border-emerald-200"
             >
               <div className="space-y-4 pt-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">タイトル <span className="text-red-500">*</span></label>
-                  <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="例: セミナー申し込みフォーム" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" />
+                  <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="例: セミナー申し込みフォーム" className="w-full px-4 py-3 border border-emerald-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-emerald-50/30" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">説明（任意）</label>
-                  <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="フォームの説明文" rows={2} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" />
+                  <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="フォームの説明文" rows={2} className="w-full px-4 py-3 border border-emerald-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-emerald-50/30" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">完了メッセージ</label>
-                  <input type="text" value={successMessage} onChange={(e) => setSuccessMessage(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" />
+                  <input type="text" value={successMessage} onChange={(e) => setSuccessMessage(e.target.value)} className="w-full px-4 py-3 border border-emerald-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-emerald-50/30" />
                 </div>
                 {savedFormId && (
                   <div>
@@ -485,14 +610,14 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
               </div>
             </Section>
 
-            {/* デザイン設定 */}
+            {/* ── デザイン設定 ── */}
             <Section
               title="デザイン設定"
               icon={<span className="bg-pink-50 p-1.5 rounded-lg"><Palette className="w-4 h-4 text-pink-600" /></span>}
+              borderColor="border-pink-200"
               defaultOpen={false}
             >
               <div className="space-y-5 pt-4">
-                {/* レイアウト選択 */}
                 <div>
                   <label className="text-sm font-bold text-gray-900 block mb-2">レイアウト</label>
                   <div className="grid grid-cols-3 gap-2">
@@ -507,9 +632,9 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                           key={l.id}
                           type="button"
                           onClick={() => setDesignLayout(l.id)}
-                          className={`p-3 rounded-xl border-2 text-center transition-all ${designLayout === l.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                          className={`p-3 rounded-xl border-2 text-center transition-all ${designLayout === l.id ? 'border-pink-500 bg-pink-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
                         >
-                          <Icon className={`w-5 h-5 mx-auto mb-1 ${designLayout === l.id ? 'text-blue-600' : 'text-gray-400'}`} />
+                          <Icon className={`w-5 h-5 mx-auto mb-1 ${designLayout === l.id ? 'text-pink-600' : 'text-gray-400'}`} />
                           <p className="font-bold text-xs text-gray-900">{l.name}</p>
                           <p className="text-[10px] text-gray-500 mt-0.5">{l.desc}</p>
                         </button>
@@ -517,8 +642,6 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                     })}
                   </div>
                 </div>
-
-                {/* カラー選択 */}
                 <div>
                   <label className="text-sm font-bold text-gray-900 block mb-2">カラーテーマ</label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -529,7 +652,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                           key={cid}
                           type="button"
                           onClick={() => setDesignColor(cid)}
-                          className={`p-2.5 rounded-xl border-2 text-left transition-all ${designColor === cid ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                          className={`p-2.5 rounded-xl border-2 text-left transition-all ${designColor === cid ? 'border-pink-500 bg-pink-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
                         >
                           <div className="flex items-center gap-2">
                             <div className="w-5 h-5 rounded-full flex-shrink-0 shadow-inner" style={{ backgroundColor: c.swatch }} />
@@ -543,21 +666,22 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
               </div>
             </Section>
 
-            {/* フィールド設定 */}
+            {/* ── フォームフィールド ── */}
             <Section
               title="フォームフィールド"
               icon={<span className="bg-blue-50 p-1.5 rounded-lg"><ListPlus className="w-4 h-4 text-blue-600" /></span>}
-              badge={<span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-bold">{fields.length}</span>}
+              borderColor="border-blue-200"
+              badge={<span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">{fields.length}</span>}
             >
               <div className="pt-4">
                 <div className="flex justify-end mb-3">
-                  <button onClick={addField} className="inline-flex items-center gap-1 px-3 py-2 text-sm bg-emerald-50 text-emerald-700 font-semibold rounded-lg hover:bg-emerald-100 transition-colors min-h-[44px] shadow-sm">
+                  <button onClick={addField} className="inline-flex items-center gap-1 px-3 py-2 text-sm bg-blue-50 text-blue-700 font-semibold rounded-lg hover:bg-blue-100 transition-colors min-h-[44px] shadow-sm">
                     <Plus className="w-4 h-4" />フィールド追加
                   </button>
                 </div>
                 <div className="space-y-3">
                   {fields.map((field, i) => (
-                    <div key={i} className="border border-gray-200 rounded-xl p-3 hover:border-emerald-200 transition-colors">
+                    <div key={i} className="border border-blue-100 rounded-xl p-3 bg-blue-50/30 hover:border-blue-300 transition-colors">
                       <div className="flex items-start gap-2">
                         <div className="flex flex-col gap-0.5 mt-1">
                           <button onClick={() => moveField(i, 'up')} disabled={i === 0} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-20 transition-colors"><ChevronUp className="w-3.5 h-3.5" /></button>
@@ -565,29 +689,29 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                         </div>
                         <div className="flex-1 grid sm:grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-xs font-semibold text-gray-500 mb-1">タイプ</label>
-                            <select value={field.fieldType} onChange={(e) => updateField(i, { fieldType: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm">
+                            <label className="block text-xs font-semibold text-blue-700 mb-1">タイプ</label>
+                            <select value={field.fieldType} onChange={(e) => updateField(i, { fieldType: e.target.value })} className="w-full px-3 py-2 border border-blue-200 rounded-lg text-gray-900 text-sm bg-white">
                               {FIELD_TYPES.map((ft) => <option key={ft.value} value={ft.value}>{ft.label}</option>)}
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-gray-500 mb-1">ラベル</label>
-                            <input type="text" value={field.label} onChange={(e) => updateField(i, { label: e.target.value })} placeholder="項目名" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400" />
+                            <label className="block text-xs font-semibold text-blue-700 mb-1">ラベル</label>
+                            <input type="text" value={field.label} onChange={(e) => updateField(i, { label: e.target.value })} placeholder="項目名" className="w-full px-3 py-2 border border-blue-200 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white" />
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-gray-500 mb-1">プレースホルダー</label>
-                            <input type="text" value={field.placeholder} onChange={(e) => updateField(i, { placeholder: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400" />
+                            <label className="block text-xs font-semibold text-blue-700 mb-1">プレースホルダー</label>
+                            <input type="text" value={field.placeholder} onChange={(e) => updateField(i, { placeholder: e.target.value })} className="w-full px-3 py-2 border border-blue-200 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white" />
                           </div>
                           <div className="flex items-end">
                             <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
-                              <input type="checkbox" checked={field.required} onChange={(e) => updateField(i, { required: e.target.checked })} className="w-4 h-4 text-emerald-600 rounded" />
+                              <input type="checkbox" checked={field.required} onChange={(e) => updateField(i, { required: e.target.checked })} className="w-4 h-4 text-blue-600 rounded" />
                               <span className="text-sm text-gray-700">必須</span>
                             </label>
                           </div>
                           {field.fieldType === 'select' && (
                             <div className="sm:col-span-2">
-                              <label className="block text-xs font-semibold text-gray-500 mb-1">選択肢（カンマ区切り）</label>
-                              <input type="text" value={(field.options || []).join(',')} onChange={(e) => updateField(i, { options: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="選択肢A, 選択肢B" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400" />
+                              <label className="block text-xs font-semibold text-blue-700 mb-1">選択肢（カンマ区切り）</label>
+                              <input type="text" value={(field.options || []).join(',')} onChange={(e) => updateField(i, { options: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="選択肢A, 選択肢B" className="w-full px-3 py-2 border border-blue-200 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white" />
                             </div>
                           )}
                         </div>
@@ -602,13 +726,159 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
               </div>
             </Section>
 
-            {/* 決済設定 */}
+            {/* ── CTAボタン設定 ── */}
+            <Section
+              title="CTAボタン設定"
+              icon={<span className="bg-orange-50 p-1.5 rounded-lg"><MousePointerClick className="w-4 h-4 text-orange-600" /></span>}
+              borderColor="border-orange-200"
+              defaultOpen={false}
+            >
+              <div className="space-y-5 pt-4">
+                {/* プレビュー */}
+                <div className="bg-gray-100 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-gray-500 mb-3 text-center">ボタンプレビュー</p>
+                  <CtaButtonPreview cta={ctaButton} label={defaultCtaText} />
+                </div>
+
+                {/* テキスト */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">ボタンテキスト</label>
+                  <input
+                    type="text"
+                    value={ctaButton.text}
+                    onChange={(e) => updateCta({ text: e.target.value })}
+                    placeholder={defaultCtaText}
+                    className="w-full px-4 py-3 border border-orange-200 rounded-xl text-gray-900 text-sm placeholder:text-gray-400 bg-orange-50/30 focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">空欄の場合はデフォルトテキストが使用されます</p>
+                </div>
+
+                {/* 色設定 */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">背景色</label>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {PRESET_COLORS.map(c => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => updateCta({ bgColor: c })}
+                          className={`w-7 h-7 rounded-full border-2 transition-all ${ctaButton.bgColor === c ? 'border-gray-900 scale-110' : 'border-gray-200 hover:scale-105'}`}
+                          style={{ backgroundColor: c }}
+                        />
+                      ))}
+                    </div>
+                    <input
+                      type="color"
+                      value={ctaButton.bgColor}
+                      onChange={(e) => updateCta({ bgColor: e.target.value })}
+                      className="w-full h-10 rounded-lg cursor-pointer border border-orange-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">テキスト色</label>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {['#ffffff', '#000000', '#1f2937', '#f9fafb'].map(c => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => updateCta({ textColor: c })}
+                          className={`w-7 h-7 rounded-full border-2 transition-all ${ctaButton.textColor === c ? 'border-gray-900 scale-110' : 'border-gray-300 hover:scale-105'}`}
+                          style={{ backgroundColor: c }}
+                        />
+                      ))}
+                    </div>
+                    <input
+                      type="color"
+                      value={ctaButton.textColor}
+                      onChange={(e) => updateCta({ textColor: e.target.value })}
+                      className="w-full h-10 rounded-lg cursor-pointer border border-orange-200"
+                    />
+                  </div>
+                </div>
+
+                {/* 角丸 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">角丸</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {BORDER_RADIUS_OPTIONS.map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => updateCta({ borderRadius: opt.value as CtaButtonSettings['borderRadius'] })}
+                        className={`p-2 text-center border-2 transition-all ${opt.preview} ${ctaButton.borderRadius === opt.value ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                      >
+                        <div className={`w-full h-6 bg-gray-300 mx-auto mb-1 ${opt.preview}`} />
+                        <p className="text-xs font-semibold text-gray-700">{opt.label}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 影 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">影</label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {SHADOW_OPTIONS.map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => updateCta({ shadow: opt.value as CtaButtonSettings['shadow'] })}
+                        className={`p-2 rounded-xl text-center border-2 transition-all ${ctaButton.shadow === opt.value ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                      >
+                        <p className="text-xs font-semibold text-gray-700">{opt.label}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* アニメーション */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">アニメーション</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {ANIMATION_OPTIONS.map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => updateCta({ animation: opt.value as CtaButtonSettings['animation'] })}
+                        className={`p-2 rounded-xl text-center border-2 transition-all ${ctaButton.animation === opt.value ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                      >
+                        <p className="text-xs font-semibold text-gray-700">{opt.label}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* サイズ */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">サイズ</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: 'md', label: '標準' },
+                      { value: 'lg', label: '大きい' },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => updateCta({ size: opt.value as CtaButtonSettings['size'] })}
+                        className={`p-3 rounded-xl text-center border-2 transition-all ${ctaButton.size === opt.value ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                      >
+                        <p className="text-sm font-semibold text-gray-700">{opt.label}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </Section>
+
+            {/* ── 決済設定 ── */}
             <Section
               title="決済設定"
               icon={<span className="bg-amber-50 p-1.5 rounded-lg"><CreditCard className="w-4 h-4 text-amber-600" /></span>}
+              borderColor="border-amber-200"
               defaultOpen={paymentType !== 'free'}
               badge={paymentType !== 'free' ? (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold">
                   {paymentType === 'one_time' ? '一回払い' : 'サブスク'}
                 </span>
               ) : undefined}
@@ -616,7 +886,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
               <div className="space-y-4 pt-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">タイプ</label>
-                  <select value={paymentType} onChange={(e) => setPaymentType(e.target.value as 'free' | 'one_time' | 'subscription')} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900">
+                  <select value={paymentType} onChange={(e) => setPaymentType(e.target.value as 'free' | 'one_time' | 'subscription')} className="w-full px-4 py-3 border border-amber-200 rounded-xl text-gray-900 bg-amber-50/30">
                     <option value="free">無料（決済なし）</option>
                     <option value="one_time">一回払い</option>
                     <option value="subscription">サブスクリプション</option>
@@ -626,11 +896,11 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                   <>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">金額（円）</label>
-                      <input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} min={0} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900" />
+                      <input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} min={0} className="w-full px-4 py-3 border border-amber-200 rounded-xl text-gray-900 bg-amber-50/30" />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">Stripe Price ID（任意）</label>
-                      <input type="text" value={stripePriceId} onChange={(e) => setStripePriceId(e.target.value)} placeholder="price_xxx" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 text-sm placeholder:text-gray-400" />
+                      <input type="text" value={stripePriceId} onChange={(e) => setStripePriceId(e.target.value)} placeholder="price_xxx" className="w-full px-4 py-3 border border-amber-200 rounded-xl text-gray-900 text-sm placeholder:text-gray-400 bg-amber-50/30" />
                       <p className="text-xs text-gray-500 mt-1">空欄の場合は金額から自動生成します</p>
                     </div>
                     {paymentType === 'subscription' && (
@@ -645,43 +915,64 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
               </div>
             </Section>
 
-            {/* メール設定 */}
+            {/* ── 申込者への自動返信メール ── */}
             <Section
-              title="メール設定"
-              icon={<span className="bg-purple-50 p-1.5 rounded-lg"><Mail className="w-4 h-4 text-purple-600" /></span>}
+              title="申込者への自動返信メール"
+              icon={<span className="bg-purple-50 p-1.5 rounded-lg"><Send className="w-4 h-4 text-purple-600" /></span>}
+              borderColor="border-purple-200"
               defaultOpen={false}
             >
               <div className="space-y-4 pt-4">
                 <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
-                  <input type="checkbox" checked={replyEmailEnabled} onChange={(e) => setReplyEmailEnabled(e.target.checked)} className="w-4 h-4 text-emerald-600 rounded" />
-                  <span className="text-sm font-semibold text-gray-700">申し込み者に自動返信メールを送る</span>
+                  <input type="checkbox" checked={replyEmailEnabled} onChange={(e) => setReplyEmailEnabled(e.target.checked)} className="w-4 h-4 text-purple-600 rounded" />
+                  <span className="text-sm font-semibold text-gray-700">自動返信メールを送る</span>
                 </label>
                 {replyEmailEnabled && (
                   <>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">件名</label>
-                      <input type="text" value={replyEmailSubject} onChange={(e) => setReplyEmailSubject(e.target.value)} placeholder="お申し込みありがとうございます" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" />
+                      <input type="text" value={replyEmailSubject} onChange={(e) => setReplyEmailSubject(e.target.value)} placeholder="お申し込みありがとうございます" className="w-full px-4 py-3 border border-purple-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-purple-50/30" />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">本文（任意）</label>
-                      <textarea value={replyEmailBody} onChange={(e) => setReplyEmailBody(e.target.value)} placeholder="空欄の場合はデフォルトの確認メールが送信されます。&#10;&#10;{name} = 申し込み者名&#10;{email} = メールアドレス&#10;{form_title} = フォームタイトル" rows={5} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" />
+                      <textarea value={replyEmailBody} onChange={(e) => setReplyEmailBody(e.target.value)} placeholder={`空欄の場合はデフォルトの確認メールが送信されます。\n\n{name} = 申し込み者名\n{email} = メールアドレス\n{form_title} = フォームタイトル`} rows={5} className="w-full px-4 py-3 border border-purple-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-purple-50/30" />
                       <p className="text-xs text-gray-500 mt-1">変数: {'{name}'}, {'{email}'}, {'{form_title}'} が使えます</p>
                     </div>
                   </>
                 )}
-                <div className="border-t border-gray-100 pt-4 space-y-3">
-                  <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
-                    <input type="checkbox" checked={notifyOwner} onChange={(e) => setNotifyOwner(e.target.checked)} className="w-4 h-4 text-emerald-600 rounded" />
-                    <span className="text-sm font-semibold text-gray-700">申し込み通知メールを送る</span>
-                  </label>
-                  {notifyOwner && (
+              </div>
+            </Section>
+
+            {/* ── 作成者への通知メール ── */}
+            <Section
+              title="作成者への通知メール"
+              icon={<span className="bg-teal-50 p-1.5 rounded-lg"><Bell className="w-4 h-4 text-teal-600" /></span>}
+              borderColor="border-teal-200"
+              defaultOpen={false}
+            >
+              <div className="space-y-4 pt-4">
+                <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                  <input type="checkbox" checked={notifyOwner} onChange={(e) => setNotifyOwner(e.target.checked)} className="w-4 h-4 text-teal-600 rounded" />
+                  <span className="text-sm font-semibold text-gray-700">申し込み通知メールを受け取る</span>
+                </label>
+                {notifyOwner && (
+                  <>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">通知先メールアドレス（任意）</label>
-                      <input type="text" value={notifyEmails} onChange={(e) => setNotifyEmails(e.target.value)} placeholder="空欄の場合はログイン中のメールアドレスに送信されます" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" />
+                      <input type="text" value={notifyEmails} onChange={(e) => setNotifyEmails(e.target.value)} placeholder="空欄の場合はログイン中のメールアドレスに送信されます" className="w-full px-4 py-3 border border-teal-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all bg-teal-50/30" />
                       <p className="text-xs text-gray-500 mt-1">複数の場合はカンマ区切り（例: a@example.com, b@example.com）</p>
                     </div>
-                  )}
-                </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">通知メール件名（任意）</label>
+                      <input type="text" value={notifyEmailSubject} onChange={(e) => setNotifyEmailSubject(e.target.value)} placeholder="空欄: 「新しい申し込みがありました」" className="w-full px-4 py-3 border border-teal-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all bg-teal-50/30" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">通知メール本文（任意）</label>
+                      <textarea value={notifyEmailBody} onChange={(e) => setNotifyEmailBody(e.target.value)} placeholder={`空欄の場合は申込内容のサマリーが自動送信されます。\n\n{name} = 申し込み者名\n{email} = メールアドレス\n{form_title} = フォームタイトル\n{fields} = 全入力内容`} rows={5} className="w-full px-4 py-3 border border-teal-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all bg-teal-50/30" />
+                      <p className="text-xs text-gray-500 mt-1">変数: {'{name}'}, {'{email}'}, {'{form_title}'}, {'{fields}'} が使えます</p>
+                    </div>
+                  </>
+                )}
               </div>
             </Section>
           </div>
@@ -699,7 +990,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             <div className="max-w-md mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
-              <OrderFormPreview title={title} description={description} price={price} paymentType={paymentType} fields={fields} designLayout={designLayout} designColor={designColor} />
+              <OrderFormPreview title={title} description={description} price={price} paymentType={paymentType} fields={fields} designLayout={designLayout} designColor={designColor} ctaButton={ctaButton} />
             </div>
           </div>
         </div>

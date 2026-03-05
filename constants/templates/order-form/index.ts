@@ -11,6 +11,16 @@ export interface OrderFormTemplateField {
   options: string[] | null;
 }
 
+export interface OrderFormCtaButton {
+  text?: string;
+  bgColor?: string;
+  textColor?: string;
+  borderRadius?: 'sm' | 'md' | 'lg' | 'full';
+  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  animation?: 'none' | 'pulse' | 'shimmer' | 'bounce';
+  size?: 'md' | 'lg';
+}
+
 export interface OrderFormTemplate {
   id: string;
   name: string;
@@ -25,6 +35,7 @@ export interface OrderFormTemplate {
   successMessage: string;
   replyEmailSubject: string;
   fields: OrderFormTemplateField[];
+  ctaButton?: OrderFormCtaButton;
 }
 
 export const ORDER_FORM_TEMPLATES: OrderFormTemplate[] = [
@@ -48,6 +59,7 @@ export const ORDER_FORM_TEMPLATES: OrderFormTemplate[] = [
       { fieldType: 'select', label: '参加希望日', placeholder: '選択してください', required: true, options: ['第1回: 〇月〇日', '第2回: 〇月〇日', '第3回: 〇月〇日'] },
       { fieldType: 'textarea', label: '備考・ご質問', placeholder: 'ご質問やご要望があればご記入ください', required: false, options: null },
     ],
+    ctaButton: { text: '今すぐ参加する', bgColor: '#059669', textColor: '#ffffff', borderRadius: 'full', shadow: 'lg', animation: 'pulse', size: 'lg' },
   },
   {
     id: 'consulting',
@@ -70,6 +82,7 @@ export const ORDER_FORM_TEMPLATES: OrderFormTemplate[] = [
       { fieldType: 'textarea', label: '相談内容', placeholder: '現在のお悩みやご相談内容をお書きください', required: true, options: null },
       { fieldType: 'textarea', label: '希望日程', placeholder: '第1希望: 〇月〇日 〇時〜\n第2希望: 〇月〇日 〇時〜', required: false, options: null },
     ],
+    ctaButton: { text: 'コンサルティングを申し込む', bgColor: '#2563eb', textColor: '#ffffff', borderRadius: 'lg', shadow: 'lg', animation: 'shimmer', size: 'lg' },
   },
   {
     id: 'product-order',
@@ -92,6 +105,7 @@ export const ORDER_FORM_TEMPLATES: OrderFormTemplate[] = [
       { fieldType: 'number', label: '数量', placeholder: '1', required: true, options: null },
       { fieldType: 'textarea', label: '備考', placeholder: 'ギフト包装・配送日時のご希望などがあればご記入ください', required: false, options: null },
     ],
+    ctaButton: { text: '注文する', bgColor: '#d97706', textColor: '#ffffff', borderRadius: 'md', shadow: 'lg', animation: 'none', size: 'md' },
   },
   {
     id: 'contact',
@@ -112,6 +126,7 @@ export const ORDER_FORM_TEMPLATES: OrderFormTemplate[] = [
       { fieldType: 'select', label: 'お問い合わせ種類', placeholder: '選択してください', required: true, options: ['サービスについて', '料金について', 'その他'] },
       { fieldType: 'textarea', label: 'お問い合わせ内容', placeholder: 'お問い合わせ内容を詳しくお書きください', required: true, options: null },
     ],
+    ctaButton: { text: '送信する', bgColor: '#0d9488', textColor: '#ffffff', borderRadius: 'lg', shadow: 'md', animation: 'none', size: 'md' },
   },
   {
     id: 'monitor',
@@ -133,6 +148,7 @@ export const ORDER_FORM_TEMPLATES: OrderFormTemplate[] = [
       { fieldType: 'text', label: '職業', placeholder: '会社員', required: false, options: null },
       { fieldType: 'textarea', label: '応募動機', placeholder: 'モニターに応募された理由をお書きください', required: true, options: null },
     ],
+    ctaButton: { text: '無料で応募する', bgColor: '#7c3aed', textColor: '#ffffff', borderRadius: 'full', shadow: 'lg', animation: 'bounce', size: 'lg' },
   },
   {
     id: 'subscription',
@@ -153,5 +169,6 @@ export const ORDER_FORM_TEMPLATES: OrderFormTemplate[] = [
       { fieldType: 'select', label: 'プラン選択', placeholder: '選択してください', required: true, options: ['ライトプラン', 'スタンダードプラン', 'プレミアムプラン'] },
       { fieldType: 'textarea', label: '備考', placeholder: 'ご質問やご要望があればご記入ください', required: false, options: null },
     ],
+    ctaButton: { text: '今すぐ始める', bgColor: '#e11d48', textColor: '#ffffff', borderRadius: 'full', shadow: 'xl', animation: 'shimmer', size: 'lg' },
   },
 ];

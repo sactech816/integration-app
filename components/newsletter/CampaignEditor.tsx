@@ -851,17 +851,21 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   };
 
   // CTAリンクをHTMLに適用（保存・送信時）
+  // CTAリンクをHTMLに適用（URL + ラベル両方を置換）
   const applyCtaLinks = useCallback((html: string) => {
     if (ctaLinks.length === 0) return html;
     let linkIndex = 0;
-    return html.replace(/href="#"/g, () => {
-      if (linkIndex < ctaLinks.length && ctaLinks[linkIndex].url) {
-        const url = ctaLinks[linkIndex].url;
+    // href="#" を含む <a> タグ全体をマッチし、URLとラベルの両方を置換
+    return html.replace(/<a\s([^>]*?)href="#"([^>]*?)>(.*?)<\/a>/g, (_match, before, after, text) => {
+      if (linkIndex < ctaLinks.length) {
+        const link = ctaLinks[linkIndex];
         linkIndex++;
-        return `href="${url}"`;
+        const newUrl = link.url || '#';
+        const newLabel = link.label || text;
+        return `<a ${before}href="${newUrl}"${after}>${newLabel}</a>`;
       }
       linkIndex++;
-      return 'href="#"';
+      return _match;
     });
   }, [ctaLinks]);
 
@@ -1286,61 +1290,6 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100"
                   />
                 </div>
-
-                {/* CTAリンク設定 */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    <span className="flex items-center gap-1.5">
-                      <Link2 className="w-4 h-4" />
-                      リンクURL（任意）
-                    </span>
-                  </label>
-                  <p className="text-xs text-gray-500 mb-3">テンプレートのボタンに設定するURLです。上から順にボタンに適用されます。</p>
-                  {ctaLinks.map((link, index) => (
-                    <div key={index} className="flex gap-2 mb-2">
-                      <input
-                        type="text"
-                        value={link.label}
-                        onChange={(e) => {
-                          const updated = [...ctaLinks];
-                          updated[index] = { ...updated[index], label: e.target.value };
-                          setCtaLinks(updated);
-                        }}
-                        disabled={isSent}
-                        placeholder="ラベル（例: 詳しくはこちら）"
-                        className="w-1/3 px-3 py-2.5 border border-gray-300 rounded-xl text-gray-900 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100"
-                      />
-                      <input
-                        type="url"
-                        value={link.url}
-                        onChange={(e) => {
-                          const updated = [...ctaLinks];
-                          updated[index] = { ...updated[index], url: e.target.value };
-                          setCtaLinks(updated);
-                        }}
-                        disabled={isSent}
-                        placeholder="https://example.com"
-                        className="flex-1 px-3 py-2.5 border border-gray-300 rounded-xl text-gray-900 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100"
-                      />
-                      {!isSent && (
-                        <button
-                          onClick={() => setCtaLinks(ctaLinks.filter((_, i) => i !== index))}
-                          className="p-2 text-gray-400 hover:text-red-500 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  {!isSent && (
-                    <button
-                      onClick={() => setCtaLinks([...ctaLinks, { label: '', url: '' }])}
-                      className="inline-flex items-center gap-1 text-xs text-blue-600 font-semibold hover:text-blue-700 transition-colors mt-1"
-                    >
-                      <Plus className="w-3.5 h-3.5" />リンクを追加
-                    </button>
-                  )}
-                </div>
               </div>
             </Section>
 
@@ -1482,6 +1431,71 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                     )}
                   </div>
                 )}
+
+                {/* CTAリンク設定 */}
+                <div className="bg-violet-50/50 border border-violet-200 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                      <Link2 className="w-4 h-4 text-violet-500" />
+                      ボタンリンク設定（任意）
+                    </label>
+                    {!isSent && ctaLinks.length === 0 && (
+                      <button
+                        onClick={() => setCtaLinks([...ctaLinks, { label: '', url: '' }])}
+                        className="inline-flex items-center gap-1 text-xs text-violet-600 font-semibold hover:text-violet-700 transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5" />リンクを追加
+                      </button>
+                    )}
+                  </div>
+                  {ctaLinks.length === 0 && (
+                    <p className="text-xs text-gray-500">テンプレートのボタンにURLとラベルを設定できます。</p>
+                  )}
+                  {ctaLinks.map((link, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={link.label}
+                        onChange={(e) => {
+                          const updated = [...ctaLinks];
+                          updated[index] = { ...updated[index], label: e.target.value };
+                          setCtaLinks(updated);
+                        }}
+                        disabled={isSent}
+                        placeholder="ラベル（例: 詳しくはこちら）"
+                        className="w-1/3 px-3 py-2.5 border border-gray-300 rounded-xl text-gray-900 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all disabled:bg-gray-100"
+                      />
+                      <input
+                        type="url"
+                        value={link.url}
+                        onChange={(e) => {
+                          const updated = [...ctaLinks];
+                          updated[index] = { ...updated[index], url: e.target.value };
+                          setCtaLinks(updated);
+                        }}
+                        disabled={isSent}
+                        placeholder="https://example.com"
+                        className="flex-1 px-3 py-2.5 border border-gray-300 rounded-xl text-gray-900 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all disabled:bg-gray-100"
+                      />
+                      {!isSent && (
+                        <button
+                          onClick={() => setCtaLinks(ctaLinks.filter((_, i) => i !== index))}
+                          className="p-2 text-gray-400 hover:text-red-500 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {!isSent && ctaLinks.length > 0 && (
+                    <button
+                      onClick={() => setCtaLinks([...ctaLinks, { label: '', url: '' }])}
+                      className="inline-flex items-center gap-1 text-xs text-violet-600 font-semibold hover:text-violet-700 transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />リンクを追加
+                    </button>
+                  )}
+                </div>
               </div>
             </Section>
 
