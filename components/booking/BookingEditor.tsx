@@ -157,26 +157,58 @@ export default function BookingEditor({
     }
   }, [selectedDates]);
 
-  // 枠追加
+  // 枠追加（同じ日時が既にあればキャパシティを加算）
   const handleAddSlot = useCallback((data: SlotFormData) => {
-    const newSlot: LocalSlot = {
-      id: `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      date: data.date,
-      startHour: data.startHour,
-      startMinute: data.startMinute,
-      endHour: Math.floor((data.startHour * 60 + data.startMinute + formData.duration_min) / 60),
-      endMinute: (data.startHour * 60 + data.startMinute + formData.duration_min) % 60,
-      isNew: true,
-      maxCapacity: data.maxCapacity, // 最大予約数
-    };
-    
-    setLocalSlots((prev) => [...prev, newSlot]);
-    
+    setLocalSlots((prev) => {
+      // 同じ日時のローカルスロットが既にあるかチェック
+      const existingIndex = prev.findIndex(
+        (s) => s.date.toDateString() === data.date.toDateString() &&
+               s.startHour === data.startHour &&
+               s.startMinute === data.startMinute
+      );
+
+      if (existingIndex >= 0) {
+        // 既存スロットのキャパシティを加算
+        const updated = [...prev];
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          maxCapacity: (updated[existingIndex].maxCapacity || 1) + (data.maxCapacity || 1),
+        };
+        return updated;
+      }
+
+      // 同じ日時の保存済みスロットがあるかもチェック
+      const hasSavedDuplicate = savedSlots.some((s) => {
+        const d = new Date(s.start_time);
+        return d.toDateString() === data.date.toDateString() &&
+               d.getHours() === data.startHour &&
+               d.getMinutes() === data.startMinute;
+      });
+
+      // 新規スロットを追加
+      const newSlot: LocalSlot = {
+        id: `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        date: data.date,
+        startHour: data.startHour,
+        startMinute: data.startMinute,
+        endHour: Math.floor((data.startHour * 60 + data.startMinute + formData.duration_min) / 60),
+        endMinute: (data.startHour * 60 + data.startMinute + formData.duration_min) % 60,
+        isNew: true,
+        maxCapacity: data.maxCapacity,
+      };
+
+      if (hasSavedDuplicate) {
+        console.warn('[Booking] 同じ日時の保存済みスロットが既に存在します。新規スロットとして追加します。');
+      }
+
+      return [...prev, newSlot];
+    });
+
     // 単一追加の場合はモーダルを閉じる
     if (slotModalMode === 'single') {
       setShowSlotModal(false);
     }
-  }, [formData.duration_min, slotModalMode]);
+  }, [formData.duration_min, slotModalMode, savedSlots]);
 
   // 一括追加完了時
   const handleBulkAddComplete = useCallback(() => {
