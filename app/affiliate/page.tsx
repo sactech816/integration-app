@@ -80,10 +80,6 @@ const faqs = [
 ];
 
 export default function AffiliateLandingPage() {
-  const navigateTo = (path: string) => {
-    // Server component - not needed
-  };
-
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
@@ -220,7 +216,7 @@ export default function AffiliateLandingPage() {
           </div>
         </section>
 
-        <Footer setPage={() => {}} />
+        <Footer />
       </div>
     </>
   );
