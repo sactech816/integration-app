@@ -477,12 +477,14 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
     setSaving(true);
     const textContent = htmlToPlainText(getFullHtml());
     const body = { userId: user.id, listId, subject, previewText, htmlContent: getFullHtml(), textContent };
-    if (campaignId) {
-      await fetch(`/api/newsletter-maker/campaigns/${campaignId}`, {
+    if (savedCampaignId) {
+      await fetch(`/api/newsletter-maker/campaigns/${savedCampaignId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
     } else {
       const res = await fetch('/api/newsletter-maker/campaigns', {
         method: 'POST',
@@ -491,24 +493,27 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
       });
       if (res.ok) {
         const data = await res.json();
-        router.push(`/newsletter/campaigns/${data.campaign.id}`);
+        setSavedCampaignId(data.campaign.id);
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 2000);
+        window.history.replaceState(null, '', `/newsletter/campaigns/${data.campaign.id}`);
       }
     }
     setSaving(false);
   };
 
   const handleSendConfirmed = async () => {
-    if (!user || !campaignId) return;
+    if (!user || !savedCampaignId) return;
     setSending(true);
     // 保存してから送信
     const textContent = htmlToPlainText(getFullHtml());
-    await fetch(`/api/newsletter-maker/campaigns/${campaignId}`, {
+    await fetch(`/api/newsletter-maker/campaigns/${savedCampaignId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: user.id, listId, subject, previewText, htmlContent: getFullHtml(), textContent }),
     });
 
-    const res = await fetch(`/api/newsletter-maker/campaigns/${campaignId}/send`, {
+    const res = await fetch(`/api/newsletter-maker/campaigns/${savedCampaignId}/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: user.id }),
@@ -657,7 +662,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-lg font-bold text-gray-900 truncate">
-            {isSent ? 'キャンペーン詳細' : campaignId ? 'キャンペーン編集' : '新しいキャンペーン'}
+            {isSent ? 'キャンペーン詳細' : savedCampaignId ? 'キャンペーン編集' : '新しいキャンペーン'}
           </h1>
           {isSent && (
             <span className="inline-flex items-center px-3 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded-full">
@@ -667,7 +672,12 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
         </div>
         {!isSent && (
           <div className="flex items-center gap-2">
-            {campaignId && (
+            {saveSuccess && (
+              <span className="inline-flex items-center gap-1 text-sm text-violet-600 font-semibold animate-fade-in">
+                <CheckCircle2 className="w-4 h-4" />保存しました
+              </span>
+            )}
+            {savedCampaignId && (
               <button
                 onClick={() => {
                   // テスト送信前に保存
@@ -682,13 +692,13 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
             )}
             <button
               onClick={handleSave}
-              disabled={saving || !subject}
+              disabled={saving || !subject || !listId}
               className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white text-sm font-semibold rounded-lg hover:bg-gray-900 disabled:opacity-50 transition-all shadow-md min-h-[44px]"
             >
               <Save className="w-4 h-4" />
               {saving ? '保存中...' : '保存'}
             </button>
-            {campaignId && (
+            {savedCampaignId && (
               <button
                 onClick={() => setShowSendConfirm(true)}
                 disabled={sending || !subject || !htmlContent}
@@ -1085,10 +1095,10 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
       )}
 
       {/* テスト送信モーダル */}
-      {showTestSend && campaignId && user && (
+      {showTestSend && savedCampaignId && user && (
         <TestSendModal
           onClose={() => setShowTestSend(false)}
-          campaignId={campaignId}
+          campaignId={savedCampaignId}
           userId={user.id}
           userEmail={user.email}
         />
