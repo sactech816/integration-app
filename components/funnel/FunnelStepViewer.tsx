@@ -222,7 +222,7 @@ export default function FunnelStepViewer({ slug, stepIndex }: Props) {
         <div className="bg-white border-t border-gray-200 px-4 py-4">
           <div className="max-w-5xl mx-auto text-center">
             <Link
-              href={`/funnel/${slug}/${currentIndex + 1}`}
+              href={`/funnel/${slug}/${currentIndex + 1}${isPreview ? '?preview=true' : ''}`}
               onClick={trackClick}
               className="inline-flex items-center gap-2 px-8 py-4 bg-amber-600 hover:bg-amber-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]"
             >

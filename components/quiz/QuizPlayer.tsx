@@ -179,9 +179,12 @@ const ResultView = ({ quiz, result, onRetry, onBack, playableQuestions, answers,
 };
 
 const QuizPlayer = ({ quiz, onBack, isPreview = false, onResult }: { quiz: any, onBack?: () => void, isPreview?: boolean, onResult?: (result: any) => void }) => {
-  useEffect(() => { 
+  const searchParams = useSearchParams();
+  const isFunnel = searchParams.get('funnel') === 'true';
+
+  useEffect(() => {
     if (!isPreview) {
-      document.title = `${quiz.title} | 診断中`; 
+      document.title = `${quiz.title} | 診断中`;
     }
   }, [quiz.title, isPreview]);
   const [currentStep, setCurrentStep] = useState(0);
@@ -369,14 +372,15 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false, onResult }: { quiz: any, 
       return (
         <div className="min-h-screen flex items-center justify-center p-4" style={{ background: theme.background }}>
             <SEO title={`${result.title} | 結果`} description={result.description.substring(0, 100)} image={quiz.image_url} />
-            <ResultView 
-                quiz={quiz} 
-                result={result} 
+            <ResultView
+                quiz={quiz}
+                result={result}
                 playableQuestions={playableQuestions}
                 answers={answers}
-                onRetry={() => {setResult(null); setCurrentStep(0); setAnswers({}); setChatHistory([]); setShowEmailForm(false); setEmail('');}} 
+                onRetry={() => {setResult(null); setCurrentStep(0); setAnswers({}); setChatHistory([]); setShowEmailForm(false); setEmail('');}}
                 onBack={onBack}
                 theme={theme}
+                isFunnel={isFunnel}
             />
         </div>
       ); 
@@ -662,15 +666,17 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false, onResult }: { quiz: any, 
           </div>
           
           {/* 戻るボタン */}
-          <div className="mt-4 text-center">
-            <button 
-              onClick={onBack} 
-              className="font-bold text-sm flex items-center gap-1 mx-auto transition-colors"
-              style={{ color: useDefaultLayoutColors ? popDefaultColors.textSecondary : theme.textSecondary }}
-            >
-              <ArrowLeft size={14}/> 戻る
-            </button>
-          </div>
+          {!isFunnel && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={onBack}
+                className="font-bold text-sm flex items-center gap-1 mx-auto transition-colors"
+                style={{ color: useDefaultLayoutColors ? popDefaultColors.textSecondary : theme.textSecondary }}
+              >
+                <ArrowLeft size={14}/> 戻る
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -773,15 +779,17 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false, onResult }: { quiz: any, 
           {feedback && <div className="text-center text-sm py-4" style={{ color: useDefaultLayoutColors ? gridDefaultColors.textSecondary : theme.textSecondary }}>判定中...</div>}
           
           {/* 戻るボタン */}
-          <div className="mt-6 text-center">
-            <button 
-              onClick={onBack} 
-              className="font-bold text-sm flex items-center gap-1 mx-auto transition-colors"
-              style={{ color: useDefaultLayoutColors ? gridDefaultColors.textSecondary : theme.textSecondary }}
-            >
-              <ArrowLeft size={14}/> 戻る
-            </button>
-          </div>
+          {!isFunnel && (
+            <div className="mt-6 text-center">
+              <button
+                onClick={onBack}
+                className="font-bold text-sm flex items-center gap-1 mx-auto transition-colors"
+                style={{ color: useDefaultLayoutColors ? gridDefaultColors.textSecondary : theme.textSecondary }}
+              >
+                <ArrowLeft size={14}/> 戻る
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -795,15 +803,17 @@ const QuizPlayer = ({ quiz, onBack, isPreview = false, onResult }: { quiz: any, 
     >
       <FeedbackOverlay />
       <SEO title={`${quiz.title} | 診断中`} description={quiz.description} image={quiz.image_url} />
-      <div className="w-full max-w-md lg:max-w-2xl mb-4 px-4">
-          <button 
-            onClick={onBack} 
-            className="font-bold flex items-center gap-1 transition-colors"
-            style={{ color: theme.textSecondary }}
-          >
-            <ArrowLeft size={16}/> 戻る
-          </button>
-      </div>
+      {!isFunnel && (
+        <div className="w-full max-w-md lg:max-w-2xl mb-4 px-4">
+            <button
+              onClick={onBack}
+              className="font-bold flex items-center gap-1 transition-colors"
+              style={{ color: theme.textSecondary }}
+            >
+              <ArrowLeft size={16}/> 戻る
+            </button>
+        </div>
+      )}
       <div className="max-w-md lg:max-w-2xl mx-auto w-full px-4">
         <div 
           className="text-white rounded-t-3xl text-center shadow-lg transition-colors duration-500 relative overflow-hidden"

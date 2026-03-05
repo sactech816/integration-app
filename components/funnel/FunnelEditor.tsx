@@ -406,9 +406,14 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
           </button>
           <h1 className="text-lg font-bold text-gray-900 truncate">{savedFunnelId ? 'ファネル編集' : '新しいファネル'}</h1>
           {slug && status === 'active' && (
-            <a href={publicUrl} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1 text-xs text-amber-600 hover:underline">
-              <Globe className="w-3 h-3" />公開中
-            </a>
+            <>
+              <a href={publicUrl} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1 text-xs text-amber-600 hover:underline">
+                <Globe className="w-3 h-3" />公開中
+              </a>
+              <a href={`${publicUrl}?preview=true`} target="_blank" rel="noopener noreferrer" className="hidden sm:inline-flex items-center gap-1 text-xs text-gray-500 hover:underline">
+                <Monitor className="w-3 h-3" />確認
+              </a>
+            </>
           )}
         </div>
         <div className="flex items-center gap-2">
