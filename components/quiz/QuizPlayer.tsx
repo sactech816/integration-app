@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, Loader2, Trophy, ExternalLink, MessageCircle, QrCode, RefreshCw, Home, Twitter, Share2, CheckCircle, XCircle, Sparkles, Mail } from 'lucide-react';
 import SEO from './SEO';
 import { supabase } from '../../lib/supabase';
@@ -7,7 +8,7 @@ import { calculateResult } from '../../lib/utils';
 import confetti from 'canvas-confetti';
 import { getQuizTheme } from '../../constants/quizThemes';
 
-const ResultView = ({ quiz, result, onRetry, onBack, playableQuestions, answers, theme }) => {
+const ResultView = ({ quiz, result, onRetry, onBack, playableQuestions, answers, theme, isFunnel = false }) => {
   const [showHistory, setShowHistory] = useState(true);
   
   useEffect(() => { 
@@ -161,14 +162,16 @@ const ResultView = ({ quiz, result, onRetry, onBack, playableQuestions, answers,
                 )}
             </div>
 
-            <div className="flex gap-4 border-t pt-6">
-                <button onClick={onRetry} className="flex-1 py-3 rounded-lg border border-gray-300 font-bold text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors">
-                    <RefreshCw size={18}/> 再診断
-                </button>
-                <button onClick={onBack} className="flex-1 py-3 rounded-lg bg-gray-800 font-bold text-white hover:bg-gray-900 flex items-center justify-center gap-2 transition-colors">
-                    <Home size={18}/> TOP
-                </button>
-            </div>
+            {!isFunnel && (
+              <div className="flex gap-4 border-t pt-6">
+                  <button onClick={onRetry} className="flex-1 py-3 rounded-lg border border-gray-300 font-bold text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors">
+                      <RefreshCw size={18}/> 再診断
+                  </button>
+                  <button onClick={onBack} className="flex-1 py-3 rounded-lg bg-gray-800 font-bold text-white hover:bg-gray-900 flex items-center justify-center gap-2 transition-colors">
+                      <Home size={18}/> TOP
+                  </button>
+              </div>
+            )}
         </div>
         <ContentFooter toolType="quiz" variant="light" hideFooter={quiz.hideFooter} />
     </div>

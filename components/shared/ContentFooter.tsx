@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useSearchParams } from 'next/navigation';
 
 // ツール種別の定義
 export type ContentToolType = 
@@ -54,8 +55,12 @@ const ContentFooter: React.FC<ContentFooterProps> = ({
   variant = 'light',
   className = '',
 }) => {
+  // ファネルモード（iframe内）ではフッター非表示
+  const searchParams = useSearchParams();
+  const isFunnel = searchParams.get('funnel') === 'true';
+
   // フッター非表示の場合は何も表示しない
-  if (hideFooter) {
+  if (hideFooter || isFunnel) {
     return null;
   }
 

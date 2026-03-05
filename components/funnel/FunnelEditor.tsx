@@ -8,7 +8,7 @@ import {
   GitBranch, BarChart3, Monitor, Pencil, ChevronDown,
   User, HelpCircle, FileText, Mail, Calendar, ExternalLink, Heart,
   Building2, PenTool, ArrowRight, X, Trophy, Share2, CheckCircle,
-  Sparkles, ClipboardList, Megaphone, Users, Image, BookOpen, MessageSquare,
+  Sparkles, ClipboardList, Megaphone, Users, Image, BookOpen, MessageSquare, Info,
 } from 'lucide-react';
 import { FUNNEL_TEMPLATES } from '@/constants/templates/funnel';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
@@ -693,6 +693,18 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
                       </div>
                     );
                   })}
+                </div>
+              )}
+
+              {/* ファネルモード注意書き */}
+              {steps.length > 0 && (
+                <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-2">
+                  <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-xs text-amber-800 space-y-1">
+                    <p className="font-semibold">ファネル表示時の注意</p>
+                    <p>各ツール内のフッターリンクはファネル表示時に自動で非表示になります。ステップインジケーターはエンドユーザーには表示されません（作成者プレビュー時のみ表示）。</p>
+                    <p>確認する場合は公開URLに <code className="bg-amber-100 px-1 rounded">?preview=true</code> を付けてください。</p>
+                  </div>
                 </div>
               )}
             </div>

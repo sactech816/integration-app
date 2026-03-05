@@ -909,9 +909,10 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                         <p className="text-xs text-amber-700 mt-1">Stripeダッシュボードで定期課金用のPrice IDを作成し、上のフィールドに入力してください。</p>
                       </div>
                     )}
-                    {userId && <StripeConnectStatus userId={userId} />}
                   </>
                 )}
+                {/* Stripe Connect状態 - 決済タイプに関係なく常に表示 */}
+                {userId && <StripeConnectStatus userId={userId} />}
               </div>
             </Section>
 

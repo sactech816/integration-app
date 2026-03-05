@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight, Loader2, CheckCircle2, ExternalLink } from 'lucide-react';
 
@@ -32,6 +33,8 @@ export default function FunnelStepViewer({ slug, stepIndex }: Props) {
     ? sessionStorage.getItem('funnel_session') || `fs_${Date.now()}_${Math.random().toString(36).slice(2)}`
     : ''
   );
+  const searchParams = useSearchParams();
+  const isPreview = searchParams.get('preview') === 'true';
 
   const currentIndex = parseInt(stepIndex, 10);
 
@@ -110,29 +113,32 @@ export default function FunnelStepViewer({ slug, stepIndex }: Props) {
   const isLastStep = currentIndex >= funnel.funnel_steps.length - 1;
   const isThankYou = step.step_type === 'thank_you';
 
-  // ステップのコンテンツURL生成
+  // ステップのコンテンツURL生成（?funnel=true でファネルモードを伝達）
   const getContentUrl = () => {
     const ref = step.content_ref;
     if (!ref) return null;
 
+    let basePath: string | null = null;
     switch (step.step_type) {
-      case 'profile_lp': return `/profile/${ref.slug}`;
-      case 'business_lp': return `/business/${ref.slug}`;
-      case 'salesletter': return `/salesletter/${ref.slug}`;
-      case 'quiz': return `/quiz/${ref.slug}`;
-      case 'entertainment_quiz': return `/quiz/${ref.slug}`;
-      case 'order_form': return `/order-form/${ref.slug}`;
-      case 'newsletter': return `/newsletter/subscribe/${ref.slug || ref.id}`;
-      case 'booking': return `/booking/${ref.slug || ref.id}`;
-      case 'survey': return `/survey/${ref.slug}`;
-      case 'webinar': return `/webinar/${ref.slug}`;
-      case 'attendance': return `/attendance/${ref.slug || ref.id}`;
-      case 'onboarding': return `/onboarding/${ref.slug}`;
-      case 'gamification': return `/gamification/${ref.slug || ref.id}`;
-      case 'sns_post': return `/sns-post/${ref.slug}`;
-      case 'custom_url': return ref.url || null;
+      case 'profile_lp': basePath = `/profile/${ref.slug}`; break;
+      case 'business_lp': basePath = `/business/${ref.slug}`; break;
+      case 'salesletter': basePath = `/salesletter/${ref.slug}`; break;
+      case 'quiz': basePath = `/quiz/${ref.slug}`; break;
+      case 'entertainment_quiz': basePath = `/quiz/${ref.slug}`; break;
+      case 'order_form': basePath = `/order-form/${ref.slug}`; break;
+      case 'newsletter': basePath = `/newsletter/subscribe/${ref.slug || ref.id}`; break;
+      case 'booking': basePath = `/booking/${ref.slug || ref.id}`; break;
+      case 'survey': basePath = `/survey/${ref.slug}`; break;
+      case 'webinar': basePath = `/webinar/${ref.slug}`; break;
+      case 'attendance': basePath = `/attendance/${ref.slug || ref.id}`; break;
+      case 'onboarding': basePath = `/onboarding/${ref.slug}`; break;
+      case 'gamification': basePath = `/gamification/${ref.slug || ref.id}`; break;
+      case 'sns_post': basePath = `/sns-post/${ref.slug}`; break;
+      case 'custom_url': return ref.url || null; // 外部URLはパラメータ追加しない
       default: return null;
     }
+
+    return basePath ? `${basePath}?funnel=true` : null;
   };
 
   const contentUrl = getContentUrl();
@@ -175,35 +181,37 @@ export default function FunnelStepViewer({ slug, stepIndex }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* ステップインジケーター */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="max-w-5xl mx-auto flex items-center gap-2">
-          {funnel.funnel_steps.map((s, i) => (
-            <div key={s.id} className="flex items-center gap-2">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                i === currentIndex ? 'bg-amber-600 text-white' : i < currentIndex ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'
-              }`}>
-                {i < currentIndex ? '✓' : i + 1}
+      {/* ステップインジケーター（作成者プレビュー時のみ表示） */}
+      {isPreview && (
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
+          <div className="max-w-5xl mx-auto flex items-center gap-2">
+            {funnel.funnel_steps.map((s, i) => (
+              <div key={s.id} className="flex items-center gap-2">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                  i === currentIndex ? 'bg-amber-600 text-white' : i < currentIndex ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'
+                }`}>
+                  {i < currentIndex ? '✓' : i + 1}
+                </div>
+                {i < funnel.funnel_steps.length - 1 && (
+                  <div className={`w-8 h-0.5 ${i < currentIndex ? 'bg-green-500' : 'bg-gray-200'}`} />
+                )}
               </div>
-              {i < funnel.funnel_steps.length - 1 && (
-                <div className={`w-8 h-0.5 ${i < currentIndex ? 'bg-green-500' : 'bg-gray-200'}`} />
-              )}
-            </div>
-          ))}
-          <span className="ml-3 text-sm text-gray-500">{step.name}</span>
+            ))}
+            <span className="ml-3 text-sm text-gray-500">{step.name}</span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* コンテンツエリア */}
       <div className="flex-1">
         {contentUrl ? (
           <iframe
             src={contentUrl}
-            className="w-full h-[calc(100vh-140px)] border-none"
+            className="w-full h-[calc(100vh-60px)] border-none"
             title={step.name}
           />
         ) : (
-          <div className="flex items-center justify-center h-[calc(100vh-140px)]">
+          <div className="flex items-center justify-center h-[calc(100vh-60px)]">
             <p className="text-gray-500">コンテンツが設定されていません</p>
           </div>
         )}

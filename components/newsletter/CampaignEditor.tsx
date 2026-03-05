@@ -850,7 +850,6 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
     }
   };
 
-  // CTAリンクをHTMLに適用（保存・送信時）
   // CTAリンクをHTMLに適用（URL + ラベル両方を置換）
   const applyCtaLinks = useCallback((html: string) => {
     if (ctaLinks.length === 0) return html;

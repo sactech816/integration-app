@@ -74,9 +74,7 @@ export async function POST(request: NextRequest) {
       .slice(0, 30);
     const slug = `${slugBase}-${Date.now().toString(36)}`;
 
-    const { data, error } = await supabase
-      .from('order_forms')
-      .insert({
+    const insertData: Record<string, any> = {
         user_id: userId,
         title,
         slug,
@@ -92,15 +90,33 @@ export async function POST(request: NextRequest) {
         reply_email_body: replyEmailBody || null,
         notify_owner: notifyOwner !== undefined ? notifyOwner : true,
         notify_emails: notifyEmails || null,
-        notify_email_subject: notifyEmailSubject || null,
-        notify_email_body: notifyEmailBody || null,
         design_layout: designLayout || 'standard',
         design_color: designColor || 'emerald',
-        cta_button: ctaButton || null,
         status: 'draft',
-      })
+    };
+    // 新カラム（マイグレーション後に有効）
+    if (notifyEmailSubject) insertData.notify_email_subject = notifyEmailSubject;
+    if (notifyEmailBody) insertData.notify_email_body = notifyEmailBody;
+    if (ctaButton) insertData.cta_button = ctaButton;
+
+    let { data, error } = await supabase
+      .from('order_forms')
+      .insert(insertData)
       .select()
       .single();
+
+    // 新カラムが原因でエラーの場合、基本フィールドのみで再試行
+    if (error && (notifyEmailSubject || notifyEmailBody || ctaButton)) {
+      console.warn('[Order Form] Retrying without extended fields:', error.message);
+      delete insertData.notify_email_subject;
+      delete insertData.notify_email_body;
+      delete insertData.cta_button;
+      ({ data, error } = await supabase
+        .from('order_forms')
+        .insert(insertData)
+        .select()
+        .single());
+    }
 
     if (error) {
       console.error('[Order Form] Insert error:', error);

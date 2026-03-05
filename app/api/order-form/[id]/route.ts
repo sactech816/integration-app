@@ -98,19 +98,35 @@ export async function PATCH(
     if (replyEmailBody !== undefined) updateData.reply_email_body = replyEmailBody;
     if (notifyOwner !== undefined) updateData.notify_owner = notifyOwner;
     if (notifyEmails !== undefined) updateData.notify_emails = notifyEmails;
-    if (notifyEmailSubject !== undefined) updateData.notify_email_subject = notifyEmailSubject;
-    if (notifyEmailBody !== undefined) updateData.notify_email_body = notifyEmailBody;
     if (designLayout !== undefined) updateData.design_layout = designLayout;
     if (designColor !== undefined) updateData.design_color = designColor;
-    if (ctaButton !== undefined) updateData.cta_button = ctaButton;
 
-    const { data, error } = await supabase
+    // 新カラム（マイグレーション後に有効）- 失敗時はフォールバック
+    const extendedFields: Record<string, any> = {};
+    if (notifyEmailSubject !== undefined) extendedFields.notify_email_subject = notifyEmailSubject;
+    if (notifyEmailBody !== undefined) extendedFields.notify_email_body = notifyEmailBody;
+    if (ctaButton !== undefined) extendedFields.cta_button = ctaButton;
+
+    // まず全フィールドで更新を試行
+    let { data, error } = await supabase
       .from('order_forms')
-      .update(updateData)
+      .update({ ...updateData, ...extendedFields })
       .eq('id', id)
       .eq('user_id', userId)
       .select()
       .single();
+
+    // 新カラムが原因でエラーの場合、基本フィールドのみで再試行
+    if (error && Object.keys(extendedFields).length > 0) {
+      console.warn('[Order Form Update] Retrying without extended fields:', error.message);
+      ({ data, error } = await supabase
+        .from('order_forms')
+        .update(updateData)
+        .eq('id', id)
+        .eq('user_id', userId)
+        .select()
+        .single());
+    }
 
     if (error) {
       console.error('[Order Form Update] Error:', error);
