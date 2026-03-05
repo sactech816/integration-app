@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { Loader2, BookOpen, Crown, Sparkles, LayoutGrid, Lock, Users, Play, Heart } from 'lucide-react';
-import { TOOL_ITEMS, TOOL_CATEGORIES } from '../Sidebar/menuItems';
+import { TOOL_ITEMS, TOOL_CATEGORIES, ToolCategory } from '../Sidebar/menuItems';
 
 import { PlanTier } from '@/lib/subscription';
 
@@ -34,6 +34,15 @@ type DashboardHomeProps = {
   onMenuItemClick?: (itemId: string) => void;
 };
 
+// カテゴリ別のタブスタイル
+const categoryTabStyles: Record<string, { active: string; bg: string }> = {
+  page: { active: 'bg-indigo-100 text-indigo-700 border border-indigo-300', bg: 'bg-indigo-50' },
+  quiz: { active: 'bg-emerald-100 text-emerald-700 border border-emerald-300', bg: 'bg-emerald-50' },
+  writing: { active: 'bg-amber-100 text-amber-700 border border-amber-300', bg: 'bg-amber-50' },
+  marketing: { active: 'bg-cyan-100 text-cyan-700 border border-cyan-300', bg: 'bg-cyan-50' },
+  monetization: { active: 'bg-purple-100 text-purple-700 border border-purple-300', bg: 'bg-purple-50' },
+};
+
 export default function DashboardHome({
   user,
   isAdmin,
@@ -45,6 +54,76 @@ export default function DashboardHome({
   onMenuItemClick,
 }: DashboardHomeProps) {
   const hasMakersProAccess = userSubscription?.planTier === 'pro';
+  const [activeTab, setActiveTab] = useState<'all' | ToolCategory>('all');
+
+  const renderToolCard = (tool: typeof TOOL_ITEMS[0]) => {
+    const Icon = tool.icon;
+    const isProOnly = tool.id === 'thumbnail';
+    const isProLocked = isProOnly && !hasMakersProAccess && !isAdmin && !isPartner;
+
+    const iconContent = (
+      <div className="relative">
+        <div className={`p-2 rounded-lg ${tool.color.bg}`}>
+          <Icon size={20} className={tool.color.text} />
+        </div>
+        {isProLocked && (
+          <div className="absolute -top-1 -right-1 bg-pink-500 text-white rounded-full p-0.5">
+            <Lock size={10} />
+          </div>
+        )}
+      </div>
+    );
+
+    const label = (
+      <span className="text-[11px] font-bold text-gray-600 text-center leading-tight">
+        {tool.description}
+        {isProOnly && (
+          <span className="block text-[9px] font-medium text-pink-500 mt-0.5">Pro</span>
+        )}
+      </span>
+    );
+
+    // カテゴリの背景色を取得
+    const categoryBg = categoryTabStyles[tool.category]?.bg || 'bg-gray-50';
+
+    if (isProLocked) {
+      return (
+        <Link
+          key={tool.id}
+          href="/pricing"
+          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl ${categoryBg} hover:bg-white hover:shadow-md active:bg-gray-100 transition-all opacity-75 hover:opacity-100`}
+        >
+          {iconContent}
+          {label}
+        </Link>
+      );
+    }
+
+    if (tool.href) {
+      return (
+        <Link
+          key={tool.id}
+          href={tool.href}
+          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl ${categoryBg} hover:bg-white hover:shadow-md active:bg-gray-100 transition-all`}
+        >
+          {iconContent}
+          {label}
+        </Link>
+      );
+    }
+
+    return (
+      <button
+        key={tool.id}
+        onClick={() => onMenuItemClick?.(tool.id)}
+        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl ${categoryBg} hover:bg-white hover:shadow-md active:bg-gray-100 transition-all`}
+      >
+        {iconContent}
+        {label}
+      </button>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* KDLサブスクリプション状態（コンパクト版） */}
@@ -144,96 +223,77 @@ export default function DashboardHome({
         </button>
       </div>
 
-      {/* すべてのツール（カテゴリ別） */}
+      {/* すべてのツール（タブ切り替え + カテゴリ色分け） */}
       {onMenuItemClick && (
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
-          <h3 className="font-bold text-gray-900 text-sm mb-4 flex items-center gap-2">
+          <h3 className="font-bold text-gray-900 text-sm mb-3 flex items-center gap-2">
             <LayoutGrid size={16} className="text-gray-500" />
             すべてのツール
           </h3>
-          <div className="space-y-4">
-            {TOOL_CATEGORIES.map((category) => {
-              const CategoryIcon = category.icon;
-              const categoryTools = TOOL_ITEMS.filter(
-                (tool) => tool.category === category.id && !['quiz', 'profile', 'business'].includes(tool.id)
-              );
-              if (categoryTools.length === 0) return null;
 
+          {/* タブバー */}
+          <div className="flex gap-1.5 overflow-x-auto pb-3 mb-3 scrollbar-hide">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                activeTab === 'all'
+                  ? 'bg-gray-800 text-white'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              }`}
+            >
+              すべて
+            </button>
+            {TOOL_CATEGORIES.map((cat) => {
+              const CategoryIcon = cat.icon;
+              const styles = categoryTabStyles[cat.id];
               return (
-                <div key={category.id}>
-                  <p className="text-xs font-bold text-gray-400 mb-2 flex items-center gap-1.5 px-1">
-                    <CategoryIcon size={12} />
-                    {category.label}
-                  </p>
-                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                    {categoryTools.map((tool) => {
-                      const Icon = tool.icon;
-                      const isProOnly = tool.id === 'thumbnail';
-                      const isProLocked = isProOnly && !hasMakersProAccess && !isAdmin && !isPartner;
-
-                      const iconContent = (
-                        <div className="relative">
-                          <div className={`p-2 rounded-lg ${tool.color.bg}`}>
-                            <Icon size={20} className={tool.color.text} />
-                          </div>
-                          {isProLocked && (
-                            <div className="absolute -top-1 -right-1 bg-pink-500 text-white rounded-full p-0.5">
-                              <Lock size={10} />
-                            </div>
-                          )}
-                        </div>
-                      );
-
-                      const label = (
-                        <span className="text-[11px] font-bold text-gray-600 text-center leading-tight">
-                          {tool.description}
-                          {isProOnly && (
-                            <span className="block text-[9px] font-medium text-pink-500 mt-0.5">Pro</span>
-                          )}
-                        </span>
-                      );
-
-                      if (isProLocked) {
-                        return (
-                          <Link
-                            key={tool.id}
-                            href="/pricing"
-                            className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-pink-50 active:bg-pink-100 transition-all opacity-75 hover:opacity-100"
-                          >
-                            {iconContent}
-                            {label}
-                          </Link>
-                        );
-                      }
-
-                      if (tool.href) {
-                        return (
-                          <Link
-                            key={tool.id}
-                            href={tool.href}
-                            className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-all"
-                          >
-                            {iconContent}
-                            {label}
-                          </Link>
-                        );
-                      }
-
-                      return (
-                        <button
-                          key={tool.id}
-                          onClick={() => onMenuItemClick(tool.id)}
-                          className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-all"
-                        >
-                          {iconContent}
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveTab(cat.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1 ${
+                    activeTab === cat.id
+                      ? styles?.active || 'bg-gray-800 text-white'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  }`}
+                >
+                  <CategoryIcon size={12} />
+                  {cat.label}
+                </button>
               );
             })}
+          </div>
+
+          {/* ツール一覧 */}
+          <div className="space-y-4">
+            {activeTab === 'all' ? (
+              // 全表示: カテゴリごとにセクション分け
+              TOOL_CATEGORIES.map((category) => {
+                const CategoryIcon = category.icon;
+                const categoryTools = TOOL_ITEMS.filter(
+                  (tool) => tool.category === category.id && !['quiz', 'profile', 'business'].includes(tool.id)
+                );
+                if (categoryTools.length === 0) return null;
+
+                return (
+                  <div key={category.id}>
+                    <p className="text-xs font-bold text-gray-400 mb-2 flex items-center gap-1.5 px-1">
+                      <CategoryIcon size={12} />
+                      {category.label}
+                    </p>
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                      {categoryTools.map(renderToolCard)}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              // カテゴリタブ: 選択カテゴリのツールのみ
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {TOOL_ITEMS
+                  .filter((tool) => tool.category === activeTab && !['quiz', 'profile', 'business'].includes(tool.id))
+                  .map(renderToolCard)}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -86,7 +86,7 @@ Apple HIG ベースのデザイン哲学。ブランドカラーは青（blue-50
 ## ダッシュボード ツール追加ルール
 新しいツールをダッシュボードに追加する際は、以下のファイルを必ず更新すること:
 
-1. **`app/dashboard/components/Sidebar/menuItems.ts`** — `TOOL_ITEMS` 配列にツールを追加（`category` 必須: `'content'` | `'marketing'` | `'publishing'` | `'monetization'`）
+1. **`app/dashboard/components/Sidebar/menuItems.ts`** — `TOOL_ITEMS` 配列にツールを追加（`category` 必須: `'page'` | `'quiz'` | `'writing'` | `'marketing'` | `'monetization'`）
 2. **`app/dashboard/components/Sidebar/SidebarNav.tsx`** — `contentCounts` 型にツールのカウント用キーを追加
 3. **`app/dashboard/components/Sidebar/index.tsx`** — `contentCounts` 型に同じキーを追加
 4. **`app/dashboard/hooks/useDashboardData.ts`** — `contentCounts` の型・初期値・`fetchAllContentCounts` のクエリに追加
@@ -94,10 +94,11 @@ Apple HIG ベースのデザイン哲学。ブランドカラーは青（blue-50
 6. **`app/dashboard/page.tsx`** — URLパラメータのビューリストに追加（必要なら handleMenuItemClick にハンドラ追加）
 
 ### カテゴリ構成
-- **コンテンツ作成** (`content`): 診断クイズ、エンタメ診断、プロフィール、LP、セールスライター、はじめかた、サムネイル
-- **集客・運営** (`marketing`): 予約、出欠、アンケート、メルマガ
-- **執筆・出版** (`publishing`): Kindle、ネタ発掘
-- **収益化** (`monetization`): ゲーミフィケーション、アフィリエイト、スキルマーケット
+- **LP・ページ作成** (`page`): プロフィール、LP、ウェビナーLP、はじめかた
+- **診断・クイズ** (`quiz`): 診断クイズ、エンタメ診断
+- **ライティング・制作** (`writing`): セールスライター、サムネイル、SNS投稿、Kindle体験版、ネタ発掘
+- **集客・イベント** (`marketing`): 予約、出欠、アンケート、メルマガ、ファネル
+- **収益化・販売** (`monetization`): 申し込みフォーム、ゲーミフィケーション、スキルマーケット、アフィリエイト
 
 ### Pro/課金制限がある場合
 - `menuItems.ts` の `ToolItem` にはアクセス制限フラグを持たせない（サイドバー側で判定）

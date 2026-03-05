@@ -219,25 +219,28 @@ export default function SidebarNav({
 
   // カテゴリごとのアイコン色
   const categoryIconColors: Record<string, { normal: string; active: string }> = {
-    content: { normal: 'text-indigo-400', active: 'text-indigo-600' },
-    marketing: { normal: 'text-emerald-400', active: 'text-emerald-600' },
-    publishing: { normal: 'text-amber-500', active: 'text-amber-600' },
+    page: { normal: 'text-indigo-400', active: 'text-indigo-600' },
+    quiz: { normal: 'text-emerald-400', active: 'text-emerald-600' },
+    writing: { normal: 'text-amber-400', active: 'text-amber-600' },
+    marketing: { normal: 'text-cyan-400', active: 'text-cyan-600' },
     monetization: { normal: 'text-purple-400', active: 'text-purple-600' },
   };
 
   // カテゴリごとのアクティブ時背景・テキスト色
   const categoryActiveStyles: Record<string, string> = {
-    content: 'bg-indigo-50 text-indigo-700 font-bold',
-    marketing: 'bg-emerald-50 text-emerald-700 font-bold',
-    publishing: 'bg-amber-50 text-amber-700 font-bold',
+    page: 'bg-indigo-50 text-indigo-700 font-bold',
+    quiz: 'bg-emerald-50 text-emerald-700 font-bold',
+    writing: 'bg-amber-50 text-amber-700 font-bold',
+    marketing: 'bg-cyan-50 text-cyan-700 font-bold',
     monetization: 'bg-purple-50 text-purple-700 font-bold',
   };
 
   // カテゴリごとのバッジアクティブ色
   const categoryBadgeStyles: Record<string, string> = {
-    content: 'bg-indigo-200 text-indigo-700',
-    marketing: 'bg-emerald-200 text-emerald-700',
-    publishing: 'bg-amber-200 text-amber-700',
+    page: 'bg-indigo-200 text-indigo-700',
+    quiz: 'bg-emerald-200 text-emerald-700',
+    writing: 'bg-amber-200 text-amber-700',
+    marketing: 'bg-cyan-200 text-cyan-700',
     monetization: 'bg-purple-200 text-purple-700',
   };
 
@@ -401,9 +404,10 @@ export default function SidebarNav({
 
   // カテゴリヘッダーのアクティブ時テキスト色
   const categoryHeaderActiveText: Record<string, string> = {
-    content: 'text-indigo-700 font-bold',
-    marketing: 'text-emerald-700 font-bold',
-    publishing: 'text-amber-700 font-bold',
+    page: 'text-indigo-700 font-bold',
+    quiz: 'text-emerald-700 font-bold',
+    writing: 'text-amber-700 font-bold',
+    marketing: 'text-cyan-700 font-bold',
     monetization: 'text-purple-700 font-bold',
   };
 
