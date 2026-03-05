@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 import BusinessCafeDemoPage from './CafeDemoClient';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
@@ -25,5 +26,9 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <BusinessCafeDemoPage />;
+  return (
+    <Suspense>
+      <BusinessCafeDemoPage />
+    </Suspense>
+  );
 }
