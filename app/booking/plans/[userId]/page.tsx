@@ -142,7 +142,7 @@ export default function BookingPlansPage() {
         </p>
       </div>
 
-      <ContentFooter />
+      <ContentFooter toolType="booking" />
     </div>
   );
 }
