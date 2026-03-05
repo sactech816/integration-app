@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import {
   Send, Save, ArrowLeft, Loader2, Monitor, Pencil,
   ChevronDown, ChevronUp, Settings, FileText, Paintbrush,
-  LayoutTemplate, Sparkles, Type, Code, Eye
+  LayoutTemplate, Sparkles, Type, Code, Eye, Mail, AlertTriangle,
+  CheckCircle2, Users, X, SendHorizonal
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { NEWSLETTER_TEMPLATES, type NewsletterTemplate } from '@/constants/templates/newsletter';
@@ -22,9 +23,55 @@ interface ListOption {
   footer_html?: string;
 }
 
+// セクションごとのテーマカラー定義
+const SECTION_THEMES = {
+  basic: {
+    iconBg: 'bg-blue-100 text-blue-600',
+    iconBgClosed: 'bg-blue-50 text-blue-400',
+    badge: 'bg-blue-100 text-blue-600',
+    border: 'border-blue-200',
+    headerHover: 'hover:bg-blue-50/50',
+    topAccent: 'bg-gradient-to-r from-blue-500 to-blue-400',
+  },
+  template: {
+    iconBg: 'bg-amber-100 text-amber-600',
+    iconBgClosed: 'bg-amber-50 text-amber-400',
+    badge: 'bg-amber-100 text-amber-600',
+    border: 'border-amber-200',
+    headerHover: 'hover:bg-amber-50/50',
+    topAccent: 'bg-gradient-to-r from-amber-500 to-orange-400',
+  },
+  header: {
+    iconBg: 'bg-emerald-100 text-emerald-600',
+    iconBgClosed: 'bg-emerald-50 text-emerald-400',
+    badge: 'bg-emerald-100 text-emerald-600',
+    border: 'border-emerald-200',
+    headerHover: 'hover:bg-emerald-50/50',
+    topAccent: 'bg-gradient-to-r from-emerald-500 to-teal-400',
+  },
+  body: {
+    iconBg: 'bg-violet-100 text-violet-600',
+    iconBgClosed: 'bg-violet-50 text-violet-400',
+    badge: 'bg-violet-100 text-violet-600',
+    border: 'border-violet-200',
+    headerHover: 'hover:bg-violet-50/50',
+    topAccent: 'bg-gradient-to-r from-violet-500 to-purple-400',
+  },
+  footer: {
+    iconBg: 'bg-rose-100 text-rose-600',
+    iconBgClosed: 'bg-rose-50 text-rose-400',
+    badge: 'bg-rose-100 text-rose-600',
+    border: 'border-rose-200',
+    headerHover: 'hover:bg-rose-50/50',
+    topAccent: 'bg-gradient-to-r from-rose-500 to-pink-400',
+  },
+} as const;
+
+type SectionThemeKey = keyof typeof SECTION_THEMES;
+
 // 折りたたみセクション
 function Section({
-  title, icon: Icon, isOpen, onToggle, children, badge,
+  title, icon: Icon, isOpen, onToggle, children, badge, theme,
 }: {
   title: string;
   icon: React.ElementType;
@@ -32,19 +79,22 @@ function Section({
   onToggle: () => void;
   children: React.ReactNode;
   badge?: string;
+  theme: SectionThemeKey;
 }) {
+  const t = SECTION_THEMES[theme];
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+    <div className={`border ${isOpen ? t.border : 'border-gray-200'} rounded-xl overflow-hidden bg-white transition-all duration-200 ${isOpen ? 'shadow-md' : 'shadow-sm'}`}>
+      {isOpen && <div className={`h-1 ${t.topAccent}`} />}
       <button
         onClick={onToggle}
-        className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 transition-colors"
+        className={`w-full flex items-center gap-3 px-5 py-4 ${t.headerHover} transition-colors`}
       >
-        <span className={`p-2 rounded-lg ${isOpen ? 'bg-violet-100 text-violet-600' : 'bg-gray-200 text-gray-500'}`}>
+        <span className={`p-2 rounded-lg transition-colors ${isOpen ? t.iconBg : t.iconBgClosed}`}>
           <Icon className="w-4 h-4" />
         </span>
         <span className="flex-1 text-left text-sm font-bold text-gray-900">{title}</span>
         {badge && (
-          <span className="px-2 py-0.5 text-xs font-semibold bg-violet-100 text-violet-600 rounded-md">{badge}</span>
+          <span className={`px-2 py-0.5 text-xs font-semibold ${t.badge} rounded-md`}>{badge}</span>
         )}
         {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
       </button>
@@ -78,6 +128,174 @@ function ViewToggle({
       >
         <Code className="w-3 h-3" />HTML
       </button>
+    </div>
+  );
+}
+
+// 送信確認モーダル
+function SendConfirmModal({
+  onConfirm, onCancel, sending, subscriberCount, subject, listName,
+}: {
+  onConfirm: () => void;
+  onCancel: () => void;
+  sending: boolean;
+  subscriberCount: number;
+  subject: string;
+  listName: string;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="p-6 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center">
+            <AlertTriangle className="w-8 h-8 text-amber-600" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">一斉送信の確認</h2>
+          <p className="text-sm text-gray-600 mb-6">
+            送信後は編集できません。内容をよく確認してから送信してください。
+          </p>
+
+          <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left space-y-3">
+            <div className="flex items-start gap-3">
+              <Mail className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs font-semibold text-gray-500">件名</p>
+                <p className="text-sm text-gray-900 font-medium">{subject}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Users className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs font-semibold text-gray-500">配信先</p>
+                <p className="text-sm text-gray-900 font-medium">{listName}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Send className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs font-semibold text-gray-500">送信数</p>
+                <p className="text-sm font-bold text-red-600">{subscriberCount}通</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-3 px-6 pb-6">
+          <button
+            onClick={onCancel}
+            disabled={sending}
+            className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all min-h-[44px] disabled:opacity-50"
+          >
+            キャンセル
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={sending}
+            className="flex-1 px-4 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-all min-h-[44px] flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
+          >
+            {sending ? (
+              <><Loader2 className="w-4 h-4 animate-spin" />送信中...</>
+            ) : (
+              <><Send className="w-4 h-4" />送信する</>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// テスト送信モーダル
+function TestSendModal({
+  onClose, campaignId, userId, userEmail,
+}: {
+  onClose: () => void;
+  campaignId: string;
+  userId: string;
+  userEmail?: string;
+}) {
+  const [testEmail, setTestEmail] = useState(userEmail || '');
+  const [testSending, setTestSending] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleTestSend = async () => {
+    if (!testEmail) return;
+    setTestSending(true);
+    setTestResult(null);
+    try {
+      const res = await fetch(`/api/newsletter-maker/campaigns/${campaignId}/test-send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, testEmail }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTestResult({ success: true, message: data.message || `${testEmail} にテストメールを送信しました` });
+      } else {
+        setTestResult({ success: false, message: data.error || 'テスト送信に失敗しました' });
+      }
+    } catch {
+      setTestResult({ success: false, message: '通信エラーが発生しました' });
+    }
+    setTestSending(false);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <SendHorizonal className="w-5 h-5 text-blue-600" />
+            テスト送信
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="p-6 space-y-4">
+          <p className="text-sm text-gray-600">
+            指定したメールアドレスに1通だけテスト送信します。件名に「【テスト送信】」が付きます。
+          </p>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">送信先メールアドレス</label>
+            <input
+              type="email"
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              placeholder="test@example.com"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            />
+          </div>
+          <button
+            onClick={handleTestSend}
+            disabled={testSending || !testEmail}
+            className="w-full px-4 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all min-h-[44px] flex items-center justify-center gap-2 shadow-md"
+          >
+            {testSending ? (
+              <><Loader2 className="w-4 h-4 animate-spin" />送信中...</>
+            ) : (
+              <><SendHorizonal className="w-4 h-4" />テスト送信する</>
+            )}
+          </button>
+
+          {testResult && (
+            <div className={`flex items-start gap-2 p-3 rounded-xl text-sm ${
+              testResult.success
+                ? 'bg-green-50 text-green-700 border border-green-200'
+                : 'bg-red-50 text-red-700 border border-red-200'
+            }`}>
+              {testResult.success ? (
+                <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              )}
+              <span>{testResult.message}</span>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -116,6 +334,11 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   const [loading, setLoading] = useState(true);
   const [sentCount, setSentCount] = useState(0);
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
+  const [subscriberCount, setSubscriberCount] = useState(0);
+
+  // モーダル
+  const [showSendConfirm, setShowSendConfirm] = useState(false);
+  const [showTestSend, setShowTestSend] = useState(false);
 
   // 表示モード（HTML / ビジュアル）
   const [headerViewMode, setHeaderViewMode] = useState<'visual' | 'html'>('visual');
@@ -170,12 +393,23 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
     init();
   }, [campaignId]);
 
-  // リスト変更時にヘッダ/フッタをデフォルト適用
+  // リスト変更時にヘッダ/フッタをデフォルト適用 & 読者数取得
   useEffect(() => {
     const selectedList = lists.find((l) => l.id === listId);
     if (selectedList && !campaignId) {
       if (selectedList.header_html && !headerHtml) setHeaderHtml(selectedList.header_html);
       if (selectedList.footer_html && !footerHtml) setFooterHtml(selectedList.footer_html);
+    }
+    // 読者数取得
+    if (listId && supabase) {
+      supabase
+        .from('newsletter_subscribers')
+        .select('id', { count: 'exact', head: true })
+        .eq('list_id', listId)
+        .eq('status', 'subscribed')
+        .then(({ count }) => {
+          setSubscriberCount(count || 0);
+        });
     }
   }, [listId, lists]);
 
@@ -229,9 +463,8 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
     setSaving(false);
   };
 
-  const handleSend = async () => {
+  const handleSendConfirmed = async () => {
     if (!user || !campaignId) return;
-    if (!confirm('このキャンペーンを全読者に送信しますか？送信後は編集できません。')) return;
     setSending(true);
     // 保存してから送信
     const textContent = htmlToPlainText(getFullHtml());
@@ -250,9 +483,11 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
       const data = await res.json();
       setStatus('sent');
       setSentCount(data.sentCount);
+      setShowSendConfirm(false);
       alert(`${data.sentCount}通のメールを送信しました`);
     } else {
       const err = await res.json();
+      setShowSendConfirm(false);
       alert(err.error || '送信に失敗しました');
     }
     setSending(false);
@@ -377,6 +612,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   }
 
   const isSent = status === 'sent';
+  const currentListName = lists.find((l) => l.id === listId)?.name || '';
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -397,6 +633,19 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
         </div>
         {!isSent && (
           <div className="flex items-center gap-2">
+            {campaignId && (
+              <button
+                onClick={() => {
+                  // テスト送信前に保存
+                  handleSave().then(() => setShowTestSend(true));
+                }}
+                disabled={saving || !subject || !htmlContent}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-blue-300 text-blue-700 text-sm font-semibold rounded-lg hover:bg-blue-50 disabled:opacity-50 transition-all shadow-sm min-h-[44px]"
+              >
+                <SendHorizonal className="w-4 h-4" />
+                <span className="hidden sm:inline">テスト送信</span>
+              </button>
+            )}
             <button
               onClick={handleSave}
               disabled={saving || !subject}
@@ -407,7 +656,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
             </button>
             {campaignId && (
               <button
-                onClick={handleSend}
+                onClick={() => setShowSendConfirm(true)}
                 disabled={sending || !subject || !htmlContent}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 text-white text-sm font-semibold rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-all shadow-md min-h-[44px]"
               >
@@ -454,6 +703,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
               icon={Settings}
               isOpen={openSections.basic}
               onToggle={() => toggleSection('basic')}
+              theme="basic"
             >
               <div className="space-y-4">
                 <div>
@@ -462,12 +712,18 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                     value={listId}
                     onChange={(e) => setListId(e.target.value)}
                     disabled={isSent}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all disabled:bg-gray-100"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100"
                   >
                     {lists.map((l) => (
                       <option key={l.id} value={l.id}>{l.name}</option>
                     ))}
                   </select>
+                  {subscriberCount > 0 && (
+                    <p className="mt-1.5 text-xs text-blue-600 font-medium flex items-center gap-1">
+                      <Users className="w-3 h-3" />
+                      {subscriberCount}人の読者に配信されます
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">件名 <span className="text-red-500">*</span></label>
@@ -481,8 +737,8 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                             onClick={() => setSubject(s)}
                             className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all min-h-[32px] ${
                               subject === s
-                                ? 'border-violet-400 bg-violet-50 text-violet-700'
-                                : 'border-gray-200 bg-white text-gray-600 hover:border-violet-300 hover:bg-violet-50'
+                                ? 'border-blue-400 bg-blue-50 text-blue-700'
+                                : 'border-gray-200 bg-white text-gray-600 hover:border-blue-300 hover:bg-blue-50'
                             }`}
                           >
                             {s}
@@ -497,7 +753,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                     onChange={(e) => setSubject(e.target.value)}
                     disabled={isSent}
                     placeholder="メールの件名を入力（テンプレート選択で自動入力されます）"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all disabled:bg-gray-100"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100"
                   />
                 </div>
                 <div>
@@ -508,7 +764,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                     onChange={(e) => setPreviewText(e.target.value)}
                     disabled={isSent}
                     placeholder="受信トレイに表示される短い説明文"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all disabled:bg-gray-100"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-100"
                   />
                 </div>
               </div>
@@ -522,36 +778,37 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                 isOpen={openSections.template}
                 onToggle={() => toggleSection('template')}
                 badge={`${NEWSLETTER_TEMPLATES.length}種類`}
+                theme="template"
               >
                 <div className="space-y-4">
                   <p className="text-sm text-gray-600">テンプレートを選択すると、件名・ヘッダー・本文・フッターが自動設定されます。</p>
                   <div>
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">基本テンプレート</p>
+                    <p className="text-xs font-bold text-amber-600 uppercase tracking-wide mb-2">基本テンプレート</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {NEWSLETTER_TEMPLATES.filter((t) => t.category === 'basic').map((template) => (
                         <button
                           key={template.id}
                           onClick={() => applyTemplate(template)}
-                          className="p-3 text-left border border-gray-200 rounded-xl hover:border-violet-300 hover:bg-violet-50 transition-all group"
+                          className="p-3 text-left border border-gray-200 rounded-xl hover:border-amber-300 hover:bg-amber-50 transition-all group"
                         >
                           <span className="text-xl mb-1 block">{template.icon}</span>
-                          <span className="text-sm font-semibold text-gray-900 group-hover:text-violet-700">{template.name}</span>
+                          <span className="text-sm font-semibold text-gray-900 group-hover:text-amber-700">{template.name}</span>
                           <span className="text-xs text-gray-500 block mt-0.5">{template.description}</span>
                         </button>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">業種別テンプレート</p>
+                    <p className="text-xs font-bold text-amber-600 uppercase tracking-wide mb-2">業種別テンプレート</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {NEWSLETTER_TEMPLATES.filter((t) => t.category === 'industry').map((template) => (
                         <button
                           key={template.id}
                           onClick={() => applyTemplate(template)}
-                          className="p-3 text-left border border-gray-200 rounded-xl hover:border-violet-300 hover:bg-violet-50 transition-all group"
+                          className="p-3 text-left border border-gray-200 rounded-xl hover:border-amber-300 hover:bg-amber-50 transition-all group"
                         >
                           <span className="text-xl mb-1 block">{template.icon}</span>
-                          <span className="text-sm font-semibold text-gray-900 group-hover:text-violet-700">{template.name}</span>
+                          <span className="text-sm font-semibold text-gray-900 group-hover:text-amber-700">{template.name}</span>
                           <span className="text-xs text-gray-500 block mt-0.5">{template.description}</span>
                         </button>
                       ))}
@@ -568,6 +825,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
               isOpen={openSections.header}
               onToggle={() => toggleSection('header')}
               badge={headerHtml ? '設定済み' : undefined}
+              theme="header"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -581,7 +839,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                     disabled={isSent}
                     placeholder="ヘッダーHTML（任意）"
                     rows={6}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all font-mono text-sm disabled:bg-gray-100"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all font-mono text-sm disabled:bg-gray-100"
                   />
                 ) : (
                   <div className="border border-gray-200 rounded-xl overflow-hidden bg-white min-h-[80px]">
@@ -591,7 +849,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                         contentEditable={!isSent}
                         suppressContentEditableWarning
                         onBlur={handleHeaderBlur}
-                        className="min-h-[80px] focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-inset rounded-xl"
+                        className="min-h-[80px] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-inset rounded-xl"
                         dangerouslySetInnerHTML={{ __html: headerHtml }}
                       />
                     ) : (
@@ -608,6 +866,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
               icon={FileText}
               isOpen={openSections.body}
               onToggle={() => toggleSection('body')}
+              theme="body"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
@@ -659,6 +918,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
               isOpen={openSections.footer}
               onToggle={() => toggleSection('footer')}
               badge={footerHtml ? '設定済み' : undefined}
+              theme="footer"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -672,7 +932,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                     disabled={isSent}
                     placeholder="フッターHTML（任意）"
                     rows={6}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all font-mono text-sm disabled:bg-gray-100"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all font-mono text-sm disabled:bg-gray-100"
                   />
                 ) : (
                   <div className="border border-gray-200 rounded-xl overflow-hidden bg-white min-h-[80px]">
@@ -682,7 +942,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                         contentEditable={!isSent}
                         suppressContentEditableWarning
                         onBlur={handleFooterBlur}
-                        className="min-h-[80px] focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-inset rounded-xl"
+                        className="min-h-[80px] focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-inset rounded-xl"
                         dangerouslySetInnerHTML={{ __html: footerHtml }}
                       />
                     ) : (
@@ -738,6 +998,28 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
         <div className="hidden lg:block lg:w-1/2 lg:flex-shrink-0 bg-gray-50" />
       </div>
 
+      {/* 送信確認モーダル */}
+      {showSendConfirm && (
+        <SendConfirmModal
+          onConfirm={handleSendConfirmed}
+          onCancel={() => setShowSendConfirm(false)}
+          sending={sending}
+          subscriberCount={subscriberCount}
+          subject={subject}
+          listName={currentListName}
+        />
+      )}
+
+      {/* テスト送信モーダル */}
+      {showTestSend && campaignId && user && (
+        <TestSendModal
+          onClose={() => setShowTestSend(false)}
+          campaignId={campaignId}
+          userId={user.id}
+          userEmail={user.email}
+        />
+      )}
+
       {/* AI本文生成モーダル */}
       {showAiModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -751,7 +1033,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                 onClick={() => { setShowAiModal(false); setAiResults([]); }}
                 className="p-2 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
-                ×
+                <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-4">

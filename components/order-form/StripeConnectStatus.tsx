@@ -18,6 +18,7 @@ export default function StripeConnectStatus({ userId, compact = false }: { userI
   const [status, setStatus] = useState<ConnectStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -39,18 +40,22 @@ export default function StripeConnectStatus({ userId, compact = false }: { userI
 
   const handleOnboarding = async () => {
     setActionLoading(true);
+    setError(null);
     try {
       const res = await fetch('/api/stripe-connect/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
       });
-      if (res.ok) {
-        const { url } = await res.json();
-        window.location.href = url;
+      const data = await res.json();
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        setError(data.error || `接続に失敗しました (${res.status})`);
       }
     } catch (e) {
       console.error('Onboarding error:', e);
+      setError('ネットワークエラーが発生しました。再度お試しください。');
     } finally {
       setActionLoading(false);
     }
@@ -114,6 +119,12 @@ export default function StripeConnectStatus({ userId, compact = false }: { userI
               {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LinkIcon className="w-4 h-4" />}
               Stripeアカウントを接続
             </button>
+            {error && (
+              <p className="text-xs text-red-600 mt-2 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                {error}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -139,6 +150,12 @@ export default function StripeConnectStatus({ userId, compact = false }: { userI
               {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
               設定を続ける
             </button>
+            {error && (
+              <p className="text-xs text-red-600 mt-2 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                {error}
+              </p>
+            )}
           </div>
         </div>
       </div>

@@ -78,10 +78,13 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ url: accountLink.url });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Stripe Connect Onboarding] Error:', error);
+    const message = error?.type === 'StripeInvalidRequestError'
+      ? `Stripe エラー: ${error.message}`
+      : 'Stripe Connect のセットアップに失敗しました';
     return NextResponse.json(
-      { error: 'Stripe Connect のセットアップに失敗しました' },
+      { error: message },
       { status: 500 }
     );
   }
