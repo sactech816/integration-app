@@ -138,7 +138,40 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
             
             // 新規登録の場合
             if (!isLogin && data.user) {
-                // セッションがない場合は確認メールが送信された
+                // Supabaseはメール確認有効時、既存メールでsignUpすると
+                // identities: [] + session: null を返す（エラーにならない）
+                // この場合は自動ログインを試みる
+                if (!data.session && data.user.identities && data.user.identities.length === 0) {
+                    console.log('既存ユーザー検出（identities空）。ログインを試みます。');
+                    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+
+                    if (!loginError && loginData.user) {
+                        alert('このメールアドレスは既に登録されています。\n\n自動的にログインしました。');
+                        await claimGuestContentIfAny(loginData.user.id);
+                        setUser(loginData.user);
+                        if (setShowPasswordReset) {
+                            setShowPasswordReset(false);
+                        }
+                        onClose();
+                        setLoading(false);
+                        return;
+                    } else {
+                        alert(
+                            'このメールアドレスは既に登録されています。\n\n' +
+                            'ログイン画面に切り替えます。\n' +
+                            'パスワードを忘れた場合は「パスワードをお忘れですか？」をクリックしてください。'
+                        );
+                        setIsLogin(true);
+                        setPassword('');
+                        setLoading(false);
+                        return;
+                    }
+                }
+
+                // セッションがない場合は確認メールが送信された（新規ユーザー）
                 if (!data.session) {
                     alert('確認メールを送信しました。\n\nメール内のリンクをクリックして認証を完了させてください。');
                     setLoading(false);

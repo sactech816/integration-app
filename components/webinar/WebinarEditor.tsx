@@ -383,9 +383,9 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
   };
 
   const handleSave = async () => {
-    if (customSlug && !validateCustomSlug(customSlug)) return;
-
     const existingId = initialData?.id || savedId;
+    // 新規作成時のみカスタムスラッグをバリデーション（編集時は既存スラッグなのでスキップ）
+    if (!existingId && customSlug && !validateCustomSlug(customSlug)) return;
     if (existingId && !user) {
       if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
         setShowAuth(true);
