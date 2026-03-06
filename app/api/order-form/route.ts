@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, successMessage, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody, designLayout, designColor, ctaButton } = body;
+    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, successMessage, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody, designLayout, designColor, ctaButton, fields } = body;
 
     if (!userId || !title) {
       return NextResponse.json({ error: 'userId と title は必須です' }, { status: 400 });
@@ -121,6 +121,24 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('[Order Form] Insert error:', error);
       return NextResponse.json({ error: 'フォーム作成に失敗しました' }, { status: 500 });
+    }
+
+    // フィールドの保存
+    if (data && fields && fields.length > 0) {
+      const fieldInserts = fields.map((f: any, i: number) => ({
+        form_id: data.id,
+        field_type: f.field_type || f.fieldType,
+        label: f.label,
+        placeholder: f.placeholder || null,
+        required: f.required || false,
+        options: f.options || null,
+        order_index: i,
+      }));
+
+      const { error: fieldError } = await supabase.from('order_form_fields').insert(fieldInserts);
+      if (fieldError) {
+        console.error('[Order Form] Field insert error:', fieldError);
+      }
     }
 
     return NextResponse.json({ form: data });

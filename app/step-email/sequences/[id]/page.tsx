@@ -1,45 +1,39 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { use, useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/shared/Header';
 import AuthModal from '@/components/shared/AuthModal';
 import SequenceEditor from '@/components/step-email/SequenceEditor';
 import { Loader2 } from 'lucide-react';
 
-export default function SequenceDetailPage() {
-  const params = useParams();
-  const sequenceId = params?.id as string;
+function SequenceDetailContent({ sequenceId }: { sequenceId: string }) {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!supabase) {
-      setAuthLoading(false);
-      return;
-    }
+    let subscription: { unsubscribe: () => void } | null = null;
 
     const init = async () => {
+      if (!supabase) {
+        setIsLoading(false);
+        return;
+      }
+
+      const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((_, session) => {
+        setUser(session?.user || null);
+      });
+      subscription = sub;
+
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user || null);
-      setAuthLoading(false);
+      setIsLoading(false);
     };
+
     init();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-    });
-
-    return () => {
-      subscription?.unsubscribe();
-    };
+    return () => { subscription?.unsubscribe(); };
   }, []);
-
-  const navigateTo = (page: string) => {
-    window.location.href = page.startsWith('/') ? page : `/${page}`;
-  };
 
   const handleLogout = async () => {
     if (supabase) {
@@ -48,42 +42,46 @@ export default function SequenceDetailPage() {
     }
   };
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header setPage={navigateTo} user={user} onLogout={handleLogout} setShowAuth={setShowAuth} currentService="step-email" />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
-        </div>
-      </div>
-    );
-  }
+  const navigateTo = (page: string) => {
+    window.location.href = page.startsWith('/') ? page : `/${page}`;
+  };
 
-  if (!user) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header setPage={navigateTo} user={user} onLogout={handleLogout} setShowAuth={setShowAuth} currentService="step-email" />
-        <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
-        <div className="flex items-center justify-center min-h-[60vh] px-4">
-          <div className="max-w-md text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">ログインが必要です</h2>
-            <button
-              onClick={() => setShowAuth(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white font-semibold rounded-xl shadow-md hover:bg-teal-700 transition-all min-h-[44px]"
-            >
-              ログイン / 新規登録
-            </button>
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="animate-spin text-teal-600" size={48} />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header setPage={navigateTo} user={user} onLogout={handleLogout} setShowAuth={setShowAuth} currentService="step-email" />
-      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
-      <SequenceEditor sequenceId={sequenceId} userId={user.id} />
+      <Header
+        setPage={navigateTo}
+        user={user}
+        onLogout={handleLogout}
+        setShowAuth={setShowAuth}
+        currentService="step-email"
+      />
+      <AuthModal
+        isOpen={showAuth}
+        onClose={() => setShowAuth(false)}
+        setUser={setUser}
+      />
+      <SequenceEditor sequenceId={sequenceId} />
     </div>
+  );
+}
+
+export default function SequenceDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="animate-spin text-teal-600" size={48} />
+      </div>
+    }>
+      <SequenceDetailContent sequenceId={id} />
+    </Suspense>
   );
 }

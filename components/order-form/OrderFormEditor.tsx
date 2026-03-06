@@ -414,23 +414,34 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
         required: f.required, options: f.fieldType === 'select' ? f.options : null,
       })),
     };
-    if (savedFormId) {
-      const res = await fetch(`/api/order-form/${savedFormId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (res.ok) {
-        if (publishStatus) setStatus(publishStatus);
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 2000);
+    try {
+      if (savedFormId) {
+        const res = await fetch(`/api/order-form/${savedFormId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        if (res.ok) {
+          if (publishStatus) setStatus(publishStatus);
+          setSaveSuccess(true);
+          setTimeout(() => setSaveSuccess(false), 2000);
+        } else {
+          const err = await res.json().catch(() => ({}));
+          alert(`保存に失敗しました: ${err.error || res.statusText}`);
+        }
+      } else {
+        const res = await fetch('/api/order-form', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        if (res.ok) {
+          const data = await res.json();
+          setCreatedSlug(data.form.slug);
+          setSlug(data.form.slug);
+          setSavedFormId(data.form.id);
+          setShowCompleteModal(true);
+          window.history.replaceState(null, '', `/order-form/editor/${data.form.id}`);
+        } else {
+          const err = await res.json().catch(() => ({}));
+          alert(`保存に失敗しました: ${err.error || res.statusText}`);
+        }
       }
-    } else {
-      const res = await fetch('/api/order-form', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (res.ok) {
-        const data = await res.json();
-        setCreatedSlug(data.form.slug);
-        setSlug(data.form.slug);
-        setSavedFormId(data.form.id);
-        setShowCompleteModal(true);
-        window.history.replaceState(null, '', `/order-form/editor/${data.form.id}`);
-      }
+    } catch (e) {
+      alert('保存中にエラーが発生しました。ネットワーク接続を確認してください。');
+      console.error('[OrderFormEditor] Save error:', e);
     }
     setSaving(false);
   };
