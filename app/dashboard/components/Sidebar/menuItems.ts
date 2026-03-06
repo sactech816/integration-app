@@ -166,7 +166,7 @@ export const TOOL_ITEMS: ToolItem[] = [
     icon: Calendar,
     description: '予約ページ作成',
     color: { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
-    href: '/booking/editor',
+    href: '/booking/new',
     category: 'marketing',
   },
   {

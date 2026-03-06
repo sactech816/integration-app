@@ -228,7 +228,7 @@ export default function DashboardHome({
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
           <h3 className="font-bold text-gray-900 text-sm mb-3 flex items-center gap-2">
             <LayoutGrid size={16} className="text-gray-500" />
-            すべてのツール
+            すべてのツール（新規作成）
           </h3>
 
           {/* タブバー */}

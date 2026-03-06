@@ -54,9 +54,9 @@ export default function FloatingButtons() {
 
   return (
     <>
-      {/* フローティングボタン群 */}
+      {/* フローティングボタン群（モバイルでは非表示） */}
       {showScrollTop && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+        <div className="fixed bottom-6 right-6 z-50 hidden lg:flex items-center gap-3">
           {/* ご意見箱ボタン（アイコン＋テキスト） */}
           <button
             onClick={() => user ? setShowFeedback(true) : setShowAuth(true)}

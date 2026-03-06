@@ -32,7 +32,7 @@ export default function MobileBottomNav({ activeView, onItemClick }: MobileBotto
         activeView={activeView}
       />
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.08)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 border-t border-slate-700 shadow-[0_-2px_10px_rgba(0,0,0,0.3)]">
         <div
           className="flex justify-around items-center h-16 px-2"
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
@@ -41,29 +41,29 @@ export default function MobileBottomNav({ activeView, onItemClick }: MobileBotto
           <button
             onClick={() => onItemClick('dashboard')}
             className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-lg transition-colors ${
-              isHome ? 'text-indigo-600' : 'text-gray-400'
+              isHome ? 'text-sky-400' : 'text-slate-400'
             }`}
           >
             <Home size={22} strokeWidth={isHome ? 2.5 : 2} />
             <span className={`text-[10px] ${isHome ? 'font-bold' : 'font-medium'}`}>ホーム</span>
           </button>
 
-          {/* ツール */}
+          {/* 作成ツール（編集） */}
           <button
             onClick={() => setIsToolsSheetOpen(!isToolsSheetOpen)}
             className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-lg transition-colors ${
-              isTool || isToolsSheetOpen ? 'text-indigo-600' : 'text-gray-400'
+              isTool || isToolsSheetOpen ? 'text-amber-400' : 'text-slate-400'
             }`}
           >
             <LayoutGrid size={22} strokeWidth={isTool || isToolsSheetOpen ? 2.5 : 2} />
-            <span className={`text-[10px] ${isTool || isToolsSheetOpen ? 'font-bold' : 'font-medium'}`}>ツール</span>
+            <span className={`text-[10px] ${isTool || isToolsSheetOpen ? 'font-bold' : 'font-medium'}`}>作成ツール（編集）</span>
           </button>
 
           {/* 設定 */}
           <button
             onClick={() => onItemClick('settings')}
             className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-lg transition-colors ${
-              isSettings ? 'text-indigo-600' : 'text-gray-400'
+              isSettings ? 'text-emerald-400' : 'text-slate-400'
             }`}
           >
             <Settings size={22} strokeWidth={isSettings ? 2.5 : 2} />

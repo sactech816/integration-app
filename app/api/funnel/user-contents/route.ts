@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   const queries = {
     profile_lp: supabaseAdmin
       .from('profiles')
-      .select('id, slug, nickname, subtitle')
+      .select('id, slug, nickname')
       .eq('user_id', userId)
       .order('created_at', { ascending: false }),
     business_lp: supabaseAdmin
