@@ -86,7 +86,7 @@ export const PLAN_FEATURES: PlanFeature[] = [
   { label: 'URL発行', guest: 'yes', free: 'yes', pro: 'yes' },
   { label: '編集・更新', guest: 'no', free: 'yes', pro: 'yes' },
   { label: 'アフィリエイト', guest: 'no', free: 'yes', pro: 'yes' },
-  { label: 'アクセス解析', guest: 'no', free: 'yes', pro: 'yes' },
+  { label: 'アクセス解析', guest: 'no', free: 'no', pro: 'yes' },
   { label: 'AI利用', guest: 'no', free: 'no', pro: 'yes' },
   { label: 'フォーム作成', guest: 'no', free: 'limited', pro: 'yes', freeNote: '機能限定' },
   { label: 'ファネル作成', guest: 'no', free: 'limited', pro: 'yes', freeNote: '機能限定' },
@@ -94,10 +94,10 @@ export const PLAN_FEATURES: PlanFeature[] = [
   { label: 'サムネイル作成', guest: 'no', free: 'limited', pro: 'yes', freeNote: '機能限定' },
   { label: 'エンタメ診断作成', guest: 'no', free: 'limited', pro: 'yes', freeNote: '機能限定' },
   { label: 'ゲーミフィケーション', guest: 'no', free: 'no', pro: 'yes' },
-  { label: 'HTMLダウンロード', guest: 'no', free: 'yes', pro: 'yes' },
-  { label: '埋め込みコード', guest: 'no', free: 'yes', pro: 'yes' },
-  { label: 'コピーライト非表示', guest: 'no', free: 'yes', pro: 'yes' },
-  { label: '広告枠非表示', guest: 'no', free: 'yes', pro: 'yes' },
+  { label: 'HTMLダウンロード', guest: 'no', free: 'no', pro: 'yes' },
+  { label: '埋め込みコード', guest: 'no', free: 'no', pro: 'yes' },
+  { label: 'コピーライト非表示', guest: 'no', free: 'no', pro: 'yes' },
+  { label: '広告枠非表示', guest: 'no', free: 'no', pro: 'yes' },
   { label: 'お問い合わせ', guest: 'no', free: 'no', pro: 'yes' },
 ];
 
