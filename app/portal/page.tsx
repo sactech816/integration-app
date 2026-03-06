@@ -25,7 +25,13 @@ import {
   FileText,
   PenTool,
   Gamepad2,
-  BookOpen
+  BookOpen,
+  PartyPopper,
+  Video,
+  ShoppingCart,
+  GitBranch,
+  CalendarCheck,
+  CalendarDays
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -72,6 +78,12 @@ const TABS: { type: ServiceType | 'all'; label: string; icon: React.ComponentTyp
   { type: 'salesletter', label: 'セールスレター', icon: PenTool },
   { type: 'gamification', label: 'ゲーミフィケーション', icon: Gamepad2 },
   { type: 'onboarding', label: 'はじめかたガイド', icon: BookOpen },
+  { type: 'entertainment_quiz', label: 'エンタメ診断', icon: PartyPopper },
+  { type: 'webinar', label: 'ウェビナーLP', icon: Video },
+  { type: 'order-form', label: '申し込みフォーム', icon: ShoppingCart },
+  { type: 'funnel', label: 'ファネル', icon: GitBranch },
+  { type: 'attendance', label: '出欠表', icon: CalendarCheck },
+  { type: 'booking', label: '予約', icon: CalendarDays },
 ];
 
 // サービスカラー取得
@@ -125,6 +137,48 @@ const getServiceColor = (type: ServiceType) => {
       border: 'border-orange-200',
       gradient: 'from-orange-400 via-amber-500 to-yellow-500',
       hoverText: 'group-hover:text-orange-600'
+    },
+    entertainment_quiz: {
+      bg: 'bg-pink-50',
+      text: 'text-pink-600',
+      border: 'border-pink-200',
+      gradient: 'from-pink-500 via-rose-500 to-red-500',
+      hoverText: 'group-hover:text-pink-600'
+    },
+    webinar: {
+      bg: 'bg-sky-50',
+      text: 'text-sky-600',
+      border: 'border-sky-200',
+      gradient: 'from-sky-500 via-blue-500 to-indigo-500',
+      hoverText: 'group-hover:text-sky-600'
+    },
+    'order-form': {
+      bg: 'bg-lime-50',
+      text: 'text-lime-600',
+      border: 'border-lime-200',
+      gradient: 'from-lime-500 via-green-500 to-emerald-500',
+      hoverText: 'group-hover:text-lime-600'
+    },
+    funnel: {
+      bg: 'bg-violet-50',
+      text: 'text-violet-600',
+      border: 'border-violet-200',
+      gradient: 'from-violet-500 via-purple-500 to-fuchsia-500',
+      hoverText: 'group-hover:text-violet-600'
+    },
+    attendance: {
+      bg: 'bg-cyan-50',
+      text: 'text-cyan-600',
+      border: 'border-cyan-200',
+      gradient: 'from-cyan-500 via-teal-500 to-green-500',
+      hoverText: 'group-hover:text-cyan-600'
+    },
+    booking: {
+      bg: 'bg-blue-50',
+      text: 'text-blue-600',
+      border: 'border-blue-200',
+      gradient: 'from-blue-500 via-indigo-500 to-violet-500',
+      hoverText: 'group-hover:text-blue-600'
     }
   };
   return colors[type] || colors.quiz;
@@ -139,7 +193,13 @@ const getServiceIcon = (type: ServiceType) => {
     survey: FileText,
     salesletter: PenTool,
     gamification: Gamepad2,
-    onboarding: BookOpen
+    onboarding: BookOpen,
+    entertainment_quiz: PartyPopper,
+    webinar: Video,
+    'order-form': ShoppingCart,
+    funnel: GitBranch,
+    attendance: CalendarCheck,
+    booking: CalendarDays
   };
   return icons[type] || Sparkles;
 };
@@ -268,12 +328,13 @@ function PortalPageContent() {
       const allItems: PortalItem[] = [];
       const offset = currentPage * ITEMS_PER_PAGE;
 
-      // クイズ取得（show_in_portalがtrueのもののみ）
+      // クイズ取得（show_in_portalがtrueのもののみ、エンタメ診断を除外）
       if (selectedTab === 'all' || selectedTab === 'quiz') {
         const { data: quizzes } = await supabase
           .from(TABLES.QUIZZES)
           .select('id, slug, title, description, image_url, created_at, views_count')
           .eq('show_in_portal', true)
+          .neq('quiz_type', 'entertainment')
           .order('created_at', { ascending: false })
           .range(offset, offset + ITEMS_PER_PAGE - 1);
 
@@ -463,6 +524,146 @@ function PortalPageContent() {
             imageUrl: undefined,
             created_at: o.created_at,
             type: 'onboarding' as ServiceType,
+            views_count: 0
+          })));
+        }
+      }
+
+      // エンタメ診断取得（quiz_type='entertainment'かつshow_in_portalがtrue）
+      if (selectedTab === 'all' || selectedTab === 'entertainment_quiz') {
+        const { data: entertainmentQuizzes } = await supabase
+          .from(TABLES.QUIZZES)
+          .select('id, slug, title, description, image_url, created_at, views_count')
+          .eq('quiz_type', 'entertainment')
+          .eq('show_in_portal', true)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + ITEMS_PER_PAGE - 1);
+
+        if (entertainmentQuizzes) {
+          allItems.push(...entertainmentQuizzes.map((q) => ({
+            id: String(q.id),
+            slug: q.slug,
+            title: q.title,
+            description: q.description,
+            imageUrl: q.image_url,
+            created_at: q.created_at,
+            type: 'entertainment_quiz' as ServiceType,
+            views_count: q.views_count
+          })));
+        }
+      }
+
+      // ウェビナーLP取得（publishedかつsettings.showInPortalがfalseでないもの）
+      if (selectedTab === 'all' || selectedTab === 'webinar') {
+        const { data: webinars } = await supabase
+          .from(TABLES.WEBINAR_LPS)
+          .select('id, slug, title, description, settings, created_at')
+          .eq('status', 'published')
+          .order('created_at', { ascending: false })
+          .range(offset, offset + ITEMS_PER_PAGE - 1);
+
+        if (webinars) {
+          const filteredWebinars = webinars.filter(w => w.settings?.showInPortal !== false);
+          allItems.push(...filteredWebinars.map((w) => ({
+            id: w.id,
+            slug: w.slug,
+            title: w.title || 'ウェビナーLP',
+            description: w.description || '',
+            imageUrl: undefined,
+            created_at: w.created_at,
+            type: 'webinar' as ServiceType,
+            views_count: 0
+          })));
+        }
+      }
+
+      // 申し込みフォーム取得（publishedのもの）
+      if (selectedTab === 'all' || selectedTab === 'order-form') {
+        const { data: orderForms } = await supabase
+          .from('order_forms')
+          .select('id, slug, title, description, created_at')
+          .eq('status', 'published')
+          .order('created_at', { ascending: false })
+          .range(offset, offset + ITEMS_PER_PAGE - 1);
+
+        if (orderForms) {
+          allItems.push(...orderForms.map((o) => ({
+            id: o.id,
+            slug: o.slug,
+            title: o.title || '申し込みフォーム',
+            description: o.description || '',
+            imageUrl: undefined,
+            created_at: o.created_at,
+            type: 'order-form' as ServiceType,
+            views_count: 0
+          })));
+        }
+      }
+
+      // ファネル取得（activeのもの）
+      if (selectedTab === 'all' || selectedTab === 'funnel') {
+        const { data: funnels } = await supabase
+          .from('funnels')
+          .select('id, slug, name, description, created_at')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .range(offset, offset + ITEMS_PER_PAGE - 1);
+
+        if (funnels) {
+          allItems.push(...funnels.map((f) => ({
+            id: f.id,
+            slug: f.slug,
+            title: f.name || 'ファネル',
+            description: f.description || '',
+            imageUrl: undefined,
+            created_at: f.created_at,
+            type: 'funnel' as ServiceType,
+            views_count: 0
+          })));
+        }
+      }
+
+      // 出欠表取得（user_idがあるもの）
+      if (selectedTab === 'all' || selectedTab === 'attendance') {
+        const { data: attendances } = await supabase
+          .from('attendance_events')
+          .select('id, title, description, created_at')
+          .not('user_id', 'is', null)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + ITEMS_PER_PAGE - 1);
+
+        if (attendances) {
+          allItems.push(...attendances.map((a) => ({
+            id: a.id,
+            slug: a.id,
+            title: a.title || '出欠表',
+            description: a.description || '',
+            imageUrl: undefined,
+            created_at: a.created_at,
+            type: 'attendance' as ServiceType,
+            views_count: 0
+          })));
+        }
+      }
+
+      // 予約取得（is_activeがtrueのもの）
+      if (selectedTab === 'all' || selectedTab === 'booking') {
+        const { data: bookings } = await supabase
+          .from('booking_menus')
+          .select('id, title, description, created_at')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + ITEMS_PER_PAGE - 1);
+
+        if (bookings) {
+          allItems.push(...bookings.map((b) => ({
+            id: b.id,
+            slug: b.id,
+            title: b.title || '予約メニュー',
+            description: b.description || '',
+            imageUrl: undefined,
+            created_at: b.created_at,
+            type: 'booking' as ServiceType,
             views_count: 0
           })));
         }
@@ -1015,6 +1216,12 @@ function PortalPageContent() {
                 // ゲーミフィケーションの場合はcampaign_typeに基づいてURLを生成
                 const itemHref = item.type === 'gamification' && item.campaign_type
                   ? getGamificationPath(item.campaign_type, item.id)
+                  : item.type === 'entertainment_quiz'
+                  ? `/entertainment/${item.slug}`
+                  : item.type === 'attendance'
+                  ? `/attendance/${item.id}`
+                  : item.type === 'booking'
+                  ? `/booking/${item.id}`
                   : `/${item.type}/${item.slug}`;
 
                 return (
