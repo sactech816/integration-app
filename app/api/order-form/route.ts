@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('[Order Form] Insert error:', error);
-      return NextResponse.json({ error: 'フォーム作成に失敗しました' }, { status: 500 });
+      return NextResponse.json({ error: `フォーム作成に失敗しました: ${error.message}` }, { status: 500 });
     }
 
     // フィールドの保存
