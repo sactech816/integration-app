@@ -18,6 +18,14 @@ interface Step {
   stepType: string;
   contentRef: { type: string; slug?: string; url?: string; id?: string; message?: string; nextAction?: string; ctaText?: string; ctaUrl?: string } | null;
   ctaLabel: string;
+  slug?: string;
+  ctaEnabled: boolean;
+  ctaStyle: {
+    color?: string;
+    size?: string;
+    rounded?: string;
+    fullWidth?: boolean;
+  };
 }
 
 interface ContentItem {
@@ -232,7 +240,7 @@ function ContentPicker({
         <option value="">-- 作成済みから選ぶ --</option>
         {items.map((item) => (
           <option key={item.id} value={item.slug || item.id}>
-            {item.label}{item.slug ? ` (${item.slug})` : ''}
+            {item.label}{item.slug && item.slug !== item.label ? ` (/${item.slug})` : ''}
           </option>
         ))}
       </select>
@@ -311,6 +319,9 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
         setSteps(f.funnel_steps.map((s: any) => ({
           name: s.name, stepType: s.step_type, contentRef: s.content_ref,
           ctaLabel: s.cta_label || '次へ進む',
+          slug: s.slug || undefined,
+          ctaEnabled: s.cta_enabled !== false,
+          ctaStyle: s.cta_style || {},
         })));
       }
     }
@@ -321,7 +332,7 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
     if (res.ok) { const data = await res.json(); setAnalytics(data.analytics || []); }
   };
 
-  const addStep = () => setSteps([...steps, { name: '', stepType: 'custom_url', contentRef: null, ctaLabel: '次へ進む' }]);
+  const addStep = () => setSteps([...steps, { name: '', stepType: 'custom_url', contentRef: null, ctaLabel: '次へ進む', ctaEnabled: true, ctaStyle: {} }]);
   const removeStep = (index: number) => setSteps(steps.filter((_, i) => i !== index));
   const updateStep = (index: number, updates: Partial<Step>) => setSteps(steps.map((s, i) => i === index ? { ...s, ...updates } : s));
   const moveStep = (index: number, direction: 'up' | 'down') => {
@@ -337,7 +348,15 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
     if (savedFunnelId) {
       const res = await fetch(`/api/funnel/${savedFunnelId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (res.ok) {
+        const data = await res.json();
         if (newStatus) setStatus(newStatus);
+        // 保存後のslugをステップに反映
+        if (data.steps?.length > 0) {
+          setSteps(prev => prev.map((s, i) => ({
+            ...s,
+            slug: data.steps[i]?.slug || s.slug,
+          })));
+        }
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 2000);
       }
@@ -487,6 +506,8 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
                           stepType: s.stepType,
                           contentRef: s.contentRef,
                           ctaLabel: s.ctaLabel,
+                          ctaEnabled: true,
+                          ctaStyle: {},
                         })));
                       }}
                       className="bg-white border border-gray-200 rounded-lg p-3 text-left hover:shadow-md hover:border-amber-300 transition-all duration-200 group"
@@ -686,13 +707,112 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
 
                           {/* CTAボタン設定 */}
                           {step.stepType !== 'thank_you' && (
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-500 mb-1">CTAボタン</label>
-                            <input type="text" value={step.ctaLabel} onChange={(e) => updateStep(i, { ctaLabel: e.target.value })} placeholder="次へ進む" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white" />
-                            {typeConfig?.ctaNote && (
-                              <p className={`text-xs ${colors.text} mt-1`}>{typeConfig.ctaNote}</p>
+                          <div className="sm:col-span-2 space-y-3">
+                            {/* CTA表示/非表示トグル */}
+                            <div className="flex items-center justify-between">
+                              <label className="block text-xs font-semibold text-gray-500">CTAボタン</label>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <span className="text-xs text-gray-500">{step.ctaEnabled ? '表示' : '非表示'}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => updateStep(i, { ctaEnabled: !step.ctaEnabled })}
+                                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${step.ctaEnabled ? 'bg-amber-500' : 'bg-gray-300'}`}
+                                >
+                                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${step.ctaEnabled ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+                                </button>
+                              </label>
+                            </div>
+
+                            {step.ctaEnabled && (
+                              <>
+                                {/* CTAテキスト */}
+                                <input type="text" value={step.ctaLabel} onChange={(e) => updateStep(i, { ctaLabel: e.target.value })} placeholder="次へ進む" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white" />
+
+                                {/* CTAスタイル設定 */}
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                  <div>
+                                    <label className="block text-xs text-gray-400 mb-1">色</label>
+                                    <select
+                                      value={step.ctaStyle?.color || 'amber'}
+                                      onChange={(e) => updateStep(i, { ctaStyle: { ...step.ctaStyle, color: e.target.value } })}
+                                      className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-gray-900 text-xs bg-white"
+                                    >
+                                      <option value="amber">アンバー</option>
+                                      <option value="blue">ブルー</option>
+                                      <option value="green">グリーン</option>
+                                      <option value="red">レッド</option>
+                                      <option value="purple">パープル</option>
+                                      <option value="pink">ピンク</option>
+                                      <option value="indigo">インディゴ</option>
+                                      <option value="teal">ティール</option>
+                                      <option value="orange">オレンジ</option>
+                                      <option value="gray">グレー</option>
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs text-gray-400 mb-1">サイズ</label>
+                                    <select
+                                      value={step.ctaStyle?.size || 'md'}
+                                      onChange={(e) => updateStep(i, { ctaStyle: { ...step.ctaStyle, size: e.target.value } })}
+                                      className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-gray-900 text-xs bg-white"
+                                    >
+                                      <option value="sm">小</option>
+                                      <option value="md">中</option>
+                                      <option value="lg">大</option>
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs text-gray-400 mb-1">角丸</label>
+                                    <select
+                                      value={step.ctaStyle?.rounded || 'lg'}
+                                      onChange={(e) => updateStep(i, { ctaStyle: { ...step.ctaStyle, rounded: e.target.value } })}
+                                      className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-gray-900 text-xs bg-white"
+                                    >
+                                      <option value="none">なし</option>
+                                      <option value="md">小</option>
+                                      <option value="lg">大</option>
+                                      <option value="full">丸</option>
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs text-gray-400 mb-1">横幅</label>
+                                    <select
+                                      value={step.ctaStyle?.fullWidth ? 'full' : 'auto'}
+                                      onChange={(e) => updateStep(i, { ctaStyle: { ...step.ctaStyle, fullWidth: e.target.value === 'full' } })}
+                                      className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-gray-900 text-xs bg-white"
+                                    >
+                                      <option value="auto">自動</option>
+                                      <option value="full">全幅</option>
+                                    </select>
+                                  </div>
+                                </div>
+
+                                {typeConfig?.ctaNote && (
+                                  <p className={`text-xs ${colors.text}`}>{typeConfig.ctaNote}</p>
+                                )}
+                              </>
                             )}
                           </div>
+                          )}
+
+                          {/* ステップ公開URL（保存後に表示） */}
+                          {step.slug && (
+                            <div className="sm:col-span-2">
+                              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                                <Globe className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                <code className="text-xs text-gray-600 truncate flex-1">{typeof window !== 'undefined' ? window.location.origin : ''}/fs/{step.slug}</code>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(`${window.location.origin}/fs/${step.slug}`);
+                                    setUrlCopied(true);
+                                    setTimeout(() => setUrlCopied(false), 2000);
+                                  }}
+                                  className="text-xs text-blue-600 hover:underline whitespace-nowrap font-semibold"
+                                >
+                                  コピー
+                                </button>
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>

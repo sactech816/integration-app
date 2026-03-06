@@ -49,7 +49,7 @@ import {
 const iconMap: Record<string, LucideIcon> = {
   PlusCircle, Globe, Link: LinkIcon, Edit3, Share2, BarChart3, Zap, Gamepad2,
   Download, Code, EyeOff, GraduationCap, Users, Handshake, CreditCard, Mail,
-  ImagePlus, MessageCircle,
+  ImagePlus, MessageCircle, Sparkles,
 };
 
 export default function PricingPageClient() {
@@ -165,11 +165,11 @@ export default function PricingPageClient() {
                 <ul className="space-y-3">
                   {[
                     { text: 'フリープランの全機能', highlight: false },
-                    { text: 'アクセス解析', highlight: true },
-                    { text: 'AI利用（優先・回数無制限）', highlight: true },
-                    { text: 'HTMLダウンロード', highlight: true },
-                    { text: '埋め込みコード発行', highlight: true },
-                    { text: '広告非表示', highlight: true },
+                    { text: 'AI利用', highlight: true },
+                    { text: 'フォーム・ファネル・メルマガ（フル機能）', highlight: true },
+                    { text: 'サムネイル・エンタメ診断（フル機能）', highlight: true },
+                    { text: 'ゲーミフィケーション', highlight: true },
+                    { text: 'お問い合わせ機能', highlight: true },
                     { text: '優先サポート', highlight: true },
                   ].map((item, idx) => (
                     <li key={idx} className="flex items-center gap-3">
@@ -204,11 +204,11 @@ export default function PricingPageClient() {
             <span className="font-bold text-sm">Pro Plan</span>
           </div>
           <h1 className="text-3xl md:text-5xl font-black mb-6" style={{ color: '#5d4037' }}>
-            プロプランで、<br className="md:hidden" />ビジネスを次のステージへ
+            プロプランで、<br className="md:hidden" />すべての機能を解放
           </h1>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto leading-relaxed">
-            全13種のコンテンツ作成ツールに加え、アクセス解析・AI優先利用・HTMLダウンロードなど、
-            本格的なビジネス運用に必要なすべてが揃っています。
+            AI利用・ゲーミフィケーション・ファネル / メルマガ / フォームのフル機能など、
+            ビジネスの成長を加速させるプロ専用機能が使い放題。
           </p>
         </div>
       </section>

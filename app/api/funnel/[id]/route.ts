@@ -107,20 +107,49 @@ export async function PATCH(
       await supabase.from('funnel_steps').delete().eq('funnel_id', id);
 
       if (steps.length > 0) {
-        const stepInserts = steps.map((s: any, i: number) => ({
-          funnel_id: id,
-          order_index: i,
-          name: s.name,
-          step_type: s.stepType || s.step_type,
-          content_ref: s.contentRef || s.content_ref || null,
-          cta_label: s.ctaLabel || s.cta_label || '次へ進む',
+        const stepInserts = await Promise.all(steps.map(async (s: any, i: number) => {
+          // slug: 既存のslugを維持、なければ自動生成
+          let stepSlug = s.slug || null;
+          if (!stepSlug) {
+            const base = `fs-${id.slice(0, 8)}-${i}`;
+            const suffix = Math.random().toString(36).slice(2, 6);
+            stepSlug = `${base}-${suffix}`;
+          }
+          // slug の重複チェック
+          const { data: existing } = await supabase
+            .from('funnel_steps')
+            .select('id')
+            .eq('slug', stepSlug)
+            .maybeSingle();
+          if (existing) {
+            stepSlug = `${stepSlug}-${Date.now().toString(36).slice(-4)}`;
+          }
+
+          return {
+            funnel_id: id,
+            order_index: i,
+            name: s.name,
+            step_type: s.stepType || s.step_type,
+            content_ref: s.contentRef || s.content_ref || null,
+            cta_label: s.ctaLabel || s.cta_label || '次へ進む',
+            slug: stepSlug,
+            cta_enabled: s.ctaEnabled !== undefined ? s.ctaEnabled : (s.cta_enabled !== undefined ? s.cta_enabled : true),
+            cta_style: s.ctaStyle || s.cta_style || {},
+          };
         }));
 
         await supabase.from('funnel_steps').insert(stepInserts);
       }
     }
 
-    return NextResponse.json({ funnel: data });
+    // 保存後のステップ（slug込み）を返す
+    const { data: savedSteps } = await supabase
+      .from('funnel_steps')
+      .select('*')
+      .eq('funnel_id', id)
+      .order('order_index', { ascending: true });
+
+    return NextResponse.json({ funnel: data, steps: savedSteps || [] });
   } catch (error) {
     console.error('[Funnel Update] Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

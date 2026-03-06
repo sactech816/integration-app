@@ -438,9 +438,9 @@ export default function HomePage() {
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 {[
-                  { icon: Zap, label: 'AI優先利用', desc: '待ち時間ゼロで\nAIをフル活用' },
-                  { icon: TrendingUp, label: 'アクセス解析', desc: 'データで\n改善サイクル' },
-                  { icon: Crown, label: 'セミナー参加', desc: '限定セミナーで\nノウハウ習得' },
+                  { icon: Zap, label: 'AI利用', desc: 'AI機能で\nコンテンツ作成を加速' },
+                  { icon: Gamepad2, label: 'ゲーミフィケーション', desc: 'ガチャ・福引き等\n全種類が使い放題' },
+                  { icon: Target, label: 'フル機能解放', desc: 'ファネル・メルマガ等\n制限なく利用可能' },
                   { icon: Star, label: '今後の新機能', desc: 'Pro専用の\n新機能を優先提供' },
                 ].map((item) => (
                   <div key={item.label} className="text-center p-4 bg-white/70 rounded-2xl">

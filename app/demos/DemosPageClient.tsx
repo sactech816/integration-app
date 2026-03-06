@@ -13,6 +13,10 @@ import {
   BookOpen,
   House,
   PenTool,
+  Mail,
+  ClipboardList,
+  GitBranch,
+  Image as ImageIcon,
 } from 'lucide-react';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
@@ -238,6 +242,219 @@ const salesLetterDemos = [
   },
 ];
 
+// メルマガデモ
+const newsletterDemos = [
+  {
+    name: 'お知らせ',
+    description: 'シンプルな告知・お知らせメール',
+    href: '/newsletter/demo/announcement',
+    color: 'from-violet-500 to-purple-600',
+    badge: '基本',
+  },
+  {
+    name: 'セール告知',
+    description: '限定オファー・割引案内メール',
+    href: '/newsletter/demo/sale',
+    color: 'from-rose-500 to-pink-600',
+    badge: '基本',
+  },
+  {
+    name: 'コラム/ブログ',
+    description: '記事・コンテンツ配信メール',
+    href: '/newsletter/demo/column',
+    color: 'from-blue-500 to-indigo-600',
+    badge: '基本',
+  },
+  {
+    name: 'イベント案内',
+    description: 'セミナー・ワークショップ告知メール',
+    href: '/newsletter/demo/event',
+    color: 'from-amber-500 to-orange-600',
+    badge: '基本',
+  },
+  {
+    name: 'ウェルカムメール',
+    description: '新規登録者向け挨拶メール',
+    href: '/newsletter/demo/welcome',
+    color: 'from-green-500 to-emerald-600',
+    badge: '基本',
+  },
+  {
+    name: '教室/スクール向け',
+    description: 'レッスン案内・生徒向けお知らせ',
+    href: '/newsletter/demo/school',
+    color: 'from-teal-500 to-cyan-600',
+    badge: '業種別',
+  },
+  {
+    name: 'コンサル向け',
+    description: 'ノウハウ共有・事例紹介メール',
+    href: '/newsletter/demo/consulting',
+    color: 'from-indigo-500 to-blue-600',
+    badge: '業種別',
+  },
+  {
+    name: 'EC/物販向け',
+    description: '新商品・おすすめ紹介メール',
+    href: '/newsletter/demo/ecommerce',
+    color: 'from-pink-500 to-rose-600',
+    badge: '業種別',
+  },
+];
+
+// 申し込みフォームデモ
+const orderFormDemos = [
+  {
+    name: 'セミナー・講座申込',
+    description: 'セミナーや講座の参加申し込みフォーム',
+    href: '/order-form/demo/seminar',
+    color: 'from-emerald-500 to-green-600',
+  },
+  {
+    name: 'コンサルティング申込',
+    description: 'コンサルティングや個別相談の申し込みフォーム',
+    href: '/order-form/demo/consulting',
+    color: 'from-blue-500 to-indigo-600',
+  },
+  {
+    name: '商品注文フォーム',
+    description: '商品の注文・購入用フォーム',
+    href: '/order-form/demo/product-order',
+    color: 'from-amber-500 to-orange-600',
+  },
+  {
+    name: 'お問い合わせフォーム',
+    description: '汎用的なお問い合わせ受付フォーム',
+    href: '/order-form/demo/contact',
+    color: 'from-teal-500 to-emerald-600',
+  },
+  {
+    name: 'モニター・体験申込',
+    description: 'モニターや無料体験の募集フォーム',
+    href: '/order-form/demo/monitor',
+    color: 'from-purple-500 to-violet-600',
+  },
+  {
+    name: '月額サービス申込',
+    description: '月額・サブスクリプションサービスの申し込みフォーム',
+    href: '/order-form/demo/subscription',
+    color: 'from-rose-500 to-pink-600',
+  },
+];
+
+// ファネルデモ
+const funnelDemos = [
+  {
+    name: 'リード獲得ファネル',
+    description: 'LPで興味を引き、メルマガ登録でリードを獲得',
+    href: '/funnel/demo/lead-magnet',
+    color: 'from-pink-500 to-rose-600',
+    badge: '入門におすすめ',
+  },
+  {
+    name: '無料相談ファネル',
+    description: '自己紹介→診断→予約の流れで無料相談に誘導',
+    href: '/funnel/demo/consultation',
+    color: 'from-blue-500 to-indigo-600',
+    badge: 'コーチ・コンサル向け',
+  },
+  {
+    name: 'セールスファネル',
+    description: 'LP→セールスレター→決済の王道パターン',
+    href: '/funnel/demo/sales',
+    color: 'from-amber-500 to-orange-600',
+    badge: '商品販売向け',
+  },
+  {
+    name: 'ウェビナー集客ファネル',
+    description: 'LP→メルマガ→ウェビナー案内→申し込み',
+    href: '/funnel/demo/webinar',
+    color: 'from-purple-500 to-violet-600',
+    badge: 'セミナー・講座向け',
+  },
+  {
+    name: 'クイズ育成ファネル',
+    description: '診断クイズで興味を引き、育成して成約に繋げる',
+    href: '/funnel/demo/quiz-nurture',
+    color: 'from-emerald-500 to-teal-600',
+    badge: '教育・サービス向け',
+  },
+];
+
+// サムネイルデモ（代表的なもの）
+const thumbnailDemos = [
+  {
+    name: '太字インパクト',
+    description: '大きな太字テキストで視聴者の目を引くスタイル',
+    href: '/thumbnail/demo/yt-impact-bold',
+    color: 'from-red-500 to-orange-600',
+    badge: 'YouTube',
+  },
+  {
+    name: 'VS対決スタイル',
+    description: '比較・対決系の動画に最適なスプリットデザイン',
+    href: '/thumbnail/demo/yt-impact-versus',
+    color: 'from-violet-500 to-purple-600',
+    badge: 'YouTube',
+  },
+  {
+    name: 'クリーンミニマル',
+    description: '余白を活かしたシンプルで洗練されたデザイン',
+    href: '/thumbnail/demo/yt-minimal-clean',
+    color: 'from-gray-500 to-slate-600',
+    badge: 'YouTube',
+  },
+  {
+    name: 'カラフルポップ',
+    description: 'カラフルで楽しい雰囲気のポップスタイル',
+    href: '/thumbnail/demo/yt-pop-colorful',
+    color: 'from-pink-500 to-rose-600',
+    badge: 'YouTube',
+  },
+  {
+    name: 'ビジネスプロ',
+    description: '企業・ビジネス向けの上品なスタイル',
+    href: '/thumbnail/demo/yt-pro-business',
+    color: 'from-blue-700 to-indigo-800',
+    badge: 'YouTube',
+  },
+  {
+    name: 'ライフスタイル投稿',
+    description: 'Instagram投稿向けのおしゃれなテンプレート',
+    href: '/thumbnail/demo/ig-post-lifestyle',
+    color: 'from-fuchsia-500 to-pink-600',
+    badge: 'Instagram',
+  },
+  {
+    name: 'グラデーションストーリー',
+    description: 'Instagram ストーリー向けの縦型テンプレート',
+    href: '/thumbnail/demo/ig-story-gradient',
+    color: 'from-orange-500 to-amber-600',
+    badge: 'Instagram',
+  },
+  {
+    name: 'ニュースカード',
+    description: 'X（Twitter）投稿向けのニュースカード',
+    href: '/thumbnail/demo/tw-news',
+    color: 'from-sky-500 to-blue-600',
+    badge: 'X/Twitter',
+  },
+  {
+    name: '会話スタイル',
+    description: 'Threads投稿向けの会話型テンプレート',
+    href: '/thumbnail/demo/threads-conversation',
+    color: 'from-gray-600 to-gray-800',
+    badge: 'Threads',
+  },
+  {
+    name: 'イベントバナー',
+    description: 'セミナー・イベント告知向けバナー',
+    href: '/thumbnail/demo/banner-event',
+    color: 'from-blue-600 to-indigo-700',
+    badge: 'バナー',
+  },
+];
+
 // アンケートデモ
 const surveyDemos = [
   {
@@ -328,35 +545,11 @@ export default function DemosPageClient() {
     url: `${siteUrl}/demos`,
     mainEntity: {
       '@type': 'ItemList',
-      numberOfItems: quizDemos.length + profileDemos.length + businessDemos.length + surveyDemos.length + salesLetterDemos.length,
+      numberOfItems: quizDemos.length + profileDemos.length + businessDemos.length + surveyDemos.length + salesLetterDemos.length + newsletterDemos.length + orderFormDemos.length + funnelDemos.length + thumbnailDemos.length,
       itemListElement: [
-        ...quizDemos.map((demo, index) => ({
+        ...[...quizDemos, ...profileDemos, ...businessDemos, ...surveyDemos, ...salesLetterDemos, ...newsletterDemos, ...orderFormDemos, ...funnelDemos, ...thumbnailDemos].map((demo, index) => ({
           '@type': 'ListItem',
           position: index + 1,
-          name: demo.name,
-          url: `${siteUrl}${demo.href}`,
-        })),
-        ...profileDemos.map((demo, index) => ({
-          '@type': 'ListItem',
-          position: quizDemos.length + index + 1,
-          name: demo.name,
-          url: `${siteUrl}${demo.href}`,
-        })),
-        ...businessDemos.map((demo, index) => ({
-          '@type': 'ListItem',
-          position: quizDemos.length + profileDemos.length + index + 1,
-          name: demo.name,
-          url: `${siteUrl}${demo.href}`,
-        })),
-        ...surveyDemos.map((demo, index) => ({
-          '@type': 'ListItem',
-          position: quizDemos.length + profileDemos.length + businessDemos.length + index + 1,
-          name: demo.name,
-          url: `${siteUrl}${demo.href}`,
-        })),
-        ...salesLetterDemos.map((demo, index) => ({
-          '@type': 'ListItem',
-          position: quizDemos.length + profileDemos.length + businessDemos.length + surveyDemos.length + index + 1,
           name: demo.name,
           url: `${siteUrl}${demo.href}`,
         })),
@@ -608,6 +801,181 @@ export default function DemosPageClient() {
                   {demo.description}
                 </p>
                 <div className="flex items-center gap-2 text-rose-600 font-bold text-sm group-hover:gap-4 transition-all">
+                  デモを見る
+                  <ArrowRight size={16} />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* メルマガデモ */}
+        <section className="bg-gradient-to-br from-violet-50 to-purple-50 py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <Mail size={32} className="text-violet-600" />
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
+                メルマガテンプレート
+              </h2>
+              <p className="text-lg text-gray-600">
+                用途別のメールテンプレートを体験
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {newsletterDemos.map((demo, index) => (
+                <Link
+                  key={index}
+                  href={demo.href}
+                  className="group bg-white rounded-2xl border-2 border-gray-100 p-6 hover:border-transparent hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${demo.color} flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg`}>
+                      <Mail size={28} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold bg-violet-100 text-violet-600 px-2.5 py-1 rounded-full">
+                      {demo.badge}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    {demo.name}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    {demo.description}
+                  </p>
+                  <div className="flex items-center gap-2 text-violet-600 font-bold text-sm group-hover:gap-4 transition-all">
+                    デモを見る
+                    <ArrowRight size={16} />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 申し込みフォームデモ */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <ClipboardList size={32} className="text-blue-600" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
+              申し込みフォーム
+            </h2>
+            <p className="text-lg text-gray-600">
+              用途別の申し込みフォームテンプレートを体験
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {orderFormDemos.map((demo, index) => (
+              <Link
+                key={index}
+                href={demo.href}
+                className="group bg-white rounded-2xl border-2 border-gray-100 p-6 hover:border-transparent hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
+              >
+                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${demo.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
+                  <ClipboardList size={28} className="text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  {demo.name}
+                </h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  {demo.description}
+                </p>
+                <div className="flex items-center gap-2 text-blue-600 font-bold text-sm group-hover:gap-4 transition-all">
+                  デモを見る
+                  <ArrowRight size={16} />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* ファネルデモ */}
+        <section className="bg-gradient-to-br from-pink-50 to-rose-50 py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <GitBranch size={32} className="text-pink-600" />
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
+                ファネル
+              </h2>
+              <p className="text-lg text-gray-600">
+                集客から成約までの導線テンプレートを体験
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {funnelDemos.map((demo, index) => (
+                <Link
+                  key={index}
+                  href={demo.href}
+                  className="group bg-white rounded-2xl border-2 border-gray-100 p-6 hover:border-transparent hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${demo.color} flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg`}>
+                      <GitBranch size={28} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold bg-pink-100 text-pink-600 px-2.5 py-1 rounded-full">
+                      {demo.badge}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    {demo.name}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    {demo.description}
+                  </p>
+                  <div className="flex items-center gap-2 text-pink-600 font-bold text-sm group-hover:gap-4 transition-all">
+                    デモを見る
+                    <ArrowRight size={16} />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* サムネイルデモ */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <ImageIcon size={32} className="text-sky-600" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
+              サムネイルテンプレート
+            </h2>
+            <p className="text-lg text-gray-600">
+              SNS・動画プラットフォーム別のサムネイルテンプレートを体験
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {thumbnailDemos.map((demo, index) => (
+              <Link
+                key={index}
+                href={demo.href}
+                className="group bg-white rounded-2xl border-2 border-gray-100 p-6 hover:border-transparent hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${demo.color} flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg`}>
+                    <ImageIcon size={28} className="text-white" />
+                  </div>
+                  <span className="text-xs font-bold bg-sky-100 text-sky-600 px-2.5 py-1 rounded-full">
+                    {demo.badge}
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  {demo.name}
+                </h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  {demo.description}
+                </p>
+                <div className="flex items-center gap-2 text-sky-600 font-bold text-sm group-hover:gap-4 transition-all">
                   デモを見る
                   <ArrowRight size={16} />
                 </div>

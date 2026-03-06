@@ -5,32 +5,35 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowRight, Loader2, CheckCircle2, ExternalLink } from 'lucide-react';
 
-interface Step {
+interface StepData {
   id: string;
   name: string;
   step_type: string;
-  content_ref: { type: string; slug?: string; url?: string; id?: string } | null;
+  content_ref: { type: string; slug?: string; url?: string; id?: string; message?: string; nextAction?: string; ctaText?: string; ctaUrl?: string } | null;
   cta_label: string;
-  cta_enabled?: boolean;
-  cta_style?: {
+  cta_enabled: boolean;
+  cta_style: {
     color?: string;
     size?: string;
     rounded?: string;
     fullWidth?: boolean;
-  };
-  slug?: string;
+  } | null;
+  slug: string;
   order_index: number;
 }
 
-interface FunnelData {
+interface FunnelInfo {
   id: string;
   name: string;
   slug: string;
-  funnel_steps: Step[];
+}
+
+interface Props {
+  stepSlug: string;
 }
 
 // CTAスタイル → Tailwindクラス変換
-function getCTAClasses(style?: Step['cta_style']) {
+function getCTAClasses(style: StepData['cta_style']) {
   const colorMap: Record<string, string> = {
     amber: 'bg-amber-600 hover:bg-amber-700',
     blue: 'bg-blue-600 hover:bg-blue-700',
@@ -43,11 +46,13 @@ function getCTAClasses(style?: Step['cta_style']) {
     orange: 'bg-orange-600 hover:bg-orange-700',
     gray: 'bg-gray-700 hover:bg-gray-800',
   };
+
   const sizeMap: Record<string, string> = {
     sm: 'px-5 py-2.5 text-sm',
     md: 'px-8 py-4 text-lg',
     lg: 'px-10 py-5 text-xl',
   };
+
   const roundedMap: Record<string, string> = {
     none: 'rounded-none',
     md: 'rounded-lg',
@@ -59,48 +64,46 @@ function getCTAClasses(style?: Step['cta_style']) {
   const size = sizeMap[style?.size || 'md'] || sizeMap.md;
   const rounded = roundedMap[style?.rounded || 'lg'] || roundedMap.lg;
   const width = style?.fullWidth ? 'w-full' : '';
+
   return `${color} ${size} ${rounded} ${width}`;
 }
 
-interface Props {
-  slug: string;
-  stepIndex: string;
-}
-
-function FunnelStepViewerInner({ slug, stepIndex }: Props) {
-  const [funnel, setFunnel] = useState<FunnelData | null>(null);
+function FunnelStepStandaloneInner({ stepSlug }: Props) {
+  const [step, setStep] = useState<StepData | null>(null);
+  const [funnel, setFunnel] = useState<FunnelInfo | null>(null);
+  const [allSteps, setAllSteps] = useState<StepData[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [sessionId] = useState(() => typeof window !== 'undefined'
-    ? sessionStorage.getItem('funnel_session') || `fs_${Date.now()}_${Math.random().toString(36).slice(2)}`
-    : ''
+  const [sessionId] = useState(() =>
+    typeof window !== 'undefined'
+      ? sessionStorage.getItem('funnel_session') || `fs_${Date.now()}_${Math.random().toString(36).slice(2)}`
+      : ''
   );
   const searchParams = useSearchParams();
   const isPreview = searchParams.get('preview') === 'true';
-
-  const currentIndex = parseInt(stepIndex, 10);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && sessionId) {
       sessionStorage.setItem('funnel_session', sessionId);
     }
-    fetchFunnel();
-  }, [slug]);
+    fetchStep();
+  }, [stepSlug]);
 
-  const fetchFunnel = async () => {
-    const res = await fetch(`/api/funnel/${slug}?public=true`);
+  const fetchStep = async () => {
+    const res = await fetch(`/api/funnel/step-by-slug?slug=${stepSlug}`);
     if (res.ok) {
       const data = await res.json();
+      setStep(data.step);
       setFunnel(data.funnel);
+      setAllSteps(data.allSteps);
+      setCurrentIndex(data.currentIndex);
     }
     setLoading(false);
   };
 
-  // ビューイベントを記録
+  // ビューイベント記録
   useEffect(() => {
-    if (!funnel || !sessionId) return;
-    const step = funnel.funnel_steps[currentIndex];
-    if (!step) return;
-
+    if (!step || !funnel || !sessionId) return;
     fetch('/api/funnel/analytics/track', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -111,13 +114,10 @@ function FunnelStepViewerInner({ slug, stepIndex }: Props) {
         eventType: 'view',
       }),
     }).catch(() => {});
-  }, [funnel, currentIndex]);
+  }, [step, funnel]);
 
   const trackClick = async () => {
-    if (!funnel) return;
-    const step = funnel.funnel_steps[currentIndex];
-    if (!step) return;
-
+    if (!step || !funnel) return;
     await fetch('/api/funnel/analytics/track', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -134,28 +134,20 @@ function FunnelStepViewerInner({ slug, stepIndex }: Props) {
     return <div className="flex items-center justify-center min-h-screen bg-gray-50"><Loader2 className="w-8 h-8 animate-spin text-amber-500" /></div>;
   }
 
-  if (!funnel || funnel.funnel_steps.length === 0) {
+  if (!step || !funnel) {
     return (
       <div className="flex items-center justify-center min-h-screen px-4">
-        <p className="text-gray-500">ファネルが見つかりません</p>
+        <p className="text-gray-500">ページが見つかりません</p>
       </div>
     );
   }
 
-  const step = funnel.funnel_steps[currentIndex];
-  if (!step) {
-    return (
-      <div className="flex items-center justify-center min-h-screen px-4">
-        <p className="text-gray-500">このステップは存在しません</p>
-      </div>
-    );
-  }
-
-  const isLastStep = currentIndex >= funnel.funnel_steps.length - 1;
+  const isLastStep = currentIndex >= allSteps.length - 1;
   const isThankYou = step.step_type === 'thank_you';
   const ctaEnabled = step.cta_enabled !== false;
+  const nextStep = !isLastStep ? allSteps[currentIndex + 1] : null;
 
-  // ステップのコンテンツURL生成（?funnel=true でファネルモードを伝達）
+  // コンテンツURL生成
   const getContentUrl = () => {
     const ref = step.content_ref;
     if (!ref) return null;
@@ -176,7 +168,7 @@ function FunnelStepViewerInner({ slug, stepIndex }: Props) {
       case 'onboarding': basePath = `/onboarding/${ref.slug}`; break;
       case 'gamification': basePath = `/gamification/${ref.slug || ref.id}`; break;
       case 'sns_post': basePath = `/sns-post/${ref.slug}`; break;
-      case 'custom_url': return ref.url || null; // 外部URLはパラメータ追加しない
+      case 'custom_url': return ref.url || null;
       default: return null;
     }
 
@@ -184,6 +176,7 @@ function FunnelStepViewerInner({ slug, stepIndex }: Props) {
   };
 
   const contentUrl = getContentUrl();
+  const ctaClasses = getCTAClasses(step.cta_style);
 
   // サンキューページ
   if (isThankYou) {
@@ -221,20 +214,23 @@ function FunnelStepViewerInner({ slug, stepIndex }: Props) {
     );
   }
 
+  // 次のステップURL（/fs/xxx形式）
+  const nextStepUrl = nextStep?.slug ? `/fs/${nextStep.slug}` : null;
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* ステップインジケーター（作成者プレビュー時のみ表示） */}
+      {/* ステップインジケーター（プレビュー時のみ） */}
       {isPreview && (
         <div className="bg-white border-b border-gray-200 px-4 py-3">
           <div className="max-w-5xl mx-auto flex items-center gap-2">
-            {funnel.funnel_steps.map((s, i) => (
+            {allSteps.map((s, i) => (
               <div key={s.id} className="flex items-center gap-2">
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                   i === currentIndex ? 'bg-amber-600 text-white' : i < currentIndex ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'
                 }`}>
                   {i < currentIndex ? '✓' : i + 1}
                 </div>
-                {i < funnel.funnel_steps.length - 1 && (
+                {i < allSteps.length - 1 && (
                   <div className={`w-8 h-0.5 ${i < currentIndex ? 'bg-green-500' : 'bg-gray-200'}`} />
                 )}
               </div>
@@ -260,13 +256,13 @@ function FunnelStepViewerInner({ slug, stepIndex }: Props) {
       </div>
 
       {/* 次のステップへのCTA */}
-      {!isLastStep && ctaEnabled && (
+      {!isLastStep && ctaEnabled && nextStepUrl && (
         <div className="bg-white border-t border-gray-200 px-4 py-4">
           <div className="max-w-5xl mx-auto text-center">
             <Link
-              href={`/funnel/${slug}/${currentIndex + 1}${isPreview ? '?preview=true' : ''}`}
+              href={`${nextStepUrl}${isPreview ? '?preview=true' : ''}`}
               onClick={trackClick}
-              className={`inline-flex items-center gap-2 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px] ${getCTAClasses(step.cta_style)}`}
+              className={`inline-flex items-center gap-2 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px] ${ctaClasses}`}
             >
               {step.cta_label || '次へ進む'}
               <ArrowRight className="w-5 h-5" />
@@ -278,11 +274,10 @@ function FunnelStepViewerInner({ slug, stepIndex }: Props) {
   );
 }
 
-// Suspenseラッパー（Next.js 16でuseSearchParamsにSuspense必須）
-export default function FunnelStepViewer(props: Props) {
+export default function FunnelStepStandalone(props: Props) {
   return (
     <Suspense>
-      <FunnelStepViewerInner {...props} />
+      <FunnelStepStandaloneInner {...props} />
     </Suspense>
   );
 }

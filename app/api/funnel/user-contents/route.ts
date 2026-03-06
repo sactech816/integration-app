@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   const queries = {
     profile_lp: supabaseAdmin
       .from('profiles')
-      .select('id, slug, nickname')
+      .select('id, slug, nickname, subtitle')
       .eq('user_id', userId)
       .order('created_at', { ascending: false }),
     business_lp: supabaseAdmin
@@ -98,11 +98,18 @@ export async function GET(req: NextRequest) {
       results[key] = [];
       return;
     }
-    results[key] = data.map((item: any) => ({
-      id: String(item.id),
-      label: item.title || item.name || item.nickname || `(ID: ${item.id})`,
-      slug: item.slug || undefined,
-    }));
+    results[key] = data.map((item: any) => {
+      // わかりやすいラベルを生成（ID表示を避ける）
+      let label = item.title || item.name || item.nickname || '';
+      if (!label && item.subtitle) label = item.subtitle;
+      if (!label && item.slug) label = item.slug;
+      if (!label) label = `(ID: ${String(item.id).slice(0, 8)}...)`;
+      return {
+        id: String(item.id),
+        label,
+        slug: item.slug || undefined,
+      };
+    });
   });
 
   return NextResponse.json({ contents: results });
