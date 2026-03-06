@@ -112,12 +112,12 @@ export default function ProPlanModal({ isOpen, onClose, user, onShowAuth }: ProP
             <ul className="space-y-3">
               {[
                 { text: 'フリープランの全機能', highlight: false },
-                { text: 'アクセス解析', highlight: true },
-                { text: 'AI利用（優先・回数無制限）', highlight: true },
-                { text: 'HTMLダウンロード', highlight: true },
-                { text: '埋め込みコード発行', highlight: true },
-                { text: '広告非表示', highlight: true },
-                { text: '優先サポート', highlight: true },
+                { text: 'AI利用', highlight: true },
+                { text: 'フォーム・ファネル・メルマガ（フル機能）', highlight: true },
+                { text: 'サムネイル・エンタメ診断（フル機能）', highlight: true },
+                { text: 'ゲーミフィケーション', highlight: true },
+                { text: 'アクセス解析 / HTML / 埋め込み / 広告非表示', highlight: true },
+                { text: 'お問い合わせ / 優先サポート', highlight: true },
               ].map((item, idx) => (
                 <li key={idx} className="flex items-center gap-3">
                   <Check
