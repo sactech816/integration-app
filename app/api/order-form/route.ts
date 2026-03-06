@@ -74,7 +74,8 @@ export async function POST(request: NextRequest) {
       .slice(0, 30);
     const slug = `${slugBase}-${Date.now().toString(36)}`;
 
-    const insertData: Record<string, any> = {
+    // 基本カラム（初期スキーマ）
+    const baseData: Record<string, any> = {
         user_id: userId,
         title,
         slug,
@@ -85,6 +86,10 @@ export async function POST(request: NextRequest) {
         payment_provider: paymentProvider || null,
         stripe_price_id: stripePriceId || null,
         success_message: successMessage || 'お申し込みありがとうございます。',
+        status: 'draft',
+    };
+    // 拡張カラム（後から追加されたマイグレーション）
+    const extendedData: Record<string, any> = {
         reply_email_enabled: replyEmailEnabled !== undefined ? replyEmailEnabled : true,
         reply_email_subject: replyEmailSubject || 'お申し込みありがとうございます',
         reply_email_body: replyEmailBody || null,
@@ -92,28 +97,24 @@ export async function POST(request: NextRequest) {
         notify_emails: notifyEmails || null,
         design_layout: designLayout || 'standard',
         design_color: designColor || 'emerald',
-        status: 'draft',
     };
-    // 新カラム（マイグレーション後に有効）
-    if (notifyEmailSubject) insertData.notify_email_subject = notifyEmailSubject;
-    if (notifyEmailBody) insertData.notify_email_body = notifyEmailBody;
-    if (ctaButton) insertData.cta_button = ctaButton;
+    if (notifyEmailSubject) extendedData.notify_email_subject = notifyEmailSubject;
+    if (notifyEmailBody) extendedData.notify_email_body = notifyEmailBody;
+    if (ctaButton) extendedData.cta_button = ctaButton;
 
+    // まず全カラムで挿入を試行
     let { data, error } = await supabase
       .from('order_forms')
-      .insert(insertData)
+      .insert({ ...baseData, ...extendedData })
       .select()
       .single();
 
-    // 新カラムが原因でエラーの場合、基本フィールドのみで再試行
-    if (error && (notifyEmailSubject || notifyEmailBody || ctaButton)) {
-      console.warn('[Order Form] Retrying without extended fields:', error.message);
-      delete insertData.notify_email_subject;
-      delete insertData.notify_email_body;
-      delete insertData.cta_button;
+    // 拡張カラムが原因でエラーの場合、基本カラムのみで再試行
+    if (error) {
+      console.warn('[Order Form] Retrying with base fields only:', error.message);
       ({ data, error } = await supabase
         .from('order_forms')
-        .insert(insertData)
+        .insert(baseData)
         .select()
         .single());
     }

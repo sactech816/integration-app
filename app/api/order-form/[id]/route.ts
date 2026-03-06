@@ -83,45 +83,45 @@ export async function PATCH(
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
-    // フォーム本体を更新
-    const updateData: Record<string, any> = { updated_at: new Date().toISOString() };
-    if (title !== undefined) updateData.title = title;
-    if (description !== undefined) updateData.description = description;
-    if (price !== undefined) updateData.price = price;
-    if (paymentType !== undefined) updateData.payment_type = paymentType;
-    if (paymentProvider !== undefined) updateData.payment_provider = paymentProvider;
-    if (stripePriceId !== undefined) updateData.stripe_price_id = stripePriceId;
-    if (successMessage !== undefined) updateData.success_message = successMessage;
-    if (status !== undefined) updateData.status = status;
-    if (replyEmailEnabled !== undefined) updateData.reply_email_enabled = replyEmailEnabled;
-    if (replyEmailSubject !== undefined) updateData.reply_email_subject = replyEmailSubject;
-    if (replyEmailBody !== undefined) updateData.reply_email_body = replyEmailBody;
-    if (notifyOwner !== undefined) updateData.notify_owner = notifyOwner;
-    if (notifyEmails !== undefined) updateData.notify_emails = notifyEmails;
-    if (designLayout !== undefined) updateData.design_layout = designLayout;
-    if (designColor !== undefined) updateData.design_color = designColor;
+    // 基本カラム（初期スキーマ）
+    const baseData: Record<string, any> = { updated_at: new Date().toISOString() };
+    if (title !== undefined) baseData.title = title;
+    if (description !== undefined) baseData.description = description;
+    if (price !== undefined) baseData.price = price;
+    if (paymentType !== undefined) baseData.payment_type = paymentType;
+    if (paymentProvider !== undefined) baseData.payment_provider = paymentProvider;
+    if (stripePriceId !== undefined) baseData.stripe_price_id = stripePriceId;
+    if (successMessage !== undefined) baseData.success_message = successMessage;
+    if (status !== undefined) baseData.status = status;
 
-    // 新カラム（マイグレーション後に有効）- 失敗時はフォールバック
-    const extendedFields: Record<string, any> = {};
-    if (notifyEmailSubject !== undefined) extendedFields.notify_email_subject = notifyEmailSubject;
-    if (notifyEmailBody !== undefined) extendedFields.notify_email_body = notifyEmailBody;
-    if (ctaButton !== undefined) extendedFields.cta_button = ctaButton;
+    // 拡張カラム（後から追加されたマイグレーション）
+    const extendedData: Record<string, any> = {};
+    if (replyEmailEnabled !== undefined) extendedData.reply_email_enabled = replyEmailEnabled;
+    if (replyEmailSubject !== undefined) extendedData.reply_email_subject = replyEmailSubject;
+    if (replyEmailBody !== undefined) extendedData.reply_email_body = replyEmailBody;
+    if (notifyOwner !== undefined) extendedData.notify_owner = notifyOwner;
+    if (notifyEmails !== undefined) extendedData.notify_emails = notifyEmails;
+    if (designLayout !== undefined) extendedData.design_layout = designLayout;
+    if (designColor !== undefined) extendedData.design_color = designColor;
+    if (notifyEmailSubject !== undefined) extendedData.notify_email_subject = notifyEmailSubject;
+    if (notifyEmailBody !== undefined) extendedData.notify_email_body = notifyEmailBody;
+    if (ctaButton !== undefined) extendedData.cta_button = ctaButton;
 
-    // まず全フィールドで更新を試行
+    // まず全カラムで更新を試行
     let { data, error } = await supabase
       .from('order_forms')
-      .update({ ...updateData, ...extendedFields })
+      .update({ ...baseData, ...extendedData })
       .eq('id', id)
       .eq('user_id', userId)
       .select()
       .single();
 
-    // 新カラムが原因でエラーの場合、基本フィールドのみで再試行
-    if (error && Object.keys(extendedFields).length > 0) {
-      console.warn('[Order Form Update] Retrying without extended fields:', error.message);
+    // 拡張カラムが原因でエラーの場合、基本カラムのみで再試行
+    if (error && Object.keys(extendedData).length > 0) {
+      console.warn('[Order Form Update] Retrying with base fields only:', error.message);
       ({ data, error } = await supabase
         .from('order_forms')
-        .update(updateData)
+        .update(baseData)
         .eq('id', id)
         .eq('user_id', userId)
         .select()
