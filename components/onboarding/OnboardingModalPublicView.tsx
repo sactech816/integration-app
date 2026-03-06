@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ICON_MAP } from './iconMap';
+import { ViewTracker } from '@/components/shared/ViewTracker';
 import type { OnboardingModalData, OnboardingModalPage } from '@/lib/types';
 
 const COLOR_MAP: Record<string, { bg: string; text: string }> = {
@@ -84,6 +85,13 @@ export default function OnboardingModalPublicView({ data }: OnboardingModalPubli
 
   return (
     <div className="min-h-screen bg-gray-100">
+      {data.slug && (
+        <ViewTracker
+          contentId={data.slug}
+          contentType="onboarding"
+          trackScroll={false}
+        />
+      )}
       {/* ボタンクリックトリガー */}
       {data.trigger_type === 'click' && !showModal && (
         <button

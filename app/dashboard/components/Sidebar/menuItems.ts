@@ -25,6 +25,7 @@ import {
   Layout,
   HelpCircle,
   ListOrdered,
+  MessageCircle,
   LucideIcon,
 } from 'lucide-react';
 
@@ -213,6 +214,14 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: 'ファネル構築',
     color: { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
     href: '/funnel/new',
+    category: 'marketing',
+  },
+  {
+    id: 'line',
+    label: 'LINE公式連携',
+    icon: MessageCircle,
+    description: 'LINE公式アカウント連携・配信',
+    color: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200' },
     category: 'marketing',
   },
 

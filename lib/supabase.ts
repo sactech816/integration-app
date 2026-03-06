@@ -28,4 +28,8 @@ export const TABLES = {
   THUMBNAILS: 'thumbnails',
   WEBINAR_LPS: 'webinar_lps',
   SNS_POSTS: 'sns_posts',
+  LINE_ACCOUNTS: 'line_accounts',
+  LINE_FRIENDS: 'line_friends',
+  LINE_MESSAGES: 'line_messages',
+  LINE_SEND_LOGS: 'line_send_logs',
 } as const;

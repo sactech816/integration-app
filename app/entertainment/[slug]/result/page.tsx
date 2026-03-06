@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { Metadata } from 'next';
 import type { QuizResult, EntertainmentMeta } from '@/lib/types';
 import { Sparkles, Star } from 'lucide-react';
+import LineAddFriendButton from '@/components/line/LineAddFriendButton';
 
 export const revalidate = 300;
 
@@ -188,6 +189,15 @@ export default async function EntertainmentResultPage({ params, searchParams }: 
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-md">
               <p className="text-xs text-gray-600 leading-relaxed">{result.description}</p>
             </div>
+
+            {/* LINE友だち追加ボタン（オーナーがLINE連携済みの場合のみ表示） */}
+            {quiz.user_id && (
+              <LineAddFriendButton
+                ownerId={quiz.user_id}
+                sourceType="entertainment_quiz"
+                sourceId={quiz.id}
+              />
+            )}
 
             {/* CTA: あなたも診断 */}
             <a

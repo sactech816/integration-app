@@ -16,6 +16,7 @@ import SurveyList from './SurveyList';
 import MyGamification from './MyGamification';
 import NewsletterDashboard from '@/components/newsletter/NewsletterDashboard';
 import StepEmailDashboard from '@/components/step-email/StepEmailDashboard';
+import LineDashboard from '@/components/line/LineDashboard';
 import OrderFormList from './OrderFormList';
 import FunnelList from './FunnelList';
 import { PlanTier } from '@/lib/subscription';
@@ -40,6 +41,7 @@ export type ActiveView =
   | 'funnel'
   | 'webinar'
   | 'sns-post'
+  | 'line'
   | 'affiliate'
   | 'marketplace-seller'
   | 'settings'
@@ -97,6 +99,7 @@ type MainContentProps = {
     funnel: number;
     webinar: number;
     sns_post: number;
+    line: number;
   };
   isLoading: boolean;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -222,7 +225,7 @@ export default function MainContent({
           onPurchase={onPurchase}
           onCreateNew={onCreateNew}
         />
-        {['quiz', 'profile', 'business'].includes(activeView) && (
+        {['quiz', 'profile', 'business', 'salesletter', 'onboarding', 'webinar'].includes(activeView) && (
           <AnalyticsSection
             contents={contents}
             selectedService={activeView as ServiceType}
@@ -271,6 +274,11 @@ export default function MainContent({
       {/* 申し込みフォーム */}
       {activeView === 'order-form' && user && (
         <OrderFormList userId={user.id} isAdmin={isAdmin} isUnlocked={isUnlocked} />
+      )}
+
+      {/* LINE公式連携 */}
+      {activeView === 'line' && user && (
+        <LineDashboard userId={user.id} isAdmin={isAdmin} />
       )}
 
       {/* ファネル */}
@@ -355,7 +363,7 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'announcements', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'step-email', 'order-form', 'funnel', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks'].includes(activeView) && (
+      {!['dashboard', 'announcements', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'step-email', 'line', 'order-form', 'funnel', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>

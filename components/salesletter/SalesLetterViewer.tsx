@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { SalesLetter } from '@/lib/types';
+import { ViewTracker, trackClick } from '@/components/shared/ViewTracker';
 import ContentFooter from '@/components/shared/ContentFooter';
 import BlockRenderer from '@/components/shared/BlockRenderer';
 
@@ -92,6 +93,12 @@ export default function SalesLetterViewer({ salesLetter }: SalesLetterViewerProp
 
   return (
     <>
+      {salesLetter.slug && (
+        <ViewTracker
+          contentId={salesLetter.slug}
+          contentType="salesletter"
+        />
+      )}
       <div
         className={`min-h-screen py-8 px-4 ${bg?.animated ? 'animate-gradient-xy' : ''}`}
         style={getBackgroundStyle()}

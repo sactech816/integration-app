@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FileText, CreditCard, CheckCircle2, Loader2 } from 'lucide-react';
 import { getOrderFormColor } from '@/constants/orderFormThemes';
+import { ViewTracker, trackCompletion } from '@/components/shared/ViewTracker';
 
 interface Field {
   id: string;
@@ -132,6 +133,7 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
 
     setSuccess(true);
     setSubmitting(false);
+    trackCompletion(slug, 'order-form');
   };
 
   if (loading) {
@@ -181,6 +183,11 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
 
   return (
     <div className="min-h-screen py-12 px-4" style={{ background: color.background }}>
+      <ViewTracker
+        contentId={slug}
+        contentType="order-form"
+        trackScroll={false}
+      />
       {/* CTA animation styles */}
       <style jsx global>{`
         @keyframes cta-shimmer {

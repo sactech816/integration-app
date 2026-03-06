@@ -29,6 +29,11 @@ export default function AnalyticsSection({
     clicks: item.clicks_count || 0,
   }));
 
+  // 完了数を表示するサービス（クイズ・申し込みフォーム）
+  const showCompletions = selectedService === 'quiz' || selectedService === 'order-form';
+  // スクロール系指標を表示するサービス
+  const showScrollMetrics = !showCompletions;
+
   // ロック状態の表示（診断クイズ以外で無料ユーザーの場合）
   // 診断クイズはテーブルにカウンターがあるので常に表示可能
   const showLockedState = !isUnlocked && selectedService !== 'quiz';
@@ -77,7 +82,7 @@ export default function AnalyticsSection({
               詳細アクセス解析
             </h4>
             <p className="text-gray-600 text-sm mb-4">
-              プロフィールLP・ビジネスLPの詳細なアクセス解析（閲覧数、クリック率、精読率、滞在時間など）は、有料プランでご利用いただけます。
+              コンテンツの詳細なアクセス解析（閲覧数、クリック率、精読率、滞在時間など）は、有料プランでご利用いただけます。
             </p>
             <button
               onClick={() => onNavigate?.('/#create-section')}
@@ -109,7 +114,7 @@ export default function AnalyticsSection({
               <Tooltip />
               <Legend />
               <Bar dataKey="views" name="閲覧数" fill="#6366f1" radius={[4, 4, 0, 0]} />
-              {selectedService === 'quiz' && (
+              {showCompletions && (
                 <>
                   <Bar dataKey="completions" name="完了数" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="clicks" name="クリック" fill="#10b981" radius={[4, 4, 0, 0]} />
@@ -124,19 +129,19 @@ export default function AnalyticsSection({
             <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
               <tr>
                 <th className="px-4 py-3 bg-gray-50">
-                  {selectedService === 'quiz' ? 'タイトル' : 'プロフィール名'}
+                  {selectedService === 'profile' ? 'プロフィール名' : 'タイトル'}
                 </th>
                 {selectedService !== 'quiz' && <th className="px-4 py-3 bg-gray-50">SLUG</th>}
                 <th className="px-4 py-3 text-right bg-gray-50">アクセス数</th>
                 <th className="px-4 py-3 text-right bg-gray-50">クリック数</th>
                 <th className="px-4 py-3 text-right bg-gray-50">クリック率</th>
-                {selectedService === 'quiz' && (
+                {showCompletions && (
                   <>
-                    <th className="px-4 py-3 text-right bg-gray-50">完了数</th>
-                    <th className="px-4 py-3 text-right bg-gray-50">完了率</th>
+                    <th className="px-4 py-3 text-right bg-gray-50">{selectedService === 'order-form' ? '申込数' : '完了数'}</th>
+                    <th className="px-4 py-3 text-right bg-gray-50">{selectedService === 'order-form' ? '申込率' : '完了率'}</th>
                   </>
                 )}
-                {selectedService !== 'quiz' && (
+                {showScrollMetrics && (
                   <>
                     <th className="px-4 py-3 text-right bg-gray-50">精読率</th>
                     <th className="px-4 py-3 text-right bg-gray-50">滞在時間</th>
@@ -169,13 +174,13 @@ export default function AnalyticsSection({
                     <td className="px-4 py-3 text-right font-bold text-blue-600">{views}</td>
                     <td className="px-4 py-3 text-right">{clicks}</td>
                     <td className="px-4 py-3 text-right text-green-600 font-bold">{ctr}%</td>
-                    {selectedService === 'quiz' && (
+                    {showCompletions && (
                       <>
                         <td className="px-4 py-3 text-right">{completions}</td>
                         <td className="px-4 py-3 text-right text-orange-600 font-bold">{rate}%</td>
                       </>
                     )}
-                    {selectedService !== 'quiz' && (
+                    {showScrollMetrics && (
                       <>
                         <td className="px-4 py-3 text-right text-orange-600 font-bold">
                           {readRate}%

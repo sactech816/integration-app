@@ -4,6 +4,7 @@ import { ArrowLeft, Loader2, Trophy, ExternalLink, MessageCircle, QrCode, Refres
 import SEO from './SEO';
 import { supabase } from '../../lib/supabase';
 import ContentFooter from '../shared/ContentFooter';
+import LineAddFriendButton from '../line/LineAddFriendButton';
 import { calculateResult } from '../../lib/utils';
 import confetti from 'canvas-confetti';
 import { getQuizTheme } from '../../constants/quizThemes';
@@ -161,6 +162,15 @@ const ResultView = ({ quiz, result, onRetry, onBack, playableQuestions, answers,
                     </a>
                 )}
             </div>
+
+            {/* LINE友だち追加ボタン（オーナーがLINE連携済みの場合のみ表示） */}
+            {quiz.user_id && (
+              <LineAddFriendButton
+                ownerId={quiz.user_id}
+                sourceType={quiz.mode === 'entertainment' ? 'entertainment_quiz' : 'quiz'}
+                sourceId={quiz.id}
+              />
+            )}
 
             {!isFunnel && (
               <div className="flex gap-4 border-t pt-6">

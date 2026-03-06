@@ -51,6 +51,7 @@ type UseDashboardDataReturn = {
     funnel: number;
     webinar: number;
     sns_post: number;
+    line: number;
   };
   totalViews: number;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -131,6 +132,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     funnel: 0,
     webinar: 0,
     sns_post: 0,
+    line: 0,
   });
   const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
   const [purchases, setPurchases] = useState<string[]>([]);
@@ -354,11 +356,19 @@ export function useDashboardData(): UseDashboardDataReturn {
 
           const { data: salesLetters } = await query;
           if (salesLetters) {
+            let analyticsMapObj: Record<string, AnalyticsData> = {};
+            if (!skipAnalytics) {
+              const slugs = salesLetters.map((s: SalesLetter) => s.slug);
+              const analyticsResults = await getMultipleAnalytics(slugs, 'salesletter');
+              analyticsResults.forEach((result) => {
+                analyticsMapObj[result.contentId] = result.analytics;
+              });
+            }
             allContents.push(
               ...salesLetters.map((s: SalesLetter) => {
-                // タイトルフォールバック: title → 最初のsales_headlineのtext → デフォルト
                 const headlineBlock = s.content?.find((b: Block) => b.type === 'sales_headline');
                 const slTitle = s.title || headlineBlock?.data?.text || 'セールスレター';
+                const analytics = analyticsMapObj[s.slug];
                 return {
                   id: s.id,
                   slug: s.slug,
@@ -369,11 +379,11 @@ export function useDashboardData(): UseDashboardDataReturn {
                   user_id: s.user_id,
                   content: s.content,
                   settings: s.settings as Record<string, unknown>,
-                  views_count: s.views_count || 0,
-                  clicks_count: 0,
-                  readRate: 0,
-                  avgTimeSpent: 0,
-                  clickRate: 0,
+                  views_count: analytics?.views || s.views_count || 0,
+                  clicks_count: analytics?.clicks || 0,
+                  readRate: analytics?.readRate || 0,
+                  avgTimeSpent: analytics?.avgTimeSpent || 0,
+                  clickRate: analytics?.clickRate || 0,
                 };
               })
             );
@@ -388,18 +398,34 @@ export function useDashboardData(): UseDashboardDataReturn {
 
           const { data: modals } = await query;
           if (modals) {
+            let analyticsMapObj: Record<string, AnalyticsData> = {};
+            if (!skipAnalytics) {
+              const slugs = modals.map((m: any) => m.slug).filter(Boolean);
+              if (slugs.length > 0) {
+                const analyticsResults = await getMultipleAnalytics(slugs, 'onboarding');
+                analyticsResults.forEach((result) => {
+                  analyticsMapObj[result.contentId] = result.analytics;
+                });
+              }
+            }
             allContents.push(
-              ...modals.map((m: any) => ({
-                id: String(m.id),
-                slug: m.slug,
-                title: m.title || 'はじめかたガイド',
-                created_at: m.created_at,
-                updated_at: m.updated_at,
-                type: 'onboarding' as ServiceType,
-                user_id: m.user_id,
-                views_count: m.views_count || 0,
-                clicks_count: 0,
-              }))
+              ...modals.map((m: any) => {
+                const analytics = analyticsMapObj[m.slug];
+                return {
+                  id: String(m.id),
+                  slug: m.slug,
+                  title: m.title || 'はじめかたガイド',
+                  created_at: m.created_at,
+                  updated_at: m.updated_at,
+                  type: 'onboarding' as ServiceType,
+                  user_id: m.user_id,
+                  views_count: analytics?.views || m.views_count || 0,
+                  clicks_count: analytics?.clicks || 0,
+                  readRate: analytics?.readRate || 0,
+                  avgTimeSpent: analytics?.avgTimeSpent || 0,
+                  clickRate: analytics?.clickRate || 0,
+                };
+              })
             );
           }
         }
@@ -439,10 +465,21 @@ export function useDashboardData(): UseDashboardDataReturn {
 
           const { data: webinarLps } = await query;
           if (webinarLps) {
+            let analyticsMapObj: Record<string, AnalyticsData> = {};
+            if (!skipAnalytics) {
+              const slugs = webinarLps.map((w: any) => w.slug).filter(Boolean);
+              if (slugs.length > 0) {
+                const analyticsResults = await getMultipleAnalytics(slugs, 'webinar');
+                analyticsResults.forEach((result) => {
+                  analyticsMapObj[result.contentId] = result.analytics;
+                });
+              }
+            }
             allContents.push(
               ...webinarLps.map((w: any) => {
                 const heroBlock = w.content?.find((b: any) => b.type === 'hero');
                 const wTitle = w.title || heroBlock?.data?.headline || 'ウェビナーLP';
+                const analytics = analyticsMapObj[w.slug];
                 return {
                   id: w.id,
                   slug: w.slug,
@@ -454,8 +491,11 @@ export function useDashboardData(): UseDashboardDataReturn {
                   user_id: w.user_id,
                   content: w.content,
                   settings: w.settings,
-                  views_count: 0,
-                  clicks_count: 0,
+                  views_count: analytics?.views || 0,
+                  clicks_count: analytics?.clicks || 0,
+                  readRate: analytics?.readRate || 0,
+                  avgTimeSpent: analytics?.avgTimeSpent || 0,
+                  clickRate: analytics?.clickRate || 0,
                 };
               })
             );
@@ -577,7 +617,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult] = await Promise.all([
+      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult, lineResult] = await Promise.all([
         // 診断クイズ数
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true })
@@ -634,6 +674,8 @@ export function useDashboardData(): UseDashboardDataReturn {
         isAdmin
           ? supabase.from(TABLES.SNS_POSTS).select('id', { count: 'exact', head: true })
           : supabase.from(TABLES.SNS_POSTS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // LINE友だち数
+        supabase.from(TABLES.LINE_FRIENDS).select('id', { count: 'exact', head: true }).eq('owner_id', user.id).eq('status', 'active'),
       ]);
 
       setContentCounts({
@@ -653,6 +695,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         funnel: funnelResult.count || 0,
         webinar: webinarResult.count || 0,
         sns_post: snsPostResult.count || 0,
+        line: lineResult.count || 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);
