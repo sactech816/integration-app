@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  GitBranch, Plus, Trash2, ChevronRight, Loader2, Eye,
+  GitBranch, Plus, Trash2, ChevronRight, Loader2, Eye, BarChart2,
 } from 'lucide-react';
+import FunnelAnalyticsChart from '@/components/funnel/FunnelAnalyticsChart';
 
 interface Funnel {
   id: string;
@@ -33,10 +34,12 @@ export default function FunnelList({
   userId,
   isAdmin,
   hasMakersProAccess = false,
+  onNavigate,
 }: {
   userId: string;
   isAdmin: boolean;
   hasMakersProAccess?: boolean;
+  onNavigate?: (path: string) => void;
 }) {
   const router = useRouter();
   const [funnels, setFunnels] = useState<Funnel[]>([]);
@@ -189,6 +192,25 @@ export default function FunnelList({
                 </div>
               </div>
             </div>
+          ))}
+        </div>
+      )}
+
+      {/* ファネル解析 */}
+      {!loading && funnels.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="font-bold text-gray-700 flex items-center gap-2">
+            <BarChart2 size={18} /> ステップ別アクセス解析
+          </h3>
+          {funnels.map((funnel) => (
+            <FunnelAnalyticsChart
+              key={`analytics-${funnel.id}`}
+              funnelId={funnel.id}
+              funnelName={funnel.name}
+              userId={userId}
+              isUnlocked={isAdmin || hasMakersProAccess}
+              onNavigate={onNavigate}
+            />
           ))}
         </div>
       )}
