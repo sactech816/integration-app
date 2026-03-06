@@ -24,6 +24,7 @@ import {
   Send,
   Layout,
   HelpCircle,
+  ListOrdered,
   LucideIcon,
 } from 'lucide-react';
 
@@ -194,6 +195,15 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: 'メルマガ配信',
     color: { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
     href: '/newsletter/campaigns/new',
+    category: 'marketing',
+  },
+  {
+    id: 'step-email',
+    label: 'ステップメールメーカー',
+    icon: ListOrdered,
+    description: 'ステップメール自動配信',
+    color: { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
+    href: '/step-email/sequences/new',
     category: 'marketing',
   },
   {

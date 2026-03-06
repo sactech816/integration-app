@@ -154,6 +154,7 @@ export default function FeaturedManager() {
       onboarding: 'はじめかたガイド',
       thumbnail: 'サムネイル',
       newsletter: 'メルマガ',
+      'step-email': 'ステップメール',
       'order-form': '申し込みフォーム',
       funnel: 'ファネル',
       webinar: 'ウェビナーLP',

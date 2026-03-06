@@ -37,6 +37,7 @@ const SHORT_LABELS: Record<ServiceType, string> = {
   onboarding: 'モーダル',
   thumbnail: 'サムネ',
   newsletter: 'メルマガ',
+  'step-email': 'ステップ',
   'order-form': 'フォーム',
   funnel: 'ファネル',
   webinar: 'ウェビナー',

@@ -46,6 +46,7 @@ type UseDashboardDataReturn = {
     onboarding: number;
     thumbnail: number;
     newsletter: number;
+    step_email: number;
     order_form: number;
     funnel: number;
     webinar: number;
@@ -125,6 +126,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     onboarding: 0,
     thumbnail: 0,
     newsletter: 0,
+    step_email: 0,
     order_form: 0,
     funnel: 0,
     webinar: 0,
@@ -575,7 +577,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, orderFormResult, funnelResult, webinarResult, snsPostResult] = await Promise.all([
+      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult] = await Promise.all([
         // 診断クイズ数
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true })
@@ -614,6 +616,8 @@ export function useDashboardData(): UseDashboardDataReturn {
           : supabase.from(TABLES.THUMBNAILS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         // メルマガリスト数
         supabase.from('newsletter_lists').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // ステップメールシーケンス数
+        supabase.from('step_email_sequences').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         // 申し込みフォーム数
         isAdmin
           ? supabase.from('order_forms').select('id', { count: 'exact', head: true })
@@ -644,6 +648,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         onboarding: onboardingResult.count || 0,
         thumbnail: thumbnailResult.count || 0,
         newsletter: newsletterResult.count || 0,
+        step_email: stepEmailResult.count || 0,
         order_form: orderFormResult.count || 0,
         funnel: funnelResult.count || 0,
         webinar: webinarResult.count || 0,

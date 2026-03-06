@@ -63,6 +63,7 @@ type SidebarNavProps = {
     onboarding: number;
     thumbnail: number;
     newsletter: number;
+    step_email: number;
     order_form: number;
     funnel: number;
     webinar: number;
@@ -109,6 +110,7 @@ export default function SidebarNav({
     onboarding: contentCounts.onboarding,
     thumbnail: contentCounts.thumbnail,
     newsletter: contentCounts.newsletter,
+    'step-email': contentCounts.step_email,
     'order-form': contentCounts.order_form,
     funnel: contentCounts.funnel,
     webinar: contentCounts.webinar,

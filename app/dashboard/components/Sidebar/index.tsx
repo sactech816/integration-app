@@ -22,6 +22,7 @@ type SidebarProps = {
     onboarding: number;
     thumbnail: number;
     newsletter: number;
+    step_email: number;
     order_form: number;
     funnel: number;
     webinar: number;

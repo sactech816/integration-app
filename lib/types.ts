@@ -5,7 +5,7 @@
 // -------------------------------------------
 // サービスタイプ
 // -------------------------------------------
-export type ServiceType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail' | 'newsletter' | 'order-form' | 'funnel' | 'webinar' | 'sns-post';
+export type ServiceType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail' | 'newsletter' | 'step-email' | 'order-form' | 'funnel' | 'webinar' | 'sns-post';
 
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   quiz: '診断クイズ',
@@ -20,6 +20,7 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
   onboarding: 'はじめかたガイド',
   thumbnail: 'サムネイルメーカー',
   newsletter: 'メルマガ',
+  'step-email': 'ステップメール',
   'order-form': '申し込みフォーム',
   funnel: 'ファネル',
   webinar: 'ウェビナーLP',
@@ -39,6 +40,7 @@ export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; 
   onboarding: { primary: 'orange', bg: 'bg-orange-50', text: 'text-orange-600' },
   thumbnail: { primary: 'pink', bg: 'bg-pink-50', text: 'text-pink-600' },
   newsletter: { primary: 'violet', bg: 'bg-violet-50', text: 'text-violet-600' },
+  'step-email': { primary: 'teal', bg: 'bg-teal-50', text: 'text-teal-600' },
   'order-form': { primary: 'emerald', bg: 'bg-emerald-50', text: 'text-emerald-600' },
   funnel: { primary: 'amber', bg: 'bg-amber-50', text: 'text-amber-600' },
   webinar: { primary: 'violet', bg: 'bg-violet-50', text: 'text-violet-600' },
@@ -509,6 +511,17 @@ export type CountdownBlockData = {
   targetDate: string; // ISO形式の日時
   expiredText?: string; // 期限切れ時の表示テキスト
   backgroundColor?: string;
+  textColor?: string;
+  expiredAction?: 'text' | 'redirect' | 'fullscreen';
+  expiredUrl?: string;
+  expiredHero?: {
+    headline: string;
+    description?: string;
+    backgroundImage?: string;
+    backgroundColor?: string;
+    buttonText?: string;
+    buttonUrl?: string;
+  };
 };
 
 export type GalleryItem = {
@@ -545,6 +558,10 @@ export type DelayedCtaBlockData = {
   delaySeconds: number;
   buttonColor?: string;
   buttonTextColor?: string;
+  borderRadius?: 'sm' | 'md' | 'lg' | 'full';
+  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  animation?: 'none' | 'pulse' | 'shimmer' | 'bounce';
+  size?: 'md' | 'lg';
 };
 
 // ブロックの型定義（Union型）

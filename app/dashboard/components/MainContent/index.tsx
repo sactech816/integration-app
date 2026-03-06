@@ -15,6 +15,7 @@ import AttendanceList from './AttendanceList';
 import SurveyList from './SurveyList';
 import MyGamification from './MyGamification';
 import NewsletterDashboard from '@/components/newsletter/NewsletterDashboard';
+import StepEmailDashboard from '@/components/step-email/StepEmailDashboard';
 import OrderFormList from './OrderFormList';
 import FunnelList from './FunnelList';
 import { PlanTier } from '@/lib/subscription';
@@ -34,6 +35,7 @@ export type ActiveView =
   | 'thumbnail'
   | 'kindle'
   | 'newsletter'
+  | 'step-email'
   | 'order-form'
   | 'funnel'
   | 'webinar'
@@ -90,6 +92,7 @@ type MainContentProps = {
     onboarding: number;
     thumbnail: number;
     newsletter: number;
+    step_email: number;
     order_form: number;
     funnel: number;
     webinar: number;
@@ -255,6 +258,16 @@ export default function MainContent({
         />
       )}
 
+      {/* ステップメールメーカー */}
+      {activeView === 'step-email' && user && (
+        <StepEmailDashboard
+          userId={user.id}
+          isProUser={userSubscription?.planTier === 'pro'}
+          planTier={userSubscription?.planTier === 'pro' ? 'pro' : 'free'}
+          isAdmin={isAdmin}
+        />
+      )}
+
       {/* 申し込みフォーム */}
       {activeView === 'order-form' && user && (
         <OrderFormList userId={user.id} isAdmin={isAdmin} isUnlocked={isUnlocked} />
@@ -342,7 +355,7 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'announcements', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'order-form', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks'].includes(activeView) && (
+      {!['dashboard', 'announcements', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'step-email', 'order-form', 'funnel', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>

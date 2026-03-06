@@ -1318,6 +1318,10 @@ function DelayedCtaRenderer({ block, onLinkClick }: { block: Extract<Block, { ty
 
   const buttonColor = block.data.buttonColor || '#7c3aed';
   const buttonTextColor = block.data.buttonTextColor || '#ffffff';
+  const borderRadiusClass = { sm: 'rounded-lg', md: 'rounded-xl', lg: 'rounded-2xl', full: 'rounded-full' }[block.data.borderRadius || 'lg'];
+  const shadowClass = { none: '', sm: 'shadow-sm', md: 'shadow-md', lg: 'shadow-lg', xl: 'shadow-xl' }[block.data.shadow || 'lg'];
+  const sizeClass = block.data.size === 'lg' ? 'px-12 py-5 text-lg' : 'px-10 py-4 text-base';
+  const animationClass = { none: '', pulse: 'cta-pulse', shimmer: 'cta-shimmer', bounce: 'cta-bounce' }[block.data.animation || 'none'];
 
   return (
     <section className="py-12 px-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -1330,7 +1334,7 @@ function DelayedCtaRenderer({ block, onLinkClick }: { block: Extract<Block, { ty
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => onLinkClick?.(block.data.buttonUrl)}
-          className="inline-block px-10 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+          className={`inline-block font-bold hover:opacity-90 transition-all duration-200 hover:scale-105 ${borderRadiusClass} ${shadowClass} ${sizeClass} ${animationClass}`}
           style={{ backgroundColor: buttonColor, color: buttonTextColor }}
         >
           {block.data.buttonText}
@@ -1345,6 +1349,9 @@ function CountdownBlockRenderer({ block }: { block: Extract<Block, { type: 'coun
   const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null);
   const [isExpired, setIsExpired] = useState(false);
 
+  const expiredAction = block.data.expiredAction || 'text';
+  const textColor = block.data.textColor || '#ffffff';
+
   useEffect(() => {
     const calculateTimeLeft = () => {
       const targetDate = new Date(block.data.targetDate);
@@ -1354,6 +1361,11 @@ function CountdownBlockRenderer({ block }: { block: Extract<Block, { type: 'coun
       if (difference <= 0) {
         setIsExpired(true);
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+        // リダイレクト
+        if (expiredAction === 'redirect' && block.data.expiredUrl) {
+          window.location.href = block.data.expiredUrl;
+        }
         return;
       }
 
@@ -1370,15 +1382,62 @@ function CountdownBlockRenderer({ block }: { block: Extract<Block, { type: 'coun
     const interval = setInterval(calculateTimeLeft, 1000);
 
     return () => clearInterval(interval);
-  }, [block.data.targetDate]);
+  }, [block.data.targetDate, expiredAction, block.data.expiredUrl]);
 
-  if (isExpired) {
+  // 期限切れ: フルスクリーン終了画面
+  if (isExpired && expiredAction === 'fullscreen' && block.data.expiredHero) {
+    const hero = block.data.expiredHero;
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center"
+        style={{
+          backgroundColor: hero.backgroundColor || '#1e293b',
+          backgroundImage: hero.backgroundImage ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${hero.backgroundImage})` : undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="text-center px-6 max-w-2xl mx-auto">
+          {hero.headline && (
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-6 leading-tight">
+              {hero.headline}
+            </h1>
+          )}
+          {hero.description && (
+            <p className="text-lg text-white/80 mb-8">{hero.description}</p>
+          )}
+          {hero.buttonText && hero.buttonUrl && (
+            <a
+              href={hero.buttonUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block px-10 py-4 bg-white text-gray-900 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+            >
+              {hero.buttonText}
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // 期限切れ: テキスト表示（デフォルト）
+  if (isExpired && expiredAction !== 'redirect') {
     return (
       <div className="glass rounded-2xl p-6 mb-4 text-center">
         {block.data.title && (
           <h3 className="text-xl font-bold text-gray-900 mb-2">{block.data.title}</h3>
         )}
         <p className="text-gray-600">{block.data.expiredText || '期限切れ'}</p>
+      </div>
+    );
+  }
+
+  // リダイレクト中（期限切れ + redirect）
+  if (isExpired && expiredAction === 'redirect') {
+    return (
+      <div className="glass rounded-2xl p-6 mb-4 text-center">
+        <p className="text-gray-600">リダイレクト中...</p>
       </div>
     );
   }
@@ -1392,30 +1451,25 @@ function CountdownBlockRenderer({ block }: { block: Extract<Block, { type: 'coun
   }
 
   return (
-    <div 
+    <div
       className="glass rounded-2xl p-6 mb-4 text-center"
       style={{ backgroundColor: block.data.backgroundColor || undefined }}
     >
       {block.data.title && (
-        <h3 className="text-xl font-bold text-white mb-4">{block.data.title}</h3>
+        <h3 className="text-xl font-bold mb-4" style={{ color: textColor }}>{block.data.title}</h3>
       )}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white/20 backdrop-blur rounded-xl p-4">
-          <div className="text-3xl font-black text-white">{timeLeft.days}</div>
-          <div className="text-sm text-white/80 mt-1">日</div>
-        </div>
-        <div className="bg-white/20 backdrop-blur rounded-xl p-4">
-          <div className="text-3xl font-black text-white">{timeLeft.hours}</div>
-          <div className="text-sm text-white/80 mt-1">時間</div>
-        </div>
-        <div className="bg-white/20 backdrop-blur rounded-xl p-4">
-          <div className="text-3xl font-black text-white">{timeLeft.minutes}</div>
-          <div className="text-sm text-white/80 mt-1">分</div>
-        </div>
-        <div className="bg-white/20 backdrop-blur rounded-xl p-4">
-          <div className="text-3xl font-black text-white">{timeLeft.seconds}</div>
-          <div className="text-sm text-white/80 mt-1">秒</div>
-        </div>
+        {[
+          { value: timeLeft.days, label: '日' },
+          { value: timeLeft.hours, label: '時間' },
+          { value: timeLeft.minutes, label: '分' },
+          { value: timeLeft.seconds, label: '秒' },
+        ].map((item) => (
+          <div key={item.label} className="bg-white/20 backdrop-blur rounded-xl p-4">
+            <div className="text-3xl font-black" style={{ color: textColor }}>{item.value}</div>
+            <div className="text-sm mt-1" style={{ color: textColor, opacity: 0.8 }}>{item.label}</div>
+          </div>
+        ))}
       </div>
     </div>
   );

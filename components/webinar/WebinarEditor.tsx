@@ -65,7 +65,7 @@ const blockTypes = [
   { type: 'agenda', label: 'アジェンダ', icon: List, description: '学べること・内容', category: 'webinar', color: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', icon: 'text-blue-500', hover: 'hover:bg-blue-100' } },
   { type: 'countdown', label: 'カウントダウン', icon: Timer, description: '開催日時タイマー', category: 'webinar', color: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-500', hover: 'hover:bg-orange-100' } },
   { type: 'cta_section', label: 'CTAセクション', icon: Target, description: 'コンバージョンポイント', category: 'webinar', color: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', icon: 'text-red-500', hover: 'hover:bg-red-100' } },
-  { type: 'delayed_cta', label: '時間制御CTA', icon: Timer, description: '遅延表示ボタン', category: 'webinar', color: { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', icon: 'text-rose-500', hover: 'hover:bg-rose-100' } },
+  { type: 'delayed_cta', label: 'CTAセクション（時間制御）', icon: Timer, description: '遅延表示ボタン', category: 'webinar', color: { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', icon: 'text-rose-500', hover: 'hover:bg-rose-100' } },
   // 共通ブロック
   { type: 'testimonial', label: '参加者の声', icon: MessageCircle, description: 'テスティモニアル', category: 'common', color: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', icon: 'text-amber-500', hover: 'hover:bg-amber-100' } },
   { type: 'text_card', label: 'テキスト', icon: Type, description: 'テキストカード', category: 'common', color: { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700', icon: 'text-slate-500', hover: 'hover:bg-slate-100' } },
@@ -87,6 +87,34 @@ const gradientPresets = [
 ];
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+
+// CTAボタン設定用定数
+const CTA_BORDER_RADIUS_OPTIONS = [
+  { value: 'sm', label: '角丸 小', preview: 'rounded-lg' },
+  { value: 'md', label: '角丸 中', preview: 'rounded-xl' },
+  { value: 'lg', label: '角丸 大', preview: 'rounded-2xl' },
+  { value: 'full', label: 'ピル型', preview: 'rounded-full' },
+];
+
+const CTA_SHADOW_OPTIONS = [
+  { value: 'none', label: 'なし' },
+  { value: 'sm', label: '小' },
+  { value: 'md', label: '中' },
+  { value: 'lg', label: '大' },
+  { value: 'xl', label: '特大' },
+];
+
+const CTA_ANIMATION_OPTIONS = [
+  { value: 'none', label: 'なし' },
+  { value: 'pulse', label: 'パルス' },
+  { value: 'shimmer', label: 'シマー' },
+  { value: 'bounce', label: 'バウンス' },
+];
+
+const CTA_PRESET_COLORS = [
+  '#2563eb', '#7c3aed', '#dc2626', '#ea580c', '#16a34a',
+  '#0891b2', '#db2777', '#4f46e5', '#ca8a04', '#0d9488',
+];
 
 // ランダム画像URL生成（Unsplash）
 const getRandomImageUrl = (category: string = 'portrait') => {
@@ -601,11 +629,11 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
       case 'agenda':
         return { id, type: 'agenda', data: { title: '学べること', items: [{ title: '', description: '' }] } };
       case 'countdown':
-        return { id, type: 'countdown', data: { targetDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16), title: '開催まで', expiredText: 'アーカイブ視聴可能', backgroundColor: '#7c3aed' } };
+        return { id, type: 'countdown', data: { targetDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16), title: '開催まで', expiredText: 'アーカイブ視聴可能', backgroundColor: '#7c3aed', expiredAction: 'text', expiredUrl: '', expiredHero: { headline: 'ウェビナーは終了しました', description: 'ご参加ありがとうございました', buttonText: 'アーカイブを見る', buttonUrl: '' } } };
       case 'cta_section':
         return { id, type: 'cta_section', data: { title: '今すぐ参加する', description: 'お早めにお申し込みください', buttonText: '無料で参加する', buttonUrl: '', backgroundGradient: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)' } };
       case 'delayed_cta':
-        return { id, type: 'delayed_cta', data: { title: '', buttonText: '今すぐ申し込む', buttonUrl: '', delaySeconds: 300, buttonColor: '#7c3aed', buttonTextColor: '#ffffff' } };
+        return { id, type: 'delayed_cta', data: { title: '', buttonText: '今すぐ申し込む', buttonUrl: '', delaySeconds: 300, buttonColor: '#7c3aed', buttonTextColor: '#ffffff', borderRadius: 'lg', shadow: 'lg', animation: 'none', size: 'md' } };
       case 'testimonial':
         return { id, type: 'testimonial', data: { items: [{ id: generateBlockId(), name: '', role: '', comment: '', imageUrl: '' }] } };
       case 'text_card':
@@ -784,7 +812,68 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
               <label className="text-sm font-bold text-gray-900 block mb-2">開催日時</label>
               <input type="datetime-local" value={block.data.targetDate?.slice(0, 16) || ''} onChange={e => updateBlock(block.id, { targetDate: e.target.value })} className="w-full border border-gray-300 p-3 rounded-lg text-gray-900 focus:ring-2 focus:ring-violet-500 outline-none" />
             </div>
-            <Input label="期限切れ時テキスト" val={block.data.expiredText || ''} onChange={v => updateBlock(block.id, { expiredText: v })} ph="アーカイブ視聴可能" />
+
+            {/* 色設定 */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-bold text-gray-900 block mb-2">背景色</label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={block.data.backgroundColor || '#7c3aed'} onChange={e => updateBlock(block.id, { backgroundColor: e.target.value })} className="w-8 h-8 rounded cursor-pointer border border-gray-300" />
+                  <span className="text-xs text-gray-500">{block.data.backgroundColor || '#7c3aed'}</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-bold text-gray-900 block mb-2">文字色</label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={block.data.textColor || '#ffffff'} onChange={e => updateBlock(block.id, { textColor: e.target.value })} className="w-8 h-8 rounded cursor-pointer border border-gray-300" />
+                  <span className="text-xs text-gray-500">{block.data.textColor || '#ffffff'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 期限切れ時の動作 */}
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">期限切れ時の動作</label>
+              <select
+                value={block.data.expiredAction || 'text'}
+                onChange={e => updateBlock(block.id, { expiredAction: e.target.value })}
+                className="w-full border border-gray-300 p-3 rounded-lg text-gray-900 focus:ring-2 focus:ring-violet-500 outline-none"
+              >
+                <option value="text">テキストを表示</option>
+                <option value="redirect">別ページへ移動</option>
+                <option value="fullscreen">終了画面を表示</option>
+              </select>
+            </div>
+
+            {(block.data.expiredAction || 'text') === 'text' && (
+              <Input label="期限切れ時テキスト" val={block.data.expiredText || ''} onChange={v => updateBlock(block.id, { expiredText: v })} ph="アーカイブ視聴可能" />
+            )}
+
+            {block.data.expiredAction === 'redirect' && (
+              <Input label="リダイレクト先URL" val={block.data.expiredUrl || ''} onChange={v => updateBlock(block.id, { expiredUrl: v })} ph="https://example.com/archive" />
+            )}
+
+            {block.data.expiredAction === 'fullscreen' && (
+              <div className="space-y-3 p-4 bg-orange-50 rounded-xl border border-orange-200">
+                <p className="text-sm font-bold text-orange-800">終了画面の設定</p>
+                <Input label="見出し" val={block.data.expiredHero?.headline || ''} onChange={v => updateBlock(block.id, { expiredHero: { ...block.data.expiredHero, headline: v } })} ph="ウェビナーは終了しました" />
+                <Textarea label="説明文" val={block.data.expiredHero?.description || ''} onChange={v => updateBlock(block.id, { expiredHero: { ...block.data.expiredHero, description: v } })} rows={2} />
+                <div className="grid grid-cols-2 gap-3">
+                  <Input label="ボタンテキスト" val={block.data.expiredHero?.buttonText || ''} onChange={v => updateBlock(block.id, { expiredHero: { ...block.data.expiredHero, buttonText: v } })} ph="アーカイブを見る" />
+                  <Input label="ボタンURL" val={block.data.expiredHero?.buttonUrl || ''} onChange={v => updateBlock(block.id, { expiredHero: { ...block.data.expiredHero, buttonUrl: v } })} ph="https://..." />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-bold text-gray-900 block mb-2">背景色</label>
+                    <input type="color" value={block.data.expiredHero?.backgroundColor || '#1e293b'} onChange={e => updateBlock(block.id, { expiredHero: { ...block.data.expiredHero, backgroundColor: e.target.value } })} className="w-8 h-8 rounded cursor-pointer border border-gray-300" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-bold text-gray-900 block mb-2">背景画像URL</label>
+                    <input type="text" value={block.data.expiredHero?.backgroundImage || ''} onChange={e => updateBlock(block.id, { expiredHero: { ...block.data.expiredHero, backgroundImage: e.target.value } })} placeholder="https://..." className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400" />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
 
@@ -817,20 +906,104 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
               <input type="number" value={block.data.delaySeconds ?? 300} onChange={e => updateBlock(block.id, { delaySeconds: parseInt(e.target.value) || 0 })} min={0} className="w-full border border-gray-300 p-3 rounded-lg text-gray-900 focus:ring-2 focus:ring-violet-500 outline-none" />
               <p className="text-xs text-gray-500 mt-1">0 = 即時表示、300 = 5分後に表示</p>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-bold text-gray-900 block mb-2">ボタン色</label>
-                <div className="flex items-center gap-2">
-                  <input type="color" value={block.data.buttonColor || '#7c3aed'} onChange={e => updateBlock(block.id, { buttonColor: e.target.value })} className="w-8 h-8 rounded cursor-pointer border border-gray-300" />
-                  <span className="text-xs text-gray-500">{block.data.buttonColor || '#7c3aed'}</span>
+
+            {/* ボタンプレビュー */}
+            <div className="bg-gray-100 rounded-xl p-4">
+              <p className="text-xs font-semibold text-gray-500 mb-3 text-center">ボタンプレビュー</p>
+              <div className="flex justify-center">
+                <div
+                  className={`inline-block font-bold text-center transition-all ${
+                    { sm: 'rounded-lg', md: 'rounded-xl', lg: 'rounded-2xl', full: 'rounded-full' }[block.data.borderRadius || 'lg']
+                  } ${
+                    { none: '', sm: 'shadow-sm', md: 'shadow-md', lg: 'shadow-lg', xl: 'shadow-xl' }[block.data.shadow || 'lg']
+                  } ${
+                    block.data.size === 'lg' ? 'px-12 py-5 text-lg' : 'px-10 py-4 text-base'
+                  } ${
+                    { none: '', pulse: 'cta-pulse', shimmer: 'cta-shimmer', bounce: 'cta-bounce' }[block.data.animation || 'none']
+                  }`}
+                  style={{ backgroundColor: block.data.buttonColor || '#7c3aed', color: block.data.buttonTextColor || '#ffffff' }}
+                >
+                  {block.data.buttonText || '今すぐ申し込む'}
                 </div>
               </div>
+            </div>
+
+            {/* 色設定 */}
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-bold text-gray-900 block mb-2">文字色</label>
-                <div className="flex items-center gap-2">
-                  <input type="color" value={block.data.buttonTextColor || '#ffffff'} onChange={e => updateBlock(block.id, { buttonTextColor: e.target.value })} className="w-8 h-8 rounded cursor-pointer border border-gray-300" />
-                  <span className="text-xs text-gray-500">{block.data.buttonTextColor || '#ffffff'}</span>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">背景色</label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {CTA_PRESET_COLORS.map(c => (
+                    <button key={c} type="button" onClick={() => updateBlock(block.id, { buttonColor: c })}
+                      className={`w-7 h-7 rounded-full border-2 transition-all ${(block.data.buttonColor || '#7c3aed') === c ? 'border-gray-900 scale-110' : 'border-gray-200 hover:scale-105'}`}
+                      style={{ backgroundColor: c }} />
+                  ))}
                 </div>
+                <input type="color" value={block.data.buttonColor || '#7c3aed'} onChange={e => updateBlock(block.id, { buttonColor: e.target.value })} className="w-full h-10 rounded-lg cursor-pointer border border-gray-200" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">テキスト色</label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {['#ffffff', '#000000', '#1f2937', '#f9fafb'].map(c => (
+                    <button key={c} type="button" onClick={() => updateBlock(block.id, { buttonTextColor: c })}
+                      className={`w-7 h-7 rounded-full border-2 transition-all ${(block.data.buttonTextColor || '#ffffff') === c ? 'border-gray-900 scale-110' : 'border-gray-300 hover:scale-105'}`}
+                      style={{ backgroundColor: c }} />
+                  ))}
+                </div>
+                <input type="color" value={block.data.buttonTextColor || '#ffffff'} onChange={e => updateBlock(block.id, { buttonTextColor: e.target.value })} className="w-full h-10 rounded-lg cursor-pointer border border-gray-200" />
+              </div>
+            </div>
+
+            {/* 角丸 */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">角丸</label>
+              <div className="grid grid-cols-4 gap-2">
+                {CTA_BORDER_RADIUS_OPTIONS.map(opt => (
+                  <button key={opt.value} type="button" onClick={() => updateBlock(block.id, { borderRadius: opt.value })}
+                    className={`p-2 text-center border-2 transition-all ${opt.preview} ${(block.data.borderRadius || 'lg') === opt.value ? 'border-violet-500 bg-violet-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                    <div className={`w-full h-6 bg-gray-300 mx-auto mb-1 ${opt.preview}`} />
+                    <p className="text-xs font-semibold text-gray-700">{opt.label}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 影 */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">影</label>
+              <div className="grid grid-cols-5 gap-2">
+                {CTA_SHADOW_OPTIONS.map(opt => (
+                  <button key={opt.value} type="button" onClick={() => updateBlock(block.id, { shadow: opt.value })}
+                    className={`p-2 rounded-xl text-center border-2 transition-all ${(block.data.shadow || 'lg') === opt.value ? 'border-violet-500 bg-violet-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                    <p className="text-xs font-semibold text-gray-700">{opt.label}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* アニメーション */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">アニメーション</label>
+              <div className="grid grid-cols-4 gap-2">
+                {CTA_ANIMATION_OPTIONS.map(opt => (
+                  <button key={opt.value} type="button" onClick={() => updateBlock(block.id, { animation: opt.value })}
+                    className={`p-2 rounded-xl text-center border-2 transition-all ${(block.data.animation || 'none') === opt.value ? 'border-violet-500 bg-violet-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                    <p className="text-xs font-semibold text-gray-700">{opt.label}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* サイズ */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">サイズ</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[{ value: 'md', label: '標準' }, { value: 'lg', label: '大きい' }].map(opt => (
+                  <button key={opt.value} type="button" onClick={() => updateBlock(block.id, { size: opt.value })}
+                    className={`p-3 rounded-xl text-center border-2 transition-all ${(block.data.size || 'md') === opt.value ? 'border-violet-500 bg-violet-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                    <p className="text-sm font-semibold text-gray-700">{opt.label}</p>
+                  </button>
+                ))}
               </div>
             </div>
           </div>
