@@ -98,42 +98,51 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
       return;
     }
 
-    const res = await fetch(`/api/order-form/${form.id}/submit`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, name, fieldsData }),
-    });
+    try {
+      const res = await fetch(`/api/order-form/${form.id}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name, fieldsData }),
+      });
 
-    if (!res.ok) {
-      const data = await res.json();
-      setError(data.error || '送信に失敗しました');
-      setSubmitting(false);
-      return;
-    }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || '送信に失敗しました');
+        setSubmitting(false);
+        return;
+      }
 
-    const result = await res.json();
+      const result = await res.json();
 
-    if (result.requiresPayment) {
-      if (result.paymentProvider === 'stripe') {
-        const checkoutRes = await fetch(`/api/order-form/${form.id}/stripe-checkout`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ submissionId: result.submission.id, email }),
-        });
-        if (checkoutRes.ok) {
-          const checkoutData = await checkoutRes.json();
-          window.location.href = checkoutData.url;
+      if (result.requiresPayment) {
+        if (result.paymentProvider === 'stripe') {
+          const checkoutRes = await fetch(`/api/order-form/${form.id}/stripe-checkout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ submissionId: result.submission.id, email }),
+          });
+          if (checkoutRes.ok) {
+            const checkoutData = await checkoutRes.json();
+            window.location.href = checkoutData.url;
+            return;
+          }
+          const errData = await checkoutRes.json().catch(() => ({}));
+          setError(errData.error || '決済セッションの作成に失敗しました');
+          setSubmitting(false);
           return;
         }
+        setError('決済セッションの作成に失敗しました');
+        setSubmitting(false);
+        return;
       }
-      setError('決済セッションの作成に失敗しました');
-      setSubmitting(false);
-      return;
-    }
 
-    setSuccess(true);
-    setSubmitting(false);
-    trackCompletion(slug, 'order-form');
+      setSuccess(true);
+      setSubmitting(false);
+      trackCompletion(slug, 'order-form');
+    } catch {
+      setError('送信中にエラーが発生しました。ネットワーク接続を確認してください。');
+      setSubmitting(false);
+    }
   };
 
   if (loading) {

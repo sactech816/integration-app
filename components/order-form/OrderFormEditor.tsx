@@ -432,6 +432,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
           setCreatedSlug(data.form.slug);
           setSlug(data.form.slug);
           setSavedFormId(data.form.id);
+          setStatus('published');
           setShowCompleteModal(true);
           window.history.replaceState(null, '', `/order-form/editor/${data.form.id}`);
         } else {

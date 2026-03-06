@@ -63,7 +63,7 @@ export async function POST(
         name: name || null,
         fields_data: fieldsData || {},
         payment_status: paymentStatus,
-        amount_paid: isFree ? 0 : form.price,
+        amount_paid: 0,
       })
       .select()
       .single();

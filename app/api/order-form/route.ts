@@ -67,12 +67,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
-    // slug生成（タイトルからランダムな短いIDを付与）
+    // slug生成（ASCII文字のみ + タイムスタンプ）
     const slugBase = title
-      .replace(/[^a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/g, '-')
+      .replace(/[^a-zA-Z0-9]/g, '-')
       .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
       .slice(0, 30);
-    const slug = `${slugBase}-${Date.now().toString(36)}`;
+    const slug = slugBase ? `${slugBase}-${Date.now().toString(36)}` : `form-${Date.now().toString(36)}`;
 
     // 基本カラム（初期スキーマ）
     const baseData: Record<string, any> = {
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
         payment_provider: paymentProvider || null,
         stripe_price_id: stripePriceId || null,
         success_message: successMessage || 'お申し込みありがとうございます。',
-        status: 'draft',
+        status: 'published',
     };
     // 拡張カラム（後から追加されたマイグレーション）
     const extendedData: Record<string, any> = {
