@@ -111,6 +111,7 @@ export default function SidebarNav({
     newsletter: contentCounts.newsletter,
     'order-form': contentCounts.order_form,
     funnel: contentCounts.funnel,
+    webinar: contentCounts.webinar,
     'sns-post': contentCounts.sns_post,
   };
 
