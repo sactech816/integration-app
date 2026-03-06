@@ -155,33 +155,27 @@ function DashboardContent() {
   const canFetchAnalyticsImmediately = isAdmin || isPartner;
   const shouldFetchAnalytics = canFetchAnalyticsImmediately || hasMakersProAccess;
 
-  // 初期データ取得（サービス切り替え時も実行）
+  // アナリティクス取得可否（サブスク確定後に判定）
+  const canFetchAnalytics = canFetchAnalyticsImmediately || (!loadingUserSubscription && hasMakersProAccess);
+
+  // 初期データ取得（ユーザーログイン時のみ）
   useEffect(() => {
     if (user) {
-      // 管理者・パートナーは即座にアナリティクスを取得
-      // それ以外はサブスク情報確定後に判定するため、初回はスキップ
-      const skipAnalytics = canFetchAnalyticsImmediately ? false : true;
-      
       Promise.all([
-        fetchContents(selectedService, { skipAnalytics }),
         fetchPurchases(),
         fetchAllContentCounts(),
         fetchKdlSubscription(),
         fetchUserSubscription(),
       ]);
     }
-  }, [user, selectedService, canFetchAnalyticsImmediately]);
+  }, [user]);
 
-  // Proプランユーザー（管理者・パートナー以外）のアナリティクス取得
+  // コンテンツ取得（サービス切り替え時・アナリティクス権限確定時）
   useEffect(() => {
-    // 管理者・パートナーは既に取得済みなのでスキップ
-    if (canFetchAnalyticsImmediately) return;
-    
-    // サブスク情報ロード完了後、Proプランの場合のみ再取得
-    if (user && !loadingUserSubscription && hasMakersProAccess) {
-      fetchContents(selectedService, { skipAnalytics: false });
+    if (user) {
+      fetchContents(selectedService, { skipAnalytics: !canFetchAnalytics });
     }
-  }, [loadingUserSubscription, hasMakersProAccess, canFetchAnalyticsImmediately, user, selectedService, fetchContents]);
+  }, [user, selectedService, canFetchAnalytics]);
   
   // ユーザーサブスクリプション状態を取得（集客メーカーのProプラン判定用）
   // 注: /api/makers/subscription-status を使用（service='makers' のモニター・サブスクをチェック）
