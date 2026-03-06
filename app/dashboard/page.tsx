@@ -257,9 +257,9 @@ function DashboardContent() {
     setActiveView(itemId as ActiveView);
 
     // サービス選択の場合はselectedServiceも更新
-    if (['quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'sns-post'].includes(itemId)) {
+    // （fetchContentsはuseEffect[selectedService]で自動実行されるため、ここでは呼ばない）
+    if (['quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post'].includes(itemId)) {
       setSelectedService(itemId as ServiceType);
-      fetchContents(itemId as ServiceType);
     }
 
     // Kindle執筆への遷移
