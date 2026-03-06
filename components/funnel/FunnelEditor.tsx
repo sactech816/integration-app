@@ -154,8 +154,19 @@ function FunnelFlowPreview({ steps, analytics }: { steps: Step[]; analytics: Fun
                   </div>
                 </div>
               )}
+              {step.slug && (
+                <a
+                  href={`${typeof window !== 'undefined' ? window.location.origin : ''}/fs/${step.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 flex items-center justify-center gap-1 text-xs text-gray-400 hover:text-amber-500 transition-colors"
+                >
+                  <Globe className="w-3 h-3" />
+                  <span className="truncate max-w-[180px]">/fs/{step.slug}</span>
+                </a>
+              )}
               {analyticsData && analyticsData.views > 0 && (
-                <div className="mt-2 text-xs text-gray-500 text-center">
+                <div className="mt-1 text-xs text-gray-500 text-center">
                   {analyticsData.views} PV
                 </div>
               )}
@@ -279,8 +290,11 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
 
   useEffect(() => {
     const init = async () => {
-      if (!supabase) return;
-      const { data: { user } } = await supabase.auth.getUser();
+      if (!supabase) { console.warn('[FunnelEditor] supabase not available'); return; }
+      // getSession はローカルセッションを使うため getUser より安定
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user || null;
+      console.log('[FunnelEditor] auth check:', user ? `user=${user.id}` : 'no user');
       if (user) {
         setUserId(user.id);
         fetchUserContents(user.id);
@@ -300,10 +314,14 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
       const res = await fetch(`/api/funnel/user-contents?userId=${uid}`);
       if (res.ok) {
         const data = await res.json();
-        setUserContents(data.contents || {});
+        const contents = data.contents || {};
+        console.log('[FunnelEditor] userContents loaded:', Object.keys(contents).map(k => `${k}:${contents[k]?.length || 0}`));
+        setUserContents(contents);
+      } else {
+        console.error('[FunnelEditor] user-contents fetch failed:', res.status);
       }
-    } catch {
-      // silently fail
+    } catch (err) {
+      console.error('[FunnelEditor] user-contents fetch error:', err);
     }
     setContentsLoading(false);
   };
@@ -365,10 +383,20 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
       if (res.ok) {
         const data = await res.json();
         // ステップ保存 + 公開状態にする（公開URLがすぐ使えるように）
-        if (steps.length > 0) {
-          await fetch(`/api/funnel/${data.funnel.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, steps, status: 'active' }) });
-        } else {
-          await fetch(`/api/funnel/${data.funnel.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, status: 'active' }) });
+        const patchRes = await fetch(`/api/funnel/${data.funnel.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, steps: steps.length > 0 ? steps : undefined, status: 'active' }),
+        });
+        if (patchRes.ok) {
+          const patchData = await patchRes.json();
+          // ステップslugを反映
+          if (patchData.steps?.length > 0) {
+            setSteps(prev => prev.map((s, i) => ({
+              ...s,
+              slug: patchData.steps[i]?.slug || s.slug,
+            })));
+          }
         }
         setStatus('active');
         setCreatedSlug(data.funnel.slug);
@@ -800,7 +828,15 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
                             <div className="sm:col-span-2">
                               <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
                                 <Globe className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                <code className="text-xs text-gray-600 truncate flex-1">{typeof window !== 'undefined' ? window.location.origin : ''}/fs/{step.slug}</code>
+                                <code className="text-xs text-gray-600 truncate flex-1">/fs/{step.slug}</code>
+                                <a
+                                  href={`${typeof window !== 'undefined' ? window.location.origin : ''}/fs/${step.slug}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-amber-600 hover:underline whitespace-nowrap font-semibold"
+                                >
+                                  開く
+                                </a>
                                 <button
                                   onClick={() => {
                                     navigator.clipboard.writeText(`${window.location.origin}/fs/${step.slug}`);

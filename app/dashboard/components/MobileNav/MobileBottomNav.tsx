@@ -41,7 +41,7 @@ export default function MobileBottomNav({ activeView, onItemClick }: MobileBotto
           <button
             onClick={() => onItemClick('dashboard')}
             className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-lg transition-colors ${
-              isHome ? 'text-sky-400' : 'text-slate-400'
+              isHome ? 'text-sky-300' : 'text-sky-400/70'
             }`}
           >
             <Home size={22} strokeWidth={isHome ? 2.5 : 2} />
@@ -52,7 +52,7 @@ export default function MobileBottomNav({ activeView, onItemClick }: MobileBotto
           <button
             onClick={() => setIsToolsSheetOpen(!isToolsSheetOpen)}
             className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-lg transition-colors ${
-              isTool || isToolsSheetOpen ? 'text-amber-400' : 'text-slate-400'
+              isTool || isToolsSheetOpen ? 'text-amber-300' : 'text-amber-400/70'
             }`}
           >
             <LayoutGrid size={22} strokeWidth={isTool || isToolsSheetOpen ? 2.5 : 2} />
@@ -63,7 +63,7 @@ export default function MobileBottomNav({ activeView, onItemClick }: MobileBotto
           <button
             onClick={() => onItemClick('settings')}
             className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-lg transition-colors ${
-              isSettings ? 'text-emerald-400' : 'text-slate-400'
+              isSettings ? 'text-emerald-300' : 'text-emerald-400/70'
             }`}
           >
             <Settings size={22} strokeWidth={isSettings ? 2.5 : 2} />

@@ -16,12 +16,12 @@ export async function GET(req: NextRequest) {
   const queries = {
     profile_lp: supabaseAdmin
       .from('profiles')
-      .select('id, slug, nickname')
+      .select('id, slug, nickname, content')
       .eq('user_id', userId)
       .order('created_at', { ascending: false }),
     business_lp: supabaseAdmin
       .from('business_projects')
-      .select('id, slug, title')
+      .select('id, slug, nickname, content')
       .eq('user_id', userId)
       .order('created_at', { ascending: false }),
     salesletter: supabaseAdmin
@@ -94,14 +94,30 @@ export async function GET(req: NextRequest) {
 
   entries.forEach(([key], i) => {
     const { data, error } = responses[i];
-    if (error || !data) {
+    if (error) {
+      console.error(`[user-contents] ${key} error:`, error.message);
+      results[key] = [];
+      return;
+    }
+    if (!data) {
       results[key] = [];
       return;
     }
     results[key] = data.map((item: any) => {
       // わかりやすいラベルを生成（ID表示を避ける）
       let label = item.title || item.name || item.nickname || '';
-      if (!label && item.subtitle) label = item.subtitle;
+
+      // profile/business: contentブロックから名前を抽出
+      if (!label && Array.isArray(item.content)) {
+        if (key === 'profile_lp') {
+          const header = item.content.find((b: any) => b.type === 'header');
+          if (header?.data?.name) label = header.data.name;
+        } else if (key === 'business_lp') {
+          const hero = item.content.find((b: any) => b.type === 'hero' || b.type === 'hero_fullwidth');
+          if (hero?.data?.headline) label = hero.data.headline;
+        }
+      }
+
       if (!label && item.slug) label = item.slug;
       if (!label) label = `(ID: ${String(item.id).slice(0, 8)}...)`;
       return {
