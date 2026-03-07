@@ -44,7 +44,9 @@
       "Bash(node -e \"const nft = JSON.parse\\(require\\(''fs''\\).readFileSync\\(''.next/server/app/page.js.nft.json'', ''utf8''\\)\\); console.log\\(''Traced files count:'', nft.files.length\\); const large = nft.files.filter\\(function\\(f\\) { return f.includes\\(''node_modules''\\); }\\).slice\\(0, 20\\); console.log\\(''Sample traced node_modules:''\\); large.forEach\\(function\\(f\\) { console.log\\(''  '', f\\); }\\);\")",
       "Bash(du -sh .next/server/app/*.segments .next/server/app/**/*.segments)",
       "Bash(sort -k5 -h -r)",
-      "Bash(du -sh public/*/)"
+      "Bash(du -sh public/*/)",
+      "Bash(node scripts/gen-keyword-editor.js)",
+      "Bash(node scripts/gen-keyword-page.js)"
     ],
     "deny": [
       "Bash(sudo:*)",

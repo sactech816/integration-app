@@ -308,7 +308,7 @@ const tools: ToolDef[] = [
     isPro: true,
     category: 'marketing',
   },
-  // ライティング・制作（追加ツール）
+  // 集客・マーケティング（YouTube系ツール）
   {
     name: 'YouTubeリサーチ',
     description: 'YouTube動画のリサーチ・分析をAIでサポート。競合分析やネタ探し、トレンド把握に最適。',
@@ -318,7 +318,18 @@ const tools: ToolDef[] = [
     bgColor: 'bg-red-50',
     textColor: 'text-red-600',
     features: ['AI分析', '競合リサーチ', 'ネタ探し', 'トレンド'],
-    category: 'writing',
+    category: 'marketing',
+  },
+  {
+    name: 'YouTubeキーワードリサーチ',
+    description: 'YouTubeキーワード検索で上位動画の指標を一括分析。再生数・登録者数・再生倍率でソート・比較。',
+    icon: TrendingUp,
+    href: '/youtube-keyword-research',
+    color: 'from-rose-500 to-red-600',
+    bgColor: 'bg-rose-50',
+    textColor: 'text-rose-600',
+    features: ['キーワード検索', '上位動画分析', '再生倍率', '比較チャート'],
+    category: 'marketing',
   },
 ];
 

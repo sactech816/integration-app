@@ -19,14 +19,17 @@ async function fetchYouTubeAPI(endpoint: string, params: Record<string, string>,
 
 export async function POST(request: NextRequest) {
   try {
-    const { keyword, maxResults = 20 } = await request.json();
+    const body = await request.json();
+    const { keyword, maxResults = 10 } = body;
 
     if (!keyword || typeof keyword !== 'string' || !keyword.trim()) {
       return NextResponse.json(
-        { error: '検索キーワードを入力してください' },
+        { error: 'キーワードを入力してください' },
         { status: 400 }
       );
     }
+
+    const clampedMax = Math.min(Math.max(Number(maxResults) || 10, 1), 20);
 
     const apiKey = process.env.YOUTUBE_API_KEY;
     if (!apiKey) {
@@ -36,9 +39,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const clampedMax = Math.min(Math.max(maxResults, 5), 50);
-
-    // 1. YouTube Search API（100クオータ/回）
+    // 1. YouTube Search API でキーワード検索
     let searchData;
     try {
       searchData = await fetchYouTubeAPI('search', {
@@ -55,12 +56,6 @@ export async function POST(request: NextRequest) {
           { status: 403 }
         );
       }
-      if (err.status === 400) {
-        return NextResponse.json(
-          { error: 'APIキーが無効です。設定を確認してください' },
-          { status: 400 }
-        );
-      }
       return NextResponse.json(
         { error: `YouTube APIエラー: ${err.body || '不明なエラー'}` },
         { status: err.status || 500 }
@@ -74,33 +69,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Video IDs抽出 → 動画詳細バッチ取得
+    // 2. 検索結果からvideoIdを抽出してバッチ取得
     const videoIds = searchData.items.map((item: any) => item.id.videoId).filter(Boolean);
 
-    const videosData = await fetchYouTubeAPI('videos', {
-      part: 'snippet,statistics,contentDetails',
-      id: videoIds.join(','),
-    }, apiKey);
+    let videosData;
+    try {
+      videosData = await fetchYouTubeAPI('videos', {
+        part: 'snippet,statistics,contentDetails',
+        id: videoIds.join(','),
+      }, apiKey);
+    } catch {
+      return NextResponse.json(
+        { error: '動画データの取得に失敗しました' },
+        { status: 500 }
+      );
+    }
 
-    // 3. チャンネルID収集 → チャンネル登録者数バッチ取得
-    const channelIds = [...new Set(videosData.items.map((item: any) => item.snippet.channelId))] as string[];
+    if (!videosData.items || videosData.items.length === 0) {
+      return NextResponse.json(
+        { error: '動画データを取得できませんでした' },
+        { status: 404 }
+      );
+    }
+
+    // 3. チャンネル登録者数をバッチ取得
+    const channelIds = [...new Set(videosData.items.map((item: any) => item.snippet.channelId))];
     const channelStatsMap: Record<string, number> = {};
 
     try {
-      // チャンネルAPIは最大50件まで
       const channelsData = await fetchYouTubeAPI('channels', {
         part: 'statistics',
-        id: channelIds.join(','),
+        id: (channelIds as string[]).join(','),
       }, apiKey);
 
       for (const ch of channelsData.items || []) {
         channelStatsMap[ch.id] = parseInt(ch.statistics.subscriberCount || '0');
       }
     } catch (err) {
-      console.error('Channel data fetch failed:', err);
+      console.error('Channel data fetch failed, continuing without subscriber count:', err);
     }
 
-    // 4. データ統合
+    // 4. レスポンス構築
     const results: YouTubeVideoData[] = videosData.items.map((item: any) => {
       const channelId = item.snippet.channelId;
       const subscriberCount = channelStatsMap[channelId] || 0;
@@ -113,6 +122,7 @@ export async function POST(request: NextRequest) {
         channelTitle: item.snippet.channelTitle,
         publishedAt: item.snippet.publishedAt,
         thumbnailUrl:
+          item.snippet.thumbnails?.maxres?.url ||
           item.snippet.thumbnails?.high?.url ||
           item.snippet.thumbnails?.medium?.url ||
           '',
@@ -128,10 +138,7 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({
-      data: results,
-      totalResults: searchData.pageInfo?.totalResults || results.length,
-    });
+    return NextResponse.json({ data: results, keyword: keyword.trim() });
   } catch (error) {
     console.error('YouTube keyword research error:', error);
     return NextResponse.json(

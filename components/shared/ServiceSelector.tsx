@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb, Crown, Image, Store, PartyPopper, Mail, GitBranch, Video, ClipboardCheck, Send, BookOpen, Share2, ListOrdered, MessageCircle, Search } from 'lucide-react';
+import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb, Crown, Image, Store, PartyPopper, Mail, GitBranch, Video, ClipboardCheck, Send, BookOpen, Share2, ListOrdered, MessageCircle, Search, TrendingUp } from 'lucide-react';
 import { ServiceType, SERVICE_LABELS } from '@/lib/types';
 import Link from 'next/link';
 
@@ -303,7 +303,7 @@ const serviceConfig = [
     category: 'marketing' as ServiceCategoryId,
     href: '/line',
   },
-  // ライティング・制作（追加ツール）
+  // 集客・マーケティング（YouTube系ツール）
   {
     id: 'youtube-analysis' as ServiceType,
     icon: Search,
@@ -315,8 +315,22 @@ const serviceConfig = [
     borderColor: 'border-red-200',
     hoverBg: 'hover:bg-red-50',
     features: ['AI分析', '競合リサーチ', 'ネタ探し'],
-    category: 'writing' as ServiceCategoryId,
+    category: 'marketing' as ServiceCategoryId,
     href: '/youtube-analysis',
+  },
+  {
+    id: 'youtube-keyword-research' as ServiceType,
+    icon: TrendingUp,
+    label: 'YouTubeキーワードリサーチ',
+    description: 'キーワード検索で上位動画の指標を一括分析。再生倍率でソート・比較',
+    gradient: 'from-rose-500 to-red-600',
+    bgLight: 'bg-rose-50',
+    textColor: 'text-rose-600',
+    borderColor: 'border-rose-200',
+    hoverBg: 'hover:bg-rose-50',
+    features: ['キーワード検索', '上位動画分析', '比較チャート'],
+    category: 'marketing' as ServiceCategoryId,
+    href: '/youtube-keyword-research',
   },
 ];
 
