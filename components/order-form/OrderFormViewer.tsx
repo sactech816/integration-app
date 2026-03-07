@@ -35,6 +35,9 @@ interface FormData {
   design_layout?: string;
   design_color?: string;
   cta_button?: CtaButtonSettings | null;
+  title_color?: string | null;
+  description_color?: string | null;
+  description_size?: string | null;
   order_form_fields: Field[];
 }
 
@@ -170,6 +173,7 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
   const isBusiness = layout === 'business';
   const isEntertainment = layout === 'entertainment';
   const isFree = form.payment_type === 'free' || form.price === 0;
+  const descSizeClass = form.description_size === 'xs' ? 'text-xs' : form.description_size === 'base' ? 'text-base' : form.description_size === 'lg' ? 'text-lg' : 'text-sm';
 
   // CTA button settings (fallback to theme defaults)
   const cta = form.cta_button || {};
@@ -219,8 +223,8 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
         >
           {isBusiness && (
             <div className="px-8 py-6" style={{ background: color.headerBg }}>
-              <h1 className="text-xl font-bold" style={{ color: color.headerText }}>{form.title}</h1>
-              {form.description && <p className="text-sm mt-1 opacity-90" style={{ color: color.headerText }}>{form.description}</p>}
+              <h1 className="text-xl font-bold" style={{ color: form.title_color || color.headerText }}>{form.title}</h1>
+              {form.description && <p className={`${descSizeClass} mt-1 opacity-90 whitespace-pre-line`} style={{ color: form.description_color || color.headerText }}>{form.description}</p>}
               {!isFree && (
                 <div className="inline-flex items-center gap-1 mt-3 px-3 py-1 rounded-full text-sm font-semibold"
                   style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: color.headerText }}>
@@ -232,8 +236,8 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
           )}
           {isEntertainment && (
             <div className="px-8 py-8 text-center" style={{ background: color.headerBg }}>
-              <h1 className="text-2xl font-black tracking-wide" style={{ color: color.headerText }}>{form.title}</h1>
-              {form.description && <p className="text-sm mt-2 opacity-90" style={{ color: color.headerText }}>{form.description}</p>}
+              <h1 className="text-2xl font-black tracking-wide" style={{ color: form.title_color || color.headerText }}>{form.title}</h1>
+              {form.description && <p className={`${descSizeClass} mt-2 opacity-90 whitespace-pre-line`} style={{ color: form.description_color || color.headerText }}>{form.description}</p>}
               {!isFree && (
                 <div className="inline-flex items-center gap-1 mt-4 px-4 py-1.5 rounded-full text-sm font-bold"
                   style={{ backgroundColor: 'rgba(255,255,255,0.25)', color: color.headerText }}>
@@ -247,8 +251,8 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
           <div className={`${isBusiness ? 'px-8 py-6' : isEntertainment ? 'px-8 py-8' : 'p-8'}`}>
             {layout === 'standard' && (
               <div className="text-center mb-6">
-                <h1 className="text-2xl font-bold mb-2" style={{ color: color.textPrimary }}>{form.title}</h1>
-                {form.description && <p className="text-sm" style={{ color: color.textSecondary }}>{form.description}</p>}
+                <h1 className="text-2xl font-bold mb-2" style={{ color: form.title_color || color.textPrimary }}>{form.title}</h1>
+                {form.description && <p className={`${descSizeClass} whitespace-pre-line`} style={{ color: form.description_color || color.textSecondary }}>{form.description}</p>}
                 {!isFree && (
                   <div className="inline-flex items-center gap-1 mt-3 px-3 py-1.5 text-sm font-semibold rounded-full"
                     style={{ backgroundColor: color.badgeBg, color: color.badgeText }}>

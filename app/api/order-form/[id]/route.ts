@@ -72,7 +72,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, successMessage, status, fields, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody, designLayout, designColor, ctaButton } = body;
+    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, successMessage, status, fields, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody, designLayout, designColor, ctaButton, titleColor, descriptionColor, descriptionSize } = body;
 
     if (!userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
@@ -106,6 +106,9 @@ export async function PATCH(
     if (notifyEmailSubject !== undefined) extendedData.notify_email_subject = notifyEmailSubject;
     if (notifyEmailBody !== undefined) extendedData.notify_email_body = notifyEmailBody;
     if (ctaButton !== undefined) extendedData.cta_button = ctaButton;
+    if (titleColor !== undefined) extendedData.title_color = titleColor || null;
+    if (descriptionColor !== undefined) extendedData.description_color = descriptionColor || null;
+    if (descriptionSize !== undefined) extendedData.description_size = descriptionSize || 'sm';
 
     // まず全カラムで更新を試行
     let { data, error } = await supabase

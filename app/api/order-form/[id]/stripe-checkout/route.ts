@@ -61,6 +61,10 @@ export async function POST(
       sessionConfig.mode = form.payment_type === 'subscription' ? 'subscription' : 'payment';
       sessionConfig.line_items = [{ price: form.stripe_price_id, quantity: 1 }];
     } else {
+      // JPYの最低金額は50円
+      if (!form.price || form.price < 50) {
+        return NextResponse.json({ error: 'Stripeの最低決済金額は50円です。金額を50円以上に設定してください。' }, { status: 400 });
+      }
       // インライン価格で作成
       sessionConfig.mode = 'payment';
       sessionConfig.line_items = [{

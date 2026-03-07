@@ -162,15 +162,17 @@ function CtaButtonPreview({ cta, label }: { cta: CtaButtonSettings; label: strin
 }
 
 /* ── フォームプレビュー ── */
-function OrderFormPreview({ title, description, price, paymentType, fields, designLayout, designColor, ctaButton }: {
+function OrderFormPreview({ title, description, price, paymentType, fields, designLayout, designColor, ctaButton, titleColor, descriptionColor, descriptionSize }: {
   title: string; description: string; price: number; paymentType: string; fields: Field[];
   designLayout: string; designColor: string; ctaButton: CtaButtonSettings;
+  titleColor?: string; descriptionColor?: string; descriptionSize?: string;
 }) {
   const color = getOrderFormColor(designColor);
   const isBusiness = designLayout === 'business';
   const isEntertainment = designLayout === 'entertainment';
   const isFree = paymentType === 'free';
   const defaultText = isFree ? '申し込む' : `${price.toLocaleString()}円で申し込む`;
+  const descSizeClass = descriptionSize === 'xs' ? 'text-xs' : descriptionSize === 'base' ? 'text-base' : descriptionSize === 'lg' ? 'text-lg' : 'text-sm';
 
   const radiusClass = ctaButton.borderRadius === 'sm' ? 'rounded-lg' : ctaButton.borderRadius === 'md' ? 'rounded-xl' : ctaButton.borderRadius === 'lg' ? 'rounded-2xl' : 'rounded-full';
   const shadowClass = ctaButton.shadow === 'none' ? '' : ctaButton.shadow === 'sm' ? 'shadow-sm' : ctaButton.shadow === 'md' ? 'shadow-md' : ctaButton.shadow === 'lg' ? 'shadow-lg' : 'shadow-xl';
@@ -185,18 +187,18 @@ function OrderFormPreview({ title, description, price, paymentType, fields, desi
       >
         {isBusiness && (
           <div className="px-6 py-5" style={{ background: color.headerBg }}>
-            <h2 className="text-lg font-bold" style={{ color: color.headerText }}>
+            <h2 className="text-lg font-bold" style={{ color: titleColor || color.headerText }}>
               {title || 'タイトルを入力してください'}
             </h2>
-            {description && <p className="text-sm mt-1 opacity-90" style={{ color: color.headerText }}>{description}</p>}
+            {description && <p className={`${descSizeClass} mt-1 opacity-90 whitespace-pre-line`} style={{ color: descriptionColor || color.headerText }}>{description}</p>}
           </div>
         )}
         {isEntertainment && (
           <div className="px-6 py-6 text-center" style={{ background: color.headerBg }}>
-            <h2 className="text-xl font-black tracking-wide" style={{ color: color.headerText }}>
+            <h2 className="text-xl font-black tracking-wide" style={{ color: titleColor || color.headerText }}>
               {title || 'タイトルを入力してください'}
             </h2>
-            {description && <p className="text-sm mt-2 opacity-90" style={{ color: color.headerText }}>{description}</p>}
+            {description && <p className={`${descSizeClass} mt-2 opacity-90 whitespace-pre-line`} style={{ color: descriptionColor || color.headerText }}>{description}</p>}
             {paymentType !== 'free' && price > 0 && (
               <div className="inline-flex items-center gap-1 mt-3 px-4 py-1.5 rounded-full text-sm font-bold"
                 style={{ backgroundColor: 'rgba(255,255,255,0.25)', color: color.headerText }}>
@@ -210,10 +212,10 @@ function OrderFormPreview({ title, description, price, paymentType, fields, desi
         <div className={`space-y-5 ${isBusiness ? 'px-6 py-5' : isEntertainment ? 'px-6 py-6' : 'p-6'}`}>
           {designLayout === 'standard' && (
             <>
-              <h2 className="text-xl font-bold" style={{ color: title ? color.textPrimary : '#d1d5db' }}>
+              <h2 className="text-xl font-bold" style={{ color: title ? (titleColor || color.textPrimary) : '#d1d5db' }}>
                 {title || 'タイトルを入力してください'}
               </h2>
-              {description && <p className="text-sm" style={{ color: color.textSecondary }}>{description}</p>}
+              {description && <p className={`${descSizeClass} whitespace-pre-line`} style={{ color: descriptionColor || color.textSecondary }}>{description}</p>}
             </>
           )}
 
@@ -317,6 +319,11 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
   const [designLayout, setDesignLayout] = useState('standard');
   const [designColor, setDesignColor] = useState('emerald');
 
+  // テキストスタイル設定
+  const [titleColor, setTitleColor] = useState('');
+  const [descriptionColor, setDescriptionColor] = useState('');
+  const [descriptionSize, setDescriptionSize] = useState<'xs' | 'sm' | 'base' | 'lg'>('sm');
+
   // CTAボタン設定
   const [ctaButton, setCtaButton] = useState<CtaButtonSettings>({ ...DEFAULT_CTA });
   const updateCta = (updates: Partial<CtaButtonSettings>) => setCtaButton(prev => ({ ...prev, ...updates }));
@@ -363,6 +370,9 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       if (f.cta_button) {
         setCtaButton({ ...DEFAULT_CTA, ...f.cta_button });
       }
+      if (f.title_color) setTitleColor(f.title_color);
+      if (f.description_color) setDescriptionColor(f.description_color);
+      if (f.description_size) setDescriptionSize(f.description_size);
       if (f.order_form_fields?.length > 0) {
         setFields(f.order_form_fields.map((field: any) => ({
           id: field.id, fieldType: field.field_type, label: field.label,
@@ -399,6 +409,10 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
 
   const handleSave = async (publishStatus?: string) => {
     if (!userId || !title) return;
+    if (paymentType !== 'free' && !stripePriceId && price > 0 && price < 50) {
+      alert('Stripeの最低決済金額は50円です。50円以上を設定してください。');
+      return;
+    }
     setSaving(true);
     const body = {
       userId, title, description, price: paymentType === 'free' ? 0 : price,
@@ -408,6 +422,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       replyEmailEnabled, replyEmailSubject, replyEmailBody,
       notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody,
       designLayout, designColor,
+      titleColor, descriptionColor, descriptionSize,
       ctaButton,
       fields: fields.map((f) => ({
         field_type: f.fieldType, label: f.label, placeholder: f.placeholder,
@@ -595,8 +610,38 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                   <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="例: セミナー申し込みフォーム" className="w-full px-4 py-3 border border-emerald-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-emerald-50/30" />
                 </div>
                 <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">タイトル文字色</label>
+                  <div className="flex items-center gap-2">
+                    <input type="color" value={titleColor || '#111827'} onChange={(e) => setTitleColor(e.target.value)} className="w-10 h-10 rounded-lg border border-emerald-200 cursor-pointer" />
+                    <span className="text-xs text-gray-500">{titleColor || 'テーマ色（デフォルト）'}</span>
+                    {titleColor && (
+                      <button type="button" onClick={() => setTitleColor('')} className="text-xs text-gray-400 hover:text-gray-600 underline">リセット</button>
+                    )}
+                  </div>
+                </div>
+                <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">説明（任意）</label>
-                  <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="フォームの説明文" rows={2} className="w-full px-4 py-3 border border-emerald-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-emerald-50/30" />
+                  <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="フォームの説明文（改行可）" rows={3} className="w-full px-4 py-3 border border-emerald-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-emerald-50/30" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">説明文の文字色</label>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={descriptionColor || '#6b7280'} onChange={(e) => setDescriptionColor(e.target.value)} className="w-10 h-10 rounded-lg border border-emerald-200 cursor-pointer" />
+                      {descriptionColor && (
+                        <button type="button" onClick={() => setDescriptionColor('')} className="text-xs text-gray-400 hover:text-gray-600 underline">リセット</button>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">説明文の大きさ</label>
+                    <select value={descriptionSize} onChange={(e) => setDescriptionSize(e.target.value as 'xs' | 'sm' | 'base' | 'lg')} className="w-full px-4 py-3 border border-emerald-200 rounded-xl text-gray-900 bg-emerald-50/30">
+                      <option value="xs">小さい</option>
+                      <option value="sm">標準</option>
+                      <option value="base">やや大きい</option>
+                      <option value="lg">大きい</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">完了メッセージ</label>
@@ -908,7 +953,10 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                   <>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">金額（円）</label>
-                      <input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} min={0} className="w-full px-4 py-3 border border-amber-200 rounded-xl text-gray-900 bg-amber-50/30" />
+                      <input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} min={50} className="w-full px-4 py-3 border border-amber-200 rounded-xl text-gray-900 bg-amber-50/30" />
+                      {price > 0 && price < 50 && (
+                        <p className="text-xs text-red-500 mt-1">Stripeの最低金額は50円です</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">Stripe Price ID（任意）</label>
@@ -1003,7 +1051,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             <div className="max-w-md mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
-              <OrderFormPreview title={title} description={description} price={price} paymentType={paymentType} fields={fields} designLayout={designLayout} designColor={designColor} ctaButton={ctaButton} />
+              <OrderFormPreview title={title} description={description} price={price} paymentType={paymentType} fields={fields} designLayout={designLayout} designColor={designColor} ctaButton={ctaButton} titleColor={titleColor} descriptionColor={descriptionColor} descriptionSize={descriptionSize} />
             </div>
           </div>
         </div>
