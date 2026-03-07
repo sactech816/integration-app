@@ -69,6 +69,7 @@ type SidebarNavProps = {
     webinar: number;
     sns_post: number;
     line: number;
+    youtube_analysis: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態

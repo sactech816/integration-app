@@ -28,6 +28,7 @@ type SidebarProps = {
     webinar: number;
     sns_post: number;
     line: number;
+    youtube_analysis: number;
   };
   totalViews: number;
   onLogout: () => void;

@@ -26,6 +26,7 @@ import {
   HelpCircle,
   ListOrdered,
   MessageCircle,
+  BarChart3,
   LucideIcon,
 } from 'lucide-react';
 
@@ -222,6 +223,15 @@ export const TOOL_ITEMS: ToolItem[] = [
     icon: MessageCircle,
     description: 'LINE公式アカウント連携・配信',
     color: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200' },
+    category: 'marketing',
+  },
+  {
+    id: 'youtube-analysis',
+    label: 'YouTube競合分析',
+    icon: BarChart3,
+    description: 'YouTube動画の統計分析',
+    color: { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
+    href: '/youtube-analysis/editor',
     category: 'marketing',
   },
 
