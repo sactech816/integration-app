@@ -1,127 +1,112 @@
-'use client';
+const fs = require('fs');
+const path = require('path');
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import {
-  Search, Eye, ThumbsUp, MessageCircle, Calendar, Clock,
-  AlertCircle, Loader2, BarChart3, ArrowLeft, Users, TrendingUp,
-  Download, ExternalLink, Filter, SlidersHorizontal, History,
-  Trash2, ChevronDown, ChevronRight, CheckSquare, Square, Sparkles, Bot, Copy,
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell,
-} from 'recharts';
-import type { YouTubeVideoData } from '@/lib/youtube';
-import { formatNumber, formatDuration } from '@/lib/youtube';
+const filePath = path.resolve(__dirname, '..', 'components', 'youtube-keyword-research', 'YouTubeKeywordResearchEditor.tsx');
 
-type SortKey = 'viewCount' | 'likeCount' | 'commentCount' | 'subscriberCount' | 'viewRatio' | 'publishedAt';
-type ChartMetric = 'viewCount' | 'likeCount' | 'viewRatio' | 'subscriberCount';
-type DateRange = '' | '1month' | '3months' | '6months' | '1year';
+// Use array join to avoid template literal nesting issues
+const lines = [];
+lines.push("'use client';");
+lines.push("");
+lines.push("import React, { useState, useMemo, useEffect, useCallback } from 'react';");
+lines.push("import {");
+lines.push("  Search, Eye, ThumbsUp, MessageCircle, Calendar, Clock,");
+lines.push("  AlertCircle, Loader2, BarChart3, ArrowLeft, Users, TrendingUp,");
+lines.push("  Download, ExternalLink, Filter, SlidersHorizontal, History,");
+lines.push("  Trash2, ChevronDown, ChevronRight, CheckSquare, Square,");
+lines.push("} from 'lucide-react';");
+lines.push("import { useRouter } from 'next/navigation';");
+lines.push("import {");
+lines.push("  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,");
+lines.push("  ResponsiveContainer, Cell,");
+lines.push("} from 'recharts';");
+lines.push("import type { YouTubeVideoData } from '@/lib/youtube';");
+lines.push("import { formatNumber, formatDuration } from '@/lib/youtube';");
+lines.push("");
+lines.push("type SortKey = 'viewCount' | 'likeCount' | 'commentCount' | 'subscriberCount' | 'viewRatio' | 'publishedAt';");
+lines.push("type ChartMetric = 'viewCount' | 'likeCount' | 'viewRatio' | 'subscriberCount';");
+lines.push("type DateRange = '' | '1month' | '3months' | '6months' | '1year';");
+lines.push("");
+lines.push("type Props = {");
+lines.push("  user: { id: string; email?: string } | null;");
+lines.push("  isAdmin: boolean;");
+lines.push("};");
+lines.push("");
+lines.push("type SearchHistoryItem = {");
+lines.push("  id: string;");
+lines.push("  keyword: string;");
+lines.push("  searchedAt: string;");
+lines.push("  dateRange: DateRange;");
+lines.push("  maxResults: number;");
+lines.push("  minViewRatio: number;");
+lines.push("  maxSubscribers: number;");
+lines.push("  sortKey: SortKey;");
+lines.push("  results: YouTubeVideoData[];");
+lines.push("  filteredCount: number;");
+lines.push("};");
+lines.push("");
+lines.push("const STORAGE_KEY = 'yt-keyword-research-history';");
+lines.push("const MAX_HISTORY = 20;");
+lines.push("");
+lines.push("const SORT_OPTIONS: { key: SortKey; label: string }[] = [");
+lines.push("  { key: 'viewCount', label: '再生数' },");
+lines.push("  { key: 'viewRatio', label: '再生倍率' },");
+lines.push("  { key: 'subscriberCount', label: '登録者数' },");
+lines.push("  { key: 'likeCount', label: '高評価数' },");
+lines.push("  { key: 'commentCount', label: 'コメント数' },");
+lines.push("  { key: 'publishedAt', label: '公開日' },");
+lines.push("];");
+lines.push("");
+lines.push("const DATE_RANGE_OPTIONS: { value: DateRange; label: string }[] = [");
+lines.push("  { value: '', label: '指定なし' },");
+lines.push("  { value: '1month', label: '1ヶ月以内' },");
+lines.push("  { value: '3months', label: '3ヶ月以内' },");
+lines.push("  { value: '6months', label: '6ヶ月以内' },");
+lines.push("  { value: '1year', label: '1年以内' },");
+lines.push("];");
+lines.push("");
+lines.push("const CHART_METRICS: { key: ChartMetric; label: string }[] = [");
+lines.push("  { key: 'viewCount', label: '再生数' },");
+lines.push("  { key: 'viewRatio', label: '再生倍率' },");
+lines.push("  { key: 'subscriberCount', label: '登録者数' },");
+lines.push("  { key: 'likeCount', label: '高評価' },");
+lines.push("];");
+lines.push("");
+lines.push("function getPublishedAfterISO(range: DateRange): string | undefined {");
+lines.push("  if (!range) return undefined;");
+lines.push("  const now = new Date();");
+lines.push("  switch (range) {");
+lines.push("    case '1month': now.setMonth(now.getMonth() - 1); break;");
+lines.push("    case '3months': now.setMonth(now.getMonth() - 3); break;");
+lines.push("    case '6months': now.setMonth(now.getMonth() - 6); break;");
+lines.push("    case '1year': now.setFullYear(now.getFullYear() - 1); break;");
+lines.push("  }");
+lines.push("  return now.toISOString();");
+lines.push("}");
+lines.push("");
+lines.push("function loadHistory(): SearchHistoryItem[] {");
+lines.push("  try {");
+lines.push("    const raw = localStorage.getItem(STORAGE_KEY);");
+lines.push("    if (!raw) return [];");
+lines.push("    return JSON.parse(raw);");
+lines.push("  } catch {");
+lines.push("    return [];");
+lines.push("  }");
+lines.push("}");
+lines.push("");
+lines.push("function saveHistory(history: SearchHistoryItem[]) {");
+lines.push("  try {");
+lines.push("    localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));");
+lines.push("  } catch {");
+lines.push("    try {");
+lines.push("      localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(0, 5)));");
+lines.push("    } catch {}");
+lines.push("  }");
+lines.push("}");
+lines.push("");
+lines.push("const CHART_COLORS = ['#f43f5e', '#fb923c', '#facc15', '#4ade80', '#22d3ee', '#818cf8', '#e879f9', '#f472b6', '#a78bfa', '#34d399'];");
 
-type Props = {
-  user: { id: string; email?: string } | null;
-  isAdmin: boolean;
-};
-
-type SearchHistoryItem = {
-  id: string;
-  keyword: string;
-  searchedAt: string;
-  dateRange: DateRange;
-  maxResults: number;
-  minViewRatio: number;
-  maxSubscribers: number;
-  sortKey: SortKey;
-  results: YouTubeVideoData[];
-  filteredCount: number;
-};
-
-
-type AIAnalysisType = 'full' | 'tags' | 'keywords' | 'overseas';
-
-const AI_ANALYSIS_OPTIONS: { type: AIAnalysisType; label: string; icon: string; desc: string }[] = [
-  { type: 'full', label: '総合分析', icon: '📊', desc: '市場概況・バズ特徴・企画アイデアを一括分析' },
-  { type: 'tags', label: 'タグ作成', icon: '🏷️', desc: 'チャンネルタグ30個+ハッシュタグ15個を提案' },
-  { type: 'keywords', label: 'キーワード100選', icon: '🔑', desc: 'ヒットキーワード100選+穴場キーワード提案' },
-  { type: 'overseas', label: '海外バズ動画', icon: '🌍', desc: '海外トレンド分析+日本未上陸の企画提案' },
-];
-
-const STORAGE_KEY = 'yt-keyword-research-history';
-const MAX_HISTORY = 20;
-
-const SORT_OPTIONS: { key: SortKey; label: string }[] = [
-  { key: 'viewCount', label: '再生数' },
-  { key: 'viewRatio', label: '再生倍率' },
-  { key: 'subscriberCount', label: '登録者数' },
-  { key: 'likeCount', label: '高評価数' },
-  { key: 'commentCount', label: 'コメント数' },
-  { key: 'publishedAt', label: '公開日' },
-];
-
-const DATE_RANGE_OPTIONS: { value: DateRange; label: string }[] = [
-  { value: '', label: '指定なし' },
-  { value: '1month', label: '1ヶ月以内' },
-  { value: '3months', label: '3ヶ月以内' },
-  { value: '6months', label: '6ヶ月以内' },
-  { value: '1year', label: '1年以内' },
-];
-
-const CHART_METRICS: { key: ChartMetric; label: string }[] = [
-  { key: 'viewCount', label: '再生数' },
-  { key: 'viewRatio', label: '再生倍率' },
-  { key: 'subscriberCount', label: '登録者数' },
-  { key: 'likeCount', label: '高評価' },
-];
-
-function getPublishedAfterISO(range: DateRange): string | undefined {
-  if (!range) return undefined;
-  const now = new Date();
-  switch (range) {
-    case '1month': now.setMonth(now.getMonth() - 1); break;
-    case '3months': now.setMonth(now.getMonth() - 3); break;
-    case '6months': now.setMonth(now.getMonth() - 6); break;
-    case '1year': now.setFullYear(now.getFullYear() - 1); break;
-  }
-  return now.toISOString();
-}
-
-function loadHistory(): SearchHistoryItem[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
-}
-
-function saveHistory(history: SearchHistoryItem[]) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));
-  } catch {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(0, 5)));
-    } catch {}
-  }
-}
-
-
-function renderMarkdown(md: string): string {
-  return md
-    .replace(/^### (.+)$/gm, '<h4 class="text-white font-bold text-sm mt-4 mb-2">$1</h4>')
-    .replace(/^## (.+)$/gm, '<h3 class="text-white font-bold text-base mt-5 mb-2 pb-1 border-b border-gray-600">$1</h3>')
-    .replace(/^# (.+)$/gm, '<h2 class="text-white font-bold text-lg mt-6 mb-3">$1</h2>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white">$1</strong>')
-    .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
-    .replace(/^(\d+)\. (.+)$/gm, '<li class="ml-4 list-decimal">$2</li>')
-    .replace(/`([^`]+)`/g, '<code class="bg-gray-600 px-1.5 py-0.5 rounded text-cyan-300 text-xs">$1</code>')
-    .replace(/\n\n/g, '<br/><br/>')
-    .replace(/\n/g, '<br/>');
-}
-
-const CHART_COLORS = ['#f43f5e', '#fb923c', '#facc15', '#4ade80', '#22d3ee', '#818cf8', '#e879f9', '#f472b6', '#a78bfa', '#34d399'];
-
+// Now write the main component as a heredoc-style string
+const mainComponent = `
 export default function YouTubeKeywordResearchEditor({ user }: Props) {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
@@ -141,12 +126,6 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
   const [showHistory, setShowHistory] = useState(true);
   const [selectedHistoryIds, setSelectedHistoryIds] = useState<Set<string>>(new Set());
   const [activeHistoryId, setActiveHistoryId] = useState<string | null>(null);
-
-  // AI Analysis
-  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState('');
-  const [showAiPanel, setShowAiPanel] = useState(false);
 
   useEffect(() => {
     setHistory(loadHistory());
@@ -304,12 +283,12 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
       const likeRate = v.viewCount > 0 ? ((v.likeCount / v.viewCount) * 100).toFixed(2) : '0';
       return [i + 1, '"' + v.title.replace(/"/g, '""') + '"', '"' + v.channelTitle.replace(/"/g, '""') + '"', v.viewCount, v.subscriberCount, v.viewRatio, v.likeCount, v.commentCount, engRate, likeRate, formatDuration(v.duration), v.publishedAt.split('T')[0], '"' + (v.tags || []).join(', ').replace(/"/g, '""') + '"', 'https://www.youtube.com/watch?v=' + v.videoId].join(',');
     });
-    return cond.join('\n') + headers.join(',') + '\n' + rows.join('\n');
+    return cond.join('\\n') + headers.join(',') + '\\n' + rows.join('\\n');
   };
 
   const exportToCSV = () => {
     if (sortedResults.length === 0) return;
-    const csv = '\uFEFF' + buildCSV(results, searchedKeyword, { dateRange, maxResults, minViewRatio, maxSubscribers, sortKey });
+    const csv = '\\uFEFF' + buildCSV(results, searchedKeyword, { dateRange, maxResults, minViewRatio, maxSubscribers, sortKey });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -323,7 +302,7 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
     const selected = history.filter(h => selectedHistoryIds.has(h.id));
     if (selected.length === 0) return;
     const sections = selected.map(h => buildCSV(h.results, h.keyword, { dateRange: h.dateRange, maxResults: h.maxResults, minViewRatio: h.minViewRatio, maxSubscribers: h.maxSubscribers, sortKey: h.sortKey }));
-    const csv = '\uFEFF' + sections.join('\n\n');
+    const csv = '\\uFEFF' + sections.join('\\n\\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -331,39 +310,6 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
     a.download = 'youtube_keyword_history_' + new Date().toISOString().split('T')[0] + '.csv';
     a.click();
     URL.revokeObjectURL(url);
-  };
-
-
-  const handleAIAnalysis = async (analysisType: AIAnalysisType) => {
-    if (sortedResults.length === 0) return;
-    setAiLoading(true);
-    setAiError('');
-    setAiAnalysis(null);
-    setShowAiPanel(true);
-
-    try {
-      const res = await fetch('/api/youtube-keyword-research/ai-analysis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          keyword: searchedKeyword,
-          results: sortedResults,
-          analysisType,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setAiError(data.error || 'AI分析に失敗しました'); return; }
-      setAiAnalysis(data.analysis);
-    } catch {
-      setAiError('通信エラーが発生しました');
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
-  const copyAiAnalysis = () => {
-    if (!aiAnalysis) return;
-    navigator.clipboard.writeText(aiAnalysis);
   };
 
   if (!user) return null;
@@ -618,66 +564,6 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-
-                {/* AI Analysis Buttons */}
-                <div className="bg-gray-700/50 rounded-xl p-4">
-                  <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-yellow-400" />
-                    AI分析
-                  </h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {AI_ANALYSIS_OPTIONS.map(opt => (
-                      <button
-                        key={opt.type}
-                        onClick={() => handleAIAnalysis(opt.type)}
-                        disabled={aiLoading}
-                        className={"p-3 rounded-lg text-left transition-all min-h-[44px] " + (aiLoading ? 'opacity-50 cursor-not-allowed bg-gray-600/50' : 'bg-gray-600/50 hover:bg-gray-600 cursor-pointer')}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm">{opt.icon}</span>
-                          <span className="text-white font-semibold text-xs">{opt.label}</span>
-                        </div>
-                        <p className="text-gray-400 text-[10px] leading-tight">{opt.desc}</p>
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-gray-500 text-[10px] mt-2 text-center">Gemini 2.5 Flash使用 / 1回約0.3円</p>
-                </div>
-
-                {/* AI Analysis Results */}
-                {showAiPanel && (
-                  <div className="bg-gray-700/50 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-white font-bold text-sm flex items-center gap-2">
-                        <Bot className="w-4 h-4 text-cyan-400" />
-                        AI分析レポート
-                      </h3>
-                      {aiAnalysis && (
-                        <button onClick={copyAiAnalysis} className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors">
-                          <Copy className="w-3.5 h-3.5" />
-                          コピー
-                        </button>
-                      )}
-                    </div>
-                    {aiLoading && (
-                      <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-                        <Loader2 className="w-8 h-8 animate-spin mb-3" />
-                        <p className="text-sm font-semibold">AI分析中...</p>
-                        <p className="text-xs mt-1">30秒ほどお待ちください</p>
-                      </div>
-                    )}
-                    {aiError && (
-                      <div className="flex items-center gap-2 text-red-400 text-sm bg-red-900/30 p-3 rounded-lg">
-                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                        <span>{aiError}</span>
-                      </div>
-                    )}
-                    {aiAnalysis && (
-                      <div className="prose prose-invert prose-sm max-w-none text-gray-300 leading-relaxed ai-analysis-content" dangerouslySetInnerHTML={{ __html: renderMarkdown(aiAnalysis) }} />
-                    )}
-                  </div>
-                )}
-
                 {sortedResults.map((v, i) => (
                   <div key={v.videoId} className="bg-gray-700/50 rounded-xl p-3">
                     <div className="flex gap-3">
@@ -743,3 +629,8 @@ function MetricBadge({ icon: Icon, value, color }: { icon: React.ElementType; va
     </span>
   );
 }
+`;
+
+const finalContent = lines.join('\n') + '\n' + mainComponent;
+fs.writeFileSync(filePath, finalContent, 'utf-8');
+console.log('YouTubeKeywordResearchEditor.tsx regenerated with search history!');

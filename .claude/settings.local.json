@@ -48,7 +48,9 @@
       "Bash(node scripts/gen-keyword-editor.js)",
       "Bash(node scripts/gen-keyword-page.js)",
       "Bash(node -e \"const fs=require\\(''fs''\\); const c=fs.readFileSync\\(''d:/obsidian/integration-app/components/youtube-keyword-research/YouTubeKeywordResearchEditor.tsx'',''utf8''\\); console.log\\(c\\)\")",
-      "Bash(node scripts/gen-youtube-keyword-research.js)"
+      "Bash(node scripts/gen-youtube-keyword-research.js)",
+      "Bash(node scripts/gen-ai-analysis-api.js)",
+      "Bash(node scripts/patch-ai-analysis-ui.js)"
     ],
     "deny": [
       "Bash(sudo:*)",
