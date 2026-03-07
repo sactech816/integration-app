@@ -20,7 +20,7 @@ async function fetchYouTubeAPI(endpoint: string, params: Record<string, string>,
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { keyword, maxResults = 10 } = body;
+    const { keyword, maxResults = 20, publishedAfter } = body;
 
     if (!keyword || typeof keyword !== 'string' || !keyword.trim()) {
       return NextResponse.json(
@@ -28,8 +28,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const clampedMax = Math.min(Math.max(Number(maxResults) || 10, 1), 20);
 
     const apiKey = process.env.YOUTUBE_API_KEY;
     if (!apiKey) {
@@ -39,16 +37,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. YouTube Search API でキーワード検索
+    const searchParams: Record<string, string> = {
+      part: 'snippet',
+      type: 'video',
+      q: keyword.trim(),
+      maxResults: String(Math.min(maxResults, 50)),
+      order: 'relevance',
+    };
+
+    if (publishedAfter) {
+      searchParams.publishedAfter = publishedAfter;
+    }
+
     let searchData;
     try {
-      searchData = await fetchYouTubeAPI('search', {
-        part: 'snippet',
-        type: 'video',
-        q: keyword.trim(),
-        maxResults: String(clampedMax),
-        order: 'relevance',
-      }, apiKey);
+      searchData = await fetchYouTubeAPI('search', searchParams, apiKey);
     } catch (err: any) {
       if (err.status === 403) {
         return NextResponse.json(
@@ -64,52 +67,48 @@ export async function POST(request: NextRequest) {
 
     if (!searchData.items || searchData.items.length === 0) {
       return NextResponse.json(
-        { error: '検索結果が見つかりませんでした' },
+        { error: '検索結果が見つかりませんでした。別のキーワードをお試しください' },
         { status: 404 }
       );
     }
 
-    // 2. 検索結果からvideoIdを抽出してバッチ取得
     const videoIds = searchData.items.map((item: any) => item.id.videoId).filter(Boolean);
 
-    let videosData;
-    try {
-      videosData = await fetchYouTubeAPI('videos', {
-        part: 'snippet,statistics,contentDetails',
-        id: videoIds.join(','),
-      }, apiKey);
-    } catch {
-      return NextResponse.json(
-        { error: '動画データの取得に失敗しました' },
-        { status: 500 }
-      );
-    }
-
-    if (!videosData.items || videosData.items.length === 0) {
+    if (videoIds.length === 0) {
       return NextResponse.json(
         { error: '動画データを取得できませんでした' },
         { status: 404 }
       );
     }
 
-    // 3. チャンネル登録者数をバッチ取得
-    const channelIds = [...new Set(videosData.items.map((item: any) => item.snippet.channelId))];
+    const videosData = await fetchYouTubeAPI('videos', {
+      part: 'snippet,statistics,contentDetails',
+      id: videoIds.join(','),
+    }, apiKey);
+
+    if (!videosData.items || videosData.items.length === 0) {
+      return NextResponse.json(
+        { error: '動画の詳細データを取得できませんでした' },
+        { status: 404 }
+      );
+    }
+
+    const channelIds = [...new Set(videosData.items.map((item: any) => item.snippet.channelId))] as string[];
     const channelStatsMap: Record<string, number> = {};
 
     try {
       const channelsData = await fetchYouTubeAPI('channels', {
         part: 'statistics',
-        id: (channelIds as string[]).join(','),
+        id: channelIds.join(','),
       }, apiKey);
 
       for (const ch of channelsData.items || []) {
         channelStatsMap[ch.id] = parseInt(ch.statistics.subscriberCount || '0');
       }
     } catch (err) {
-      console.error('Channel data fetch failed, continuing without subscriber count:', err);
+      console.error('Channel data fetch failed:', err);
     }
 
-    // 4. レスポンス構築
     const results: YouTubeVideoData[] = videosData.items.map((item: any) => {
       const channelId = item.snippet.channelId;
       const subscriberCount = channelStatsMap[channelId] || 0;

@@ -58,7 +58,7 @@ export default function YouTubeKeywordResearchPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-rose-500" />
       </div>
     );
   }
@@ -81,7 +81,7 @@ export default function YouTubeKeywordResearchPage() {
             <p className="text-gray-600 mb-6">YouTubeキーワードリサーチを利用するにはログインしてください</p>
             <button
               onClick={() => setShowAuth(true)}
-              className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl shadow-md transition-all min-h-[44px]"
+              className="px-6 py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl shadow-md transition-all min-h-[44px]"
             >
               ログイン
             </button>
