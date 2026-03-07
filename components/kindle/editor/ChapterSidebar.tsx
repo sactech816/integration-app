@@ -676,7 +676,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                 {structureHandlers && !isEditing && (
                   <button
                     onClick={(e) => openChapterMenu(e, chapter)}
-                    className="opacity-0 group-hover:opacity-100 lg:opacity-0 p-1 rounded hover:bg-amber-200/50 transition-all flex-shrink-0 text-gray-500 hover:text-gray-700"
+                    className="opacity-0 group-hover:opacity-100 lg:opacity-100 p-1 rounded hover:bg-amber-200/50 transition-all flex-shrink-0 text-gray-400 hover:text-gray-700"
                     title="章のオプション"
                   >
                     <MoreVertical size={14} className="sm:w-4 sm:h-4" />
@@ -757,7 +757,7 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                               e.stopPropagation();
                               openSectionMenu(e, section, chapter.id);
                             }}
-                            className={`opacity-0 group-hover:opacity-100 lg:opacity-0 p-1 rounded transition-all flex-shrink-0 ${
+                            className={`opacity-0 group-hover:opacity-100 lg:opacity-100 p-1 rounded transition-all flex-shrink-0 ${
                               isActive 
                                 ? 'hover:bg-white/20 text-white/70 hover:text-white' 
                                 : 'hover:bg-amber-200/50 text-gray-500 hover:text-gray-700'
@@ -770,6 +770,20 @@ export const ChapterSidebar: React.FC<ChapterSidebarProps> = ({
                       </div>
                     );
                   })}
+
+                  {/* 節を追加ボタン（常時表示） */}
+                  {structureHandlers && !readOnly && addingSectionChapterId !== chapter.id && (
+                    <button
+                      onClick={() => {
+                        setAddingSectionChapterId(chapter.id);
+                        setNewSectionTitle('');
+                      }}
+                      className="w-full flex items-center gap-1.5 px-2 sm:px-3 py-2 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50 transition-colors border-t border-amber-100/50"
+                    >
+                      <Plus size={12} className="sm:w-3.5 sm:h-3.5" />
+                      <span>節を追加</span>
+                    </button>
+                  )}
 
                   {/* 節を追加中 */}
                   {addingSectionChapterId === chapter.id && (
