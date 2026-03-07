@@ -86,7 +86,7 @@ export default function LineLandingPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="min-h-screen bg-white">
-        <LandingHeader currentService="line" />
+        <LandingHeader />
 
         {/* Hero */}
         <section className="bg-gradient-to-b from-green-50 to-white">

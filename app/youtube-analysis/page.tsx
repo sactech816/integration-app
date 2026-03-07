@@ -86,7 +86,7 @@ export default function YouTubeAnalysisLandingPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="min-h-screen bg-white">
-        <LandingHeader currentService="youtube-analysis" />
+        <LandingHeader />
 
         {/* Hero */}
         <section className="bg-gradient-to-b from-red-50 to-white">
