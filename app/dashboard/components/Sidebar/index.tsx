@@ -29,6 +29,7 @@ type SidebarProps = {
     sns_post: number;
     line: number;
     youtube_analysis: number;
+    youtube_keyword_research: number;
   };
   totalViews: number;
   onLogout: () => void;

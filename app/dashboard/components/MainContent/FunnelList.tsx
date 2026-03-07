@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   GitBranch, Plus, Trash2, ChevronRight, Loader2, Eye, BarChart2,
@@ -41,7 +40,6 @@ export default function FunnelList({
   hasMakersProAccess?: boolean;
   onNavigate?: (path: string) => void;
 }) {
-  const router = useRouter();
   const [funnels, setFunnels] = useState<Funnel[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -67,14 +65,7 @@ export default function FunnelList({
     }
   };
 
-  // コンテンツ0件の場合は新規作成画面へリダイレクト
-  useEffect(() => {
-    if (!loading && funnels.length === 0) {
-      router.replace('/funnel/new');
-    }
-  }, [loading, funnels.length, router]);
-
-  if (loading || funnels.length === 0) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-8 h-8 animate-spin text-amber-500" />

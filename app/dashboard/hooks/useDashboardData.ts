@@ -53,6 +53,7 @@ type UseDashboardDataReturn = {
     sns_post: number;
     line: number;
     youtube_analysis: number;
+    youtube_keyword_research: number;
   };
   totalViews: number;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -135,6 +136,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     sns_post: 0,
     line: 0,
     youtube_analysis: 0,
+    youtube_keyword_research: 0,
   });
   const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
   const [purchases, setPurchases] = useState<string[]>([]);
@@ -699,6 +701,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         sns_post: snsPostResult.count || 0,
         line: lineResult.count || 0,
         youtube_analysis: 0,
+        youtube_keyword_research: 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);

@@ -27,6 +27,7 @@ import {
   ListOrdered,
   MessageCircle,
   BarChart3,
+  Search,
   LucideIcon,
 } from 'lucide-react';
 
@@ -232,6 +233,15 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: 'YouTube動画の統計分析',
     color: { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
     href: '/youtube-analysis/editor',
+    category: 'marketing',
+  },
+  {
+    id: 'youtube-keyword-research',
+    label: 'YouTubeキーワードリサーチ',
+    icon: Search,
+    description: 'YouTube検索キーワード分析',
+    color: { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
+    href: '/youtube-keyword-research/editor',
     category: 'marketing',
   },
 

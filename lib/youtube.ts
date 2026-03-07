@@ -3,12 +3,15 @@
 export type YouTubeVideoData = {
   videoId: string;
   title: string;
+  channelId: string;
   channelTitle: string;
   publishedAt: string;
   thumbnailUrl: string;
   viewCount: number;
   likeCount: number;
   commentCount: number;
+  subscriberCount: number;
+  viewRatio: number;
   description: string;
   tags: string[];
   categoryId: string;
@@ -64,4 +67,12 @@ export function formatDuration(isoDuration: string): string {
     return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   }
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+/**
+ * 再生倍率を計算（再生数 / チャンネル登録者数）
+ */
+export function calcViewRatio(viewCount: number, subscriberCount: number): number {
+  if (subscriberCount === 0) return 0;
+  return Math.round((viewCount / subscriberCount) * 100) / 100;
 }

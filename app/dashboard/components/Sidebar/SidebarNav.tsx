@@ -70,6 +70,7 @@ type SidebarNavProps = {
     sns_post: number;
     line: number;
     youtube_analysis: number;
+    youtube_keyword_research: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態
