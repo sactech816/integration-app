@@ -109,7 +109,7 @@ export default function StripeConnectStatus({ userId, compact = false }: { userI
           <div className="flex-1">
             <p className="text-sm font-semibold text-blue-800 mb-1">Stripe アカウント未接続</p>
             <p className="text-xs text-blue-700 mb-3">
-              Stripeアカウントを接続すると、決済の売上があなたに直接入金されます（手数料{status?.platformFeePercent || 5}%）。
+              Stripeアカウントを接続すると、決済の売上があなたに直接入金されます（手数料：プラットフォーム{status?.platformFeePercent || 5}% + Stripe 3.6%）。
             </p>
             <button
               onClick={handleOnboarding}
@@ -170,7 +170,7 @@ export default function StripeConnectStatus({ userId, compact = false }: { userI
         <div className="flex-1">
           <p className="text-sm font-semibold text-green-800 mb-1">Stripe 接続済み</p>
           <p className="text-xs text-green-700 mb-3">
-            決済の売上はあなたのStripeアカウントに直接入金されます（手数料{status.platformFeePercent}%）。
+            決済の売上はあなたのStripeアカウントに直接入金されます（手数料：プラットフォーム{status.platformFeePercent}% + Stripe 3.6%）。
           </p>
           <button
             onClick={handleDashboard}

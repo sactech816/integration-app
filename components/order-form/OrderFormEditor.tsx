@@ -953,7 +953,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                   <>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1">金額（円）</label>
-                      <input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} min={50} className="w-full px-4 py-3 border border-amber-200 rounded-xl text-gray-900 bg-amber-50/30" />
+                      <input type="number" value={price || ''} onChange={(e) => setPrice(e.target.value === '' ? 0 : parseInt(e.target.value, 10) || 0)} min={50} placeholder="50" className="w-full px-4 py-3 border border-amber-200 rounded-xl text-gray-900 placeholder:text-gray-400 bg-amber-50/30" />
                       {price > 0 && price < 50 && (
                         <p className="text-xs text-red-500 mt-1">Stripeの最低金額は50円です</p>
                       )}
