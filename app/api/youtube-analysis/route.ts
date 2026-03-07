@@ -45,6 +45,7 @@ function buildVideoData(
     tags: videoItem.snippet.tags || [],
     categoryId: videoItem.snippet.categoryId || '',
     duration: videoItem.contentDetails?.duration || '',
+    hasCaption: videoItem.contentDetails?.caption === 'true',
   };
 }
 

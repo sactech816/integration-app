@@ -16,6 +16,7 @@ export type YouTubeVideoData = {
   tags: string[];
   categoryId: string;
   duration: string;
+  hasCaption: boolean;
 };
 
 /**

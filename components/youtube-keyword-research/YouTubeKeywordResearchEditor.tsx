@@ -18,6 +18,7 @@ import { formatNumber, formatDuration } from '@/lib/youtube';
 type SortKey = 'viewCount' | 'likeCount' | 'commentCount' | 'subscriberCount' | 'viewRatio' | 'publishedAt' | 'vph';
 type ChartMetric = 'viewCount' | 'likeCount' | 'viewRatio' | 'subscriberCount' | 'vph';
 type DateRange = '' | '1month' | '3months' | '6months' | '1year';
+type SearchOrder = 'relevance' | 'viewCount' | 'date' | 'rating';
 
 type Props = {
   user: { id: string; email?: string } | null;
@@ -69,6 +70,13 @@ const DATE_RANGE_OPTIONS: { value: DateRange; label: string }[] = [
   { value: '3months', label: '3ヶ月以内' },
   { value: '6months', label: '6ヶ月以内' },
   { value: '1year', label: '1年以内' },
+];
+
+const SEARCH_ORDER_OPTIONS: { value: SearchOrder; label: string; desc: string }[] = [
+  { value: 'relevance', label: '関連性順', desc: 'キーワードとの関連度' },
+  { value: 'viewCount', label: '再生数順', desc: 'vidIQと同じ並び順' },
+  { value: 'date', label: '新着順', desc: '最近公開された動画優先' },
+  { value: 'rating', label: '評価順', desc: '高評価の動画優先' },
 ];
 
 const CHART_METRICS: { key: ChartMetric; label: string }[] = [
@@ -138,6 +146,7 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
   const [keyword, setKeyword] = useState('');
   const [maxResults, setMaxResults] = useState(20);
   const [dateRange, setDateRange] = useState<DateRange>('');
+  const [searchOrder, setSearchOrder] = useState<SearchOrder>('relevance');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [results, setResults] = useState<YouTubeVideoData[]>([]);
@@ -247,7 +256,7 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
       const res = await fetch('/api/youtube-keyword-research', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword: keyword.trim(), maxResults, publishedAfter }),
+        body: JSON.stringify({ keyword: keyword.trim(), maxResults, publishedAfter, order: searchOrder }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'エラーが発生しました'); return; }
@@ -292,6 +301,7 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
       name: v.title.length > 15 ? v.title.slice(0, 15) + '...' : v.title,
       value: chartMetric === 'vph' ? calcVPH(v.viewCount, v.publishedAt) : v[chartMetric] as number,
       color: CHART_COLORS[i % CHART_COLORS.length],
+      videoId: v.videoId,
     }));
   }, [sortedResults, chartMetric]);
 
@@ -463,7 +473,13 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
                 <h2 className="text-lg font-bold text-gray-900">キーワード検索</h2>
               </div>
               <input type="text" value={keyword} onChange={(e) => { setKeyword(e.target.value); if (error) setError(''); }} onKeyDown={handleKeyDown} placeholder="例: ダイエット 筋トレ 料理" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all" />
-              <div className="grid grid-cols-2 gap-3 mt-4">
+              <div className="grid grid-cols-3 gap-3 mt-4">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1 block">API並び順</label>
+                  <select value={searchOrder} onChange={(e) => setSearchOrder(e.target.value as SearchOrder)} className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-rose-500 focus:border-transparent">
+                    {SEARCH_ORDER_OPTIONS.map(o => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                  </select>
+                </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-600 mb-1 block">公開日</label>
                   <select value={dateRange} onChange={(e) => setDateRange(e.target.value as DateRange)} className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-rose-500 focus:border-transparent">
@@ -529,20 +545,8 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
               </div>
             </div>
 
-            {/* Summary */}
-            {hasResults && (
-              <div className="bg-white rounded-2xl border border-gray-300 shadow-md p-6">
-                <h3 className="text-sm font-bold text-gray-900 mb-3">検索サマリー</h3>
-                <div className="space-y-2 text-sm">
-                  <SummaryRow label="キーワード" value={searchedKeyword} />
-                  <SummaryRow label="結果件数" value={sortedResults.length + '件'} />
-                  <SummaryRow label="平均再生数" value={formatNumber(Math.round(sortedResults.reduce((s, v) => s + v.viewCount, 0) / sortedResults.length))} />
-                  <SummaryRow label="平均再生倍率" value={(sortedResults.reduce((s, v) => s + v.viewRatio, 0) / sortedResults.length).toFixed(2) + 'x'} />
-                  <SummaryRow label="平均VPH" value={Math.round(sortedResults.reduce((s, v) => s + calcVPH(v.viewCount, v.publishedAt), 0) / sortedResults.length).toLocaleString()} />
-                  <SummaryRow label="平均登録者数" value={formatNumber(Math.round(sortedResults.reduce((s, v) => s + v.subscriberCount, 0) / sortedResults.length))} />
-                </div>
-              </div>
-            )}
+            {/* Summary - vidIQ style */}
+            {hasResults && <VidIQStyleSummary results={sortedResults} keyword={searchedKeyword} />}
 
             {/* Title Pattern Analysis */}
             {hasResults && <TitlePatternCard results={sortedResults} />}
@@ -653,8 +657,8 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
                       <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                       <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 9 }} angle={-35} textAnchor="end" axisLine={{ stroke: '#4b5563' }} />
                       <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={{ stroke: '#4b5563' }} tickFormatter={(v) => v >= 1000000 ? (v / 1000000).toFixed(1) + 'M' : v >= 1000 ? (v / 1000).toFixed(0) + 'K' : String(v)} />
-                      <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px', color: '#fff' }} formatter={(value: number) => [chartMetric === 'viewRatio' ? value + 'x' : formatNumber(value), CHART_METRICS.find(m => m.key === chartMetric)?.label || '']} />
-                      <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={30}>
+                      <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px', color: '#fff' }} labelStyle={{ color: '#d1d5db' }} itemStyle={{ color: '#fff' }} formatter={(value: number) => [chartMetric === 'viewRatio' ? value + 'x' : chartMetric === 'vph' ? value.toLocaleString() + '/h' : formatNumber(value), CHART_METRICS.find(m => m.key === chartMetric)?.label || '']} />
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={30} cursor="pointer" onClick={(data: any) => { if (data?.videoId) { const el = document.getElementById('video-' + data.videoId); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }}>
                         {chartData.map((entry, index) => (<Cell key={index} fill={entry.color} />))}
                       </Bar>
                     </BarChart>
@@ -737,7 +741,7 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
                 )}
 
                 {sortedResults.map((v, i) => (
-                  <VideoCard key={v.videoId} video={v} index={i} formatDateStr={formatDateStr} />
+                  <VideoCard key={v.videoId} video={v} index={i} formatDateStr={formatDateStr} searchedKeyword={searchedKeyword} />
                 ))}
               </div>
             )}
@@ -745,6 +749,88 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
         </div>
         <div className="hidden lg:block lg:w-1/2 lg:flex-shrink-0 bg-gray-50"></div>
       </div>
+    </div>
+  );
+}
+
+function VidIQStyleSummary({ results, keyword }: { results: YouTubeVideoData[]; keyword: string }) {
+  const stats = useMemo(() => {
+    const len = results.length;
+    if (len === 0) return null;
+    const maxViews = Math.max(...results.map(v => v.viewCount));
+    const avgViews = Math.round(results.reduce((s, v) => s + v.viewCount, 0) / len);
+    const avgSubs = Math.round(results.reduce((s, v) => s + v.subscriberCount, 0) / len);
+    const avgVPH = Math.round(results.reduce((s, v) => s + calcVPH(v.viewCount, v.publishedAt), 0) / len);
+    const avgRatio = (results.reduce((s, v) => s + v.viewRatio, 0) / len).toFixed(2);
+
+    // Last 7 days
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const last7Days = results.filter(v => new Date(v.publishedAt).getTime() >= sevenDaysAgo).length;
+
+    // Average age
+    const avgAgeMs = results.reduce((s, v) => s + (Date.now() - new Date(v.publishedAt).getTime()), 0) / len;
+    const avgAgeDays = Math.round(avgAgeMs / (1000 * 60 * 60 * 24));
+    let ageLabel = '';
+    if (avgAgeDays >= 365) {
+      const years = Math.round(avgAgeDays / 365 * 10) / 10;
+      ageLabel = years + '年';
+    } else if (avgAgeDays >= 30) {
+      ageLabel = Math.round(avgAgeDays / 30) + 'ヶ月';
+    } else {
+      ageLabel = avgAgeDays + '日';
+    }
+
+    // CC (caption)
+    const ccCount = results.filter(v => v.hasCaption).length;
+
+    // Keyword in title/desc
+    const kw = keyword.toLowerCase();
+    const kwParts = kw.split(/\s+/).filter(Boolean);
+    const titleHasKw = results.filter(v => kwParts.some(k => v.title.toLowerCase().includes(k))).length;
+    const descHasKw = results.filter(v => kwParts.some(k => (v.description || '').toLowerCase().includes(k))).length;
+
+    // Top creator (most videos)
+    const channelCount: Record<string, { count: number; name: string }> = {};
+    results.forEach(v => {
+      if (!channelCount[v.channelId]) channelCount[v.channelId] = { count: 0, name: v.channelTitle };
+      channelCount[v.channelId].count++;
+    });
+    const topCreator = Object.values(channelCount).sort((a, b) => b.count - a.count)[0];
+
+    return { maxViews, avgViews, avgSubs, avgVPH, avgRatio, last7Days, ageLabel, ccCount, titleHasKw, descHasKw, topCreator, total: len };
+  }, [results, keyword]);
+
+  if (!stats) return null;
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-300 shadow-md p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <BarChart3 className="w-5 h-5 text-rose-600" />
+        <h3 className="text-sm font-bold text-gray-900">検索サマリー</h3>
+        <span className="text-[10px] bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full font-bold">vidIQ風</span>
+      </div>
+      <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+        <SummaryRow label="キーワード" value={keyword} />
+        <SummaryRow label="結果件数" value={stats.total + '件'} />
+        <SummaryRow label="最高再生数" value={formatNumber(stats.maxViews)} highlight />
+        <SummaryRow label="平均再生数" value={formatNumber(stats.avgViews)} />
+        <SummaryRow label="平均登録者数" value={formatNumber(stats.avgSubs)} />
+        <SummaryRow label="平均再生倍率" value={stats.avgRatio + 'x'} />
+        <SummaryRow label="平均VPH" value={stats.avgVPH.toLocaleString() + '/h'} />
+        <SummaryRow label="平均年齢" value={stats.ageLabel} />
+        <SummaryRow label="直近7日の動画" value={stats.last7Days + '/' + stats.total} />
+        <SummaryRow label="字幕(CC)あり" value={stats.ccCount + '/' + stats.total} />
+        <SummaryRow label="タイトルにKW" value={stats.titleHasKw + '/' + stats.total} />
+        <SummaryRow label="説明文にKW" value={stats.descHasKw + '/' + stats.total} />
+      </div>
+      {stats.topCreator && stats.topCreator.count > 1 && (
+        <div className="mt-3 pt-3 border-t border-gray-200">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">トップクリエイター</span>
+            <span className="font-bold text-gray-900 text-right max-w-[60%] truncate">{stats.topCreator.name} ({stats.topCreator.count}本)</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -808,14 +894,14 @@ function PatternStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function VideoCard({ video: v, index: i, formatDateStr }: { video: YouTubeVideoData; index: number; formatDateStr: (s: string) => string }) {
+function VideoCard({ video: v, index: i, formatDateStr, searchedKeyword = '' }: { video: YouTubeVideoData; index: number; formatDateStr: (s: string) => string; searchedKeyword?: string }) {
   const [showDesc, setShowDesc] = useState(false);
   const vph = calcVPH(v.viewCount, v.publishedAt);
   const descPreview = (v.description || '').slice(0, 300);
   const hasDesc = !!v.description && v.description.length > 0;
 
   return (
-    <div className="bg-gray-700/50 rounded-xl p-3">
+    <div id={'video-' + v.videoId} className="bg-gray-700/50 rounded-xl p-3 scroll-mt-4">
       <div className="flex gap-3">
         <div className="flex-shrink-0 w-36 relative group">
           <a href={'https://www.youtube.com/watch?v=' + v.videoId} target="_blank" rel="noopener noreferrer">
@@ -844,6 +930,7 @@ function VideoCard({ video: v, index: i, formatDateStr }: { video: YouTubeVideoD
             <MetricBadge icon={Zap} value={vph.toLocaleString() + '/h'} color={vph >= 100 ? 'amber' : 'gray'} />
             <MetricBadge icon={ThumbsUp} value={formatNumber(v.likeCount)} color="emerald" />
             <MetricBadge icon={MessageCircle} value={formatNumber(v.commentCount)} color="amber" />
+            {v.hasCaption && <span className="text-[10px] bg-gray-600 text-gray-300 px-1.5 py-0.5 rounded font-semibold">CC</span>}
           </div>
         </div>
       </div>
@@ -865,11 +952,11 @@ function VideoCard({ video: v, index: i, formatDateStr }: { video: YouTubeVideoD
   );
 }
 
-function SummaryRow({ label, value }: { label: string; value: string }) {
+function SummaryRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div className="flex justify-between">
       <span className="text-gray-600">{label}</span>
-      <span className="font-bold text-gray-900">{value}</span>
+      <span className={"font-bold " + (highlight ? "text-rose-600" : "text-gray-900")}>{value}</span>
     </div>
   );
 }
