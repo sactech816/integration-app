@@ -29,6 +29,9 @@ import {
   Send,
   BookOpen,
   Share2,
+  ListOrdered,
+  MessageCircle,
+  Search,
 } from 'lucide-react';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
@@ -279,6 +282,43 @@ const tools: ToolDef[] = [
     textColor: 'text-purple-600',
     features: ['紹介報酬', '簡単登録', '収益化', '無料'],
     category: 'monetization',
+  },
+  // 集客・イベント（追加ツール）
+  {
+    name: 'ステップメール',
+    description: 'シナリオ設計からメール配信まで自動化。見込み客を段階的にナーチャリングして成約率をアップ。',
+    icon: ListOrdered,
+    href: '/step-email',
+    color: 'from-cyan-500 to-blue-600',
+    bgColor: 'bg-cyan-50',
+    textColor: 'text-cyan-600',
+    features: ['自動配信', 'シナリオ設計', 'ナーチャリング', 'PRO'],
+    isPro: true,
+    category: 'marketing',
+  },
+  {
+    name: 'LINE配信',
+    description: 'LINE公式アカウントと連携してメッセージ配信。リッチメニュー・ステップ配信で顧客との関係を構築。',
+    icon: MessageCircle,
+    href: '/line',
+    color: 'from-green-500 to-emerald-600',
+    bgColor: 'bg-green-50',
+    textColor: 'text-green-600',
+    features: ['LINE連携', 'ステップ配信', 'リッチメニュー', 'PRO'],
+    isPro: true,
+    category: 'marketing',
+  },
+  // ライティング・制作（追加ツール）
+  {
+    name: 'YouTubeリサーチ',
+    description: 'YouTube動画のリサーチ・分析をAIでサポート。競合分析やネタ探し、トレンド把握に最適。',
+    icon: Search,
+    href: '/youtube-analysis',
+    color: 'from-red-500 to-rose-600',
+    bgColor: 'bg-red-50',
+    textColor: 'text-red-600',
+    features: ['AI分析', '競合リサーチ', 'ネタ探し', 'トレンド'],
+    category: 'writing',
   },
 ];
 

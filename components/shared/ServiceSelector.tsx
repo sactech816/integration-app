@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb, Crown, Image, Store, PartyPopper, Mail, GitBranch, Video, ClipboardCheck, Send, BookOpen, Share2 } from 'lucide-react';
+import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb, Crown, Image, Store, PartyPopper, Mail, GitBranch, Video, ClipboardCheck, Send, BookOpen, Share2, ListOrdered, MessageCircle, Search } from 'lucide-react';
 import { ServiceType, SERVICE_LABELS } from '@/lib/types';
 import Link from 'next/link';
 
@@ -271,6 +271,52 @@ const serviceConfig = [
     features: ['紹介報酬', '簡単登録', '収益化'],
     category: 'monetization' as ServiceCategoryId,
     href: '/affiliate',
+  },
+  // 集客・イベント（追加ツール）
+  {
+    id: 'step-email' as ServiceType,
+    icon: ListOrdered,
+    label: 'ステップメール',
+    description: 'シナリオ設計からメール配信まで自動化。見込み客を自動でナーチャリング',
+    gradient: 'from-cyan-500 to-blue-600',
+    bgLight: 'bg-cyan-50',
+    textColor: 'text-cyan-600',
+    borderColor: 'border-cyan-200',
+    hoverBg: 'hover:bg-cyan-50',
+    features: ['自動配信', 'シナリオ設計', 'ナーチャリング'],
+    isPro: true,
+    category: 'marketing' as ServiceCategoryId,
+    href: '/step-email',
+  },
+  {
+    id: 'line' as ServiceType,
+    icon: MessageCircle,
+    label: 'LINE配信',
+    description: 'LINE公式アカウントと連携してメッセージ配信。リッチメニュー・ステップ配信に対応',
+    gradient: 'from-green-500 to-emerald-600',
+    bgLight: 'bg-green-50',
+    textColor: 'text-green-600',
+    borderColor: 'border-green-200',
+    hoverBg: 'hover:bg-green-50',
+    features: ['LINE連携', 'ステップ配信', 'リッチメニュー'],
+    isPro: true,
+    category: 'marketing' as ServiceCategoryId,
+    href: '/line',
+  },
+  // ライティング・制作（追加ツール）
+  {
+    id: 'youtube-analysis' as ServiceType,
+    icon: Search,
+    label: 'YouTubeリサーチ',
+    description: 'YouTube動画のリサーチ・分析をAIでサポート。競合分析やネタ探しに最適',
+    gradient: 'from-red-500 to-rose-600',
+    bgLight: 'bg-red-50',
+    textColor: 'text-red-600',
+    borderColor: 'border-red-200',
+    hoverBg: 'hover:bg-red-50',
+    features: ['AI分析', '競合リサーチ', 'ネタ探し'],
+    category: 'writing' as ServiceCategoryId,
+    href: '/youtube-analysis',
   },
 ];
 
