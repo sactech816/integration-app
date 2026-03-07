@@ -140,6 +140,13 @@ export default function SidebarNav({
       item.disabledBadge = getKdlBadge();
     }
 
+    // YouTubeキーワードリサーチはPro限定
+    if (tool.id === 'youtube-keyword-research') {
+      const proDisabled = !hasMakersProAccess && !isAdmin;
+      item.isDisabled = proDisabled;
+      item.disabledBadge = proDisabled ? 'Pro' : undefined;
+    }
+
     return item;
   });
 

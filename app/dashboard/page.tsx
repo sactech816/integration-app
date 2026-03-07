@@ -276,6 +276,16 @@ function DashboardContent() {
       return;
     }
 
+    // YouTubeキーワードリサーチはPro限定
+    if (itemId === 'youtube-keyword-research') {
+      if (!isAdmin && !hasMakersProAccess) {
+        alert('YouTubeキーワードリサーチはProプラン限定の機能です。\nProプランにアップグレードしてご利用ください。');
+        return;
+      }
+      router.push('/youtube-keyword-research/editor');
+      return;
+    }
+
     // 申し込みフォームはダッシュボード内で表示（全ユーザー利用可能、無料は手数料5%）
     if (itemId === 'order-form') {
       setActiveView('order-form' as ActiveView);
