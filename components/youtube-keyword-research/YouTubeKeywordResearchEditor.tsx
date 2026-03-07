@@ -35,6 +35,7 @@ type SearchHistoryItem = {
   sortKey: SortKey;
   results: YouTubeVideoData[];
   filteredCount: number;
+  aiAnalyses?: Record<string, string>;
 };
 
 
@@ -168,6 +169,7 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
       sortKey: opts.sortKey,
       results: data,
       filteredCount: opts.filteredCount,
+      aiAnalyses: {},
     };
     const updated = [item, ...history].slice(0, MAX_HISTORY);
     setHistory(updated);
@@ -200,6 +202,17 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
     setMinViewRatio(item.minViewRatio);
     setMaxSubscribers(item.maxSubscribers);
     setActiveHistoryId(item.id);
+    // Restore AI analysis if exists
+    const analyses = item.aiAnalyses || {};
+    const lastAnalysis = Object.values(analyses).pop();
+    if (lastAnalysis) {
+      setAiAnalysis(lastAnalysis);
+      setShowAiPanel(true);
+    } else {
+      setAiAnalysis(null);
+      setShowAiPanel(false);
+    }
+    setAiError('');
     setMobileTab('preview');
   };
 
@@ -354,6 +367,18 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
       const data = await res.json();
       if (!res.ok) { setAiError(data.error || 'AI分析に失敗しました'); return; }
       setAiAnalysis(data.analysis);
+      // Save to history
+      if (activeHistoryId) {
+        const updated = history.map(h => {
+          if (h.id === activeHistoryId) {
+            const aiAnalyses = { ...(h.aiAnalyses || {}), [analysisType]: data.analysis };
+            return { ...h, aiAnalyses };
+          }
+          return h;
+        });
+        setHistory(updated);
+        saveHistory(updated);
+      }
     } catch {
       setAiError('通信エラーが発生しました');
     } finally {
@@ -626,20 +651,34 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
                     AI分析
                   </h3>
                   <div className="grid grid-cols-2 gap-2">
-                    {AI_ANALYSIS_OPTIONS.map(opt => (
-                      <button
-                        key={opt.type}
-                        onClick={() => handleAIAnalysis(opt.type)}
-                        disabled={aiLoading}
-                        className={"p-3 rounded-lg text-left transition-all min-h-[44px] " + (aiLoading ? 'opacity-50 cursor-not-allowed bg-gray-600/50' : 'bg-gray-600/50 hover:bg-gray-600 cursor-pointer')}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm">{opt.icon}</span>
-                          <span className="text-white font-semibold text-xs">{opt.label}</span>
-                        </div>
-                        <p className="text-gray-400 text-[10px] leading-tight">{opt.desc}</p>
-                      </button>
-                    ))}
+                    {AI_ANALYSIS_OPTIONS.map(opt => {
+                      const currentHistory = activeHistoryId ? history.find(h => h.id === activeHistoryId) : null;
+                      const hasCached = !!(currentHistory?.aiAnalyses?.[opt.type]);
+                      return (
+                        <button
+                          key={opt.type}
+                          onClick={() => {
+                            if (hasCached && !aiLoading) {
+                              const cached = currentHistory!.aiAnalyses![opt.type];
+                              setAiAnalysis(cached);
+                              setShowAiPanel(true);
+                              setAiError('');
+                            } else {
+                              handleAIAnalysis(opt.type);
+                            }
+                          }}
+                          disabled={aiLoading}
+                          className={"p-3 rounded-lg text-left transition-all min-h-[44px] " + (aiLoading ? 'opacity-50 cursor-not-allowed bg-gray-600/50' : hasCached ? 'bg-cyan-900/30 hover:bg-cyan-900/50 border border-cyan-700/50 cursor-pointer' : 'bg-gray-600/50 hover:bg-gray-600 cursor-pointer')}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm">{opt.icon}</span>
+                            <span className="text-white font-semibold text-xs">{opt.label}</span>
+                            {hasCached && <span className="text-[9px] bg-cyan-800/60 text-cyan-300 px-1.5 py-0.5 rounded font-bold">保存済</span>}
+                          </div>
+                          <p className="text-gray-400 text-[10px] leading-tight">{hasCached ? 'クリックで表示（再分析は長押し）' : opt.desc}</p>
+                        </button>
+                      );
+                    })}
                   </div>
                   <p className="text-gray-500 text-[10px] mt-2 text-center">Gemini 2.5 Flash使用 / 1回約0.3円</p>
                 </div>
@@ -653,10 +692,12 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
                         AI分析レポート
                       </h3>
                       {aiAnalysis && (
-                        <button onClick={copyAiAnalysis} className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors">
-                          <Copy className="w-3.5 h-3.5" />
-                          コピー
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button onClick={copyAiAnalysis} className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors">
+                            <Copy className="w-3.5 h-3.5" />
+                            コピー
+                          </button>
+                        </div>
                       )}
                     </div>
                     {aiLoading && (
