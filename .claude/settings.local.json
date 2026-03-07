@@ -51,7 +51,11 @@
       "Bash(node scripts/gen-youtube-keyword-research.js)",
       "Bash(node scripts/gen-ai-analysis-api.js)",
       "Bash(node scripts/patch-ai-analysis-ui.js)",
-      "Bash(node scripts/patch-ai-history.js)"
+      "Bash(node scripts/patch-ai-history.js)",
+      "Bash(node -e \"const fs=require\\(''fs''\\); const c=fs.readFileSync\\(''d:/obsidian/integration-app/components/youtube-keyword-research/YouTubeKeywordResearchEditor.tsx'',''utf8''\\); const lines=c.split\\(''\\\\n''\\); console.log\\(''Total lines:'', lines.length\\); console.log\\(''---FIRST 80---''\\); lines.slice\\(0,80\\).forEach\\(\\(l,i\\)=>console.log\\(\\(i+1\\)+'': ''+l\\)\\);\")",
+      "Bash(node -e \"const fs=require\\(''fs''\\); const c=fs.readFileSync\\(''d:/obsidian/integration-app/components/youtube-keyword-research/YouTubeKeywordResearchEditor.tsx'',''utf8''\\); const lines=c.split\\(''\\\\n''\\); lines.slice\\(80,200\\).forEach\\(\\(l,i\\)=>console.log\\(\\(i+81\\)+'': ''+l\\)\\);\")",
+      "Bash(node -e \"const fs=require\\(''fs''\\); const c=fs.readFileSync\\(''d:/obsidian/integration-app/components/youtube-keyword-research/YouTubeKeywordResearchEditor.tsx'',''utf8''\\); const lines=c.split\\(''\\\\n''\\); lines.slice\\(200,350\\).forEach\\(\\(l,i\\)=>console.log\\(\\(i+201\\)+'': ''+l\\)\\);\")",
+      "Bash(node -e \"const fs=require\\(''fs''\\); const c=fs.readFileSync\\(''d:/obsidian/integration-app/components/youtube-keyword-research/YouTubeKeywordResearchEditor.tsx'',''utf8''\\); const lines=c.split\\(''\\\\n''\\); lines.slice\\(350,500\\).forEach\\(\\(l,i\\)=>console.log\\(\\(i+351\\)+'': ''+l\\)\\);\")"
     ],
     "deny": [
       "Bash(sudo:*)",

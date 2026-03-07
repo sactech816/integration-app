@@ -92,6 +92,7 @@ const getServiceIcon = (type: ServiceType) => {
     funnel: FileText,
     webinar: FileText,
     'sns-post': Send,
+    line: MessageCircle,
   };
   return icons[type] || Sparkles; // フォールバック
 };
@@ -115,6 +116,7 @@ const getServiceColor = (type: ServiceType) => {
     funnel: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200', gradient: 'from-amber-500 to-orange-600' },
     webinar: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200', gradient: 'from-violet-500 to-purple-600' },
     'sns-post': { bg: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-200', gradient: 'from-sky-500 to-blue-600' },
+    line: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200', gradient: 'from-green-500 to-emerald-600' },
   };
   return colors[type] || colors.quiz; // フォールバック
 };

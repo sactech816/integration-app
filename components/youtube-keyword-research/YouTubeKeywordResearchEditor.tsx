@@ -5,7 +5,7 @@ import {
   Search, Eye, ThumbsUp, MessageCircle, Calendar, Clock,
   AlertCircle, Loader2, BarChart3, ArrowLeft, Users, TrendingUp,
   Download, ExternalLink, Filter, SlidersHorizontal, History,
-  Trash2, ChevronDown, ChevronRight, CheckSquare, Square, Sparkles, Bot, Copy,
+  Trash2, ChevronDown, ChevronRight, CheckSquare, Square, Sparkles, Bot, Copy, Zap, FileText, ChevronUp,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import {
@@ -15,8 +15,8 @@ import {
 import type { YouTubeVideoData } from '@/lib/youtube';
 import { formatNumber, formatDuration } from '@/lib/youtube';
 
-type SortKey = 'viewCount' | 'likeCount' | 'commentCount' | 'subscriberCount' | 'viewRatio' | 'publishedAt';
-type ChartMetric = 'viewCount' | 'likeCount' | 'viewRatio' | 'subscriberCount';
+type SortKey = 'viewCount' | 'likeCount' | 'commentCount' | 'subscriberCount' | 'viewRatio' | 'publishedAt' | 'vph';
+type ChartMetric = 'viewCount' | 'likeCount' | 'viewRatio' | 'subscriberCount' | 'vph';
 type DateRange = '' | '1month' | '3months' | '6months' | '1year';
 
 type Props = {
@@ -39,13 +39,15 @@ type SearchHistoryItem = {
 };
 
 
-type AIAnalysisType = 'full' | 'tags' | 'keywords' | 'overseas';
+type AIAnalysisType = 'full' | 'tags' | 'keywords' | 'overseas' | 'persona' | 'title-pattern';
 
 const AI_ANALYSIS_OPTIONS: { type: AIAnalysisType; label: string; icon: string; desc: string }[] = [
   { type: 'full', label: '総合分析', icon: '📊', desc: '市場概況・バズ特徴・企画アイデアを一括分析' },
   { type: 'tags', label: 'タグ作成', icon: '🏷️', desc: 'チャンネルタグ30個+ハッシュタグ15個を提案' },
   { type: 'keywords', label: 'キーワード100選', icon: '🔑', desc: 'ヒットキーワード100選+穴場キーワード提案' },
   { type: 'overseas', label: '海外バズ動画', icon: '🌍', desc: '海外トレンド分析+日本未上陸の企画提案' },
+  { type: 'persona', label: 'ペルソナ分析', icon: '🎯', desc: '視聴者ターゲット層・年齢・悩み・目的を推定' },
+  { type: 'title-pattern', label: 'タイトル分析', icon: '✏️', desc: 'バズるタイトルのパターン分析+テンプレ提案' },
 ];
 
 const STORAGE_KEY = 'yt-keyword-research-history';
@@ -57,6 +59,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'subscriberCount', label: '登録者数' },
   { key: 'likeCount', label: '高評価数' },
   { key: 'commentCount', label: 'コメント数' },
+  { key: 'vph', label: 'VPH' },
   { key: 'publishedAt', label: '公開日' },
 ];
 
@@ -73,6 +76,7 @@ const CHART_METRICS: { key: ChartMetric; label: string }[] = [
   { key: 'viewRatio', label: '再生倍率' },
   { key: 'subscriberCount', label: '登録者数' },
   { key: 'likeCount', label: '高評価' },
+  { key: 'vph', label: 'VPH(時間あたり再生)' },
 ];
 
 function getPublishedAfterISO(range: DateRange): string | undefined {
@@ -119,6 +123,12 @@ function renderMarkdown(md: string): string {
     .replace(/`([^`]+)`/g, '<code class="bg-gray-600 px-1.5 py-0.5 rounded text-cyan-300 text-xs">$1</code>')
     .replace(/\n\n/g, '<br/><br/>')
     .replace(/\n/g, '<br/>');
+}
+
+function calcVPH(viewCount: number, publishedAt: string): number {
+  const hours = (Date.now() - new Date(publishedAt).getTime()) / (1000 * 60 * 60);
+  if (hours <= 0) return 0;
+  return Math.round((viewCount / hours) * 100) / 100;
 }
 
 const CHART_COLORS = ['#f43f5e', '#fb923c', '#facc15', '#4ade80', '#22d3ee', '#818cf8', '#e879f9', '#f472b6', '#a78bfa', '#34d399'];
@@ -271,6 +281,7 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
     const sorted = [...filteredResults];
     sorted.sort((a, b) => {
       if (sortKey === 'publishedAt') return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+      if (sortKey === 'vph') return calcVPH(b.viewCount, b.publishedAt) - calcVPH(a.viewCount, a.publishedAt);
       return (b[sortKey] as number) - (a[sortKey] as number);
     });
     return sorted;
@@ -279,7 +290,7 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
   const chartData = useMemo(() => {
     return sortedResults.slice(0, 10).map((v, i) => ({
       name: v.title.length > 15 ? v.title.slice(0, 15) + '...' : v.title,
-      value: v[chartMetric] as number,
+      value: chartMetric === 'vph' ? calcVPH(v.viewCount, v.publishedAt) : v[chartMetric] as number,
       color: CHART_COLORS[i % CHART_COLORS.length],
     }));
   }, [sortedResults, chartMetric]);
@@ -311,11 +322,13 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
       'フィルター後件数,' + filtered.length + '件',
       '',
     ];
-    const headers = ['順位', 'タイトル', 'チャンネル名', '再生数', 'チャンネル登録数', '再生倍率', '高評価数', 'コメント数', 'エンゲージメント率(%)', '高評価率(%)', '動画時間', '動画公開日', 'タグ', '動画URL'];
+    const headers = ['順位', 'タイトル', 'チャンネル名', '再生数', 'チャンネル登録数', '再生倍率', 'VPH(時間あたり再生)', '高評価数', 'コメント数', 'エンゲージメント率(%)', '高評価率(%)', '動画時間', '動画公開日', 'タグ', '説明文(冒頭200文字)', '動画URL'];
     const rows = filtered.map((v, i) => {
       const engRate = v.viewCount > 0 ? (((v.likeCount + v.commentCount) / v.viewCount) * 100).toFixed(2) : '0';
       const likeRate = v.viewCount > 0 ? ((v.likeCount / v.viewCount) * 100).toFixed(2) : '0';
-      return [i + 1, '"' + v.title.replace(/"/g, '""') + '"', '"' + v.channelTitle.replace(/"/g, '""') + '"', v.viewCount, v.subscriberCount, v.viewRatio, v.likeCount, v.commentCount, engRate, likeRate, formatDuration(v.duration), v.publishedAt.split('T')[0], '"' + (v.tags || []).join(', ').replace(/"/g, '""') + '"', 'https://www.youtube.com/watch?v=' + v.videoId].join(',');
+      const vph = calcVPH(v.viewCount, v.publishedAt);
+      const descShort = (v.description || '').slice(0, 200).replace(/"/g, '""').replace(/\n/g, ' ');
+      return [i + 1, '"' + v.title.replace(/"/g, '""') + '"', '"' + v.channelTitle.replace(/"/g, '""') + '"', v.viewCount, v.subscriberCount, v.viewRatio, vph, v.likeCount, v.commentCount, engRate, likeRate, formatDuration(v.duration), v.publishedAt.split('T')[0], '"' + (v.tags || []).join(', ').replace(/"/g, '""') + '"', '"' + descShort + '"', 'https://www.youtube.com/watch?v=' + v.videoId].join(',');
     });
     return cond.join('\n') + headers.join(',') + '\n' + rows.join('\n');
   };
@@ -525,10 +538,14 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
                   <SummaryRow label="結果件数" value={sortedResults.length + '件'} />
                   <SummaryRow label="平均再生数" value={formatNumber(Math.round(sortedResults.reduce((s, v) => s + v.viewCount, 0) / sortedResults.length))} />
                   <SummaryRow label="平均再生倍率" value={(sortedResults.reduce((s, v) => s + v.viewRatio, 0) / sortedResults.length).toFixed(2) + 'x'} />
+                  <SummaryRow label="平均VPH" value={Math.round(sortedResults.reduce((s, v) => s + calcVPH(v.viewCount, v.publishedAt), 0) / sortedResults.length).toLocaleString()} />
                   <SummaryRow label="平均登録者数" value={formatNumber(Math.round(sortedResults.reduce((s, v) => s + v.subscriberCount, 0) / sortedResults.length))} />
                 </div>
               </div>
             )}
+
+            {/* Title Pattern Analysis */}
+            {hasResults && <TitlePatternCard results={sortedResults} />}
 
             {/* Search History */}
             {history.length > 0 && (
@@ -720,38 +737,7 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
                 )}
 
                 {sortedResults.map((v, i) => (
-                  <div key={v.videoId} className="bg-gray-700/50 rounded-xl p-3">
-                    <div className="flex gap-3">
-                      <div className="flex-shrink-0 w-36 relative group">
-                        <a href={'https://www.youtube.com/watch?v=' + v.videoId} target="_blank" rel="noopener noreferrer">
-                          <div className="rounded-lg overflow-hidden">
-                            <img src={v.thumbnailUrl} alt={v.title} className="w-full aspect-video object-cover" />
-                          </div>
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors rounded-lg flex items-center justify-center">
-                            <ExternalLink className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </div>
-                        </a>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start gap-2 mb-1">
-                          <span className="text-rose-400 font-bold text-xs flex-shrink-0 mt-0.5">#{i + 1}</span>
-                          <a href={'https://www.youtube.com/watch?v=' + v.videoId} target="_blank" rel="noopener noreferrer" className="text-white font-bold text-sm leading-snug line-clamp-2 hover:text-rose-300 transition-colors">
-                            {v.title}
-                          </a>
-                        </div>
-                        <a href={'https://www.youtube.com/channel/' + v.channelId} target="_blank" rel="noopener noreferrer" className="text-gray-400 text-xs mb-2 block hover:text-rose-300 transition-colors">
-                          {v.channelTitle} / {formatDateStr(v.publishedAt)}{v.duration ? ' / ' + formatDuration(v.duration) : ''}
-                        </a>
-                        <div className="flex flex-wrap gap-2">
-                          <MetricBadge icon={Eye} value={formatNumber(v.viewCount)} color="blue" />
-                          <MetricBadge icon={Users} value={formatNumber(v.subscriberCount)} color="red" />
-                          <MetricBadge icon={TrendingUp} value={v.viewRatio + 'x'} color={v.viewRatio >= 2 ? 'green' : 'gray'} />
-                          <MetricBadge icon={ThumbsUp} value={formatNumber(v.likeCount)} color="emerald" />
-                          <MetricBadge icon={MessageCircle} value={formatNumber(v.commentCount)} color="amber" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <VideoCard key={v.videoId} video={v} index={i} formatDateStr={formatDateStr} />
                 ))}
               </div>
             )}
@@ -759,6 +745,122 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
         </div>
         <div className="hidden lg:block lg:w-1/2 lg:flex-shrink-0 bg-gray-50"></div>
       </div>
+    </div>
+  );
+}
+
+function TitlePatternCard({ results }: { results: YouTubeVideoData[] }) {
+  const stats = useMemo(() => {
+    const titles = results.map(v => v.title);
+    const hasNumber = titles.filter(t => /\d/.test(t)).length;
+    const hasQuestion = titles.filter(t => /[？?]/.test(t)).length;
+    const hasExclamation = titles.filter(t => /[！!]/.test(t)).length;
+    const hasBrackets = titles.filter(t => /[【\[「『]/.test(t)).length;
+    const avgLength = Math.round(titles.reduce((s, t) => s + t.length, 0) / titles.length);
+    const maxViewVideo = results.reduce((best, v) => v.viewCount > best.viewCount ? v : best, results[0]);
+    const maxRatioVideo = results.reduce((best, v) => v.viewRatio > best.viewRatio ? v : best, results[0]);
+    const pct = (n: number) => Math.round((n / titles.length) * 100);
+    return { hasNumber: pct(hasNumber), hasQuestion: pct(hasQuestion), hasExclamation: pct(hasExclamation), hasBrackets: pct(hasBrackets), avgLength, maxViewVideo, maxRatioVideo, total: titles.length };
+  }, [results]);
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-300 shadow-md p-6">
+      <div className="flex items-center gap-2 mb-3">
+        <FileText className="w-5 h-5 text-rose-600" />
+        <h3 className="text-sm font-bold text-gray-900">タイトルパターン分析</h3>
+      </div>
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <PatternStat label="数字を含む" value={stats.hasNumber + '%'} />
+        <PatternStat label="疑問形（？）" value={stats.hasQuestion + '%'} />
+        <PatternStat label="感嘆符（！）" value={stats.hasExclamation + '%'} />
+        <PatternStat label="括弧【】「」" value={stats.hasBrackets + '%'} />
+      </div>
+      <div className="space-y-1.5 text-xs">
+        <div className="flex justify-between text-gray-600">
+          <span>平均タイトル文字数</span>
+          <span className="font-bold text-gray-900">{stats.avgLength}文字</span>
+        </div>
+        <div className="flex justify-between text-gray-600">
+          <span>最多再生タイトル</span>
+          <span className="font-bold text-gray-900 text-right max-w-[60%] truncate" title={stats.maxViewVideo.title}>{stats.maxViewVideo.title}</span>
+        </div>
+        <div className="flex justify-between text-gray-600">
+          <span>最高倍率タイトル</span>
+          <span className="font-bold text-gray-900 text-right max-w-[60%] truncate" title={stats.maxRatioVideo.title}>{stats.maxRatioVideo.title}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PatternStat({ label, value }: { label: string; value: string }) {
+  const pct = parseInt(value);
+  return (
+    <div className="bg-gray-50 rounded-lg p-2.5 border border-gray-200">
+      <div className="text-xs text-gray-500 mb-1">{label}</div>
+      <div className="flex items-end gap-1.5">
+        <span className="text-lg font-bold text-gray-900">{value}</span>
+        <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden mb-1.5">
+          <div className="h-full bg-rose-400 rounded-full" style={{ width: Math.min(pct, 100) + '%' }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VideoCard({ video: v, index: i, formatDateStr }: { video: YouTubeVideoData; index: number; formatDateStr: (s: string) => string }) {
+  const [showDesc, setShowDesc] = useState(false);
+  const vph = calcVPH(v.viewCount, v.publishedAt);
+  const descPreview = (v.description || '').slice(0, 300);
+  const hasDesc = !!v.description && v.description.length > 0;
+
+  return (
+    <div className="bg-gray-700/50 rounded-xl p-3">
+      <div className="flex gap-3">
+        <div className="flex-shrink-0 w-36 relative group">
+          <a href={'https://www.youtube.com/watch?v=' + v.videoId} target="_blank" rel="noopener noreferrer">
+            <div className="rounded-lg overflow-hidden">
+              <img src={v.thumbnailUrl} alt={v.title} className="w-full aspect-video object-cover" />
+            </div>
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors rounded-lg flex items-center justify-center">
+              <ExternalLink className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </a>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start gap-2 mb-1">
+            <span className="text-rose-400 font-bold text-xs flex-shrink-0 mt-0.5">#{i + 1}</span>
+            <a href={'https://www.youtube.com/watch?v=' + v.videoId} target="_blank" rel="noopener noreferrer" className="text-white font-bold text-sm leading-snug line-clamp-2 hover:text-rose-300 transition-colors">
+              {v.title}
+            </a>
+          </div>
+          <a href={'https://www.youtube.com/channel/' + v.channelId} target="_blank" rel="noopener noreferrer" className="text-gray-400 text-xs mb-2 block hover:text-rose-300 transition-colors">
+            {v.channelTitle} / {formatDateStr(v.publishedAt)}{v.duration ? ' / ' + formatDuration(v.duration) : ''}
+          </a>
+          <div className="flex flex-wrap gap-2">
+            <MetricBadge icon={Eye} value={formatNumber(v.viewCount)} color="blue" />
+            <MetricBadge icon={Users} value={formatNumber(v.subscriberCount)} color="red" />
+            <MetricBadge icon={TrendingUp} value={v.viewRatio + 'x'} color={v.viewRatio >= 2 ? 'green' : 'gray'} />
+            <MetricBadge icon={Zap} value={vph.toLocaleString() + '/h'} color={vph >= 100 ? 'amber' : 'gray'} />
+            <MetricBadge icon={ThumbsUp} value={formatNumber(v.likeCount)} color="emerald" />
+            <MetricBadge icon={MessageCircle} value={formatNumber(v.commentCount)} color="amber" />
+          </div>
+        </div>
+      </div>
+      {hasDesc && (
+        <div className="mt-2">
+          <button onClick={() => setShowDesc(!showDesc)} className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-gray-200 transition-colors">
+            <FileText className="w-3 h-3" />
+            {showDesc ? '説明文を閉じる' : '説明文を表示'}
+            {showDesc ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+          {showDesc && (
+            <div className="mt-1.5 p-2.5 bg-gray-800/50 rounded-lg text-[11px] text-gray-400 leading-relaxed whitespace-pre-wrap break-all max-h-40 overflow-y-auto">
+              {descPreview}{v.description && v.description.length > 300 ? '...' : ''}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

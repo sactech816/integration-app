@@ -42,6 +42,7 @@ const SHORT_LABELS: Record<ServiceType, string> = {
   funnel: 'ファネル',
   webinar: 'ウェビナー',
   'sns-post': 'SNS',
+  line: 'LINE',
 };
 
 const getServiceColor = (type: ServiceType) => {

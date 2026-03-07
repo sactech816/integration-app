@@ -159,6 +159,7 @@ export default function FeaturedManager() {
       funnel: 'ファネル',
       webinar: 'ウェビナーLP',
       'sns-post': 'SNS投稿',
+      line: 'LINE公式連携',
     };
     return labels[type] || type;
   };
