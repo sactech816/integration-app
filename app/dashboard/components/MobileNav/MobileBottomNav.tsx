@@ -32,7 +32,7 @@ export default function MobileBottomNav({ activeView, onItemClick }: MobileBotto
         activeView={activeView}
       />
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 border-t border-slate-700 shadow-[0_-2px_10px_rgba(0,0,0,0.3)]">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-slate-700 border-t border-slate-600 shadow-[0_-2px_10px_rgba(0,0,0,0.3)]">
         <div
           className="flex justify-around items-center h-16 px-2"
           style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
@@ -47,7 +47,7 @@ export default function MobileBottomNav({ activeView, onItemClick }: MobileBotto
             <Home size={22} strokeWidth={isHome ? 2.5 : 2} />
             <span className={`text-[10px] ${isHome ? 'font-bold' : 'font-medium'}`}>ホーム</span>
           </button>
-
+          <div className="w-px h-8 bg-slate-500" />
           {/* 作成ツール（編集） */}
           <button
             onClick={() => setIsToolsSheetOpen(!isToolsSheetOpen)}
@@ -58,6 +58,7 @@ export default function MobileBottomNav({ activeView, onItemClick }: MobileBotto
             <LayoutGrid size={22} strokeWidth={isTool || isToolsSheetOpen ? 2.5 : 2} />
             <span className={`text-[10px] ${isTool || isToolsSheetOpen ? 'font-bold' : 'font-medium'}`}>作成ツール（編集）</span>
           </button>
+          <div className="w-px h-8 bg-slate-500" />
 
           {/* 設定 */}
           <button
