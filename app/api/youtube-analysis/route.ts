@@ -33,14 +33,23 @@ export async function POST(request: NextRequest) {
     const response = await fetch(apiUrl);
 
     if (!response.ok) {
+      const errorBody = await response.text();
+      console.error('YouTube API error:', response.status, errorBody);
+
       if (response.status === 403) {
         return NextResponse.json(
           { error: 'API利用制限に達しました。しばらく時間をおいてお試しください' },
           { status: 403 }
         );
       }
+      if (response.status === 400) {
+        return NextResponse.json(
+          { error: 'APIキーが無効です。設定を確認してください' },
+          { status: 400 }
+        );
+      }
       return NextResponse.json(
-        { error: 'YouTube APIへのリクエストに失敗しました' },
+        { error: `YouTube APIエラー (${response.status}): ${errorBody}` },
         { status: response.status }
       );
     }
