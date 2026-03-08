@@ -217,62 +217,117 @@ export async function getMultipleAnalytics(
       return contentIds.map(id => ({ contentId: id, analytics: defaultResult }));
     }
 
-    // RPC関数でDB側で集計（高速）
-    console.log('[Analytics] Fetching via RPC for:', { contentIds: contentIds.length, contentType });
-    
+    // RPC関数でDB側で集計（高速）- フォールバックあり
+    console.log('[Analytics] Fetching analytics for:', { contentIds: contentIds.length, contentType });
+
     const { data: summaryData, error } = await supabase.rpc('get_analytics_summary', {
       p_content_ids: contentIds,
       p_content_type: contentType
     });
 
-    if (error) {
-      console.error('[Analytics] RPC error:', error);
-      return contentIds.map(id => ({ contentId: id, analytics: defaultResult }));
-    }
+    // RPC成功時
+    if (!error && summaryData) {
+      console.log('[Analytics] RPC result:', { resultCount: summaryData.length });
 
-    console.log('[Analytics] RPC result:', { 
-      resultCount: summaryData?.length || 0
-    });
+      const summaryMap = new Map<string, {
+        views: number;
+        clicks: number;
+        completions: number;
+        avg_scroll_depth: number;
+        avg_time_spent: number;
+        read_rate: number;
+        click_rate: number;
+      }>();
 
-    // 結果をマッピング
-    const summaryMap = new Map<string, {
-      views: number;
-      clicks: number;
-      completions: number;
-      avg_scroll_depth: number;
-      avg_time_spent: number;
-      read_rate: number;
-      click_rate: number;
-    }>();
-    
-    if (summaryData) {
       for (const row of summaryData) {
         summaryMap.set(row.content_id, row);
       }
+
+      return contentIds.map(contentId => {
+        const summary = summaryMap.get(contentId);
+        if (!summary) {
+          return { contentId, analytics: defaultResult };
+        }
+        return {
+          contentId,
+          analytics: {
+            views: Number(summary.views) || 0,
+            clicks: Number(summary.clicks) || 0,
+            completions: Number(summary.completions) || 0,
+            avgScrollDepth: Math.round(Number(summary.avg_scroll_depth) || 0),
+            avgTimeSpent: Math.round(Number(summary.avg_time_spent) || 0),
+            readRate: Math.round(Number(summary.read_rate) || 0),
+            clickRate: Math.round(Number(summary.click_rate) || 0)
+          }
+        };
+      });
     }
 
-    const results = contentIds.map(contentId => {
-      const summary = summaryMap.get(contentId);
-      
-      if (!summary) {
+    // RPC失敗時: 直接クエリでフォールバック
+    if (error) {
+      console.warn('[Analytics] RPC error, falling back to direct query:', error.message);
+    }
+
+    // 全イベントを一括取得して集計
+    const { data: allEvents, error: queryError } = await supabase
+      .from('analytics')
+      .select('profile_id, event_type, event_data')
+      .in('profile_id', contentIds)
+      .eq('content_type', contentType);
+
+    if (queryError) {
+      console.error('[Analytics] Direct query error:', queryError);
+      return contentIds.map(id => ({ contentId: id, analytics: defaultResult }));
+    }
+
+    // コンテンツIDごとにイベントをグループ化して集計
+    const eventsByContent = new Map<string, typeof allEvents>();
+    for (const event of (allEvents || [])) {
+      const existing = eventsByContent.get(event.profile_id) || [];
+      existing.push(event);
+      eventsByContent.set(event.profile_id, existing);
+    }
+
+    return contentIds.map(contentId => {
+      const events = eventsByContent.get(contentId) || [];
+      if (events.length === 0) {
         return { contentId, analytics: defaultResult };
       }
+
+      const views = events.filter(e => e.event_type === 'view');
+      const clicks = events.filter(e => e.event_type === 'click');
+      const completions = events.filter(e => e.event_type === 'completion');
+      const scrolls = events.filter(e => e.event_type === 'scroll');
+      const times = events.filter(e => e.event_type === 'time');
+      const reads = events.filter(e => e.event_type === 'read');
+
+      const scrollDepths = scrolls.map(e => e.event_data?.scrollDepth || 0).filter((d: number) => d > 0);
+      const avgScrollDepth = scrollDepths.length > 0
+        ? Math.round(scrollDepths.reduce((a: number, b: number) => a + b, 0) / scrollDepths.length)
+        : 0;
+
+      const timeSpents = times.map(e => e.event_data?.timeSpent || 0).filter((t: number) => t > 0);
+      const avgTimeSpent = timeSpents.length > 0
+        ? Math.round(timeSpents.reduce((a: number, b: number) => a + b, 0) / timeSpents.length)
+        : 0;
+
+      const readCount = reads.length;
+      const readRate = views.length > 0 ? Math.round((readCount / views.length) * 100) : 0;
+      const clickRate = views.length > 0 ? Math.round((clicks.length / views.length) * 100) : 0;
 
       return {
         contentId,
         analytics: {
-          views: Number(summary.views) || 0,
-          clicks: Number(summary.clicks) || 0,
-          completions: Number(summary.completions) || 0,
-          avgScrollDepth: Math.round(Number(summary.avg_scroll_depth) || 0),
-          avgTimeSpent: Math.round(Number(summary.avg_time_spent) || 0),
-          readRate: Math.round(Number(summary.read_rate) || 0),
-          clickRate: Math.round(Number(summary.click_rate) || 0)
+          views: views.length,
+          clicks: clicks.length,
+          completions: completions.length,
+          avgScrollDepth,
+          avgTimeSpent,
+          readRate,
+          clickRate
         }
       };
     });
-
-    return results;
   } catch (error) {
     console.error('[Analytics] Unexpected error:', error);
     return contentIds.map(id => ({ contentId: id, analytics: defaultResult }));

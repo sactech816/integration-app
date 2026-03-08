@@ -140,14 +140,13 @@ export const extractYouTubeId = (url: string): string | null => {
 /**
  * 動画プラットフォームを自動検出
  */
-export type VideoPlatform = 'youtube' | 'vimeo' | 'tiktok' | 'instagram' | 'unknown';
+export type VideoPlatform = 'youtube' | 'vimeo' | 'tiktok' | 'unknown';
 
 export const detectVideoPlatform = (url: string): VideoPlatform => {
   if (!url) return 'unknown';
   if (/youtu\.?be/.test(url)) return 'youtube';
   if (/vimeo\.com/.test(url)) return 'vimeo';
   if (/tiktok\.com/.test(url)) return 'tiktok';
-  if (/instagram\.com/.test(url)) return 'instagram';
   return 'unknown';
 };
 
@@ -171,14 +170,6 @@ export const extractTikTokUrl = (url: string): string | null => {
 };
 
 /**
- * Instagram Reels/投稿のIDを抽出
- */
-export const extractInstagramId = (url: string): string | null => {
-  const match = url.match(/instagram\.com\/(?:reel|reels|p)\/([A-Za-z0-9_-]+)/);
-  return match ? match[1] : null;
-};
-
-/**
  * 動画の埋め込み情報を取得
  */
 export const getVideoEmbedInfo = (url: string): { platform: VideoPlatform; embedUrl: string | null; aspectClass: string } => {
@@ -195,10 +186,6 @@ export const getVideoEmbedInfo = (url: string): { platform: VideoPlatform; embed
     case 'tiktok': {
       const tikTokUrl = extractTikTokUrl(url);
       return { platform, embedUrl: tikTokUrl, aspectClass: 'aspect-[9/16]' };
-    }
-    case 'instagram': {
-      const id = extractInstagramId(url);
-      return { platform, embedUrl: id ? `https://www.instagram.com/reel/${id}/embed` : null, aspectClass: 'aspect-[9/16]' };
     }
     default:
       return { platform: 'unknown', embedUrl: null, aspectClass: 'aspect-video' };

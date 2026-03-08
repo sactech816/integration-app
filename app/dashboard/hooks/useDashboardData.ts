@@ -532,6 +532,47 @@ export function useDashboardData(): UseDashboardDataReturn {
           }
         }
 
+        // 申し込みフォーム取得（アナリティクス用）
+        if (selectedService === 'order-form') {
+          const query = isAdmin
+            ? supabase.from('order_forms').select('*').order('created_at', { ascending: false })
+            : supabase.from('order_forms').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+
+          const { data: orderForms } = await query;
+          if (orderForms) {
+            let analyticsMapObj: Record<string, AnalyticsData> = {};
+            if (!skipAnalytics) {
+              const slugs = orderForms.map((f: any) => f.slug).filter(Boolean);
+              if (slugs.length > 0) {
+                const analyticsResults = await getMultipleAnalytics(slugs, 'order-form');
+                analyticsResults.forEach((result) => {
+                  analyticsMapObj[result.contentId] = result.analytics;
+                });
+              }
+            }
+            allContents.push(
+              ...orderForms.map((f: any) => {
+                const analytics = analyticsMapObj[f.slug];
+                return {
+                  id: f.id,
+                  slug: f.slug,
+                  title: f.title || 'フォーム',
+                  created_at: f.created_at,
+                  updated_at: f.updated_at,
+                  type: 'order-form' as ServiceType,
+                  user_id: f.user_id,
+                  views_count: analytics?.views || 0,
+                  clicks_count: analytics?.clicks || 0,
+                  completions_count: analytics?.completions || f.submission_count || 0,
+                  readRate: analytics?.readRate || 0,
+                  avgTimeSpent: analytics?.avgTimeSpent || 0,
+                  clickRate: analytics?.clickRate || 0,
+                };
+              })
+            );
+          }
+        }
+
         // 作成日時でソート
         allContents.sort((a, b) => {
           const dateA = new Date(a.created_at || 0);

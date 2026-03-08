@@ -193,12 +193,12 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
     case 'youtube': {
       const embedInfo = getVideoEmbedInfo(block.data.url);
       const isTikTokEmbed = embedInfo.platform === 'tiktok';
-      const isVertical = embedInfo.platform === 'tiktok' || embedInfo.platform === 'instagram';
+      const isVertical = embedInfo.platform === 'tiktok';
 
       if (!embedInfo.embedUrl) {
         // URLが未設定または無効な場合はプレースホルダーを表示
         const placeholderText = '動画URLを設定してください';
-        const subText = 'YouTube / Vimeo / TikTok / Instagram Reels に対応';
+        const subText = 'YouTube / Vimeo / TikTok に対応';
         if (variant === 'profile') {
           return (
             <div className="mb-4 aspect-video rounded-2xl overflow-hidden shadow-lg bg-white/90 backdrop-blur flex flex-col items-center justify-center">
@@ -256,7 +256,7 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
         );
       }
 
-      // YouTube / Vimeo / Instagram はiframe埋め込み
+      // YouTube / Vimeo はiframe埋め込み
       const containerClass = isVertical ? 'max-w-md mx-auto' : 'max-w-4xl mx-auto';
       if (variant === 'profile') {
         return (

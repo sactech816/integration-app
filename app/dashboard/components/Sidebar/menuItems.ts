@@ -248,12 +248,12 @@ export const TOOL_ITEMS: ToolItem[] = [
   // 収益化・販売
   {
     id: 'order-form',
-    label: '申し込みフォーム',
+    label: 'フォームメーカー',
     icon: ClipboardCheck,
     description: '申し込み・決済フォーム',
     color: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200' },
     href: '/order-form/new',
-    category: 'monetization',
+    category: 'page',
   },
   {
     id: 'my-games',

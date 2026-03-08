@@ -273,9 +273,17 @@ export default function MainContent({
         />
       )}
 
-      {/* 申し込みフォーム */}
+      {/* フォームメーカー */}
       {activeView === 'order-form' && user && (
-        <OrderFormList userId={user.id} isAdmin={isAdmin} isUnlocked={isUnlocked} />
+        <div className="space-y-6">
+          <OrderFormList userId={user.id} isAdmin={isAdmin} isUnlocked={isUnlocked} />
+          <AnalyticsSection
+            contents={contents}
+            selectedService={activeView as ServiceType}
+            isUnlocked={isUnlocked}
+            onNavigate={onNavigate}
+          />
+        </div>
       )}
 
       {/* LINE公式連携 */}

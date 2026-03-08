@@ -60,7 +60,7 @@ const blockTypes = [
   // ウェビナーLP専用ブロック
   { type: 'hero', label: 'ヒーロー', icon: Zap, description: 'タイトル・サブタイトル', category: 'webinar', color: { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', icon: 'text-violet-500', hover: 'hover:bg-violet-100' } },
   { type: 'hero_fullwidth', label: 'フルワイドヒーロー', icon: Layout, description: 'インパクトのあるファーストビュー', category: 'webinar', color: { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', icon: 'text-violet-500', hover: 'hover:bg-violet-100' } },
-  { type: 'youtube', label: '動画', icon: Youtube, description: 'YouTube / Vimeo / TikTok / Instagram', category: 'webinar', color: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', icon: 'text-red-500', hover: 'hover:bg-red-100' } },
+  { type: 'youtube', label: '動画', icon: Youtube, description: 'YouTube / Vimeo / TikTok', category: 'webinar', color: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', icon: 'text-red-500', hover: 'hover:bg-red-100' } },
   { type: 'speaker', label: '講師紹介', icon: UserCircle, description: '講師プロフィール', category: 'webinar', color: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', icon: 'text-emerald-500', hover: 'hover:bg-emerald-100' } },
   { type: 'agenda', label: 'アジェンダ', icon: List, description: '学べること・内容', category: 'webinar', color: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', icon: 'text-blue-500', hover: 'hover:bg-blue-100' } },
   { type: 'countdown', label: 'カウントダウン', icon: Timer, description: '開催日時タイマー', category: 'webinar', color: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-500', hover: 'hover:bg-orange-100' } },
@@ -883,7 +883,6 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
           youtube: { label: 'YouTube', color: 'bg-red-100 text-red-700' },
           vimeo: { label: 'Vimeo', color: 'bg-sky-100 text-sky-700' },
           tiktok: { label: 'TikTok', color: 'bg-gray-900 text-white' },
-          instagram: { label: 'Instagram', color: 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700' },
           unknown: { label: '', color: '' },
         };
         const detected = platformLabels[videoPlatform];
@@ -901,12 +900,15 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
                   setVideoMeta(prev => ({ ...prev, [block.id]: null }));
                 }
               }} ph="https://www.youtube.com/watch?v=..." />
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 {detected.label && (
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${detected.color}`}>{detected.label} 検出</span>
                 )}
-                <p className="text-xs text-gray-500">YouTube / Vimeo / TikTok / Instagram Reels に対応</p>
+                <p className="text-xs text-gray-500">YouTube / Vimeo / TikTok に対応</p>
               </div>
+              {videoPlatform === 'tiktok' && (
+                <p className="text-xs text-amber-600 -mt-2">TikTokは https://www.tiktok.com/@ユーザー名/video/数字 形式のフルURLを入力してください</p>
+              )}
             </div>
             {/* YouTube メタ情報表示 */}
             {isFetchingMeta && (

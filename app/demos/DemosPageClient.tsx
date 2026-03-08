@@ -17,6 +17,7 @@ import {
   ClipboardList,
   GitBranch,
   Image as ImageIcon,
+  Video,
 } from 'lucide-react';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
@@ -495,6 +496,45 @@ const surveyDemos = [
   },
 ];
 
+// ウェビナーLPデモ
+const webinarDemos = [
+  {
+    name: '無料ウェビナー集客',
+    description: 'リード獲得型。メール登録でセミナー参加を促す構成',
+    href: '/webinar/demo/free-webinar',
+    color: 'from-violet-500 to-purple-600',
+    badge: '集客型',
+  },
+  {
+    name: '録画セミナー販売',
+    description: '録画済みセミナーの販売・申込を誘導する構成',
+    href: '/webinar/demo/recorded-seminar',
+    color: 'from-blue-500 to-indigo-600',
+    badge: '販売型',
+  },
+  {
+    name: 'セミナーシリーズ',
+    description: '全3回の連続講座を案内する構成',
+    href: '/webinar/demo/series-seminar',
+    color: 'from-emerald-500 to-green-600',
+    badge: 'シリーズ型',
+  },
+  {
+    name: 'プロダクトデモ',
+    description: 'SaaS・ツールのデモウェビナー用構成',
+    href: '/webinar/demo/product-demo',
+    color: 'from-gray-600 to-slate-800',
+    badge: 'BtoB型',
+  },
+  {
+    name: '出版記念セミナー',
+    description: 'Kindle著者の出版記念ウェビナー用構成',
+    href: '/webinar/demo/book-launch',
+    color: 'from-rose-500 to-red-600',
+    badge: '著者向け',
+  },
+];
+
 export default function DemosPageClient() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
@@ -545,9 +585,9 @@ export default function DemosPageClient() {
     url: `${siteUrl}/demos`,
     mainEntity: {
       '@type': 'ItemList',
-      numberOfItems: quizDemos.length + profileDemos.length + businessDemos.length + surveyDemos.length + salesLetterDemos.length + newsletterDemos.length + orderFormDemos.length + funnelDemos.length + thumbnailDemos.length,
+      numberOfItems: quizDemos.length + profileDemos.length + businessDemos.length + surveyDemos.length + salesLetterDemos.length + newsletterDemos.length + orderFormDemos.length + funnelDemos.length + thumbnailDemos.length + webinarDemos.length,
       itemListElement: [
-        ...[...quizDemos, ...profileDemos, ...businessDemos, ...surveyDemos, ...salesLetterDemos, ...newsletterDemos, ...orderFormDemos, ...funnelDemos, ...thumbnailDemos].map((demo, index) => ({
+        ...[...quizDemos, ...profileDemos, ...businessDemos, ...surveyDemos, ...salesLetterDemos, ...newsletterDemos, ...orderFormDemos, ...funnelDemos, ...thumbnailDemos, ...webinarDemos].map((demo, index) => ({
           '@type': 'ListItem',
           position: index + 1,
           name: demo.name,
@@ -981,6 +1021,52 @@ export default function DemosPageClient() {
                 </div>
               </Link>
             ))}
+          </div>
+        </section>
+
+        {/* ウェビナーLPデモ */}
+        <section className="bg-gradient-to-br from-indigo-50 to-violet-50 py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <Video size={32} className="text-indigo-600" />
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
+                ウェビナーLP
+              </h2>
+              <p className="text-lg text-gray-600">
+                用途別のウェビナーLPテンプレートを体験
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {webinarDemos.map((demo, index) => (
+                <Link
+                  key={index}
+                  href={demo.href}
+                  className="group bg-white rounded-2xl border-2 border-gray-100 p-6 hover:border-transparent hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${demo.color} flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg`}>
+                      <Video size={28} className="text-white" />
+                    </div>
+                    <span className="text-xs font-bold bg-indigo-100 text-indigo-600 px-2.5 py-1 rounded-full">
+                      {demo.badge}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    {demo.name}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    {demo.description}
+                  </p>
+                  <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm group-hover:gap-4 transition-all">
+                    デモを見る
+                    <ArrowRight size={16} />
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
 
