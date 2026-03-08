@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const timeParam = validTimes.includes(timeFilter) ? timeFilter : 'all';
     const limit = Math.min(Math.max(maxResults, 1), 100);
 
-    let baseUrl = 'https://www.reddit.com/search.json';
+    let baseUrl = 'https://old.reddit.com/search.json';
     const params = new URLSearchParams({
       q: keyword.trim(),
       sort: sortParam,
@@ -53,13 +53,14 @@ export async function POST(request: NextRequest) {
 
     if (subreddit && typeof subreddit === 'string' && subreddit.trim()) {
       const sub = subreddit.trim().replace(/^r\//, '');
-      baseUrl = `https://www.reddit.com/r/${encodeURIComponent(sub)}/search.json`;
+      baseUrl = `https://old.reddit.com/r/${encodeURIComponent(sub)}/search.json`;
       params.set('restrict_sr', 'on');
     }
 
     const res = await fetch(`${baseUrl}?${params}`, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; MakersTokyo/1.0)',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Accept': 'application/json',
       },
     });
 
