@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Block } from '@/lib/types';
-import { extractYouTubeId } from '@/lib/utils';
+import { extractYouTubeId, getVideoEmbedInfo, detectVideoPlatform } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import dynamic from 'next/dynamic';
 import { 
@@ -190,17 +190,23 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
         </section>
       );
 
-    case 'youtube':
-      const videoId = extractYouTubeId(block.data.url);
-      if (!videoId) {
+    case 'youtube': {
+      const embedInfo = getVideoEmbedInfo(block.data.url);
+      const isTikTokEmbed = embedInfo.platform === 'tiktok';
+      const isVertical = embedInfo.platform === 'tiktok' || embedInfo.platform === 'instagram';
+
+      if (!embedInfo.embedUrl) {
         // URLが未設定または無効な場合はプレースホルダーを表示
+        const placeholderText = '動画URLを設定してください';
+        const subText = 'YouTube / Vimeo / TikTok / Instagram Reels に対応';
         if (variant === 'profile') {
           return (
             <div className="mb-4 aspect-video rounded-2xl overflow-hidden shadow-lg bg-white/90 backdrop-blur flex flex-col items-center justify-center">
               <div className="w-12 h-12 mb-2 text-red-500 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
               </div>
-              <p className="text-gray-500 text-sm">YouTube URLを設定してください</p>
+              <p className="text-gray-500 text-sm">{placeholderText}</p>
+              <p className="text-gray-400 text-xs mt-1">{subText}</p>
             </div>
           );
         }
@@ -210,16 +216,53 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
               <div className="w-16 h-16 mb-4 text-red-500 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
               </div>
-              <p className="text-gray-500">YouTube URLを設定してください</p>
+              <p className="text-gray-500">{placeholderText}</p>
+              <p className="text-gray-400 text-sm mt-1">{subText}</p>
             </div>
           </section>
         );
       }
+
+      // TikTokはiframe埋め込み（動画IDベース）
+      if (isTikTokEmbed) {
+        const tiktokVideoId = embedInfo.embedUrl?.match(/video\/(\d+)/)?.[1] || '';
+        const tiktokIframeSrc = tiktokVideoId ? `https://www.tiktok.com/embed/v2/${tiktokVideoId}` : null;
+        if (!tiktokIframeSrc) {
+          const placeholder = (
+            <div className="flex flex-col items-center justify-center bg-gray-100 rounded-2xl p-8">
+              <p className="text-gray-500 text-sm">TikTok動画IDを取得できませんでした</p>
+              <p className="text-gray-400 text-xs mt-1">https://www.tiktok.com/@user/video/123... 形式のURLを入力してください</p>
+            </div>
+          );
+          return variant === 'profile' ? <div className="mb-4">{placeholder}</div> : <section className="py-12 px-6"><div className="max-w-md mx-auto">{placeholder}</div></section>;
+        }
+        if (variant === 'profile') {
+          return (
+            <div className="mb-4 flex justify-center">
+              <div className="w-[325px] max-w-full rounded-2xl overflow-hidden shadow-lg" style={{ height: '580px' }}>
+                <iframe src={tiktokIframeSrc} className="w-full h-full" allowFullScreen allow="encrypted-media" />
+              </div>
+            </div>
+          );
+        }
+        return (
+          <section className="py-12 px-6">
+            <div className="max-w-md mx-auto flex justify-center">
+              <div className="w-[325px] max-w-full rounded-2xl overflow-hidden shadow-lg" style={{ height: '580px' }}>
+                <iframe src={tiktokIframeSrc} className="w-full h-full" allowFullScreen allow="encrypted-media" />
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      // YouTube / Vimeo / Instagram はiframe埋め込み
+      const containerClass = isVertical ? 'max-w-md mx-auto' : 'max-w-4xl mx-auto';
       if (variant === 'profile') {
         return (
-          <div className="mb-4 aspect-video rounded-2xl overflow-hidden shadow-lg">
+          <div className={`mb-4 ${embedInfo.aspectClass} rounded-2xl overflow-hidden shadow-lg ${isVertical ? 'max-w-[320px] mx-auto' : ''}`}>
             <iframe
-              src={`https://www.youtube.com/embed/${videoId}`}
+              src={embedInfo.embedUrl}
               className="w-full h-full"
               allowFullScreen
             />
@@ -228,15 +271,16 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
       }
       return (
         <section className="py-12 px-6">
-          <div className="max-w-4xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-lg">
+          <div className={`${containerClass} ${embedInfo.aspectClass} rounded-2xl overflow-hidden shadow-lg`}>
             <iframe
-              src={`https://www.youtube.com/embed/${videoId}`}
+              src={embedInfo.embedUrl}
               className="w-full h-full"
               allowFullScreen
             />
           </div>
         </section>
       );
+    }
 
     case 'links':
       return (

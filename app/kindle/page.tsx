@@ -304,6 +304,11 @@ function KindleListPageContent() {
           const data = await response.json();
           setUserBooks(data.userBooks || []);
           setAdminStats(data.stats || null);
+          // 書籍LP・表紙作成画面で使うため、全書籍をbooksにも格納
+          const allBooks: Book[] = (data.userBooks || []).flatMap((ub: UserBooks) =>
+            ub.books.map(book => ({ ...book, user_id: ub.user_id, user_email: ub.user_email }))
+          );
+          setBooks(allBooks);
           // 最初のユーザーを展開状態にする
           if (data.userBooks && data.userBooks.length > 0) {
             setExpandedUsers(new Set([data.userBooks[0].user_id]));

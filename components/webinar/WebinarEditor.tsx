@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { generateSlug } from '@/lib/utils';
+import { generateSlug, detectVideoPlatform } from '@/lib/utils';
 import { WebinarLP, Block, generateBlockId } from '@/lib/types';
 import CustomColorPicker from '@/components/shared/CustomColorPicker';
 import {
@@ -60,7 +60,7 @@ const blockTypes = [
   // ウェビナーLP専用ブロック
   { type: 'hero', label: 'ヒーロー', icon: Zap, description: 'タイトル・サブタイトル', category: 'webinar', color: { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', icon: 'text-violet-500', hover: 'hover:bg-violet-100' } },
   { type: 'hero_fullwidth', label: 'フルワイドヒーロー', icon: Layout, description: 'インパクトのあるファーストビュー', category: 'webinar', color: { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', icon: 'text-violet-500', hover: 'hover:bg-violet-100' } },
-  { type: 'youtube', label: 'YouTube', icon: Youtube, description: '動画埋め込み', category: 'webinar', color: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', icon: 'text-red-500', hover: 'hover:bg-red-100' } },
+  { type: 'youtube', label: '動画', icon: Youtube, description: 'YouTube / Vimeo / TikTok / Instagram', category: 'webinar', color: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', icon: 'text-red-500', hover: 'hover:bg-red-100' } },
   { type: 'speaker', label: '講師紹介', icon: UserCircle, description: '講師プロフィール', category: 'webinar', color: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', icon: 'text-emerald-500', hover: 'hover:bg-emerald-100' } },
   { type: 'agenda', label: 'アジェンダ', icon: List, description: '学べること・内容', category: 'webinar', color: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', icon: 'text-blue-500', hover: 'hover:bg-blue-100' } },
   { type: 'countdown', label: 'カウントダウン', icon: Timer, description: '開催日時タイマー', category: 'webinar', color: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-500', hover: 'hover:bg-orange-100' } },
@@ -143,6 +143,109 @@ const testimonialPresetImages = [
   { label: '男性B', url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces' },
   { label: '女性A', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces' },
   { label: '女性B', url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=faces' },
+];
+
+// ウェビナーLPテンプレート定義
+type WebinarTemplate = {
+  id: string;
+  name: string;
+  description: string;
+  emoji: string;
+  gradient: string;
+  animated: boolean;
+  blocks: () => Block[];
+};
+
+const WEBINAR_TEMPLATES: WebinarTemplate[] = [
+  {
+    id: 'free-webinar',
+    name: '無料ウェビナー集客',
+    description: 'リード獲得型。メール登録でセミナー参加',
+    emoji: '🎓',
+    gradient: 'linear-gradient(-45deg, #2d1b69, #4c1d95, #6d28d9, #4c1d95)',
+    animated: true,
+    blocks: () => [
+      { id: generateBlockId(), type: 'hero', data: { headline: '【無料】あなたのビジネスを\n加速させるウェビナー', subheadline: '参加者限定の特別コンテンツをご用意しています', ctaText: '無料で参加する', ctaUrl: '#register', backgroundColor: 'linear-gradient(-45deg, #2d1b69, #4c1d95, #6d28d9, #4c1d95)' } },
+      { id: generateBlockId(), type: 'countdown', data: { targetDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16), title: '開催まであと', expiredText: 'アーカイブ視聴可能', backgroundColor: '#7c3aed', expiredAction: 'text' } },
+      { id: generateBlockId(), type: 'youtube', data: { url: '' } },
+      { id: generateBlockId(), type: 'agenda', data: { title: 'このウェビナーで学べること', items: [{ title: '成功するビジネス戦略の3つの柱', description: '実績のあるフレームワークを公開' }, { title: '集客を自動化する仕組みづくり', description: 'ツールとワークフローを紹介' }, { title: '明日から使える具体的アクションプラン', description: '参加者だけの特典付き' }] } },
+      { id: generateBlockId(), type: 'speaker', data: { name: '講師名を入力', title: '肩書きを入力', image: '', bio: '講師の紹介文を入力してください。実績や専門分野について記載すると効果的です。' } },
+      { id: generateBlockId(), type: 'testimonial', data: { items: [{ id: generateBlockId(), name: '参加者A', role: '会社員', comment: '具体的で分かりやすく、すぐに実践できる内容でした！', imageUrl: '' }, { id: generateBlockId(), name: '参加者B', role: '個人事業主', comment: '無料でここまでの内容が聞けるとは思いませんでした。', imageUrl: '' }] } },
+      { id: generateBlockId(), type: 'lead_form', data: { title: '無料で参加する', buttonText: '今すぐ申し込む' } },
+      { id: generateBlockId(), type: 'faq', data: { items: [{ id: generateBlockId(), question: '参加費はかかりますか？', answer: 'いいえ、完全無料でご参加いただけます。' }, { id: generateBlockId(), question: 'アーカイブ視聴はできますか？', answer: 'はい、申し込みいただいた方にアーカイブURLをお送りします。' }, { id: generateBlockId(), question: '初心者でも大丈夫ですか？', answer: 'はい、初心者の方にも分かりやすい内容です。' }] } },
+    ],
+  },
+  {
+    id: 'recorded-seminar',
+    name: '録画セミナー販売',
+    description: '録画済みセミナーの販売・申込誘導',
+    emoji: '🎬',
+    gradient: 'linear-gradient(-45deg, #1e3a5f, #2d5a87, #3d7ab0, #2d5a87)',
+    animated: true,
+    blocks: () => [
+      { id: generateBlockId(), type: 'hero_fullwidth', data: { headline: '今すぐ視聴できる\nオンラインセミナー', subheadline: 'いつでも・どこでも・何度でも学べる', ctaText: '今すぐ申し込む', ctaUrl: '#cta', backgroundColor: 'linear-gradient(-45deg, #1e3a5f, #2d5a87, #3d7ab0, #2d5a87)' } },
+      { id: generateBlockId(), type: 'text_card', data: { title: 'こんなお悩みありませんか？', text: '• 忙しくてセミナーに参加できない\n• 自分のペースで繰り返し学びたい\n• 移動時間をかけずに学習したい\n• 質の高いコンテンツに出会えない', align: 'left' as const } },
+      { id: generateBlockId(), type: 'youtube', data: { url: '' } },
+      { id: generateBlockId(), type: 'agenda', data: { title: 'セミナー内容', items: [{ title: 'セッション1: 基礎編', description: '全体像と基本的な考え方を解説' }, { title: 'セッション2: 実践編', description: '具体的な手順とテクニックを紹介' }, { title: 'セッション3: 応用編', description: 'さらなる成果を出すための上級テクニック' }, { title: '特典: テンプレート集', description: 'すぐに使えるテンプレートをプレゼント' }] } },
+      { id: generateBlockId(), type: 'speaker', data: { name: '講師名を入力', title: '肩書きを入力', image: '', bio: '講師の紹介文を入力してください。' } },
+      { id: generateBlockId(), type: 'testimonial', data: { items: [{ id: generateBlockId(), name: '受講者A', role: '経営者', comment: '何度も見返せるので、理解が深まりました。', imageUrl: '' }, { id: generateBlockId(), name: '受講者B', role: 'フリーランス', comment: '通勤中に視聴して、効率的に学べました。', imageUrl: '' }] } },
+      { id: generateBlockId(), type: 'delayed_cta', data: { title: '期間限定の特別価格', buttonText: '今すぐ申し込む', buttonUrl: '', delaySeconds: 30, buttonColor: '#2563eb', buttonTextColor: '#ffffff', borderRadius: 'lg', shadow: 'lg', animation: 'pulse', size: 'lg' } },
+      { id: generateBlockId(), type: 'faq', data: { items: [{ id: generateBlockId(), question: '視聴期限はありますか？', answer: 'ご購入から1年間、何度でも視聴いただけます。' }, { id: generateBlockId(), question: '返金保証はありますか？', answer: '14日間の返金保証をご用意しています。' }] } },
+    ],
+  },
+  {
+    id: 'series-seminar',
+    name: 'セミナーシリーズ',
+    description: '連続講座・全3回シリーズなど',
+    emoji: '📚',
+    gradient: 'linear-gradient(-45deg, #064e3b, #065f46, #047857, #065f46)',
+    animated: true,
+    blocks: () => [
+      { id: generateBlockId(), type: 'hero', data: { headline: '全3回で完全マスター\nオンライン集中講座', subheadline: 'ステップバイステップで確実にスキルアップ', ctaText: 'シリーズに申し込む', ctaUrl: '#register', backgroundColor: 'linear-gradient(-45deg, #064e3b, #065f46, #047857, #065f46)' } },
+      { id: generateBlockId(), type: 'youtube', data: { url: '' } },
+      { id: generateBlockId(), type: 'agenda', data: { title: '全3回の講座内容', items: [{ title: '第1回: 基礎を固める', description: '重要な概念と基本スキルの習得' }, { title: '第2回: 実践力を磨く', description: 'ケーススタディと実践ワーク' }, { title: '第3回: 成果を出す', description: '総仕上げと独自プラン作成' }] } },
+      { id: generateBlockId(), type: 'speaker', data: { name: '講師名を入力', title: '肩書きを入力', image: '', bio: '講師の紹介文を入力してください。' } },
+      { id: generateBlockId(), type: 'text_card', data: { title: '受講の流れ', text: '1. お申し込み後、受講URLをメールでお届け\n2. 各回の動画を順番に視聴\n3. ワークシートに取り組み、実践\n4. 質問フォームで疑問を解消\n5. 修了証を発行', align: 'left' as const } },
+      { id: generateBlockId(), type: 'countdown', data: { targetDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16), title: '第1回開催まで', expiredText: '次回の開催をお待ちください', backgroundColor: '#047857', expiredAction: 'text' } },
+      { id: generateBlockId(), type: 'cta_section', data: { title: 'シリーズ講座に申し込む', description: '全3回セットで特別価格。早期申込割引あり。', buttonText: '今すぐ申し込む', buttonUrl: '', backgroundGradient: 'linear-gradient(135deg, #047857 0%, #065f46 100%)' } },
+      { id: generateBlockId(), type: 'faq', data: { items: [{ id: generateBlockId(), question: '途中から参加できますか？', answer: 'はい、各回のアーカイブ視聴が可能です。' }, { id: generateBlockId(), question: '個別の質問はできますか？', answer: '各回終了後に質問フォームをご用意しています。' }] } },
+    ],
+  },
+  {
+    id: 'product-demo',
+    name: 'プロダクトデモ',
+    description: 'SaaS・ツールのデモウェビナー',
+    emoji: '💻',
+    gradient: 'linear-gradient(-45deg, #0f0f0f, #1a1a2e, #16213e, #1a1a2e)',
+    animated: true,
+    blocks: () => [
+      { id: generateBlockId(), type: 'hero_fullwidth', data: { headline: 'サービス名のデモを\nライブでお見せします', subheadline: '導入を検討中の方向け・無料デモウェビナー', ctaText: 'デモに参加する', ctaUrl: '#register', backgroundColor: 'linear-gradient(-45deg, #0f0f0f, #1a1a2e, #16213e, #1a1a2e)' } },
+      { id: generateBlockId(), type: 'youtube', data: { url: '' } },
+      { id: generateBlockId(), type: 'agenda', data: { title: 'デモでお見せする内容', items: [{ title: 'ダッシュボード概要', description: '管理画面の全体像をご紹介' }, { title: '主要機能のデモ', description: '日常業務で最も使う機能を実演' }, { title: '導入事例の紹介', description: '実際の企業の活用方法' }, { title: 'Q&Aセッション', description: 'ご質問にリアルタイムでお答え' }] } },
+      { id: generateBlockId(), type: 'testimonial', data: { items: [{ id: generateBlockId(), name: '導入企業A', role: '株式会社○○', comment: '導入後、業務効率が30%改善しました。', imageUrl: '' }, { id: generateBlockId(), name: '導入企業B', role: '有限会社△△', comment: 'サポートが手厚く、安心して使えています。', imageUrl: '' }] } },
+      { id: generateBlockId(), type: 'text_card', data: { title: '料金プラン', text: '• スタータープラン: 月額 ¥9,800\n• ビジネスプラン: 月額 ¥29,800\n• エンタープライズ: お問い合わせ\n\n※ 14日間の無料トライアル付き', align: 'left' as const } },
+      { id: generateBlockId(), type: 'delayed_cta', data: { title: '', buttonText: '無料トライアルを始める', buttonUrl: '', delaySeconds: 20, buttonColor: '#2563eb', buttonTextColor: '#ffffff', borderRadius: 'lg', shadow: 'xl', animation: 'shimmer', size: 'lg' } },
+      { id: generateBlockId(), type: 'lead_form', data: { title: 'お問い合わせ・デモ申込', buttonText: '申し込む' } },
+    ],
+  },
+  {
+    id: 'book-launch',
+    name: '出版記念セミナー',
+    description: 'Kindle著者の出版記念ウェビナー',
+    emoji: '📖',
+    gradient: 'linear-gradient(-45deg, #9f1239, #be123c, #e11d48, #be123c)',
+    animated: true,
+    blocks: () => [
+      { id: generateBlockId(), type: 'hero', data: { headline: '出版記念\n特別オンラインセミナー', subheadline: '著者が語る、本には書けなかった裏話', ctaText: '参加申し込み', ctaUrl: '#register', backgroundColor: 'linear-gradient(-45deg, #9f1239, #be123c, #e11d48, #be123c)' } },
+      { id: generateBlockId(), type: 'image', data: { url: '', caption: '書籍カバー画像をアップロードしてください' } },
+      { id: generateBlockId(), type: 'youtube', data: { url: '' } },
+      { id: generateBlockId(), type: 'speaker', data: { name: '著者名を入力', title: '著者・○○の専門家', image: '', bio: '著者プロフィールを入力してください。出版実績や専門分野、メディア出演歴などを記載すると効果的です。' } },
+      { id: generateBlockId(), type: 'agenda', data: { title: 'トークテーマ', items: [{ title: 'なぜこの本を書いたのか', description: '執筆の背景にある想いと問題意識' }, { title: '本では書けなかった裏話', description: 'セミナー参加者だけの特別エピソード' }, { title: '読者からの質問に回答', description: '出版後に寄せられた反響を紹介' }] } },
+      { id: generateBlockId(), type: 'countdown', data: { targetDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16), title: '開催まであと', expiredText: 'アーカイブ視聴をお申し込みください', backgroundColor: '#be123c', expiredAction: 'text' } },
+      { id: generateBlockId(), type: 'cta_section', data: { title: '出版記念セミナーに参加する', description: '書籍購入者は無料で参加できます', buttonText: '参加を申し込む', buttonUrl: '', backgroundGradient: 'linear-gradient(135deg, #be123c 0%, #9f1239 100%)' } },
+      { id: generateBlockId(), type: 'faq', data: { items: [{ id: generateBlockId(), question: '書籍を購入していなくても参加できますか？', answer: 'はい、どなたでもご参加いただけます。' }, { id: generateBlockId(), question: 'セミナー中に質問できますか？', answer: 'はい、Q&Aセッションを設けています。' }] } },
+    ],
+  },
 ];
 
 // セクションコンポーネント
@@ -325,6 +428,34 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
   const [slugError, setSlugError] = useState('');
   const [justSavedSlug, setJustSavedSlug] = useState<string | null>(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [videoMeta, setVideoMeta] = useState<Record<string, { title: string; channelTitle: string; thumbnailUrl: string; viewCount: number; likeCount: number; publishedAt: string; description: string } | null>>({});
+  const [fetchingVideoMeta, setFetchingVideoMeta] = useState<string | null>(null);
+
+  // YouTube メタ情報自動取得
+  const fetchVideoMeta = useCallback(async (blockId: string, url: string) => {
+    if (!url || detectVideoPlatform(url) !== 'youtube') {
+      setVideoMeta(prev => ({ ...prev, [blockId]: null }));
+      return;
+    }
+    setFetchingVideoMeta(blockId);
+    try {
+      const res = await fetch('/api/video-meta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      if (res.ok) {
+        const { data } = await res.json();
+        setVideoMeta(prev => ({ ...prev, [blockId]: data }));
+      } else {
+        setVideoMeta(prev => ({ ...prev, [blockId]: null }));
+      }
+    } catch {
+      setVideoMeta(prev => ({ ...prev, [blockId]: null }));
+    } finally {
+      setFetchingVideoMeta(null);
+    }
+  }, []);
 
   // カスタムスラッグのバリデーション
   const validateCustomSlug = (slug: string): boolean => {
@@ -746,13 +877,67 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
           </div>
         );
 
-      case 'youtube':
+      case 'youtube': {
+        const videoPlatform = detectVideoPlatform(block.data.url || '');
+        const platformLabels: Record<string, { label: string; color: string }> = {
+          youtube: { label: 'YouTube', color: 'bg-red-100 text-red-700' },
+          vimeo: { label: 'Vimeo', color: 'bg-sky-100 text-sky-700' },
+          tiktok: { label: 'TikTok', color: 'bg-gray-900 text-white' },
+          instagram: { label: 'Instagram', color: 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700' },
+          unknown: { label: '', color: '' },
+        };
+        const detected = platformLabels[videoPlatform];
+        const meta = videoMeta[block.id];
+        const isFetchingMeta = fetchingVideoMeta === block.id;
         return (
           <div className="space-y-4">
-            <Input label="YouTube URL" val={block.data.url || ''} onChange={v => updateBlock(block.id, { url: v })} ph="https://www.youtube.com/watch?v=..." />
-            <p className="text-xs text-gray-500 -mt-2">YouTube動画のURLまたは埋め込みURLを入力</p>
+            <div className="space-y-1">
+              <Input label="動画URL" val={block.data.url || ''} onChange={v => {
+                updateBlock(block.id, { url: v });
+                // YouTube URLの場合、debounce的に自動取得
+                if (detectVideoPlatform(v) === 'youtube' && v.length > 10) {
+                  fetchVideoMeta(block.id, v);
+                } else {
+                  setVideoMeta(prev => ({ ...prev, [block.id]: null }));
+                }
+              }} ph="https://www.youtube.com/watch?v=..." />
+              <div className="flex items-center gap-2">
+                {detected.label && (
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${detected.color}`}>{detected.label} 検出</span>
+                )}
+                <p className="text-xs text-gray-500">YouTube / Vimeo / TikTok / Instagram Reels に対応</p>
+              </div>
+            </div>
+            {/* YouTube メタ情報表示 */}
+            {isFetchingMeta && (
+              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                <Loader2 size={14} className="animate-spin text-gray-400" />
+                <span className="text-xs text-gray-500">動画情報を取得中...</span>
+              </div>
+            )}
+            {meta && !isFetchingMeta && (
+              <div className="p-3 bg-red-50 rounded-xl border border-red-200 space-y-2">
+                <div className="flex gap-3">
+                  {meta.thumbnailUrl && (
+                    <img src={meta.thumbnailUrl} alt="" className="w-24 h-14 rounded-lg object-cover flex-shrink-0" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-gray-900 truncate">{meta.title}</p>
+                    <p className="text-xs text-gray-600">{meta.channelTitle}</p>
+                    <div className="flex gap-3 mt-1">
+                      <span className="text-xs text-gray-500">{meta.viewCount.toLocaleString()} 回再生</span>
+                      <span className="text-xs text-gray-500">{meta.likeCount.toLocaleString()} いいね</span>
+                    </div>
+                  </div>
+                </div>
+                {meta.description && (
+                  <p className="text-xs text-gray-500 line-clamp-2">{meta.description}</p>
+                )}
+              </div>
+            )}
           </div>
         );
+      }
 
       case 'speaker':
         return (
@@ -1110,8 +1295,53 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
   };
 
   // エディタ部分のレンダリング
+  // テンプレート適用
+  const applyTemplate = (template: WebinarTemplate) => {
+    const blocks = template.blocks();
+    setLp(prev => ({
+      ...prev,
+      content: blocks,
+      settings: {
+        ...prev.settings,
+        theme: {
+          gradient: template.gradient,
+          animated: template.animated,
+        },
+      },
+    }));
+    // 最初のブロックを開く
+    setExpandedBlocks(new Set(blocks[0]?.id ? [blocks[0].id] : []));
+  };
+
   const renderEditor = () => (
     <div className="space-y-4 pb-32">
+      {/* テンプレート選択（新規作成時のみ） */}
+      {!savedId && !initialData && (
+        <div className="bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200 rounded-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+              <span className="bg-violet-100 p-1.5 rounded-lg"><Layout className="w-4 h-4 text-violet-600" /></span>テンプレートから作成
+            </h2>
+          </div>
+          <p className="text-sm text-gray-600 mb-3">テンプレートを選ぶと、ブロックが自動追加されます</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {WEBINAR_TEMPLATES.map((template) => (
+              <button
+                key={template.id}
+                onClick={() => applyTemplate(template)}
+                className="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-xl hover:border-violet-400 hover:shadow-md transition-all text-left group"
+              >
+                <span className="text-2xl flex-shrink-0 mt-0.5">{template.emoji}</span>
+                <div className="min-w-0">
+                  <p className="font-bold text-sm text-gray-900 group-hover:text-violet-700 transition-colors">{template.name}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{template.description}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ステップ1: テーマ設定 */}
       <Section
         title="テーマ設定"

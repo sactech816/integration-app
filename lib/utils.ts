@@ -138,6 +138,74 @@ export const extractYouTubeId = (url: string): string | null => {
 };
 
 /**
+ * 動画プラットフォームを自動検出
+ */
+export type VideoPlatform = 'youtube' | 'vimeo' | 'tiktok' | 'instagram' | 'unknown';
+
+export const detectVideoPlatform = (url: string): VideoPlatform => {
+  if (!url) return 'unknown';
+  if (/youtu\.?be/.test(url)) return 'youtube';
+  if (/vimeo\.com/.test(url)) return 'vimeo';
+  if (/tiktok\.com/.test(url)) return 'tiktok';
+  if (/instagram\.com/.test(url)) return 'instagram';
+  return 'unknown';
+};
+
+/**
+ * Vimeo動画IDを抽出
+ */
+export const extractVimeoId = (url: string): string | null => {
+  const match = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  return match ? match[1] : null;
+};
+
+/**
+ * TikTok動画URLからoEmbed用URLを生成
+ */
+export const extractTikTokUrl = (url: string): string | null => {
+  const match = url.match(/(https?:\/\/(?:www\.)?tiktok\.com\/@[^/]+\/video\/\d+)/);
+  if (match) return match[1];
+  // 短縮URLの場合はそのまま返す
+  const shortMatch = url.match(/(https?:\/\/(?:vm|vt)\.tiktok\.com\/[^\s?]+)/);
+  return shortMatch ? shortMatch[1] : null;
+};
+
+/**
+ * Instagram Reels/投稿のIDを抽出
+ */
+export const extractInstagramId = (url: string): string | null => {
+  const match = url.match(/instagram\.com\/(?:reel|reels|p)\/([A-Za-z0-9_-]+)/);
+  return match ? match[1] : null;
+};
+
+/**
+ * 動画の埋め込み情報を取得
+ */
+export const getVideoEmbedInfo = (url: string): { platform: VideoPlatform; embedUrl: string | null; aspectClass: string } => {
+  const platform = detectVideoPlatform(url);
+  switch (platform) {
+    case 'youtube': {
+      const id = extractYouTubeId(url);
+      return { platform, embedUrl: id ? `https://www.youtube.com/embed/${id}` : null, aspectClass: 'aspect-video' };
+    }
+    case 'vimeo': {
+      const id = extractVimeoId(url);
+      return { platform, embedUrl: id ? `https://player.vimeo.com/video/${id}` : null, aspectClass: 'aspect-video' };
+    }
+    case 'tiktok': {
+      const tikTokUrl = extractTikTokUrl(url);
+      return { platform, embedUrl: tikTokUrl, aspectClass: 'aspect-[9/16]' };
+    }
+    case 'instagram': {
+      const id = extractInstagramId(url);
+      return { platform, embedUrl: id ? `https://www.instagram.com/reel/${id}/embed` : null, aspectClass: 'aspect-[9/16]' };
+    }
+    default:
+      return { platform: 'unknown', embedUrl: null, aspectClass: 'aspect-video' };
+  }
+};
+
+/**
  * 文字列を指定文字数で切り詰め
  */
 export const truncate = (str: string, length: number): string => {
