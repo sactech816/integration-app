@@ -12,6 +12,7 @@ type SidebarProps = {
   onItemClick: (itemId: string) => void;
   contentCounts: {
     quiz: number;
+    entertainment_quiz: number;
     profile: number;
     business: number;
     salesletter: number;
@@ -30,6 +31,9 @@ type SidebarProps = {
     line: number;
     youtube_analysis: number;
     youtube_keyword_research: number;
+    google_keyword_research: number;
+    kindle_keywords: number;
+    rakuten_research: number;
   };
   totalViews: number;
   onLogout: () => void;

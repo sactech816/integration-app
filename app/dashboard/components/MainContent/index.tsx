@@ -25,6 +25,7 @@ export type ActiveView =
   | 'dashboard'
   | 'announcements'
   | 'quiz'
+  | 'entertainment'
   | 'profile'
   | 'business'
   | 'salesletter'
@@ -44,6 +45,9 @@ export type ActiveView =
   | 'line'
   | 'youtube-analysis'
   | 'youtube-keyword-research'
+  | 'kindle-keywords'
+  | 'google-keyword-research'
+  | 'rakuten-research'
   | 'affiliate'
   | 'marketplace-seller'
   | 'settings'
@@ -86,6 +90,7 @@ type MainContentProps = {
   contents: ContentItem[];
   contentCounts: {
     quiz: number;
+    entertainment_quiz: number;
     profile: number;
     business: number;
     salesletter: number;
@@ -206,11 +211,11 @@ export default function MainContent({
         <AnnouncementList />
       )}
 
-      {['quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post'].includes(activeView) && (
+      {['quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post'].includes(activeView) && (
       <div className="space-y-6">
         <ContentList
           contents={contents}
-          selectedService={activeView as ServiceType}
+          selectedService={activeView === 'entertainment' ? 'entertainment_quiz' as ServiceType : activeView as ServiceType}
           isLoading={isLoading}
           isAdmin={isAdmin}
           proAccessMap={proAccessMap}
@@ -373,7 +378,7 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'announcements', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'step-email', 'line', 'youtube-analysis', 'youtube-keyword-research', 'order-form', 'funnel', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks'].includes(activeView) && (
+      {!['dashboard', 'announcements', 'quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'step-email', 'line', 'youtube-analysis', 'youtube-keyword-research', 'kindle-keywords', 'google-keyword-research', 'rakuten-research', 'order-form', 'funnel', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>

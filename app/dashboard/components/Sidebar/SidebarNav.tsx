@@ -53,6 +53,7 @@ type SidebarNavProps = {
   isAdmin: boolean;
   contentCounts: {
     quiz: number;
+    entertainment_quiz: number;
     profile: number;
     business: number;
     salesletter: number;
@@ -71,6 +72,8 @@ type SidebarNavProps = {
     line: number;
     youtube_analysis: number;
     youtube_keyword_research: number;
+    google_keyword_research: number;
+    rakuten_research: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態
@@ -103,6 +106,7 @@ export default function SidebarNav({
   // コンテンツ数のマッピング
   const countMap: Record<string, number | undefined> = {
     quiz: contentCounts.quiz,
+    entertainment: contentCounts.entertainment_quiz,
     profile: contentCounts.profile,
     business: contentCounts.business,
     salesletter: contentCounts.salesletter,
@@ -142,6 +146,27 @@ export default function SidebarNav({
 
     // YouTubeキーワードリサーチはPro限定
     if (tool.id === 'youtube-keyword-research') {
+      const proDisabled = !hasMakersProAccess && !isAdmin;
+      item.isDisabled = proDisabled;
+      item.disabledBadge = proDisabled ? 'Pro' : undefined;
+    }
+
+    // KindleキーワードリサーチはPro限定
+    if (tool.id === 'kindle-keywords') {
+      const proDisabled = !hasMakersProAccess && !isAdmin;
+      item.isDisabled = proDisabled;
+      item.disabledBadge = proDisabled ? 'Pro' : undefined;
+    }
+
+    // GoogleキーワードリサーチはPro限定
+    if (tool.id === 'google-keyword-research') {
+      const proDisabled = !hasMakersProAccess && !isAdmin;
+      item.isDisabled = proDisabled;
+      item.disabledBadge = proDisabled ? 'Pro' : undefined;
+    }
+
+    // 楽天市場リサーチはPro限定
+    if (tool.id === 'rakuten-research') {
       const proDisabled = !hasMakersProAccess && !isAdmin;
       item.isDisabled = proDisabled;
       item.disabledBadge = proDisabled ? 'Pro' : undefined;

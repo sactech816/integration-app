@@ -36,6 +36,7 @@ type UseDashboardDataReturn = {
   contents: ContentItem[];
   contentCounts: {
     quiz: number;
+    entertainment_quiz: number;
     profile: number;
     business: number;
     salesletter: number;
@@ -54,6 +55,9 @@ type UseDashboardDataReturn = {
     line: number;
     youtube_analysis: number;
     youtube_keyword_research: number;
+    google_keyword_research: number;
+    kindle_keywords: number;
+    rakuten_research: number;
   };
   totalViews: number;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -119,6 +123,7 @@ export function useDashboardData(): UseDashboardDataReturn {
   const [contents, setContents] = useState<ContentItem[]>([]);
   const [contentCounts, setContentCounts] = useState({
     quiz: 0,
+    entertainment_quiz: 0,
     profile: 0,
     business: 0,
     salesletter: 0,
@@ -137,6 +142,9 @@ export function useDashboardData(): UseDashboardDataReturn {
     line: 0,
     youtube_analysis: 0,
     youtube_keyword_research: 0,
+    google_keyword_research: 0,
+    kindle_keywords: 0,
+    rakuten_research: 0,
   });
   const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
   const [purchases, setPurchases] = useState<string[]>([]);
@@ -244,10 +252,18 @@ export function useDashboardData(): UseDashboardDataReturn {
 
       try {
         // 診断クイズ取得（カウンターはテーブルに保存済み）
-        if (selectedService === 'quiz') {
-          const query = isAdmin
+        if (selectedService === 'quiz' || selectedService === 'entertainment_quiz') {
+          const isEntertainment = selectedService === 'entertainment_quiz';
+          let query = isAdmin
             ? supabase.from(TABLES.QUIZZES).select('*').order('created_at', { ascending: false })
             : supabase.from(TABLES.QUIZZES).select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+
+          // quiz_typeでフィルタ
+          if (isEntertainment) {
+            query = query.eq('quiz_type', 'entertainment');
+          } else {
+            query = query.or('quiz_type.is.null,quiz_type.eq.business');
+          }
 
           const { data: quizzes } = await query;
           if (quizzes) {
@@ -256,7 +272,7 @@ export function useDashboardData(): UseDashboardDataReturn {
                 ...q,
                 id: String(q.id),
                 title: q.title,
-                type: 'quiz' as ServiceType,
+                type: selectedService as ServiceType,
                 user_id: q.user_id,
                 views_count: q.views_count || 0,
                 completions_count: q.completions_count || 0,
@@ -662,11 +678,15 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult, lineResult] = await Promise.all([
-        // 診断クイズ数
+      const [quizResult, entertainmentQuizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult, lineResult] = await Promise.all([
+        // 診断クイズ数（ビジネス診断のみ）
         isAdmin
-          ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true })
-          : supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+          ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).or('quiz_type.is.null,quiz_type.eq.business')
+          : supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).eq('user_id', user.id).or('quiz_type.is.null,quiz_type.eq.business'),
+        // エンタメ診断数
+        isAdmin
+          ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).eq('quiz_type', 'entertainment')
+          : supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('quiz_type', 'entertainment'),
         // プロフィールLP数
         isAdmin
           ? supabase.from(TABLES.PROFILES).select('id', { count: 'exact', head: true })
@@ -725,6 +745,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
       setContentCounts({
         quiz: quizResult.count || 0,
+        entertainment_quiz: entertainmentQuizResult.count || 0,
         profile: profileResult.count || 0,
         business: businessResult.count || 0,
         salesletter: salesletterResult.count || 0,
@@ -743,6 +764,9 @@ export function useDashboardData(): UseDashboardDataReturn {
         line: lineResult.count || 0,
         youtube_analysis: 0,
         youtube_keyword_research: 0,
+        google_keyword_research: 0,
+        kindle_keywords: 0,
+        rakuten_research: 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);

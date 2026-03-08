@@ -28,6 +28,7 @@ import {
   MessageCircle,
   BarChart3,
   Search,
+  ShoppingBag,
   LucideIcon,
 } from 'lucide-react';
 
@@ -242,6 +243,33 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: 'YouTube検索キーワード分析',
     color: { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
     href: '/youtube-keyword-research/editor',
+    category: 'marketing',
+  },
+  {
+    id: 'kindle-keywords',
+    label: 'Kindleキーワードリサーチ',
+    icon: BookOpen,
+    description: 'Kindle出版キーワード分析',
+    color: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200' },
+    href: '/kindle-keywords/editor',
+    category: 'writing',
+  },
+  {
+    id: 'google-keyword-research',
+    label: 'Googleキーワードリサーチ',
+    icon: Search,
+    description: 'Google検索キーワード競合分析',
+    color: { bg: 'bg-teal-50', text: 'text-teal-600', border: 'border-teal-200' },
+    href: '/google-keyword-research/editor',
+    category: 'marketing',
+  },
+  {
+    id: 'rakuten-research',
+    label: '楽天市場リサーチ',
+    icon: ShoppingBag,
+    description: '楽天商品キーワード分析',
+    color: { bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-200' },
+    href: '/rakuten-research/editor',
     category: 'marketing',
   },
 

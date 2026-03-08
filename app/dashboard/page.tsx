@@ -97,7 +97,7 @@ function DashboardContent() {
   // URLパラメータからビューを設定
   useEffect(() => {
     const view = searchParams?.get('view');
-    if (view && ['announcements', 'booking', 'attendance', 'survey', 'quiz', 'profile', 'business', 'salesletter', 'onboarding', 'newsletter', 'step-email', 'line', 'youtube-analysis', 'youtube-keyword-research', 'order-form', 'funnel', 'webinar', 'sns-post', 'affiliate', 'settings'].includes(view)) {
+    if (view && ['announcements', 'booking', 'attendance', 'survey', 'quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'newsletter', 'step-email', 'line', 'youtube-analysis', 'youtube-keyword-research', 'kindle-keywords', 'google-keyword-research', 'rakuten-research', 'order-form', 'funnel', 'webinar', 'sns-post', 'affiliate', 'settings'].includes(view)) {
       setActiveView(view as ActiveView);
       // URLパラメータをクリア
       window.history.replaceState({}, '', '/dashboard');
@@ -252,8 +252,8 @@ function DashboardContent() {
 
     // サービス選択の場合はselectedServiceも更新
     // （fetchContentsはuseEffect[selectedService]で自動実行されるため、ここでは呼ばない）
-    if (['quiz', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post'].includes(itemId)) {
-      setSelectedService(itemId as ServiceType);
+    if (['quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post'].includes(itemId)) {
+      setSelectedService(itemId === 'entertainment' ? 'entertainment_quiz' as ServiceType : itemId as ServiceType);
     }
 
     // Kindle執筆への遷移
@@ -276,6 +276,16 @@ function DashboardContent() {
       return;
     }
 
+    // KindleキーワードリサーチはPro限定
+    if (itemId === 'kindle-keywords') {
+      if (!isAdmin && !hasMakersProAccess) {
+        alert('KindleキーワードリサーチはProプラン限定の機能です。\nProプランにアップグレードしてご利用ください。');
+        return;
+      }
+      router.push('/kindle-keywords/editor');
+      return;
+    }
+
     // YouTubeキーワードリサーチはPro限定
     if (itemId === 'youtube-keyword-research') {
       if (!isAdmin && !hasMakersProAccess) {
@@ -283,6 +293,26 @@ function DashboardContent() {
         return;
       }
       router.push('/youtube-keyword-research/editor');
+      return;
+    }
+
+    // GoogleキーワードリサーチはPro限定
+    if (itemId === 'google-keyword-research') {
+      if (!isAdmin && !hasMakersProAccess) {
+        alert('GoogleキーワードリサーチはProプラン限定の機能です。\nProプランにアップグレードしてご利用ください。');
+        return;
+      }
+      router.push('/google-keyword-research/editor');
+      return;
+    }
+
+    // 楽天市場リサーチはPro限定
+    if (itemId === 'rakuten-research') {
+      if (!isAdmin && !hasMakersProAccess) {
+        alert('楽天市場リサーチはProプラン限定の機能です。\nProプランにアップグレードしてご利用ください。');
+        return;
+      }
+      router.push('/rakuten-research/editor');
       return;
     }
 
