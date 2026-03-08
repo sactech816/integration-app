@@ -29,6 +29,7 @@ import {
   ShoppingBag,
   Globe,
   Search,
+  Tv,
 } from 'lucide-react';
 
 // Client Components
@@ -254,6 +255,8 @@ export default function HomePage() {
                   { icon: ShoppingBag, text: '楽天リサーチ', color: 'text-rose-500' },
                   { icon: Globe, text: 'Googleリサーチ', color: 'text-teal-500' },
                   { icon: Search, text: 'YouTubeリサーチ', color: 'text-red-500' },
+                  { icon: Tv, text: 'ニコニコリサーチ', color: 'text-orange-500' },
+                  { icon: Globe, text: 'Redditリサーチ', color: 'text-orange-600' },
                 ].map((tool, i) => (
                   <div key={`${setIdx}-${i}`} className="w-[160px] flex-shrink-0 bg-white border border-orange-100 rounded-2xl p-4 flex flex-col items-center justify-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300 mx-2">
                     <div className={`${tool.color} mb-1`}><tool.icon size={28} /></div>

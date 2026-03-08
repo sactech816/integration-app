@@ -32,6 +32,8 @@ import {
   ListOrdered,
   MessageCircle,
   Search,
+  Tv,
+  Globe,
 } from 'lucide-react';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
@@ -329,6 +331,28 @@ const tools: ToolDef[] = [
     bgColor: 'bg-rose-50',
     textColor: 'text-rose-600',
     features: ['キーワード検索', '上位動画分析', '再生倍率', '比較チャート'],
+    category: 'marketing',
+  },
+  {
+    name: 'ニコニコキーワードリサーチ',
+    description: 'ニコニコ動画のキーワード検索で上位動画の再生数・コメント数・マイリスト数を一括分析。トレンド把握に最適。',
+    icon: Tv,
+    href: '/niconico-keyword-research',
+    color: 'from-orange-400 to-orange-600',
+    bgColor: 'bg-orange-50',
+    textColor: 'text-orange-600',
+    features: ['キーワード検索', 'コメント文化分析', 'タグ分析', 'AI分析'],
+    category: 'marketing',
+  },
+  {
+    name: 'Redditキーワードリサーチ',
+    description: 'Redditのキーワード検索で人気投稿のスコア・コメント数・エンゲージメントを一括分析。海外マーケティングに最適。',
+    icon: Globe,
+    href: '/reddit-keyword-research',
+    color: 'from-orange-500 to-red-600',
+    bgColor: 'bg-orange-50',
+    textColor: 'text-orange-600',
+    features: ['スコア分析', 'サブレディット分析', 'エンゲージメント', 'AI分析'],
     category: 'marketing',
   },
 ];
