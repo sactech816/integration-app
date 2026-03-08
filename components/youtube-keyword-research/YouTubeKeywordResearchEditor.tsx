@@ -19,6 +19,7 @@ type SortKey = 'viewCount' | 'likeCount' | 'commentCount' | 'subscriberCount' | 
 type ChartMetric = 'viewCount' | 'likeCount' | 'viewRatio' | 'subscriberCount' | 'vph';
 type DateRange = '' | '1month' | '3months' | '6months' | '1year';
 type SearchOrder = 'relevance' | 'viewCount' | 'date' | 'rating';
+type VideoDuration = 'any' | 'short' | 'medium' | 'long';
 
 type Props = {
   user: { id: string; email?: string } | null;
@@ -70,6 +71,13 @@ const DATE_RANGE_OPTIONS: { value: DateRange; label: string }[] = [
   { value: '3months', label: '3ヶ月以内' },
   { value: '6months', label: '6ヶ月以内' },
   { value: '1year', label: '1年以内' },
+];
+
+const VIDEO_DURATION_OPTIONS: { value: VideoDuration; label: string }[] = [
+  { value: 'any', label: '混在' },
+  { value: 'short', label: 'ショート(4分未満)' },
+  { value: 'medium', label: 'ミドル(4-20分)' },
+  { value: 'long', label: 'ロング(20分+)' },
 ];
 
 const SEARCH_ORDER_OPTIONS: { value: SearchOrder; label: string; desc: string }[] = [
@@ -147,6 +155,7 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
   const [maxResults, setMaxResults] = useState(20);
   const [dateRange, setDateRange] = useState<DateRange>('');
   const [searchOrder, setSearchOrder] = useState<SearchOrder>('relevance');
+  const [videoDuration, setVideoDuration] = useState<VideoDuration>('any');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [results, setResults] = useState<YouTubeVideoData[]>([]);
@@ -256,7 +265,7 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
       const res = await fetch('/api/youtube-keyword-research', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword: keyword.trim(), maxResults, publishedAfter, order: searchOrder }),
+        body: JSON.stringify({ keyword: keyword.trim(), maxResults, publishedAfter, order: searchOrder, videoDuration }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'エラーが発生しました'); return; }
@@ -473,7 +482,13 @@ export default function YouTubeKeywordResearchEditor({ user }: Props) {
                 <h2 className="text-lg font-bold text-gray-900">キーワード検索</h2>
               </div>
               <input type="text" value={keyword} onChange={(e) => { setKeyword(e.target.value); if (error) setError(''); }} onKeyDown={handleKeyDown} placeholder="例: ダイエット 筋トレ 料理" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all" />
-              <div className="grid grid-cols-3 gap-3 mt-4">
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1 block">動画タイプ</label>
+                  <select value={videoDuration} onChange={(e) => setVideoDuration(e.target.value as VideoDuration)} className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-rose-500 focus:border-transparent">
+                    {VIDEO_DURATION_OPTIONS.map(o => (<option key={o.value} value={o.value}>{o.label}</option>))}
+                  </select>
+                </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-600 mb-1 block">API並び順</label>
                   <select value={searchOrder} onChange={(e) => setSearchOrder(e.target.value as SearchOrder)} className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-rose-500 focus:border-transparent">

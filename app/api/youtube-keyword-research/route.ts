@@ -20,7 +20,7 @@ async function fetchYouTubeAPI(endpoint: string, params: Record<string, string>,
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { keyword, maxResults = 20, publishedAfter, order = 'relevance' } = body;
+    const { keyword, maxResults = 20, publishedAfter, order = 'relevance', videoDuration = 'any' } = body;
 
     if (!keyword || typeof keyword !== 'string' || !keyword.trim()) {
       return NextResponse.json(
@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
       q: keyword.trim(),
       maxResults: String(Math.min(maxResults, 50)),
       order: ['relevance', 'viewCount', 'date', 'rating'].includes(order) ? order : 'relevance',
+      videoDuration: ['any', 'short', 'medium', 'long'].includes(videoDuration) ? videoDuration : 'any',
     };
 
     if (publishedAfter) {
