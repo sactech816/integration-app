@@ -58,6 +58,8 @@ type UseDashboardDataReturn = {
     google_keyword_research: number;
     kindle_keywords: number;
     rakuten_research: number;
+    niconico_keyword_research: number;
+    reddit_keyword_research: number;
   };
   totalViews: number;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -145,6 +147,8 @@ export function useDashboardData(): UseDashboardDataReturn {
     google_keyword_research: 0,
     kindle_keywords: 0,
     rakuten_research: 0,
+    niconico_keyword_research: 0,
+    reddit_keyword_research: 0,
   });
   const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
   const [purchases, setPurchases] = useState<string[]>([]);
@@ -767,6 +771,8 @@ export function useDashboardData(): UseDashboardDataReturn {
         google_keyword_research: 0,
         kindle_keywords: 0,
         rakuten_research: 0,
+        niconico_keyword_research: 0,
+        reddit_keyword_research: 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);

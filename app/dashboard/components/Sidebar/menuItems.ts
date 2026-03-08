@@ -29,6 +29,8 @@ import {
   BarChart3,
   Search,
   ShoppingBag,
+  Tv,
+  Globe,
   LucideIcon,
 } from 'lucide-react';
 
@@ -270,6 +272,24 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: '楽天商品キーワード分析',
     color: { bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-200' },
     href: '/rakuten-research/editor',
+    category: 'marketing',
+  },
+  {
+    id: 'niconico-keyword-research',
+    label: 'ニコニコリサーチ',
+    icon: Tv,
+    description: 'ニコニコ動画キーワード分析',
+    color: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200' },
+    href: '/niconico-keyword-research/editor',
+    category: 'marketing',
+  },
+  {
+    id: 'reddit-keyword-research',
+    label: 'Redditリサーチ',
+    icon: Globe,
+    description: 'Reddit投稿キーワード分析',
+    color: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200' },
+    href: '/reddit-keyword-research/editor',
     category: 'marketing',
   },
 

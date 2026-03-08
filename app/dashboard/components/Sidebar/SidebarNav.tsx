@@ -74,6 +74,8 @@ type SidebarNavProps = {
     youtube_keyword_research: number;
     google_keyword_research: number;
     rakuten_research: number;
+    niconico_keyword_research: number;
+    reddit_keyword_research: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態

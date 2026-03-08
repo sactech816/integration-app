@@ -34,6 +34,8 @@ type SidebarProps = {
     google_keyword_research: number;
     kindle_keywords: number;
     rakuten_research: number;
+    niconico_keyword_research: number;
+    reddit_keyword_research: number;
   };
   totalViews: number;
   onLogout: () => void;

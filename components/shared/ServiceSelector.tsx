@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb, Crown, Image, Store, PartyPopper, Mail, GitBranch, Video, ClipboardCheck, Send, BookOpen, Share2, ListOrdered, MessageCircle, Search, TrendingUp, ShoppingBag, Globe } from 'lucide-react';
+import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb, Crown, Image, Store, PartyPopper, Mail, GitBranch, Video, ClipboardCheck, Send, BookOpen, Share2, ListOrdered, MessageCircle, Search, TrendingUp, ShoppingBag, Globe, Tv } from 'lucide-react';
 import { ServiceType, SERVICE_LABELS } from '@/lib/types';
 import Link from 'next/link';
 
@@ -373,6 +373,34 @@ const serviceConfig = [
     features: ['キーワード調査', '競合分析', 'ブルーオーシャン'],
     category: 'marketing' as ServiceCategoryId,
     href: '/google-keyword-research',
+  },
+  {
+    id: 'niconico-keyword-research' as ServiceType,
+    icon: Tv,
+    label: 'ニコニコリサーチ',
+    description: 'ニコニコ動画のキーワード検索で上位動画の再生数・コメント数・マイリスト数を一括分析',
+    gradient: 'from-orange-500 to-amber-600',
+    bgLight: 'bg-orange-50',
+    textColor: 'text-orange-600',
+    borderColor: 'border-orange-200',
+    hoverBg: 'hover:bg-orange-50',
+    features: ['コメント分析', 'タグ分析', 'AI分析'],
+    category: 'marketing' as ServiceCategoryId,
+    href: '/niconico-keyword-research',
+  },
+  {
+    id: 'reddit-keyword-research' as ServiceType,
+    icon: Globe,
+    label: 'Redditリサーチ',
+    description: 'Redditのキーワード検索で人気投稿のスコア・コメント・エンゲージメントを一括分析',
+    gradient: 'from-orange-600 to-red-600',
+    bgLight: 'bg-orange-50',
+    textColor: 'text-orange-600',
+    borderColor: 'border-orange-200',
+    hoverBg: 'hover:bg-orange-50',
+    features: ['海外マーケ', 'トレンド分析', 'AI分析'],
+    category: 'marketing' as ServiceCategoryId,
+    href: '/reddit-keyword-research',
   },
 ];
 
