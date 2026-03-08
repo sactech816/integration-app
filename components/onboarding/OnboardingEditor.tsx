@@ -533,7 +533,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
             <div className="bg-gradient-to-r from-sky-50 to-amber-50 border border-sky-200 rounded-xl p-5">
               <h3 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
                 <MousePointer size={18} className="text-sky-600" />
-                はじめかたメーカーとは？
+                ガイドメーカーとは？
               </h3>
               <p className="text-sm text-gray-700 mb-3">
                 サイトに埋め込めるステップ式ガイド（モーダル）をノーコードで作成できるツールです。
@@ -960,7 +960,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
       {showOnboarding && (
         <OnboardingModal
           storageKey="onboarding_editor_onboarding_dismissed"
-          title="はじめかたメーカーの使い方"
+          title="ガイドメーカーの使い方"
           gradientFrom="from-amber-500"
           gradientTo="to-orange-500"
           pages={[

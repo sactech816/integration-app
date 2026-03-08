@@ -70,7 +70,7 @@ const GUIDE_PAGES: GuidePage[] = [
   {
     subtitle: '進化し続けるプラットフォーム',
     items: [
-      { iconName: 'Rocket', iconColor: 'purple', title: '新機能を随時追加中', description: 'AIサムネイル、はじめかたメーカーなど新ツールを順次リリース' },
+      { iconName: 'Rocket', iconColor: 'purple', title: '新機能を随時追加中', description: 'AIサムネイル、ガイドメーカーなど新ツールを順次リリース' },
       { iconName: 'Globe', iconColor: 'blue', title: 'みんなの作品ポータル', description: 'ユーザー同士の作品共有・発見ができるポータルサイト' },
       { iconName: 'Mail', iconColor: 'amber', title: 'ご要望・フィードバック', description: '新機能のリクエストやご意見をお気軽にお寄せください' },
     ],

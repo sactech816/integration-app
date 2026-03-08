@@ -88,7 +88,7 @@ export const TOOL_ITEMS: ToolItem[] = [
   },
   {
     id: 'onboarding',
-    label: 'はじめかたメーカー',
+    label: 'ガイドメーカー',
     icon: MousePointerClick,
     description: 'はじめかたガイド',
     color: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200' },

@@ -25,85 +25,63 @@ interface ListOption {
   footer_html?: string;
 }
 
-// セクションごとのテーマカラー定義
-const SECTION_THEMES = {
-  basic: {
-    iconBg: 'bg-blue-100 text-blue-600',
-    iconBgClosed: 'bg-blue-50 text-blue-400',
-    badge: 'bg-blue-100 text-blue-600',
-    border: 'border-blue-200',
-    headerHover: 'hover:bg-blue-50/50',
-    topAccent: 'bg-gradient-to-r from-blue-500 to-blue-400',
-  },
-  template: {
-    iconBg: 'bg-amber-100 text-amber-600',
-    iconBgClosed: 'bg-amber-50 text-amber-400',
-    badge: 'bg-amber-100 text-amber-600',
-    border: 'border-amber-200',
-    headerHover: 'hover:bg-amber-50/50',
-    topAccent: 'bg-gradient-to-r from-amber-500 to-orange-400',
-  },
-  header: {
-    iconBg: 'bg-emerald-100 text-emerald-600',
-    iconBgClosed: 'bg-emerald-50 text-emerald-400',
-    badge: 'bg-emerald-100 text-emerald-600',
-    border: 'border-emerald-200',
-    headerHover: 'hover:bg-emerald-50/50',
-    topAccent: 'bg-gradient-to-r from-emerald-500 to-teal-400',
-  },
-  body: {
-    iconBg: 'bg-violet-100 text-violet-600',
-    iconBgClosed: 'bg-violet-50 text-violet-400',
-    badge: 'bg-violet-100 text-violet-600',
-    border: 'border-violet-200',
-    headerHover: 'hover:bg-violet-50/50',
-    topAccent: 'bg-gradient-to-r from-violet-500 to-purple-400',
-  },
-  footer: {
-    iconBg: 'bg-rose-100 text-rose-600',
-    iconBgClosed: 'bg-rose-50 text-rose-400',
-    badge: 'bg-rose-100 text-rose-600',
-    border: 'border-rose-200',
-    headerHover: 'hover:bg-rose-50/50',
-    topAccent: 'bg-gradient-to-r from-rose-500 to-pink-400',
-  },
-} as const;
-
-type SectionThemeKey = keyof typeof SECTION_THEMES;
-
-// 折りたたみセクション
-function Section({
-  title, icon: Icon, isOpen, onToggle, children, badge, theme,
+// 折りたたみセクション（他エディタと統一パターン）
+const Section = ({
+  title,
+  icon: Icon,
+  isOpen,
+  onToggle,
+  children,
+  badge,
+  step,
+  stepLabel,
+  headerBgColor = 'bg-gray-50',
+  headerHoverColor = 'hover:bg-gray-100',
+  accentColor = 'bg-violet-100 text-violet-600',
 }: {
   title: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string; size?: number }>;
   isOpen: boolean;
   onToggle: () => void;
   children: React.ReactNode;
   badge?: string;
-  theme: SectionThemeKey;
-}) {
-  const t = SECTION_THEMES[theme];
-  return (
-    <div className={`border ${isOpen ? t.border : 'border-gray-200'} rounded-xl overflow-hidden bg-white transition-all duration-200 ${isOpen ? 'shadow-md' : 'shadow-sm'}`}>
-      {isOpen && <div className={`h-1 ${t.topAccent}`} />}
-      <button
-        onClick={onToggle}
-        className={`w-full flex items-center gap-3 px-5 py-4 ${t.headerHover} transition-colors`}
-      >
-        <span className={`p-2 rounded-lg transition-colors ${isOpen ? t.iconBg : t.iconBgClosed}`}>
-          <Icon className="w-4 h-4" />
+  step?: number;
+  stepLabel?: string;
+  headerBgColor?: string;
+  headerHoverColor?: string;
+  accentColor?: string;
+}) => (
+  <div className="border border-gray-200 rounded-xl overflow-hidden mb-4 bg-white">
+    {step && stepLabel && (
+      <div className={`px-5 py-2 ${headerBgColor} border-b border-gray-200/50`}>
+        <span className="text-xs font-bold text-gray-600 bg-white/60 px-2 py-0.5 rounded">
+          STEP {step}
         </span>
-        <span className="flex-1 text-left text-sm font-bold text-gray-900">{title}</span>
+        <span className="text-sm text-gray-700 ml-2">{stepLabel}</span>
+      </div>
+    )}
+    <button
+      onClick={onToggle}
+      className={`w-full px-5 py-4 flex items-center justify-between ${headerBgColor} ${headerHoverColor} transition-colors`}
+    >
+      <div className="flex items-center gap-3">
+        <div className={`p-2 rounded-lg ${isOpen ? accentColor : 'bg-gray-200 text-gray-500'}`}>
+          <Icon size={18} />
+        </div>
+        <span className="font-bold text-gray-900">{title}</span>
         {badge && (
-          <span className={`px-2 py-0.5 text-xs font-semibold ${t.badge} rounded-md`}>{badge}</span>
+          <span className="text-xs bg-white/80 text-gray-700 px-2 py-0.5 rounded-full border border-gray-200">{badge}</span>
         )}
-        {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-      </button>
-      {isOpen && <div className="px-5 pb-5 border-t border-gray-100 pt-4">{children}</div>}
-    </div>
-  );
-}
+      </div>
+      {isOpen ? <ChevronUp size={20} className="text-gray-500" /> : <ChevronDown size={20} className="text-gray-500" />}
+    </button>
+    {isOpen && (
+      <div className="p-5 border-t border-gray-100">
+        {children}
+      </div>
+    )}
+  </div>
+);
 
 // HTML⇔ビジュアル切替トグル
 function ViewToggle({
@@ -1139,14 +1117,18 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
       <div className="flex flex-1 overflow-hidden">
         {/* 左パネル: 編集 */}
         <div className={`w-full lg:w-1/2 overflow-y-auto p-4 md:p-6 bg-gray-50 ${mobileTab === 'preview' ? 'hidden lg:block' : ''}`}>
-          <div className="max-w-2xl mx-auto space-y-4">
+          <div className="max-w-2xl mx-auto">
             {/* Section 1: 基本設定 */}
             <Section
               title="基本設定"
               icon={Settings}
               isOpen={openSections.basic}
               onToggle={() => toggleSection('basic')}
-              theme="basic"
+              step={1}
+              stepLabel="配信先・件名を設定"
+              headerBgColor="bg-blue-50"
+              headerHoverColor="hover:bg-blue-100"
+              accentColor="bg-blue-100 text-blue-600"
             >
               <div className="space-y-4">
                 <div>
@@ -1300,7 +1282,11 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                 isOpen={openSections.template}
                 onToggle={() => toggleSection('template')}
                 badge={`${NEWSLETTER_TEMPLATES.length}種類`}
-                theme="template"
+                step={2}
+                stepLabel="テンプレートを選択"
+                headerBgColor="bg-amber-50"
+                headerHoverColor="hover:bg-amber-100"
+                accentColor="bg-amber-100 text-amber-600"
               >
                 <div className="space-y-4">
                   <p className="text-sm text-gray-600">テンプレートを選択すると、件名・ヘッダー・本文・フッターが自動設定されます。</p>
@@ -1347,7 +1333,11 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
               isOpen={openSections.header}
               onToggle={() => toggleSection('header')}
               badge={headerHtml ? '設定済み' : undefined}
-              theme="header"
+              step={3}
+              stepLabel="メールヘッダーを編集"
+              headerBgColor="bg-emerald-50"
+              headerHoverColor="hover:bg-emerald-100"
+              accentColor="bg-emerald-100 text-emerald-600"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -1388,7 +1378,11 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
               icon={FileText}
               isOpen={openSections.body}
               onToggle={() => toggleSection('body')}
-              theme="body"
+              step={4}
+              stepLabel="メール本文を作成"
+              headerBgColor="bg-violet-50"
+              headerHoverColor="hover:bg-violet-100"
+              accentColor="bg-violet-100 text-violet-600"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
@@ -1505,7 +1499,11 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
               isOpen={openSections.footer}
               onToggle={() => toggleSection('footer')}
               badge={footerHtml ? '設定済み' : undefined}
-              theme="footer"
+              step={5}
+              stepLabel="フッターを編集"
+              headerBgColor="bg-rose-50"
+              headerHoverColor="hover:bg-rose-100"
+              accentColor="bg-rose-100 text-rose-600"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">

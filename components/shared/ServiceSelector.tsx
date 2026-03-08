@@ -68,7 +68,7 @@ const serviceConfig = [
   {
     id: 'onboarding' as ServiceType,
     icon: Lightbulb,
-    label: 'はじめかたメーカー',
+    label: 'ガイドメーカー',
     description: 'サイトに埋め込めるはじめかたガイドを簡単作成。外部サイトへの埋め込みにも対応',
     gradient: 'from-indigo-400 to-blue-600',
     bgLight: 'bg-indigo-50',

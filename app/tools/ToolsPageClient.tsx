@@ -99,7 +99,7 @@ const tools: ToolDef[] = [
     category: 'page',
   },
   {
-    name: 'はじめかたメーカー',
+    name: 'ガイドメーカー',
     description: 'サイトに埋め込めるはじめかたガイドを簡単作成。外部サイトへの埋め込みにも対応します。',
     icon: Lightbulb,
     href: '/onboarding',

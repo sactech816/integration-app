@@ -394,7 +394,7 @@ export function useDashboardData(): UseDashboardDataReturn {
           }
         }
 
-        // はじめかたガイド取得
+        // ガイド取得
         if (selectedService === 'onboarding') {
           const query = isAdmin
             ? supabase.from(TABLES.ONBOARDING_MODALS).select('*').order('created_at', { ascending: false })

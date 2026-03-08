@@ -7,18 +7,18 @@ import {
 import LandingHeader from '@/components/shared/LandingHeader';
 
 export const metadata: Metadata = {
-  title: 'はじめかたメーカー（オンボーディングガイド作成）| 集客メーカー',
+  title: 'ガイドメーカー（オンボーディングガイド作成）| 集客メーカー',
   description:
     'サービス・商品の使い始め方をわかりやすく伝えるオンボーディングガイドを無料で作成。ステップバイステップのガイドページで顧客の離脱を防ぎ、満足度を向上。講師・SaaS・コーチに最適。',
   keywords: ['オンボーディング', 'はじめかた', 'スタートガイド', '使い方ガイド', '無料', '顧客サポート', 'SaaS', '講師', 'コーチ'],
   openGraph: {
-    title: 'はじめかたメーカー | 集客メーカー',
+    title: 'ガイドメーカー | 集客メーカー',
     description: 'サービス・商品の使い始め方をわかりやすく伝えるガイドページを無料作成。顧客の離脱を防ぎ満足度を向上。',
     type: 'website',
     url: 'https://makers.tokyo/onboarding',
     siteName: '集客メーカー',
   },
-  twitter: { card: 'summary_large_image', title: 'はじめかたメーカー | 集客メーカー', description: '使い始め方ガイドを無料作成。顧客の離脱を防ぎ満足度を向上。' },
+  twitter: { card: 'summary_large_image', title: 'ガイドメーカー | 集客メーカー', description: '使い始め方ガイドを無料作成。顧客の離脱を防ぎ満足度を向上。' },
   alternates: { canonical: 'https://makers.tokyo/onboarding' },
 };
 
@@ -27,7 +27,7 @@ const jsonLd = {
   '@graph': [
     {
       '@type': 'SoftwareApplication',
-      name: 'はじめかたメーカー',
+      name: 'ガイドメーカー',
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',
       description: 'サービス・商品のオンボーディングガイド作成ツール。ステップバイステップのガイドで顧客の使い始めをサポート。',
@@ -48,7 +48,7 @@ const jsonLd = {
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'ホーム', item: 'https://makers.tokyo/' },
-        { '@type': 'ListItem', position: 2, name: 'はじめかたメーカー', item: 'https://makers.tokyo/onboarding' },
+        { '@type': 'ListItem', position: 2, name: 'ガイドメーカー', item: 'https://makers.tokyo/onboarding' },
       ],
     },
   ],
@@ -124,7 +124,7 @@ export default function OnboardingLandingPage() {
 
         {/* Features */}
         <section className="max-w-5xl mx-auto px-4 py-16">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-4">はじめかたメーカーの特長</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-4">ガイドメーカーの特長</h2>
           <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">お客様の「わからない」を解消し、サービスを使いこなしてもらうためのガイドが作れます。</p>
           <div className="grid sm:grid-cols-2 gap-6">
             {features.map((f) => (

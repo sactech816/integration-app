@@ -57,7 +57,7 @@ const Footer: React.FC<FooterProps> = () => {
               <li>
                 <Link href="/onboarding" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <MousePointerClick size={16} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  はじめかたメーカー
+                  ガイドメーカー
                 </Link>
               </li>
             </ul>

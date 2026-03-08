@@ -124,7 +124,7 @@ const Header: React.FC<HeaderProps> = ({
   const salesletterService = { id: 'salesletter', label: 'セールスライター', icon: PenTool, color: 'text-rose-600', bg: 'bg-rose-50' };
 
   // はじめかたガイド
-  const onboardingService = { id: 'onboarding', label: 'はじめかたメーカー', icon: MousePointerClick, color: 'text-sky-600', bg: 'bg-sky-50' };
+  const onboardingService = { id: 'onboarding', label: 'ガイドメーカー', icon: MousePointerClick, color: 'text-sky-600', bg: 'bg-sky-50' };
 
   // サムネイルメーカー
   const thumbnailService = { id: 'thumbnail', label: 'サムネイルメーカー', icon: Image, color: 'text-pink-600', bg: 'bg-pink-50' };
