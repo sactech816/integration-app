@@ -58,7 +58,16 @@
       "Bash(node -e \"const fs=require\\(''fs''\\); const c=fs.readFileSync\\(''d:/obsidian/integration-app/components/youtube-keyword-research/YouTubeKeywordResearchEditor.tsx'',''utf8''\\); const lines=c.split\\(''\\\\n''\\); lines.slice\\(350,500\\).forEach\\(\\(l,i\\)=>console.log\\(\\(i+351\\)+'': ''+l\\)\\);\")",
       "Bash(node -e \"const fs=require\\(''fs''\\); const c=fs.readFileSync\\(''d:/obsidian/integration-app/components/youtube-keyword-research/YouTubeKeywordResearchEditor.tsx'',''utf8''\\); const lines=c.split\\(''\\\\n''\\); lines.slice\\(529,560\\).forEach\\(\\(l,i\\)=>console.log\\(\\(i+530\\)+'': ''+l\\)\\);\")",
       "Bash(node -e \"const fs=require\\(''fs''\\); const c=fs.readFileSync\\(''d:/obsidian/integration-app/components/youtube-keyword-research/YouTubeKeywordResearchEditor.tsx'',''utf8''\\); const lines=c.split\\(''\\\\n''\\); lines.slice\\(635,660\\).forEach\\(\\(l,i\\)=>console.log\\(\\(i+636\\)+'': ''+l\\)\\);\")",
-      "Bash(node scripts/patch-keyword-research-v4.js)"
+      "Bash(node scripts/patch-keyword-research-v4.js)",
+      "Bash(node -e \"const fs = require\\(''fs''\\); fs.writeFileSync\\(''/tmp/kindle_b64.txt'', Buffer.from\\(fs.readFileSync\\(''d:/obsidian/integration-app/app/rakuten-research/page.tsx'', ''utf8''\\)\\).toString\\(''base64''\\)\\); console.log\\(''done''\\);\")",
+      "Bash(node d:/obsidian/integration-app/scripts/create-landing-pages.js)",
+      "Bash(node -e \"const fs = require\\(''fs''\\); const k = fs.readFileSync\\(''d:/obsidian/integration-app/app/kindle-keywords/page.tsx'', ''utf8''\\); console.log\\(''=== KINDLE \\(first 50 lines\\) ===''\\); console.log\\(k.split\\(''\\\\n''\\).slice\\(0,50\\).join\\(''\\\\n''\\)\\); console.log\\(''...''\\); console.log\\(''=== KINDLE \\(last 20 lines\\) ===''\\); const klines = k.split\\(''\\\\n''\\); console.log\\(klines.slice\\(-20\\).join\\(''\\\\n''\\)\\);\")",
+      "Bash(node -e \"const fs = require\\(''fs''\\); const k = fs.readFileSync\\(''d:/obsidian/integration-app/app/kindle-keywords/page.tsx'', ''utf8''\\); const lines = k.split\\(''\\\\n''\\); console.log\\(''=== First 25 lines ===''\\); console.log\\(lines.slice\\(0,25\\).join\\(''\\\\n''\\)\\);\")",
+      "Bash(node -e \":*)",
+      "Bash(git -C \"d:\\\\obsidian\\\\integration-app\" show HEAD:app/youtube-keyword-research/page.tsx)",
+      "Bash(git -C \"d:\\\\obsidian\\\\integration-app\" show HEAD:app/youtube-keyword-research/editor/page.tsx)",
+      "Bash(git -C \"d:\\\\obsidian\\\\integration-app\" show HEAD:components/youtube-keyword-research/YouTubeKeywordResearchEditor.tsx)",
+      "Bash(git -C \"d:\\\\obsidian\\\\integration-app\" show HEAD:lib/types.ts)"
     ],
     "deny": [
       "Bash(sudo:*)",

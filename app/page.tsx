@@ -26,6 +26,9 @@ import {
   GitBranch,
   Video,
   ClipboardCheck,
+  ShoppingBag,
+  Globe,
+  Search,
 } from 'lucide-react';
 
 // Client Components
@@ -246,6 +249,11 @@ export default function HomePage() {
                   { icon: Star, text: 'スロット', color: 'text-yellow-500' },
                   { icon: Ticket, text: 'スクラッチ', color: 'text-cyan-500' },
                   { icon: Stamp, text: 'スタンプラリー', color: 'text-green-500' },
+                  // リサーチ
+                  { icon: BookOpen, text: 'Kindleリサーチ', color: 'text-orange-500' },
+                  { icon: ShoppingBag, text: '楽天リサーチ', color: 'text-rose-500' },
+                  { icon: Globe, text: 'Googleリサーチ', color: 'text-teal-500' },
+                  { icon: Search, text: 'YouTubeリサーチ', color: 'text-red-500' },
                 ].map((tool, i) => (
                   <div key={`${setIdx}-${i}`} className="w-[160px] flex-shrink-0 bg-white border border-orange-100 rounded-2xl p-4 flex flex-col items-center justify-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300 mx-2">
                     <div className={`${tool.color} mb-1`}><tool.icon size={28} /></div>

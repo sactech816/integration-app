@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb, Crown, Image, Store, PartyPopper, Mail, GitBranch, Video, ClipboardCheck, Send, BookOpen, Share2, ListOrdered, MessageCircle, Search, TrendingUp } from 'lucide-react';
+import { Sparkles, UserCircle, Building2, ArrowRight, FileText, Users, Calendar, PenTool, Gamepad2, Lightbulb, Crown, Image, Store, PartyPopper, Mail, GitBranch, Video, ClipboardCheck, Send, BookOpen, Share2, ListOrdered, MessageCircle, Search, TrendingUp, ShoppingBag, Globe } from 'lucide-react';
 import { ServiceType, SERVICE_LABELS } from '@/lib/types';
 import Link from 'next/link';
 
@@ -331,6 +331,48 @@ const serviceConfig = [
     features: ['キーワード検索', '上位動画分析', '比較チャート'],
     category: 'marketing' as ServiceCategoryId,
     href: '/youtube-keyword-research',
+  },
+  {
+    id: 'kindle-keywords' as ServiceType,
+    icon: BookOpen,
+    label: 'Kindleリサーチ',
+    description: 'Amazonキーワード分析でKindle出版の市場調査。競合・価格帯・表紙トレンドをAI分析',
+    gradient: 'from-orange-500 to-amber-600',
+    bgLight: 'bg-orange-50',
+    textColor: 'text-orange-600',
+    borderColor: 'border-orange-200',
+    hoverBg: 'hover:bg-orange-50',
+    features: ['市場分析', 'キーワード調査', 'AI分析'],
+    category: 'marketing' as ServiceCategoryId,
+    href: '/kindle-keywords',
+  },
+  {
+    id: 'rakuten-research' as ServiceType,
+    icon: ShoppingBag,
+    label: '楽天リサーチ',
+    description: '楽天市場の商品リサーチ・競合分析。価格帯・レビュー・キーワードをAIでコンサルティング',
+    gradient: 'from-rose-500 to-pink-600',
+    bgLight: 'bg-rose-50',
+    textColor: 'text-rose-600',
+    borderColor: 'border-rose-200',
+    hoverBg: 'hover:bg-rose-50',
+    features: ['市場調査', '価格分析', 'AIコンサル'],
+    category: 'marketing' as ServiceCategoryId,
+    href: '/rakuten-research',
+  },
+  {
+    id: 'google-keyword-research' as ServiceType,
+    icon: Globe,
+    label: 'Googleリサーチ',
+    description: 'Google検索のキーワード調査。allintitle分析でブルーオーシャンキーワードを発見',
+    gradient: 'from-teal-500 to-cyan-600',
+    bgLight: 'bg-teal-50',
+    textColor: 'text-teal-600',
+    borderColor: 'border-teal-200',
+    hoverBg: 'hover:bg-teal-50',
+    features: ['キーワード調査', '競合分析', 'ブルーオーシャン'],
+    category: 'marketing' as ServiceCategoryId,
+    href: '/google-keyword-research',
   },
 ];
 

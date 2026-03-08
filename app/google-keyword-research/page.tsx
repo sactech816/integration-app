@@ -1,24 +1,24 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import {
-  Search, TrendingUp, BarChart3, Lightbulb,
-  CheckCircle2, ArrowRight, ChevronRight, Globe, Zap,
+  Globe, TrendingUp, BarChart3, Lightbulb,
+  CheckCircle2, ArrowRight, ChevronRight, Search, Target,
 } from 'lucide-react';
 import LandingHeader from '@/components/shared/LandingHeader';
 
 export const metadata: Metadata = {
-  title: 'Googleキーワードリサーチ | 集客メーカー',
+  title: 'Googleリサーチ（キーワード分析・SEO調査）| 集客メーカー',
   description:
-    'Googleサジェストキーワードの自動展開＋allintitle競合分析。穴場キーワードを発見し、SEO対策を効率化。AI分析でコンテンツ戦略も提案。',
-  keywords: ['Googleキーワードリサーチ', 'キーワード分析', 'SEO対策', 'allintitle', 'サジェストキーワード', '穴場キーワード'],
+    'Google検索のキーワード調査をAIでサポート。allintitle分析でブルーオーシャンキーワードを発見。SEO対策・コンテンツ戦略に最適。',
+  keywords: ['Googleリサーチ', 'キーワード調査', 'SEO分析', 'allintitle', 'ブルーオーシャン', 'キーワードリサーチ', 'SEO対策'],
   openGraph: {
-    title: 'Googleキーワードリサーチ | 集客メーカー',
-    description: 'Googleサジェスト展開＋allintitle競合分析。穴場キーワードを発見し、SEO対策を効率化。',
+    title: 'Googleリサーチ | 集客メーカー',
+    description: 'Google検索のキーワード調査をAIでサポート。ブルーオーシャンキーワードを発見。',
     type: 'website',
     url: 'https://makers.tokyo/google-keyword-research',
     siteName: '集客メーカー',
   },
-  twitter: { card: 'summary_large_image', title: 'Googleキーワードリサーチ | 集客メーカー', description: 'Googleサジェスト展開＋allintitle競合分析ツール' },
+  twitter: { card: 'summary_large_image', title: 'Googleリサーチ | 集客メーカー', description: 'Google検索のキーワード調査をAIでサポート。' },
   alternates: { canonical: 'https://makers.tokyo/google-keyword-research' },
 };
 
@@ -27,231 +27,200 @@ const jsonLd = {
   '@graph': [
     {
       '@type': 'SoftwareApplication',
-      name: 'Googleキーワードリサーチ',
+      name: 'Googleリサーチ',
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',
-      description: 'Google検索のサジェストキーワード展開＋allintitle競合分析ツール。穴場キーワードの発見とAI分析に対応。',
+      description: 'Google検索のキーワード調査ツール。allintitle分析でブルーオーシャンキーワードを発見。',
       url: 'https://makers.tokyo/google-keyword-research',
-      offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY', description: 'Proプランで利用可能' },
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY', description: '無料で利用可能' },
       provider: { '@type': 'Organization', name: '集客メーカー', url: 'https://makers.tokyo' },
     },
     {
       '@type': 'FAQPage',
       mainEntity: [
-        { '@type': 'Question', name: 'Googleキーワードリサーチとは？', acceptedAnswer: { '@type': 'Answer', text: 'Googleのサジェスト機能を使ってキーワードを自動展開し、allintitle検索で競合の少ないキーワードを発見するツールです。' } },
-        { '@type': 'Question', name: 'allintitleとは何ですか？', acceptedAnswer: { '@type': 'Answer', text: 'Google検索で「allintitle:キーワード」と検索すると、タイトルにそのキーワードを含むページの数がわかります。この数が少ないほど競合が少なく、上位表示しやすいキーワードです。' } },
-        { '@type': 'Question', name: 'どんな分析ができますか？', acceptedAnswer: { '@type': 'Answer', text: 'サジェストキーワードの一括展開、allintitle件数による競合度分析、AI によるSEO戦略提案、コンテンツアイデアの提案などが可能です。' } },
+        { '@type': 'Question', name: 'Googleリサーチとは何ですか？', acceptedAnswer: { '@type': 'Answer', text: 'Googleサジェストキーワードを自動展開し、allintitle検索で競合数を分析することで、ブルーオーシャン（競合が少ない穴場キーワード）を発見するツールです。' } },
+        { '@type': 'Question', name: '無料で使えますか？', acceptedAnswer: { '@type': 'Answer', text: 'はい、基本的なリサーチ機能は無料でご利用いただけます。' } },
+        { '@type': 'Question', name: 'allintitle分析とは何ですか？', acceptedAnswer: { '@type': 'Answer', text: 'allintitleはGoogle検索のコマンドで、タイトルにキーワードが含まれるページ数を調べます。この数が少ないほど競合が少なく、上位表示しやすいキーワードです。' } },
       ],
     },
     {
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'ホーム', item: 'https://makers.tokyo/' },
-        { '@type': 'ListItem', position: 2, name: 'Googleキーワードリサーチ', item: 'https://makers.tokyo/google-keyword-research' },
+        { '@type': 'ListItem', position: 2, name: 'Googleリサーチ', item: 'https://makers.tokyo/google-keyword-research' },
       ],
     },
   ],
 };
 
 const features = [
-  {
-    icon: Search,
-    title: 'サジェスト一括展開',
-    description: 'a〜z・あ〜わの全パターンでGoogleサジェストを自動展開。100件以上のキーワード候補を瞬時に取得。',
-  },
-  {
-    icon: BarChart3,
-    title: 'allintitle競合分析',
-    description: '各キーワードのallintitle件数を自動取得。競合の少ない穴場キーワードを数値で可視化。',
-  },
-  {
-    icon: TrendingUp,
-    title: '穴場スコア判定',
-    description: 'allintitle件数から独自の穴場スコアを算出。ブルーオーシャンから激戦区まで一目で判別。',
-  },
-  {
-    icon: Lightbulb,
-    title: 'AI戦略分析',
-    description: 'AIがキーワードデータを分析し、SEO戦略・コンテンツアイデア・ペルソナ分析を自動提案。',
-  },
-  {
-    icon: Globe,
-    title: 'ロングテール発掘',
-    description: '3語以上の複合キーワードを発掘。検索意図別に分類し、成約に繋がるキーワードを特定。',
-  },
-  {
-    icon: Zap,
-    title: 'CSV一括エクスポート',
-    description: '分析結果をCSVで一括ダウンロード。他ツールとの連携やチームでの共有に便利。',
-  },
+  { icon: Search, iconClass: 'text-teal-600', bgClass: 'bg-teal-100', title: 'サジェスト自動展開', desc: 'キーワードにa-z・あ-わを自動追加してGoogleサジェストを網羅的に取得。隠れたキーワードを発見します。' },
+  { icon: Target, iconClass: 'text-cyan-600', bgClass: 'bg-cyan-100', title: 'allintitle競合分析', desc: '最大50キーワードのallintitle件数を一括取得。競合の少ないブルーオーシャンキーワードを自動判定。' },
+  { icon: TrendingUp, iconClass: 'text-teal-700', bgClass: 'bg-teal-50', title: 'チャンススコア', desc: 'allintitle件数から0〜100のチャンススコアを算出。数値で穴場度合いを一目で把握できます。' },
+  { icon: Lightbulb, iconClass: 'text-cyan-700', bgClass: 'bg-cyan-50', title: 'AI戦略分析（6種類）', desc: '市場分析・競合分析・コンテンツ案・ロングテール提案・ペルソナ分析・タイトルパターンの6つの分析を提供。' },
 ];
 
 const steps = [
-  {
-    step: 1,
-    title: 'キーワードを入力',
-    description: '調べたいキーワードを入力するだけ。展開方式（アルファベット・ひらがな・両方）を選択できます。',
-  },
-  {
-    step: 2,
-    title: 'サジェスト＆競合度を確認',
-    description: 'Googleサジェストが自動展開され、allintitle件数と穴場スコアが表示されます。ソート・フィルターで絞り込み可能。',
-  },
-  {
-    step: 3,
-    title: 'AI分析で戦略立案',
-    description: 'AIが競合データを分析し、具体的なコンテンツ戦略・タイトル案・ペルソナ分析を提案します。',
-  },
+  { num: '01', title: 'キーワードを入力', desc: 'リサーチしたいメインキーワードを入力。展開方法（アルファベット/ひらがな）を選択します。', icon: Search },
+  { num: '02', title: 'サジェスト＆allintitle分析', desc: 'Googleサジェストを自動展開し、allintitle件数で競合数を一括分析します。', icon: BarChart3 },
+  { num: '03', title: 'AI戦略レポート', desc: 'ブルーオーシャンキーワードの特定・コンテンツ案・SEO戦略をAIが提案。', icon: Lightbulb },
 ];
 
-export default function GoogleKeywordResearchLanding() {
+const useCases = [
+  { profession: 'ブロガー・アフィリエイター', title: '穴場キーワードの発掘', desc: '競合が少ないブルーオーシャンキーワードを発見。allintitle分析で上位表示しやすい記事テーマを効率的に選定。', emoji: '✍️', badge: 'SEO対策に' },
+  { profession: 'Web担当者・マーケター', title: 'コンテンツマーケティング戦略', desc: 'サジェストキーワードを網羅的に分析し、ユーザーのニーズを把握。データに基づいたコンテンツ計画を立案。', emoji: '📊', badge: '戦略立案に' },
+  { profession: 'コンサルタント・コーチ', title: '集客コンテンツの企画', desc: '見込み客が検索するキーワードを発見。競合が少ないテーマでブログやLPを作り、集客を加速。', emoji: '💼', badge: '集客強化に' },
+  { profession: 'EC・D2Cブランド', title: '商品ページのSEO対策', desc: '商品に関連するキーワードの競合状況を分析。allintitle数の少ないキーワードで商品ページの検索順位を向上。', emoji: '🛍️', badge: '検索流入アップに' },
+];
+
+const faqs = [
+  { q: 'Googleリサーチとは何ですか？', a: 'Googleサジェストキーワードを自動展開し、allintitle検索で競合数を分析することで、ブルーオーシャン（競合が少ない穴場キーワード）を発見するツールです。' },
+  { q: '無料で使えますか？', a: 'はい、基本的なリサーチ機能は無料でご利用いただけます。' },
+  { q: 'allintitle分析とは何ですか？', a: 'allintitleはGoogle検索のコマンドで、タイトルにキーワードが含まれるページ数を調べます。この数が少ないほど競合が少なく、上位表示しやすいキーワードです。' },
+  { q: 'どのくらいのキーワードを分析できますか？', a: '1回の分析で最大50キーワードのallintitle件数を一括取得できます。サジェストの展開数に制限はありません。' },
+  { q: 'AI分析にはどんな種類がありますか？', a: '全体分析・競合分析・コンテンツアイデア・ロングテールキーワード提案・ペルソナ分析・タイトルパターン最適化の6種類の分析を提供しています。' },
+];
+
+export default function GoogleKeywordResearchLandingPage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <div className="min-h-screen bg-white">
+        <LandingHeader />
 
-      <LandingHeader />
-
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-teal-600 via-teal-500 to-emerald-500 text-white">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-        <div className="relative max-w-5xl mx-auto px-4 py-20 md:py-28 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium mb-6">
-            <Globe size={16} />
-            <span>Google検索キーワード競合分析ツール</span>
-          </div>
-          <h1 className="text-3xl md:text-5xl font-black leading-tight mb-6">
-            穴場キーワードを
-            <br className="md:hidden" />
-            <span className="text-yellow-300">一瞬で</span>発見
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Googleサジェストを自動展開し、allintitle件数で競合度を数値化。
-            <br className="hidden md:block" />
-            AIが最適なSEO戦略を提案します。
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/google-keyword-research/editor"
-              className="inline-flex items-center justify-center gap-2 bg-white text-teal-700 px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all"
-            >
-              無料で始める
-              <ArrowRight size={20} />
-            </Link>
-            <Link
-              href="#features"
-              className="inline-flex items-center justify-center gap-2 border-2 border-white/50 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/10 transition-all"
-            >
-              詳しく見る
-              <ChevronRight size={20} />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section id="features" className="py-20 bg-gray-50">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="text-center mb-14">
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-4">
-              6つの主要機能
-            </h2>
-            <p className="text-gray-600 max-w-xl mx-auto">
-              キーワード発掘から競合分析、コンテンツ戦略まで一貫してサポート
+        {/* Hero */}
+        <section className="bg-gradient-to-b from-teal-50 to-white">
+          <div className="max-w-5xl mx-auto px-4 pt-14 pb-16 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal-100 text-teal-700 rounded-full text-sm font-semibold mb-6">
+              <Globe className="w-4 h-4" />
+              SEOキーワード分析ツール
+            </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6 leading-tight">
+              ブルーオーシャンを<br />
+              <span className="text-teal-600">AIで発見</span>
+            </h1>
+            <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+              サジェスト展開・allintitle分析で
+              <br className="hidden sm:block" />
+              競合の少ない穴場キーワードを自動発見。
             </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/google-keyword-research/editor" className="inline-flex items-center gap-2 px-8 py-4 bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
+                <Search className="w-5 h-5" />
+                リサーチを始める
+              </Link>
+              <Link href="/demos" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-teal-600 font-semibold text-lg rounded-xl border border-teal-200 shadow hover:shadow-md transition-all duration-200 min-h-[44px]">
+                デモを見る <ArrowRight className="w-5 h-5" />
+              </Link>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8 text-sm text-gray-500">
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-green-500" />キーワード調査</span>
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-green-500" />allintitle分析</span>
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-green-500" />ブルーオーシャン発見</span>
+            </div>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        </section>
+
+        {/* Features */}
+        <section className="max-w-5xl mx-auto px-4 py-16">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-4">Googleリサーチの特長</h2>
+          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">データに基づいたSEO戦略で、検索からの集客を最大化します。</p>
+          <div className="grid sm:grid-cols-2 gap-6">
             {features.map((f) => (
-              <div
-                key={f.title}
-                className="bg-white rounded-2xl p-6 shadow-md border border-gray-200 hover:shadow-lg transition-shadow"
-              >
-                <div className="w-12 h-12 rounded-xl bg-teal-50 flex items-center justify-center mb-4">
-                  <f.icon size={24} className="text-teal-600" />
+              <div key={f.title} className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow duration-200">
+                <div className={`w-12 h-12 mb-4 ${f.bgClass} rounded-xl flex items-center justify-center`}>
+                  <f.icon className={`w-6 h-6 ${f.iconClass}`} />
                 </div>
-                <h3 className="font-bold text-gray-900 mb-2">{f.title}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{f.description}</p>
+                <h3 className="font-bold text-gray-900 mb-2 text-lg">{f.title}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Steps */}
-      <section className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center mb-14">
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-4">
-              かんたん3ステップ
-            </h2>
-          </div>
-          <div className="space-y-8">
-            {steps.map((s) => (
-              <div
-                key={s.step}
-                className="flex gap-6 items-start bg-gray-50 rounded-2xl p-6 border border-gray-200"
-              >
-                <div className="w-12 h-12 rounded-full bg-teal-600 text-white flex items-center justify-center font-black text-lg shrink-0">
-                  {s.step}
+        {/* Steps */}
+        <section className="bg-gray-50 py-16">
+          <div className="max-w-5xl mx-auto px-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-3">3ステップでリサーチ</h2>
+            <p className="text-gray-600 text-center mb-12">キーワードを入力するだけで、AIが競合分析レポートを生成</p>
+            <div className="grid sm:grid-cols-3 gap-8">
+              {steps.map((step, i) => (
+                <div key={step.num} className="flex flex-col items-center text-center relative">
+                  {i < steps.length - 1 && (
+                    <div className="hidden sm:flex absolute top-10 left-[calc(50%+48px)] right-0 items-center justify-center">
+                      <ChevronRight className="w-6 h-6 text-teal-300" />
+                    </div>
+                  )}
+                  <div className="w-20 h-20 mb-4 bg-teal-600 rounded-2xl flex items-center justify-center shadow-md">
+                    <step.icon className="w-8 h-8 text-white" />
+                  </div>
+                  <div className="text-xs font-bold text-teal-500 mb-1 tracking-widest">STEP {step.num}</div>
+                  <h3 className="font-bold text-gray-900 mb-2 text-lg">{step.title}</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">{step.desc}</p>
                 </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 text-lg mb-2">{s.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{s.description}</p>
+              ))}
+            </div>
+            <div className="text-center mt-12">
+              <Link href="/google-keyword-research/editor" className="inline-flex items-center gap-2 px-8 py-4 bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
+                <Search className="w-5 h-5" />リサーチを始める（無料）
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Use Cases */}
+        <section className="max-w-5xl mx-auto px-4 py-16">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-4">こんな方が使っています</h2>
+          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">データに基づいたSEO戦略で、効率的に検索からの集客を伸ばしましょう</p>
+          <div className="grid sm:grid-cols-2 gap-6">
+            {useCases.map((uc) => (
+              <div key={uc.profession} className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow duration-200">
+                <div className="flex items-start gap-4">
+                  <span className="text-4xl flex-shrink-0">{uc.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-semibold text-teal-600 mb-1 uppercase tracking-wide">{uc.profession}</div>
+                    <h3 className="font-bold text-gray-900 mb-2">「{uc.title}」</h3>
+                    <p className="text-sm text-gray-600 mb-3 leading-relaxed">{uc.desc}</p>
+                    <div className="inline-flex items-center gap-1.5 text-xs text-green-700 font-semibold bg-green-50 px-3 py-1.5 rounded-full border border-green-200">
+                      <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />{uc.badge}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA */}
-      <section className="py-16 bg-gradient-to-r from-teal-600 to-emerald-600 text-white text-center">
-        <div className="max-w-3xl mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-black mb-4">
-            穴場キーワードを今すぐ発見
-          </h2>
-          <p className="text-white/80 mb-8">
-            競合が少ないキーワードを見つけて、SEOで上位表示を狙いましょう
-          </p>
-          <Link
-            href="/google-keyword-research/editor"
-            className="inline-flex items-center gap-2 bg-white text-teal-700 px-10 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all"
-          >
-            <Search size={20} />
-            キーワードリサーチを始める
-          </Link>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-3xl mx-auto px-4">
-          <h2 className="text-2xl font-black text-gray-900 text-center mb-10">よくある質問</h2>
-          <div className="space-y-4">
-            {[
-              { q: 'allintitleとは何ですか？', a: 'Google検索で「allintitle:キーワード」と検索すると、ページタイトルにそのキーワードを含むページの数がわかります。この数が少ないほど競合が少なく、上位表示しやすいキーワードです。' },
-              { q: '無料で使えますか？', a: 'サジェストキーワードの展開は無料です。allintitle件数の取得とAI分析はProプラン限定の機能です。' },
-              { q: '1日何回まで使えますか？', a: 'サジェスト展開は制限なし。allintitle件数の取得はGoogle Custom Search APIの制限（無料枠100クエリ/日）に依存します。' },
-              { q: 'YouTubeキーワードリサーチとの違いは？', a: 'YouTube版はYouTube動画の再生回数やチャンネル登録者数を分析します。Google版はGoogle検索のサジェストとallintitle件数で、ブログやWebサイトのSEO対策に特化しています。' },
-            ].map((faq) => (
-              <details key={faq.q} className="bg-white rounded-xl border border-gray-200 p-5 group">
-                <summary className="font-bold text-gray-900 cursor-pointer flex items-center justify-between">
-                  {faq.q}
-                  <ChevronRight size={18} className="text-gray-400 group-open:rotate-90 transition-transform" />
-                </summary>
-                <p className="mt-3 text-gray-600 text-sm leading-relaxed">{faq.a}</p>
-              </details>
-            ))}
+        {/* FAQ */}
+        <section className="bg-gray-50 py-16">
+          <div className="max-w-3xl mx-auto px-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-10">よくある質問</h2>
+            <div className="space-y-3">
+              {faqs.map((faq) => (
+                <details key={faq.q} className="group bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                  <summary className="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer font-semibold text-gray-900 select-none hover:bg-gray-50 transition-colors duration-150 list-none">
+                    <span>{faq.q}</span>
+                    <span className="text-teal-500 text-2xl font-light flex-shrink-0 transition-transform duration-200 group-open:rotate-45">+</span>
+                  </summary>
+                  <div className="px-6 pb-5 text-gray-600 leading-relaxed text-sm border-t border-gray-100 pt-4">{faq.a}</div>
+                </details>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-8 text-center text-sm">
-        <p>&copy; 集客メーカー. All rights reserved.</p>
-      </footer>
+        {/* CTA */}
+        <section className="max-w-4xl mx-auto px-4 py-20">
+          <div className="bg-gradient-to-br from-teal-600 to-cyan-700 rounded-3xl p-10 sm:p-14 text-center shadow-2xl">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">Googleリサーチを始めよう</h2>
+            <p className="text-teal-100 mb-8 text-lg">AIがあなたのSEO戦略をサポート。ブルーオーシャンキーワードの発見からコンテンツ企画まで、すべて無料で使えます。</p>
+            <Link href="/google-keyword-research/editor" className="inline-flex items-center gap-2 px-10 py-4 bg-white text-teal-700 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
+              <Search className="w-5 h-5" />リサーチを始める
+            </Link>
+            <p className="text-teal-200 text-sm mt-4">無料で利用可能</p>
+          </div>
+        </section>
+      </div>
     </>
   );
 }
