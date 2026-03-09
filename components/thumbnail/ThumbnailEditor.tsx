@@ -23,6 +23,7 @@ import SVGTextOverlay, { SVGTextOverlayRef } from './SVGTextOverlay';
 import TextEditPanel from './TextEditPanel';
 import { downloadSVG, downloadPNG, exportAsPNG } from '@/lib/thumbnail/exportSvg';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import { usePoints } from '@/lib/hooks/usePoints';
 
 interface ThumbnailEditorProps {
   user: { id: string; email?: string } | null;
@@ -88,6 +89,8 @@ const Section = ({
 );
 
 export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, isPro = false }: ThumbnailEditorProps) {
+  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro });
+
   // セクション開閉状態
   const [openSections, setOpenSections] = useState({
     platform: !editingThumbnail,
@@ -254,65 +257,67 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
     const hasContent = generationMode === 'editable_text' ? backgroundImageUrl : generatedImageUrl;
     if (!hasContent) return;
 
-    setIsSaving(true);
-    try {
-      // editable_textモードの場合、SVGからPNGをレンダリングしてアップロード
-      let imageUrlToSave = generatedImageUrl;
-      if (generationMode === 'editable_text' && svgOverlayRef.current?.getSVGElement()) {
-        const svgEl = svgOverlayRef.current.getSVGElement()!;
-        const [w, h] = currentAspectRatio === '9:16' ? [1080, 1920] : currentAspectRatio === '1:1' ? [1080, 1080] : [1280, 720];
-        const pngBlob = await exportAsPNG(svgEl, w, h);
-        const filePath = `${user.id}/${Date.now()}_composed.png`;
-        const { error: uploadErr } = await supabase.storage
-          .from('thumbnail-images')
-          .upload(filePath, pngBlob, { contentType: 'image/png' });
-        if (uploadErr) throw uploadErr;
-        const { data: urlData } = supabase.storage
-          .from('thumbnail-images')
-          .getPublicUrl(filePath);
-        imageUrlToSave = urlData.publicUrl;
+    await consumeAndExecute('thumbnail', 'save', async () => {
+      setIsSaving(true);
+      try {
+        // editable_textモードの場合、SVGからPNGをレンダリングしてアップロード
+        let imageUrlToSave = generatedImageUrl;
+        if (generationMode === 'editable_text' && svgOverlayRef.current?.getSVGElement()) {
+          const svgEl = svgOverlayRef.current.getSVGElement()!;
+          const [w, h] = currentAspectRatio === '9:16' ? [1080, 1920] : currentAspectRatio === '1:1' ? [1080, 1080] : [1280, 720];
+          const pngBlob = await exportAsPNG(svgEl, w, h);
+          const filePath = `${user.id}/${Date.now()}_composed.png`;
+          const { error: uploadErr } = await supabase.storage
+            .from('thumbnail-images')
+            .upload(filePath, pngBlob, { contentType: 'image/png' });
+          if (uploadErr) throw uploadErr;
+          const { data: urlData } = supabase.storage
+            .from('thumbnail-images')
+            .getPublicUrl(filePath);
+          imageUrlToSave = urlData.publicUrl;
+        }
+
+        const slug = savedSlug || generateSlug();
+        const thumbnailData = {
+          slug,
+          title: title || '新規サムネイル',
+          image_url: imageUrlToSave,
+          platform: selectedPlatform,
+          aspect_ratio: currentAspectRatio,
+          template_id: selectedTemplate?.id || null,
+          text_overlay: {
+            title, subtitle, colorTheme: selectedColorTheme,
+            mode: generationMode,
+            ...(generationMode === 'editable_text' ? { svgTextElements, backgroundImageUrl } : {}),
+          },
+          user_id: user.id,
+          status: 'published',
+        };
+
+        if (editingThumbnail) {
+          const { error: updateError } = await supabase
+            .from(TABLES.THUMBNAILS)
+            .update(thumbnailData)
+            .eq('id', editingThumbnail.id);
+          if (updateError) throw updateError;
+        } else {
+          const { error: insertError } = await supabase
+            .from(TABLES.THUMBNAILS)
+            .insert([thumbnailData]);
+          if (insertError) throw insertError;
+        }
+
+        setSavedSlug(slug);
+        const publicUrl = `${window.location.origin}/thumbnail/${slug}`;
+        setCompletedUrl(publicUrl);
+        setShowCompleteModal(true);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : '不明なエラー';
+        alert('保存に失敗しました: ' + msg);
+      } finally {
+        setIsSaving(false);
       }
-
-      const slug = savedSlug || generateSlug();
-      const thumbnailData = {
-        slug,
-        title: title || '新規サムネイル',
-        image_url: imageUrlToSave,
-        platform: selectedPlatform,
-        aspect_ratio: currentAspectRatio,
-        template_id: selectedTemplate?.id || null,
-        text_overlay: {
-          title, subtitle, colorTheme: selectedColorTheme,
-          mode: generationMode,
-          ...(generationMode === 'editable_text' ? { svgTextElements, backgroundImageUrl } : {}),
-        },
-        user_id: user.id,
-        status: 'published',
-      };
-
-      if (editingThumbnail) {
-        const { error: updateError } = await supabase
-          .from(TABLES.THUMBNAILS)
-          .update(thumbnailData)
-          .eq('id', editingThumbnail.id);
-        if (updateError) throw updateError;
-      } else {
-        const { error: insertError } = await supabase
-          .from(TABLES.THUMBNAILS)
-          .insert([thumbnailData]);
-        if (insertError) throw insertError;
-      }
-
-      setSavedSlug(slug);
-      const publicUrl = `${window.location.origin}/thumbnail/${slug}`;
-      setCompletedUrl(publicUrl);
-      setShowCompleteModal(true);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : '不明なエラー';
-      alert('保存に失敗しました: ' + msg);
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   // ダウンロード（通常モード: PNG直接 / 編集テキストモード: SVGまたはPNG）

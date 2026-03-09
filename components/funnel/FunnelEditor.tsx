@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { FUNNEL_TEMPLATES } from '@/constants/templates/funnel';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import { usePoints } from '@/lib/hooks/usePoints';
 
 interface Step {
   name: string;
@@ -288,6 +289,8 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [urlCopied, setUrlCopied] = useState(false);
 
+  const { consumeAndExecute } = usePoints({ userId: userId ?? undefined, isPro: false });
+
   useEffect(() => {
     const init = async () => {
       if (!supabase) { console.warn('[FunnelEditor] supabase not available'); return; }
@@ -361,52 +364,57 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
 
   const handleSave = async (newStatus?: string) => {
     if (!userId || !name) return;
-    setSaving(true);
-    const body = { userId, name, description, status: newStatus || status, steps };
-    if (savedFunnelId) {
-      const res = await fetch(`/api/funnel/${savedFunnelId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (res.ok) {
-        const data = await res.json();
-        if (newStatus) setStatus(newStatus);
-        // 保存後のslugをステップに反映
-        if (data.steps?.length > 0) {
-          setSteps(prev => prev.map((s, i) => ({
-            ...s,
-            slug: data.steps[i]?.slug || s.slug,
-          })));
-        }
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 2000);
-      }
-    } else {
-      const res = await fetch('/api/funnel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (res.ok) {
-        const data = await res.json();
-        // ステップ保存 + 公開状態にする（公開URLがすぐ使えるように）
-        const patchRes = await fetch(`/api/funnel/${data.funnel.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, steps: steps.length > 0 ? steps : undefined, status: 'active' }),
-        });
-        if (patchRes.ok) {
-          const patchData = await patchRes.json();
-          // ステップslugを反映
-          if (patchData.steps?.length > 0) {
-            setSteps(prev => prev.map((s, i) => ({
-              ...s,
-              slug: patchData.steps[i]?.slug || s.slug,
-            })));
+    await consumeAndExecute('funnel', 'save', async () => {
+      setSaving(true);
+      try {
+        const body = { userId, name, description, status: newStatus || status, steps };
+        if (savedFunnelId) {
+          const res = await fetch(`/api/funnel/${savedFunnelId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          if (res.ok) {
+            const data = await res.json();
+            if (newStatus) setStatus(newStatus);
+            // 保存後のslugをステップに反映
+            if (data.steps?.length > 0) {
+              setSteps(prev => prev.map((s, i) => ({
+                ...s,
+                slug: data.steps[i]?.slug || s.slug,
+              })));
+            }
+            setSaveSuccess(true);
+            setTimeout(() => setSaveSuccess(false), 2000);
+          }
+        } else {
+          const res = await fetch('/api/funnel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          if (res.ok) {
+            const data = await res.json();
+            // ステップ保存 + 公開状態にする（公開URLがすぐ使えるように）
+            const patchRes = await fetch(`/api/funnel/${data.funnel.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, steps: steps.length > 0 ? steps : undefined, status: 'active' }),
+            });
+            if (patchRes.ok) {
+              const patchData = await patchRes.json();
+              // ステップslugを反映
+              if (patchData.steps?.length > 0) {
+                setSteps(prev => prev.map((s, i) => ({
+                  ...s,
+                  slug: patchData.steps[i]?.slug || s.slug,
+                })));
+              }
+            }
+            setStatus('active');
+            setCreatedSlug(data.funnel.slug);
+            setSlug(data.funnel.slug);
+            setSavedFunnelId(data.funnel.id);
+            setShowCompleteModal(true);
+            window.history.replaceState(null, '', `/funnel/editor/${data.funnel.id}`);
           }
         }
-        setStatus('active');
-        setCreatedSlug(data.funnel.slug);
-        setSlug(data.funnel.slug);
-        setSavedFunnelId(data.funnel.id);
-        setShowCompleteModal(true);
-        window.history.replaceState(null, '', `/funnel/editor/${data.funnel.id}`);
+      } finally {
+        setSaving(false);
       }
-    }
-    setSaving(false);
+    });
   };
 
   const getStepTypeConfig = (type: string) => STEP_TYPES.find((t) => t.value === type);

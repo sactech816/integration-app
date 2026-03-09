@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { recordAffiliateConversion, getAffiliateServiceSetting } from '@/app/actions/affiliate';
+import { addPoints, PRO_MONTHLY_POINTS } from '@/lib/points';
 
 /**
  * Stripe Webhook エンドポイント
@@ -67,7 +68,24 @@ export async function POST(request: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         
-        // サブスクリプションモードの場合のみ処理
+        // ── ポイント購入（一回払い）の処理 ──
+        if (session.mode === 'payment' && session.metadata?.type === 'point_purchase') {
+          const userId = session.metadata?.userId;
+          const packId = session.metadata?.packId;
+          const points = parseInt(session.metadata?.points || '0', 10);
+
+          if (userId && points > 0) {
+            const result = await addPoints(userId, points, 'purchase', `${packId} ポイント購入`, {
+              stripe_session_id: session.id,
+              pack_id: packId,
+              amount_paid: session.amount_total,
+            });
+            console.log(`✅ Points purchased: user=${userId}, points=${points}, success=${result.success}`);
+          }
+          break;
+        }
+
+        // ── サブスクリプションモードの処理 ──
         if (session.mode === 'subscription') {
           const userId = session.metadata?.userId;
           const planId = session.metadata?.planId;
@@ -199,9 +217,35 @@ export async function POST(request: NextRequest) {
       }
 
       case 'invoice.paid': {
-        const invoice = event.data.object as Stripe.Invoice;
-        console.log(`✅ Invoice paid: ${invoice.id}, amount: ${invoice.amount_paid}`);
-        // 必要に応じて課金履歴を記録
+        const invoicePaid = event.data.object as any;
+        console.log(`✅ Invoice paid: ${invoicePaid.id}, amount: ${invoicePaid.amount_paid}`);
+
+        // Proプラン月次更新時にポイントを付与
+        // billing_reason: 'subscription_cycle' = 月次更新、'subscription_create' = 初回作成
+        const billingReason = invoicePaid.billing_reason;
+        const invoiceSubId = invoicePaid.subscription as string | undefined;
+        if (invoiceSubId && (billingReason === 'subscription_cycle' || billingReason === 'subscription_create')) {
+          try {
+            // サブスクリプションからuserIdを取得
+            const sub = await stripe.subscriptions.retrieve(invoiceSubId);
+            const userId = sub.metadata?.userId;
+            const planId = sub.metadata?.planId;
+
+            if (userId && userId !== 'anonymous' && planId === 'makers_pro_monthly') {
+              const month = new Date().toISOString().slice(0, 7); // YYYY-MM
+              const result = await addPoints(
+                userId,
+                PRO_MONTHLY_POINTS,
+                'grant_monthly',
+                `プロプラン月次ポイント付与（${month}）`,
+                { subscription_id: invoiceSubId, month, billing_reason: billingReason }
+              );
+              console.log(`✅ Monthly points granted: user=${userId}, points=${PRO_MONTHLY_POINTS}, success=${result.success}`);
+            }
+          } catch (pointErr) {
+            console.error('Monthly points grant error:', pointErr);
+          }
+        }
         break;
       }
 

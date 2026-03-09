@@ -22,6 +22,7 @@ import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import SalesTextEditor from '@/components/salesletter/SalesTextEditor';
 import OnboardingModal, { type OnboardingPage } from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
+import { usePoints } from '@/lib/hooks/usePoints';
 import { supabase } from '@/lib/supabase';
 import { createAttendanceEvent, getAttendanceEvent, updateAttendanceEvent } from '@/app/actions/attendance';
 import { AttendanceSlot, AttendanceEvent } from '@/types/attendance';
@@ -35,6 +36,7 @@ function AttendanceEditorContent() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
 
   // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('attendance_editor_onboarding_dismissed', { skip: !!editId });
@@ -297,38 +299,44 @@ function AttendanceEditorContent() {
     setSubmitting(true);
     setError(null);
 
-    try {
-      const inputData = {
-        title: title.trim(),
-        description: (description && description !== '<p></p>') ? description : undefined,
-        slots,
-      };
+    const pointsOk = await consumeAndExecute('attendance', 'save', async () => {
+      try {
+        const inputData = {
+          title: title.trim(),
+          description: (description && description !== '<p></p>') ? description : undefined,
+          slots,
+        };
 
-      let result;
-      
-      if (isEditMode && editId && user?.id) {
-        // 更新
-        result = await updateAttendanceEvent(editId, inputData, user.id);
-        if (result.success && result.data) {
-          setCreatedEventId(result.data.id);
-          setShowCompleteModal(true);
+        let result;
+
+        if (isEditMode && editId && user?.id) {
+          // 更新
+          result = await updateAttendanceEvent(editId, inputData, user.id);
+          if (result.success && result.data) {
+            setCreatedEventId(result.data.id);
+            setShowCompleteModal(true);
+          } else {
+            setError('error' in result ? result.error : '更新に失敗しました');
+          }
         } else {
-          setError('error' in result ? result.error : '更新に失敗しました');
+          // 新規作成
+          result = await createAttendanceEvent(inputData, user?.id);
+          if (result.success && result.data) {
+            setCreatedEventId(result.data.id);
+            setShowCompleteModal(true);
+          } else {
+            setError('error' in result ? result.error : '作成に失敗しました');
+          }
         }
-      } else {
-        // 新規作成
-        result = await createAttendanceEvent(inputData, user?.id);
-        if (result.success && result.data) {
-          setCreatedEventId(result.data.id);
-          setShowCompleteModal(true);
-        } else {
-          setError('error' in result ? result.error : '作成に失敗しました');
-        }
+      } catch (err) {
+        console.error('Submit error:', err);
+        setError('予期しないエラーが発生しました');
+      } finally {
+        setSubmitting(false);
       }
-    } catch (err) {
-      console.error('Submit error:', err);
-      setError('予期しないエラーが発生しました');
-    } finally {
+    });
+
+    if (!pointsOk) {
       setSubmitting(false);
     }
   };

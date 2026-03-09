@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { usePoints } from '@/lib/hooks/usePoints';
 import { CreateBookingMenuInput, CreateBookingSlotInput } from '@/types/booking';
 import { createBookingMenu, createBookingSlots } from '@/app/actions/booking';
 import { LocalSlot } from '@/components/booking/WeeklyCalendar';
@@ -18,6 +19,7 @@ export default function NewBookingMenuPage() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAuth, setShowAuth] = useState(false);
+  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -56,68 +58,82 @@ export default function NewBookingMenuPage() {
     menuData: CreateBookingMenuInput,
     localSlots: LocalSlot[]
   ): Promise<{ success: boolean; menuId?: string; editKey?: string; error?: string }> => {
-    try {
-      // 1. メニューを作成
-      const menuResult = await createBookingMenu(user?.id || null, menuData);
-      
-      if (!menuResult.success || !menuResult.data) {
-        return { 
-          success: false, 
-          error: 'error' in menuResult ? menuResult.error : 'メニューの作成に失敗しました' 
-        };
-      }
+    let result: { success: boolean; menuId?: string; editKey?: string; error?: string } = {
+      success: false,
+      error: 'ポイントが不足しています',
+    };
 
-      const menu = menuResult.data;
+    const pointsOk = await consumeAndExecute('booking', 'save', async () => {
+      try {
+        // 1. メニューを作成
+        const menuResult = await createBookingMenu(user?.id || null, menuData);
 
-      // 2. 編集キーをローカルストレージに保存（非ログインユーザーの場合）
-      if (!user && menu.edit_key) {
-        const editKeys = JSON.parse(localStorage.getItem('booking_edit_keys') || '[]');
-        editKeys.push({ 
-          menuId: menu.id, 
-          editKey: menu.edit_key, 
-          createdAt: new Date().toISOString() 
-        });
-        localStorage.setItem('booking_edit_keys', JSON.stringify(editKeys));
-      }
-
-      // 3. 予約枠を作成
-      if (localSlots.length > 0) {
-        const slotsInput: CreateBookingSlotInput[] = localSlots.map((slot) => {
-          const startTime = new Date(slot.date);
-          startTime.setHours(slot.startHour, slot.startMinute, 0, 0);
-          
-          const endTime = new Date(slot.date);
-          endTime.setHours(slot.endHour, slot.endMinute, 0, 0);
-          
-          return {
-            start_time: startTime.toISOString(),
-            end_time: endTime.toISOString(),
-            max_capacity: slot.maxCapacity || 1, // SlotModalで設定した値を使用
+        if (!menuResult.success || !menuResult.data) {
+          result = {
+            success: false,
+            error: 'error' in menuResult ? menuResult.error : 'メニューの作成に失敗しました'
           };
-        });
-
-        const slotsResult = await createBookingSlots(
-          menu.id, 
-          user?.id || null, 
-          slotsInput, 
-          menu.edit_key || undefined
-        );
-
-        if (!slotsResult.success) {
-          console.error('Slots creation failed:', slotsResult);
-          // 枠の作成に失敗してもメニューは作成済みなので、成功として返す
+          return;
         }
-      }
 
-      return {
-        success: true,
-        menuId: menu.id,
-        editKey: menu.edit_key || undefined,
-      };
-    } catch (err) {
-      console.error('Save error:', err);
-      return { success: false, error: '保存中にエラーが発生しました' };
+        const menu = menuResult.data;
+
+        // 2. 編集キーをローカルストレージに保存（非ログインユーザーの場合）
+        if (!user && menu.edit_key) {
+          const editKeys = JSON.parse(localStorage.getItem('booking_edit_keys') || '[]');
+          editKeys.push({
+            menuId: menu.id,
+            editKey: menu.edit_key,
+            createdAt: new Date().toISOString()
+          });
+          localStorage.setItem('booking_edit_keys', JSON.stringify(editKeys));
+        }
+
+        // 3. 予約枠を作成
+        if (localSlots.length > 0) {
+          const slotsInput: CreateBookingSlotInput[] = localSlots.map((slot) => {
+            const startTime = new Date(slot.date);
+            startTime.setHours(slot.startHour, slot.startMinute, 0, 0);
+
+            const endTime = new Date(slot.date);
+            endTime.setHours(slot.endHour, slot.endMinute, 0, 0);
+
+            return {
+              start_time: startTime.toISOString(),
+              end_time: endTime.toISOString(),
+              max_capacity: slot.maxCapacity || 1, // SlotModalで設定した値を使用
+            };
+          });
+
+          const slotsResult = await createBookingSlots(
+            menu.id,
+            user?.id || null,
+            slotsInput,
+            menu.edit_key || undefined
+          );
+
+          if (!slotsResult.success) {
+            console.error('Slots creation failed:', slotsResult);
+            // 枠の作成に失敗してもメニューは作成済みなので、成功として返す
+          }
+        }
+
+        result = {
+          success: true,
+          menuId: menu.id,
+          editKey: menu.edit_key || undefined,
+        };
+      } catch (err) {
+        console.error('Save error:', err);
+        result = { success: false, error: '保存中にエラーが発生しました' };
+      }
+    });
+
+    if (!pointsOk) {
+      return result;
     }
+
+    return result;
   };
 
   if (loading) {

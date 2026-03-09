@@ -100,12 +100,20 @@ export default function EducationContent({ userId }: EducationContentProps) {
     setContentBody('');
   };
 
+  // URLをクリッカブルリンクに変換
+  const linkifyText = (text: string): string => {
+    const urlRegex = /(https?:\/\/[^\s<]+)/g;
+    return text
+      .replace(/\n/g, '<br />')
+      .replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline break-all">$1</a>');
+  };
+
   // 詳細ビュー
   if (selectedContent) {
     return (
-      <div className="space-y-6">
-        {/* ヘッダー */}
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col max-h-[85vh] md:max-h-none">
+        {/* ヘッダー（固定） */}
+        <div className="flex items-center gap-3 pb-4 shrink-0">
           <button
             onClick={handleBack}
             className="text-gray-500 hover:text-gray-700 flex items-center gap-1"
@@ -114,20 +122,20 @@ export default function EducationContent({ userId }: EducationContentProps) {
           </button>
         </div>
 
-        {/* コンテンツ詳細 */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        {/* コンテンツ詳細（スクロール可能） */}
+        <div className="bg-white rounded-lg border border-gray-200 overflow-y-auto flex-1 min-h-0">
           {/* サムネイル */}
           {selectedContent.thumbnail_url && (
-            <div className="h-48 bg-gray-200 overflow-hidden">
-              <img 
-                src={selectedContent.thumbnail_url} 
+            <div className="h-48 bg-gray-200 overflow-hidden shrink-0">
+              <img
+                src={selectedContent.thumbnail_url}
                 alt={selectedContent.title}
                 className="w-full h-full object-cover"
               />
             </div>
           )}
 
-          <div className="p-6">
+          <div className="p-4 md:p-6">
             {/* メタ情報 */}
             <div className="flex flex-wrap gap-2 mb-4">
               <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold">
@@ -151,8 +159,8 @@ export default function EducationContent({ userId }: EducationContentProps) {
             </div>
 
             {/* タイトル */}
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{selectedContent.title}</h1>
-            <p className="text-gray-700 mb-6">{selectedContent.description}</p>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">{selectedContent.title}</h1>
+            <p className="text-gray-700 mb-6 text-sm md:text-base">{selectedContent.description}</p>
 
             {/* 本文 */}
             {loadingContent ? (
@@ -160,9 +168,9 @@ export default function EducationContent({ userId }: EducationContentProps) {
                 <Loader2 className="animate-spin text-amber-600" size={32} />
               </div>
             ) : (
-              <div 
-                className="text-gray-800 leading-relaxed text-base"
-                dangerouslySetInnerHTML={{ __html: contentBody.replace(/\n/g, '<br />') }}
+              <div
+                className="text-gray-800 leading-relaxed text-sm md:text-base"
+                dangerouslySetInnerHTML={{ __html: linkifyText(contentBody) }}
               />
             )}
           </div>

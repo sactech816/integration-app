@@ -3,10 +3,9 @@
  * Server Actions / API Routes で認証チェックを行うための共通ユーティリティ
  */
 
-import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import { getAdminEmails } from '@/lib/constants';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 
 export interface AuthenticatedUser {
   id: string;
@@ -18,27 +17,7 @@ export interface AuthenticatedUser {
  * Server Actions用: Cookie認証でログインユーザーを取得
  */
 export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // Server Component からの呼び出し時は set できない場合がある
-          }
-        },
-      },
-    }
-  );
+  const supabase = await createServerSupabaseClient();
 
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) return null;

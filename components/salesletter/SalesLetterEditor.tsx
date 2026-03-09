@@ -10,6 +10,7 @@ import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import BlockRenderer from '@/components/shared/BlockRenderer';
 import SalesTextEditor from './SalesTextEditor';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
+import { usePoints } from '@/lib/hooks/usePoints';
 import {
   Save,
   Eye,
@@ -129,6 +130,7 @@ export default function SalesLetterEditor({
   
   // ユーザープラン権限
   const { userPlan } = useUserPlan(user?.id);
+  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: userPlan.isProUser });
   
   // セクション開閉状態
   const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(true);
@@ -315,112 +317,114 @@ export default function SalesLetterEditor({
       return;
     }
 
-    setIsSaving(true);
-    try {
-      if (existingId) {
-        // 更新（user_idは変更しない）
-        const payload = {
-          title,
-          content: blocks,
-          settings,
-        };
-
-        const result = await supabase
-          .from('sales_letters')
-          .update(payload)
-          .eq('id', existingId)
-          .select()
-          .single();
-
-        if (result.error) throw result.error;
-
-        setCompletedSlug(result.data.slug);
-
-        // ISRキャッシュを無効化
-        fetch('/api/revalidate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: `/s/${result.data.slug}` }),
-        }).catch(() => {});
-
-        alert('保存しました！');
-      } else {
-        // 新規作成：カスタムslugまたは自動生成（リトライ付き）
-        let attempts = 0;
-        const maxAttempts = 5;
-        let insertError: any = null;
-
-        while (attempts < maxAttempts) {
-          const newSlug = customSlug || generateSlug();
+    await consumeAndExecute('salesletter', 'save', async () => {
+      setIsSaving(true);
+      try {
+        if (existingId) {
+          // 更新（user_idは変更しない）
           const payload = {
-            user_id: user?.id || null,
             title,
-            slug: newSlug,
             content: blocks,
             settings,
           };
 
-          const { data, error } = await supabase
+          const result = await supabase
             .from('sales_letters')
-            .insert(payload)
+            .update(payload)
+            .eq('id', existingId)
             .select()
             .single();
 
-          // slug重複エラー（23505）の場合はリトライ（カスタムslugの場合はリトライしない）
-          if (error?.code === '23505' && error?.message?.includes('slug') && !customSlug) {
-            attempts++;
-            console.log(`Slug collision, retrying... (attempt ${attempts}/${maxAttempts})`);
-            continue;
-          }
+          if (result.error) throw result.error;
 
-          if (error) {
-            insertError = error;
-            break;
-          }
-
-          // 成功
-          setSavedId(data.id);
-          setSlug(data.slug);
-          setCompletedSlug(data.slug);
-
-          // ゲストが新規作成した場合、ログイン後に紐付けるためlocalStorageに保存
-          if (!user) {
-            try {
-              const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
-              stored.push({ table: 'sales_letters', id: data.id });
-              localStorage.setItem('guest_content', JSON.stringify(stored));
-            } catch {}
-          }
+          setCompletedSlug(result.data.slug);
 
           // ISRキャッシュを無効化
           fetch('/api/revalidate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: `/s/${data.slug}` }),
+            body: JSON.stringify({ path: `/s/${result.data.slug}` }),
           }).catch(() => {});
 
-          if (customSlug) setCustomSlug(''); // カスタムslugをクリア
-          setShowCompleteModal(true);
-          return;
-        }
+          alert('保存しました！');
+        } else {
+          // 新規作成：カスタムslugまたは自動生成（リトライ付き）
+          let attempts = 0;
+          const maxAttempts = 5;
+          let insertError: any = null;
 
-        // エラーハンドリング
-        if (insertError) {
-          throw insertError;
+          while (attempts < maxAttempts) {
+            const newSlug = customSlug || generateSlug();
+            const payload = {
+              user_id: user?.id || null,
+              title,
+              slug: newSlug,
+              content: blocks,
+              settings,
+            };
+
+            const { data, error } = await supabase
+              .from('sales_letters')
+              .insert(payload)
+              .select()
+              .single();
+
+            // slug重複エラー（23505）の場合はリトライ（カスタムslugの場合はリトライしない）
+            if (error?.code === '23505' && error?.message?.includes('slug') && !customSlug) {
+              attempts++;
+              console.log(`Slug collision, retrying... (attempt ${attempts}/${maxAttempts})`);
+              continue;
+            }
+
+            if (error) {
+              insertError = error;
+              break;
+            }
+
+            // 成功
+            setSavedId(data.id);
+            setSlug(data.slug);
+            setCompletedSlug(data.slug);
+
+            // ゲストが新規作成した場合、ログイン後に紐付けるためlocalStorageに保存
+            if (!user) {
+              try {
+                const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
+                stored.push({ table: 'sales_letters', id: data.id });
+                localStorage.setItem('guest_content', JSON.stringify(stored));
+              } catch {}
+            }
+
+            // ISRキャッシュを無効化
+            fetch('/api/revalidate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ path: `/s/${data.slug}` }),
+            }).catch(() => {});
+
+            if (customSlug) setCustomSlug(''); // カスタムslugをクリア
+            setShowCompleteModal(true);
+            return;
+          }
+
+          // エラーハンドリング
+          if (insertError) {
+            throw insertError;
+          }
+          throw new Error('保存に失敗しました（リトライ上限到達）');
         }
-        throw new Error('保存に失敗しました（リトライ上限到達）');
+      } catch (error: any) {
+        console.error('Save error:', error);
+        // カスタムURL（slug）の重複エラーを分かりやすいメッセージに変換
+        if (error.code === '23505' && error.message?.includes('slug')) {
+          alert('このカスタムURLは既に使用されています。別のURLを指定してください。');
+        } else {
+          alert('保存に失敗しました: ' + (error.message || '不明なエラー'));
+        }
+      } finally {
+        setIsSaving(false);
       }
-    } catch (error: any) {
-      console.error('Save error:', error);
-      // カスタムURL（slug）の重複エラーを分かりやすいメッセージに変換
-      if (error.code === '23505' && error.message?.includes('slug')) {
-        alert('このカスタムURLは既に使用されています。別のURLを指定してください。');
-      } else {
-        alert('保存に失敗しました: ' + (error.message || '不明なエラー'));
-      }
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   // テンプレート選択

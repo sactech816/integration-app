@@ -40,6 +40,7 @@ import { supabase } from "@/lib/supabase";
 import { generateSlug } from "@/lib/utils";
 import SurveyPlayer from "./SurveyPlayer";
 import { useUserPlan } from "@/lib/hooks/useUserPlan";
+import { usePoints } from "@/lib/hooks/usePoints";
 import CreationCompleteModal from "@/components/shared/CreationCompleteModal";
 import OnboardingModal from "@/components/shared/OnboardingModal";
 import { useOnboarding } from "@/lib/hooks/useOnboarding";
@@ -262,6 +263,7 @@ interface SurveyEditorProps {
 export default function SurveyEditor({ onBack, initialData, user, templateId, setShowAuth }: SurveyEditorProps) {
   // ユーザープラン権限を取得
   const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
+  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: userPlan.isProUser });
   // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('survey_editor_onboarding_dismissed', { skip: !!initialData?.id });
 
@@ -486,88 +488,90 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
       return;
     }
 
-    setIsSaving(true);
+    await consumeAndExecute('survey', 'save', async () => {
+      setIsSaving(true);
 
-    try {
-      // UPDATE用のデータ（user_idは含めない）
-      const updateData = {
-        title: form.title,
-        description: form.description,
-        questions: form.questions,
-        creator_email: form.creator_email,
-        creator_name: form.creator_name,
-        thank_you_message: form.thank_you_message,
-        settings: form.settings,
-        show_in_portal: form.settings?.showInPortal || false,
-        show_results_after_submission: form.show_results_after_submission || false,
-      };
-
-      let result;
-
-      if (existingId) {
-        // 更新（user_idは変更しない）
-        const { data, error } = await supabase
-          .from("surveys")
-          .update(updateData)
-          .eq("id", existingId)
-          .select()
-          .single();
-
-        if (error) throw error;
-        result = data;
-      } else {
-        // 新規作成（slugとuser_idを追加）
-        const newSlug = generateSlug();
-        const insertData = {
-          ...updateData,
-          slug: newSlug,
-          user_id: user?.id || null, // INSERT時のみuser_idを設定
+      try {
+        // UPDATE用のデータ（user_idは含めない）
+        const updateData = {
+          title: form.title,
+          description: form.description,
+          questions: form.questions,
+          creator_email: form.creator_email,
+          creator_name: form.creator_name,
+          thank_you_message: form.thank_you_message,
+          settings: form.settings,
+          show_in_portal: form.settings?.showInPortal || false,
+          show_results_after_submission: form.show_results_after_submission || false,
         };
-        
-        const { data, error } = await supabase
-          .from("surveys")
-          .insert(insertData)
-          .select()
-          .single();
 
-        if (error) throw error;
-        result = data;
-      }
+        let result;
 
-      if (result) {
-        const wasNewCreation = !existingId; // 保存前の状態で判定
+        if (existingId) {
+          // 更新（user_idは変更しない）
+          const { data, error } = await supabase
+            .from("surveys")
+            .update(updateData)
+            .eq("id", existingId)
+            .select()
+            .single();
 
-        setSavedId(result.id);
-        setSavedSlug(result.slug);
-
-        // ゲストが新規作成した場合、ログイン後に紐付けるためlocalStorageに保存
-        if (!user && wasNewCreation) {
-          try {
-            const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
-            stored.push({ table: 'surveys', id: result.id });
-            localStorage.setItem('guest_content', JSON.stringify(stored));
-          } catch {}
-        }
-
-        // ISRキャッシュを無効化
-        fetch('/api/revalidate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: `/survey/${result.slug}` }),
-        }).catch(() => {});
-
-        if (wasNewCreation) {
-          setShowSuccessModal(true);
+          if (error) throw error;
+          result = data;
         } else {
-          alert("保存しました！");
+          // 新規作成（slugとuser_idを追加）
+          const newSlug = generateSlug();
+          const insertData = {
+            ...updateData,
+            slug: newSlug,
+            user_id: user?.id || null, // INSERT時のみuser_idを設定
+          };
+
+          const { data, error } = await supabase
+            .from("surveys")
+            .insert(insertData)
+            .select()
+            .single();
+
+          if (error) throw error;
+          result = data;
         }
+
+        if (result) {
+          const wasNewCreation = !existingId; // 保存前の状態で判定
+
+          setSavedId(result.id);
+          setSavedSlug(result.slug);
+
+          // ゲストが新規作成した場合、ログイン後に紐付けるためlocalStorageに保存
+          if (!user && wasNewCreation) {
+            try {
+              const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
+              stored.push({ table: 'surveys', id: result.id });
+              localStorage.setItem('guest_content', JSON.stringify(stored));
+            } catch {}
+          }
+
+          // ISRキャッシュを無効化
+          fetch('/api/revalidate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: `/survey/${result.slug}` }),
+          }).catch(() => {});
+
+          if (wasNewCreation) {
+            setShowSuccessModal(true);
+          } else {
+            alert("保存しました！");
+          }
+        }
+      } catch (error: unknown) {
+        console.error("保存エラー:", error);
+        alert("保存に失敗しました: " + (error instanceof Error ? error.message : "不明なエラー"));
+      } finally {
+        setIsSaving(false);
       }
-    } catch (error: unknown) {
-      console.error("保存エラー:", error);
-      alert("保存に失敗しました: " + (error instanceof Error ? error.message : "不明なエラー"));
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   const handleCopyUrl = () => {

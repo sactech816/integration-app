@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { X, Menu } from 'lucide-react';
 import RightPanel from './RightPanel';
 import { MobileBottomNav } from './MobileNav';
 
@@ -19,7 +19,6 @@ type DashboardLayoutProps = {
   // モバイルボトムナビ用
   activeView?: string;
   onItemClick?: (itemId: string) => void;
-  isAdmin?: boolean;
 };
 
 const SIDEBAR_MIN = 220;
@@ -27,7 +26,7 @@ const SIDEBAR_MAX = 360;
 const SIDEBAR_DEFAULT = 256;
 const SIDEBAR_STORAGE_KEY = 'dashboard-sidebar-width';
 
-export default function DashboardLayout({ sidebar, children, rightPanel, activeView, onItemClick, isAdmin }: DashboardLayoutProps) {
+export default function DashboardLayout({ sidebar, children, rightPanel, activeView, onItemClick }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -39,6 +38,11 @@ export default function DashboardLayout({ sidebar, children, rightPanel, activeV
     }
     return SIDEBAR_DEFAULT;
   });
+  // activeView変更時にモバイルサイドバーを自動で閉じる
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [activeView]);
+
   const isResizing = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(SIDEBAR_DEFAULT);
@@ -78,17 +82,6 @@ export default function DashboardLayout({ sidebar, children, rightPanel, activeV
 
   return (
     <div className="min-h-screen bg-gray-50" style={{ '--sidebar-w': `${sidebarWidth}px` } as React.CSSProperties}>
-      {/* モバイル用ハンバーガーメニューボタン（管理者のみ表示） */}
-      {isAdmin && (
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-md border border-gray-200"
-          aria-label="管理メニューを開く"
-        >
-          {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      )}
-
       {/* オーバーレイ（モバイル時） */}
       {isSidebarOpen && (
         <div
@@ -128,7 +121,15 @@ export default function DashboardLayout({ sidebar, children, rightPanel, activeV
 
       {/* モバイル用ボトムナビ */}
       {activeView && onItemClick && (
-        <MobileBottomNav activeView={activeView} onItemClick={onItemClick} />
+        <MobileBottomNav
+          activeView={activeView}
+          onItemClick={(itemId: string) => {
+            setIsSidebarOpen(false);
+            onItemClick(itemId);
+          }}
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+        />
       )}
 
       {/* 右側パネル */}

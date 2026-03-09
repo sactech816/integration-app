@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import { BlockRenderer } from '@/components/shared/BlockRenderer';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
+import { usePoints } from '@/lib/hooks/usePoints';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 
 interface WebinarEditorProps {
@@ -350,6 +351,7 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
   setShowAuth,
 }) => {
   const { userPlan } = useUserPlan(user?.id);
+  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: userPlan.isProUser });
 
   // 初期ブロック
   const initialBlocks: Block[] = [
@@ -552,38 +554,16 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
       return;
     }
 
-    setIsSaving(true);
-    try {
-      const finalTitle = lp.title?.trim() || '無題のウェビナーLP';
-      let result;
+    await consumeAndExecute('webinar', 'save', async () => {
+      setIsSaving(true);
+      try {
+        const finalTitle = lp.title?.trim() || '無題のウェビナーLP';
+        let result;
 
-      if (existingId) {
-        result = await supabase
-          ?.from('webinar_lps')
-          .update({
-            content: lp.content,
-            settings: {
-              ...lp.settings,
-              title: finalTitle,
-              description: lp.description,
-            },
-            title: finalTitle,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', existingId)
-          .select()
-          .single();
-
-        if (result?.error) throw result.error;
-      } else {
-        let attempts = 0;
-        const maxAttempts = 5;
-
-        while (attempts < maxAttempts) {
-          const newSlug = customSlug.trim() || generateSlug();
+        if (existingId) {
           result = await supabase
             ?.from('webinar_lps')
-            .insert({
+            .update({
               content: lp.content,
               settings: {
                 ...lp.settings,
@@ -591,64 +571,88 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
                 description: lp.description,
               },
               title: finalTitle,
-              slug: newSlug,
-              user_id: user?.id || null,
-              status: 'published',
+              updated_at: new Date().toISOString(),
             })
+            .eq('id', existingId)
             .select()
             .single();
 
-          if (result?.error?.code === '23505' && result?.error?.message?.includes('slug') && !customSlug.trim()) {
-            attempts++;
-            continue;
-          }
-          break;
-        }
-
-        if (attempts >= maxAttempts) {
-          throw new Error('ユニークなURLの生成に失敗しました。もう一度お試しください。');
-        }
-
-        if (result?.error) {
-          if (result.error.code === '23505' && result.error.message?.includes('slug')) {
-            throw new Error('このカスタムURLは既に使用されています。別のURLを指定してください。');
-          }
-          throw result.error;
-        }
-      }
-
-      if (result?.data) {
-        setSavedSlug(result.data.slug);
-        setSavedId(result.data.id);
-        setJustSavedSlug(result.data.slug);
-
-        // ISRキャッシュを無効化
-        fetch('/api/revalidate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: `/webinar/${result.data.slug}` }),
-        }).catch(() => {});
-
-        if (!initialData && !savedId) {
-          setShowSuccessModal(true);
-          if (!user) {
-            try {
-              const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
-              stored.push({ table: 'webinar_lps', id: result.data.id });
-              localStorage.setItem('guest_content', JSON.stringify(stored));
-            } catch {}
-          }
+          if (result?.error) throw result.error;
         } else {
-          alert('保存しました！');
+          let attempts = 0;
+          const maxAttempts = 5;
+
+          while (attempts < maxAttempts) {
+            const newSlug = customSlug.trim() || generateSlug();
+            result = await supabase
+              ?.from('webinar_lps')
+              .insert({
+                content: lp.content,
+                settings: {
+                  ...lp.settings,
+                  title: finalTitle,
+                  description: lp.description,
+                },
+                title: finalTitle,
+                slug: newSlug,
+                user_id: user?.id || null,
+                status: 'published',
+              })
+              .select()
+              .single();
+
+            if (result?.error?.code === '23505' && result?.error?.message?.includes('slug') && !customSlug.trim()) {
+              attempts++;
+              continue;
+            }
+            break;
+          }
+
+          if (attempts >= maxAttempts) {
+            throw new Error('ユニークなURLの生成に失敗しました。もう一度お試しください。');
+          }
+
+          if (result?.error) {
+            if (result.error.code === '23505' && result.error.message?.includes('slug')) {
+              throw new Error('このカスタムURLは既に使用されています。別のURLを指定してください。');
+            }
+            throw result.error;
+          }
         }
+
+        if (result?.data) {
+          setSavedSlug(result.data.slug);
+          setSavedId(result.data.id);
+          setJustSavedSlug(result.data.slug);
+
+          // ISRキャッシュを無効化
+          fetch('/api/revalidate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: `/webinar/${result.data.slug}` }),
+          }).catch(() => {});
+
+          if (!initialData && !savedId) {
+            setShowSuccessModal(true);
+            if (!user) {
+              try {
+                const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
+                stored.push({ table: 'webinar_lps', id: result.data.id });
+                localStorage.setItem('guest_content', JSON.stringify(stored));
+              } catch {}
+            }
+          } else {
+            alert('保存しました！');
+          }
+        }
+      } catch (error) {
+        console.error('Save error:', error);
+        const errorMessage = error instanceof Error ? error.message : '不明なエラー';
+        alert(`保存中にエラーが発生しました: ${errorMessage}`);
+      } finally {
+        setIsSaving(false);
       }
-    } catch (error) {
-      console.error('Save error:', error);
-      const errorMessage = error instanceof Error ? error.message : '不明なエラー';
-      alert(`保存中にエラーが発生しました: ${errorMessage}`);
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   const addBlock = (type: string) => {

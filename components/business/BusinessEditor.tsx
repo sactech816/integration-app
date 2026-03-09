@@ -59,6 +59,7 @@ import {
 } from 'lucide-react';
 import { BlockRenderer } from '@/components/shared/BlockRenderer';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
+import { usePoints } from '@/lib/hooks/usePoints';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
@@ -460,6 +461,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
 }) => {
   // ユーザープラン権限を取得
   const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
+  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: userPlan.isProUser });
   // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('business_editor_onboarding_dismissed', { skip: !!initialData });
 
@@ -695,120 +697,122 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       return;
     }
 
-    setIsSaving(true);
-    try {
-      // タイトルが未入力の場合はデフォルト名を使用
-      const finalTitle = lp.title?.trim() || '無題のビジネスLP';
-      
-      let result;
-      const existingId = initialData?.id || savedId;
-      
-      if (existingId) {
-        // 更新の場合：既存のslugを維持（slugは変更しない）
-        const updatePayload = {
-          content: lp.content,
-          settings: {
-            ...lp.settings,
-            title: finalTitle,
-            description: lp.description,
-          },
-        };
-        
-        result = await supabase
-          ?.from('business_projects')
-          .update(updatePayload)
-          .eq('id', existingId)
-          .select()
-          .single();
-          
-        if (result?.error) {
-          console.error('Business LP update error:', result.error);
-          throw result.error;
-        }
-      } else {
-        // 新規作成の場合：ユニークなslugを生成（リトライ付き）
-        let attempts = 0;
-        const maxAttempts = 5;
-        
-        while (attempts < maxAttempts) {
-          const newSlug = customSlug.trim() || generateSlug();
-          const insertPayload = {
+    await consumeAndExecute('business', 'save', async () => {
+      setIsSaving(true);
+      try {
+        // タイトルが未入力の場合はデフォルト名を使用
+        const finalTitle = lp.title?.trim() || '無題のビジネスLP';
+
+        let result;
+        const existingId = initialData?.id || savedId;
+
+        if (existingId) {
+          // 更新の場合：既存のslugを維持（slugは変更しない）
+          const updatePayload = {
             content: lp.content,
             settings: {
               ...lp.settings,
               title: finalTitle,
               description: lp.description,
             },
-            slug: newSlug,
-            user_id: user?.id || null,
           };
-          
+
           result = await supabase
             ?.from('business_projects')
-            .insert(insertPayload)
+            .update(updatePayload)
+            .eq('id', existingId)
             .select()
             .single();
-          
-          // slug重複エラー（23505）の場合はリトライ（カスタムslugの場合はリトライしない）
-          if (result?.error?.code === '23505' && result?.error?.message?.includes('slug') && !customSlug.trim()) {
-            attempts++;
-            console.log(`Slug collision, retrying... (attempt ${attempts}/${maxAttempts})`);
-            continue;
-          }
-          
-          // その他のエラーまたは成功の場合はループを抜ける
-          break;
-        }
-        
-        if (attempts >= maxAttempts) {
-          throw new Error('ユニークなURLの生成に失敗しました。もう一度お試しください。');
-        }
-        
-        if (result?.error) {
-          console.error('Business LP save error:', result.error);
-          // カスタムURL（slug）の重複エラーを分かりやすいメッセージに変換
-          if (result.error.code === '23505' && result.error.message?.includes('slug')) {
-            throw new Error('このカスタムURLは既に使用されています。別のURLを指定してください。');
-          }
-          throw result.error;
-        }
-      }
 
-      if (result?.data) {
-        setSavedSlug(result.data.slug);
-        setSavedId(result.data.id);
-        setJustSavedSlug(result.data.slug);
-
-        // ISRキャッシュを無効化
-        fetch('/api/revalidate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: `/business/${result.data.slug}` }),
-        }).catch(() => {});
-
-        if (!initialData && !savedId) {
-          // 完全な新規作成の場合のみ成功モーダルを表示
-          setShowSuccessModal(true);
-
-          // ゲスト作成の場合、ログイン時に引き継ぐためlocalStorageに保存
-          if (!user) {
-            try {
-              const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
-              stored.push({ table: 'business_projects', id: result.data.id });
-              localStorage.setItem('guest_content', JSON.stringify(stored));
-            } catch {}
+          if (result?.error) {
+            console.error('Business LP update error:', result.error);
+            throw result.error;
           }
         } else {
-          alert('保存しました！');
+          // 新規作成の場合：ユニークなslugを生成（リトライ付き）
+          let attempts = 0;
+          const maxAttempts = 5;
+
+          while (attempts < maxAttempts) {
+            const newSlug = customSlug.trim() || generateSlug();
+            const insertPayload = {
+              content: lp.content,
+              settings: {
+                ...lp.settings,
+                title: finalTitle,
+                description: lp.description,
+              },
+              slug: newSlug,
+              user_id: user?.id || null,
+            };
+
+            result = await supabase
+              ?.from('business_projects')
+              .insert(insertPayload)
+              .select()
+              .single();
+
+            // slug重複エラー（23505）の場合はリトライ（カスタムslugの場合はリトライしない）
+            if (result?.error?.code === '23505' && result?.error?.message?.includes('slug') && !customSlug.trim()) {
+              attempts++;
+              console.log(`Slug collision, retrying... (attempt ${attempts}/${maxAttempts})`);
+              continue;
+            }
+
+            // その他のエラーまたは成功の場合はループを抜ける
+            break;
+          }
+
+          if (attempts >= maxAttempts) {
+            throw new Error('ユニークなURLの生成に失敗しました。もう一度お試しください。');
+          }
+
+          if (result?.error) {
+            console.error('Business LP save error:', result.error);
+            // カスタムURL（slug）の重複エラーを分かりやすいメッセージに変換
+            if (result.error.code === '23505' && result.error.message?.includes('slug')) {
+              throw new Error('このカスタムURLは既に使用されています。別のURLを指定してください。');
+            }
+            throw result.error;
+          }
         }
+
+        if (result?.data) {
+          setSavedSlug(result.data.slug);
+          setSavedId(result.data.id);
+          setJustSavedSlug(result.data.slug);
+
+          // ISRキャッシュを無効化
+          fetch('/api/revalidate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: `/business/${result.data.slug}` }),
+          }).catch(() => {});
+
+          if (!initialData && !savedId) {
+            // 完全な新規作成の場合のみ成功モーダルを表示
+            setShowSuccessModal(true);
+
+            // ゲスト作成の場合、ログイン時に引き継ぐためlocalStorageに保存
+            if (!user) {
+              try {
+                const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
+                stored.push({ table: 'business_projects', id: result.data.id });
+                localStorage.setItem('guest_content', JSON.stringify(stored));
+              } catch {}
+            }
+          } else {
+            alert('保存しました！');
+          }
+        }
+      } catch (error) {
+        console.error('Save error:', error);
+        const errorMessage = error instanceof Error ? error.message : '不明なエラー';
+        alert(`保存中にエラーが発生しました: ${errorMessage}`);
+      } finally {
+        setIsSaving(false);
       }
-    } catch (error) {
-      console.error('Save error:', error);
-      const errorMessage = error instanceof Error ? error.message : '不明なエラー';
-      alert(`保存中にエラーが発生しました: ${errorMessage}`);
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   const addBlock = (type: string) => {

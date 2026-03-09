@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
+import { usePoints } from '@/lib/hooks/usePoints';
 import OnboardingModalPreview from './OnboardingModalPreview';
 import OnboardingEmbedCodeGenerator from './OnboardingEmbedCodeGenerator';
 import IconSelector from './IconSelector';
@@ -238,6 +239,9 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
   const [showDonationModal, setShowDonationModal] = useState(false);
   const [justSavedSlug, setJustSavedSlug] = useState('');
 
+  // ポイント消費
+  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
+
   // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('onboarding_editor_onboarding_dismissed', { skip: !!initialData });
 
@@ -340,115 +344,117 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
       return;
     }
 
-    setIsSaving(true);
+    await consumeAndExecute('onboarding', 'save', async () => {
+      setIsSaving(true);
 
-    try {
-      const updateData: Record<string, unknown> = {
-        title: form.title,
-        description: form.description,
-        pages: form.pages,
-        gradient_from: form.gradient_from,
-        gradient_to: form.gradient_to,
-        trigger_type: form.trigger_type,
-        trigger_delay: form.trigger_delay,
-        trigger_scroll_percent: form.trigger_scroll_percent,
-        trigger_button_text: form.trigger_button_text,
-        trigger_button_position: form.trigger_button_position,
-        show_dont_show_again: form.show_dont_show_again,
-        close_on_overlay_click: form.close_on_overlay_click,
-        auto_close_seconds: form.auto_close_seconds,
-        dont_show_text: form.dont_show_text,
-        next_button_text: form.next_button_text,
-        back_button_text: form.back_button_text,
-        start_button_text: form.start_button_text,
-        show_in_portal: form.show_in_portal,
-      };
+      try {
+        const updateData: Record<string, unknown> = {
+          title: form.title,
+          description: form.description,
+          pages: form.pages,
+          gradient_from: form.gradient_from,
+          gradient_to: form.gradient_to,
+          trigger_type: form.trigger_type,
+          trigger_delay: form.trigger_delay,
+          trigger_scroll_percent: form.trigger_scroll_percent,
+          trigger_button_text: form.trigger_button_text,
+          trigger_button_position: form.trigger_button_position,
+          show_dont_show_again: form.show_dont_show_again,
+          close_on_overlay_click: form.close_on_overlay_click,
+          auto_close_seconds: form.auto_close_seconds,
+          dont_show_text: form.dont_show_text,
+          next_button_text: form.next_button_text,
+          back_button_text: form.back_button_text,
+          start_button_text: form.start_button_text,
+          show_in_portal: form.show_in_portal,
+        };
 
-      let result;
+        let result;
 
-      if (existingId) {
-        const { data, error } = await supabase
-          .from('onboarding_modals')
-          .update(updateData)
-          .eq('id', existingId)
-          .select()
-          .single();
-        if (error) throw error;
-        result = data;
-      } else {
-        let attempts = 0;
-        const maxAttempts = 5;
-        let insertError: any = null;
-
-        while (attempts < maxAttempts) {
-          const newSlug = customSlug || generateSlug();
-          const insertData = {
-            ...updateData,
-            slug: newSlug,
-            user_id: user?.id || null,
-          };
-
+        if (existingId) {
           const { data, error } = await supabase
             .from('onboarding_modals')
-            .insert(insertData)
+            .update(updateData)
+            .eq('id', existingId)
             .select()
             .single();
+          if (error) throw error;
+          result = data;
+        } else {
+          let attempts = 0;
+          const maxAttempts = 5;
+          let insertError: any = null;
 
-          if (error?.code === '23505' && error?.message?.includes('slug') && !customSlug) {
-            attempts++;
-            continue;
+          while (attempts < maxAttempts) {
+            const newSlug = customSlug || generateSlug();
+            const insertData = {
+              ...updateData,
+              slug: newSlug,
+              user_id: user?.id || null,
+            };
+
+            const { data, error } = await supabase
+              .from('onboarding_modals')
+              .insert(insertData)
+              .select()
+              .single();
+
+            if (error?.code === '23505' && error?.message?.includes('slug') && !customSlug) {
+              attempts++;
+              continue;
+            }
+
+            insertError = error;
+            result = data;
+            break;
           }
 
-          insertError = error;
-          result = data;
-          break;
+          if (attempts >= maxAttempts) {
+            throw new Error('ユニークなURLの生成に失敗しました。もう一度お試しください。');
+          }
+          if (insertError) throw insertError;
+          if (customSlug) setCustomSlug('');
         }
 
-        if (attempts >= maxAttempts) {
-          throw new Error('ユニークなURLの生成に失敗しました。もう一度お試しください。');
+        if (result) {
+          const wasNewCreation = !existingId;
+          setSavedId(result.id);
+          setSavedSlug(result.slug);
+
+          // ゲストコンテンツ保存
+          if (!user && wasNewCreation) {
+            try {
+              const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
+              stored.push({ table: 'onboarding_modals', id: result.id });
+              localStorage.setItem('guest_content', JSON.stringify(stored));
+            } catch {}
+          }
+
+          // ISRキャッシュ無効化
+          fetch('/api/revalidate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: `/onboarding/${result.slug}` }),
+          }).catch(() => {});
+
+          if (wasNewCreation) {
+            setJustSavedSlug(result.slug);
+            setShowDonationModal(true);
+          } else {
+            alert('保存しました！');
+          }
         }
-        if (insertError) throw insertError;
-        if (customSlug) setCustomSlug('');
-      }
-
-      if (result) {
-        const wasNewCreation = !existingId;
-        setSavedId(result.id);
-        setSavedSlug(result.slug);
-
-        // ゲストコンテンツ保存
-        if (!user && wasNewCreation) {
-          try {
-            const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
-            stored.push({ table: 'onboarding_modals', id: result.id });
-            localStorage.setItem('guest_content', JSON.stringify(stored));
-          } catch {}
-        }
-
-        // ISRキャッシュ無効化
-        fetch('/api/revalidate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: `/onboarding/${result.slug}` }),
-        }).catch(() => {});
-
-        if (wasNewCreation) {
-          setJustSavedSlug(result.slug);
-          setShowDonationModal(true);
+      } catch (error: any) {
+        console.error('保存エラー:', error);
+        if (error.code === '23505' && error.message?.includes('slug')) {
+          alert('このカスタムURLは既に使用されています。別のURLを指定してください。');
         } else {
-          alert('保存しました！');
+          alert('保存に失敗しました: ' + (error.message || '不明なエラー'));
         }
+      } finally {
+        setIsSaving(false);
       }
-    } catch (error: any) {
-      console.error('保存エラー:', error);
-      if (error.code === '23505' && error.message?.includes('slug')) {
-        alert('このカスタムURLは既に使用されています。別のURLを指定してください。');
-      } else {
-        alert('保存に失敗しました: ' + (error.message || '不明なエラー'));
-      }
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   const handlePublish = (slug: string) => {

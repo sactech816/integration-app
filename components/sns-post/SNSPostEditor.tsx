@@ -24,6 +24,7 @@ import ToneSelector from './ToneSelector';
 import HashtagEditor from './HashtagEditor';
 import PostPreview from './PostPreview';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import { usePoints } from '@/lib/hooks/usePoints';
 
 type SNSPostEditorProps = {
   user: { id: string; email?: string } | null;
@@ -33,6 +34,7 @@ type SNSPostEditorProps = {
 
 export default function SNSPostEditor({ user, editingPost, setShowAuth }: SNSPostEditorProps) {
   const router = useRouter();
+  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
 
   // State
   const [platform, setPlatform] = useState<SNSPlatform>('twitter');
@@ -139,49 +141,51 @@ export default function SNSPostEditor({ user, editingPost, setShowAuth }: SNSPos
       return;
     }
 
-    setIsSaving(true);
-    try {
-      const slug = savedSlug || generateSlug();
-      const postData = {
-        slug,
-        title: title || 'SNS投稿',
-        user_id: user.id,
-        platform,
-        tone,
-        content: {
-          text: postText,
-          hashtags,
-          topic,
-        },
-        status: 'published',
-        updated_at: new Date().toISOString(),
-      };
+    await consumeAndExecute('sns-post', 'save', async () => {
+      setIsSaving(true);
+      try {
+        const slug = savedSlug || generateSlug();
+        const postData = {
+          slug,
+          title: title || 'SNS投稿',
+          user_id: user.id,
+          platform,
+          tone,
+          content: {
+            text: postText,
+            hashtags,
+            topic,
+          },
+          status: 'published',
+          updated_at: new Date().toISOString(),
+        };
 
-      if (savedSlug) {
-        // Update
-        const { error } = await supabase!
-          .from(TABLES.SNS_POSTS)
-          .update(postData)
-          .eq('slug', savedSlug);
+        if (savedSlug) {
+          // Update
+          const { error } = await supabase!
+            .from(TABLES.SNS_POSTS)
+            .update(postData)
+            .eq('slug', savedSlug);
 
-        if (error) throw error;
-        alert('更新しました');
-      } else {
-        // Insert
-        const { error } = await supabase!
-          .from(TABLES.SNS_POSTS)
-          .insert(postData);
+          if (error) throw error;
+          alert('更新しました');
+        } else {
+          // Insert
+          const { error } = await supabase!
+            .from(TABLES.SNS_POSTS)
+            .insert(postData);
 
-        if (error) throw error;
-        setSavedSlug(slug);
-        setShowCompleteModal(true);
+          if (error) throw error;
+          setSavedSlug(slug);
+          setShowCompleteModal(true);
+        }
+      } catch (error: any) {
+        console.error('Save error:', error);
+        alert('保存に失敗しました: ' + (error.message || ''));
+      } finally {
+        setIsSaving(false);
       }
-    } catch (error: any) {
-      console.error('Save error:', error);
-      alert('保存に失敗しました: ' + (error.message || ''));
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   // Copy helpers

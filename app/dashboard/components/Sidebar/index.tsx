@@ -4,6 +4,7 @@ import React from 'react';
 import { Heart, Users } from 'lucide-react';
 import SidebarUserInfo from './SidebarUserInfo';
 import SidebarNav from './SidebarNav';
+import PointBalance from '@/components/points/PointBalance';
 
 type SidebarProps = {
   user: { id: string; email?: string } | null;
@@ -43,6 +44,8 @@ type SidebarProps = {
   hasKdlSubscription?: boolean;
   isKdlMonitor?: boolean;
   hasMakersProAccess?: boolean;
+  pointBalance?: number;
+  onPointPurchaseClick?: () => void;
 };
 
 export default function Sidebar({
@@ -57,6 +60,8 @@ export default function Sidebar({
   hasKdlSubscription = false,
   isKdlMonitor = false,
   hasMakersProAccess = false,
+  pointBalance,
+  onPointPurchaseClick,
 }: SidebarProps) {
   const totalContentCount = Object.values(contentCounts).reduce((a, b) => a + b, 0);
 
@@ -75,6 +80,17 @@ export default function Sidebar({
         contentCount={totalContentCount}
         totalViews={totalViews}
       />
+
+      {/* ポイント残高 */}
+      {user && pointBalance !== undefined && (
+        <div className="px-4 py-2 border-b border-gray-200">
+          <PointBalance
+            balance={pointBalance}
+            isPro={hasMakersProAccess}
+            onPurchaseClick={onPointPurchaseClick}
+          />
+        </div>
+      )}
 
       {/* ナビゲーション */}
       <SidebarNav

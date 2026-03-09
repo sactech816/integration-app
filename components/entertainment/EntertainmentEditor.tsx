@@ -12,6 +12,7 @@ import QuizPlayer from '@/components/quiz/QuizPlayer';
 import WizardProgress, { type ProgressStep } from './WizardProgress';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import { triggerGamificationEvent } from '@/lib/gamification/events';
+import { usePoints } from '@/lib/hooks/usePoints';
 import {
   type EntertainmentForm,
   STYLE_OPTIONS,
@@ -93,6 +94,8 @@ interface EntertainmentEditorProps {
 }
 
 export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBack, user }: EntertainmentEditorProps) {
+  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
+
   const [openSections, setOpenSections] = useState({
     ai: true,
     basic: false,
@@ -274,122 +277,125 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
   // --- 保存 ---
   const handleSave = async () => {
     if (!supabase) { alert('データベースに接続されていません'); return; }
-    setIsSaving(true);
-    setError(null);
 
-    try {
-      const quizData = quizFromForm(form);
-      const insertData: Record<string, unknown> = {
-        title: quizData.title,
-        description: quizData.description,
-        category: quizData.category,
-        color: quizData.color,
-        questions: quizData.questions,
-        results: quizData.results,
-        layout: quizData.layout || 'pop',
-        mode: quizData.mode || 'diagnosis',
-        theme: quizData.theme || 'vibrant',
-        quiz_type: 'entertainment',
-        entertainment_meta: quizData.entertainment_meta,
-        show_in_portal: form.show_in_portal,
-      };
+    await consumeAndExecute('entertainment_quiz', 'save', async () => {
+      setIsSaving(true);
+      setError(null);
 
-      let result;
+      try {
+        const quizData = quizFromForm(form);
+        const insertData: Record<string, unknown> = {
+          title: quizData.title,
+          description: quizData.description,
+          category: quizData.category,
+          color: quizData.color,
+          questions: quizData.questions,
+          results: quizData.results,
+          layout: quizData.layout || 'pop',
+          mode: quizData.mode || 'diagnosis',
+          theme: quizData.theme || 'vibrant',
+          quiz_type: 'entertainment',
+          entertainment_meta: quizData.entertainment_meta,
+          show_in_portal: form.show_in_portal,
+        };
 
-      if (savedId) {
-        const { data, error: dbError } = await supabase
-          .from(TABLES.QUIZZES)
-          .update(insertData)
-          .eq('id', savedId)
-          .select()
-          .single();
-        if (dbError) throw dbError;
-        result = data;
-      } else {
-        // 新規作成時: エンタメ診断の作成数制限チェック
-        if (user?.id) {
-          try {
-            const res = await fetch(`/api/makers/subscription-status?userId=${user.id}`);
-            const subData = res.ok ? await res.json() : null;
-            const isPro = subData?.planTier === 'pro';
-            if (!isPro) {
-              const { count } = await supabase
-                .from(TABLES.QUIZZES)
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', user.id)
-                .eq('quiz_type', 'entertainment');
-              if ((count || 0) >= 1) {
-                setError('フリープランではエンタメ診断は1つまで作成できます。プロプランにアップグレードすると無制限に作成できます。');
-                setIsSaving(false);
-                return;
-              }
-            }
-          } catch (e) {
-            console.warn('制限チェックエラー:', e);
-          }
-        }
+        let result;
 
-        let attempts = 0;
-        let insertError: any = null;
-        while (attempts < 5) {
-          const slug = generateSlug();
+        if (savedId) {
           const { data, error: dbError } = await supabase
             .from(TABLES.QUIZZES)
-            .insert({ ...insertData, slug, user_id: user?.id || null })
+            .update(insertData)
+            .eq('id', savedId)
             .select()
             .single();
-          if (dbError?.code === '23505' && dbError?.message?.includes('slug')) {
-            attempts++;
-            continue;
-          }
-          insertError = dbError;
+          if (dbError) throw dbError;
           result = data;
-          break;
-        }
-        if (attempts >= 5) throw new Error('ユニークなURLの生成に失敗しました');
-        if (insertError) throw insertError;
-      }
-
-      if (result) {
-        const wasNew = !savedId;
-        setSavedId(result.id);
-        setSavedSlug(result.slug);
-
-        if (!user && wasNew) {
-          try {
-            const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
-            stored.push({ table: 'quizzes', id: result.id });
-            localStorage.setItem('guest_content', JSON.stringify(stored));
-          } catch {}
-        }
-
-        fetch('/api/revalidate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ path: `/entertainment/${result.slug}` }),
-        }).catch(() => {});
-
-        if (wasNew) {
-          setShowCompleteModal(true);
-          if (user?.id) {
-            triggerGamificationEvent(user.id, 'quiz_create', {
-              contentId: result.slug,
-              contentTitle: result.title,
-            });
-          }
         } else {
-          alert('保存しました！');
+          // 新規作成時: エンタメ診断の作成数制限チェック
+          if (user?.id) {
+            try {
+              const res = await fetch(`/api/makers/subscription-status?userId=${user.id}`);
+              const subData = res.ok ? await res.json() : null;
+              const isPro = subData?.planTier === 'pro';
+              if (!isPro) {
+                const { count } = await supabase
+                  .from(TABLES.QUIZZES)
+                  .select('*', { count: 'exact', head: true })
+                  .eq('user_id', user.id)
+                  .eq('quiz_type', 'entertainment');
+                if ((count || 0) >= 1) {
+                  setError('フリープランではエンタメ診断は1つまで作成できます。プロプランにアップグレードすると無制限に作成できます。');
+                  setIsSaving(false);
+                  return;
+                }
+              }
+            } catch (e) {
+              console.warn('制限チェックエラー:', e);
+            }
+          }
+
+          let attempts = 0;
+          let insertError: any = null;
+          while (attempts < 5) {
+            const slug = generateSlug();
+            const { data, error: dbError } = await supabase
+              .from(TABLES.QUIZZES)
+              .insert({ ...insertData, slug, user_id: user?.id || null })
+              .select()
+              .single();
+            if (dbError?.code === '23505' && dbError?.message?.includes('slug')) {
+              attempts++;
+              continue;
+            }
+            insertError = dbError;
+            result = data;
+            break;
+          }
+          if (attempts >= 5) throw new Error('ユニークなURLの生成に失敗しました');
+          if (insertError) throw insertError;
         }
+
+        if (result) {
+          const wasNew = !savedId;
+          setSavedId(result.id);
+          setSavedSlug(result.slug);
+
+          if (!user && wasNew) {
+            try {
+              const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
+              stored.push({ table: 'quizzes', id: result.id });
+              localStorage.setItem('guest_content', JSON.stringify(stored));
+            } catch {}
+          }
+
+          fetch('/api/revalidate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: `/entertainment/${result.slug}` }),
+          }).catch(() => {});
+
+          if (wasNew) {
+            setShowCompleteModal(true);
+            if (user?.id) {
+              triggerGamificationEvent(user.id, 'quiz_create', {
+                contentId: result.slug,
+                contentTitle: result.title,
+              });
+            }
+          } else {
+            alert('保存しました！');
+          }
+        }
+      } catch (err: any) {
+        if (err.code === '23505' && err.message?.includes('slug')) {
+          setError('URLが重複しています。もう一度お試しください。');
+        } else {
+          setError(err.message || '保存に失敗しました');
+        }
+      } finally {
+        setIsSaving(false);
       }
-    } catch (err: any) {
-      if (err.code === '23505' && err.message?.includes('slug')) {
-        setError('URLが重複しています。もう一度お試しください。');
-      } else {
-        setError(err.message || '保存に失敗しました');
-      }
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   const previewQuizData = quizFromForm(form);

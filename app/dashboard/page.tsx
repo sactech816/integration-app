@@ -22,6 +22,7 @@ import GamificationManager from './components/Admin/GamificationManager';
 import FeedbackManager from './components/Admin/FeedbackManager';
 import AccountSettings from './components/Settings/AccountSettings';
 import { Loader2 } from 'lucide-react';
+import PointPurchaseModal from '@/components/points/PointPurchaseModal';
 
 // 新しいコンポーネント
 import DashboardLayout from './components/DashboardLayout';
@@ -120,6 +121,10 @@ function DashboardContent() {
   const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
   const [loadingUserSubscription, setLoadingUserSubscription] = useState(true);
 
+  // ポイント残高
+  const [pointBalance, setPointBalance] = useState<number>(0);
+  const [showPointPurchase, setShowPointPurchase] = useState(false);
+
   // 決済完了後の検証
   useEffect(() => {
     const verifyPayment = async () => {
@@ -158,6 +163,20 @@ function DashboardContent() {
   // アナリティクス取得可否（サブスク確定後に判定）
   const canFetchAnalytics = canFetchAnalyticsImmediately || (!loadingUserSubscription && hasMakersProAccess);
 
+  // ポイント残高を取得
+  const fetchPointBalance = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch(`/api/points/balance?userId=${user.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPointBalance(data.balance || 0);
+      }
+    } catch (err) {
+      console.error('Point balance fetch error:', err);
+    }
+  };
+
   // 初期データ取得（ユーザーログイン時のみ）
   useEffect(() => {
     if (user) {
@@ -166,6 +185,7 @@ function DashboardContent() {
         fetchAllContentCounts(),
         fetchKdlSubscription(),
         fetchUserSubscription(),
+        fetchPointBalance(),
       ]);
     }
   }, [user]);
@@ -491,11 +511,12 @@ function DashboardContent() {
               hasKdlSubscription={kdlSubscription?.hasActiveSubscription || false}
               isKdlMonitor={kdlSubscription?.isMonitor || false}
               hasMakersProAccess={hasMakersProAccess}
+              pointBalance={pointBalance}
+              onPointPurchaseClick={() => setShowPointPurchase(true)}
             />
           }
           activeView={activeView}
           onItemClick={handleMenuItemClick}
-          isAdmin={isAdmin}
         >
           <MainContent
             activeView={activeView}
@@ -538,6 +559,17 @@ function DashboardContent() {
       
       {/* KDLアクセス案内モーダル */}
       <KdlAccessModal isOpen={showKdlModal} onClose={() => setShowKdlModal(false)} />
+
+      {/* ポイント購入モーダル */}
+      {user && (
+        <PointPurchaseModal
+          isOpen={showPointPurchase}
+          onClose={() => { setShowPointPurchase(false); fetchPointBalance(); }}
+          userId={user.id}
+          email={user.email}
+          currentBalance={pointBalance}
+        />
+      )}
       
       {/* ゲーミフィケーション */}
       {user && <WelcomeBonus userId={user.id} />}

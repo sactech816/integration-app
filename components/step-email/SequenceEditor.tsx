@@ -10,6 +10,7 @@ import {
   Eye, Code, BarChart3, ListOrdered, Zap
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { usePoints } from '@/lib/hooks/usePoints';
 
 // --- Types ---
 
@@ -146,6 +147,7 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
   // Auth
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
 
   // Basic info
   const [name, setName] = useState('');
@@ -321,90 +323,94 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
 
   const handleSave = async () => {
     if (!user || !name.trim() || !listId) return;
-    setSaving(true);
 
-    try {
-      if (isEditing) {
-        // Update sequence metadata
-        await fetch(`/api/step-email-maker/sequences/${sequenceId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id, name: name.trim(), description: description.trim() || null }),
-        });
+    await consumeAndExecute('step-email', 'save', async () => {
+      setSaving(true);
 
-        // Save each step
-        for (const step of steps) {
-          if (step.id) {
-            // Update existing step
-            await fetch(`/api/step-email-maker/sequences/${sequenceId}/steps/${step.id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userId: user.id,
-                subject: step.subject,
-                htmlContent: step.html_content,
-                delayDays: step.delay_days,
-              }),
-            });
-          } else {
-            // Create new step
-            await fetch(`/api/step-email-maker/sequences/${sequenceId}/steps`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userId: user.id,
-                subject: step.subject,
-                htmlContent: step.html_content,
-                delayDays: step.delay_days,
-              }),
-            });
-          }
-        }
+      try {
+        if (isEditing) {
+          // Update sequence metadata
+          await fetch(`/api/step-email-maker/sequences/${sequenceId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id, name: name.trim(), description: description.trim() || null }),
+          });
 
-        // Refresh data
-        await fetchSequence(user.id);
-        alert('保存しました');
-      } else {
-        // Create new sequence
-        const res = await fetch('/api/step-email-maker/sequences', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: user.id,
-            listId,
-            name: name.trim(),
-            description: description.trim() || null,
-          }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          const newSeqId = data.sequence.id;
-
-          // Save steps
+          // Save each step
           for (const step of steps) {
-            await fetch(`/api/step-email-maker/sequences/${newSeqId}/steps`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userId: user.id,
-                subject: step.subject,
-                htmlContent: step.html_content,
-                delayDays: step.delay_days,
-              }),
-            });
+            if (step.id) {
+              // Update existing step
+              await fetch(`/api/step-email-maker/sequences/${sequenceId}/steps/${step.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: user.id,
+                  subject: step.subject,
+                  htmlContent: step.html_content,
+                  delayDays: step.delay_days,
+                }),
+              });
+            } else {
+              // Create new step
+              await fetch(`/api/step-email-maker/sequences/${sequenceId}/steps`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: user.id,
+                  subject: step.subject,
+                  htmlContent: step.html_content,
+                  delayDays: step.delay_days,
+                }),
+              });
+            }
           }
 
-          router.push(`/step-email/sequences/${newSeqId}`);
+          // Refresh data
+          await fetchSequence(user.id);
+          alert('保存しました');
         } else {
-          const err = await res.json();
-          alert(err.error || 'シーケンス作成に失敗しました');
+          // Create new sequence
+          const res = await fetch('/api/step-email-maker/sequences', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.id,
+              listId,
+              name: name.trim(),
+              description: description.trim() || null,
+            }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            const newSeqId = data.sequence.id;
+
+            // Save steps
+            for (const step of steps) {
+              await fetch(`/api/step-email-maker/sequences/${newSeqId}/steps`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: user.id,
+                  subject: step.subject,
+                  htmlContent: step.html_content,
+                  delayDays: step.delay_days,
+                }),
+              });
+            }
+
+            router.push(`/step-email/sequences/${newSeqId}`);
+          } else {
+            const err = await res.json();
+            alert(err.error || 'シーケンス作成に失敗しました');
+          }
         }
+      } catch {
+        alert('保存に失敗しました');
+      } finally {
+        setSaving(false);
       }
-    } catch {
-      alert('保存に失敗しました');
-    }
-    setSaving(false);
+    });
   };
 
   // --- Activate / Pause / Resume ---

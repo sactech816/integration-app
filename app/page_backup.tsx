@@ -30,7 +30,6 @@ import {
   Globe,
   Search,
   Tv,
-  Compass,
 } from 'lucide-react';
 
 // Client Components
@@ -42,32 +41,32 @@ import DiagnosisSection from '@/components/home/DiagnosisSection';
 import RecipeTabSection from '@/components/home/RecipeTabSection';
 import PricingSection from '@/components/home/PricingSection';
 import PopularContents from '@/components/home/PopularContents';
-import PersonaRoadmap from '@/components/home/PersonaRoadmap';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
 export const metadata: Metadata = {
-  title: '集客メーカー｜あなたのビジネスに最適な集客ツールをステップバイステップで',
-  description: '起業準備、コーチ・コンサル、セミナー開催、コンテンツ販売、EC事業、SNS発信。あなたのステージに合わせて最適なツールをご案内。診断クイズ・LP・予約・メルマガなど30種以上が無料で使えます。',
+  title: '集客メーカー｜診断クイズ・プロフィールLP・ビジネスLPが簡単作成。SNS拡散・SEO対策で集客を加速',
+  description: '診断クイズ・プロフィールLP・ビジネスLPをAIで簡単作成。SNS拡散・SEO対策であなたのビジネスに顧客を引き寄せる集客ツール。無料で今すぐ始められます。',
   keywords: [
-    '集客メーカー', '集客ツール', '起業ツール', 'ビジネスツール', '診断クイズ', '診断クイズ作成',
-    'プロフィールLP', 'ランディングページ作成', 'LP作成ツール', 'LP作成無料',
-    'AI自動生成', 'SNS集客', 'SEO対策', 'リード獲得', '無料ツール',
-    'マーケティングツール', 'コンテンツマーケティング', 'セミナー集客', 'コーチ集客',
+    '集客メーカー', '集客ツール', '診断クイズ', '診断クイズ作成', '診断コンテンツ',
+    '性格診断作成', 'プロフィールLP', 'プロフィールサイト', 'リンクまとめ', 'ビジネスLP',
+    'ランディングページ作成', 'LP作成ツール', 'LP作成無料', 'AI自動生成', 'AIツール',
+    'SNS集客', 'SEO対策', 'リード獲得', '見込み客獲得', '無料ツール',
+    'マーケティングツール', 'コンテンツマーケティング', 'lit.link代替',
   ],
   alternates: { canonical: siteUrl },
   openGraph: {
-    title: '集客メーカー｜あなたのビジネスに最適な集客ツールをステップバイステップで',
-    description: 'あなたのステージに合わせて最適なツールをご案内。診断クイズ・LP・予約・メルマガなど30種以上が無料。',
+    title: '集客メーカー｜診断クイズ・プロフィールLP・ビジネスLPが簡単作成',
+    description: '診断クイズ・プロフィールLP・ビジネスLPをAIで簡単作成。SNS拡散・SEO対策で集客を加速。無料で今すぐ始められます。',
     url: siteUrl,
     type: 'website',
-    images: [`${siteUrl}/api/og?title=${encodeURIComponent('集客メーカー')}&description=${encodeURIComponent('あなたに最適なツールをステップバイステップで')}`],
+    images: [`${siteUrl}/api/og?title=${encodeURIComponent('集客メーカー')}&description=${encodeURIComponent('診断クイズ・プロフィールLP・ビジネスLPを簡単作成')}`],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '集客メーカー｜あなたのビジネスに最適な集客ツールをステップバイステップで',
-    description: 'あなたのステージに合わせて最適なツールをご案内。30種以上が無料。',
-    images: [`${siteUrl}/api/og?title=${encodeURIComponent('集客メーカー')}&description=${encodeURIComponent('あなたに最適なツールをステップバイステップで')}`],
+    title: '集客メーカー｜診断クイズ・プロフィールLP・ビジネスLPが簡単作成',
+    description: '診断クイズ・プロフィールLP・ビジネスLPをAIで簡単作成。SNS拡散・SEO対策で集客を加速。',
+    images: [`${siteUrl}/api/og?title=${encodeURIComponent('集客メーカー')}&description=${encodeURIComponent('診断クイズ・プロフィールLP・ビジネスLPを簡単作成')}`],
   },
 };
 
@@ -159,30 +158,32 @@ export default function HomePage() {
       `}} />
 
       <HomeAuthProvider>
-        {/* ========== 1. Hero Section — ポジショニング明確化 ========== */}
-        <section className="relative pt-32 pb-16 lg:pt-40 lg:pb-20 overflow-hidden" style={{ backgroundColor: '#fffbf0' }}>
+        {/* ========== 1. Hero Section (SSR) ========== */}
+        <section className="relative pt-32 pb-16 lg:pt-40 lg:pb-24 overflow-hidden" style={{ backgroundColor: '#fffbf0' }}>
           <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#f97316 1.5px, transparent 1.5px)', backgroundSize: '30px 30px', opacity: 0.08 }}></div>
           <div className="absolute top-0 left-1/2 w-[600px] h-[600px] rounded-full blur-[80px] transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0" style={{ backgroundColor: '#ffedd5' }}></div>
 
           <div className="container mx-auto px-4 text-center relative z-10">
             <span className="inline-block py-1.5 px-5 rounded-full bg-white text-sm font-bold mb-6 tracking-wide border-2 shadow-sm" style={{ color: '#f97316', borderColor: '#f97316' }}>
-              30種以上の集客ツールが月額0円～
+              パソコン苦手でも大丈夫！ ずっと0円
             </span>
-            <h1 className="text-3xl md:text-4xl lg:text-6xl font-black leading-tight mb-6" style={{ color: '#5d4037' }}>
-              ツールが多すぎて迷う？<br />
-              <span style={{ color: '#f97316' }}>あなた専用のロードマップ</span>で<br />
-              もう迷わない。
+            <h1 className="text-4xl lg:text-6xl font-black leading-tight mb-6" style={{ color: '#5d4037' }}>
+              仕事に役立つ集客ツール<br />全17種類が、ぜーんぶ<br />
+              <span style={{ color: '#f97316' }}>作り放題！</span><br />
+               <span style={{ color: '#ff000d' }}>しかも、月額0円～</span><br />
             </h1>
             <p className="text-base md:text-lg text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed" data-speakable>
-              起業準備中の方も、セミナー講師も、EC事業者も。<br />
-              <span className="font-bold" style={{ color: '#f97316' }}>あなたのビジネスステージ</span>に合わせて<br className="md:hidden" />
-              最適なツールをステップバイステップでご案内します。
+              <span className="font-bold" style={{ color: '#f97316' }}>診断クイズ</span>、
+              <span className="font-bold" style={{ color: '#f97316' }}>プロフィール</span>、
+              <span className="font-bold" style={{ color: '#f97316' }}>ランディングページ</span>、<br />
+              アンケート、予約システム、出欠確認、ゲーム、Kindle出版まで...。<br />
+              あなたのアイデア次第で、使い方は無限大！
             </p>
 
-            {/* CTA Buttons */}
+            {/* CTA Buttons (Client) */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
-              <ScrollButton to="persona-roadmap" className="w-full sm:w-auto text-white text-lg font-bold py-4 px-10 rounded-full shadow-xl transition transform hover:-translate-y-1 flex items-center justify-center gap-2" style={{ backgroundColor: '#f97316' }}>
-                <Compass size={20} />自分に合うツールを見つける
+              <ScrollButton to="create-section-services" className="w-full sm:w-auto text-white text-lg font-bold py-4 px-10 rounded-full shadow-xl transition transform hover:-translate-y-1 flex items-center justify-center gap-2" style={{ backgroundColor: '#f97316' }}>
+                <Sparkles size={20} />今すぐ何か作る！
               </ScrollButton>
               <a href="/portal" className="w-full sm:w-auto text-lg font-bold py-4 px-10 rounded-full shadow-sm transition transform hover:-translate-y-1 flex items-center justify-center gap-2 bg-white border-2" style={{ color: '#5d4037', borderColor: '#ffedd5' }}>
                 <LayoutGrid size={20} />みんなの作品を見る
@@ -192,7 +193,7 @@ export default function HomePage() {
             <div className="flex flex-wrap justify-center gap-6 text-sm font-bold">
               <AuthCTAButton className="hover:underline transition" style={{ color: '#f97316' }}>ログイン</AuthCTAButton>
               <span className="text-gray-300">|</span>
-              <ScrollButton to="create-section-services" className="hover:underline transition" style={{ color: '#f97316' }}>全ツール一覧</ScrollButton>
+              <ScrollButton to="create-section-services" className="hover:underline transition" style={{ color: '#f97316' }}>ツール一覧</ScrollButton>
               <span className="text-gray-300">|</span>
               <ScrollButton to="diagnosis" className="hover:underline transition" style={{ color: '#f97316' }}>無料診断</ScrollButton>
               <span className="text-gray-300">|</span>
@@ -201,10 +202,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ========== 2. Stats Bar ========== */}
+        {/* ========== 2. Stats Bar (Client) ========== */}
         <StatsBar />
 
-        {/* ========== 3. Marquee - Text Badges ========== */}
+        {/* ========== 3. Marquee - Text Badges (SSR) ========== */}
         <section className="py-3 overflow-hidden border-b" style={{ backgroundColor: '#fffbf0', borderColor: '#ffedd5' }}>
           <div className="relative">
             <div className="marquee-left inline-flex py-2">
@@ -220,27 +221,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ========== 4. ペルソナ別ロードマップ（NEW: メインセクション） ========== */}
-        <section id="persona-roadmap" className="py-20 bg-white border-b" style={{ borderColor: '#ffedd5' }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-600 px-4 py-1.5 rounded-full mb-4 border border-orange-200">
-                <Compass size={16} />
-                <span className="font-bold text-sm">ステップバイステップガイド</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-black mb-4" style={{ color: '#5d4037' }}>
-                あなたはどのタイプ？
-              </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                近いタイプを選ぶだけで、今やるべきことが明確に。<br className="hidden md:block" />
-                ビジネスの成長に合わせた最適なツールをご案内します。
-              </p>
-            </div>
-            <PersonaRoadmap />
-          </div>
-        </section>
-
-        {/* ========== 5. Marquee - Tool Icons ========== */}
+        {/* ========== 4. Marquee - Tool Icons (SSR) ========== */}
         <section className="py-4 overflow-hidden border-b" style={{ backgroundColor: 'rgba(255, 237, 213, 0.3)', borderColor: '#ffedd5' }}>
           <div className="relative">
             <div className="marquee-right inline-flex py-2">
@@ -287,52 +268,21 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ========== 6. Features - 3つの力 ========== */}
-        <section className="py-24" style={{ backgroundColor: '#fffbf0' }}>
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold mb-4" style={{ color: '#5d4037' }}>ビジネスを加速させる「3つの力」</h2>
-              <p className="text-gray-600">必要なのは「機能の多さ」ではなく「成果につながる流れ」です。</p>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              <div className="bg-white p-8 rounded-3xl border border-orange-50 hover:shadow-lg transition group">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition" style={{ backgroundColor: '#dbeafe', color: '#2563eb' }}><TrendingUp size={28} /></div>
-                <h3 className="text-xl font-bold mb-3" style={{ color: '#5d4037' }}>【集客】知ってもらう</h3>
-                <p className="text-sm font-bold mb-4 tracking-wider" style={{ color: '#f97316' }}>プロフィール / LP / セールスライター</p>
-                <p className="text-gray-600 text-sm">テンプレートを選ぶだけで、名刺代わりのWebページが完成。AIが売れる文章を自動生成。SNS拡散設計でオーガニックな集客を実現。</p>
-              </div>
-              <div className="bg-white p-8 rounded-3xl border-2 shadow-lg transform md:-translate-y-4 relative group" style={{ borderColor: '#f97316' }}>
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">差別化ポイント！</div>
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition" style={{ backgroundColor: '#fce7f3', color: '#db2777' }}><Gamepad2 size={28} /></div>
-                <h3 className="text-xl font-bold mb-3" style={{ color: '#5d4037' }}>【接客】ファンにする</h3>
-                <p className="text-sm font-bold mb-4 tracking-wider" style={{ color: '#f97316' }}>診断クイズ / ガチャ / 福引き / スクラッチ等</p>
-                <p className="text-gray-600 text-sm">「あなたは何タイプ？」診断クイズやガチャ、スタンプラリーなどの遊べるコンテンツで、お客様との距離を縮めます。</p>
-              </div>
-              <div className="bg-white p-8 rounded-3xl border border-orange-50 hover:shadow-lg transition group">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition" style={{ backgroundColor: '#dcfce7', color: '#16a34a' }}><Calendar size={28} /></div>
-                <h3 className="text-xl font-bold mb-3" style={{ color: '#5d4037' }}>【成約】スムーズに繋がる</h3>
-                <p className="text-sm font-bold mb-4 tracking-wider" style={{ color: '#f97316' }}>予約 / アンケート / 出欠表</p>
-                <p className="text-gray-600 text-sm">面倒な日程調整の往復メールは不要。予約受付から顧客の声の収集、イベントの出欠管理まで自動化し、チャンスを逃しません。</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ========== 7. Tool Selection (全ツール一覧) ========== */}
+        {/* ========== 5. Tool Selection (SSR + Client ServiceSelector) ========== */}
         <section id="create-section-services" className="py-20 bg-white border-b" style={{ borderColor: '#ffedd5' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-black mb-4" style={{ color: '#5d4037' }}>全ツール一覧</h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">使いたいツールが決まっている方はこちらから直接どうぞ</p>
+              <h2 className="text-3xl sm:text-4xl font-black mb-4" style={{ color: '#5d4037' }}>何を作りますか？</h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">目的に合わせて最適なコンテンツタイプを選んでね！</p>
             </div>
             <HomeServiceSelector />
             <p className="text-center text-sm text-gray-500 mt-6">
-              迷ったら「<ScrollButton to="persona-roadmap" className="font-bold hover:underline" style={{ color: '#f97316' }}>タイプ別ガイド</ScrollButton>」か「<ScrollButton to="diagnosis" className="font-bold hover:underline" style={{ color: '#f97316' }}>診断</ScrollButton>」を試してみてね
+              迷ったら、下にある「<ScrollButton to="diagnosis" className="font-bold hover:underline" style={{ color: '#f97316' }}>診断</ScrollButton>」を試してみてね
             </p>
           </div>
         </section>
 
-        {/* ========== 8. Gallery ========== */}
+        {/* ========== 6. Gallery (SSR) ========== */}
         <section className="py-24" style={{ backgroundColor: '#fffbf0' }}>
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
@@ -373,7 +323,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ========== 9. Diagnosis ========== */}
+        {/* ========== 7. Diagnosis (Client) ========== */}
         <section id="diagnosis" className="py-24 bg-white relative overflow-hidden">
           <div className="container mx-auto px-4 relative z-10">
             <div className="text-center mb-10">
@@ -384,10 +334,41 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ========== 10. Recipe Tabs ========== */}
+        {/* ========== 8. Features - 3つの力 (SSR) ========== */}
+        <section className="py-24" style={{ backgroundColor: '#fffbf0' }}>
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold mb-4" style={{ color: '#5d4037' }}>ビジネスを加速させる「3つの力」</h2>
+              <p className="text-gray-600">必要なのは「機能の多さ」ではなく「成果につながる流れ」です。</p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              <div className="bg-white p-8 rounded-3xl border border-orange-50 hover:shadow-lg transition group">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition" style={{ backgroundColor: '#dbeafe', color: '#2563eb' }}><TrendingUp size={28} /></div>
+                <h3 className="text-xl font-bold mb-3" style={{ color: '#5d4037' }}>【集客】知ってもらう</h3>
+                <p className="text-sm font-bold mb-4 tracking-wider" style={{ color: '#f97316' }}>プロフィール / LP / セールスライター</p>
+                <p className="text-gray-600 text-sm">テンプレートを選ぶだけで、名刺代わりのWebページが完成。AIが売れる文章を自動生成。SNS拡散設計でオーガニックな集客を実現。</p>
+              </div>
+              <div className="bg-white p-8 rounded-3xl border-2 shadow-lg transform md:-translate-y-4 relative group" style={{ borderColor: '#f97316' }}>
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">差別化ポイント！</div>
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition" style={{ backgroundColor: '#fce7f3', color: '#db2777' }}><Gamepad2 size={28} /></div>
+                <h3 className="text-xl font-bold mb-3" style={{ color: '#5d4037' }}>【接客】ファンにする</h3>
+                <p className="text-sm font-bold mb-4 tracking-wider" style={{ color: '#f97316' }}>診断クイズ / ガチャ / 福引き / スクラッチ等</p>
+                <p className="text-gray-600 text-sm">「あなたは何タイプ？」診断クイズやガチャ、スタンプラリーなどの遊べるコンテンツで、お客様との距離を縮めます。</p>
+              </div>
+              <div className="bg-white p-8 rounded-3xl border border-orange-50 hover:shadow-lg transition group">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition" style={{ backgroundColor: '#dcfce7', color: '#16a34a' }}><Calendar size={28} /></div>
+                <h3 className="text-xl font-bold mb-3" style={{ color: '#5d4037' }}>【成約】スムーズに繋がる</h3>
+                <p className="text-sm font-bold mb-4 tracking-wider" style={{ color: '#f97316' }}>予約 / アンケート / 出欠表</p>
+                <p className="text-gray-600 text-sm">面倒な日程調整の往復メールは不要。予約受付から顧客の声の収集、イベントの出欠管理まで自動化し、チャンスを逃しません。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ========== 9. Recipe Tabs (Client) ========== */}
         <RecipeTabSection />
 
-        {/* ========== 11. 3 Steps ========== */}
+        {/* ========== 10. 3 Steps (SSR) ========== */}
         <section className="py-24" style={{ backgroundColor: '#fffbf0' }}>
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
@@ -422,7 +403,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ========== 12. Comparison Table ========== */}
+        {/* ========== 11. Comparison Table (SSR) ========== */}
         <section className="py-24 bg-white">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
@@ -452,10 +433,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ========== 13. Pricing ========== */}
+        {/* ========== 12. Pricing (Client) ========== */}
         <PricingSection />
 
-        {/* ========== 13.5. Pro Plan Promo ========== */}
+        {/* ========== 12.5. Pro Plan Promo (SSR) ========== */}
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50 border-2 border-purple-100 rounded-3xl p-8 md:p-12">
@@ -492,7 +473,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ========== 14. FAQ ========== */}
+        {/* ========== 13. FAQ (SSR + JSON-LD) ========== */}
         <section className="py-24 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
@@ -515,10 +496,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ========== 15. Popular Contents ========== */}
+        {/* ========== 14. Popular Contents (Client) ========== */}
         <PopularContents />
 
-        {/* ========== 16. Final CTA ========== */}
+        {/* ========== 15. Final CTA (SSR + Client buttons) ========== */}
         <section className="py-24 relative overflow-hidden" style={{ backgroundColor: '#f97316' }}>
           <div className="absolute top-0 left-0 w-full h-full opacity-10">
             <div className="absolute top-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl"></div>
@@ -535,15 +516,15 @@ export default function HomePage() {
               <AuthCTAButton className="w-full sm:w-auto bg-white text-lg font-bold py-4 px-12 rounded-full shadow-2xl transition transform hover:-translate-y-1 flex items-center justify-center gap-2" style={{ color: '#f97316' }}>
                 <Sparkles size={20} />無料で始める
               </AuthCTAButton>
-              <ScrollButton to="persona-roadmap" className="w-full sm:w-auto bg-transparent border-2 border-white hover:bg-white/10 text-white text-lg font-bold py-4 px-12 rounded-full transition transform hover:-translate-y-1">
-                タイプ別ガイドを見る
+              <ScrollButton to="diagnosis" className="w-full sm:w-auto bg-transparent border-2 border-white hover:bg-white/10 text-white text-lg font-bold py-4 px-12 rounded-full transition transform hover:-translate-y-1">
+                診断から始める
               </ScrollButton>
             </div>
             <p className="text-sm text-orange-100">※ 登録は30秒で完了 / クレジットカード不要 / いつでも無料で使えます</p>
           </div>
         </section>
 
-        {/* ========== 17. Support ========== */}
+        {/* ========== 16. Support (SSR) ========== */}
         <section className="py-16" style={{ backgroundColor: '#fffbf0' }}>
           <div className="container mx-auto px-4 max-w-2xl text-center">
             <h3 className="text-xl md:text-2xl font-bold mb-4" style={{ color: '#5d4037' }}>

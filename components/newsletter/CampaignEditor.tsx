@@ -12,6 +12,7 @@ import {
 import { isValidEmail } from '@/lib/security/sanitize';
 import { supabase } from '@/lib/supabase';
 import { NEWSLETTER_TEMPLATES, type NewsletterTemplate } from '@/constants/templates/newsletter';
+import { usePoints } from '@/lib/hooks/usePoints';
 
 interface CampaignEditorProps {
   campaignId?: string;
@@ -659,6 +660,7 @@ function htmlToPlainText(html: string): string {
 export default function CampaignEditor({ campaignId, defaultListId }: CampaignEditorProps) {
   const router = useRouter();
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
   const [lists, setLists] = useState<ListOption[]>([]);
   const [listId, setListId] = useState(defaultListId || '');
   const [subject, setSubject] = useState('');
@@ -848,33 +850,38 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
 
   const handleSave = async () => {
     if (!user || !subject || !listId) return;
-    setSaving(true);
-    const finalHtml = applyCtaLinks(getFullHtml());
-    const textContent = htmlToPlainText(finalHtml);
-    const body = { userId: user.id, listId, subject, previewText, htmlContent: finalHtml, textContent };
-    if (savedCampaignId) {
-      await fetch(`/api/newsletter-maker/campaigns/${savedCampaignId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 2000);
-    } else {
-      const res = await fetch('/api/newsletter-maker/campaigns', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setSavedCampaignId(data.campaign.id);
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 2000);
-        window.history.replaceState(null, '', `/newsletter/campaigns/${data.campaign.id}`);
+    await consumeAndExecute('newsletter', 'save', async () => {
+      setSaving(true);
+      try {
+        const finalHtml = applyCtaLinks(getFullHtml());
+        const textContent = htmlToPlainText(finalHtml);
+        const body = { userId: user.id, listId, subject, previewText, htmlContent: finalHtml, textContent };
+        if (savedCampaignId) {
+          await fetch(`/api/newsletter-maker/campaigns/${savedCampaignId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          setSaveSuccess(true);
+          setTimeout(() => setSaveSuccess(false), 2000);
+        } else {
+          const res = await fetch('/api/newsletter-maker/campaigns', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setSavedCampaignId(data.campaign.id);
+            setSaveSuccess(true);
+            setTimeout(() => setSaveSuccess(false), 2000);
+            window.history.replaceState(null, '', `/newsletter/campaigns/${data.campaign.id}`);
+          }
+        }
+      } finally {
+        setSaving(false);
       }
-    }
-    setSaving(false);
+    });
   };
 
   const handleSendConfirmed = async () => {

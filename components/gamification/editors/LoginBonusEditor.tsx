@@ -23,6 +23,7 @@ import {
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
+import { usePoints } from '@/lib/hooks/usePoints';
 
 interface LoginBonusEditorProps {
   user: User | null;
@@ -78,6 +79,7 @@ const Section = ({
 export default function LoginBonusEditor({ user, initialData, onBack, setShowAuth }: LoginBonusEditorProps) {
   const router = useRouter();
   const { showOnboarding, setShowOnboarding } = useOnboarding('gamification_loginbonus_onboarding_dismissed', { skip: !!initialData });
+  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(initialData?.id || null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -131,46 +133,48 @@ export default function LoginBonusEditor({ user, initialData, onBack, setShowAut
       return;
     }
 
-    setIsSaving(true);
+    await consumeAndExecute('gamification', 'save', async () => {
+      setIsSaving(true);
 
-    try {
-      const campaignData = {
-        owner_id: user.id,
-        title: form.title,
-        description: form.description,
-        campaign_type: 'login_bonus',
-        status: 'active',
-        settings: {
-          points_per_day: form.points_per_day,
-        },
-      };
+      try {
+        const campaignData = {
+          owner_id: user.id,
+          title: form.title,
+          description: form.description,
+          campaign_type: 'login_bonus',
+          status: 'active',
+          settings: {
+            points_per_day: form.points_per_day,
+          },
+        };
 
-      let campaignId = savedId;
+        let campaignId = savedId;
 
-      if (savedId) {
-        await supabase
-          .from('gamification_campaigns')
-          .update(campaignData)
-          .eq('id', savedId);
-      } else {
-        const { data, error } = await supabase
-          .from('gamification_campaigns')
-          .insert(campaignData)
-          .select()
-          .single();
+        if (savedId) {
+          await supabase
+            .from('gamification_campaigns')
+            .update(campaignData)
+            .eq('id', savedId);
+        } else {
+          const { data, error } = await supabase
+            .from('gamification_campaigns')
+            .insert(campaignData)
+            .select()
+            .single();
 
-        if (error) throw error;
-        campaignId = data.id;
-        setSavedId(data.id);
+          if (error) throw error;
+          campaignId = data.id;
+          setSavedId(data.id);
+        }
+
+        setShowSuccessModal(true);
+      } catch (error) {
+        console.error('Save error:', error);
+        alert('保存に失敗しました');
+      } finally {
+        setIsSaving(false);
       }
-
-      setShowSuccessModal(true);
-    } catch (error) {
-      console.error('Save error:', error);
-      alert('保存に失敗しました');
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   // 左パネル（編集フォーム）

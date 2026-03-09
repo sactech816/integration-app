@@ -30,6 +30,7 @@ import {
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
+import { usePoints } from '@/lib/hooks/usePoints';
 
 // ゲームタイプ設定
 type GameType = 'gacha' | 'scratch' | 'fukubiki' | 'slot';
@@ -192,6 +193,7 @@ const getDefaultPrizes = (gameType: GameType): GachaPrizeForm[] => {
 export default function GachaEditor({ user, initialData, onBack, setShowAuth, gameType = 'gacha' }: GachaEditorProps) {
   const router = useRouter();
   const { showOnboarding, setShowOnboarding } = useOnboarding('gamification_gacha_onboarding_dismissed', { skip: !!initialData });
+  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(initialData?.id || null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -334,70 +336,72 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth, ga
       return;
     }
 
-    setIsSaving(true);
+    await consumeAndExecute('gamification', 'save', async () => {
+      setIsSaving(true);
 
-    try {
-      const campaignData = {
-        owner_id: user.id,
-        title: form.title,
-        description: form.description,
-        campaign_type: gameType as CampaignType,
-        status: 'active',
-        animation_type: form.animation_type,
-        settings: {
-          cost_per_play: form.cost_per_play,
-        },
-      };
+      try {
+        const campaignData = {
+          owner_id: user.id,
+          title: form.title,
+          description: form.description,
+          campaign_type: gameType as CampaignType,
+          status: 'active',
+          animation_type: form.animation_type,
+          settings: {
+            cost_per_play: form.cost_per_play,
+          },
+        };
 
-      let campaignId = savedId;
+        let campaignId = savedId;
 
-      if (savedId) {
-        // 更新
+        if (savedId) {
+          // 更新
+          await supabase
+            .from('gamification_campaigns')
+            .update(campaignData)
+            .eq('id', savedId);
+        } else {
+          // 新規作成
+          const { data, error } = await supabase
+            .from('gamification_campaigns')
+            .insert(campaignData)
+            .select()
+            .single();
+
+          if (error) throw error;
+          campaignId = data.id;
+          setSavedId(data.id);
+        }
+
+        // 既存の景品を削除
         await supabase
-          .from('gamification_campaigns')
-          .update(campaignData)
-          .eq('id', savedId);
-      } else {
-        // 新規作成
-        const { data, error } = await supabase
-          .from('gamification_campaigns')
-          .insert(campaignData)
-          .select()
-          .single();
+          .from('gacha_prizes')
+          .delete()
+          .eq('campaign_id', campaignId);
 
-        if (error) throw error;
-        campaignId = data.id;
-        setSavedId(data.id);
+        // 景品を保存
+        const prizesData = form.prizes.map((prize, index) => ({
+          campaign_id: campaignId,
+          name: prize.name,
+          description: prize.description || null,
+          image_url: prize.image_url || null,
+          probability: prize.probability,
+          is_winning: prize.is_winning,
+          stock: prize.stock,
+          display_order: index,
+          point_reward: prize.point_reward || 0,
+        }));
+
+        await supabase.from('gacha_prizes').insert(prizesData);
+
+        setShowSuccessModal(true);
+      } catch (error) {
+        console.error('Save error:', error);
+        alert('保存に失敗しました');
+      } finally {
+        setIsSaving(false);
       }
-
-      // 既存の景品を削除
-      await supabase
-        .from('gacha_prizes')
-        .delete()
-        .eq('campaign_id', campaignId);
-
-      // 景品を保存
-      const prizesData = form.prizes.map((prize, index) => ({
-        campaign_id: campaignId,
-        name: prize.name,
-        description: prize.description || null,
-        image_url: prize.image_url || null,
-        probability: prize.probability,
-        is_winning: prize.is_winning,
-        stock: prize.stock,
-        display_order: index,
-        point_reward: prize.point_reward || 0,
-      }));
-
-      await supabase.from('gacha_prizes').insert(prizesData);
-
-      setShowSuccessModal(true);
-    } catch (error) {
-      console.error('Save error:', error);
-      alert('保存に失敗しました');
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   // 確率チェック

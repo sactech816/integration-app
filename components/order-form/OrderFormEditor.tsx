@@ -17,6 +17,7 @@ import {
 } from '@/constants/orderFormThemes';
 import StripeConnectStatus from '@/components/order-form/StripeConnectStatus';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import { usePoints } from '@/lib/hooks/usePoints';
 
 interface Field {
   id?: string;
@@ -603,6 +604,8 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
     { fieldType: 'email', label: 'メールアドレス', placeholder: 'you@example.com', required: true, options: null },
   ]);
 
+  const { consumeAndExecute } = usePoints({ userId: userId || undefined, isPro: false });
+
   useEffect(() => {
     const init = async () => {
       if (!supabase) return;
@@ -698,61 +701,64 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       alert('Stripeの最低決済金額は50円です。50円以上を設定してください。');
       return;
     }
-    setSaving(true);
-    const body = {
-      userId, title, description, price: paymentType === 'free' ? 0 : price,
-      paymentType, paymentProvider: paymentType !== 'free' ? paymentProvider : null,
-      stripePriceId: paymentProvider === 'stripe' ? stripePriceId : null,
-      successMessage, status: publishStatus || status,
-      replyEmailEnabled, replyEmailSubject, replyEmailBody,
-      notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody,
-      emailFooterName,
-      paymentEmailEnabled, paymentEmailSubject, paymentEmailBody,
-      eventDate: eventDate || null,
-      reminder1dayEnabled, reminderSameDayEnabled,
-      reminderEmailSubject, reminderEmailBody,
-      designLayout, designColor,
-      titleColor, descriptionColor, descriptionSize,
-      ctaButton,
-      fields: fields.map((f) => ({
-        field_type: f.fieldType, label: f.label, placeholder: f.placeholder,
-        required: f.fieldType === 'privacy_policy' ? true : f.required,
-        options: (f.fieldType === 'select' || f.fieldType === 'radio') ? f.options
-          : f.fieldType === 'privacy_policy' ? { policyText: f.policyText || '' }
-          : null,
-      })),
-    };
-    try {
-      if (savedFormId) {
-        const res = await fetch(`/api/order-form/${savedFormId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-        if (res.ok) {
-          if (publishStatus) setStatus(publishStatus);
-          setSaveSuccess(true);
-          setTimeout(() => setSaveSuccess(false), 2000);
+    await consumeAndExecute('order-form', 'save', async () => {
+      setSaving(true);
+      const body = {
+        userId, title, description, price: paymentType === 'free' ? 0 : price,
+        paymentType, paymentProvider: paymentType !== 'free' ? paymentProvider : null,
+        stripePriceId: paymentProvider === 'stripe' ? stripePriceId : null,
+        successMessage, status: publishStatus || status,
+        replyEmailEnabled, replyEmailSubject, replyEmailBody,
+        notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody,
+        emailFooterName,
+        paymentEmailEnabled, paymentEmailSubject, paymentEmailBody,
+        eventDate: eventDate || null,
+        reminder1dayEnabled, reminderSameDayEnabled,
+        reminderEmailSubject, reminderEmailBody,
+        designLayout, designColor,
+        titleColor, descriptionColor, descriptionSize,
+        ctaButton,
+        fields: fields.map((f) => ({
+          field_type: f.fieldType, label: f.label, placeholder: f.placeholder,
+          required: f.fieldType === 'privacy_policy' ? true : f.required,
+          options: (f.fieldType === 'select' || f.fieldType === 'radio') ? f.options
+            : f.fieldType === 'privacy_policy' ? { policyText: f.policyText || '' }
+            : null,
+        })),
+      };
+      try {
+        if (savedFormId) {
+          const res = await fetch(`/api/order-form/${savedFormId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          if (res.ok) {
+            if (publishStatus) setStatus(publishStatus);
+            setSaveSuccess(true);
+            setTimeout(() => setSaveSuccess(false), 2000);
+          } else {
+            const err = await res.json().catch(() => ({}));
+            alert(`保存に失敗しました: ${err.error || res.statusText}`);
+          }
         } else {
-          const err = await res.json().catch(() => ({}));
-          alert(`保存に失敗しました: ${err.error || res.statusText}`);
+          const res = await fetch('/api/order-form', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          if (res.ok) {
+            const data = await res.json();
+            setCreatedSlug(data.form.slug);
+            setSlug(data.form.slug);
+            setSavedFormId(data.form.id);
+            setStatus('published');
+            setShowCompleteModal(true);
+            window.history.replaceState(null, '', `/order-form/editor/${data.form.id}`);
+          } else {
+            const err = await res.json().catch(() => ({}));
+            alert(`保存に失敗しました: ${err.error || res.statusText}`);
+          }
         }
-      } else {
-        const res = await fetch('/api/order-form', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-        if (res.ok) {
-          const data = await res.json();
-          setCreatedSlug(data.form.slug);
-          setSlug(data.form.slug);
-          setSavedFormId(data.form.id);
-          setStatus('published');
-          setShowCompleteModal(true);
-          window.history.replaceState(null, '', `/order-form/editor/${data.form.id}`);
-        } else {
-          const err = await res.json().catch(() => ({}));
-          alert(`保存に失敗しました: ${err.error || res.statusText}`);
-        }
+      } catch (e) {
+        alert('保存中にエラーが発生しました。ネットワーク接続を確認してください。');
+        console.error('[OrderFormEditor] Save error:', e);
+      } finally {
+        setSaving(false);
       }
-    } catch (e) {
-      alert('保存中にエラーが発生しました。ネットワーク接続を確認してください。');
-      console.error('[OrderFormEditor] Save error:', e);
-    }
-    setSaving(false);
+    });
   };
 
   if (loading) {

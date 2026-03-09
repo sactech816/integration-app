@@ -34,6 +34,7 @@ import {
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
+import { usePoints } from '@/lib/hooks/usePoints';
 
 interface StampRallyEditorProps {
   user: User | null;
@@ -91,6 +92,7 @@ const Section = ({
 export default function StampRallyEditor({ user, initialData, onBack, setShowAuth }: StampRallyEditorProps) {
   const router = useRouter();
   const { showOnboarding, setShowOnboarding } = useOnboarding('gamification_stamprally_onboarding_dismissed', { skip: !!initialData });
+  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(initialData?.id || null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -196,50 +198,52 @@ export default function StampRallyEditor({ user, initialData, onBack, setShowAut
       return;
     }
 
-    setIsSaving(true);
+    await consumeAndExecute('gamification', 'save', async () => {
+      setIsSaving(true);
 
-    try {
-      const campaignData = {
-        owner_id: user.id,
-        title: form.title,
-        description: form.description,
-        campaign_type: 'stamp_rally',
-        status: 'active',
-        settings: {
-          total_stamps: form.total_stamps,
-          points_per_stamp: form.points_per_stamp,
-          completion_bonus: form.completion_bonus,
-          stamp_ids: form.stamp_labels.map((_, i) => `stamp_${i + 1}`),
-          triggers: form.triggers,
-        },
-      };
+      try {
+        const campaignData = {
+          owner_id: user.id,
+          title: form.title,
+          description: form.description,
+          campaign_type: 'stamp_rally',
+          status: 'active',
+          settings: {
+            total_stamps: form.total_stamps,
+            points_per_stamp: form.points_per_stamp,
+            completion_bonus: form.completion_bonus,
+            stamp_ids: form.stamp_labels.map((_, i) => `stamp_${i + 1}`),
+            triggers: form.triggers,
+          },
+        };
 
-      let campaignId = savedId;
+        let campaignId = savedId;
 
-      if (savedId) {
-        await supabase
-          .from('gamification_campaigns')
-          .update(campaignData)
-          .eq('id', savedId);
-      } else {
-        const { data, error } = await supabase
-          .from('gamification_campaigns')
-          .insert(campaignData)
-          .select()
-          .single();
+        if (savedId) {
+          await supabase
+            .from('gamification_campaigns')
+            .update(campaignData)
+            .eq('id', savedId);
+        } else {
+          const { data, error } = await supabase
+            .from('gamification_campaigns')
+            .insert(campaignData)
+            .select()
+            .single();
 
-        if (error) throw error;
-        campaignId = data.id;
-        setSavedId(data.id);
+          if (error) throw error;
+          campaignId = data.id;
+          setSavedId(data.id);
+        }
+
+        setShowSuccessModal(true);
+      } catch (error) {
+        console.error('Save error:', error);
+        alert('保存に失敗しました');
+      } finally {
+        setIsSaving(false);
       }
-
-      setShowSuccessModal(true);
-    } catch (error) {
-      console.error('Save error:', error);
-      alert('保存に失敗しました');
-    } finally {
-      setIsSaving(false);
-    }
+    });
   };
 
   // 左パネル（編集フォーム）

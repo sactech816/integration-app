@@ -12,6 +12,7 @@ import { QUIZ_THEMES, QUIZ_THEME_IDS, getQuizTheme } from '../../constants/quizT
 import QuizPlayer from './QuizPlayer';
 import { triggerGamificationEvent } from '@/lib/gamification/events';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
+import { usePoints } from '@/lib/hooks/usePoints';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
@@ -193,6 +194,7 @@ interface EditorProps {
 const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: EditorProps) => {
     // ユーザープラン権限を取得
     const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
+    const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: userPlan.isProUser });
     // はじめかたガイド
     const { showOnboarding, setShowOnboarding } = useOnboarding('quiz_editor_onboarding_dismissed', { skip: !!initialData?.id });
     
@@ -510,136 +512,139 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
             return;
         }
 
-        setIsSaving(true);
-        
-        try {
-            // UPDATE用のデータ（user_idは含めない）
-            const updateData: Record<string, unknown> = {
-                title: form.title, 
-                description: form.description, 
-                category: form.category, 
-                color: form.color,
-                questions: form.questions, 
-                results: form.results, 
-                layout: form.layout || 'card', 
-                image_url: form.image_url || null, 
-                mode: form.mode || 'diagnosis',
-                collect_email: form.collect_email || false,
-                theme: form.theme || 'standard',
-                option_order: form.option_order || 'random',
-                show_in_portal: form.show_in_portal === undefined ? true : form.show_in_portal,
-            };
-            
-            let result;
-            
-            if (existingId) {
-                // 更新（user_idは変更しない）
-                if (regenerateSlug) {
-                    updateData.slug = generateSlug();
-                }
-                
-                console.log('QuizEditor UPDATE:', { existingId, updateData });
-                
-                const { data, error } = await supabase
-                    .from('quizzes')
-                    .update(updateData)
-                    .eq('id', existingId)
-                    .select()
-                    .single();
-                
-                console.log('QuizEditor UPDATE result:', { data, error });
-                    
-                if (error) throw error;
-                result = data;
-            } else {
-                // 新規作成の場合：ユニークなslugを生成（リトライ付き）
-                let attempts = 0;
-                const maxAttempts = 5;
-                let insertError: any = null;
-                
-                while (attempts < maxAttempts) {
-                    const newSlug = customSlug || generateSlug();
-                    const insertData = {
-                        ...updateData,
-                        slug: newSlug,
-                        user_id: user?.id || null, // INSERT時のみuser_idを設定
-                    };
-                    
+        // ポイント消費チェック
+        const success = await consumeAndExecute('quiz', 'save', async () => {
+            setIsSaving(true);
+
+            try {
+                // UPDATE用のデータ（user_idは含めない）
+                const updateData: Record<string, unknown> = {
+                    title: form.title,
+                    description: form.description,
+                    category: form.category,
+                    color: form.color,
+                    questions: form.questions,
+                    results: form.results,
+                    layout: form.layout || 'card',
+                    image_url: form.image_url || null,
+                    mode: form.mode || 'diagnosis',
+                    collect_email: form.collect_email || false,
+                    theme: form.theme || 'standard',
+                    option_order: form.option_order || 'random',
+                    show_in_portal: form.show_in_portal === undefined ? true : form.show_in_portal,
+                };
+
+                let result;
+
+                if (existingId) {
+                    // 更新（user_idは変更しない）
+                    if (regenerateSlug) {
+                        updateData.slug = generateSlug();
+                    }
+
+                    console.log('QuizEditor UPDATE:', { existingId, updateData });
+
                     const { data, error } = await supabase
                         .from('quizzes')
-                        .insert(insertData)
+                        .update(updateData)
+                        .eq('id', existingId)
                         .select()
                         .single();
-                    
-                    // slug重複エラー（23505）の場合はリトライ（カスタムslugの場合はリトライしない）
-                    if (error?.code === '23505' && error?.message?.includes('slug') && !customSlug) {
-                        attempts++;
-                        console.log(`Slug collision, retrying... (attempt ${attempts}/${maxAttempts})`);
-                        continue;
-                    }
-                    
-                    insertError = error;
+
+                    console.log('QuizEditor UPDATE result:', { data, error });
+
+                    if (error) throw error;
                     result = data;
-                    break;
-                }
-                
-                if (attempts >= maxAttempts) {
-                    throw new Error('ユニークなURLの生成に失敗しました。もう一度お試しください。');
-                }
-                
-                if (insertError) throw insertError;
-                if (customSlug) setCustomSlug(''); // 保存後はクリア
-            }
-            
-            if (result) {
-                const wasNewCreation = !existingId; // 保存前の状態で判定
-
-                setSavedId(result.id);
-                setSavedSlug(result.slug);
-
-                // ゲストが新規作成した場合、ログイン後に紐付けるためlocalStorageに保存
-                if (!user && wasNewCreation) {
-                    try {
-                        const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
-                        stored.push({ table: 'quizzes', id: result.id });
-                        localStorage.setItem('guest_content', JSON.stringify(stored));
-                    } catch {}
-                }
-
-                // ISRキャッシュを無効化
-                fetch('/api/revalidate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ path: `/quiz/${result.slug}` }),
-                }).catch(() => {});
-
-                // 新規作成時のみ開発支援モーダルを表示
-                if (wasNewCreation) {
-                    setJustSavedQuizId(result.slug);
-                    setShowDonationModal(true);
-                    
-                    // ゲーミフィケーションイベント発火（クイズ作成）
-                    if (user?.id) {
-                        triggerGamificationEvent(user.id, 'quiz_create', {
-                            contentId: result.slug,
-                            contentTitle: result.title,
-                        });
-                    }
                 } else {
-                    alert('保存しました！');
+                    // 新規作成の場合：ユニークなslugを生成（リトライ付き）
+                    let attempts = 0;
+                    const maxAttempts = 5;
+                    let insertError: any = null;
+
+                    while (attempts < maxAttempts) {
+                        const newSlug = customSlug || generateSlug();
+                        const insertData = {
+                            ...updateData,
+                            slug: newSlug,
+                            user_id: user?.id || null, // INSERT時のみuser_idを設定
+                        };
+
+                        const { data, error } = await supabase
+                            .from('quizzes')
+                            .insert(insertData)
+                            .select()
+                            .single();
+
+                        // slug重複エラー（23505）の場合はリトライ（カスタムslugの場合はリトライしない）
+                        if (error?.code === '23505' && error?.message?.includes('slug') && !customSlug) {
+                            attempts++;
+                            console.log(`Slug collision, retrying... (attempt ${attempts}/${maxAttempts})`);
+                            continue;
+                        }
+
+                        insertError = error;
+                        result = data;
+                        break;
+                    }
+
+                    if (attempts >= maxAttempts) {
+                        throw new Error('ユニークなURLの生成に失敗しました。もう一度お試しください。');
+                    }
+
+                    if (insertError) throw insertError;
+                    if (customSlug) setCustomSlug(''); // 保存後はクリア
                 }
+
+                if (result) {
+                    const wasNewCreation = !existingId; // 保存前の状態で判定
+
+                    setSavedId(result.id);
+                    setSavedSlug(result.slug);
+
+                    // ゲストが新規作成した場合、ログイン後に紐付けるためlocalStorageに保存
+                    if (!user && wasNewCreation) {
+                        try {
+                            const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
+                            stored.push({ table: 'quizzes', id: result.id });
+                            localStorage.setItem('guest_content', JSON.stringify(stored));
+                        } catch {}
+                    }
+
+                    // ISRキャッシュを無効化
+                    fetch('/api/revalidate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ path: `/quiz/${result.slug}` }),
+                    }).catch(() => {});
+
+                    // 新規作成時のみ開発支援モーダルを表示
+                    if (wasNewCreation) {
+                        setJustSavedQuizId(result.slug);
+                        setShowDonationModal(true);
+
+                        // ゲーミフィケーションイベント発火（クイズ作成）
+                        if (user?.id) {
+                            triggerGamificationEvent(user.id, 'quiz_create', {
+                                contentId: result.slug,
+                                contentTitle: result.title,
+                            });
+                        }
+                    } else {
+                        alert('保存しました！');
+                    }
+                }
+            } catch (error: any) {
+                console.error('保存エラー:', error);
+                // カスタムURL（slug）の重複エラーを分かりやすいメッセージに変換
+                if (error.code === '23505' && error.message?.includes('slug')) {
+                    alert('このカスタムURLは既に使用されています。別のURLを指定してください。');
+                } else {
+                    alert('保存に失敗しました: ' + (error.message || '不明なエラー'));
+                }
+            } finally {
+                setIsSaving(false);
             }
-        } catch (error: any) {
-            console.error('保存エラー:', error);
-            // カスタムURL（slug）の重複エラーを分かりやすいメッセージに変換
-            if (error.code === '23505' && error.message?.includes('slug')) {
-                alert('このカスタムURLは既に使用されています。別のURLを指定してください。');
-            } else {
-                alert('保存に失敗しました: ' + (error.message || '不明なエラー'));
-            }
-        } finally {
-            setIsSaving(false);
-        }
+        }, existingId?.toString());
     };
 
     // プレビュー用のクイズデータを構築

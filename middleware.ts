@@ -3,20 +3,14 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 
 /**
- * Kindle出版メーカーのアクセス制限Middleware
+ * 統合 Middleware
  *
- * /kindle 配下のページへのアクセスを制御し、
- * 未ログインユーザーを /kindle/lp にリダイレクトします。
+ * 1. 全ルートでセッション更新（Supabase Auth のトークンリフレッシュ）
+ * 2. /kindle 配下のアクセス制御（既存ロジック維持）
  *
- * アクセス制御の優先順位:
- * 1. 公開パス（/kindle/lp, /kindle/guide等）は認証不要
- * 2. admin_keyパラメータ（管理者専用バイパス）
- * 3. 管理者（環境変数で指定されたメールアドレス）
- * 4. モニターユーザー（monitor_usersテーブルで有効期限内）
- * 5. 課金ユーザー（kdl_subscriptionsテーブルで有効なサブスクリプション）
- * 6. 代理店ユーザー
- * 7. ログイン済みユーザー → フリープラン（planTier=none）としてアクセス許可
- * 8. 未ログインユーザー → /kindle/lp にリダイレクト
+ * セッション更新はすべてのページリクエストで必要:
+ * - Cookie に保存された JWT の有効期限を延長
+ * - getUser() を呼ぶことでトークン検証 + リフレッシュが行われる
  */
 
 // 管理者メールアドレス（環境変数から取得、カンマ区切り）
@@ -35,105 +29,93 @@ const PUBLIC_PATHS = [
   '/kindle/guide',
   '/kindle/publish-guide',
   '/kindle/demo',
-  '/kindle/book-lp',  // 書籍PR用LP（公開ページ）
-  '/kindle/discovery',  // ネタ発掘診断（ページ側でKDLサブスクチェック）
-  '/kindle/discovery/demo',  // ネタ発掘診断デモ版
-  '/kindle/free-trial',  // 無料体験LP（公開ページ）
-  '/kindle/upgrade',     // 有料プランアップグレードLP
-  '/kindle/optin',       // 広告用オプトインLP
+  '/kindle/book-lp',
+  '/kindle/discovery',
+  '/kindle/discovery/demo',
+  '/kindle/free-trial',
+  '/kindle/upgrade',
+  '/kindle/optin',
 ];
 
 // デモモード用のパス（クエリパラメータ付き）
 const DEMO_PATH = '/kindle/new';
 
 // 管理者バイパス用シークレットキー（環境変数から取得、デフォルト値なし）
-// セキュリティ: 環境変数が未設定の場合はバイパス機能を無効化
 const ADMIN_BYPASS_KEY = process.env.KDL_ADMIN_BYPASS_KEY;
+
+/**
+ * Supabase セッション更新用のクライアントを作成し、getUser() を呼ぶ
+ * これにより Cookie 内のトークンが自動的にリフレッシュされる
+ */
+async function updateSession(request: NextRequest) {
+  let response = NextResponse.next({
+    request: { headers: request.headers },
+  });
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) return { response, user: null, supabase: null };
+
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => {
+          request.cookies.set(name, value);
+        });
+        response = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) => {
+          response.cookies.set(name, value, options);
+        });
+      },
+    },
+  });
+
+  // getUser() でトークン検証 + リフレッシュ
+  const { data: { user } } = await supabase.auth.getUser();
+
+  return { response, user, supabase };
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
-  // /kindle 配下以外は通過
+  // ─── 1. 全ルート共通: セッション更新 ───
+  const { response, user, supabase } = await updateSession(request);
+
+  // /kindle 配下以外はセッション更新のみで通過
   if (!pathname.startsWith('/kindle')) {
-    return NextResponse.next();
+    return response;
   }
+
+  // ─── 2. /kindle 配下: アクセス制御 ───
 
   // 公開パスはそのまま通過
   for (const publicPath of PUBLIC_PATHS) {
     if (pathname === publicPath || pathname.startsWith(publicPath + '/')) {
-      return NextResponse.next();
+      return response;
     }
   }
 
   // デモモード（/kindle/new?mode=demo）は通過
   if (pathname === DEMO_PATH && searchParams.get('mode') === 'demo') {
-    return NextResponse.next();
+    return response;
   }
 
-  // 管理者バイパス（?admin_key=xxx）- 緊急時の管理者専用バイパスキー
-  // セキュリティ: 環境変数が設定されている場合のみ有効
+  // 管理者バイパス（?admin_key=xxx）
   const adminKey = searchParams.get('admin_key');
   if (ADMIN_BYPASS_KEY && adminKey === ADMIN_BYPASS_KEY) {
-    return NextResponse.next();
+    return response;
   }
 
-  // Supabaseの設定確認
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  // Supabaseが設定されていない場合は通過（開発環境用）
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.next();
+  // Supabase未設定の場合は通過（開発環境用）
+  if (!supabase) {
+    return response;
   }
-
-  // Supabaseクライアントを作成
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
 
   try {
-    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value);
-            response.cookies.set(name, value, options);
-          });
-        },
-      },
-    });
-
-    // セッション情報を取得（getUser()を使用、トークン検証を行う）
-    let user = null;
-    
-    try {
-      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
-      if (authUser) {
-        user = authUser;
-      } else if (authError) {
-        // getUser()がエラーの場合、getSession()をフォールバックとして試す
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          user = session.user;
-        }
-      }
-    } catch {
-      // 認証エラーの場合もgetSession()を試す
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          user = session.user;
-        }
-      } catch {
-        // 両方失敗
-      }
-    }
-
     // 未ログインの場合はLPにリダイレクト
     if (!user) {
       return NextResponse.redirect(new URL('/kindle/lp', request.url));
@@ -144,32 +126,29 @@ export async function middleware(request: NextRequest) {
     const userEmail = user.email?.toLowerCase() || '';
     const isAdmin = adminEmails.includes(userEmail);
 
-    // 管理者は常にアクセス可能
     if (isAdmin) {
       return response;
     }
 
     // サービスロールキーを使用してRLSをバイパス（モニター・サブスク確認用）
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const supabaseAdmin = serviceRoleKey 
+    const supabaseAdmin = serviceRoleKey
       ? createClient(supabaseUrl, serviceRoleKey)
       : null;
 
     const now = new Date().toISOString();
     const supabaseForQuery = supabaseAdmin || supabase;
-    
-    // モニター権限チェック（monitor_usersテーブルを確認、KDLサービス限定）
-    const { data: monitorData, error: monitorError } = await supabaseForQuery
+
+    // モニター権限チェック
+    const { data: monitorData } = await supabaseForQuery
       .from('monitor_users')
       .select('monitor_expires_at, monitor_start_at, service')
       .eq('user_id', user.id)
       .eq('service', 'kdl')
       .maybeSingle();
-    
-    console.log('[Middleware] Monitor check for user:', user.id, 'result:', monitorData, 'error:', monitorError);
 
-    // モニター権限が有効期限内かチェック
-    const hasMonitorAccess = monitorData && 
+    const hasMonitorAccess = monitorData &&
       new Date(monitorData.monitor_start_at) <= new Date(now) &&
       new Date(monitorData.monitor_expires_at) > new Date(now);
 
@@ -177,24 +156,22 @@ export async function middleware(request: NextRequest) {
       return response;
     }
 
-    // 課金者チェック（kdl_subscriptionsテーブルを確認）
+    // 課金者チェック
     const { data: subscription } = await supabaseForQuery
       .from('kdl_subscriptions')
       .select('status, current_period_end')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    // 有効なサブスクリプションがあるかチェック
-    const hasActiveSubscription = subscription && 
+    const hasActiveSubscription = subscription &&
       subscription.status === 'active' &&
       new Date(subscription.current_period_end) > new Date();
 
-    // 課金者はアクセス可能
     if (hasActiveSubscription) {
       return response;
     }
 
-    // 代理店チェック（kdl_agenciesテーブルを確認）
+    // 代理店チェック
     const { data: agencyData } = await supabaseForQuery
       .from('kdl_agencies')
       .select('id')
@@ -206,20 +183,17 @@ export async function middleware(request: NextRequest) {
       return response;
     }
 
-    // ログイン済みユーザーはフリープラン（planTier=none）としてアクセス許可
-    // 機能制限はダッシュボード・エディタ・API側で制御する
+    // ログイン済みユーザーはフリープランとしてアクセス許可
     return response;
 
   } catch {
-    // エラーが発生した場合はLPにリダイレクト
     return NextResponse.redirect(new URL('/kindle/lp', request.url));
   }
 }
 
-// Middlewareを適用するパスを指定
+// 全ページでセッション更新を実行（静的ファイルを除外）
 export const config = {
   matcher: [
-    '/kindle',
-    '/kindle/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$).*)',
   ],
 };
