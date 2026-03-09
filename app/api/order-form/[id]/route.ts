@@ -72,7 +72,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, successMessage, status, fields, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody, designLayout, designColor, ctaButton, titleColor, descriptionColor, descriptionSize, emailFooterName, paymentEmailEnabled, paymentEmailSubject, paymentEmailBody } = body;
+    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, successMessage, status, fields, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody, designLayout, designColor, ctaButton, titleColor, descriptionColor, descriptionSize, emailFooterName, paymentEmailEnabled, paymentEmailSubject, paymentEmailBody, eventDate, reminder1dayEnabled, reminderSameDayEnabled, reminderEmailSubject, reminderEmailBody } = body;
 
     if (!userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
@@ -113,6 +113,11 @@ export async function PATCH(
     if (paymentEmailEnabled !== undefined) extendedData.payment_email_enabled = paymentEmailEnabled;
     if (paymentEmailSubject !== undefined) extendedData.payment_email_subject = paymentEmailSubject || null;
     if (paymentEmailBody !== undefined) extendedData.payment_email_body = paymentEmailBody || null;
+    if (eventDate !== undefined) extendedData.event_date = eventDate || null;
+    if (reminder1dayEnabled !== undefined) extendedData.reminder_1day_enabled = reminder1dayEnabled;
+    if (reminderSameDayEnabled !== undefined) extendedData.reminder_same_day_enabled = reminderSameDayEnabled;
+    if (reminderEmailSubject !== undefined) extendedData.reminder_email_subject = reminderEmailSubject || null;
+    if (reminderEmailBody !== undefined) extendedData.reminder_email_body = reminderEmailBody || null;
 
     // まず全カラムで更新を試行
     let { data, error } = await supabase

@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, successMessage, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody, designLayout, designColor, ctaButton, titleColor, descriptionColor, descriptionSize, fields, emailFooterName, paymentEmailEnabled, paymentEmailSubject, paymentEmailBody } = body;
+    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, successMessage, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody, designLayout, designColor, ctaButton, titleColor, descriptionColor, descriptionSize, fields, emailFooterName, paymentEmailEnabled, paymentEmailSubject, paymentEmailBody, eventDate, reminder1dayEnabled, reminderSameDayEnabled, reminderEmailSubject, reminderEmailBody } = body;
 
     if (!userId || !title) {
       return NextResponse.json({ error: 'userId と title は必須です' }, { status: 400 });
@@ -109,6 +109,11 @@ export async function POST(request: NextRequest) {
     if (paymentEmailEnabled !== undefined) extendedData.payment_email_enabled = paymentEmailEnabled;
     if (paymentEmailSubject) extendedData.payment_email_subject = paymentEmailSubject;
     if (paymentEmailBody) extendedData.payment_email_body = paymentEmailBody;
+    if (eventDate) extendedData.event_date = eventDate;
+    if (reminder1dayEnabled) extendedData.reminder_1day_enabled = reminder1dayEnabled;
+    if (reminderSameDayEnabled) extendedData.reminder_same_day_enabled = reminderSameDayEnabled;
+    if (reminderEmailSubject) extendedData.reminder_email_subject = reminderEmailSubject;
+    if (reminderEmailBody) extendedData.reminder_email_body = reminderEmailBody;
 
     // まず全カラムで挿入を試行
     let { data, error } = await supabase

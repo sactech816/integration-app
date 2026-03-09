@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/step-email",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/order-form-reminders",
+      "schedule": "0 0 * * *"
     }
   ],
   "redirects": [

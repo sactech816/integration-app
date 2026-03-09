@@ -8,7 +8,7 @@ import {
   Globe, CreditCard, Monitor, Pencil, ChevronDown, ChevronUp,
   Settings, ListPlus, CheckCircle, Trophy, Share2, Sparkles,
   Palette, Layout, Briefcase, PartyPopper, MousePointerClick,
-  Send, Bell,
+  Send, Bell, Clock,
 } from 'lucide-react';
 import { ORDER_FORM_TEMPLATES, type OrderFormTemplate, type OrderFormCtaButton } from '@/constants/templates/order-form';
 import {
@@ -335,6 +335,11 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
   const [paymentEmailEnabled, setPaymentEmailEnabled] = useState(true);
   const [paymentEmailSubject, setPaymentEmailSubject] = useState('決済が完了しました');
   const [paymentEmailBody, setPaymentEmailBody] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [reminder1dayEnabled, setReminder1dayEnabled] = useState(false);
+  const [reminderSameDayEnabled, setReminderSameDayEnabled] = useState(false);
+  const [reminderEmailSubject, setReminderEmailSubject] = useState('');
+  const [reminderEmailBody, setReminderEmailBody] = useState('');
 
   // デザイン設定
   const [designLayout, setDesignLayout] = useState('standard');
@@ -390,6 +395,11 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       if (f.payment_email_enabled !== undefined) setPaymentEmailEnabled(f.payment_email_enabled);
       if (f.payment_email_subject) setPaymentEmailSubject(f.payment_email_subject);
       if (f.payment_email_body !== undefined) setPaymentEmailBody(f.payment_email_body || '');
+      if (f.event_date) setEventDate(f.event_date.slice(0, 16));
+      if (f.reminder_1day_enabled !== undefined) setReminder1dayEnabled(f.reminder_1day_enabled);
+      if (f.reminder_same_day_enabled !== undefined) setReminderSameDayEnabled(f.reminder_same_day_enabled);
+      if (f.reminder_email_subject) setReminderEmailSubject(f.reminder_email_subject);
+      if (f.reminder_email_body !== undefined) setReminderEmailBody(f.reminder_email_body || '');
       if (f.design_layout) setDesignLayout(f.design_layout);
       if (f.design_color) setDesignColor(f.design_color);
       if (f.cta_button) {
@@ -448,6 +458,9 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody,
       emailFooterName,
       paymentEmailEnabled, paymentEmailSubject, paymentEmailBody,
+      eventDate: eventDate || null,
+      reminder1dayEnabled, reminderSameDayEnabled,
+      reminderEmailSubject, reminderEmailBody,
       designLayout, designColor,
       titleColor, descriptionColor, descriptionSize,
       ctaButton,
@@ -1120,6 +1133,57 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                       <textarea value={paymentEmailBody} onChange={(e) => setPaymentEmailBody(e.target.value)} placeholder={`空欄の場合はデフォルトの決済完了メールが送信されます。\n\n{name} = 申し込み者名\n{email} = メールアドレス\n{form_title} = フォームタイトル\n{amount} = 決済金額`} rows={5} className="w-full px-4 py-3 border border-emerald-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-emerald-50/30" />
                       <p className="text-xs text-gray-500 mt-1">変数: {'{name}'}, {'{email}'}, {'{form_title}'}, {'{amount}'} が使えます</p>
                     </div>
+                  </>
+                )}
+              </div>
+            </Section>
+
+            {/* ── リマインダー設定 ── */}
+            <Section
+              title="リマインダーメール"
+              icon={<span className="bg-indigo-50 p-1.5 rounded-lg"><Clock className="w-4 h-4 text-indigo-600" /></span>}
+              borderColor="border-indigo-200"
+              defaultOpen={false}
+            >
+              <div className="space-y-4 pt-4">
+                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3">
+                  <p className="text-xs text-indigo-800">イベント日時を設定すると、前日や当日に申し込み者へリマインドメールを自動送信できます。毎朝9時（JST）に送信されます。</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">イベント日時</label>
+                  <input
+                    type="datetime-local"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                    className="w-full px-4 py-3 border border-indigo-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-indigo-50/30"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">セミナーやイベントの開催日時を入力してください</p>
+                </div>
+                {eventDate && (
+                  <>
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                        <input type="checkbox" checked={reminder1dayEnabled} onChange={(e) => setReminder1dayEnabled(e.target.checked)} className="w-4 h-4 text-indigo-600 rounded" />
+                        <span className="text-sm font-semibold text-gray-700">前日にリマインドメールを送る</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                        <input type="checkbox" checked={reminderSameDayEnabled} onChange={(e) => setReminderSameDayEnabled(e.target.checked)} className="w-4 h-4 text-indigo-600 rounded" />
+                        <span className="text-sm font-semibold text-gray-700">当日にリマインドメールを送る</span>
+                      </label>
+                    </div>
+                    {(reminder1dayEnabled || reminderSameDayEnabled) && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-1">件名</label>
+                          <input type="text" value={reminderEmailSubject} onChange={(e) => setReminderEmailSubject(e.target.value)} placeholder="まもなく開催です！" className="w-full px-4 py-3 border border-indigo-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-indigo-50/30" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-1">本文（任意）</label>
+                          <textarea value={reminderEmailBody} onChange={(e) => setReminderEmailBody(e.target.value)} placeholder={`空欄の場合はデフォルトのリマインドメールが送信されます。\n\n{name} = 申し込み者名\n{email} = メールアドレス\n{form_title} = フォームタイトル\n{event_date} = イベント日時`} rows={5} className="w-full px-4 py-3 border border-indigo-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-indigo-50/30" />
+                          <p className="text-xs text-gray-500 mt-1">変数: {'{name}'}, {'{email}'}, {'{form_title}'}, {'{event_date}'} が使えます</p>
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
               </div>
