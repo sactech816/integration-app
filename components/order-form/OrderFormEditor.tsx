@@ -110,7 +110,7 @@ function CtaAnimationStyles() {
 }
 
 /* ── 折りたたみセクション（色付き） ── */
-function Section({ title, icon, defaultOpen = true, children, badge, borderColor = 'border-gray-200', headerBg = '' }: {
+function Section({ title, icon, defaultOpen = true, children, badge, borderColor = 'border-gray-200', headerBg = 'bg-gray-50 hover:bg-gray-100' }: {
   title: string;
   icon?: React.ReactNode;
   defaultOpen?: boolean;
@@ -125,16 +125,36 @@ function Section({ title, icon, defaultOpen = true, children, badge, borderColor
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors ${headerBg}`}
+        className={`w-full flex items-center justify-between px-5 py-4 transition-colors ${headerBg}`}
       >
         <div className="flex items-center gap-2">
           {icon}
           <h2 className="font-bold text-gray-900">{title}</h2>
           {badge}
         </div>
-        {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+        {open ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
       </button>
-      {open && <div className="px-5 pb-5 border-t border-gray-100">{children}</div>}
+      {open && <div className="px-5 pb-5 border-t border-gray-200/50">{children}</div>}
+    </div>
+  );
+}
+
+/* ── セクション内の見出し ── */
+function SectionHeading({ label, color = 'gray' }: { label: string; color?: string }) {
+  const colorMap: Record<string, string> = {
+    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    pink: 'bg-pink-50 text-pink-700 border-pink-200',
+    blue: 'bg-blue-50 text-blue-700 border-blue-200',
+    orange: 'bg-orange-50 text-orange-700 border-orange-200',
+    amber: 'bg-amber-50 text-amber-700 border-amber-200',
+    purple: 'bg-purple-50 text-purple-700 border-purple-200',
+    teal: 'bg-teal-50 text-teal-700 border-teal-200',
+    indigo: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    gray: 'bg-gray-50 text-gray-700 border-gray-200',
+  };
+  return (
+    <div className={`-mx-5 px-5 py-2 text-xs font-bold border-b ${colorMap[color] || colorMap.gray}`}>
+      {label}
     </div>
   );
 }
@@ -641,10 +661,12 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
             {/* ── 基本設定 ── */}
             <Section
               title="基本設定"
-              icon={<span className="bg-emerald-50 p-1.5 rounded-lg"><Settings className="w-4 h-4 text-emerald-600" /></span>}
+              icon={<span className="bg-emerald-100 p-1.5 rounded-lg"><Settings className="w-4 h-4 text-emerald-600" /></span>}
               borderColor="border-emerald-200"
+              headerBg="bg-emerald-50 hover:bg-emerald-100"
             >
               <div className="space-y-4 pt-4">
+                <SectionHeading label="タイトル・説明" color="emerald" />
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">タイトル <span className="text-red-500">*</span></label>
                   <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="例: セミナー申し込みフォーム" className="w-full px-4 py-3 border border-emerald-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-emerald-50/30" />
@@ -683,6 +705,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                     </select>
                   </div>
                 </div>
+                <SectionHeading label="その他設定" color="emerald" />
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">完了メッセージ</label>
                   <input type="text" value={successMessage} onChange={(e) => setSuccessMessage(e.target.value)} className="w-full px-4 py-3 border border-emerald-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-emerald-50/30" />
@@ -710,8 +733,9 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
             {/* ── デザイン設定 ── */}
             <Section
               title="デザイン設定"
-              icon={<span className="bg-pink-50 p-1.5 rounded-lg"><Palette className="w-4 h-4 text-pink-600" /></span>}
+              icon={<span className="bg-pink-100 p-1.5 rounded-lg"><Palette className="w-4 h-4 text-pink-600" /></span>}
               borderColor="border-pink-200"
+              headerBg="bg-pink-50 hover:bg-pink-100"
               defaultOpen={false}
             >
               <div className="space-y-5 pt-4">
@@ -766,8 +790,9 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
             {/* ── フォームフィールド ── */}
             <Section
               title="フォームフィールド"
-              icon={<span className="bg-blue-50 p-1.5 rounded-lg"><ListPlus className="w-4 h-4 text-blue-600" /></span>}
+              icon={<span className="bg-blue-100 p-1.5 rounded-lg"><ListPlus className="w-4 h-4 text-blue-600" /></span>}
               borderColor="border-blue-200"
+              headerBg="bg-blue-50 hover:bg-blue-100"
               badge={<span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">{fields.length}</span>}
             >
               <div className="pt-4">
@@ -778,7 +803,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                 </div>
                 <div className="space-y-3">
                   {fields.map((field, i) => (
-                    <div key={i} className="border border-blue-100 rounded-xl p-3 bg-blue-50/30 hover:border-blue-300 transition-colors">
+                    <div key={i} className={`border rounded-xl p-3 hover:border-blue-300 transition-colors ${i % 2 === 0 ? 'bg-blue-50/40 border-blue-200' : 'bg-white border-blue-100'}`}>
                       <div className="flex items-start gap-2">
                         <div className="flex flex-col gap-0.5 mt-1">
                           <button onClick={() => moveField(i, 'up')} disabled={i === 0} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-20 transition-colors"><ChevronUp className="w-3.5 h-3.5" /></button>
@@ -826,8 +851,9 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
             {/* ── CTAボタン設定 ── */}
             <Section
               title="CTAボタン設定"
-              icon={<span className="bg-orange-50 p-1.5 rounded-lg"><MousePointerClick className="w-4 h-4 text-orange-600" /></span>}
+              icon={<span className="bg-orange-100 p-1.5 rounded-lg"><MousePointerClick className="w-4 h-4 text-orange-600" /></span>}
               borderColor="border-orange-200"
+              headerBg="bg-orange-50 hover:bg-orange-100"
               defaultOpen={false}
             >
               <div className="space-y-5 pt-4">
@@ -838,6 +864,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                 </div>
 
                 {/* テキスト */}
+                <SectionHeading label="テキスト・色設定" color="orange" />
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">ボタンテキスト</label>
                   <input
@@ -925,6 +952,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                 </div>
 
                 {/* 角丸 */}
+                <SectionHeading label="スタイル設定" color="orange" />
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">角丸</label>
                   <div className="grid grid-cols-4 gap-2">
@@ -1001,8 +1029,9 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
             {/* ── 決済設定 ── */}
             <Section
               title="決済設定"
-              icon={<span className="bg-amber-50 p-1.5 rounded-lg"><CreditCard className="w-4 h-4 text-amber-600" /></span>}
+              icon={<span className="bg-amber-100 p-1.5 rounded-lg"><CreditCard className="w-4 h-4 text-amber-600" /></span>}
               borderColor="border-amber-200"
+              headerBg="bg-amber-50 hover:bg-amber-100"
               defaultOpen={paymentType !== 'free'}
               badge={paymentType !== 'free' ? (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold">
@@ -1049,8 +1078,9 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
             {/* ── 申込者への自動返信メール ── */}
             <Section
               title="申込者への自動返信メール"
-              icon={<span className="bg-purple-50 p-1.5 rounded-lg"><Send className="w-4 h-4 text-purple-600" /></span>}
+              icon={<span className="bg-purple-100 p-1.5 rounded-lg"><Send className="w-4 h-4 text-purple-600" /></span>}
               borderColor="border-purple-200"
+              headerBg="bg-purple-50 hover:bg-purple-100"
               defaultOpen={false}
             >
               <div className="space-y-4 pt-4">
@@ -1077,8 +1107,9 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
             {/* ── 作成者への通知メール ── */}
             <Section
               title="作成者への通知メール"
-              icon={<span className="bg-teal-50 p-1.5 rounded-lg"><Bell className="w-4 h-4 text-teal-600" /></span>}
+              icon={<span className="bg-teal-100 p-1.5 rounded-lg"><Bell className="w-4 h-4 text-teal-600" /></span>}
               borderColor="border-teal-200"
+              headerBg="bg-teal-50 hover:bg-teal-100"
               defaultOpen={false}
             >
               <div className="space-y-4 pt-4">
@@ -1110,8 +1141,9 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
             {/* ── 決済完了メール ── */}
             <Section
               title="決済完了メール"
-              icon={<span className="bg-emerald-50 p-1.5 rounded-lg"><CheckCircle className="w-4 h-4 text-emerald-600" /></span>}
+              icon={<span className="bg-emerald-100 p-1.5 rounded-lg"><CheckCircle className="w-4 h-4 text-emerald-600" /></span>}
               borderColor="border-emerald-200"
+              headerBg="bg-emerald-50 hover:bg-emerald-100"
               defaultOpen={false}
             >
               <div className="space-y-4 pt-4">
@@ -1141,8 +1173,9 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
             {/* ── リマインダー設定 ── */}
             <Section
               title="リマインダーメール"
-              icon={<span className="bg-indigo-50 p-1.5 rounded-lg"><Clock className="w-4 h-4 text-indigo-600" /></span>}
+              icon={<span className="bg-indigo-100 p-1.5 rounded-lg"><Clock className="w-4 h-4 text-indigo-600" /></span>}
               borderColor="border-indigo-200"
+              headerBg="bg-indigo-50 hover:bg-indigo-100"
               defaultOpen={false}
             >
               <div className="space-y-4 pt-4">
@@ -1192,15 +1225,16 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
             {/* ── メールフッター設定 ── */}
             <Section
               title="メールフッター設定"
-              icon={<span className="bg-gray-100 p-1.5 rounded-lg"><Settings className="w-4 h-4 text-gray-600" /></span>}
+              icon={<span className="bg-gray-200 p-1.5 rounded-lg"><Settings className="w-4 h-4 text-gray-600" /></span>}
               borderColor="border-gray-200"
+              headerBg="bg-gray-100 hover:bg-gray-200"
               defaultOpen={false}
             >
               <div className="space-y-4 pt-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">フッター表示名</label>
-                  <input type="text" value={emailFooterName} onChange={(e) => setEmailFooterName(e.target.value)} placeholder="集客メーカー（空欄の場合は「集客メーカー」）" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-                  <p className="text-xs text-gray-500 mt-1">すべてのメールの最下部に表示される名前です</p>
+                  <textarea value={emailFooterName} onChange={(e) => setEmailFooterName(e.target.value)} placeholder="集客メーカー（空欄の場合は「集客メーカー」）" rows={3} className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                  <p className="text-xs text-gray-500 mt-1">すべてのメールの最下部に表示されます（改行可）</p>
                 </div>
               </div>
             </Section>

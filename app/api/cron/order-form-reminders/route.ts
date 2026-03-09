@@ -230,7 +230,7 @@ function buildReminderEmailHtml(subject: string, bodyText: string, footerName: s
     </div>
   </div>
   <div style="text-align: center; padding: 16px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af;">
-    ${escapeHtml(footerName)}
+    ${escapeHtml(footerName).replace(/\n/g, '<br>')}
   </div>
 </body>
 </html>`;

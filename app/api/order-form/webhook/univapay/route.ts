@@ -57,7 +57,7 @@ async function sendPaymentCompleteEmail(supabase: any, submissionId: string, amo
           <div style="padding:24px;background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
             <p style="color:#374151;line-height:1.8;">${customBody}</p>
           </div>
-          <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">${escapeHtml(footerName)}</p>
+          <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">${escapeHtml(footerName).replace(/\n/g, '<br>')}</p>
         </div>`;
     } else {
       bodyHtml = `
@@ -73,7 +73,7 @@ async function sendPaymentCompleteEmail(supabase: any, submissionId: string, amo
               <tr><td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;color:#6b7280;font-size:14px;">ステータス</td><td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;color:#059669;font-size:14px;font-weight:600;">決済完了</td></tr>
             </table>
           </div>
-          <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">${escapeHtml(footerName)}</p>
+          <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">${escapeHtml(footerName).replace(/\n/g, '<br>')}</p>
         </div>`;
     }
 
