@@ -27,7 +27,7 @@ export type RelatedItem = {
  * 同じカテゴリの関連コンテンツを取得（現在のコンテンツを除外）
  */
 export async function getRelatedContents(
-  contentType: 'quiz' | 'profile' | 'business' | 'survey' | 'salesletter' | 'webinar',
+  contentType: 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'survey' | 'salesletter' | 'webinar',
   currentSlug: string,
   limit: number = 4
 ): Promise<{ success: boolean; data?: RelatedItem[]; error?: string }> {
@@ -37,7 +37,28 @@ export async function getRelatedContents(
 
     const items: RelatedItem[] = [];
 
-    if (contentType === 'quiz') {
+    if (contentType === 'entertainment_quiz') {
+      const { data } = await supabase
+        .from('quizzes')
+        .select('slug, title, description, image_url, views_count')
+        .eq('show_in_portal', true)
+        .eq('quiz_type', 'entertainment')
+        .neq('slug', currentSlug)
+        .not('slug', 'is', null)
+        .order('views_count', { ascending: false })
+        .limit(limit);
+
+      if (data) {
+        items.push(...data.map(q => ({
+          slug: q.slug,
+          title: q.title,
+          description: q.description,
+          imageUrl: q.image_url,
+          type: 'entertainment_quiz',
+          views_count: q.views_count,
+        })));
+      }
+    } else if (contentType === 'quiz') {
       const { data } = await supabase
         .from('quizzes')
         .select('slug, title, description, image_url, views_count')

@@ -79,7 +79,7 @@ function ContentFooterInner({
   const styles = variantStyles[variant];
 
   return (
-    <footer className={`py-6 text-center ${styles.container} ${className}`}>
+    <footer data-speakable="footer" className={`py-6 text-center ${styles.container} ${className}`}>
       {/* 1行目: ツール名 */}
       <a
         href="https://makers.tokyo/tools"

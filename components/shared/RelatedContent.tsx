@@ -5,6 +5,7 @@ import { getRelatedContents, RelatedItem } from '@/app/actions/related-content';
 
 const TYPE_LABELS: Record<string, string> = {
   quiz: '診断クイズ',
+  entertainment_quiz: 'エンタメ診断',
   profile: 'プロフィールLP',
   business: 'ビジネスLP',
   survey: 'アンケート',
@@ -13,6 +14,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 const TYPE_PATH: Record<string, string> = {
   quiz: 'quiz',
+  entertainment_quiz: 'entertainment',
   profile: 'profile',
   business: 'business',
   survey: 'survey',
@@ -21,6 +23,7 @@ const TYPE_PATH: Record<string, string> = {
 
 const TYPE_COLORS: Record<string, { bg: string; text: string; gradient: string }> = {
   quiz: { bg: 'bg-indigo-50', text: 'text-indigo-600', gradient: 'from-indigo-500 to-purple-500' },
+  entertainment_quiz: { bg: 'bg-pink-50', text: 'text-pink-600', gradient: 'from-pink-500 to-purple-500' },
   profile: { bg: 'bg-emerald-50', text: 'text-emerald-600', gradient: 'from-emerald-400 to-teal-500' },
   business: { bg: 'bg-amber-50', text: 'text-amber-600', gradient: 'from-amber-400 to-orange-500' },
   survey: { bg: 'bg-teal-50', text: 'text-teal-600', gradient: 'from-teal-500 to-cyan-500' },
@@ -28,7 +31,7 @@ const TYPE_COLORS: Record<string, { bg: string; text: string; gradient: string }
 };
 
 interface RelatedContentProps {
-  contentType: 'quiz' | 'profile' | 'business' | 'survey' | 'salesletter' | 'webinar';
+  contentType: 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'survey' | 'salesletter' | 'webinar';
   currentSlug: string;
   limit?: number;
   hide?: boolean; // Proプラン: 関連コンテンツ非表示
@@ -45,7 +48,7 @@ export default async function RelatedContent({ contentType, currentSlug, limit =
 
   const items = result.data;
   const label = TYPE_LABELS[contentType] || contentType;
-  const portalTab = contentType === 'salesletter' ? 'salesletter' : contentType;
+  const portalTab = contentType === 'salesletter' ? 'salesletter' : contentType === 'entertainment_quiz' ? 'entertainment_quiz' : contentType;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
   // 構造化データ - ItemList
@@ -70,7 +73,7 @@ export default async function RelatedContent({ contentType, currentSlug, limit =
       />
 
       <div className="max-w-4xl mx-auto px-4">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">
+        <h2 data-speakable="heading" className="text-xl font-bold text-gray-900 mb-6">
           他の{label}もチェック
         </h2>
 
@@ -102,11 +105,11 @@ export default async function RelatedContent({ contentType, currentSlug, limit =
 
                 {/* テキスト */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-sm text-gray-900 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+                  <h3 data-speakable="name" className="font-bold text-sm text-gray-900 line-clamp-2 group-hover:text-indigo-600 transition-colors">
                     {item.title}
                   </h3>
                   {item.description && (
-                    <p className="text-xs text-gray-500 line-clamp-1 mt-1">
+                    <p data-speakable="description" className="text-xs text-gray-500 line-clamp-1 mt-1">
                       {item.description}
                     </p>
                   )}

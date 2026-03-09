@@ -4,6 +4,7 @@ import { generateBreadcrumbSchema } from '@/components/shared/Breadcrumb';
 import { shouldHideFooter } from '@/lib/utils/checkCreatorPlanPermission';
 import { generateUGCSchema } from '@/lib/seo/generateUGCSchema';
 import EntertainmentPlayerWrapper from '@/components/entertainment/EntertainmentPlayerWrapper';
+import RelatedContent from '@/components/shared/RelatedContent';
 
 export const revalidate = 300;
 
@@ -130,6 +131,11 @@ export default async function EntertainmentPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <EntertainmentPlayerWrapper quiz={quizWithPermission} />
+      <RelatedContent
+        contentType="entertainment_quiz"
+        currentSlug={slug}
+        hide={canHideFooter}
+      />
     </>
   );
 }
