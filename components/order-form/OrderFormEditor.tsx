@@ -8,7 +8,7 @@ import {
   Globe, CreditCard, Monitor, Pencil, ChevronDown, ChevronUp,
   Settings, ListPlus, CheckCircle, Trophy, Share2, Sparkles,
   Palette, Layout, Briefcase, Crown, MousePointerClick,
-  Send, Bell, Clock,
+  Send, Bell, Clock, Shield,
 } from 'lucide-react';
 import { ORDER_FORM_TEMPLATES, type OrderFormTemplate, type OrderFormCtaButton } from '@/constants/templates/order-form';
 import {
@@ -223,10 +223,185 @@ function OrderFormPreview({ title, description, price, paymentType, fields, desi
   const sizeClass = ctaButton.size === 'lg' ? 'px-8 py-4 text-lg' : 'px-6 py-3 text-base';
   const animClass = ctaButton.animation === 'pulse' ? 'cta-pulse' : ctaButton.animation === 'bounce' ? 'cta-bounce' : '';
 
+  if (isPremium) {
+    return (
+      <div className="min-h-[500px] p-6" style={{ background: color.background }}>
+        <div
+          className="mx-auto rounded-xl shadow-xl overflow-hidden"
+          style={{ backgroundColor: color.cardBg, border: color.cardBorder, maxWidth: '640px' }}
+        >
+          {/* Premium Header with gradient + pattern overlay */}
+          <div
+            className="relative px-6 py-6 text-center"
+            style={{ background: `linear-gradient(135deg, ${color.headerBg}, ${darkenColor(color.headerBg, 15)})` }}
+          >
+            <div
+              className="absolute inset-0 opacity-[0.06]"
+              style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,1) 10px, rgba(255,255,255,1) 11px)' }}
+            />
+            <div className="relative">
+              <h2 className="text-xl font-black tracking-widest" style={{ color: titleColor || color.headerText }}>
+                {title || 'タイトルを入力してください'}
+              </h2>
+              {description && (
+                <p className={`${descSizeClass} mt-2 opacity-80 whitespace-pre-line`} style={{ color: descriptionColor || color.headerText }}>{description}</p>
+              )}
+              {paymentType !== 'free' && price > 0 && (
+                <div className="inline-flex items-center gap-1 mt-3 px-4 py-1.5 rounded-full text-sm font-bold"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.25)', color: color.headerText }}>
+                  <CreditCard className="w-4 h-4" />
+                  {price.toLocaleString()}円
+                </div>
+              )}
+            </div>
+          </div>
+          {/* Accent line */}
+          <div style={{ height: '4px', background: color.accentColor }} />
+
+          {/* Premium Form Body - table-like rows */}
+          <div className="divide-y" style={{ borderColor: color.inputBorder }}>
+            {fields.map((field, i) => {
+              if (field.fieldType === 'section_header') {
+                return (
+                  <div key={i} className="flex items-center gap-3 px-5 py-2.5" style={{ backgroundColor: `${color.accentColor}12` }}>
+                    <div className="flex-1 h-px" style={{ backgroundColor: `${color.accentColor}40` }} />
+                    <h3 className="font-bold text-xs tracking-wide whitespace-nowrap" style={{ color: color.accentColor }}>{field.label || 'セクション見出し'}</h3>
+                    <div className="flex-1 h-px" style={{ backgroundColor: `${color.accentColor}40` }} />
+                  </div>
+                );
+              }
+              if (field.fieldType === 'privacy_policy') {
+                return (
+                  <div key={i} className="px-5 py-4">
+                    <p className="text-sm font-semibold mb-1" style={{ color: color.textPrimary }}>{field.label || '個人情報の取り扱いについて'}</p>
+                    <div className="max-h-24 overflow-y-auto px-3 py-2 rounded-lg text-xs mb-2 whitespace-pre-wrap"
+                      style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: color.textSecondary }}>
+                      {field.policyText || 'ポリシー本文がここに表示されます'}
+                    </div>
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" disabled className="w-4 h-4 rounded" style={{ accentColor: color.accentColor }} />
+                      <span className="text-sm font-semibold" style={{ color: color.textPrimary }}>上記に同意する <span className="text-red-500">*</span></span>
+                    </label>
+                  </div>
+                );
+              }
+              if (field.fieldType === 'checkbox') {
+                return (
+                  <div key={i} className="grid grid-cols-1 md:grid-cols-[160px_1fr]">
+                    <div className="px-4 py-3 flex items-center" style={{ backgroundColor: color.badgeBg }}>
+                      <span className="text-xs font-semibold" style={{ color: color.textPrimary }}>{field.label || '(ラベル未設定)'}</span>
+                    </div>
+                    <div className="px-4 py-3 flex items-center">
+                      <label className="flex items-center gap-2">
+                        <input type="checkbox" disabled className="w-4 h-4 rounded" style={{ accentColor: color.accentColor }} />
+                        <span className="text-sm" style={{ color: color.textSecondary }}>{field.label || 'チェックボックス'}</span>
+                      </label>
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div key={i} className="grid grid-cols-1 md:grid-cols-[160px_1fr]">
+                  {/* Label cell */}
+                  <div className="px-4 py-3 flex items-start gap-1" style={{ backgroundColor: color.badgeBg }}>
+                    <span className="text-xs font-semibold" style={{ color: color.textPrimary }}>{field.label || '(ラベル未設定)'}</span>
+                    {field.required && <span className="text-red-500 text-[10px] font-bold mt-0.5">*</span>}
+                  </div>
+                  {/* Input cell */}
+                  <div className="px-4 py-3">
+                    {field.fieldType === 'textarea' ? (
+                      <div className="w-full h-16 px-3 py-2 rounded-lg text-sm"
+                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }}>
+                        {field.placeholder}
+                      </div>
+                    ) : field.fieldType === 'select' ? (
+                      <select disabled className="w-full px-3 py-2 rounded-lg text-sm"
+                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }}>
+                        <option>{field.placeholder || '選択してください'}</option>
+                        {(Array.isArray(field.options) ? field.options : []).map((o, j) => <option key={j}>{o}</option>)}
+                      </select>
+                    ) : field.fieldType === 'radio' ? (
+                      <div className="flex flex-wrap gap-2">
+                        {(Array.isArray(field.options) ? field.options : []).map((o, j) => (
+                          <label key={j} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm" style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}` }}>
+                            <input type="radio" disabled name={`preview-radio-${i}`} className="w-3.5 h-3.5" style={{ accentColor: color.accentColor }} />
+                            <span style={{ color: color.textSecondary }}>{o}</span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : field.fieldType === 'date' ? (
+                      <input type="date" disabled className="w-full px-3 py-2 rounded-lg text-sm"
+                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
+                    ) : field.fieldType === 'name_split' ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        <input type="text" disabled placeholder="姓" className="w-full px-3 py-2 rounded-lg text-sm placeholder:text-gray-400"
+                          style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
+                        <input type="text" disabled placeholder="名" className="w-full px-3 py-2 rounded-lg text-sm placeholder:text-gray-400"
+                          style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
+                      </div>
+                    ) : field.fieldType === 'address' ? (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold" style={{ color: color.textSecondary }}>〒</span>
+                          <input type="text" disabled placeholder="123-4567" className="w-32 px-2 py-1.5 rounded-lg text-sm placeholder:text-gray-400"
+                            style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
+                        </div>
+                        <select disabled className="w-full px-2 py-1.5 rounded-lg text-sm" style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }}>
+                          <option>都道府県</option>
+                        </select>
+                        <input type="text" disabled placeholder="市区町村番地" className="w-full px-2 py-1.5 rounded-lg text-sm placeholder:text-gray-400"
+                          style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
+                        <input type="text" disabled placeholder="マンション/ビル名" className="w-full px-2 py-1.5 rounded-lg text-sm placeholder:text-gray-400"
+                          style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
+                      </div>
+                    ) : (
+                      <input type="text" disabled placeholder={field.placeholder} className="w-full px-3 py-2 rounded-lg text-sm placeholder:text-gray-400"
+                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {fields.length === 0 && (
+            <p className="text-center py-8" style={{ color: '#d1d5db' }}>フィールドを追加すると、ここにプレビューが表示されます</p>
+          )}
+
+          {/* Premium CTA area */}
+          <div className="px-6 py-6 text-center">
+            <p className="text-[10px] mb-2" style={{ color: color.textSecondary }}>必須項目をご入力の上、送信してください</p>
+            <div className="relative max-w-xs mx-auto">
+              <button disabled className={`w-full font-bold min-h-[44px] transition-all ${radiusClass} ${shadowClass} ${sizeClass} ${animClass}`}
+                style={{ backgroundColor: ctaButton.bgColor, color: ctaButton.textColor }}>
+                {ctaButton.animation === 'shimmer' && (
+                  <span className="absolute inset-0 cta-shimmer" style={{ borderRadius: 'inherit' }} />
+                )}
+                <span className="relative inline-flex items-center gap-2">
+                  {isFree ? <Settings className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
+                  {ctaButton.text || defaultText}
+                </span>
+              </button>
+            </div>
+            <p className="text-[10px] mt-2 flex items-center justify-center gap-1" style={{ color: color.textSecondary, opacity: 0.6 }}>
+              <Shield className="w-3 h-3" />
+              SSL暗号化通信で安全に送信されます
+            </p>
+          </div>
+
+          {/* Premium Footer */}
+          <div className="border-t px-4 py-2 text-center" style={{ borderColor: color.inputBorder, backgroundColor: color.badgeBg }}>
+            <p className="text-[9px] tracking-wide" style={{ color: color.textSecondary, opacity: 0.5 }}>Powered by 集客メーカー</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[500px] p-6" style={{ background: color.background }}>
       <div
-        className={`mx-auto overflow-hidden ${isBusiness ? 'rounded-lg' : isPremium ? 'rounded-3xl' : 'rounded-2xl'}`}
+        className={`mx-auto overflow-hidden ${isBusiness ? 'rounded-lg' : 'rounded-2xl'}`}
         style={{ backgroundColor: color.cardBg, border: color.cardBorder, maxWidth: '440px' }}
       >
         {isBusiness && (
@@ -237,23 +412,8 @@ function OrderFormPreview({ title, description, price, paymentType, fields, desi
             {description && <p className={`${descSizeClass} mt-1 opacity-90 whitespace-pre-line`} style={{ color: descriptionColor || color.headerText }}>{description}</p>}
           </div>
         )}
-        {isPremium && (
-          <div className="px-6 py-6 text-center" style={{ background: color.headerBg }}>
-            <h2 className="text-xl font-black tracking-wide" style={{ color: titleColor || color.headerText }}>
-              {title || 'タイトルを入力してください'}
-            </h2>
-            {description && <p className={`${descSizeClass} mt-2 opacity-90 whitespace-pre-line`} style={{ color: descriptionColor || color.headerText }}>{description}</p>}
-            {paymentType !== 'free' && price > 0 && (
-              <div className="inline-flex items-center gap-1 mt-3 px-4 py-1.5 rounded-full text-sm font-bold"
-                style={{ backgroundColor: 'rgba(255,255,255,0.25)', color: color.headerText }}>
-                <CreditCard className="w-4 h-4" />
-                {price.toLocaleString()}円
-              </div>
-            )}
-          </div>
-        )}
 
-        <div className={`space-y-5 ${isBusiness ? 'px-6 py-5' : isPremium ? 'px-6 py-6' : 'p-6'}`}>
+        <div className={`space-y-5 ${isBusiness ? 'px-6 py-5' : 'p-6'}`}>
           {designLayout === 'standard' && (
             <>
               <h2 className="text-xl font-bold" style={{ color: title ? (titleColor || color.textPrimary) : '#d1d5db' }}>

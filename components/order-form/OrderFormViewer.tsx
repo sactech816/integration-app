@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, CreditCard, CheckCircle2, Loader2 } from 'lucide-react';
+import { FileText, CreditCard, CheckCircle2, Loader2, Shield } from 'lucide-react';
 import { getOrderFormColor } from '@/constants/orderFormThemes';
 import { ViewTracker, trackCompletion } from '@/components/shared/ViewTracker';
 import { PREFECTURES } from '@/constants/prefectures';
@@ -257,217 +257,64 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
         .cta-bounce { animation: bounce 1s infinite; }
       `}</style>
 
-      <div className="max-w-lg mx-auto">
-        <div
-          className={`shadow-lg overflow-hidden ${isBusiness ? 'rounded-lg' : isPremium ? 'rounded-3xl' : 'rounded-2xl'}`}
-          style={{ backgroundColor: color.cardBg, border: color.cardBorder }}
-        >
-          {isBusiness && (
-            <div className="px-8 py-6" style={{ background: color.headerBg }}>
-              <h1 className="text-xl font-bold" style={{ color: form.title_color || color.headerText }}>{form.title}</h1>
-              {form.description && <p className={`${descSizeClass} mt-1 opacity-90 whitespace-pre-line`} style={{ color: form.description_color || color.headerText }}>{form.description}</p>}
-              {!isFree && (
-                <div className="inline-flex items-center gap-1 mt-3 px-3 py-1 rounded-full text-sm font-semibold"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: color.headerText }}>
-                  <CreditCard className="w-4 h-4" />
-                  {form.price.toLocaleString()}円
-                </div>
-              )}
-            </div>
-          )}
-          {isPremium && (
-            <div className="px-8 py-8 text-center" style={{ background: color.headerBg }}>
-              <h1 className="text-2xl font-black tracking-wide" style={{ color: form.title_color || color.headerText }}>{form.title}</h1>
-              {form.description && <p className={`${descSizeClass} mt-2 opacity-90 whitespace-pre-line`} style={{ color: form.description_color || color.headerText }}>{form.description}</p>}
-              {!isFree && (
-                <div className="inline-flex items-center gap-1 mt-4 px-4 py-1.5 rounded-full text-sm font-bold"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.25)', color: color.headerText }}>
-                  <CreditCard className="w-4 h-4" />
-                  {form.price.toLocaleString()}円
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className={`${isBusiness ? 'px-8 py-6' : isPremium ? 'px-8 py-8' : 'p-8'}`}>
-            {layout === 'standard' && (
-              <div className="text-center mb-6">
-                <h1 className="text-2xl font-bold mb-2" style={{ color: form.title_color || color.textPrimary }}>{form.title}</h1>
-                {form.description && <p className={`${descSizeClass} whitespace-pre-line`} style={{ color: form.description_color || color.textSecondary }}>{form.description}</p>}
+      <div className={`${isPremium ? 'max-w-2xl' : 'max-w-lg'} mx-auto`}>
+        {isPremium ? (
+          /* ── Premium Layout ── */
+          <div
+            className="rounded-xl shadow-xl overflow-hidden"
+            style={{ backgroundColor: color.cardBg, border: color.cardBorder }}
+          >
+            {/* Premium Header with gradient + pattern overlay */}
+            <div
+              className="relative px-8 py-8 text-center"
+              style={{ background: `linear-gradient(135deg, ${color.headerBg}, ${darkenColor(color.headerBg, 15)})` }}
+            >
+              <div
+                className="absolute inset-0 opacity-[0.06]"
+                style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,1) 10px, rgba(255,255,255,1) 11px)' }}
+              />
+              <div className="relative">
+                <h1 className="text-2xl font-black tracking-widest" style={{ color: form.title_color || color.headerText }}>{form.title}</h1>
+                {form.description && (
+                  <p className={`${descSizeClass} mt-3 opacity-80 whitespace-pre-line`} style={{ color: form.description_color || color.headerText }}>{form.description}</p>
+                )}
                 {!isFree && (
-                  <div className="inline-flex items-center gap-1 mt-3 px-3 py-1.5 text-sm font-semibold rounded-full"
-                    style={{ backgroundColor: color.badgeBg, color: color.badgeText }}>
+                  <div className="inline-flex items-center gap-1 mt-4 px-4 py-1.5 rounded-full text-sm font-bold"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.25)', color: color.headerText }}>
                     <CreditCard className="w-4 h-4" />
                     {form.price.toLocaleString()}円
                   </div>
                 )}
               </div>
-            )}
+            </div>
+            {/* Accent line */}
+            <div style={{ height: '4px', background: color.accentColor }} />
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {form.order_form_fields.map((field) => {
-                const opts = Array.isArray(field.options) ? field.options : [];
-                const policyText = (!Array.isArray(field.options) && field.options?.policyText) || '';
+            {/* Premium Form Body - table-like rows */}
+            <form onSubmit={handleSubmit}>
+              <div className="divide-y" style={{ borderColor: color.inputBorder }}>
+                {form.order_form_fields.map((field) => {
+                  const opts = Array.isArray(field.options) ? field.options : [];
+                  const policyText = (!Array.isArray(field.options) && field.options?.policyText) || '';
 
-                if (field.field_type === 'section_header') {
-                  return (
-                    <div key={field.id} className="pt-4 pb-1 border-l-4" style={{ borderColor: color.accentColor, paddingLeft: '12px' }}>
-                      <h3 className="font-bold text-base" style={{ color: color.textPrimary }}>{field.label}</h3>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={field.id}>
-                    {field.field_type !== 'privacy_policy' && field.field_type !== 'checkbox' && (
-                      <label className="block text-sm font-semibold mb-1" style={{ color: color.textPrimary }}>
-                        {field.label}
-                        {field.required && <span className="text-red-500 ml-1">*</span>}
-                      </label>
-                    )}
-
-                    {field.field_type === 'textarea' ? (
-                      <textarea
-                        required={field.required}
-                        placeholder={field.placeholder}
-                        value={fieldValues[field.id] as string || ''}
-                        onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
-                        rows={4}
-                        className="w-full px-4 py-3 rounded-xl text-gray-900 placeholder:text-gray-400 transition-all"
-                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
-                      />
-                    ) : field.field_type === 'select' ? (
-                      <select
-                        required={field.required}
-                        value={fieldValues[field.id] as string || ''}
-                        onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl text-gray-900 transition-all"
-                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
-                      >
-                        <option value="">選択してください</option>
-                        {opts.map((opt: string) => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    ) : field.field_type === 'radio' ? (
-                      <div className="flex flex-wrap gap-3">
-                        {opts.map((opt: string) => (
-                          <label key={opt} className="flex items-center gap-2 px-4 py-3 rounded-xl cursor-pointer min-h-[44px] transition-all"
-                            style={{ backgroundColor: fieldValues[field.id] === opt ? color.badgeBg : color.inputBg, border: `1px solid ${fieldValues[field.id] === opt ? color.accentColor : color.inputBorder}` }}>
-                            <input
-                              type="radio"
-                              name={`field-${field.id}`}
-                              required={field.required}
-                              value={opt}
-                              checked={fieldValues[field.id] === opt}
-                              onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
-                              className="w-4 h-4"
-                              style={{ accentColor: color.accentColor }}
-                            />
-                            <span className="text-sm" style={{ color: color.textPrimary }}>{opt}</span>
-                          </label>
-                        ))}
+                  if (field.field_type === 'section_header') {
+                    return (
+                      <div key={field.id} className="flex items-center gap-4 px-6 py-3" style={{ backgroundColor: `${color.accentColor}12` }}>
+                        <div className="flex-1 h-px" style={{ backgroundColor: `${color.accentColor}40` }} />
+                        <h3 className="font-bold text-sm tracking-wide whitespace-nowrap" style={{ color: color.accentColor }}>{field.label}</h3>
+                        <div className="flex-1 h-px" style={{ backgroundColor: `${color.accentColor}40` }} />
                       </div>
-                    ) : field.field_type === 'checkbox' ? (
-                      <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
-                        <input
-                          type="checkbox"
-                          required={field.required}
-                          checked={fieldValues[field.id] as boolean || false}
-                          onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.checked })}
-                          className="w-5 h-5 rounded"
-                          style={{ accentColor: color.accentColor }}
-                        />
-                        <span className="text-sm" style={{ color: color.textSecondary }}>{field.placeholder || field.label}</span>
-                      </label>
-                    ) : field.field_type === 'date' ? (
-                      <input
-                        type="date"
-                        required={field.required}
-                        value={fieldValues[field.id] as string || ''}
-                        onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl text-gray-900 transition-all"
-                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
-                      />
-                    ) : field.field_type === 'name_split' ? (
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <span className="block text-xs mb-1" style={{ color: color.textSecondary }}>姓</span>
-                          <input
-                            type="text"
-                            required={field.required}
-                            placeholder="山田"
-                            value={fieldValues[field.id + '_sei'] as string || ''}
-                            onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_sei']: e.target.value })}
-                            className="w-full px-4 py-3 rounded-xl text-gray-900 placeholder:text-gray-400 transition-all"
-                            style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
-                          />
-                        </div>
-                        <div>
-                          <span className="block text-xs mb-1" style={{ color: color.textSecondary }}>名</span>
-                          <input
-                            type="text"
-                            required={field.required}
-                            placeholder="太郎"
-                            value={fieldValues[field.id + '_mei'] as string || ''}
-                            onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_mei']: e.target.value })}
-                            className="w-full px-4 py-3 rounded-xl text-gray-900 placeholder:text-gray-400 transition-all"
-                            style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
-                          />
-                        </div>
-                      </div>
-                    ) : field.field_type === 'address' ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold" style={{ color: color.textSecondary }}>〒</span>
-                          <input
-                            type="text"
-                            required={field.required}
-                            placeholder="123-4567"
-                            pattern="\d{3}-?\d{4}"
-                            value={fieldValues[field.id + '_zip'] as string || ''}
-                            onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_zip']: e.target.value })}
-                            className="w-40 px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
-                            style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
-                          />
-                        </div>
-                        <select
-                          required={field.required}
-                          value={fieldValues[field.id + '_pref'] as string || ''}
-                          onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_pref']: e.target.value })}
-                          className="w-full px-3 py-2 rounded-lg text-gray-900 transition-all"
-                          style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
-                        >
-                          <option value="">都道府県</option>
-                          {PREFECTURES.map((p) => (
-                            <option key={p} value={p}>{p}</option>
-                          ))}
-                        </select>
-                        <input
-                          type="text"
-                          required={field.required}
-                          placeholder="市区町村番地"
-                          value={fieldValues[field.id + '_city'] as string || ''}
-                          onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_city']: e.target.value })}
-                          className="w-full px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
-                          style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
-                        />
-                        <input
-                          type="text"
-                          placeholder="マンション/ビル名"
-                          value={fieldValues[field.id + '_building'] as string || ''}
-                          onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_building']: e.target.value })}
-                          className="w-full px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
-                          style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
-                        />
-                      </div>
-                    ) : field.field_type === 'privacy_policy' ? (
-                      <div>
-                        <p className="block text-sm font-semibold mb-1" style={{ color: color.textPrimary }}>
+                    );
+                  }
+
+                  if (field.field_type === 'privacy_policy') {
+                    return (
+                      <div key={field.id} className="px-6 py-5">
+                        <p className="text-sm font-semibold mb-2" style={{ color: color.textPrimary }}>
                           {field.label || '個人情報の取り扱いについて'}
                         </p>
                         {policyText && (
-                          <div className="max-h-48 overflow-y-auto px-4 py-3 rounded-xl text-xs mb-3 whitespace-pre-wrap"
+                          <div className="max-h-48 overflow-y-auto px-4 py-3 rounded-lg text-xs mb-3 whitespace-pre-wrap"
                             style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: color.textSecondary }}>
                             {policyText}
                           </div>
@@ -486,50 +333,484 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
                           </span>
                         </label>
                       </div>
-                    ) : (
-                      <input
-                        type={field.field_type}
-                        required={field.required}
-                        placeholder={field.placeholder}
-                        value={fieldValues[field.id] as string || ''}
-                        onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl text-gray-900 placeholder:text-gray-400 transition-all"
-                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
-                      />
-                    )}
-                  </div>
-                );
-              })}
+                    );
+                  }
 
-              {error && <p className="text-red-600 text-sm font-medium">{error}</p>}
+                  if (field.field_type === 'checkbox') {
+                    return (
+                      <div key={field.id} className="grid grid-cols-1 md:grid-cols-[200px_1fr]">
+                        <div className="px-5 py-4 flex items-center" style={{ backgroundColor: color.badgeBg }}>
+                          <span className="text-sm font-semibold" style={{ color: color.textPrimary }}>{field.label}</span>
+                        </div>
+                        <div className="px-5 py-4 flex items-center">
+                          <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                            <input
+                              type="checkbox"
+                              required={field.required}
+                              checked={fieldValues[field.id] as boolean || false}
+                              onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.checked })}
+                              className="w-5 h-5 rounded"
+                              style={{ accentColor: color.accentColor }}
+                            />
+                            <span className="text-sm" style={{ color: color.textSecondary }}>{field.placeholder || field.label}</span>
+                          </label>
+                        </div>
+                      </div>
+                    );
+                  }
 
-              <div className="relative">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  onMouseEnter={() => setCtaHovered(true)}
-                  onMouseLeave={() => setCtaHovered(false)}
-                  className={`w-full inline-flex items-center justify-center gap-2 font-bold disabled:opacity-50 transition-all min-h-[44px] ${radius} ${shadow} ${size} ${anim}`}
-                  style={{ backgroundColor: ctaHovered && !submitting ? ctaHoverBgColor : ctaBgColor, color: ctaTextColor }}
-                >
-                  {hasShimmer && (
-                    <span className="absolute inset-0 cta-shimmer" style={{ borderRadius: 'inherit' }} />
-                  )}
-                  <span className="relative inline-flex items-center gap-2">
-                    {submitting ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : isFree ? (
-                      <FileText className="w-5 h-5" />
-                    ) : (
-                      <CreditCard className="w-5 h-5" />
+                  return (
+                    <div key={field.id} className="grid grid-cols-1 md:grid-cols-[200px_1fr]">
+                      {/* Label cell */}
+                      <div className="px-5 py-4 flex items-start gap-1" style={{ backgroundColor: color.badgeBg }}>
+                        <span className="text-sm font-semibold" style={{ color: color.textPrimary }}>{field.label}</span>
+                        {field.required && <span className="text-red-500 text-xs font-bold mt-0.5">*</span>}
+                      </div>
+                      {/* Input cell */}
+                      <div className="px-5 py-4">
+                        {field.field_type === 'textarea' ? (
+                          <textarea
+                            required={field.required}
+                            placeholder={field.placeholder}
+                            value={fieldValues[field.id] as string || ''}
+                            onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
+                            rows={4}
+                            className="w-full px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
+                            style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                          />
+                        ) : field.field_type === 'select' ? (
+                          <select
+                            required={field.required}
+                            value={fieldValues[field.id] as string || ''}
+                            onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
+                            className="w-full px-3 py-2 rounded-lg text-gray-900 transition-all"
+                            style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                          >
+                            <option value="">選択してください</option>
+                            {opts.map((opt: string) => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
+                        ) : field.field_type === 'radio' ? (
+                          <div className="flex flex-wrap gap-3">
+                            {opts.map((opt: string) => (
+                              <label key={opt} className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer min-h-[44px] transition-all"
+                                style={{ backgroundColor: fieldValues[field.id] === opt ? color.badgeBg : color.inputBg, border: `1px solid ${fieldValues[field.id] === opt ? color.accentColor : color.inputBorder}` }}>
+                                <input
+                                  type="radio"
+                                  name={`field-${field.id}`}
+                                  required={field.required}
+                                  value={opt}
+                                  checked={fieldValues[field.id] === opt}
+                                  onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
+                                  className="w-4 h-4"
+                                  style={{ accentColor: color.accentColor }}
+                                />
+                                <span className="text-sm" style={{ color: color.textPrimary }}>{opt}</span>
+                              </label>
+                            ))}
+                          </div>
+                        ) : field.field_type === 'date' ? (
+                          <input
+                            type="date"
+                            required={field.required}
+                            value={fieldValues[field.id] as string || ''}
+                            onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
+                            className="w-full px-3 py-2 rounded-lg text-gray-900 transition-all"
+                            style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                          />
+                        ) : field.field_type === 'name_split' ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <span className="block text-xs mb-1" style={{ color: color.textSecondary }}>姓</span>
+                              <input
+                                type="text"
+                                required={field.required}
+                                placeholder="山田"
+                                value={fieldValues[field.id + '_sei'] as string || ''}
+                                onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_sei']: e.target.value })}
+                                className="w-full px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
+                                style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                              />
+                            </div>
+                            <div>
+                              <span className="block text-xs mb-1" style={{ color: color.textSecondary }}>名</span>
+                              <input
+                                type="text"
+                                required={field.required}
+                                placeholder="太郎"
+                                value={fieldValues[field.id + '_mei'] as string || ''}
+                                onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_mei']: e.target.value })}
+                                className="w-full px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
+                                style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                              />
+                            </div>
+                          </div>
+                        ) : field.field_type === 'address' ? (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold" style={{ color: color.textSecondary }}>〒</span>
+                              <input
+                                type="text"
+                                required={field.required}
+                                placeholder="123-4567"
+                                pattern="\d{3}-?\d{4}"
+                                value={fieldValues[field.id + '_zip'] as string || ''}
+                                onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_zip']: e.target.value })}
+                                className="w-40 px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
+                                style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                              />
+                            </div>
+                            <select
+                              required={field.required}
+                              value={fieldValues[field.id + '_pref'] as string || ''}
+                              onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_pref']: e.target.value })}
+                              className="w-full px-3 py-2 rounded-lg text-gray-900 transition-all"
+                              style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                            >
+                              <option value="">都道府県</option>
+                              {PREFECTURES.map((p) => (
+                                <option key={p} value={p}>{p}</option>
+                              ))}
+                            </select>
+                            <input
+                              type="text"
+                              required={field.required}
+                              placeholder="市区町村番地"
+                              value={fieldValues[field.id + '_city'] as string || ''}
+                              onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_city']: e.target.value })}
+                              className="w-full px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
+                              style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                            />
+                            <input
+                              type="text"
+                              placeholder="マンション/ビル名"
+                              value={fieldValues[field.id + '_building'] as string || ''}
+                              onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_building']: e.target.value })}
+                              className="w-full px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
+                              style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                            />
+                          </div>
+                        ) : (
+                          <input
+                            type={field.field_type}
+                            required={field.required}
+                            placeholder={field.placeholder}
+                            value={fieldValues[field.id] as string || ''}
+                            onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
+                            className="w-full px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
+                            style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {error && <p className="text-red-600 text-sm font-medium px-8 pt-4">{error}</p>}
+
+              {/* Premium CTA area */}
+              <div className="px-8 py-8 text-center">
+                <p className="text-xs mb-3" style={{ color: color.textSecondary }}>必須項目をご入力の上、送信してください</p>
+                <div className="relative max-w-sm mx-auto">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    onMouseEnter={() => setCtaHovered(true)}
+                    onMouseLeave={() => setCtaHovered(false)}
+                    className={`w-full inline-flex items-center justify-center gap-2 font-bold disabled:opacity-50 transition-all min-h-[44px] ${radius} ${shadow} ${size} ${anim}`}
+                    style={{ backgroundColor: ctaHovered && !submitting ? ctaHoverBgColor : ctaBgColor, color: ctaTextColor }}
+                  >
+                    {hasShimmer && (
+                      <span className="absolute inset-0 cta-shimmer" style={{ borderRadius: 'inherit' }} />
                     )}
-                    {submitting ? '送信中...' : ctaText}
-                  </span>
-                </button>
+                    <span className="relative inline-flex items-center gap-2">
+                      {submitting ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : isFree ? (
+                        <FileText className="w-5 h-5" />
+                      ) : (
+                        <CreditCard className="w-5 h-5" />
+                      )}
+                      {submitting ? '送信中...' : ctaText}
+                    </span>
+                  </button>
+                </div>
+                <p className="text-xs mt-3 flex items-center justify-center gap-1" style={{ color: color.textSecondary, opacity: 0.6 }}>
+                  <Shield className="w-3 h-3" />
+                  SSL暗号化通信で安全に送信されます
+                </p>
+              </div>
+
+              {/* Premium Footer */}
+              <div className="border-t px-6 py-3 text-center" style={{ borderColor: color.inputBorder, backgroundColor: color.badgeBg }}>
+                <p className="text-[10px] tracking-wide" style={{ color: color.textSecondary, opacity: 0.5 }}>Powered by 集客メーカー</p>
               </div>
             </form>
           </div>
-        </div>
+        ) : (
+          /* ── Standard / Business Layout ── */
+          <div
+            className={`shadow-lg overflow-hidden ${isBusiness ? 'rounded-lg' : 'rounded-2xl'}`}
+            style={{ backgroundColor: color.cardBg, border: color.cardBorder }}
+          >
+            {isBusiness && (
+              <div className="px-8 py-6" style={{ background: color.headerBg }}>
+                <h1 className="text-xl font-bold" style={{ color: form.title_color || color.headerText }}>{form.title}</h1>
+                {form.description && <p className={`${descSizeClass} mt-1 opacity-90 whitespace-pre-line`} style={{ color: form.description_color || color.headerText }}>{form.description}</p>}
+                {!isFree && (
+                  <div className="inline-flex items-center gap-1 mt-3 px-3 py-1 rounded-full text-sm font-semibold"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: color.headerText }}>
+                    <CreditCard className="w-4 h-4" />
+                    {form.price.toLocaleString()}円
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className={`${isBusiness ? 'px-8 py-6' : 'p-8'}`}>
+              {layout === 'standard' && (
+                <div className="text-center mb-6">
+                  <h1 className="text-2xl font-bold mb-2" style={{ color: form.title_color || color.textPrimary }}>{form.title}</h1>
+                  {form.description && <p className={`${descSizeClass} whitespace-pre-line`} style={{ color: form.description_color || color.textSecondary }}>{form.description}</p>}
+                  {!isFree && (
+                    <div className="inline-flex items-center gap-1 mt-3 px-3 py-1.5 text-sm font-semibold rounded-full"
+                      style={{ backgroundColor: color.badgeBg, color: color.badgeText }}>
+                      <CreditCard className="w-4 h-4" />
+                      {form.price.toLocaleString()}円
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {form.order_form_fields.map((field) => {
+                  const opts = Array.isArray(field.options) ? field.options : [];
+                  const policyText = (!Array.isArray(field.options) && field.options?.policyText) || '';
+
+                  if (field.field_type === 'section_header') {
+                    return (
+                      <div key={field.id} className="pt-4 pb-1 border-l-4" style={{ borderColor: color.accentColor, paddingLeft: '12px' }}>
+                        <h3 className="font-bold text-base" style={{ color: color.textPrimary }}>{field.label}</h3>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={field.id}>
+                      {field.field_type !== 'privacy_policy' && field.field_type !== 'checkbox' && (
+                        <label className="block text-sm font-semibold mb-1" style={{ color: color.textPrimary }}>
+                          {field.label}
+                          {field.required && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                      )}
+
+                      {field.field_type === 'textarea' ? (
+                        <textarea
+                          required={field.required}
+                          placeholder={field.placeholder}
+                          value={fieldValues[field.id] as string || ''}
+                          onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
+                          rows={4}
+                          className="w-full px-4 py-3 rounded-xl text-gray-900 placeholder:text-gray-400 transition-all"
+                          style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                        />
+                      ) : field.field_type === 'select' ? (
+                        <select
+                          required={field.required}
+                          value={fieldValues[field.id] as string || ''}
+                          onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl text-gray-900 transition-all"
+                          style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                        >
+                          <option value="">選択してください</option>
+                          {opts.map((opt: string) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : field.field_type === 'radio' ? (
+                        <div className="flex flex-wrap gap-3">
+                          {opts.map((opt: string) => (
+                            <label key={opt} className="flex items-center gap-2 px-4 py-3 rounded-xl cursor-pointer min-h-[44px] transition-all"
+                              style={{ backgroundColor: fieldValues[field.id] === opt ? color.badgeBg : color.inputBg, border: `1px solid ${fieldValues[field.id] === opt ? color.accentColor : color.inputBorder}` }}>
+                              <input
+                                type="radio"
+                                name={`field-${field.id}`}
+                                required={field.required}
+                                value={opt}
+                                checked={fieldValues[field.id] === opt}
+                                onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
+                                className="w-4 h-4"
+                                style={{ accentColor: color.accentColor }}
+                              />
+                              <span className="text-sm" style={{ color: color.textPrimary }}>{opt}</span>
+                            </label>
+                          ))}
+                        </div>
+                      ) : field.field_type === 'checkbox' ? (
+                        <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                          <input
+                            type="checkbox"
+                            required={field.required}
+                            checked={fieldValues[field.id] as boolean || false}
+                            onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.checked })}
+                            className="w-5 h-5 rounded"
+                            style={{ accentColor: color.accentColor }}
+                          />
+                          <span className="text-sm" style={{ color: color.textSecondary }}>{field.placeholder || field.label}</span>
+                        </label>
+                      ) : field.field_type === 'date' ? (
+                        <input
+                          type="date"
+                          required={field.required}
+                          value={fieldValues[field.id] as string || ''}
+                          onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl text-gray-900 transition-all"
+                          style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                        />
+                      ) : field.field_type === 'name_split' ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <span className="block text-xs mb-1" style={{ color: color.textSecondary }}>姓</span>
+                            <input
+                              type="text"
+                              required={field.required}
+                              placeholder="山田"
+                              value={fieldValues[field.id + '_sei'] as string || ''}
+                              onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_sei']: e.target.value })}
+                              className="w-full px-4 py-3 rounded-xl text-gray-900 placeholder:text-gray-400 transition-all"
+                              style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                            />
+                          </div>
+                          <div>
+                            <span className="block text-xs mb-1" style={{ color: color.textSecondary }}>名</span>
+                            <input
+                              type="text"
+                              required={field.required}
+                              placeholder="太郎"
+                              value={fieldValues[field.id + '_mei'] as string || ''}
+                              onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_mei']: e.target.value })}
+                              className="w-full px-4 py-3 rounded-xl text-gray-900 placeholder:text-gray-400 transition-all"
+                              style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                            />
+                          </div>
+                        </div>
+                      ) : field.field_type === 'address' ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold" style={{ color: color.textSecondary }}>〒</span>
+                            <input
+                              type="text"
+                              required={field.required}
+                              placeholder="123-4567"
+                              pattern="\d{3}-?\d{4}"
+                              value={fieldValues[field.id + '_zip'] as string || ''}
+                              onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_zip']: e.target.value })}
+                              className="w-40 px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
+                              style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                            />
+                          </div>
+                          <select
+                            required={field.required}
+                            value={fieldValues[field.id + '_pref'] as string || ''}
+                            onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_pref']: e.target.value })}
+                            className="w-full px-3 py-2 rounded-lg text-gray-900 transition-all"
+                            style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                          >
+                            <option value="">都道府県</option>
+                            {PREFECTURES.map((p) => (
+                              <option key={p} value={p}>{p}</option>
+                            ))}
+                          </select>
+                          <input
+                            type="text"
+                            required={field.required}
+                            placeholder="市区町村番地"
+                            value={fieldValues[field.id + '_city'] as string || ''}
+                            onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_city']: e.target.value })}
+                            className="w-full px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
+                            style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                          />
+                          <input
+                            type="text"
+                            placeholder="マンション/ビル名"
+                            value={fieldValues[field.id + '_building'] as string || ''}
+                            onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_building']: e.target.value })}
+                            className="w-full px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
+                            style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                          />
+                        </div>
+                      ) : field.field_type === 'privacy_policy' ? (
+                        <div>
+                          <p className="block text-sm font-semibold mb-1" style={{ color: color.textPrimary }}>
+                            {field.label || '個人情報の取り扱いについて'}
+                          </p>
+                          {policyText && (
+                            <div className="max-h-48 overflow-y-auto px-4 py-3 rounded-xl text-xs mb-3 whitespace-pre-wrap"
+                              style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: color.textSecondary }}>
+                              {policyText}
+                            </div>
+                          )}
+                          <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                            <input
+                              type="checkbox"
+                              required
+                              checked={fieldValues[field.id] as boolean || false}
+                              onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.checked })}
+                              className="w-5 h-5 rounded"
+                              style={{ accentColor: color.accentColor }}
+                            />
+                            <span className="text-sm font-semibold" style={{ color: color.textPrimary }}>
+                              上記に同意する <span className="text-red-500">*</span>
+                            </span>
+                          </label>
+                        </div>
+                      ) : (
+                        <input
+                          type={field.field_type}
+                          required={field.required}
+                          placeholder={field.placeholder}
+                          value={fieldValues[field.id] as string || ''}
+                          onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl text-gray-900 placeholder:text-gray-400 transition-all"
+                          style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+
+                {error && <p className="text-red-600 text-sm font-medium">{error}</p>}
+
+                <div className="relative">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    onMouseEnter={() => setCtaHovered(true)}
+                    onMouseLeave={() => setCtaHovered(false)}
+                    className={`w-full inline-flex items-center justify-center gap-2 font-bold disabled:opacity-50 transition-all min-h-[44px] ${radius} ${shadow} ${size} ${anim}`}
+                    style={{ backgroundColor: ctaHovered && !submitting ? ctaHoverBgColor : ctaBgColor, color: ctaTextColor }}
+                  >
+                    {hasShimmer && (
+                      <span className="absolute inset-0 cta-shimmer" style={{ borderRadius: 'inherit' }} />
+                    )}
+                    <span className="relative inline-flex items-center gap-2">
+                      {submitting ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : isFree ? (
+                        <FileText className="w-5 h-5" />
+                      ) : (
+                        <CreditCard className="w-5 h-5" />
+                      )}
+                      {submitting ? '送信中...' : ctaText}
+                    </span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

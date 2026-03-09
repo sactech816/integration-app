@@ -805,6 +805,9 @@ export default function BookingEditor({
                                 当日にリマインドメールを送信
                               </label>
                             </div>
+                            <p className="text-xs text-gray-500 pl-8 -mt-1">
+                              ※ リマインドメールは毎朝9時（日本時間）に一括送信されます。予約開始時刻の○時間前ではなく、日単位での送信です。
+                            </p>
                           </div>
 
                           {/* リマインダーが有効な場合の詳細設定 */}
