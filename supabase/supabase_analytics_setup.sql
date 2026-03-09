@@ -7,7 +7,7 @@
 CREATE TABLE IF NOT EXISTS analytics (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   profile_id TEXT NOT NULL,  -- コンテンツID（プロフィール/ビジネス/クイズ等のID）
-  content_type TEXT NOT NULL CHECK (content_type IN ('quiz', 'entertainment_quiz', 'profile', 'business', 'salesletter', 'survey', 'gamification', 'attendance', 'booking', 'onboarding', 'thumbnail', 'newsletter', 'step-email', 'order-form', 'funnel', 'webinar', 'sns-post')),
+  content_type TEXT NOT NULL CHECK (content_type IN ('quiz', 'entertainment_quiz', 'profile', 'business', 'salesletter', 'survey', 'gamification', 'attendance', 'booking', 'onboarding', 'thumbnail', 'newsletter', 'step-email', 'order-form', 'funnel', 'webinar', 'sns-post', 'line')),
   event_type TEXT NOT NULL CHECK (event_type IN ('view', 'click', 'scroll', 'time', 'read', 'completion')),
   event_data JSONB DEFAULT '{}'::JSONB,
   created_at TIMESTAMPTZ DEFAULT NOW()

@@ -10,15 +10,97 @@ export const metadata: Metadata = {
   title: '申し込みフォームメーカー（決済付きフォーム作成）| 集客メーカー',
   description:
     '決済機能付きの申し込みフォームを簡単に作成。Stripe・UnivaPay対応。セミナー・講座・コンサル申し込みの受付と決済を1つのフォームで完結。',
-  keywords: ['申し込みフォーム', '決済フォーム', 'Stripe', '決済機能', 'フォーム作成', 'オンライン決済'],
+  keywords: ['申し込みフォーム', '決済フォーム', 'Stripe', '決済機能', 'フォーム作成', 'オンライン決済', 'UnivaPay', 'セミナー申し込み'],
   openGraph: {
     title: '申し込みフォームメーカー | 集客メーカー',
-    description: '決済付き申し込みフォームを簡単作成。セミナー・講座・コンサル受付に。',
+    description: '決済付き申し込みフォームを簡単作成。Stripe・UnivaPay対応でセミナー・講座・コンサル受付に。',
     type: 'website',
     url: 'https://makers.tokyo/order-form',
     siteName: '集客メーカー',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: '申し込みフォームメーカー | 集客メーカー',
+    description: '決済付き申し込みフォームを簡単作成。Stripe・UnivaPay対応。セミナー・講座・コンサル受付に。',
+  },
   alternates: { canonical: 'https://makers.tokyo/order-form' },
+};
+
+// ─── 構造化データ（JSON-LD） ──────────────────────────────────────────────────
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'SoftwareApplication',
+      name: '申し込みフォームメーカー',
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Web',
+      description:
+        '決済機能付きの申し込みフォームを簡単に作成。Stripe・UnivaPay対応でセミナー・講座・コンサルの申し込み受付と決済を1つのフォームで完結。',
+      url: 'https://makers.tokyo/order-form',
+      offers: {
+        '@type': 'Offer',
+        price: '3980',
+        priceCurrency: 'JPY',
+        description: 'PROプラン（月額3,980円）に含まれる機能',
+      },
+      featureList: [
+        'カスタムフォームビルダー',
+        'Stripe / UnivaPay 決済対応',
+        '申し込み管理ダッシュボード',
+        'PCI DSS準拠のセキュアな決済',
+      ],
+      provider: {
+        '@type': 'Organization',
+        name: '集客メーカー',
+        url: 'https://makers.tokyo',
+      },
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'どの決済方法に対応していますか？',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Stripe（クレジットカード）とUnivaPayに対応しています。お客様はカード情報を安全に入力して決済できます。',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: '無料のフォームも作れますか？',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'はい。決済なしの無料申し込みフォームとしても利用可能です。後から決済機能を追加することもできます。',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: '申し込みデータはどのように管理しますか？',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'ダッシュボードで一覧確認できます。名前・メール・カスタムフィールドの回答・決済ステータスを確認できます。',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: '料金はいくらですか？',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'PROプラン（月額3,980円）に含まれる機能です。決済手数料は各決済プロバイダの規定に準じます。',
+          },
+        },
+      ],
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'ホーム', item: 'https://makers.tokyo/' },
+        { '@type': 'ListItem', position: 2, name: '申し込みフォーム', item: 'https://makers.tokyo/order-form' },
+      ],
+    },
+  ],
 };
 
 const features = [
@@ -51,6 +133,11 @@ const faqs = [
 export default function OrderFormLandingPage() {
   return (
     <>
+      {/* 構造化データ */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="min-h-screen bg-white">
         <LandingHeader currentService="order-form" />
 
@@ -153,11 +240,11 @@ export default function OrderFormLandingPage() {
             <div className="space-y-3">
               {faqs.map((faq) => (
                 <details key={faq.q} className="group bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                  <summary className="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer font-semibold text-gray-900 select-none hover:bg-gray-50 transition-colors duration-150 list-none">
+                  <summary data-speakable="question" className="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer font-semibold text-gray-900 select-none hover:bg-gray-50 transition-colors duration-150 list-none">
                     <span>{faq.q}</span>
                     <span className="text-emerald-500 text-2xl font-light flex-shrink-0 transition-transform duration-200 group-open:rotate-45">+</span>
                   </summary>
-                  <div className="px-6 pb-5 text-gray-600 leading-relaxed text-sm border-t border-gray-100 pt-4">{faq.a}</div>
+                  <div data-speakable="answer" className="px-6 pb-5 text-gray-600 leading-relaxed text-sm border-t border-gray-100 pt-4">{faq.a}</div>
                 </details>
               ))}
             </div>

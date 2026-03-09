@@ -32,7 +32,7 @@ BEGIN
       AVG((a.event_data->>'timeSpent')::NUMERIC) FILTER (
         WHERE a.event_type = 'time' AND (a.event_data->>'timeSpent')::NUMERIC > 0
       ) AS avg_time
-    FROM analytics a
+    FROM public.analytics a
     WHERE a.profile_id = ANY(p_content_ids)
       AND a.content_type = p_content_type
     GROUP BY a.profile_id

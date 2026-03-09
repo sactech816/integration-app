@@ -10,15 +10,89 @@ export const metadata: Metadata = {
   title: 'ファネルメーカー（簡易ファネル構築）| 集客メーカー',
   description:
     '既存のLP・診断クイズ・申し込みフォームを繋いで集客ファネルを構築。各ステップのコンバージョン率を可視化して改善に活かせます。',
-  keywords: ['ファネル', 'マーケティングファネル', 'コンバージョン', 'CVR', '集客', '導線設計'],
+  keywords: ['ファネル', 'マーケティングファネル', 'コンバージョン', 'CVR', '集客', '導線設計', 'ファネル構築', 'CVR改善'],
   openGraph: {
     title: 'ファネルメーカー | 集客メーカー',
-    description: '既存ページを繋いで集客ファネルを構築。CVRを可視化して改善。',
+    description: '既存ページを繋いで集客ファネルを構築。各ステップのCVRを可視化して改善。',
     type: 'website',
     url: 'https://makers.tokyo/funnel',
     siteName: '集客メーカー',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ファネルメーカー | 集客メーカー',
+    description: '既存ページを繋いで集客ファネルを構築。CVRを可視化してボトルネックを改善。',
+  },
   alternates: { canonical: 'https://makers.tokyo/funnel' },
+};
+
+// ─── 構造化データ（JSON-LD） ──────────────────────────────────────────────────
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'SoftwareApplication',
+      name: 'ファネルメーカー',
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Web',
+      description:
+        '既存のLP・診断クイズ・申し込みフォームを繋いで集客ファネルを構築。各ステップのコンバージョン率を可視化して改善に活かせるツール。',
+      url: 'https://makers.tokyo/funnel',
+      offers: {
+        '@type': 'Offer',
+        price: '3980',
+        priceCurrency: 'JPY',
+        description: 'PROプラン（月額3,980円）に含まれる機能',
+      },
+      featureList: [
+        '既存ページをステップとして接続',
+        'CVR自動計測',
+        'ウォーターフォールチャートで可視化',
+        '柔軟なステップ順序設定',
+      ],
+      provider: {
+        '@type': 'Organization',
+        name: '集客メーカー',
+        url: 'https://makers.tokyo',
+      },
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'ファネルのステップには何を設定できますか？',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: '集客メーカーで作成したプロフィールLP・診断クイズ・申し込みフォーム・メルマガ登録フォーム・予約ページのほか、外部URLも設定できます。',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'CVR計測はどのように行われますか？',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'ファネルの各ステップのページビュー・CTAクリック・完了を自動で記録します。ダッシュボードでウォーターフォールチャートとして可視化されます。',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: '無料で使えますか？',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'PROプラン（月額3,980円）に含まれる機能です。他のPRO機能と合わせてご利用いただけます。',
+          },
+        },
+      ],
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'ホーム', item: 'https://makers.tokyo/' },
+        { '@type': 'ListItem', position: 2, name: 'ファネル', item: 'https://makers.tokyo/funnel' },
+      ],
+    },
+  ],
 };
 
 const features = [
@@ -50,6 +124,11 @@ const faqs = [
 export default function FunnelLandingPage() {
   return (
     <>
+      {/* 構造化データ */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="min-h-screen bg-white">
         <LandingHeader currentService="funnel" />
 
@@ -150,11 +229,11 @@ export default function FunnelLandingPage() {
             <div className="space-y-3">
               {faqs.map((faq) => (
                 <details key={faq.q} className="group bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                  <summary className="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer font-semibold text-gray-900 select-none hover:bg-gray-50 transition-colors duration-150 list-none">
+                  <summary data-speakable="question" className="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer font-semibold text-gray-900 select-none hover:bg-gray-50 transition-colors duration-150 list-none">
                     <span>{faq.q}</span>
                     <span className="text-amber-500 text-2xl font-light flex-shrink-0 transition-transform duration-200 group-open:rotate-45">+</span>
                   </summary>
-                  <div className="px-6 pb-5 text-gray-600 leading-relaxed text-sm border-t border-gray-100 pt-4">{faq.a}</div>
+                  <div data-speakable="answer" className="px-6 pb-5 text-gray-600 leading-relaxed text-sm border-t border-gray-100 pt-4">{faq.a}</div>
                 </details>
               ))}
             </div>

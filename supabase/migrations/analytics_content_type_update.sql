@@ -24,5 +24,6 @@ ALTER TABLE analytics ADD CONSTRAINT analytics_content_type_check
     'order-form',
     'funnel',
     'webinar',
-    'sns-post'
+    'sns-post',
+    'line'
   ));

@@ -484,11 +484,11 @@ export default function HomePage() {
               {faqs.map((faq, i) => (
                 <div key={i} className="rounded-2xl overflow-hidden border border-orange-50 bg-white">
                   <details className="group">
-                    <summary className="flex justify-between items-center px-6 py-5 font-bold cursor-pointer select-none list-none" style={{ color: '#5d4037' }}>
+                    <summary data-speakable="question" className="flex justify-between items-center px-6 py-5 font-bold cursor-pointer select-none list-none" style={{ color: '#5d4037' }}>
                       <span>{faq.q}</span>
                       <span className="transition group-open:rotate-180" style={{ color: '#f97316' }}>▼</span>
                     </summary>
-                    <div className="px-6 pb-5 text-sm text-gray-600 leading-relaxed border-t pt-4" style={{ borderColor: '#ffedd5' }}>{faq.a}</div>
+                    <div data-speakable="answer" className="px-6 pb-5 text-sm text-gray-600 leading-relaxed border-t pt-4" style={{ borderColor: '#ffedd5' }}>{faq.a}</div>
                   </details>
                 </div>
               ))}

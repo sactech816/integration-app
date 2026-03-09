@@ -225,8 +225,8 @@ export async function getMultipleAnalytics(
       p_content_type: contentType
     });
 
-    // RPC成功時
-    if (!error && summaryData) {
+    // RPC成功時（空配列の場合はフォールバックへ）
+    if (!error && summaryData && summaryData.length > 0) {
       console.log('[Analytics] RPC result:', { resultCount: summaryData.length });
 
       const summaryMap = new Map<string, {
