@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, successMessage, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody, designLayout, designColor, ctaButton, titleColor, descriptionColor, descriptionSize, fields } = body;
+    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, successMessage, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody, designLayout, designColor, ctaButton, titleColor, descriptionColor, descriptionSize, fields, emailFooterName, paymentEmailEnabled, paymentEmailSubject, paymentEmailBody } = body;
 
     if (!userId || !title) {
       return NextResponse.json({ error: 'userId と title は必須です' }, { status: 400 });
@@ -105,6 +105,10 @@ export async function POST(request: NextRequest) {
     if (titleColor) extendedData.title_color = titleColor;
     if (descriptionColor) extendedData.description_color = descriptionColor;
     if (descriptionSize) extendedData.description_size = descriptionSize;
+    if (emailFooterName) extendedData.email_footer_name = emailFooterName;
+    if (paymentEmailEnabled !== undefined) extendedData.payment_email_enabled = paymentEmailEnabled;
+    if (paymentEmailSubject) extendedData.payment_email_subject = paymentEmailSubject;
+    if (paymentEmailBody) extendedData.payment_email_body = paymentEmailBody;
 
     // まず全カラムで挿入を試行
     let { data, error } = await supabase

@@ -101,7 +101,7 @@ export async function POST(
                 <div style="padding:24px;background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
                   <p style="color:#374151;line-height:1.8;">${customBody}</p>
                 </div>
-                <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">Makers</p>
+                <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">${escapeHtml(form.email_footer_name || '集客メーカー')}</p>
               </div>`;
           } else {
             const fieldsHtml = fieldsData
@@ -120,7 +120,7 @@ export async function POST(
                   ${fieldsHtml ? `<table style="width:100%;border-collapse:collapse;margin-bottom:16px;">${fieldsHtml}</table>` : ''}
                   ${!isFree ? '<p style="color:#6b7280;font-size:13px;">決済完了後、確認メールをお送りいたします。</p>' : ''}
                 </div>
-                <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">Makers</p>
+                <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">${escapeHtml(form.email_footer_name || '集客メーカー')}</p>
               </div>`;
           }
 
@@ -186,7 +186,7 @@ export async function POST(
                   </table>
                   ${!isFree ? `<p style="color:#6b7280;font-size:13px;">決済状況: 決済待ち / 金額: ${form.price.toLocaleString()}円</p>` : ''}
                 </div>
-                <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">Makers</p>
+                <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:16px;">${escapeHtml(form.email_footer_name || '集客メーカー')}</p>
               </div>`;
 
             // 各通知先にメール送信

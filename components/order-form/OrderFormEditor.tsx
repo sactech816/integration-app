@@ -31,6 +31,7 @@ interface CtaButtonSettings {
   text: string;
   bgColor: string;
   textColor: string;
+  hoverBgColor: string;
   borderRadius: 'sm' | 'md' | 'lg' | 'full';
   shadow: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   animation: 'none' | 'pulse' | 'shimmer' | 'bounce';
@@ -41,6 +42,7 @@ const DEFAULT_CTA: CtaButtonSettings = {
   text: '',
   bgColor: '#2563eb',
   textColor: '#ffffff',
+  hoverBgColor: '',
   borderRadius: 'lg',
   shadow: 'lg',
   animation: 'none',
@@ -139,26 +141,41 @@ function Section({ title, icon, defaultOpen = true, children, badge, borderColor
 
 /* ── CTAボタンプレビュー ── */
 function CtaButtonPreview({ cta, label }: { cta: CtaButtonSettings; label: string }) {
+  const [isHovered, setIsHovered] = useState(false);
   const radiusClass = cta.borderRadius === 'sm' ? 'rounded-lg' : cta.borderRadius === 'md' ? 'rounded-xl' : cta.borderRadius === 'lg' ? 'rounded-2xl' : 'rounded-full';
   const shadowClass = cta.shadow === 'none' ? '' : cta.shadow === 'sm' ? 'shadow-sm' : cta.shadow === 'md' ? 'shadow-md' : cta.shadow === 'lg' ? 'shadow-lg' : 'shadow-xl';
   const sizeClass = cta.size === 'lg' ? 'px-8 py-4 text-lg' : 'px-6 py-3 text-base';
   const animClass = cta.animation === 'pulse' ? 'cta-pulse' : cta.animation === 'bounce' ? 'cta-bounce' : '';
 
+  const defaultHoverColor = darkenColor(cta.bgColor, 15);
+  const hoverBg = cta.hoverBgColor || defaultHoverColor;
+  const currentBg = isHovered ? hoverBg : cta.bgColor;
+
   return (
     <div className="relative">
       <button
         type="button"
-        disabled
-        className={`w-full font-bold min-h-[44px] transition-all ${radiusClass} ${shadowClass} ${sizeClass} ${animClass}`}
-        style={{ backgroundColor: cta.bgColor, color: cta.textColor }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={`w-full font-bold min-h-[44px] transition-all cursor-pointer ${radiusClass} ${shadowClass} ${sizeClass} ${animClass}`}
+        style={{ backgroundColor: currentBg, color: cta.textColor }}
       >
         {cta.animation === 'shimmer' && (
           <span className="absolute inset-0 cta-shimmer" style={{ borderRadius: 'inherit' }} />
         )}
         <span className="relative">{cta.text || label}</span>
       </button>
+      <p className="text-xs text-gray-400 text-center mt-1">マウスオーバーで確認できます</p>
     </div>
   );
+}
+
+function darkenColor(hex: string, percent: number): string {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const r = Math.max(0, Math.floor(((num >> 16) & 0xff) * (1 - percent / 100)));
+  const g = Math.max(0, Math.floor(((num >> 8) & 0xff) * (1 - percent / 100)));
+  const b = Math.max(0, Math.floor((num & 0xff) * (1 - percent / 100)));
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
 }
 
 /* ── フォームプレビュー ── */
@@ -314,6 +331,10 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
   const [notifyEmails, setNotifyEmails] = useState('');
   const [notifyEmailSubject, setNotifyEmailSubject] = useState('');
   const [notifyEmailBody, setNotifyEmailBody] = useState('');
+  const [emailFooterName, setEmailFooterName] = useState('');
+  const [paymentEmailEnabled, setPaymentEmailEnabled] = useState(true);
+  const [paymentEmailSubject, setPaymentEmailSubject] = useState('決済が完了しました');
+  const [paymentEmailBody, setPaymentEmailBody] = useState('');
 
   // デザイン設定
   const [designLayout, setDesignLayout] = useState('standard');
@@ -365,6 +386,10 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       if (f.notify_emails) setNotifyEmails(f.notify_emails);
       if (f.notify_email_subject) setNotifyEmailSubject(f.notify_email_subject);
       if (f.notify_email_body) setNotifyEmailBody(f.notify_email_body);
+      if (f.email_footer_name !== undefined) setEmailFooterName(f.email_footer_name || '');
+      if (f.payment_email_enabled !== undefined) setPaymentEmailEnabled(f.payment_email_enabled);
+      if (f.payment_email_subject) setPaymentEmailSubject(f.payment_email_subject);
+      if (f.payment_email_body !== undefined) setPaymentEmailBody(f.payment_email_body || '');
       if (f.design_layout) setDesignLayout(f.design_layout);
       if (f.design_color) setDesignColor(f.design_color);
       if (f.cta_button) {
@@ -421,6 +446,8 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       successMessage, status: publishStatus || status,
       replyEmailEnabled, replyEmailSubject, replyEmailBody,
       notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody,
+      emailFooterName,
+      paymentEmailEnabled, paymentEmailSubject, paymentEmailBody,
       designLayout, designColor,
       titleColor, descriptionColor, descriptionSize,
       ctaButton,
@@ -854,6 +881,36 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                   </div>
                 </div>
 
+                {/* ホバー色 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">マウスオーバー時の背景色</label>
+                  <p className="text-xs text-gray-500 mb-2">空欄の場合は背景色を少し暗くした色が使われます</p>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={ctaButton.hoverBgColor || ctaButton.bgColor}
+                      onChange={(e) => updateCta({ hoverBgColor: e.target.value })}
+                      className="w-16 h-10 rounded-lg cursor-pointer border border-orange-200"
+                    />
+                    <input
+                      type="text"
+                      value={ctaButton.hoverBgColor}
+                      onChange={(e) => updateCta({ hoverBgColor: e.target.value })}
+                      placeholder="自動（少し暗く）"
+                      className="flex-1 px-4 py-2.5 border border-orange-200 rounded-xl text-gray-900 text-sm placeholder:text-gray-400 bg-orange-50/30 focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all"
+                    />
+                    {ctaButton.hoverBgColor && (
+                      <button
+                        type="button"
+                        onClick={() => updateCta({ hoverBgColor: '' })}
+                        className="text-xs text-gray-500 hover:text-red-500 px-2 py-1 rounded transition-colors"
+                      >
+                        リセット
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* 角丸 */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">角丸</label>
@@ -1034,6 +1091,53 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                     </div>
                   </>
                 )}
+              </div>
+            </Section>
+
+            {/* ── 決済完了メール ── */}
+            <Section
+              title="決済完了メール"
+              icon={<span className="bg-emerald-50 p-1.5 rounded-lg"><CheckCircle className="w-4 h-4 text-emerald-600" /></span>}
+              borderColor="border-emerald-200"
+              defaultOpen={false}
+            >
+              <div className="space-y-4 pt-4">
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+                  <p className="text-xs text-emerald-800">決済が完了した際に申し込み者へ自動送信されるメールです。無料フォームでは送信されません。</p>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                  <input type="checkbox" checked={paymentEmailEnabled} onChange={(e) => setPaymentEmailEnabled(e.target.checked)} className="w-4 h-4 text-emerald-600 rounded" />
+                  <span className="text-sm font-semibold text-gray-700">決済完了メールを送る</span>
+                </label>
+                {paymentEmailEnabled && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">件名</label>
+                      <input type="text" value={paymentEmailSubject} onChange={(e) => setPaymentEmailSubject(e.target.value)} placeholder="決済が完了しました" className="w-full px-4 py-3 border border-emerald-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-emerald-50/30" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">本文（任意）</label>
+                      <textarea value={paymentEmailBody} onChange={(e) => setPaymentEmailBody(e.target.value)} placeholder={`空欄の場合はデフォルトの決済完了メールが送信されます。\n\n{name} = 申し込み者名\n{email} = メールアドレス\n{form_title} = フォームタイトル\n{amount} = 決済金額`} rows={5} className="w-full px-4 py-3 border border-emerald-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all bg-emerald-50/30" />
+                      <p className="text-xs text-gray-500 mt-1">変数: {'{name}'}, {'{email}'}, {'{form_title}'}, {'{amount}'} が使えます</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </Section>
+
+            {/* ── メールフッター設定 ── */}
+            <Section
+              title="メールフッター設定"
+              icon={<span className="bg-gray-100 p-1.5 rounded-lg"><Settings className="w-4 h-4 text-gray-600" /></span>}
+              borderColor="border-gray-200"
+              defaultOpen={false}
+            >
+              <div className="space-y-4 pt-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">フッター表示名</label>
+                  <input type="text" value={emailFooterName} onChange={(e) => setEmailFooterName(e.target.value)} placeholder="集客メーカー（空欄の場合は「集客メーカー」）" className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                  <p className="text-xs text-gray-500 mt-1">すべてのメールの最下部に表示される名前です</p>
+                </div>
               </div>
             </Section>
           </div>

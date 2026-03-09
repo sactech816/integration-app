@@ -18,10 +18,19 @@ interface CtaButtonSettings {
   text?: string;
   bgColor?: string;
   textColor?: string;
+  hoverBgColor?: string;
   borderRadius?: 'sm' | 'md' | 'lg' | 'full';
   shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   animation?: 'none' | 'pulse' | 'shimmer' | 'bounce';
   size?: 'md' | 'lg';
+}
+
+function darkenColor(hex: string, percent: number): string {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const r = Math.max(0, Math.floor(((num >> 16) & 0xff) * (1 - percent / 100)));
+  const g = Math.max(0, Math.floor(((num >> 8) & 0xff) * (1 - percent / 100)));
+  const b = Math.max(0, Math.floor((num & 0xff) * (1 - percent / 100)));
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
 }
 
 interface FormData {
@@ -56,6 +65,7 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
   const [fieldValues, setFieldValues] = useState<Record<string, string | boolean>>({});
+  const [ctaHovered, setCtaHovered] = useState(false);
 
   useEffect(() => {
     fetchForm();
@@ -179,6 +189,7 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
   const cta = form.cta_button || {};
   const ctaBgColor = cta.bgColor || color.buttonBg;
   const ctaTextColor = cta.textColor || color.buttonText;
+  const ctaHoverBgColor = cta.hoverBgColor || darkenColor(ctaBgColor, 15);
   const ctaText = cta.text || (isFree ? '申し込む' : `${form.price.toLocaleString()}円で申し込む`);
   const { radius, shadow, size, anim, hasShimmer } = getCtaClasses(cta);
 
@@ -326,8 +337,10 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className={`w-full inline-flex items-center justify-center gap-2 font-bold disabled:opacity-50 transition-all min-h-[44px] hover:opacity-90 ${radius} ${shadow} ${size} ${anim}`}
-                  style={{ backgroundColor: ctaBgColor, color: ctaTextColor }}
+                  onMouseEnter={() => setCtaHovered(true)}
+                  onMouseLeave={() => setCtaHovered(false)}
+                  className={`w-full inline-flex items-center justify-center gap-2 font-bold disabled:opacity-50 transition-all min-h-[44px] ${radius} ${shadow} ${size} ${anim}`}
+                  style={{ backgroundColor: ctaHovered && !submitting ? ctaHoverBgColor : ctaBgColor, color: ctaTextColor }}
                 >
                   {hasShimmer && (
                     <span className="absolute inset-0 cta-shimmer" style={{ borderRadius: 'inherit' }} />

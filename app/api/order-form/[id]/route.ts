@@ -72,7 +72,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, successMessage, status, fields, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody, designLayout, designColor, ctaButton, titleColor, descriptionColor, descriptionSize } = body;
+    const { userId, title, description, price, paymentType, paymentProvider, stripePriceId, successMessage, status, fields, replyEmailEnabled, replyEmailSubject, replyEmailBody, notifyOwner, notifyEmails, notifyEmailSubject, notifyEmailBody, designLayout, designColor, ctaButton, titleColor, descriptionColor, descriptionSize, emailFooterName, paymentEmailEnabled, paymentEmailSubject, paymentEmailBody } = body;
 
     if (!userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
@@ -109,6 +109,10 @@ export async function PATCH(
     if (titleColor !== undefined) extendedData.title_color = titleColor || null;
     if (descriptionColor !== undefined) extendedData.description_color = descriptionColor || null;
     if (descriptionSize !== undefined) extendedData.description_size = descriptionSize || 'sm';
+    if (emailFooterName !== undefined) extendedData.email_footer_name = emailFooterName || null;
+    if (paymentEmailEnabled !== undefined) extendedData.payment_email_enabled = paymentEmailEnabled;
+    if (paymentEmailSubject !== undefined) extendedData.payment_email_subject = paymentEmailSubject || null;
+    if (paymentEmailBody !== undefined) extendedData.payment_email_body = paymentEmailBody || null;
 
     // まず全カラムで更新を試行
     let { data, error } = await supabase

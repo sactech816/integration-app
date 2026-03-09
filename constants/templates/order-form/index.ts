@@ -15,6 +15,7 @@ export interface OrderFormCtaButton {
   text?: string;
   bgColor?: string;
   textColor?: string;
+  hoverBgColor?: string;
   borderRadius?: 'sm' | 'md' | 'lg' | 'full';
   shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   animation?: 'none' | 'pulse' | 'shimmer' | 'bounce';
