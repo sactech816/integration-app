@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { FileText, CreditCard, CheckCircle2, Loader2 } from 'lucide-react';
 import { getOrderFormColor } from '@/constants/orderFormThemes';
 import { ViewTracker, trackCompletion } from '@/components/shared/ViewTracker';
+import { PREFECTURES } from '@/constants/prefectures';
 
 interface Field {
   id: string;
@@ -11,7 +12,7 @@ interface Field {
   label: string;
   placeholder: string;
   required: boolean;
-  options: string[] | null;
+  options: any;
 }
 
 interface CtaButtonSettings {
@@ -78,7 +79,20 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
       setForm(data.form);
       const initial: Record<string, string | boolean> = {};
       data.form.order_form_fields?.forEach((f: Field) => {
-        initial[f.id] = f.field_type === 'checkbox' ? false : '';
+        if (f.field_type === 'section_header') return;
+        if (f.field_type === 'checkbox' || f.field_type === 'privacy_policy') {
+          initial[f.id] = false;
+        } else if (f.field_type === 'name_split') {
+          initial[f.id + '_sei'] = '';
+          initial[f.id + '_mei'] = '';
+        } else if (f.field_type === 'address') {
+          initial[f.id + '_zip'] = '';
+          initial[f.id + '_pref'] = '';
+          initial[f.id + '_city'] = '';
+          initial[f.id + '_building'] = '';
+        } else {
+          initial[f.id] = '';
+        }
       });
       setFieldValues(initial);
     }
@@ -97,10 +111,26 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
     let name = '';
 
     form.order_form_fields.forEach((f) => {
-      const value = fieldValues[f.id];
+      if (f.field_type === 'section_header') return;
+      let value: any;
+      if (f.field_type === 'name_split') {
+        const sei = (fieldValues[f.id + '_sei'] as string) || '';
+        const mei = (fieldValues[f.id + '_mei'] as string) || '';
+        value = `${sei} ${mei}`.trim();
+      } else if (f.field_type === 'address') {
+        const zip = (fieldValues[f.id + '_zip'] as string) || '';
+        const pref = (fieldValues[f.id + '_pref'] as string) || '';
+        const city = (fieldValues[f.id + '_city'] as string) || '';
+        const building = (fieldValues[f.id + '_building'] as string) || '';
+        value = `〒${zip} ${pref} ${city} ${building}`.trim();
+      } else if (f.field_type === 'privacy_policy') {
+        value = fieldValues[f.id] ? '同意済み' : '';
+      } else {
+        value = fieldValues[f.id];
+      }
       fieldsData[f.label] = value;
       if (f.field_type === 'email') email = value as string;
-      if (f.label.includes('名前') || f.label.includes('Name') || f.label === 'お名前') {
+      if (f.field_type === 'name_split' || f.label.includes('名前') || f.label.includes('Name') || f.label === 'お名前') {
         name = value as string;
       }
     });
@@ -181,7 +211,7 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
   const color = getOrderFormColor(form.design_color);
   const layout = form.design_layout || 'standard';
   const isBusiness = layout === 'business';
-  const isEntertainment = layout === 'entertainment';
+  const isPremium = layout === 'premium' || layout === 'entertainment';
   const isFree = form.payment_type === 'free' || form.price === 0;
   const descSizeClass = form.description_size === 'xs' ? 'text-xs' : form.description_size === 'base' ? 'text-base' : form.description_size === 'lg' ? 'text-lg' : 'text-sm';
 
@@ -229,7 +259,7 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
 
       <div className="max-w-lg mx-auto">
         <div
-          className={`shadow-lg overflow-hidden ${isBusiness ? 'rounded-lg' : isEntertainment ? 'rounded-3xl' : 'rounded-2xl'}`}
+          className={`shadow-lg overflow-hidden ${isBusiness ? 'rounded-lg' : isPremium ? 'rounded-3xl' : 'rounded-2xl'}`}
           style={{ backgroundColor: color.cardBg, border: color.cardBorder }}
         >
           {isBusiness && (
@@ -245,7 +275,7 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
               )}
             </div>
           )}
-          {isEntertainment && (
+          {isPremium && (
             <div className="px-8 py-8 text-center" style={{ background: color.headerBg }}>
               <h1 className="text-2xl font-black tracking-wide" style={{ color: form.title_color || color.headerText }}>{form.title}</h1>
               {form.description && <p className={`${descSizeClass} mt-2 opacity-90 whitespace-pre-line`} style={{ color: form.description_color || color.headerText }}>{form.description}</p>}
@@ -259,7 +289,7 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
             </div>
           )}
 
-          <div className={`${isBusiness ? 'px-8 py-6' : isEntertainment ? 'px-8 py-8' : 'p-8'}`}>
+          <div className={`${isBusiness ? 'px-8 py-6' : isPremium ? 'px-8 py-8' : 'p-8'}`}>
             {layout === 'standard' && (
               <div className="text-center mb-6">
                 <h1 className="text-2xl font-bold mb-2" style={{ color: form.title_color || color.textPrimary }}>{form.title}</h1>
@@ -275,61 +305,201 @@ export default function OrderFormViewer({ slug }: { slug: string }) {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {form.order_form_fields.map((field) => (
-                <div key={field.id}>
-                  <label className="block text-sm font-semibold mb-1" style={{ color: color.textPrimary }}>
-                    {field.label}
-                    {field.required && <span className="text-red-500 ml-1">*</span>}
-                  </label>
+              {form.order_form_fields.map((field) => {
+                const opts = Array.isArray(field.options) ? field.options : [];
+                const policyText = (!Array.isArray(field.options) && field.options?.policyText) || '';
 
-                  {field.field_type === 'textarea' ? (
-                    <textarea
-                      required={field.required}
-                      placeholder={field.placeholder}
-                      value={fieldValues[field.id] as string || ''}
-                      onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
-                      rows={4}
-                      className="w-full px-4 py-3 rounded-xl text-gray-900 placeholder:text-gray-400 transition-all"
-                      style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
-                    />
-                  ) : field.field_type === 'select' ? (
-                    <select
-                      required={field.required}
-                      value={fieldValues[field.id] as string || ''}
-                      onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl text-gray-900 transition-all"
-                      style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
-                    >
-                      <option value="">選択してください</option>
-                      {(field.options || []).map((opt) => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
-                  ) : field.field_type === 'checkbox' ? (
-                    <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
-                      <input
-                        type="checkbox"
+                if (field.field_type === 'section_header') {
+                  return (
+                    <div key={field.id} className="pt-4 pb-1 border-l-4" style={{ borderColor: color.accentColor, paddingLeft: '12px' }}>
+                      <h3 className="font-bold text-base" style={{ color: color.textPrimary }}>{field.label}</h3>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={field.id}>
+                    {field.field_type !== 'privacy_policy' && field.field_type !== 'checkbox' && (
+                      <label className="block text-sm font-semibold mb-1" style={{ color: color.textPrimary }}>
+                        {field.label}
+                        {field.required && <span className="text-red-500 ml-1">*</span>}
+                      </label>
+                    )}
+
+                    {field.field_type === 'textarea' ? (
+                      <textarea
                         required={field.required}
-                        checked={fieldValues[field.id] as boolean || false}
-                        onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.checked })}
-                        className="w-5 h-5 rounded"
-                        style={{ accentColor: color.accentColor }}
+                        placeholder={field.placeholder}
+                        value={fieldValues[field.id] as string || ''}
+                        onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
+                        rows={4}
+                        className="w-full px-4 py-3 rounded-xl text-gray-900 placeholder:text-gray-400 transition-all"
+                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
                       />
-                      <span className="text-sm" style={{ color: color.textSecondary }}>{field.placeholder || field.label}</span>
-                    </label>
-                  ) : (
-                    <input
-                      type={field.field_type}
-                      required={field.required}
-                      placeholder={field.placeholder}
-                      value={fieldValues[field.id] as string || ''}
-                      onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl text-gray-900 placeholder:text-gray-400 transition-all"
-                      style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
-                    />
-                  )}
-                </div>
-              ))}
+                    ) : field.field_type === 'select' ? (
+                      <select
+                        required={field.required}
+                        value={fieldValues[field.id] as string || ''}
+                        onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl text-gray-900 transition-all"
+                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                      >
+                        <option value="">選択してください</option>
+                        {opts.map((opt: string) => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    ) : field.field_type === 'radio' ? (
+                      <div className="flex flex-wrap gap-3">
+                        {opts.map((opt: string) => (
+                          <label key={opt} className="flex items-center gap-2 px-4 py-3 rounded-xl cursor-pointer min-h-[44px] transition-all"
+                            style={{ backgroundColor: fieldValues[field.id] === opt ? color.badgeBg : color.inputBg, border: `1px solid ${fieldValues[field.id] === opt ? color.accentColor : color.inputBorder}` }}>
+                            <input
+                              type="radio"
+                              name={`field-${field.id}`}
+                              required={field.required}
+                              value={opt}
+                              checked={fieldValues[field.id] === opt}
+                              onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
+                              className="w-4 h-4"
+                              style={{ accentColor: color.accentColor }}
+                            />
+                            <span className="text-sm" style={{ color: color.textPrimary }}>{opt}</span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : field.field_type === 'checkbox' ? (
+                      <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                        <input
+                          type="checkbox"
+                          required={field.required}
+                          checked={fieldValues[field.id] as boolean || false}
+                          onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.checked })}
+                          className="w-5 h-5 rounded"
+                          style={{ accentColor: color.accentColor }}
+                        />
+                        <span className="text-sm" style={{ color: color.textSecondary }}>{field.placeholder || field.label}</span>
+                      </label>
+                    ) : field.field_type === 'date' ? (
+                      <input
+                        type="date"
+                        required={field.required}
+                        value={fieldValues[field.id] as string || ''}
+                        onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl text-gray-900 transition-all"
+                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                      />
+                    ) : field.field_type === 'name_split' ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="block text-xs mb-1" style={{ color: color.textSecondary }}>姓</span>
+                          <input
+                            type="text"
+                            required={field.required}
+                            placeholder="山田"
+                            value={fieldValues[field.id + '_sei'] as string || ''}
+                            onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_sei']: e.target.value })}
+                            className="w-full px-4 py-3 rounded-xl text-gray-900 placeholder:text-gray-400 transition-all"
+                            style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                          />
+                        </div>
+                        <div>
+                          <span className="block text-xs mb-1" style={{ color: color.textSecondary }}>名</span>
+                          <input
+                            type="text"
+                            required={field.required}
+                            placeholder="太郎"
+                            value={fieldValues[field.id + '_mei'] as string || ''}
+                            onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_mei']: e.target.value })}
+                            className="w-full px-4 py-3 rounded-xl text-gray-900 placeholder:text-gray-400 transition-all"
+                            style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                          />
+                        </div>
+                      </div>
+                    ) : field.field_type === 'address' ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold" style={{ color: color.textSecondary }}>〒</span>
+                          <input
+                            type="text"
+                            required={field.required}
+                            placeholder="123-4567"
+                            pattern="\d{3}-?\d{4}"
+                            value={fieldValues[field.id + '_zip'] as string || ''}
+                            onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_zip']: e.target.value })}
+                            className="w-40 px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
+                            style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                          />
+                        </div>
+                        <select
+                          required={field.required}
+                          value={fieldValues[field.id + '_pref'] as string || ''}
+                          onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_pref']: e.target.value })}
+                          className="w-full px-3 py-2 rounded-lg text-gray-900 transition-all"
+                          style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                        >
+                          <option value="">都道府県</option>
+                          {PREFECTURES.map((p) => (
+                            <option key={p} value={p}>{p}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="text"
+                          required={field.required}
+                          placeholder="市区町村番地"
+                          value={fieldValues[field.id + '_city'] as string || ''}
+                          onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_city']: e.target.value })}
+                          className="w-full px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
+                          style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="マンション/ビル名"
+                          value={fieldValues[field.id + '_building'] as string || ''}
+                          onChange={(e) => setFieldValues({ ...fieldValues, [field.id + '_building']: e.target.value })}
+                          className="w-full px-3 py-2 rounded-lg text-gray-900 placeholder:text-gray-400 transition-all"
+                          style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                        />
+                      </div>
+                    ) : field.field_type === 'privacy_policy' ? (
+                      <div>
+                        <p className="block text-sm font-semibold mb-1" style={{ color: color.textPrimary }}>
+                          {field.label || '個人情報の取り扱いについて'}
+                        </p>
+                        {policyText && (
+                          <div className="max-h-48 overflow-y-auto px-4 py-3 rounded-xl text-xs mb-3 whitespace-pre-wrap"
+                            style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: color.textSecondary }}>
+                            {policyText}
+                          </div>
+                        )}
+                        <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                          <input
+                            type="checkbox"
+                            required
+                            checked={fieldValues[field.id] as boolean || false}
+                            onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.checked })}
+                            className="w-5 h-5 rounded"
+                            style={{ accentColor: color.accentColor }}
+                          />
+                          <span className="text-sm font-semibold" style={{ color: color.textPrimary }}>
+                            上記に同意する <span className="text-red-500">*</span>
+                          </span>
+                        </label>
+                      </div>
+                    ) : (
+                      <input
+                        type={field.field_type}
+                        required={field.required}
+                        placeholder={field.placeholder}
+                        value={fieldValues[field.id] as string || ''}
+                        onChange={(e) => setFieldValues({ ...fieldValues, [field.id]: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl text-gray-900 placeholder:text-gray-400 transition-all"
+                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, outlineColor: color.inputFocusRing }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
 
               {error && <p className="text-red-600 text-sm font-medium">{error}</p>}
 

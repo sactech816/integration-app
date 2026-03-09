@@ -24,6 +24,7 @@ import {
   DEFAULT_DURATION_MIN,
   DEFAULT_MAX_CAPACITY,
 } from '@/types/booking';
+import { generateIcsContent, CalendarEvent } from '@/lib/calendar';
 
 // ===========================================
 // Supabaseクライアント初期化
@@ -158,6 +159,27 @@ export async function sendBookingNotificationEmail(
       ? `${baseUrl}/booking/cancel?token=${booking.cancel_token}`
       : null;
 
+    // ICSカレンダーファイル生成（予約確認時のみ）
+    let icsAttachments: { filename: string; content: Buffer }[] = [];
+    if (type === 'confirm') {
+      try {
+        const calendarEvent: CalendarEvent = {
+          title: menu.title,
+          startTime: new Date(slot.start_time),
+          endTime: new Date(slot.end_time),
+          description: menu.description || undefined,
+          location: menu.contact_method || undefined,
+        };
+        const icsContent = generateIcsContent(calendarEvent);
+        icsAttachments = [{
+          filename: 'booking.ics',
+          content: Buffer.from(icsContent, 'utf-8'),
+        }];
+      } catch (icsError) {
+        console.error('[Booking Email] ICS generation failed:', icsError);
+      }
+    }
+
     const emailPromises = [];
 
     // 予約者へのメール
@@ -243,6 +265,7 @@ export async function sendBookingNotificationEmail(
           to: customerEmail,
           subject: `【予約${type === 'cancel' ? 'キャンセル' : '完了'}】${menu.title}`,
           html: customerHtml,
+          ...(icsAttachments.length > 0 ? { attachments: icsAttachments } : {}),
         })
       );
     }
@@ -325,6 +348,7 @@ export async function sendBookingNotificationEmail(
           to: ownerEmail,
           subject: `【新規予約${type === 'cancel' ? 'キャンセル' : ''}】${menu.title} - ${customerName || '(名前なし)'}様`,
           html: ownerHtml,
+          ...(icsAttachments.length > 0 ? { attachments: icsAttachments } : {}),
         })
       );
     }
@@ -655,6 +679,11 @@ export async function createBookingMenu(
       type: input.type ?? 'reservation',
       is_active: input.is_active ?? true,
       notification_email: input.notification_email?.trim() || null,
+      reminder_1day_enabled: input.reminder_1day_enabled ?? false,
+      reminder_same_day_enabled: input.reminder_same_day_enabled ?? false,
+      reminder_email_subject: input.reminder_email_subject?.trim() || null,
+      reminder_email_body: input.reminder_email_body?.trim() || null,
+      email_footer_name: input.email_footer_name?.trim() || null,
     })
     .select()
     .single();
@@ -989,6 +1018,11 @@ export async function updateBookingMenu(
   if (input.type !== undefined) updateData.type = input.type;
   if (input.is_active !== undefined) updateData.is_active = input.is_active;
   if (input.notification_email !== undefined) updateData.notification_email = input.notification_email?.trim() || null;
+  if (input.reminder_1day_enabled !== undefined) updateData.reminder_1day_enabled = input.reminder_1day_enabled;
+  if (input.reminder_same_day_enabled !== undefined) updateData.reminder_same_day_enabled = input.reminder_same_day_enabled;
+  if (input.reminder_email_subject !== undefined) updateData.reminder_email_subject = input.reminder_email_subject?.trim() || null;
+  if (input.reminder_email_body !== undefined) updateData.reminder_email_body = input.reminder_email_body?.trim() || null;
+  if (input.email_footer_name !== undefined) updateData.email_footer_name = input.email_footer_name?.trim() || null;
 
   const { data, error } = await supabase
     .from('booking_menus')

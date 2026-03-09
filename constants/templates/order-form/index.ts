@@ -1,14 +1,16 @@
 import {
   GraduationCap, Briefcase, ShoppingCart, MessageSquare, UserCheck, Repeat,
+  Building2, ClipboardList,
   type LucideIcon,
 } from 'lucide-react';
 
 export interface OrderFormTemplateField {
-  fieldType: 'text' | 'email' | 'tel' | 'number' | 'textarea' | 'select' | 'checkbox';
+  fieldType: 'text' | 'email' | 'tel' | 'number' | 'textarea' | 'select' | 'radio' | 'checkbox' | 'date' | 'name_split' | 'address' | 'section_header' | 'privacy_policy';
   label: string;
   placeholder: string;
   required: boolean;
-  options: string[] | null;
+  options: string[] | { policyText: string } | null;
+  policyText?: string;
 }
 
 export interface OrderFormCtaButton {
@@ -171,5 +173,58 @@ export const ORDER_FORM_TEMPLATES: OrderFormTemplate[] = [
       { fieldType: 'textarea', label: '備考', placeholder: 'ご質問やご要望があればご記入ください', required: false, options: null },
     ],
     ctaButton: { text: '今すぐ始める', bgColor: '#e11d48', textColor: '#ffffff', borderRadius: 'full', shadow: 'xl', animation: 'shimmer', size: 'lg' },
+  },
+  {
+    id: 'business-contact',
+    name: 'お問い合わせ（企業向け）',
+    description: 'セクション分け・住所・プライバシーポリシー付き',
+    icon: Building2,
+    color: 'text-gray-700',
+    bg: 'bg-gray-50',
+    title: 'お問い合わせ',
+    formDescription: 'ご質問やご相談がございましたら、下記フォームよりお問い合わせください。',
+    paymentType: 'free',
+    price: 0,
+    successMessage: 'お問い合わせありがとうございます。担当者より折り返しご連絡いたします。',
+    replyEmailSubject: 'お問い合わせを受け付けました',
+    fields: [
+      { fieldType: 'section_header', label: 'お問い合わせ内容を入力してください', placeholder: '', required: false, options: null },
+      { fieldType: 'select', label: 'お問い合わせ種別', placeholder: '選択してください', required: true, options: ['サービスについて', '料金・お見積もり', '導入のご相談', 'その他'] },
+      { fieldType: 'textarea', label: 'お問い合わせ内容', placeholder: 'お問い合わせ内容をご記入ください', required: true, options: null },
+      { fieldType: 'section_header', label: 'お客様情報を入力してください', placeholder: '', required: false, options: null },
+      { fieldType: 'name_split', label: 'お名前', placeholder: '', required: true, options: null },
+      { fieldType: 'email', label: 'メールアドレス', placeholder: 'you@example.com', required: true, options: null },
+      { fieldType: 'tel', label: '電話番号', placeholder: '03-1234-5678', required: false, options: null },
+      { fieldType: 'text', label: '会社名', placeholder: '株式会社〇〇', required: false, options: null },
+      { fieldType: 'text', label: '部署名', placeholder: '営業部', required: false, options: null },
+      { fieldType: 'address', label: 'ご住所', placeholder: '', required: false, options: null },
+      { fieldType: 'privacy_policy', label: '個人情報の取り扱いについて', placeholder: '', required: true, options: null, policyText: '個人情報保護方針\n\n当社は、お客様の個人情報の取扱いについて、以下のとおりプライバシーポリシーを定め、適切な取り扱いに努めます。\n\n1. 個人情報の利用目的\nお客様からいただいた個人情報は、お問い合わせへの回答、サービスに関するご案内のために利用いたします。\n\n2. 個人情報の第三者への開示\nお客様の個人情報を、お客様の同意なく第三者に開示・提供することはありません。\n\n3. 個人情報の管理\n個人情報の正確性および安全性を確保するため、適切な管理を行います。' },
+    ],
+    ctaButton: { text: '入力内容の確認画面へ', bgColor: '#374151', textColor: '#ffffff', borderRadius: 'lg', shadow: 'md', animation: 'none', size: 'lg' },
+  },
+  {
+    id: 'business-report',
+    name: '業務報告フォーム',
+    description: 'ラジオボタン・日付入力付きの日報フォーム',
+    icon: ClipboardList,
+    color: 'text-emerald-700',
+    bg: 'bg-emerald-50',
+    title: '業務報告',
+    formDescription: '本日の業務内容を報告してください。',
+    paymentType: 'free',
+    price: 0,
+    successMessage: '報告を受け付けました。お疲れさまでした。',
+    replyEmailSubject: '業務報告を受け付けました',
+    fields: [
+      { fieldType: 'text', label: '所属部署', placeholder: '営業部', required: false, options: null },
+      { fieldType: 'email', label: 'メールアドレス', placeholder: 'you@example.com', required: true, options: null },
+      { fieldType: 'text', label: '社員番号', placeholder: '', required: true, options: null },
+      { fieldType: 'date', label: '報告日', placeholder: '', required: true, options: null },
+      { fieldType: 'radio', label: '残業', placeholder: '', required: true, options: ['なし', 'あり'] },
+      { fieldType: 'textarea', label: '今日やったこと', placeholder: '本日の業務内容を記入してください', required: true, options: null },
+      { fieldType: 'radio', label: '作業の進捗度', placeholder: '', required: false, options: ['20%以下', '40%', '60%', '80%', '100%'] },
+      { fieldType: 'textarea', label: '今後の予定', placeholder: '明日以降の予定・課題を記入してください', required: true, options: null },
+    ],
+    ctaButton: { text: '報告する', bgColor: '#059669', textColor: '#ffffff', borderRadius: 'lg', shadow: 'md', animation: 'none', size: 'lg' },
   },
 ];

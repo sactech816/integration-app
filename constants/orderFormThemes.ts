@@ -22,10 +22,10 @@ export const ORDER_FORM_LAYOUTS: Record<string, OrderFormLayout> = {
     name: 'ビジネス',
     description: '企業・法人向け',
   },
-  entertainment: {
-    id: 'entertainment',
-    name: 'エンタメ',
-    description: 'イベント・講座向け',
+  premium: {
+    id: 'premium',
+    name: 'プレミアム',
+    description: '洗練されたデザイン',
   },
 };
 
@@ -237,8 +237,10 @@ export function getOrderFormColor(colorId?: string): OrderFormColorTheme {
 }
 
 export function getOrderFormLayout(layoutId?: string): OrderFormLayout {
-  if (layoutId && ORDER_FORM_LAYOUTS[layoutId]) {
-    return ORDER_FORM_LAYOUTS[layoutId];
+  // 後方互換: entertainment → premium
+  const id = layoutId === 'entertainment' ? 'premium' : layoutId;
+  if (id && ORDER_FORM_LAYOUTS[id]) {
+    return ORDER_FORM_LAYOUTS[id];
   }
   return ORDER_FORM_LAYOUTS[DEFAULT_ORDER_FORM_LAYOUT];
 }

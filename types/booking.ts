@@ -26,6 +26,11 @@ export interface BookingMenu {
   type: BookingMenuType;
   is_active: boolean;
   notification_email?: string | null;
+  reminder_1day_enabled?: boolean;
+  reminder_same_day_enabled?: boolean;
+  reminder_email_subject?: string | null;
+  reminder_email_body?: string | null;
+  email_footer_name?: string | null;
   created_at?: string;
 }
 
@@ -38,6 +43,11 @@ export interface CreateBookingMenuInput {
   type?: BookingMenuType;
   is_active?: boolean;
   notification_email?: string;
+  reminder_1day_enabled?: boolean;
+  reminder_same_day_enabled?: boolean;
+  reminder_email_subject?: string;
+  reminder_email_body?: string;
+  email_footer_name?: string;
 }
 
 // 予約メニュー更新用の入力型
@@ -49,6 +59,11 @@ export interface UpdateBookingMenuInput {
   type?: BookingMenuType;
   is_active?: boolean;
   notification_email?: string;
+  reminder_1day_enabled?: boolean;
+  reminder_same_day_enabled?: boolean;
+  reminder_email_subject?: string;
+  reminder_email_body?: string;
+  email_footer_name?: string;
 }
 
 // -------------------------------------------

@@ -92,7 +92,7 @@ export default function OrderFormDemoClient() {
                     disabled
                   >
                     <option>{field.placeholder}</option>
-                    {field.options?.map((opt, j) => (
+                    {(Array.isArray(field.options) ? field.options : []).map((opt: string, j: number) => (
                       <option key={j}>{opt}</option>
                     ))}
                   </select>

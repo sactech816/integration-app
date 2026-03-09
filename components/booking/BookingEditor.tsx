@@ -19,6 +19,9 @@ import {
   Trash2,
   Save,
   Users,
+  Bell,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { CreateBookingMenuInput, BookingMenuType, BookingSlotWithAvailability, BookingMenu, UpdateBookingMenuInput } from '@/types/booking';
 import WeeklyCalendar, { LocalSlot } from './WeeklyCalendar';
@@ -77,8 +80,16 @@ export default function BookingEditor({
     type: 'reservation',
     is_active: true,
     notification_email: '',
+    reminder_1day_enabled: false,
+    reminder_same_day_enabled: false,
+    reminder_email_subject: '',
+    reminder_email_body: '',
+    email_footer_name: '',
   });
-  
+
+  // リマインダー設定の開閉状態
+  const [showReminderSettings, setShowReminderSettings] = useState(false);
+
   // カレンダー状態
   const [calendarView, setCalendarView] = useState<CalendarView>('week');
   const [localSlots, setLocalSlots] = useState<LocalSlot[]>([]);
@@ -119,6 +130,11 @@ export default function BookingEditor({
         type: existingMenu.type,
         is_active: existingMenu.is_active,
         notification_email: existingMenu.notification_email || '',
+        reminder_1day_enabled: existingMenu.reminder_1day_enabled ?? false,
+        reminder_same_day_enabled: existingMenu.reminder_same_day_enabled ?? false,
+        reminder_email_subject: existingMenu.reminder_email_subject || '',
+        reminder_email_body: existingMenu.reminder_email_body || '',
+        email_footer_name: existingMenu.email_footer_name || '',
       });
     }
   }, [mode, existingMenu]);
@@ -334,6 +350,11 @@ export default function BookingEditor({
           type: formData.type,
           is_active: formData.is_active,
           notification_email: formData.notification_email,
+          reminder_1day_enabled: formData.reminder_1day_enabled,
+          reminder_same_day_enabled: formData.reminder_same_day_enabled,
+          reminder_email_subject: formData.reminder_email_subject,
+          reminder_email_body: formData.reminder_email_body,
+          email_footer_name: formData.email_footer_name,
         },
         localSlots,
         deletedSlotIds
@@ -740,6 +761,105 @@ export default function BookingEditor({
                       予約が入った際に通知メールを受け取るアドレスを指定できます
                     </p>
                   </div>
+
+                  {/* リマインダー設定（予約タイプのみ） */}
+                  {formData.type === 'reservation' && (
+                    <div className="pt-2 border-t border-gray-100">
+                      <button
+                        type="button"
+                        onClick={() => setShowReminderSettings(!showReminderSettings)}
+                        className="w-full flex items-center justify-between py-2 text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Bell size={16} className="text-blue-600" />
+                          リマインダー設定
+                        </span>
+                        {showReminderSettings ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </button>
+
+                      {showReminderSettings && (
+                        <div className="space-y-4 mt-3 pl-1">
+                          {/* リマインドタイミング */}
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="checkbox"
+                                id="reminder_1day"
+                                checked={formData.reminder_1day_enabled ?? false}
+                                onChange={(e) => setFormData({ ...formData, reminder_1day_enabled: e.target.checked })}
+                                className="w-5 h-5 border-gray-300 rounded text-blue-600 focus:ring-2 focus:ring-blue-500"
+                              />
+                              <label htmlFor="reminder_1day" className="text-sm font-medium text-gray-700">
+                                前日にリマインドメールを送信
+                              </label>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="checkbox"
+                                id="reminder_same_day"
+                                checked={formData.reminder_same_day_enabled ?? false}
+                                onChange={(e) => setFormData({ ...formData, reminder_same_day_enabled: e.target.checked })}
+                                className="w-5 h-5 border-gray-300 rounded text-blue-600 focus:ring-2 focus:ring-blue-500"
+                              />
+                              <label htmlFor="reminder_same_day" className="text-sm font-medium text-gray-700">
+                                当日にリマインドメールを送信
+                              </label>
+                            </div>
+                          </div>
+
+                          {/* リマインダーが有効な場合の詳細設定 */}
+                          {(formData.reminder_1day_enabled || formData.reminder_same_day_enabled) && (
+                            <div className="space-y-4 bg-blue-50/50 rounded-xl p-4 border border-blue-100">
+                              <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                  メール件名（任意）
+                                </label>
+                                <input
+                                  type="text"
+                                  value={formData.reminder_email_subject || ''}
+                                  onChange={(e) => setFormData({ ...formData, reminder_email_subject: e.target.value })}
+                                  placeholder="例: 【リマインド】明日のご予約のお知らせ"
+                                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900 placeholder:text-gray-400"
+                                />
+                                <p className="mt-1 text-xs text-gray-500">
+                                  空欄の場合はデフォルトの件名が使用されます
+                                </p>
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                  メール本文（任意）
+                                </label>
+                                <textarea
+                                  value={formData.reminder_email_body || ''}
+                                  onChange={(e) => setFormData({ ...formData, reminder_email_body: e.target.value })}
+                                  placeholder={`{name} 様\n\n「{title}」のご予約は明日です。\n\n日時: {date} {time}\n\nご来場をお待ちしております。`}
+                                  rows={5}
+                                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none text-gray-900 placeholder:text-gray-400"
+                                />
+                                <p className="mt-1 text-xs text-gray-500">
+                                  使用可能な変数: <code className="bg-gray-100 px-1 rounded">{'{name}'}</code> <code className="bg-gray-100 px-1 rounded">{'{title}'}</code> <code className="bg-gray-100 px-1 rounded">{'{date}'}</code> <code className="bg-gray-100 px-1 rounded">{'{time}'}</code> <code className="bg-gray-100 px-1 rounded">{'{email}'}</code>
+                                </p>
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                  メールフッター名（任意）
+                                </label>
+                                <input
+                                  type="text"
+                                  value={formData.email_footer_name || ''}
+                                  onChange={(e) => setFormData({ ...formData, email_footer_name: e.target.value })}
+                                  placeholder="集客メーカー"
+                                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900 placeholder:text-gray-400"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* 公開設定（編集モード時のみ表示） */}
                   {mode === 'edit' && (

@@ -7,7 +7,7 @@ import {
   ArrowLeft, Save, Plus, Trash2, Loader2,
   Globe, CreditCard, Monitor, Pencil, ChevronDown, ChevronUp,
   Settings, ListPlus, CheckCircle, Trophy, Share2, Sparkles,
-  Palette, Layout, Briefcase, PartyPopper, MousePointerClick,
+  Palette, Layout, Briefcase, Crown, MousePointerClick,
   Send, Bell, Clock,
 } from 'lucide-react';
 import { ORDER_FORM_TEMPLATES, type OrderFormTemplate, type OrderFormCtaButton } from '@/constants/templates/order-form';
@@ -25,6 +25,7 @@ interface Field {
   placeholder: string;
   required: boolean;
   options: string[] | null;
+  policyText?: string;
 }
 
 interface CtaButtonSettings {
@@ -78,7 +79,13 @@ const FIELD_TYPES = [
   { value: 'number', label: '数値' },
   { value: 'textarea', label: '長文テキスト' },
   { value: 'select', label: 'セレクト（選択肢）' },
+  { value: 'radio', label: 'ラジオボタン（単一選択）' },
   { value: 'checkbox', label: 'チェックボックス' },
+  { value: 'date', label: '日付' },
+  { value: 'name_split', label: '氏名（姓・名）' },
+  { value: 'address', label: '住所' },
+  { value: 'section_header', label: 'セクション見出し' },
+  { value: 'privacy_policy', label: 'プライバシーポリシー同意' },
 ];
 
 const PRESET_COLORS = [
@@ -206,7 +213,7 @@ function OrderFormPreview({ title, description, price, paymentType, fields, desi
 }) {
   const color = getOrderFormColor(designColor);
   const isBusiness = designLayout === 'business';
-  const isEntertainment = designLayout === 'entertainment';
+  const isPremium = designLayout === 'premium' || designLayout === 'entertainment';
   const isFree = paymentType === 'free';
   const defaultText = isFree ? '申し込む' : `${price.toLocaleString()}円で申し込む`;
   const descSizeClass = descriptionSize === 'xs' ? 'text-xs' : descriptionSize === 'base' ? 'text-base' : descriptionSize === 'lg' ? 'text-lg' : 'text-sm';
@@ -219,7 +226,7 @@ function OrderFormPreview({ title, description, price, paymentType, fields, desi
   return (
     <div className="min-h-[500px] p-6" style={{ background: color.background }}>
       <div
-        className={`mx-auto overflow-hidden ${isBusiness ? 'rounded-lg' : isEntertainment ? 'rounded-3xl' : 'rounded-2xl'}`}
+        className={`mx-auto overflow-hidden ${isBusiness ? 'rounded-lg' : isPremium ? 'rounded-3xl' : 'rounded-2xl'}`}
         style={{ backgroundColor: color.cardBg, border: color.cardBorder, maxWidth: '440px' }}
       >
         {isBusiness && (
@@ -230,7 +237,7 @@ function OrderFormPreview({ title, description, price, paymentType, fields, desi
             {description && <p className={`${descSizeClass} mt-1 opacity-90 whitespace-pre-line`} style={{ color: descriptionColor || color.headerText }}>{description}</p>}
           </div>
         )}
-        {isEntertainment && (
+        {isPremium && (
           <div className="px-6 py-6 text-center" style={{ background: color.headerBg }}>
             <h2 className="text-xl font-black tracking-wide" style={{ color: titleColor || color.headerText }}>
               {title || 'タイトルを入力してください'}
@@ -246,7 +253,7 @@ function OrderFormPreview({ title, description, price, paymentType, fields, desi
           </div>
         )}
 
-        <div className={`space-y-5 ${isBusiness ? 'px-6 py-5' : isEntertainment ? 'px-6 py-6' : 'p-6'}`}>
+        <div className={`space-y-5 ${isBusiness ? 'px-6 py-5' : isPremium ? 'px-6 py-6' : 'p-6'}`}>
           {designLayout === 'standard' && (
             <>
               <h2 className="text-xl font-bold" style={{ color: title ? (titleColor || color.textPrimary) : '#d1d5db' }}>
@@ -265,34 +272,91 @@ function OrderFormPreview({ title, description, price, paymentType, fields, desi
           )}
 
           <div className="space-y-4">
-            {fields.map((field, i) => (
-              <div key={i}>
-                <label className="block text-sm font-semibold mb-1" style={{ color: color.textPrimary }}>
-                  {field.label || '(ラベル未設定)'}
-                  {field.required && <span className="text-red-500 ml-1">*</span>}
-                </label>
-                {field.fieldType === 'textarea' ? (
-                  <div className="w-full h-20 px-4 py-3 rounded-xl text-sm"
-                    style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }}>
-                    {field.placeholder}
+            {fields.map((field, i) => {
+              if (field.fieldType === 'section_header') {
+                return (
+                  <div key={i} className="pt-4 pb-1 border-l-4" style={{ borderColor: color.accentColor, paddingLeft: '12px' }}>
+                    <h3 className="font-bold text-base" style={{ color: color.textPrimary }}>{field.label || 'セクション見出し'}</h3>
                   </div>
-                ) : field.fieldType === 'select' ? (
-                  <select disabled className="w-full px-4 py-3 rounded-xl text-sm"
-                    style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }}>
-                    <option>{field.placeholder || '選択してください'}</option>
-                    {(field.options || []).map((o, j) => <option key={j}>{o}</option>)}
-                  </select>
-                ) : field.fieldType === 'checkbox' ? (
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" disabled className="w-4 h-4 rounded" style={{ accentColor: color.accentColor }} />
-                    <span className="text-sm" style={{ color: color.textSecondary }}>{field.label || 'チェックボックス'}</span>
-                  </label>
-                ) : (
-                  <input type="text" disabled placeholder={field.placeholder} className="w-full px-4 py-3 rounded-xl text-sm placeholder:text-gray-400"
-                    style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
-                )}
-              </div>
-            ))}
+                );
+              }
+              return (
+                <div key={i}>
+                  {field.fieldType !== 'privacy_policy' && (
+                    <label className="block text-sm font-semibold mb-1" style={{ color: color.textPrimary }}>
+                      {field.label || '(ラベル未設定)'}
+                      {field.required && <span className="text-red-500 ml-1">*</span>}
+                    </label>
+                  )}
+                  {field.fieldType === 'textarea' ? (
+                    <div className="w-full h-20 px-4 py-3 rounded-xl text-sm"
+                      style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }}>
+                      {field.placeholder}
+                    </div>
+                  ) : field.fieldType === 'select' ? (
+                    <select disabled className="w-full px-4 py-3 rounded-xl text-sm"
+                      style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }}>
+                      <option>{field.placeholder || '選択してください'}</option>
+                      {(Array.isArray(field.options) ? field.options : []).map((o, j) => <option key={j}>{o}</option>)}
+                    </select>
+                  ) : field.fieldType === 'radio' ? (
+                    <div className="flex flex-wrap gap-3">
+                      {(Array.isArray(field.options) ? field.options : []).map((o, j) => (
+                        <label key={j} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm" style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}` }}>
+                          <input type="radio" disabled name={`preview-radio-${i}`} className="w-4 h-4" style={{ accentColor: color.accentColor }} />
+                          <span style={{ color: color.textSecondary }}>{o}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : field.fieldType === 'checkbox' ? (
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" disabled className="w-4 h-4 rounded" style={{ accentColor: color.accentColor }} />
+                      <span className="text-sm" style={{ color: color.textSecondary }}>{field.label || 'チェックボックス'}</span>
+                    </label>
+                  ) : field.fieldType === 'date' ? (
+                    <input type="date" disabled className="w-full px-4 py-3 rounded-xl text-sm"
+                      style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
+                  ) : field.fieldType === 'name_split' ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      <input type="text" disabled placeholder="姓" className="w-full px-4 py-3 rounded-xl text-sm placeholder:text-gray-400"
+                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
+                      <input type="text" disabled placeholder="名" className="w-full px-4 py-3 rounded-xl text-sm placeholder:text-gray-400"
+                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
+                    </div>
+                  ) : field.fieldType === 'address' ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold" style={{ color: color.textSecondary }}>〒</span>
+                        <input type="text" disabled placeholder="123-4567" className="w-40 px-3 py-2 rounded-lg text-sm placeholder:text-gray-400"
+                          style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
+                      </div>
+                      <select disabled className="w-full px-3 py-2 rounded-lg text-sm" style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }}>
+                        <option>都道府県</option>
+                      </select>
+                      <input type="text" disabled placeholder="市区町村番地" className="w-full px-3 py-2 rounded-lg text-sm placeholder:text-gray-400"
+                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
+                      <input type="text" disabled placeholder="マンション/ビル名" className="w-full px-3 py-2 rounded-lg text-sm placeholder:text-gray-400"
+                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
+                    </div>
+                  ) : field.fieldType === 'privacy_policy' ? (
+                    <div>
+                      <p className="block text-sm font-semibold mb-1" style={{ color: color.textPrimary }}>{field.label || '個人情報の取り扱いについて'}</p>
+                      <div className="max-h-32 overflow-y-auto px-3 py-2 rounded-lg text-xs mb-2 whitespace-pre-wrap"
+                        style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: color.textSecondary }}>
+                        {field.policyText || 'ポリシー本文がここに表示されます'}
+                      </div>
+                      <label className="flex items-center gap-2">
+                        <input type="checkbox" disabled className="w-4 h-4 rounded" style={{ accentColor: color.accentColor }} />
+                        <span className="text-sm font-semibold" style={{ color: color.textPrimary }}>上記に同意する <span className="text-red-500">*</span></span>
+                      </label>
+                    </div>
+                  ) : (
+                    <input type="text" disabled placeholder={field.placeholder} className="w-full px-4 py-3 rounded-xl text-sm placeholder:text-gray-400"
+                      style={{ backgroundColor: color.inputBg, border: `1px solid ${color.inputBorder}`, color: '#9ca3af' }} />
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {fields.length === 0 && (
@@ -431,7 +495,9 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       if (f.order_form_fields?.length > 0) {
         setFields(f.order_form_fields.map((field: any) => ({
           id: field.id, fieldType: field.field_type, label: field.label,
-          placeholder: field.placeholder || '', required: field.required, options: field.options,
+          placeholder: field.placeholder || '', required: field.required,
+          options: Array.isArray(field.options) ? field.options : null,
+          policyText: field.field_type === 'privacy_policy' && field.options?.policyText ? field.options.policyText : undefined,
         })));
       }
     }
@@ -445,7 +511,11 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
     setPrice(template.price);
     setSuccessMessage(template.successMessage);
     setReplyEmailSubject(template.replyEmailSubject);
-    setFields(template.fields.map(f => ({ ...f })));
+    setFields(template.fields.map(f => ({
+      fieldType: f.fieldType, label: f.label, placeholder: f.placeholder,
+      required: f.required, options: Array.isArray(f.options) ? f.options : null,
+      policyText: f.policyText || (f.options && !Array.isArray(f.options) ? (f.options as any).policyText : undefined),
+    })));
     if (template.ctaButton) {
       setCtaButton({ ...DEFAULT_CTA, ...template.ctaButton });
     }
@@ -486,7 +556,10 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       ctaButton,
       fields: fields.map((f) => ({
         field_type: f.fieldType, label: f.label, placeholder: f.placeholder,
-        required: f.required, options: f.fieldType === 'select' ? f.options : null,
+        required: f.fieldType === 'privacy_policy' ? true : f.required,
+        options: (f.fieldType === 'select' || f.fieldType === 'radio') ? f.options
+          : f.fieldType === 'privacy_policy' ? { policyText: f.policyText || '' }
+          : null,
       })),
     };
     try {
@@ -745,7 +818,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                     {[
                       { id: 'standard', name: 'スタンダード', icon: Layout, desc: 'シンプル' },
                       { id: 'business', name: 'ビジネス', icon: Briefcase, desc: '企業・法人向け' },
-                      { id: 'entertainment', name: 'エンタメ', icon: PartyPopper, desc: 'イベント向け' },
+                      { id: 'premium', name: 'プレミアム', icon: Crown, desc: '洗練されたデザイン' },
                     ].map(l => {
                       const Icon = l.icon;
                       return (
@@ -803,7 +876,10 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                 </div>
                 <div className="space-y-3">
                   {fields.map((field, i) => (
-                    <div key={i} className={`border rounded-xl p-3 hover:border-blue-300 transition-colors ${i % 2 === 0 ? 'bg-blue-50/40 border-blue-200' : 'bg-white border-blue-100'}`}>
+                    <div key={i} className={`border rounded-xl p-3 hover:border-blue-300 transition-colors ${
+                      field.fieldType === 'section_header' ? 'bg-gray-100 border-gray-300 border-l-4 border-l-blue-500' :
+                      i % 2 === 0 ? 'bg-blue-50/40 border-blue-200' : 'bg-white border-blue-100'
+                    }`}>
                       <div className="flex items-start gap-2">
                         <div className="flex flex-col gap-0.5 mt-1">
                           <button onClick={() => moveField(i, 'up')} disabled={i === 0} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-20 transition-colors"><ChevronUp className="w-3.5 h-3.5" /></button>
@@ -817,23 +893,36 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-blue-700 mb-1">ラベル</label>
-                            <input type="text" value={field.label} onChange={(e) => updateField(i, { label: e.target.value })} placeholder="項目名" className="w-full px-3 py-2 border border-blue-200 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white" />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-blue-700 mb-1">プレースホルダー</label>
-                            <input type="text" value={field.placeholder} onChange={(e) => updateField(i, { placeholder: e.target.value })} className="w-full px-3 py-2 border border-blue-200 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white" />
-                          </div>
-                          <div className="flex items-end">
-                            <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
-                              <input type="checkbox" checked={field.required} onChange={(e) => updateField(i, { required: e.target.checked })} className="w-4 h-4 text-blue-600 rounded" />
-                              <span className="text-sm text-gray-700">必須</span>
+                            <label className="block text-xs font-semibold text-blue-700 mb-1">
+                              {field.fieldType === 'section_header' ? '見出しテキスト' : 'ラベル'}
                             </label>
+                            <input type="text" value={field.label} onChange={(e) => updateField(i, { label: e.target.value })} placeholder={field.fieldType === 'section_header' ? 'お客様情報を入力してください' : '項目名'} className="w-full px-3 py-2 border border-blue-200 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white" />
                           </div>
-                          {field.fieldType === 'select' && (
+                          {!['section_header', 'name_split', 'address', 'date', 'privacy_policy', 'checkbox'].includes(field.fieldType) && (
+                            <div>
+                              <label className="block text-xs font-semibold text-blue-700 mb-1">プレースホルダー</label>
+                              <input type="text" value={field.placeholder} onChange={(e) => updateField(i, { placeholder: e.target.value })} className="w-full px-3 py-2 border border-blue-200 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white" />
+                            </div>
+                          )}
+                          {!['section_header', 'privacy_policy'].includes(field.fieldType) && (
+                            <div className="flex items-end">
+                              <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                                <input type="checkbox" checked={field.required} onChange={(e) => updateField(i, { required: e.target.checked })} className="w-4 h-4 text-blue-600 rounded" />
+                                <span className="text-sm text-gray-700">必須</span>
+                              </label>
+                            </div>
+                          )}
+                          {(field.fieldType === 'select' || field.fieldType === 'radio') && (
                             <div className="sm:col-span-2">
                               <label className="block text-xs font-semibold text-blue-700 mb-1">選択肢（カンマ区切り）</label>
                               <input type="text" value={(field.options || []).join(',')} onChange={(e) => updateField(i, { options: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="選択肢A, 選択肢B" className="w-full px-3 py-2 border border-blue-200 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white" />
+                            </div>
+                          )}
+                          {field.fieldType === 'privacy_policy' && (
+                            <div className="sm:col-span-2">
+                              <label className="block text-xs font-semibold text-blue-700 mb-1">ポリシー本文</label>
+                              <textarea value={field.policyText || ''} onChange={(e) => updateField(i, { policyText: e.target.value })} placeholder="個人情報保護方針の本文を入力してください..." rows={4} className="w-full px-3 py-2 border border-blue-200 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 bg-white" />
+                              <p className="text-xs text-gray-500 mt-1">フォーム上でスクロール可能なエリアに表示され、同意チェックボックスが付きます</p>
                             </div>
                           )}
                         </div>
