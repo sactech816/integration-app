@@ -5,7 +5,7 @@ import {
   Link2, Search, X, Loader2, ExternalLink, ChevronDown,
   User, Building2, Megaphone, BookOpen, HelpCircle, Sparkles,
   PenTool, Image, MessageSquare, Calendar, Users, ClipboardList,
-  Mail, GitBranch, FileText, Trophy,
+  Mail, GitBranch, FileText, Trophy, Globe,
 } from 'lucide-react';
 import {
   LINKABLE_TOOLS,
@@ -36,6 +36,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   GitBranch: <GitBranch className="w-4 h-4" />,
   FileText: <FileText className="w-4 h-4" />,
   Trophy: <Trophy className="w-4 h-4" />,
+  Globe: <Globe className="w-4 h-4" />,
 };
 
 // タイプ別カラー

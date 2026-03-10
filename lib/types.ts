@@ -5,7 +5,7 @@
 // -------------------------------------------
 // サービスタイプ
 // -------------------------------------------
-export type ServiceType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail' | 'newsletter' | 'step-email' | 'order-form' | 'funnel' | 'webinar' | 'sns-post' | 'line';
+export type ServiceType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail' | 'newsletter' | 'step-email' | 'order-form' | 'funnel' | 'webinar' | 'sns-post' | 'line' | 'mini-site';
 
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   quiz: '診断クイズ',
@@ -26,6 +26,7 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
   webinar: 'ウェビナーLP',
   'sns-post': 'SNS投稿',
   line: 'LINE公式連携',
+  'mini-site': 'マイサイト',
 };
 
 export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; text: string }> = {
@@ -47,6 +48,7 @@ export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; 
   webinar: { primary: 'violet', bg: 'bg-violet-50', text: 'text-violet-600' },
   'sns-post': { primary: 'sky', bg: 'bg-sky-50', text: 'text-sky-600' },
   line: { primary: 'green', bg: 'bg-green-50', text: 'text-green-600' },
+  'mini-site': { primary: 'cyan', bg: 'bg-cyan-50', text: 'text-cyan-600' },
 };
 
 // -------------------------------------------
@@ -566,6 +568,18 @@ export type DelayedCtaBlockData = {
   size?: 'md' | 'lg';
 };
 
+// コンテンツリンクブロック（ツール間連携）
+export type LinkedContentBlockData = {
+  title?: string;
+  items: Array<{
+    type: string;   // LinkableContentType
+    id: string;
+    slug?: string;
+    label?: string;
+  }>;
+  layout?: 'list' | 'grid';
+};
+
 // ブロックの型定義（Union型）
 export type Block = 
   | { id: string; type: 'header'; data: HeaderBlockData }
@@ -607,7 +621,9 @@ export type Block =
   // ウェビナーLP専用ブロック
   | { id: string; type: 'speaker'; data: SpeakerBlockData }
   | { id: string; type: 'agenda'; data: AgendaBlockData }
-  | { id: string; type: 'delayed_cta'; data: DelayedCtaBlockData };
+  | { id: string; type: 'delayed_cta'; data: DelayedCtaBlockData }
+  // ツール間連携ブロック
+  | { id: string; type: 'linked_content'; data: LinkedContentBlockData };
 
 // トラッキング設定の型定義
 export type TrackingSettings = {
@@ -1593,6 +1609,61 @@ export interface OnboardingModalData {
   user_id?: string | null;
   show_in_portal?: boolean;
   views_count?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// -------------------------------------------
+// マイサイトメーカー関連の型定義
+// -------------------------------------------
+
+export type SiteNavStyle = 'top' | 'sidebar' | 'hamburger';
+
+export interface SiteTheme {
+  primaryColor?: string;
+  gradient?: string;
+  backgroundImage?: string;
+  fontFamily?: string;
+}
+
+export interface SiteSettings {
+  navStyle?: SiteNavStyle;
+  theme?: SiteTheme;
+  gtmId?: string;
+  fbPixelId?: string;
+  lineTagId?: string;
+  hideFooter?: boolean;
+  hideRelatedContent?: boolean;
+  showInPortal?: boolean;
+  tracking?: TrackingSettings;
+}
+
+export interface Site {
+  id: string;
+  user_id: string;
+  slug: string;
+  title: string;
+  description?: string;
+  logo_url?: string;
+  settings?: SiteSettings;
+  status?: 'draft' | 'published';
+  created_at?: string;
+  updated_at?: string;
+  // JOIN結果
+  pages?: SitePage[];
+}
+
+export interface SitePage {
+  id: string;
+  site_id: string;
+  slug: string;
+  title: string;
+  description?: string;
+  content: Block[];
+  sort_order: number;
+  is_home: boolean;
+  show_in_nav: boolean;
+  icon?: string;
   created_at?: string;
   updated_at?: string;
 }

@@ -98,6 +98,15 @@ export const TOOL_ITEMS: ToolItem[] = [
     href: '/onboarding/editor',
     category: 'page',
   },
+  {
+    id: 'mini-site',
+    label: 'マイサイトメーカー',
+    icon: Globe,
+    description: '複数ページサイト作成',
+    color: { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
+    href: '/site/editor',
+    category: 'page',
+  },
 
   // 診断・クイズ
   {

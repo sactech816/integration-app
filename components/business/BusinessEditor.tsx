@@ -55,11 +55,16 @@ import {
   Timer,
   Images,
   CheckCircle,
-  Lock
+  Lock,
+  Link2,
 } from 'lucide-react';
 import { BlockRenderer } from '@/components/shared/BlockRenderer';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
 import { usePoints } from '@/lib/hooks/usePoints';
+import { useUserContents } from '@/lib/hooks/useUserContents';
+import ContentLinker from '@/components/shared/ContentLinker';
+import LinkedContentCard from '@/components/shared/LinkedContentCard';
+import type { ContentRef } from '@/lib/content-links';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
@@ -104,6 +109,7 @@ const blockTypes = [
   { type: 'quiz', label: '診断クイズ', icon: Brain, description: '診断クイズ埋め込み', category: 'common', color: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-700', icon: 'text-teal-500', hover: 'hover:bg-teal-100' } },
   { type: 'countdown', label: 'カウントダウン', icon: Timer, description: 'カウントダウンタイマー', category: 'common', color: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-500', hover: 'hover:bg-orange-100' } },
   { type: 'gallery', label: 'ギャラリー', icon: Images, description: '複数画像スライドショー', category: 'common', color: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', icon: 'text-purple-500', hover: 'hover:bg-purple-100' } },
+  { type: 'linked_content', label: '関連コンテンツ', icon: Link2, description: '他のツールへのリンク', category: 'common', color: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', icon: 'text-blue-500', hover: 'hover:bg-blue-100' } },
 ];
 
 // グラデーションプリセット
@@ -462,6 +468,8 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   // ユーザープラン権限を取得
   const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
   const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: userPlan.isProUser });
+  // ツール間連携: ユーザーのコンテンツ一覧を取得
+  const { contents: userContents, loading: contentsLoading } = useUserContents({ userId: user?.id || null, exclude: ['business'] });
   // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('business_editor_onboarding_dismissed', { skip: !!initialData });
 
@@ -1098,6 +1106,8 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
         return { id, type: 'countdown', data: { targetDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16), title: '期間限定キャンペーン', expiredText: 'キャンペーンは終了しました', backgroundColor: '#ef4444' } };
       case 'gallery':
         return { id, type: 'gallery', data: { items: [], columns: 3 as const, showCaptions: true, title: 'ギャラリー' } };
+      case 'linked_content':
+        return { id, type: 'linked_content', data: { title: '関連コンテンツ', items: [], layout: 'list' } };
       default:
         return { id, type: 'text_card', data: { title: '', text: '', align: 'center' as const } };
     }
@@ -2136,6 +2146,49 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
               </div>
             ))}
             <button onClick={() => updateBlock(block.id, { items: [...(block.data.items || []), { id: generateBlockId(), imageUrl: '', caption: '' }] })} className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-amber-500 hover:text-amber-600 font-medium">+ 画像を追加</button>
+          </div>
+        );
+
+      case 'linked_content':
+        return (
+          <div className="space-y-4">
+            <Input label="セクションタイトル" val={block.data.title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="関連コンテンツ" />
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">レイアウト</label>
+              <div className="flex gap-2">
+                {[{ value: 'list', label: 'リスト' }, { value: 'grid', label: 'グリッド' }].map((opt) => (
+                  <button key={opt.value} onClick={() => updateBlock(block.id, { layout: opt.value })} className={`px-4 py-2 rounded-lg font-medium ${block.data.layout === opt.value ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}>{opt.label}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">リンク済みコンテンツ</label>
+              <div className="space-y-2 mb-3">
+                {(block.data.items || []).map((item: any, i: number) => (
+                  <LinkedContentCard
+                    key={`${item.type}-${item.id}`}
+                    contentRef={item as ContentRef}
+                    size="sm"
+                    onRemove={() => {
+                      const newItems = [...(block.data.items || [])];
+                      newItems.splice(i, 1);
+                      updateBlock(block.id, { items: newItems });
+                    }}
+                  />
+                ))}
+              </div>
+              <ContentLinker
+                contents={userContents}
+                loading={contentsLoading}
+                onSelect={(ref) => {
+                  const newItems = [...(block.data.items || []), ref];
+                  updateBlock(block.id, { items: newItems });
+                }}
+                selectedIds={(block.data.items || []).map((item: any) => item.id)}
+                multiple
+                compact
+              />
+            </div>
           </div>
         );
 

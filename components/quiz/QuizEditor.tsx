@@ -17,6 +17,9 @@ import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { trackGenerateComplete, trackGenerateError } from '@/lib/gtag';
+import { useUserContents } from '@/lib/hooks/useUserContents';
+import ContentLinker from '@/components/shared/ContentLinker';
+import { getContentUrl, type ContentRef, type LinkableContentType } from '@/lib/content-links';
 
 // --- 用途別テンプレート（プリセットデータ）---
 const USE_CASE_PRESETS = {
@@ -195,6 +198,8 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
     // ユーザープラン権限を取得
     const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
     const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: userPlan.isProUser });
+    // ツール間連携: ユーザーのコンテンツ一覧を取得
+    const { contents: userContents, loading: contentsLoading } = useUserContents({ userId: user?.id || null, exclude: ['quiz', 'entertainment_quiz'] });
     // はじめかたガイド
     const { showOnboarding, setShowOnboarding } = useOnboarding('quiz_editor_onboarding_dismissed', { skip: !!initialData?.id });
     
@@ -1029,6 +1034,25 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                                 <Link size={14}/> 誘導ボタン設定（任意）
                                             </summary>
                                             <div className="mt-3 space-y-3">
+                                                {/* コンテンツから選ぶ */}
+                                                <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                                    <p className="text-xs font-bold text-blue-700 mb-2">作成済みコンテンツから選ぶ</p>
+                                                    <ContentLinker
+                                                        contents={userContents}
+                                                        loading={contentsLoading}
+                                                        onSelect={(ref: ContentRef) => {
+                                                            const url = getContentUrl(ref, typeof window !== 'undefined' ? window.location.origin : '');
+                                                            const n = [...form.results];
+                                                            n[i].link_url = url;
+                                                            n[i].link_text = ref.label || '詳しく見る';
+                                                            setForm({...form, results: n});
+                                                            resetPreview();
+                                                        }}
+                                                        buttonLabel="コンテンツを選択"
+                                                        compact
+                                                    />
+                                                </div>
+                                                <p className="text-xs text-gray-400 text-center">— または手動で入力 —</p>
                                                 <div className="grid grid-cols-2 gap-2">
                                                     <Input label="リンク先URL" val={r.link_url} onChange={v=>{const n=[...form.results];n[i].link_url=v;setForm({...form, results:n}); resetPreview();}} ph="https://..." />
                                                     <Input label="ボタン文言" val={r.link_text} onChange={v=>{const n=[...form.results];n[i].link_text=v;setForm({...form, results:n}); resetPreview();}} ph="詳細を見る" />

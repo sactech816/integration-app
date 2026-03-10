@@ -62,7 +62,7 @@ export default function MobileToolsSheet({
             <div className="w-10 h-1 bg-gray-300 rounded-full" />
           </div>
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-gray-900 text-base">すべてのツール（新規作成）</h3>
+            <h3 className="font-bold text-gray-900 text-base">作成ツール（編集）</h3>
             <button
               onClick={onClose}
               className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"

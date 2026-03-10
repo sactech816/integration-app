@@ -77,6 +77,7 @@ type SidebarNavProps = {
     rakuten_research: number;
     niconico_keyword_research: number;
     reddit_keyword_research: number;
+    mini_site: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態

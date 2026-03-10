@@ -4,7 +4,7 @@ import {
   ExternalLink, X, Copy, Check,
   User, Building2, Megaphone, BookOpen, HelpCircle, Sparkles,
   PenTool, Image, MessageSquare, Calendar, Users, ClipboardList,
-  Mail, GitBranch, FileText, Trophy, Link2,
+  Mail, GitBranch, FileText, Trophy, Link2, Globe,
 } from 'lucide-react';
 import { useState } from 'react';
 import {
@@ -31,6 +31,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   GitBranch: <GitBranch className="w-4 h-4" />,
   FileText: <FileText className="w-4 h-4" />,
   Trophy: <Trophy className="w-4 h-4" />,
+  Globe: <Globe className="w-4 h-4" />,
 };
 
 const COLOR_MAP: Record<string, { bg: string; text: string; border: string; light: string; gradient: string }> = {

@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 export type UGCType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'survey' | 'salesletter'
   | 'gacha' | 'fukubiki' | 'scratch' | 'slot' | 'stamp-rally' | 'login-bonus'
   | 'booking' | 'kindle' | 'point-quiz' | 'arcade' | 'attendance' | 'thumbnail'
-  | 'funnel' | 'order-form' | 'newsletter' | 'webinar';
+  | 'funnel' | 'order-form' | 'newsletter' | 'webinar' | 'mini-site';
 
 interface UGCMetadataInput {
   title: string;
@@ -152,6 +152,12 @@ const TYPE_CONFIG: Record<UGCType, {
     label: 'ウェビナーLPメーカー',
     defaultKeywords: ['ウェビナー', 'オンラインセミナー', 'Webセミナー', 'ランディングページ'],
     descriptionTemplate: (title) => `「${title}」ウェビナーの詳細・お申し込みページ。オンラインで参加できます。`,
+  },
+  'mini-site': {
+    pathPrefix: 'site',
+    label: 'マイサイトメーカー',
+    defaultKeywords: ['マイサイト', 'ホームページ', 'Webサイト', 'ポートフォリオ'],
+    descriptionTemplate: (title) => `「${title}」のWebサイト。集客メーカーのマイサイトメーカーで作成されたサイトです。`,
   },
 };
 

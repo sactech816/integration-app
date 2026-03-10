@@ -60,6 +60,7 @@ type UseDashboardDataReturn = {
     rakuten_research: number;
     niconico_keyword_research: number;
     reddit_keyword_research: number;
+    mini_site: number;
   };
   totalViews: number;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -149,6 +150,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     rakuten_research: 0,
     niconico_keyword_research: 0,
     reddit_keyword_research: 0,
+    mini_site: 0,
   });
   const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
   const [purchases, setPurchases] = useState<string[]>([]);
@@ -593,6 +595,31 @@ export function useDashboardData(): UseDashboardDataReturn {
           }
         }
 
+        // マイサイト取得
+        if (selectedService === 'mini-site') {
+          const query = isAdmin
+            ? supabase.from(TABLES.SITES).select('*').order('created_at', { ascending: false })
+            : supabase.from(TABLES.SITES).select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+
+          const { data: sites } = await query;
+          if (sites) {
+            allContents.push(
+              ...sites.map((s: any) => ({
+                id: s.id,
+                slug: s.slug,
+                title: s.title || 'マイサイト',
+                created_at: s.created_at,
+                updated_at: s.updated_at,
+                type: 'mini-site' as ServiceType,
+                user_id: s.user_id,
+                settings: s.settings,
+                views_count: 0,
+                clicks_count: 0,
+              }))
+            );
+          }
+        }
+
         // 作成日時でソート
         allContents.sort((a, b) => {
           const dateA = new Date(a.created_at || 0);
@@ -682,7 +709,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, entertainmentQuizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult, lineResult] = await Promise.all([
+      const [quizResult, entertainmentQuizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult, lineResult, miniSiteResult] = await Promise.all([
         // 診断クイズ数（ビジネス診断のみ）
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).or('quiz_type.is.null,quiz_type.eq.business')
@@ -745,6 +772,10 @@ export function useDashboardData(): UseDashboardDataReturn {
           : supabase.from(TABLES.SNS_POSTS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         // LINE友だち数
         supabase.from(TABLES.LINE_FRIENDS).select('id', { count: 'exact', head: true }).eq('owner_id', user.id).eq('status', 'active'),
+        // マイサイト数
+        isAdmin
+          ? supabase.from(TABLES.SITES).select('id', { count: 'exact', head: true })
+          : supabase.from(TABLES.SITES).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
       ]);
 
       setContentCounts({
@@ -773,6 +804,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         rakuten_research: 0,
         niconico_keyword_research: 0,
         reddit_keyword_research: 0,
+        mini_site: miniSiteResult.count || 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);
@@ -781,18 +813,21 @@ export function useDashboardData(): UseDashboardDataReturn {
 
   // 編集
   const handleEdit = (item: ContentItem) => {
-    window.location.href = `/${item.type}/editor?id=${item.slug}`;
+    const basePath = item.type === 'mini-site' ? '/site' : `/${item.type}`;
+    window.location.href = `${basePath}/editor?id=${item.slug}`;
   };
 
   // プレビュー
   const handleView = (item: ContentItem) => {
-    window.open(`/${item.type}/${item.slug}`, '_blank');
+    const basePath = item.type === 'mini-site' ? '/site' : `/${item.type}`;
+    window.open(`${basePath}/${item.slug}`, '_blank');
   };
 
   // URLコピー
   const handleCopyUrl = (item: ContentItem) => {
     const baseUrl = window.location.origin;
-    const url = `${baseUrl}/${item.type}/${item.slug}`;
+    const basePath = item.type === 'mini-site' ? '/site' : `/${item.type}`;
+    const url = `${baseUrl}${basePath}/${item.slug}`;
     navigator.clipboard.writeText(url);
     setCopiedId(item.id);
     setTimeout(() => setCopiedId(null), 2000);

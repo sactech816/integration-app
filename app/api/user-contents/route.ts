@@ -212,6 +212,16 @@ export async function GET(req: NextRequest) {
         .order('created_at', { ascending: false }),
     };
   }
+  if (targetTypes.includes('mini-site')) {
+    queryMap['mini-site'] = {
+      type: 'mini-site',
+      query: supabaseAdmin
+        .from('sites')
+        .select('id, slug, title')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false }),
+    };
+  }
 
   // 全クエリを並列実行
   const entries = Object.entries(queryMap);

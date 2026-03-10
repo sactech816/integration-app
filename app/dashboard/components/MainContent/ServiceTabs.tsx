@@ -43,6 +43,7 @@ const SHORT_LABELS: Record<ServiceType, string> = {
   webinar: 'ウェビナー',
   'sns-post': 'SNS',
   line: 'LINE',
+  'mini-site': 'サイト',
 };
 
 const getServiceColor = (type: ServiceType) => {

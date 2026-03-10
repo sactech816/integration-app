@@ -160,6 +160,7 @@ export default function FeaturedManager() {
       webinar: 'ウェビナーLP',
       'sns-post': 'SNS投稿',
       line: 'LINE公式連携',
+      'mini-site': 'マイサイト',
     };
     return labels[type] || type;
   };

@@ -5,16 +5,21 @@ import { Block } from '@/lib/types';
 import { extractYouTubeId, getVideoEmbedInfo, detectVideoPlatform } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import dynamic from 'next/dynamic';
-import { 
-  ExternalLink, 
-  ChevronDown, 
-  ChevronUp, 
-  ArrowRight, 
+import {
+  ExternalLink,
+  ChevronDown,
+  ChevronUp,
+  ArrowRight,
   Check,
   AlertCircle,
   Gift,
-  CheckCircle2
+  CheckCircle2,
+  Link2,
+  User, Building2, Megaphone, BookOpen, HelpCircle, Sparkles as SparklesIcon,
+  PenTool, Image as ImageIcon, MessageSquare, Calendar, Users, ClipboardList,
+  Mail, GitBranch, FileText, Trophy,
 } from 'lucide-react';
+import { LINKABLE_TOOL_MAP, getContentUrl, type LinkableContentType } from '@/lib/content-links';
 
 // QuizPlayerを動的インポート
 const QuizPlayer = dynamic(() => import('@/components/quiz/QuizPlayer'), {
@@ -1342,6 +1347,9 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
     case 'delayed_cta':
       return <DelayedCtaRenderer block={block} onLinkClick={handleLinkClick} />;
 
+    case 'linked_content':
+      return <LinkedContentBlockRenderer block={block} onLinkClick={handleLinkClick} />;
+
     default:
       return null;
   }
@@ -1829,6 +1837,100 @@ function LeadFormBlockRenderer({ block, variant }: { block: Extract<Block, { typ
             {isSubmitting ? '送信中...' : block.data.buttonText}
           </button>
         </form>
+      </div>
+    </section>
+  );
+}
+
+// Linked Content Block Renderer（ツール間連携）
+const LINKED_ICON_MAP: Record<string, React.ReactNode> = {
+  User: <User className="w-5 h-5" />,
+  Building2: <Building2 className="w-5 h-5" />,
+  Megaphone: <Megaphone className="w-5 h-5" />,
+  BookOpen: <BookOpen className="w-5 h-5" />,
+  HelpCircle: <HelpCircle className="w-5 h-5" />,
+  Sparkles: <SparklesIcon className="w-5 h-5" />,
+  PenTool: <PenTool className="w-5 h-5" />,
+  Image: <ImageIcon className="w-5 h-5" />,
+  MessageSquare: <MessageSquare className="w-5 h-5" />,
+  Calendar: <Calendar className="w-5 h-5" />,
+  Users: <Users className="w-5 h-5" />,
+  ClipboardList: <ClipboardList className="w-5 h-5" />,
+  Mail: <Mail className="w-5 h-5" />,
+  GitBranch: <GitBranch className="w-5 h-5" />,
+  FileText: <FileText className="w-5 h-5" />,
+  Trophy: <Trophy className="w-5 h-5" />,
+};
+
+const LINKED_COLORS: Record<string, { bg: string; text: string; gradient: string }> = {
+  emerald: { bg: 'bg-emerald-100', text: 'text-emerald-700', gradient: 'from-emerald-400 to-teal-500' },
+  amber:   { bg: 'bg-amber-100', text: 'text-amber-700', gradient: 'from-amber-400 to-orange-500' },
+  purple:  { bg: 'bg-purple-100', text: 'text-purple-700', gradient: 'from-purple-400 to-indigo-500' },
+  lime:    { bg: 'bg-lime-100', text: 'text-lime-700', gradient: 'from-lime-400 to-green-500' },
+  indigo:  { bg: 'bg-indigo-100', text: 'text-indigo-700', gradient: 'from-indigo-400 to-purple-500' },
+  pink:    { bg: 'bg-pink-100', text: 'text-pink-700', gradient: 'from-pink-400 to-rose-500' },
+  rose:    { bg: 'bg-rose-100', text: 'text-rose-700', gradient: 'from-rose-400 to-pink-500' },
+  sky:     { bg: 'bg-sky-100', text: 'text-sky-700', gradient: 'from-sky-400 to-blue-500' },
+  blue:    { bg: 'bg-blue-100', text: 'text-blue-700', gradient: 'from-blue-400 to-indigo-500' },
+  orange:  { bg: 'bg-orange-100', text: 'text-orange-700', gradient: 'from-orange-400 to-red-500' },
+  cyan:    { bg: 'bg-cyan-100', text: 'text-cyan-700', gradient: 'from-cyan-400 to-teal-500' },
+  violet:  { bg: 'bg-violet-100', text: 'text-violet-700', gradient: 'from-violet-400 to-purple-500' },
+  teal:    { bg: 'bg-teal-100', text: 'text-teal-700', gradient: 'from-teal-400 to-cyan-500' },
+  fuchsia: { bg: 'bg-fuchsia-100', text: 'text-fuchsia-700', gradient: 'from-fuchsia-400 to-pink-500' },
+};
+
+function LinkedContentBlockRenderer({
+  block,
+  onLinkClick,
+}: {
+  block: Extract<Block, { type: 'linked_content' }>;
+  onLinkClick?: (url: string) => void;
+}) {
+  const items = block.data.items || [];
+  if (items.length === 0) return null;
+
+  const isGrid = block.data.layout === 'grid';
+
+  return (
+    <section className="py-8 px-6">
+      <div className="max-w-4xl mx-auto">
+        {block.data.title && (
+          <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">{block.data.title}</h3>
+        )}
+        <div className={isGrid ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'space-y-3'}>
+          {items.map((item, i) => {
+            const tool = LINKABLE_TOOL_MAP[item.type as LinkableContentType];
+            const colorSet = LINKED_COLORS[tool?.color || 'indigo'] || LINKED_COLORS.indigo;
+            const icon = tool ? LINKED_ICON_MAP[tool.iconName] : <Link2 className="w-5 h-5" />;
+            const url = getContentUrl({
+              type: item.type as LinkableContentType,
+              id: item.id,
+              slug: item.slug,
+            });
+
+            return (
+              <a
+                key={`${item.type}-${item.id}-${i}`}
+                href={url}
+                onClick={() => onLinkClick?.(url)}
+                className="group flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-white hover:border-gray-200 hover:shadow-md transition-all"
+              >
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colorSet.gradient} flex items-center justify-center flex-shrink-0 text-white shadow-sm`}>
+                  {icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors truncate">
+                    {item.label || item.slug || '無題'}
+                  </p>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mt-1 ${colorSet.bg} ${colorSet.text}`}>
+                    {tool?.label || item.type}
+                  </span>
+                </div>
+                <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
+              </a>
+            );
+          })}
+        </div>
       </div>
     </section>
   );

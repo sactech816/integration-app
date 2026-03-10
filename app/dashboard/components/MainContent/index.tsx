@@ -50,6 +50,7 @@ export type ActiveView =
   | 'rakuten-research'
   | 'niconico-keyword-research'
   | 'reddit-keyword-research'
+  | 'mini-site'
   | 'affiliate'
   | 'marketplace-seller'
   | 'settings'
@@ -110,6 +111,7 @@ type MainContentProps = {
     webinar: number;
     sns_post: number;
     line: number;
+    mini_site: number;
   };
   isLoading: boolean;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -215,7 +217,7 @@ export default function MainContent({
         <AnnouncementList />
       )}
 
-      {['quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post'].includes(activeView) && (
+      {['quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'mini-site'].includes(activeView) && (
       <div className="space-y-6">
         <ContentList
           contents={contents}

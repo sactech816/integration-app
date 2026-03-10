@@ -47,10 +47,15 @@ import {
   Timer,
   Images,
   CheckCircle,
-  Lock
+  Lock,
+  Link2,
 } from 'lucide-react';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
 import { usePoints } from '@/lib/hooks/usePoints';
+import { useUserContents } from '@/lib/hooks/useUserContents';
+import ContentLinker from '@/components/shared/ContentLinker';
+import LinkedContentCard from '@/components/shared/LinkedContentCard';
+import type { ContentRef } from '@/lib/content-links';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
@@ -88,6 +93,7 @@ const blockTypes = [
   { type: 'quiz', label: '診断クイズ', icon: Brain, description: '診断クイズ埋め込み', color: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-700', icon: 'text-teal-500', hover: 'hover:bg-teal-100' } },
   { type: 'countdown', label: 'カウントダウン', icon: Timer, description: 'カウントダウンタイマー', color: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-500', hover: 'hover:bg-orange-100' } },
   { type: 'gallery', label: 'ギャラリー', icon: Images, description: '複数画像スライドショー', color: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', icon: 'text-purple-500', hover: 'hover:bg-purple-100' } },
+  { type: 'linked_content', label: '関連コンテンツ', icon: Link2, description: '他のツールへのリンク', color: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', icon: 'text-blue-500', hover: 'hover:bg-blue-100' } },
 ];
 
 // セールスレター用ブロックタイプの定義
@@ -734,6 +740,34 @@ const ProfileBlockRenderer = ({ block }: { block: Block }) => {
       );
     }
 
+    case 'linked_content': {
+      const lcData = block.data as { title?: string; items?: Array<{ type: string; id: string; slug?: string; label?: string }>; layout?: string };
+      const items = lcData.items || [];
+      return (
+        <div className="glass rounded-2xl p-4 mb-4">
+          {lcData.title && <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">{lcData.title}</h3>}
+          {items.length === 0 ? (
+            <div className="text-center py-4 text-gray-400 text-sm">
+              <Link2 size={24} className="mx-auto mb-2 opacity-50" />
+              <p>リンクするコンテンツを選択してください</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {items.map((item, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 bg-white/80 rounded-xl border border-gray-100">
+                  <Link2 size={16} className="text-blue-500 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{item.label || item.slug || '無題'}</p>
+                    <p className="text-xs text-gray-400">{item.type}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     default:
       return null;
   }
@@ -750,6 +784,8 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
   // ユーザープラン権限を取得
   const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
   const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: userPlan.isProUser });
+  // ツール間連携: ユーザーのコンテンツ一覧を取得
+  const { contents: userContents, loading: contentsLoading } = useUserContents({ userId: user?.id || null, exclude: ['profile'] });
   // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('profile_editor_onboarding_dismissed', { skip: !!initialData });
 
@@ -1117,6 +1153,8 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         return { id, type: 'countdown', data: { title: '限定オファー', targetDate: targetDate.toISOString(), expiredText: '期限切れ', backgroundColor: '#f59e0b' } };
       case 'gallery':
         return { id, type: 'gallery', data: { title: '', items: [], columns: 3, showCaptions: true } };
+      case 'linked_content':
+        return { id, type: 'linked_content', data: { title: '関連コンテンツ', items: [], layout: 'list' } };
       default:
         return { id, type: 'text_card', data: { title: '', text: '', align: 'center' as const } };
     }
@@ -2074,6 +2112,52 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
               >
                 + 画像を追加
               </button>
+            </div>
+          </div>
+        );
+
+      case 'linked_content':
+        return (
+          <div className="space-y-4">
+            <Input label="セクションタイトル" val={block.data.title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="関連コンテンツ" />
+            <div>
+              <label className="text-xs font-bold text-gray-600 block mb-2">レイアウト</label>
+              <select
+                value={block.data.layout || 'list'}
+                onChange={(e) => updateBlock(block.id, { layout: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 text-sm"
+              >
+                <option value="list">リスト</option>
+                <option value="grid">グリッド</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-600 block mb-2">リンク済みコンテンツ</label>
+              <div className="space-y-2 mb-3">
+                {(block.data.items || []).map((item: any, i: number) => (
+                  <LinkedContentCard
+                    key={`${item.type}-${item.id}`}
+                    contentRef={item as ContentRef}
+                    size="sm"
+                    onRemove={() => {
+                      const newItems = [...(block.data.items || [])];
+                      newItems.splice(i, 1);
+                      updateBlock(block.id, { items: newItems });
+                    }}
+                  />
+                ))}
+              </div>
+              <ContentLinker
+                contents={userContents}
+                loading={contentsLoading}
+                onSelect={(ref) => {
+                  const newItems = [...(block.data.items || []), ref];
+                  updateBlock(block.id, { items: newItems });
+                }}
+                selectedIds={(block.data.items || []).map((item: any) => item.id)}
+                multiple
+                compact
+              />
             </div>
           </div>
         );

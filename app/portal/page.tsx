@@ -199,6 +199,7 @@ function PortalPageContent() {
     webinar: 0,
     'sns-post': 0,
     line: 0,
+    'mini-site': 0,
   });
   const [featuredContents, setFeaturedContents] = useState<FeaturedContentWithDetails[]>([]);
   const [popularContents, setPopularContents] = useState<PopularContent[]>([]);
@@ -269,6 +270,7 @@ function PortalPageContent() {
           webinar: counts.webinar || 0,
           'sns-post': counts['sns-post'] || 0,
           line: counts.line || 0,
+          'mini-site': counts['mini-site'] || 0,
         });
       }
     } catch (error) {

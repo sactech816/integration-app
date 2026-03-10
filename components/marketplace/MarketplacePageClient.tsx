@@ -8,7 +8,7 @@ import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
 import CategoryFilter from '@/components/marketplace/CategoryFilter';
 import ListingCard from '@/components/marketplace/ListingCard';
-import { Search, Store, Plus, ShoppingBag, Loader2, Sparkles, ArrowRight, TrendingUp, Users, Star } from 'lucide-react';
+import { Search, Store, Plus, Loader2, Sparkles, ArrowRight, TrendingUp, Users, Star } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MarketplacePage() {
@@ -164,13 +164,6 @@ export default function MarketplacePage() {
         {isLoggedIn && (
           <div className="max-w-6xl mx-auto px-4 -mt-4 mb-6 relative z-10">
             <div className="flex justify-end gap-3">
-              <Link
-                href="/marketplace/orders"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 shadow-sm hover:shadow-md transition-all"
-              >
-                <ShoppingBag className="w-4 h-4 text-indigo-500" />
-                案件一覧
-              </Link>
               <Link
                 href="/marketplace/seller"
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-medium hover:from-indigo-700 hover:to-purple-700 shadow-sm hover:shadow-md transition-all"

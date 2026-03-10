@@ -32,4 +32,6 @@ export const TABLES = {
   LINE_FRIENDS: 'line_friends',
   LINE_MESSAGES: 'line_messages',
   LINE_SEND_LOGS: 'line_send_logs',
+  SITES: 'sites',
+  SITE_PAGES: 'site_pages',
 } as const;
