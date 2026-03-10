@@ -47,11 +47,13 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { results, style, theme } = body as {
+    const { results, style, theme, aspectRatio } = body as {
       results: ResultInput[];
       style: string;
       theme: string;
+      aspectRatio?: '1:1' | '3:4' | '4:3' | '9:16';
     };
+    const imageAspectRatio = aspectRatio || '1:1';
 
     if (!results || results.length === 0) {
       return NextResponse.json({ error: '結果データが必要です' }, { status: 400 });
@@ -80,16 +82,25 @@ export async function POST(request: Request) {
     const isCharacterTheme = /キャラ|推し|アニメ|character/.test(themeLower);
     const isPastLifeTheme = /前世|過去|past life/.test(themeLower);
 
+    const aspectDescriptions: Record<string, string> = {
+      '1:1': 'Square format',
+      '3:4': 'Portrait format (3:4 ratio, taller than wide)',
+      '4:3': 'Landscape format (4:3 ratio, wider than tall)',
+      '9:16': 'Vertical story format (9:16 ratio, very tall and narrow)',
+    };
+    const aspectDesc = aspectDescriptions[imageAspectRatio] || 'Square format';
+
     function buildImagePrompt(resultItem: ResultInput): string {
       const styleDesc = stylePrompts[style] || stylePrompts.pop;
+      const noTextRule = 'IMPORTANT: Do NOT include any text, letters, numbers, or words in the image. Only visual elements.';
 
       // imageHintがある場合は、それをベースにプロンプトを構築
       if (resultItem.imageHint) {
         return `Create a vivid, high-quality illustration based on this description: ${resultItem.imageHint}
 This is for a fun "${theme}" personality quiz result type: "${resultItem.title}".
 Style: ${styleDesc}, visually striking, social-media-worthy, eye-catching.
-IMPORTANT: Do NOT include any text, letters, numbers, or words in the image. Only visual elements.
-Square format, beautiful background, high quality digital art.`;
+${noTextRule}
+${aspectDesc}, beautiful background, high quality digital art.`;
       }
 
       if (isAnimalTheme) {
@@ -97,8 +108,8 @@ Square format, beautiful background, high quality digital art.`;
 The animal should have human-like expressions and personality. Draw the full animal in a characteristic pose.
 Style: ${styleDesc}, cute animal illustration, detailed, expressive eyes.
 Theme context: "${theme}" personality quiz.
-IMPORTANT: Do NOT include any text, letters, numbers, or words anywhere in the image.
-Square format, soft gradient background matching the animal's mood, high quality digital art.`;
+${noTextRule}
+${aspectDesc}, soft gradient background matching the animal's mood, high quality digital art.`;
       }
 
       if (isBrainTheme) {
@@ -107,8 +118,8 @@ The brain should be filled with various colorful icons, symbols, and visual elem
 For example: if the type is emotional, fill with hearts and music notes; if analytical, fill with gears and numbers; if creative, fill with paint splashes and stars.
 Personality: "${resultItem.title}" - ${resultItem.description}
 Style: ${styleDesc}, infographic style, bold flat colors, fun visual composition.
-IMPORTANT: Do NOT include any text, letters, numbers, or readable words. Use only visual symbols and icons.
-Square format, clean background, high quality.`;
+${noTextRule}
+${aspectDesc}, clean background, high quality.`;
       }
 
       if (isBodyTheme) {
@@ -117,8 +128,8 @@ The body interior should be filled with cute, cartoonish elements that represent
 For example: energetic type = filled with lightning bolts and fire; calm type = filled with flowers and clouds.
 Personality: "${resultItem.title}" - ${resultItem.description}
 Style: ${styleDesc}, medical-meets-kawaii illustration, educational but fun.
-IMPORTANT: Do NOT include any text, letters, numbers, or words. Only visual elements.
-Square format, clean background, high quality.`;
+${noTextRule}
+${aspectDesc}, clean background, high quality.`;
       }
 
       if (isFoodTheme) {
@@ -126,8 +137,8 @@ Square format, clean background, high quality.`;
 The food should look delicious and have personality - matching the vibe of "${resultItem.title}".
 Style: ${styleDesc}, food illustration, appetizing colors, detailed textures.
 Theme: "${theme}" quiz result.
-IMPORTANT: Do NOT include any text, letters, numbers, or words in the image.
-Square format, clean background with subtle decoration, high quality.`;
+${noTextRule}
+${aspectDesc}, clean background with subtle decoration, high quality.`;
       }
 
       if (isCharacterTheme) {
@@ -135,16 +146,16 @@ Square format, clean background with subtle decoration, high quality.`;
 The character should have a distinct look, outfit, and pose that matches their personality.
 Personality: "${resultItem.title}" - ${resultItem.description}
 Style: ${styleDesc}, anime character design, full body, expressive.
-IMPORTANT: Do NOT include any text, letters, numbers, or words in the image.
-Square format, simple background, high quality.`;
+${noTextRule}
+${aspectDesc}, simple background, high quality.`;
       }
 
       if (isPastLifeTheme) {
         return `Create a mystical, atmospheric illustration representing a past life as "${resultItem.title}".
 Show a historical/fantasy figure or scene that embodies this past life type.
 Style: ${styleDesc}, mystical atmosphere, ethereal lighting, dreamy quality.
-IMPORTANT: Do NOT include any text, letters, numbers, or words in the image.
-Square format, atmospheric background, high quality.`;
+${noTextRule}
+${aspectDesc}, atmospheric background, high quality.`;
       }
 
       // デフォルト: テーマに合わせた汎用イラスト
@@ -153,8 +164,8 @@ Theme: "${theme}" - Result type: "${resultItem.title}".
 Create a visual that instantly communicates the essence of "${resultItem.title}" personality type.
 Description: ${resultItem.description}
 Style: ${styleDesc}, illustration, bold composition, visually striking, social-media-worthy.
-IMPORTANT: Do NOT include any text, letters, numbers, or words in the image. Only visual elements.
-Square format, colorful gradient background, high quality digital art.`;
+${noTextRule}
+${aspectDesc}, colorful gradient background, high quality digital art.`;
     }
 
     const images: Record<string, string> = {};
@@ -168,13 +179,12 @@ Square format, colorful gradient background, high quality digital art.`;
         const prompt = buildImagePrompt(result);
 
         const response = await ai.models.generateContent({
-          model: 'gemini-3-pro-image-preview',
+          model: 'gemini-2.0-flash-exp',
           contents: prompt,
           config: {
             responseModalities: ['TEXT', 'IMAGE'],
             imageConfig: {
-              aspectRatio: '1:1',
-              imageSize: '1K',
+              aspectRatio: imageAspectRatio,
             },
           },
         });
@@ -218,10 +228,10 @@ Square format, colorful gradient background, high quality digital art.`;
       actionType: 'entertainment_image_generate',
       service: 'quiz',
       featureType: 'quiz',
-      modelUsed: 'gemini-3-pro-image-preview',
+      modelUsed: 'gemini-2.0-flash-exp',
       inputTokens: 0,
       outputTokens: 0,
-      metadata: { imageCount: Object.keys(images).length, style, theme, errors: errors.length > 0 ? errors : undefined },
+      metadata: { imageCount: Object.keys(images).length, style, theme, aspectRatio: imageAspectRatio, errors: errors.length > 0 ? errors : undefined },
     });
 
     return NextResponse.json({

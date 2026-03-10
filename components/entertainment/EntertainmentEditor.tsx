@@ -18,6 +18,7 @@ import {
   STYLE_OPTIONS,
   MODE_OPTIONS,
   RESULT_COUNT_OPTIONS,
+  ASPECT_RATIO_OPTIONS,
   THEME_PRESETS,
   STYLE_TO_THEME,
   quizFromForm,
@@ -241,6 +242,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
           results: form.results,
           style: form.style,
           theme: form.title,
+          aspectRatio: form.entertainment_meta.imageAspectRatio || '1:1',
         }),
       });
       const data = await res.json();
@@ -868,6 +870,32 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="text-sm font-bold text-gray-900 block mb-2">画像アスペクト比</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {ASPECT_RATIO_OPTIONS.map((ar) => (
+                    <button
+                      key={ar.value}
+                      onClick={() => updateForm({
+                        entertainment_meta: { ...form.entertainment_meta, imageAspectRatio: ar.value },
+                      })}
+                      className={`p-3 rounded-lg border-2 text-left transition-all ${
+                        (form.entertainment_meta.imageAspectRatio || '1:1') === ar.value
+                          ? 'border-pink-500 bg-pink-50'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-base">{ar.icon}</span>
+                        <span className="font-bold text-sm text-gray-900">{ar.label}</span>
+                      </div>
+                      <span className="text-xs text-gray-500">{ar.desc}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">AI画像生成時のアスペクト比を選択</p>
               </div>
 
               <div className="mb-4">

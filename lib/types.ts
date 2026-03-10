@@ -70,6 +70,12 @@ export interface QuizResult {
   title: string;
   description: string;
   image_url?: string;
+  // エンタメ診断拡張フィールド
+  traits?: { label: string; value: number }[];       // 特性バー表示用（0-100）
+  compatibleType?: string;                            // 相性の良いタイプ（typeを参照）
+  funFact?: string;                                   // おもしろ一言コメント
+  rarity?: 'common' | 'rare' | 'super_rare' | 'legendary';  // レア度
+  imageHint?: string;                                 // AI画像生成ヒント（英語）
   // 誘導ボタン設定
   ctaUrl?: string;
   ctaText?: string;
@@ -83,6 +89,7 @@ export interface EntertainmentMeta {
   resultImages?: Record<string, string>;
   shareTemplate?: string;
   ogStyle?: 'vibrant' | 'cute' | 'cool' | 'pop';
+  imageAspectRatio?: '1:1' | '3:4' | '4:3' | '9:16';  // 画像アスペクト比
   conversationLog?: Array<{ role: string; content: string }>;
 }
 

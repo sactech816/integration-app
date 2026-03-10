@@ -239,8 +239,10 @@ async function handleGeneratePhase(
 
   const resultExamples = types
     .map(
-      (type) =>
-        `    { "type": "${type}", "title": "結果タイトル", "description": "150文字程度の楽しい説明文", "imageHint": "この結果のイラスト内容を英語で30語以内で描写" }`
+      (type, idx) => {
+        const compatType = types[(idx + 1) % types.length];
+        return `    { "type": "${type}", "title": "結果タイトル", "description": "150文字程度の楽しい説明文", "imageHint": "この結果のイラスト内容を英語で30語以内で描写", "traits": [{"label": "特性名", "value": 85}, {"label": "特性名", "value": 40}], "compatibleType": "${compatType}", "funFact": "思わずシェアしたくなる一言", "rarity": "common" }`;
+      }
     )
     .join(',\n');
 
@@ -280,6 +282,13 @@ ${resultExamples}
   例: どうぶつ占いなら "A sleepy cute calico cat curled up on a cushion"
   例: 脳内メーカーなら "Brain cross-section filled with hearts, music notes, and sparkles"
   例: 腸内メーカーなら "Colorful gut interior filled with dancing fire and lightning"
+- traits: 3〜5個の特性パラメータ。テーマに合った特性名を使う。valueは0〜100の整数
+  例: どうぶつなら [{"label":"なつき度","value":95},{"label":"冒険心","value":30},{"label":"マイペース度","value":80}]
+  例: 脳内なら [{"label":"創造力","value":90},{"label":"論理力","value":40},{"label":"行動力","value":75}]
+- compatibleType: 相性の良い結果タイプ（type値で指定）。自分以外のタイプを必ず指定
+- funFact: 「あなたは全体の○%！」「○○な有名人と同じタイプ！」等、シェアしたくなる一言
+- rarity: レア度。結果タイプ数に応じてバランスよく配分する
+  ${resultCount}タイプの場合の目安: common(${Math.max(1, Math.floor(resultCount * 0.4))}個), rare(${Math.max(1, Math.floor(resultCount * 0.3))}個), super_rare(${Math.max(1, Math.floor(resultCount * 0.2))}個), legendary(${Math.max(0, Math.ceil(resultCount * 0.1))}個)
 - shareTemplateはSNS投稿用テンプレート。{{result_title}}と{{quiz_title}}が置換される
 
 重要な技術的制約:

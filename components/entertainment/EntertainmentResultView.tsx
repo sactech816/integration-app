@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { RefreshCw, Share2, Users, Heart, Sparkles, Star, Download } from 'lucide-react';
+import { RefreshCw, Share2, Users, Heart, Sparkles, Star, Download, Crown, Gem, Zap, ChevronDown } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { supabase } from '@/lib/supabase';
 import type { Quiz, QuizResult, EntertainmentMeta } from '@/lib/types';
@@ -14,6 +14,20 @@ interface EntertainmentResultViewProps {
   onBack: () => void;
 }
 
+const RARITY_CONFIG = {
+  common: { label: 'COMMON', color: 'from-gray-400 to-gray-500', text: 'text-gray-100', border: 'border-gray-400/50', icon: null },
+  rare: { label: 'RARE', color: 'from-blue-400 to-blue-600', text: 'text-blue-100', border: 'border-blue-400/50', icon: Gem },
+  super_rare: { label: 'SUPER RARE', color: 'from-purple-400 to-purple-600', text: 'text-purple-100', border: 'border-purple-400/50', icon: Zap },
+  legendary: { label: 'LEGENDARY', color: 'from-yellow-400 to-amber-500', text: 'text-yellow-100', border: 'border-yellow-400/50', icon: Crown },
+};
+
+const ASPECT_RATIO_CLASSES: Record<string, string> = {
+  '1:1': 'aspect-square',
+  '3:4': 'aspect-[3/4]',
+  '4:3': 'aspect-[4/3]',
+  '9:16': 'aspect-[9/16]',
+};
+
 export default function EntertainmentResultView({
   quiz,
   result,
@@ -23,19 +37,27 @@ export default function EntertainmentResultView({
   const [liked, setLiked] = useState(false);
   const [shared, setShared] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [showAllTypes, setShowAllTypes] = useState(false);
 
   const meta = quiz.entertainment_meta as EntertainmentMeta | undefined;
   const resultImage = meta?.resultImages?.[result.type] || result.image_url;
   const ogStyle = meta?.ogStyle || 'vibrant';
+  const aspectRatio = meta?.imageAspectRatio || '1:1';
+  const aspectClass = ASPECT_RATIO_CLASSES[aspectRatio] || 'aspect-square';
 
-  const gradients: Record<string, { bg: string; card: string; accent: string }> = {
-    vibrant: { bg: 'from-red-400 via-pink-400 to-yellow-300', card: 'from-pink-500 to-orange-400', accent: 'text-pink-500' },
-    cute: { bg: 'from-pink-300 via-purple-300 to-pink-200', card: 'from-pink-400 to-purple-400', accent: 'text-pink-500' },
-    cool: { bg: 'from-indigo-900 via-purple-900 to-indigo-800', card: 'from-indigo-600 to-purple-600', accent: 'text-purple-400' },
-    pop: { bg: 'from-pink-400 via-purple-400 to-indigo-400', card: 'from-pink-500 to-purple-500', accent: 'text-purple-500' },
+  const gradients: Record<string, { bg: string; card: string; accent: string; bar: string }> = {
+    vibrant: { bg: 'from-red-400 via-pink-400 to-yellow-300', card: 'from-pink-500 to-orange-400', accent: 'text-pink-500', bar: 'from-pink-400 to-orange-400' },
+    cute: { bg: 'from-pink-300 via-purple-300 to-pink-200', card: 'from-pink-400 to-purple-400', accent: 'text-pink-500', bar: 'from-pink-400 to-purple-400' },
+    cool: { bg: 'from-indigo-900 via-purple-900 to-indigo-800', card: 'from-indigo-600 to-purple-600', accent: 'text-purple-400', bar: 'from-indigo-400 to-purple-400' },
+    pop: { bg: 'from-pink-400 via-purple-400 to-indigo-400', card: 'from-pink-500 to-purple-500', accent: 'text-purple-500', bar: 'from-pink-400 to-indigo-400' },
   };
   const g = gradients[ogStyle] || gradients.vibrant;
   const isDark = ogStyle === 'cool';
+
+  // 相性タイプを取得
+  const compatibleResult = result.compatibleType
+    ? quiz.results.find(r => r.type === result.compatibleType)
+    : null;
 
   useEffect(() => {
     fireConfetti();
@@ -112,6 +134,9 @@ export default function EntertainmentResultView({
     a.click();
   };
 
+  const rarityConfig = result.rarity ? RARITY_CONFIG[result.rarity] : null;
+  const RarityIcon = rarityConfig?.icon;
+
   return (
     <div className={`min-h-screen bg-gradient-to-b ${g.bg}`}>
       {/* 装飾 */}
@@ -130,14 +155,26 @@ export default function EntertainmentResultView({
           </p>
         </div>
 
+        {/* レア度バッジ */}
+        {rarityConfig && (
+          <div className="flex justify-center">
+            <div className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r ${rarityConfig.color} border ${rarityConfig.border} shadow-lg`}>
+              {RarityIcon && <RarityIcon className={`w-4 h-4 ${rarityConfig.text}`} />}
+              <span className={`text-xs font-black tracking-widest ${rarityConfig.text}`}>
+                {rarityConfig.label}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* ===== メイン: 画像がヒーロー ===== */}
         {resultImage ? (
           <>
-            {/* 画像カード: 画面幅いっぱい、角丸、影 */}
+            {/* 画像カード */}
             <div className="relative">
               <div className={`absolute inset-3 bg-gradient-to-br ${g.card} rounded-3xl blur-3xl opacity-50`} />
               <div className="relative rounded-3xl shadow-2xl overflow-hidden ring-4 ring-white/20">
-                <div className="relative w-full aspect-square bg-gray-200">
+                <div className={`relative w-full ${aspectClass} bg-gray-200`}>
                   <Image
                     src={resultImage}
                     alt={result.title}
@@ -151,7 +188,7 @@ export default function EntertainmentResultView({
               </div>
             </div>
 
-            {/* タイトル（画像がメイン、テキストはサブ） */}
+            {/* タイトル */}
             <div className="text-center space-y-1">
               <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-purple-300' : 'text-white/70'}`}>
                 あなたのタイプは
@@ -161,7 +198,16 @@ export default function EntertainmentResultView({
               </h2>
             </div>
 
-            {/* 説明（コンパクト） */}
+            {/* おもしろ一言 */}
+            {result.funFact && (
+              <div className="text-center">
+                <p className={`text-sm font-bold ${isDark ? 'text-yellow-300' : 'text-yellow-200'} drop-shadow`}>
+                  {result.funFact}
+                </p>
+              </div>
+            )}
+
+            {/* 説明 */}
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-md">
               <p className="text-xs text-gray-600 leading-relaxed">{result.description}</p>
             </div>
@@ -177,15 +223,13 @@ export default function EntertainmentResultView({
             </button>
           </>
         ) : (
-          /* 画像なしフォールバック: タイトルをビジュアルの主役に */
+          /* 画像なしフォールバック */
           <>
             <div className="relative">
               <div className={`absolute inset-3 bg-gradient-to-br ${g.card} rounded-3xl blur-3xl opacity-50`} />
               <div className={`relative rounded-3xl shadow-2xl overflow-hidden bg-gradient-to-br ${g.card} aspect-square flex items-center justify-center`}>
-                {/* 背景装飾 */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(255,255,255,0.15),transparent_50%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.1),transparent_40%)]" />
-                {/* キラキラパーティクル */}
                 <div className="absolute top-[15%] left-[20%]">
                   <Sparkles className="w-6 h-6 text-white/40 animate-pulse" />
                 </div>
@@ -198,7 +242,6 @@ export default function EntertainmentResultView({
                 <div className="absolute bottom-[30%] right-[20%]">
                   <Sparkles className="w-5 h-5 text-white/30 animate-pulse" style={{ animationDelay: '0.7s' }} />
                 </div>
-                {/* メインコンテンツ: タイトルを巨大に */}
                 <div className="text-center px-8 relative z-10 space-y-4">
                   <div className="flex items-center justify-center gap-2">
                     <Star className="w-6 h-6 text-yellow-300 fill-yellow-300 drop-shadow animate-bounce" />
@@ -215,11 +258,67 @@ export default function EntertainmentResultView({
                 </div>
               </div>
             </div>
-            {/* 説明文 */}
+            {/* おもしろ一言 */}
+            {result.funFact && (
+              <div className="text-center">
+                <p className={`text-sm font-bold ${isDark ? 'text-yellow-300' : 'text-yellow-200'} drop-shadow`}>
+                  {result.funFact}
+                </p>
+              </div>
+            )}
             <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-lg">
               <p className="text-sm text-gray-700 leading-relaxed">{result.description}</p>
             </div>
           </>
+        )}
+
+        {/* ===== 特性バー ===== */}
+        {result.traits && result.traits.length > 0 && (
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-4 shadow-md space-y-3">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">あなたの特性</p>
+            {result.traits.map((trait, i) => (
+              <div key={i} className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-gray-700">{trait.label}</span>
+                  <span className="text-xs font-black text-gray-900">{trait.value}%</span>
+                </div>
+                <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full bg-gradient-to-r ${g.bar} rounded-full transition-all duration-1000 ease-out`}
+                    style={{ width: `${trait.value}%`, animationDelay: `${i * 150}ms` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ===== 相性タイプ ===== */}
+        {compatibleResult && (
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-4 shadow-md">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">相性ぴったりのタイプ</p>
+            <div className="flex items-center gap-3">
+              {meta?.resultImages?.[compatibleResult.type] ? (
+                <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-white shadow">
+                  <Image
+                    src={meta.resultImages[compatibleResult.type]}
+                    alt={compatibleResult.title}
+                    width={48}
+                    height={48}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              ) : (
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${g.card} flex items-center justify-center flex-shrink-0 shadow`}>
+                  <Heart className="w-5 h-5 text-white" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-sm font-black text-gray-900 truncate">{compatibleResult.title}</p>
+                <p className="text-xs text-gray-500 truncate">{compatibleResult.type}タイプ</p>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* SNSシェア */}
@@ -282,6 +381,63 @@ export default function EntertainmentResultView({
             友達にも診断させる
           </button>
         </div>
+
+        {/* ===== 全タイプ一覧 ===== */}
+        {quiz.results.length > 1 && (
+          <div className="space-y-2">
+            <button
+              onClick={() => setShowAllTypes(!showAllTypes)}
+              className={`w-full flex items-center justify-center gap-2 px-4 py-3 bg-white/20 backdrop-blur-sm
+                text-white font-bold rounded-2xl hover:bg-white/30 transition-all min-h-[44px] active:scale-95`}
+            >
+              <ChevronDown className={`w-4 h-4 transition-transform ${showAllTypes ? 'rotate-180' : ''}`} />
+              他のタイプも見る（{quiz.results.length}タイプ）
+            </button>
+            {showAllTypes && (
+              <div className="grid grid-cols-2 gap-2">
+                {quiz.results.map((r) => {
+                  const rImage = meta?.resultImages?.[r.type] || r.image_url;
+                  const isCurrentType = r.type === result.type;
+                  const rRarity = r.rarity ? RARITY_CONFIG[r.rarity] : null;
+                  return (
+                    <div
+                      key={r.type}
+                      className={`bg-white/90 backdrop-blur-sm rounded-xl p-2.5 shadow-md transition-all ${
+                        isCurrentType ? 'ring-2 ring-yellow-400 ring-offset-2 ring-offset-transparent' : 'opacity-80'
+                      }`}
+                    >
+                      {rImage ? (
+                        <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-2">
+                          <Image src={rImage} alt={r.title} fill className="object-cover" sizes="160px" />
+                          {isCurrentType && (
+                            <div className="absolute top-1 right-1 bg-yellow-400 text-yellow-900 text-[10px] font-black px-1.5 py-0.5 rounded-full">
+                              YOU
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className={`w-full aspect-square rounded-lg bg-gradient-to-br ${g.card} flex items-center justify-center mb-2 relative`}>
+                          <span className="text-white font-black text-lg">{r.type}</span>
+                          {isCurrentType && (
+                            <div className="absolute top-1 right-1 bg-yellow-400 text-yellow-900 text-[10px] font-black px-1.5 py-0.5 rounded-full">
+                              YOU
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <p className="text-xs font-bold text-gray-900 text-center truncate">{r.title}</p>
+                      {rRarity && (
+                        <p className={`text-[10px] font-bold text-center mt-0.5 bg-gradient-to-r ${rRarity.color} bg-clip-text text-transparent`}>
+                          {rRarity.label}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* もう一度 */}
         <button

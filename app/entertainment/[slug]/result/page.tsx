@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { Metadata } from 'next';
 import type { QuizResult, EntertainmentMeta } from '@/lib/types';
-import { Sparkles, Star } from 'lucide-react';
+import { Sparkles, Star, Crown, Gem, Zap } from 'lucide-react';
 import LineAddFriendButton from '@/components/line/LineAddFriendButton';
 
 export const revalidate = 300;
@@ -115,6 +115,38 @@ export default async function EntertainmentResultPage({ params, searchParams }: 
   const g = gradients[ogStyle] || gradients.vibrant;
   const isDark = ogStyle === 'cool';
 
+  const aspectRatio = meta?.imageAspectRatio || '1:1';
+  const aspectClasses: Record<string, string> = {
+    '1:1': 'aspect-square',
+    '3:4': 'aspect-[3/4]',
+    '4:3': 'aspect-[4/3]',
+    '9:16': 'aspect-[9/16]',
+  };
+  const aspectClass = aspectClasses[aspectRatio] || 'aspect-square';
+
+  const rarityConfigs: Record<string, { label: string; color: string; text: string; border: string }> = {
+    common: { label: 'COMMON', color: 'from-gray-400 to-gray-500', text: 'text-gray-100', border: 'border-gray-400/50' },
+    rare: { label: 'RARE', color: 'from-blue-400 to-blue-600', text: 'text-blue-100', border: 'border-blue-400/50' },
+    super_rare: { label: 'SUPER RARE', color: 'from-purple-400 to-purple-600', text: 'text-purple-100', border: 'border-purple-400/50' },
+    legendary: { label: 'LEGENDARY', color: 'from-yellow-400 to-amber-500', text: 'text-yellow-100', border: 'border-yellow-400/50' },
+  };
+
+  const barGradients: Record<string, string> = {
+    vibrant: 'from-pink-400 to-orange-400',
+    cute: 'from-pink-400 to-purple-400',
+    cool: 'from-indigo-400 to-purple-400',
+    pop: 'from-pink-400 to-indigo-400',
+  };
+  const barGrad = barGradients[ogStyle] || barGradients.vibrant;
+
+  const rarityConfig = result?.rarity ? rarityConfigs[result.rarity] : null;
+  const RarityIconMap: Record<string, typeof Crown> = { rare: Gem, super_rare: Zap, legendary: Crown };
+  const RarityIcon = result?.rarity ? RarityIconMap[result.rarity] : null;
+
+  const compatibleResult = result?.compatibleType
+    ? results.find(r => r.type === result.compatibleType)
+    : null;
+
   return (
     <div className={`min-h-screen bg-gradient-to-b ${g.bg}`}>
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -136,12 +168,24 @@ export default async function EntertainmentResultPage({ params, searchParams }: 
 
         {result ? (
           <>
+            {/* レア度バッジ */}
+            {rarityConfig && (
+              <div className="flex justify-center">
+                <div className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r ${rarityConfig.color} border ${rarityConfig.border} shadow-lg`}>
+                  {RarityIcon && <RarityIcon className={`w-4 h-4 ${rarityConfig.text}`} />}
+                  <span className={`text-xs font-black tracking-widest ${rarityConfig.text}`}>
+                    {rarityConfig.label}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* 画像メイン */}
             {resultImage ? (
               <div className="relative">
                 <div className={`absolute inset-3 bg-gradient-to-br ${g.card} rounded-3xl blur-3xl opacity-50`} />
                 <div className="relative rounded-3xl shadow-2xl overflow-hidden ring-4 ring-white/20">
-                  <div className="relative w-full aspect-square bg-gray-200">
+                  <div className={`relative w-full ${aspectClass} bg-gray-200`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={resultImage}
@@ -175,7 +219,7 @@ export default async function EntertainmentResultPage({ params, searchParams }: 
               </div>
             )}
 
-            {/* タイトル + 説明（画像がメイン、テキストはサブ） */}
+            {/* タイトル + おもしろ一言 */}
             <div className="text-center space-y-1">
               <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-purple-300' : 'text-white/70'}`}>
                 わたしのタイプは
@@ -183,12 +227,65 @@ export default async function EntertainmentResultPage({ params, searchParams }: 
               <h2 className="text-2xl font-extrabold text-white drop-shadow-lg leading-tight">
                 {result.title}
               </h2>
+              {result.funFact && (
+                <p className={`text-sm font-bold ${isDark ? 'text-yellow-300' : 'text-yellow-200'} drop-shadow mt-1`}>
+                  {result.funFact}
+                </p>
+              )}
             </div>
 
-            {/* 説明（コンパクト） */}
+            {/* 説明 */}
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-md">
               <p className="text-xs text-gray-600 leading-relaxed">{result.description}</p>
             </div>
+
+            {/* 特性バー */}
+            {result.traits && result.traits.length > 0 && (
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-4 shadow-md space-y-3">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">あなたの特性</p>
+                {result.traits.map((trait, i) => (
+                  <div key={i} className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-gray-700">{trait.label}</span>
+                      <span className="text-xs font-black text-gray-900">{trait.value}%</span>
+                    </div>
+                    <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full bg-gradient-to-r ${barGrad} rounded-full`}
+                        style={{ width: `${trait.value}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 相性タイプ */}
+            {compatibleResult && (
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-4 shadow-md">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">相性ぴったりのタイプ</p>
+                <div className="flex items-center gap-3">
+                  {meta?.resultImages?.[compatibleResult.type] ? (
+                    <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-white shadow">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={meta.resultImages[compatibleResult.type]}
+                        alt={compatibleResult.title}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                  ) : (
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${g.card} flex items-center justify-center flex-shrink-0 shadow`}>
+                      <Star className="w-5 h-5 text-white" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-black text-gray-900 truncate">{compatibleResult.title}</p>
+                    <p className="text-xs text-gray-500 truncate">{compatibleResult.type}タイプ</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* LINE友だち追加ボタン（オーナーがLINE連携済みの場合のみ表示） */}
             {quiz.user_id && (

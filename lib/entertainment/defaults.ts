@@ -18,10 +18,15 @@ export interface EntertainmentForm {
     description: string;
     image_url?: string;
     imageHint?: string;
+    traits?: { label: string; value: number }[];
+    compatibleType?: string;
+    funFact?: string;
+    rarity?: 'common' | 'rare' | 'super_rare' | 'legendary';
   }>;
   entertainment_meta: {
     shareTemplate?: string;
     ogStyle?: string;
+    imageAspectRatio?: '1:1' | '3:4' | '4:3' | '9:16';
     resultImages?: Record<string, string>;
   };
   show_in_portal: boolean;
@@ -41,6 +46,13 @@ export const MODE_OPTIONS = [
 ];
 
 export const RESULT_COUNT_OPTIONS = [3, 4, 6];
+
+export const ASPECT_RATIO_OPTIONS = [
+  { label: '正方形', value: '1:1' as const, icon: '⬜', desc: 'SNS投稿向き' },
+  { label: '縦型', value: '3:4' as const, icon: '📱', desc: 'スマホ・カード向き' },
+  { label: '横型', value: '4:3' as const, icon: '🖼️', desc: 'OGP・ブログ向き' },
+  { label: 'ストーリーズ', value: '9:16' as const, icon: '📲', desc: 'ストーリーズ向き' },
+];
 
 export const STYLE_TO_THEME: Record<string, string> = {
   cute: 'kawaii',
@@ -115,7 +127,17 @@ export function quizFromForm(form: EntertainmentForm): Quiz {
         score: o.score,
       })),
     })),
-    results: form.results,
+    results: form.results.map(r => ({
+      type: r.type,
+      title: r.title,
+      description: r.description,
+      image_url: r.image_url,
+      imageHint: r.imageHint,
+      traits: r.traits,
+      compatibleType: r.compatibleType,
+      funFact: r.funFact,
+      rarity: r.rarity,
+    })),
     layout: (form.layout as Quiz['layout']) || 'pop',
     mode: form.mode,
     theme: (form.theme as Quiz['theme']) || 'vibrant',
@@ -123,6 +145,7 @@ export function quizFromForm(form: EntertainmentForm): Quiz {
     entertainment_meta: {
       shareTemplate: form.entertainment_meta.shareTemplate,
       ogStyle: form.entertainment_meta.ogStyle as 'vibrant' | 'cute' | 'cool' | 'pop',
+      imageAspectRatio: form.entertainment_meta.imageAspectRatio,
       resultImages: form.entertainment_meta.resultImages,
     },
   };
@@ -151,11 +174,15 @@ export function applyGeneratedData(
         score: opt.score,
       })),
     })),
-    results: quiz.results.map((r: { type: string; title: string; description: string; imageHint?: string }) => ({
+    results: quiz.results.map((r: { type: string; title: string; description: string; imageHint?: string; traits?: { label: string; value: number }[]; compatibleType?: string; funFact?: string; rarity?: string }) => ({
       type: r.type,
       title: r.title,
       description: r.description,
       ...(r.imageHint ? { imageHint: r.imageHint } : {}),
+      ...(r.traits ? { traits: r.traits } : {}),
+      ...(r.compatibleType ? { compatibleType: r.compatibleType } : {}),
+      ...(r.funFact ? { funFact: r.funFact } : {}),
+      ...(r.rarity ? { rarity: r.rarity as 'common' | 'rare' | 'super_rare' | 'legendary' } : {}),
     })),
     entertainment_meta: {
       ...form.entertainment_meta,
