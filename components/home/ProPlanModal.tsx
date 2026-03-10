@@ -38,7 +38,7 @@ export default function ProPlanModal({ isOpen, onClose, user, onShowAuth }: ProP
               email,
               referralCode,
               service: 'makers',
-              planTier: 'pro',
+              planTier: 'business',
               planPeriod: 'monthly',
               userId: user?.id || null,
             }),
@@ -51,7 +51,7 @@ export default function ProPlanModal({ isOpen, onClose, user, onShowAuth }: ProP
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          planId: 'makers_pro_monthly',
+          planId: 'makers_business_monthly',
           userId: user?.id || null,
           email: email || null,
         }),
@@ -84,7 +84,7 @@ export default function ProPlanModal({ isOpen, onClose, user, onShowAuth }: ProP
         >
           <div className="flex items-center gap-3">
             <Crown size={24} />
-            <h3 className="font-bold text-xl">プロプラン</h3>
+            <h3 className="font-bold text-xl">有料プラン</h3>
           </div>
           <button
             onClick={onClose}
@@ -107,7 +107,7 @@ export default function ProPlanModal({ isOpen, onClose, user, onShowAuth }: ProP
               style={{ color: '#5d4037' }}
             >
               <Sparkles size={18} style={{ color: '#f97316' }} />
-              プロプランで使える機能
+              有料プランで使える機能
             </h4>
             <ul className="space-y-3">
               {[

@@ -35,7 +35,7 @@ interface Sequence {
 interface StepEmailDashboardProps {
   userId: string;
   isProUser: boolean;
-  planTier: 'guest' | 'free' | 'pro';
+  planTier: 'guest' | 'free' | 'standard' | 'business' | 'premium';
   isAdmin?: boolean;
 }
 
@@ -48,7 +48,7 @@ export default function StepEmailDashboard({ userId, isProUser, planTier, isAdmi
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const [copiedListId, setCopiedListId] = useState<string | null>(null);
 
-  const monthlyLimit = isAdmin ? -1 : planTier === 'pro' ? 1000 : planTier === 'free' ? 100 : 0;
+  const monthlyLimit = isAdmin ? -1 : planTier === 'premium' ? 5000 : planTier === 'business' ? 1000 : planTier === 'standard' ? 300 : planTier === 'free' ? 100 : 0;
 
   const { showOnboarding, setShowOnboarding } = useOnboarding(
     'step_email_dashboard_onboarding_dismissed'

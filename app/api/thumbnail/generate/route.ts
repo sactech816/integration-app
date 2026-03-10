@@ -45,7 +45,7 @@ export async function POST(request: Request) {
 
     // Pro制限チェック: Proユーザーは無制限、無料ユーザーは1回まで
     const subStatus = await getMakersSubscriptionStatus(userId);
-    const isPro = subStatus.planTier === 'pro';
+    const isPro = subStatus.planTier === 'business' || subStatus.planTier === 'premium';
 
     if (!isPro) {
       const generateCount = await getThumbnailGenerateCount(userId);

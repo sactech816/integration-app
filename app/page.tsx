@@ -5,7 +5,6 @@ import {
   Building2,
   ArrowRight,
   Calendar,
-  ClipboardList,
   Gamepad2,
   Check,
   TrendingUp,
@@ -36,7 +35,6 @@ import {
 // Client Components
 import HomeAuthProvider from '@/components/home/HomeAuthProvider';
 import { AuthCTAButton, ScrollButton, WelcomeGuideButton } from '@/components/home/HomeClientButtons';
-import HomeServiceSelector from '@/components/home/HomeServiceSelector';
 import StatsBar from '@/components/home/StatsBar';
 import DiagnosisSection from '@/components/home/DiagnosisSection';
 import RecipeTabSection from '@/components/home/RecipeTabSection';
@@ -166,17 +164,15 @@ export default function HomePage() {
 
           <div className="container mx-auto px-4 text-center relative z-10">
             <span className="inline-block py-1.5 px-5 rounded-full bg-white text-sm font-bold mb-6 tracking-wide border-2 shadow-sm" style={{ color: '#f97316', borderColor: '#f97316' }}>
-              30種以上の集客ツールが月額0円～
+              ぜーんぶ月額0円で使い放題
             </span>
             <h1 className="text-3xl md:text-4xl lg:text-6xl font-black leading-tight mb-6" style={{ color: '#5d4037' }}>
-              ツールが多すぎて迷う？<br />
-              <span style={{ color: '#f97316' }}>あなた専用のロードマップ</span>で<br />
-              もう迷わない。
+              集客に必要なもの、<br />
+              <span style={{ color: '#f97316' }}>ぜんぶここに。</span>
             </h1>
             <p className="text-base md:text-lg text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed" data-speakable>
-              起業準備中の方も、セミナー講師も、EC事業者も。<br />
-              <span className="font-bold" style={{ color: '#f97316' }}>あなたのビジネスステージ</span>に合わせて<br className="md:hidden" />
-              最適なツールをステップバイステップでご案内します。
+              LP・診断クイズ・予約・メルマガ・HP・ファネル・リサーチ…<br className="hidden md:block" />
+              <span className="font-bold" style={{ color: '#f97316' }}>30種以上のツール</span>が、ぜんぶ無料で使い放題。
             </p>
 
             {/* CTA Buttons */}
@@ -318,67 +314,71 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ========== 7. Tool Selection (全ツール一覧) ========== */}
-        <section id="create-section-services" className="py-20 bg-white border-b" style={{ borderColor: '#ffedd5' }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-black mb-4" style={{ color: '#5d4037' }}>全ツール一覧</h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">使いたいツールが決まっている方はこちらから直接どうぞ</p>
-            </div>
-            <HomeServiceSelector />
-            <p className="text-center text-sm text-gray-500 mt-6">
-              迷ったら「<ScrollButton to="persona-roadmap" className="font-bold hover:underline" style={{ color: '#f97316' }}>タイプ別ガイド</ScrollButton>」か「<ScrollButton to="diagnosis" className="font-bold hover:underline" style={{ color: '#f97316' }}>診断</ScrollButton>」を試してみてね
-            </p>
-          </div>
-        </section>
+        {/* ========== 7. 全ツール一覧バナー + ガイドメーカー ========== */}
+        <section id="create-section-services" className="py-16 bg-white border-b" style={{ borderColor: '#ffedd5' }}>
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* 全ツール一覧バナー */}
+              <a
+                href="/tools"
+                className="group relative overflow-hidden rounded-3xl border-2 p-8 md:p-10 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col justify-between min-h-[220px]"
+                style={{ borderColor: '#f97316', background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 50%, #fed7aa 100%)' }}
+              >
+                <div className="absolute top-4 right-4 w-20 h-20 rounded-full opacity-20" style={{ backgroundColor: '#f97316' }} />
+                <div className="absolute bottom-[-20px] right-[-20px] w-32 h-32 rounded-full opacity-10" style={{ backgroundColor: '#f97316' }} />
+                <div>
+                  <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur px-3 py-1 rounded-full mb-4 shadow-sm">
+                    <LayoutGrid size={16} style={{ color: '#f97316' }} />
+                    <span className="text-xs font-bold" style={{ color: '#f97316' }}>30種以上のツール</span>
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-black mb-2" style={{ color: '#5d4037' }}>
+                    全ツール一覧
+                  </h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    LP・診断・予約・メルマガ・ファネル・リサーチ…<br />
+                    カテゴリ別に全ツールをチェック
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 font-bold text-sm mt-4 group-hover:gap-3 transition-all" style={{ color: '#f97316' }}>
+                  一覧を見る <ArrowRight size={16} />
+                </div>
+              </a>
 
-        {/* ========== 8. Gallery ========== */}
-        <section className="py-24" style={{ backgroundColor: '#fffbf0' }}>
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold mb-4" style={{ color: '#5d4037' }}>こんな素敵なページが作れちゃう</h2>
-              <p className="text-gray-600">デザインのセンスはいりません！テンプレートを選ぶだけ。</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              <div className="bg-white rounded-3xl shadow-sm border border-orange-100 overflow-hidden hover:-translate-y-2 transition duration-300">
-                <div className="aspect-[4/3] flex items-center justify-center" style={{ backgroundColor: '#fce7f3' }}><span className="text-7xl">💅</span></div>
-                <div className="p-6">
-                  <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ color: '#ec4899', backgroundColor: '#fce7f3' }}>美容・サロン</span>
-                  <h4 className="font-bold text-lg mt-3 mb-1" style={{ color: '#5d4037' }}>予約もできるページ</h4>
-                  <p className="text-sm text-gray-500">おしゃれなサロンさんに人気！</p>
+              {/* ガイドメーカーパネル */}
+              <a
+                href="/onboarding"
+                className="group relative overflow-hidden rounded-3xl border-2 p-8 md:p-10 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col justify-between min-h-[220px]"
+                style={{ borderColor: '#6366f1', background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 50%, #c7d2fe 100%)' }}
+              >
+                <div className="absolute top-4 right-4 w-20 h-20 rounded-full opacity-20 bg-indigo-500" />
+                <div className="absolute bottom-[-20px] right-[-20px] w-32 h-32 rounded-full opacity-10 bg-indigo-500" />
+                <div>
+                  <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur px-3 py-1 rounded-full mb-4 shadow-sm">
+                    <Compass size={16} className="text-indigo-500" />
+                    <span className="text-xs font-bold text-indigo-500">はじめての方におすすめ</span>
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-black mb-2" style={{ color: '#5d4037' }}>
+                    ガイドメーカー
+                  </h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    ステップバイステップの「はじめかた」ページで<br />
+                    お客様を迷わせずにご案内
+                  </p>
                 </div>
-              </div>
-              <div className="bg-white rounded-3xl shadow-sm border border-orange-100 overflow-hidden hover:-translate-y-2 transition duration-300">
-                <div className="aspect-[4/3] flex items-center justify-center" style={{ backgroundColor: '#dbeafe' }}><span className="text-7xl">👩‍🏫</span></div>
-                <div className="p-6">
-                  <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ color: '#2563eb', backgroundColor: '#dbeafe' }}>先生・コーチ</span>
-                  <h4 className="font-bold text-lg mt-3 mb-1" style={{ color: '#5d4037' }}>信頼プロフィール</h4>
-                  <p className="text-sm text-gray-500">経歴や実績をしっかりアピール</p>
+                <div className="flex items-center gap-2 font-bold text-sm mt-4 text-indigo-500 group-hover:gap-3 transition-all">
+                  詳しく見る <ArrowRight size={16} />
                 </div>
-              </div>
-              <div className="bg-white rounded-3xl shadow-sm border border-orange-100 overflow-hidden hover:-translate-y-2 transition duration-300">
-                <div className="aspect-[4/3] flex items-center justify-center" style={{ backgroundColor: '#fef9c3' }}><span className="text-7xl">🍔</span></div>
-                <div className="p-6">
-                  <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ color: '#ca8a04', backgroundColor: '#fef9c3' }}>飲食・お店</span>
-                  <h4 className="font-bold text-lg mt-3 mb-1" style={{ color: '#5d4037' }}>クーポン付き診断</h4>
-                  <p className="text-sm text-gray-500">お客さんが楽しめる仕掛け！</p>
-                </div>
-              </div>
-            </div>
-            <div className="text-center mt-12">
-              <a href="/portal" className="font-bold border-b-2 transition inline-flex items-center gap-2" style={{ color: '#f97316', borderColor: '#f97316' }}>
-                もっと他のデザインを見る<ArrowRight size={16} />
               </a>
             </div>
           </div>
         </section>
 
-        {/* ========== 9. Diagnosis ========== */}
+        {/* ========== 8. Diagnosis ========== */}
         <section id="diagnosis" className="py-24 bg-white relative overflow-hidden">
           <div className="container mx-auto px-4 relative z-10">
             <div className="text-center mb-10">
               <h2 className="text-3xl font-bold mb-4" style={{ color: '#5d4037' }}>あなたに最適なツール診断</h2>
-              <p className="text-gray-600">3つの質問に答えるだけで、今の課題を解決するツールセットを提案します。</p>
+              <p className="text-gray-600">4つの質問に答えるだけで、あなたに最適なツールの組み合わせを提案します。</p>
             </div>
             <DiagnosisSection />
           </div>
@@ -422,37 +422,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ========== 12. Comparison Table ========== */}
-        <section className="py-24 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto">
-              <div className="text-center mb-16">
-                <h2 className="text-3xl font-bold mb-6" style={{ color: '#5d4037' }}>こんな「ツール迷子」になっていませんか？</h2>
-                <p className="text-gray-600">あれもこれも契約して、管理画面を行き来する日々はもう終わりです。</p>
-              </div>
-              <div className="bg-white rounded-3xl shadow-lg border-2 overflow-hidden" style={{ borderColor: '#ffedd5' }}>
-                <div className="grid grid-cols-2 text-center">
-                  <div className="p-6 border-b border-r" style={{ backgroundColor: '#fffbf0', borderColor: '#ffedd5' }}><h3 className="font-bold text-gray-500">これまでの運用</h3></div>
-                  <div className="p-6 border-b text-white" style={{ backgroundColor: '#f97316', borderColor: '#ffedd5' }}><h3 className="font-bold">Makersの運用</h3></div>
-                  <div className="p-8 border-b border-r flex flex-col items-center justify-center gap-2" style={{ borderColor: '#ffedd5' }}>
-                    <ClipboardList size={40} className="text-gray-300" /><div className="font-bold text-gray-600">バラバラのツール</div><div className="text-xs text-gray-400">HP・予約・フォーム...<br />3つ以上の管理画面</div>
-                  </div>
-                  <div className="p-8 border-b flex flex-col items-center justify-center gap-2" style={{ backgroundColor: '#fffbf0', borderColor: '#ffedd5' }}>
-                    <Check size={40} style={{ color: '#f97316' }} /><div className="font-bold" style={{ color: '#5d4037' }}>これ1つで完結</div><div className="text-xs" style={{ color: '#f97316' }}>すべての機能が<br />ひとつの管理画面に</div>
-                  </div>
-                  <div className="p-8 border-r flex flex-col items-center justify-center gap-2" style={{ borderColor: '#ffedd5' }}>
-                    <TrendingUp size={40} className="text-gray-300" /><div className="font-bold text-gray-600">月額 ¥10,000~</div><div className="text-xs text-gray-400">ツールの数だけ<br />コストがかさむ</div>
-                  </div>
-                  <div className="p-8 flex flex-col items-center justify-center gap-2" style={{ backgroundColor: '#fffbf0' }}>
-                    <Sparkles size={40} style={{ color: '#f97316' }} /><div className="font-bold text-2xl" style={{ color: '#5d4037' }}>¥0</div><div className="text-xs" style={{ color: '#f97316' }}>ずっと無料<br />追加費用なし</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ========== 13. Pricing ========== */}
+        {/* ========== 11. Pricing ========== */}
         <PricingSection />
 
         {/* ========== 13.5. Pro Plan Promo ========== */}

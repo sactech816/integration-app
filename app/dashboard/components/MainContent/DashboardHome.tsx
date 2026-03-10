@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Loader2, BookOpen, Crown, Sparkles, LayoutGrid, Lock, Users, Play, Heart } from 'lucide-react';
 import { TOOL_ITEMS, TOOL_CATEGORIES, ToolCategory } from '../Sidebar/menuItems';
 
-import { PlanTier } from '@/lib/subscription';
+import { MakersPlanTier } from '@/lib/subscription';
 
 type KdlSubscription = {
   hasActiveSubscription: boolean;
@@ -18,7 +18,7 @@ type KdlSubscription = {
 };
 
 type UserSubscription = {
-  planTier: PlanTier;
+  planTier: MakersPlanTier;
   gamificationLimit?: number;
   aiDailyLimit?: number;
 };
@@ -53,7 +53,7 @@ export default function DashboardHome({
   onNavigate,
   onMenuItemClick,
 }: DashboardHomeProps) {
-  const hasMakersProAccess = userSubscription?.planTier === 'pro';
+  const hasMakersProAccess = userSubscription?.planTier === 'business' || userSubscription?.planTier === 'premium';
   const [activeTab, setActiveTab] = useState<'all' | ToolCategory>('all');
 
   const renderToolCard = (tool: typeof TOOL_ITEMS[0]) => {

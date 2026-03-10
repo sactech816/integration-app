@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { recordAffiliateConversion, getAffiliateServiceSetting } from '@/app/actions/affiliate';
-import { addPoints, PRO_MONTHLY_POINTS } from '@/lib/points';
+import { addPoints, PLAN_MONTHLY_POINTS } from '@/lib/points';
+import { normalizeMakersPlanTier } from '@/lib/subscription';
 
 /**
  * Stripe Webhook エンドポイント
@@ -85,6 +86,53 @@ export async function POST(request: NextRequest) {
           break;
         }
 
+        // ── 単品機能購入（一回払い）の処理 ──
+        if (session.mode === 'payment' && session.metadata?.type === 'feature_purchase') {
+          const userId = session.metadata?.userId;
+          const productId = session.metadata?.productId;
+          const contentId = session.metadata?.contentId || null;
+          const contentType = session.metadata?.contentType || null;
+
+          if (userId && productId) {
+            // 商品情報を取得
+            const { data: product } = await supabase
+              .from('feature_products')
+              .select('*')
+              .eq('id', productId)
+              .single();
+
+            if (product) {
+              // 有効期限を計算
+              let expiresAt: string | null = null;
+              if (product.duration_type === 'days' && product.duration_days) {
+                const expires = new Date();
+                expires.setDate(expires.getDate() + product.duration_days);
+                expiresAt = expires.toISOString();
+              }
+
+              // 購入レコードを作成
+              await supabase.from('feature_purchases').insert({
+                user_id: userId,
+                product_id: productId,
+                price_paid: session.amount_total || product.price,
+                stripe_session_id: session.id,
+                expires_at: expiresAt,
+                remaining_uses: product.duration_type === 'count' ? product.usage_count : null,
+                content_id: contentId,
+                content_type: contentType,
+                status: 'active',
+                metadata: {
+                  stripe_session_id: session.id,
+                  amount_paid: session.amount_total,
+                },
+              });
+
+              console.log(`✅ Feature purchased: user=${userId}, product=${productId}, price=¥${session.amount_total}`);
+            }
+          }
+          break;
+        }
+
         // ── サブスクリプションモードの処理 ──
         if (session.mode === 'subscription') {
           const userId = session.metadata?.userId;
@@ -97,13 +145,20 @@ export async function POST(request: NextRequest) {
           if (userId && userId !== 'anonymous' && subscriptionId) {
             // Stripeからサブスクリプション詳細を取得
             const subscriptionData = await stripe.subscriptions.retrieve(subscriptionId) as any;
-            const amount = session.amount_total || 3980;
-            
+            const amount = session.amount_total || 4980;
+
+            // plan_tierを取得（metadataから優先、なければplanIdから推定）
+            const planTier = normalizeMakersPlanTier(
+              session.metadata?.planTier || subscriptionData.metadata?.planTier ||
+              (planId?.includes('premium') ? 'premium' :
+               planId?.includes('standard') ? 'standard' : 'business')
+            );
+
             // 次回決済日を計算
             const periodEnd = subscriptionData.current_period_end || Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
             const periodStart = subscriptionData.current_period_start || Math.floor(Date.now() / 1000);
             const nextPaymentDate = new Date(periodEnd * 1000).toISOString();
-            
+
             await supabase.from('subscriptions').upsert({
               id: subscriptionId,
               user_id: userId,
@@ -115,10 +170,12 @@ export async function POST(request: NextRequest) {
               service: 'makers',
               period: 'monthly',
               plan_name: planName,
+              plan_tier: planTier,
               email: session.customer_email || null,
               next_payment_date: nextPaymentDate,
-              metadata: { 
-                planId, 
+              metadata: {
+                planId,
+                planTier,
                 stripeCustomerId: session.customer,
                 currentPeriodStart: periodStart,
                 currentPeriodEnd: periodEnd,
@@ -231,16 +288,22 @@ export async function POST(request: NextRequest) {
             const userId = sub.metadata?.userId;
             const planId = sub.metadata?.planId;
 
-            if (userId && userId !== 'anonymous' && planId === 'makers_pro_monthly') {
-              const month = new Date().toISOString().slice(0, 7); // YYYY-MM
-              const result = await addPoints(
-                userId,
-                PRO_MONTHLY_POINTS,
-                'grant_monthly',
-                `プロプラン月次ポイント付与（${month}）`,
-                { subscription_id: invoiceSubId, month, billing_reason: billingReason }
-              );
-              console.log(`✅ Monthly points granted: user=${userId}, points=${PRO_MONTHLY_POINTS}, success=${result.success}`);
+            if (userId && userId !== 'anonymous') {
+              // plan_tierを取得してポイント付与量を決定
+              const planTier = normalizeMakersPlanTier(sub.metadata?.planTier || planId);
+              const monthlyPoints = PLAN_MONTHLY_POINTS[planTier] || 0;
+
+              if (monthlyPoints > 0) {
+                const month = new Date().toISOString().slice(0, 7); // YYYY-MM
+                const result = await addPoints(
+                  userId,
+                  monthlyPoints,
+                  'grant_monthly',
+                  `${planTier}プラン月次ポイント付与（${month}）`,
+                  { subscription_id: invoiceSubId, month, billing_reason: billingReason, plan_tier: planTier }
+                );
+                console.log(`✅ Monthly points granted: user=${userId}, plan=${planTier}, points=${monthlyPoints}, success=${result.success}`);
+              }
             }
           } catch (pointErr) {
             console.error('Monthly points grant error:', pointErr);

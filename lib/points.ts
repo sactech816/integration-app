@@ -58,8 +58,13 @@ export interface AddResult {
   transactionId?: string;
 }
 
-// Proプランの月次ポイント付与量
-export const PRO_MONTHLY_POINTS = 1500;
+// サブスクプラン別の月次ポイント付与量
+export const PRO_MONTHLY_POINTS = 1500; // レガシー互換
+export const PLAN_MONTHLY_POINTS: Record<string, number> = {
+  standard: 0,
+  business: 1500,
+  premium: 3000,
+};
 
 // ─── Admin Supabaseクライアント取得 ───
 
@@ -249,7 +254,7 @@ export async function checkAndConsumePoints(
   isPro: boolean = false,
   contentId?: string
 ): Promise<ConsumeResult> {
-  // Proユーザーはポイント消費不要
+  // business以上のプラン（旧Pro含む）はポイント消費不要
   if (isPro) {
     return { success: true, error: 'pro_user', balance: -1, consumed: 0 };
   }

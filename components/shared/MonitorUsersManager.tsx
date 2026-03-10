@@ -435,7 +435,7 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-900"
                 >
-                  <option value="pro">Pro - {MAKERS_PLAN_DEFINITIONS.pro.nameJa}（¥3,980相当）</option>
+                  <option value="business">Business - {MAKERS_PLAN_DEFINITIONS.business.nameJa}（¥3,980相当）</option>
                 </select>
               )}
               {formService === 'makers' && (
@@ -675,7 +675,7 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
                             onChange={(e) => setEditPlan(e.target.value as MakersPlanTier)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-900"
                           >
-                            <option value="pro">Pro - {MAKERS_PLAN_DEFINITIONS.pro.nameJa}</option>
+                            <option value="business">Business - {MAKERS_PLAN_DEFINITIONS.business.nameJa}</option>
                           </select>
                         )}
                       </div>

@@ -13,8 +13,54 @@ import { getAdminEmails } from '@/lib/constants';
 // Kindle（KDL）のプランTier
 export type PlanTier = 'none' | 'lite' | 'standard' | 'pro' | 'business' | 'enterprise';
 
-// 集客メーカーのプランTier
-export type MakersPlanTier = 'guest' | 'free' | 'pro';
+// 集客メーカーのプランTier（階層順）
+// guest < free < standard < business < premium
+export type MakersPlanTier = 'guest' | 'free' | 'standard' | 'business' | 'premium';
+
+// レガシー互換: 旧 'pro' は 'business' にマッピング
+export type MakersPlanTierLegacy = MakersPlanTier | 'pro';
+
+// ティアのレベル値（数値が大きいほど上位）
+const MAKERS_TIER_LEVEL: Record<MakersPlanTier, number> = {
+  guest: 0,
+  free: 1,
+  standard: 2,   // ¥1,980/月
+  business: 3,    // ¥4,980/月（旧Pro）
+  premium: 4,     // ¥9,800/月
+};
+
+/**
+ * レガシーの 'pro' を 'business' に変換する
+ * DB上に 'pro' が残っている場合のマイグレーション用
+ */
+export function normalizeMakersPlanTier(tier: MakersPlanTierLegacy | string | null | undefined): MakersPlanTier {
+  if (!tier) return 'free';
+  if (tier === 'pro') return 'business';
+  if (tier in MAKERS_TIER_LEVEL) return tier as MakersPlanTier;
+  return 'free';
+}
+
+/**
+ * ユーザーのティアが要求ティア以上かチェック
+ * 例: hasAccess('business', 'standard') → true（businessはstandard以上）
+ */
+export function hasMakersAccess(userTier: MakersPlanTier, requiredTier: MakersPlanTier): boolean {
+  return MAKERS_TIER_LEVEL[userTier] >= MAKERS_TIER_LEVEL[requiredTier];
+}
+
+/**
+ * 有料プラン（standard以上）かどうか
+ */
+export function hasMakersPaidPlan(tier: MakersPlanTier): boolean {
+  return hasMakersAccess(tier, 'standard');
+}
+
+/**
+ * レガシー互換: isPro相当（business以上）
+ */
+export function isMakersProOrHigher(tier: MakersPlanTier): boolean {
+  return hasMakersAccess(tier, 'business');
+}
 
 // サービス種別
 export type ServiceType = 'makers' | 'kdl';
@@ -413,17 +459,13 @@ export async function getMakersSubscriptionStatus(userId: string): Promise<Maker
       .eq('plan_tier', planTier)
       .eq('is_active', true)
       .single();
-    
-    // DBから取得できなければデフォルト値を返す
-    const defaults: Record<MakersPlanTier, { gamificationLimit: number; aiDailyLimit: number }> = {
-      guest: { gamificationLimit: 0, aiDailyLimit: 0 },
-      free: { gamificationLimit: 0, aiDailyLimit: 0 },
-      pro: { gamificationLimit: 10, aiDailyLimit: -1 }, // -1は無制限
-    };
-    
+
+    // DBから取得できなければデフォルト値を返す（MAKERS_PLAN_DEFINITIONSから取得）
+    const planDef = MAKERS_PLAN_DEFINITIONS[planTier] || MAKERS_PLAN_DEFINITIONS.free;
+
     return {
-      gamificationLimit: planData?.gamification_limit ?? defaults[planTier].gamificationLimit,
-      aiDailyLimit: planData?.ai_daily_limit ?? defaults[planTier].aiDailyLimit,
+      gamificationLimit: planData?.gamification_limit ?? planDef.gamificationLimit,
+      aiDailyLimit: planData?.ai_daily_limit ?? planDef.aiDailyLimit,
     };
   };
 
@@ -444,10 +486,12 @@ export async function getMakersSubscriptionStatus(userId: string): Promise<Maker
 
     // モニター権限がある場合はそれを優先
     if (monitorData) {
-      const limits = await getPlanLimits('pro');
+      // モニターのplan_typeを正規化（'pro' → 'business'）
+      const monitorTier = normalizeMakersPlanTier(monitorData.monitor_plan_type);
+      const limits = await getPlanLimits(monitorTier);
       return {
         hasActiveSubscription: true,
-        planTier: 'pro', // 集客メーカーのモニターはプロ扱い
+        planTier: monitorTier,
         isMonitor: true,
         monitorExpiresAt: monitorData.monitor_expires_at,
         ...limits,
@@ -457,7 +501,7 @@ export async function getMakersSubscriptionStatus(userId: string): Promise<Maker
     // 2. 通常のサブスクリプションをチェック（集客メーカーサービス限定）
     const { data: subscription } = await supabase
       .from('subscriptions')
-      .select('id, status, plan_name')
+      .select('id, status, plan_name, plan_tier')
       .eq('user_id', userId)
       .eq('service', 'makers')
       .eq('status', 'active')
@@ -466,12 +510,23 @@ export async function getMakersSubscriptionStatus(userId: string): Promise<Maker
       .single();
 
     if (subscription) {
-      // プロプランかどうかを判定
-      const isPro = subscription.plan_name?.toLowerCase().includes('pro') ||
-                    subscription.plan_name?.toLowerCase().includes('プロ');
-      const planTier: MakersPlanTier = isPro ? 'pro' : 'free';
+      // plan_tierカラムを優先、なければplan_nameから判定
+      let planTier: MakersPlanTier = 'free';
+      if (subscription.plan_tier) {
+        planTier = normalizeMakersPlanTier(subscription.plan_tier);
+      } else {
+        // レガシー互換: plan_nameからの判定
+        const pn = subscription.plan_name?.toLowerCase() || '';
+        if (pn.includes('premium') || pn.includes('プレミアム')) {
+          planTier = 'premium';
+        } else if (pn.includes('business') || pn.includes('ビジネス') || pn.includes('pro') || pn.includes('プロ')) {
+          planTier = 'business';
+        } else if (pn.includes('standard') || pn.includes('スタンダード')) {
+          planTier = 'standard';
+        }
+      }
       const limits = await getPlanLimits(planTier);
-      
+
       return {
         hasActiveSubscription: true,
         planTier,
@@ -616,7 +671,9 @@ export const GAMIFICATION_LIMITS: Record<PlanTier, number> = {
 export const MAKERS_GAMIFICATION_LIMITS: Record<MakersPlanTier, number> = {
   guest: 0,       // ゲスト: 作成不可
   free: 0,        // フリー: 作成不可
-  pro: 10,        // プロ: 10件まで（DBから取得可能）
+  standard: 0,    // スタンダード: 作成不可
+  business: 10,   // ビジネス: 10件まで
+  premium: -1,    // プレミアム: 無制限
 };
 
 /**
@@ -728,11 +785,69 @@ export const MAKERS_PLAN_DEFINITIONS: Record<MakersPlanTier, MakersPlanDefinitio
     thumbnailLimit: 1,
     features: ['新規作成', 'ポータル掲載', 'URL発行', '編集・更新', 'アフィリエイト機能', 'メルマガ（月30通）'],
   },
-  pro: {
-    id: 'pro',
-    name: 'Pro',
-    nameJa: 'プロプラン',
-    price: 3980,
+  standard: {
+    id: 'standard',
+    name: 'Standard',
+    nameJa: 'スタンダード',
+    price: 1980,
+    priceType: 'monthly',
+    canCreate: true,
+    canEdit: true,
+    canUseAI: true,
+    canUseAnalytics: true,
+    canUseGamification: false,
+    canDownloadHtml: false,
+    canEmbed: false,
+    canHideCopyright: false,
+    canUseAffiliate: true,
+    aiDailyLimit: 30,
+    gamificationLimit: 0,
+    newsletterMonthlyLimit: 300,
+    newsletterListLimit: 3,
+    funnelLimit: 3,
+    entertainmentQuizLimit: 3,
+    thumbnailLimit: 5,
+    features: [
+      '新規作成', 'ポータル掲載', 'URL発行', '編集・更新',
+      'アフィリエイト機能', 'AI利用（月30回）', 'アクセス解析',
+      'メルマガ（月300通）', 'ファネル（3件）',
+    ],
+  },
+  business: {
+    id: 'business',
+    name: 'Business',
+    nameJa: 'ビジネス',
+    price: 4980,
+    priceType: 'monthly',
+    canCreate: true,
+    canEdit: true,
+    canUseAI: true,
+    canUseAnalytics: true,
+    canUseGamification: true,
+    canDownloadHtml: true,
+    canEmbed: true,
+    canHideCopyright: true,
+    canUseAffiliate: true,
+    aiDailyLimit: -1, // 無制限
+    gamificationLimit: 10,
+    newsletterMonthlyLimit: 1000,
+    newsletterListLimit: -1, // 無制限
+    funnelLimit: -1, // 無制限
+    entertainmentQuizLimit: -1, // 無制限
+    thumbnailLimit: -1, // 無制限
+    features: [
+      '新規作成', 'ポータル掲載', 'URL発行', '編集・更新',
+      'アフィリエイト機能', 'アクセス解析', 'AI利用（無制限）',
+      'ゲーミフィケーション（10件）', 'HTMLダウンロード',
+      '埋め込みコード発行', 'コピーライト非表示',
+      'メルマガ（月1,000通）', 'お問い合わせ',
+    ],
+  },
+  premium: {
+    id: 'premium',
+    name: 'Premium',
+    nameJa: 'プレミアム',
+    price: 9800,
     priceType: 'monthly',
     canCreate: true,
     canEdit: true,
@@ -745,18 +860,18 @@ export const MAKERS_PLAN_DEFINITIONS: Record<MakersPlanTier, MakersPlanDefinitio
     canUseAffiliate: true,
     aiDailyLimit: -1, // 無制限
     gamificationLimit: -1, // 無制限
-    newsletterMonthlyLimit: 1000,
+    newsletterMonthlyLimit: 5000,
     newsletterListLimit: -1, // 無制限
     funnelLimit: -1, // 無制限
     entertainmentQuizLimit: -1, // 無制限
     thumbnailLimit: -1, // 無制限
     features: [
       '新規作成', 'ポータル掲載', 'URL発行', '編集・更新',
-      'アフィリエイト機能', 'アクセス解析', 'AI利用（優先）',
+      'アフィリエイト機能', 'アクセス解析', 'AI利用（無制限）',
       'ゲーミフィケーション（無制限）', 'HTMLダウンロード',
       '埋め込みコード発行', 'コピーライト非表示',
-      'メルマガ（月1,000通）',
-      'お問い合わせ', '各種セミナー参加', 'グループコンサル',
+      'メルマガ（月5,000通）', 'お問い合わせ',
+      '優先サポート', 'カスタムドメイン',
     ],
   },
 };
@@ -788,14 +903,19 @@ export async function fetchServicePlans(service: ServiceType): Promise<any[]> {
 
 /**
  * 集客メーカーのユーザープランを判定
+ * @param isLoggedIn ログイン状態
+ * @param subscriptionTier サブスクリプションのティア（省略時はfree）
  */
 export function getMakersPlanTier(
   isLoggedIn: boolean,
-  hasProSubscription: boolean
+  subscriptionTier?: MakersPlanTier | MakersPlanTierLegacy | boolean
 ): MakersPlanTier {
   if (!isLoggedIn) return 'guest';
-  if (hasProSubscription) return 'pro';
-  return 'free';
+  // レガシー互換: boolean の場合 true → business, false → free
+  if (typeof subscriptionTier === 'boolean') {
+    return subscriptionTier ? 'business' : 'free';
+  }
+  return normalizeMakersPlanTier(subscriptionTier);
 }
 
 /**

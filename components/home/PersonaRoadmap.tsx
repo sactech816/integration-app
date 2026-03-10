@@ -52,8 +52,8 @@ const personas: Persona[] = [
         phaseIcon: Eye,
         phaseColor: 'text-sky-600',
         tools: [
-          { name: 'プロフィールメーカー', href: '/profile/editor', description: '名刺代わりのWebページを作成' },
-          { name: 'SNS投稿メーカー', href: '/sns-post/editor', description: 'SNS用の投稿画像を量産' },
+          { name: 'プロフィールメーカー', href: '/profile', description: '名刺代わりのWebページを作成' },
+          { name: 'SNS投稿メーカー', href: '/sns-post', description: 'SNS用の投稿画像を量産' },
         ],
       },
       {
@@ -61,8 +61,8 @@ const personas: Persona[] = [
         phaseIcon: Users,
         phaseColor: 'text-emerald-600',
         tools: [
-          { name: '診断クイズメーカー', href: '/quiz/editor', description: '「あなたは何タイプ？」で興味を引く' },
-          { name: 'サムネイルメーカー', href: '/thumbnail/editor', description: 'クリックされるサムネを作成' },
+          { name: '診断クイズメーカー', href: '/quiz', description: '「あなたは何タイプ？」で興味を引く' },
+          { name: 'サムネイルメーカー', href: '/thumbnail', description: 'クリックされるサムネを作成' },
         ],
       },
       {
@@ -70,8 +70,8 @@ const personas: Persona[] = [
         phaseIcon: CreditCard,
         phaseColor: 'text-orange-600',
         tools: [
-          { name: 'ガイドメーカー', href: '/onboarding/editor', description: 'はじめかたページで信頼を獲得' },
-          { name: '申し込みフォーム', href: '/order-form/new', description: '決済付きの申し込みページ' },
+          { name: 'ガイドメーカー', href: '/onboarding', description: 'はじめかたページで信頼を獲得' },
+          { name: '申し込みフォーム', href: '/order-form', description: '決済付きの申し込みページ' },
         ],
       },
       {
@@ -79,8 +79,8 @@ const personas: Persona[] = [
         phaseIcon: Rocket,
         phaseColor: 'text-purple-600',
         tools: [
-          { name: 'メルマガメーカー', href: '/newsletter/campaigns/new', description: 'メール配信で継続的にアプローチ' },
-          { name: 'ファネルメーカー', href: '/funnel/new', description: '集客〜販売を自動化' },
+          { name: 'メルマガメーカー', href: '/newsletter', description: 'メール配信で継続的にアプローチ' },
+          { name: 'ファネルメーカー', href: '/funnel', description: '集客〜販売を自動化' },
         ],
       },
     ],
@@ -99,8 +99,8 @@ const personas: Persona[] = [
         phaseIcon: Eye,
         phaseColor: 'text-sky-600',
         tools: [
-          { name: 'プロフィールメーカー', href: '/profile/editor', description: '実績・経歴を魅力的にアピール' },
-          { name: '診断クイズメーカー', href: '/quiz/editor', description: 'お客様の悩みを可視化' },
+          { name: 'プロフィールメーカー', href: '/profile', description: '実績・経歴を魅力的にアピール' },
+          { name: '診断クイズメーカー', href: '/quiz', description: 'お客様の悩みを可視化' },
         ],
       },
       {
@@ -108,8 +108,8 @@ const personas: Persona[] = [
         phaseIcon: Users,
         phaseColor: 'text-emerald-600',
         tools: [
-          { name: 'LPメーカー', href: '/business/editor', description: 'サービス紹介ページを作成' },
-          { name: 'メルマガメーカー', href: '/newsletter/campaigns/new', description: 'メールで見込み客を育成' },
+          { name: 'LPメーカー', href: '/business', description: 'サービス紹介ページを作成' },
+          { name: 'メルマガメーカー', href: '/newsletter', description: 'メールで見込み客を育成' },
         ],
       },
       {
@@ -117,9 +117,9 @@ const personas: Persona[] = [
         phaseIcon: CreditCard,
         phaseColor: 'text-orange-600',
         tools: [
-          { name: '予約メーカー', href: '/booking/new', description: '日程調整の手間をゼロに' },
-          { name: '申し込みフォーム', href: '/order-form/new', description: '決済付きの申し込みページ' },
-          { name: 'セールスライター', href: '/salesletter/editor', description: 'AIが売れる文章を自動生成' },
+          { name: '予約メーカー', href: '/booking', description: '日程調整の手間をゼロに' },
+          { name: '申し込みフォーム', href: '/order-form', description: '決済付きの申し込みページ' },
+          { name: 'セールスライター', href: '/salesletter', description: 'AIが売れる文章を自動生成' },
         ],
       },
       {
@@ -127,8 +127,8 @@ const personas: Persona[] = [
         phaseIcon: Rocket,
         phaseColor: 'text-purple-600',
         tools: [
-          { name: 'ステップメール', href: '/step-email/sequences/new', description: '自動フォローアップメール' },
-          { name: 'ファネルメーカー', href: '/funnel/new', description: '集客〜成約を仕組み化' },
+          { name: 'ステップメール', href: '/step-email', description: '自動フォローアップメール' },
+          { name: 'ファネルメーカー', href: '/funnel', description: '集客〜成約を仕組み化' },
           { name: 'ゲーミフィケーション', href: '/gamification', description: 'リピーター育成の仕掛け' },
         ],
       },
@@ -148,8 +148,8 @@ const personas: Persona[] = [
         phaseIcon: Eye,
         phaseColor: 'text-sky-600',
         tools: [
-          { name: 'ウェビナーLPメーカー', href: '/webinar/editor', description: 'セミナー告知ページを即作成' },
-          { name: 'SNS投稿メーカー', href: '/sns-post/editor', description: '告知画像をSNSで拡散' },
+          { name: 'ウェビナーLPメーカー', href: '/webinar', description: 'セミナー告知ページを即作成' },
+          { name: 'SNS投稿メーカー', href: '/sns-post', description: '告知画像をSNSで拡散' },
         ],
       },
       {
@@ -157,8 +157,8 @@ const personas: Persona[] = [
         phaseIcon: Users,
         phaseColor: 'text-emerald-600',
         tools: [
-          { name: '診断クイズメーカー', href: '/quiz/editor', description: '参加者の悩みを事前に把握' },
-          { name: 'メルマガメーカー', href: '/newsletter/campaigns/new', description: 'セミナー案内をメール配信' },
+          { name: '診断クイズメーカー', href: '/quiz', description: '参加者の悩みを事前に把握' },
+          { name: 'メルマガメーカー', href: '/newsletter', description: 'セミナー案内をメール配信' },
         ],
       },
       {
@@ -166,9 +166,9 @@ const personas: Persona[] = [
         phaseIcon: CreditCard,
         phaseColor: 'text-orange-600',
         tools: [
-          { name: '予約メーカー', href: '/booking/new', description: '参加申し込みを自動受付' },
-          { name: '出欠メーカー', href: '/attendance/editor', description: '出欠確認をスムーズに' },
-          { name: 'アンケートメーカー', href: '/survey/editor', description: '満足度・フィードバック収集' },
+          { name: '予約メーカー', href: '/booking', description: '参加申し込みを自動受付' },
+          { name: '出欠メーカー', href: '/attendance', description: '出欠確認をスムーズに' },
+          { name: 'アンケートメーカー', href: '/survey', description: '満足度・フィードバック収集' },
         ],
       },
       {
@@ -176,8 +176,8 @@ const personas: Persona[] = [
         phaseIcon: Rocket,
         phaseColor: 'text-purple-600',
         tools: [
-          { name: 'ファネルメーカー', href: '/funnel/new', description: 'セミナー→バックエンド販売を自動化' },
-          { name: 'ステップメール', href: '/step-email/sequences/new', description: '参加後フォローを自動配信' },
+          { name: 'ファネルメーカー', href: '/funnel', description: 'セミナー→バックエンド販売を自動化' },
+          { name: 'ステップメール', href: '/step-email', description: '参加後フォローを自動配信' },
           { name: 'アフィリエイト', href: '/affiliate', description: '紹介制度で集客を加速' },
         ],
       },
@@ -197,8 +197,8 @@ const personas: Persona[] = [
         phaseIcon: Eye,
         phaseColor: 'text-sky-600',
         tools: [
-          { name: 'プロフィールメーカー', href: '/profile/editor', description: '著者ページで信頼を構築' },
-          { name: 'Kindle体験版', href: '/kindle/demo', description: '試し読みページを作成' },
+          { name: 'プロフィールメーカー', href: '/profile', description: '著者ページで信頼を構築' },
+          { name: 'Kindle体験版', href: '/kindle', description: '試し読みページを作成' },
         ],
       },
       {
@@ -206,9 +206,9 @@ const personas: Persona[] = [
         phaseIcon: Users,
         phaseColor: 'text-emerald-600',
         tools: [
-          { name: 'LPメーカー', href: '/business/editor', description: '商品紹介ページを作成' },
-          { name: 'サムネイルメーカー', href: '/thumbnail/editor', description: '目を引く表紙・サムネを作成' },
-          { name: 'SNS投稿メーカー', href: '/sns-post/editor', description: 'SNSで商品を告知' },
+          { name: 'LPメーカー', href: '/business', description: '商品紹介ページを作成' },
+          { name: 'サムネイルメーカー', href: '/thumbnail', description: '目を引く表紙・サムネを作成' },
+          { name: 'SNS投稿メーカー', href: '/sns-post', description: 'SNSで商品を告知' },
         ],
       },
       {
@@ -216,8 +216,8 @@ const personas: Persona[] = [
         phaseIcon: CreditCard,
         phaseColor: 'text-orange-600',
         tools: [
-          { name: 'セールスライター', href: '/salesletter/editor', description: 'AIが売れる文章を自動生成' },
-          { name: '申し込みフォーム', href: '/order-form/new', description: '決済付きの販売ページ' },
+          { name: 'セールスライター', href: '/salesletter', description: 'AIが売れる文章を自動生成' },
+          { name: '申し込みフォーム', href: '/order-form', description: '決済付きの販売ページ' },
         ],
       },
       {
@@ -225,8 +225,8 @@ const personas: Persona[] = [
         phaseIcon: Rocket,
         phaseColor: 'text-purple-600',
         tools: [
-          { name: 'ファネルメーカー', href: '/funnel/new', description: '集客〜販売を自動化' },
-          { name: 'ステップメール', href: '/step-email/sequences/new', description: '購入後のアップセルを自動化' },
+          { name: 'ファネルメーカー', href: '/funnel', description: '集客〜販売を自動化' },
+          { name: 'ステップメール', href: '/step-email', description: '購入後のアップセルを自動化' },
           { name: 'ゲーミフィケーション', href: '/gamification', description: 'リピーター育成の仕掛け' },
         ],
       },
@@ -246,8 +246,8 @@ const personas: Persona[] = [
         phaseIcon: Search,
         phaseColor: 'text-sky-600',
         tools: [
-          { name: '楽天リサーチ', href: '/rakuten-research/editor', description: '売れ筋商品・キーワードを調査' },
-          { name: 'Googleキーワードリサーチ', href: '/google-keyword-research/editor', description: '検索需要を把握' },
+          { name: '楽天リサーチ', href: '/rakuten-research', description: '売れ筋商品・キーワードを調査' },
+          { name: 'Googleキーワードリサーチ', href: '/google-keyword-research', description: '検索需要を把握' },
         ],
       },
       {
@@ -255,9 +255,9 @@ const personas: Persona[] = [
         phaseIcon: Users,
         phaseColor: 'text-emerald-600',
         tools: [
-          { name: 'LPメーカー', href: '/business/editor', description: '商品紹介ページを作成' },
-          { name: 'SNS投稿メーカー', href: '/sns-post/editor', description: 'SNSで商品を告知' },
-          { name: 'サムネイルメーカー', href: '/thumbnail/editor', description: '商品画像を魅力的に' },
+          { name: 'LPメーカー', href: '/business', description: '商品紹介ページを作成' },
+          { name: 'SNS投稿メーカー', href: '/sns-post', description: 'SNSで商品を告知' },
+          { name: 'サムネイルメーカー', href: '/thumbnail', description: '商品画像を魅力的に' },
         ],
       },
       {
@@ -265,8 +265,8 @@ const personas: Persona[] = [
         phaseIcon: CreditCard,
         phaseColor: 'text-orange-600',
         tools: [
-          { name: 'セールスライター', href: '/salesletter/editor', description: '商品説明文をAIで生成' },
-          { name: '申し込みフォーム', href: '/order-form/new', description: '自社販売ページを作成' },
+          { name: 'セールスライター', href: '/salesletter', description: '商品説明文をAIで生成' },
+          { name: '申し込みフォーム', href: '/order-form', description: '自社販売ページを作成' },
         ],
       },
       {
@@ -274,8 +274,8 @@ const personas: Persona[] = [
         phaseIcon: Rocket,
         phaseColor: 'text-purple-600',
         tools: [
-          { name: 'メルマガメーカー', href: '/newsletter/campaigns/new', description: 'リピート購入を促進' },
-          { name: 'ファネルメーカー', href: '/funnel/new', description: '集客〜販売を自動化' },
+          { name: 'メルマガメーカー', href: '/newsletter', description: 'リピート購入を促進' },
+          { name: 'ファネルメーカー', href: '/funnel', description: '集客〜販売を自動化' },
           { name: 'アフィリエイト', href: '/affiliate', description: '紹介制度で販路拡大' },
         ],
       },
@@ -295,9 +295,9 @@ const personas: Persona[] = [
         phaseIcon: Eye,
         phaseColor: 'text-sky-600',
         tools: [
-          { name: 'プロフィールメーカー', href: '/profile/editor', description: 'リンクまとめページを作成' },
-          { name: 'SNS投稿メーカー', href: '/sns-post/editor', description: '投稿画像を量産' },
-          { name: 'サムネイルメーカー', href: '/thumbnail/editor', description: 'YouTube用サムネ作成' },
+          { name: 'プロフィールメーカー', href: '/profile', description: 'リンクまとめページを作成' },
+          { name: 'SNS投稿メーカー', href: '/sns-post', description: '投稿画像を量産' },
+          { name: 'サムネイルメーカー', href: '/thumbnail', description: 'YouTube用サムネ作成' },
         ],
       },
       {
@@ -305,8 +305,8 @@ const personas: Persona[] = [
         phaseIcon: Users,
         phaseColor: 'text-emerald-600',
         tools: [
-          { name: 'エンタメ診断メーカー', href: '/entertainment/create', description: 'バズる診断コンテンツ' },
-          { name: 'YouTube競合分析', href: '/youtube-analysis/editor', description: '競合チャンネルを分析' },
+          { name: 'エンタメ診断メーカー', href: '/entertainment', description: 'バズる診断コンテンツ' },
+          { name: 'YouTube競合分析', href: '/youtube-analysis', description: '競合チャンネルを分析' },
         ],
       },
       {
@@ -314,8 +314,8 @@ const personas: Persona[] = [
         phaseIcon: CreditCard,
         phaseColor: 'text-orange-600',
         tools: [
-          { name: 'LPメーカー', href: '/business/editor', description: '商品・サービス紹介ページ' },
-          { name: '申し込みフォーム', href: '/order-form/new', description: '決済付きの販売ページ' },
+          { name: 'LPメーカー', href: '/business', description: '商品・サービス紹介ページ' },
+          { name: '申し込みフォーム', href: '/order-form', description: '決済付きの販売ページ' },
         ],
       },
       {
@@ -324,7 +324,7 @@ const personas: Persona[] = [
         phaseColor: 'text-purple-600',
         tools: [
           { name: 'ゲーミフィケーション', href: '/gamification', description: 'ガチャ・福引きでエンゲージUP' },
-          { name: 'メルマガメーカー', href: '/newsletter/campaigns/new', description: 'ファンとの関係を深める' },
+          { name: 'メルマガメーカー', href: '/newsletter', description: 'ファンとの関係を深める' },
           { name: 'アフィリエイト', href: '/affiliate', description: '紹介報酬で収益拡大' },
         ],
       },
@@ -333,7 +333,7 @@ const personas: Persona[] = [
 ];
 
 export default function PersonaRoadmap() {
-  const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
+  const [selectedPersona, setSelectedPersona] = useState<string | null>('startup');
   const activePersona = personas.find((p) => p.id === selectedPersona);
 
   return (

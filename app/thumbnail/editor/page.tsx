@@ -42,7 +42,7 @@ function ThumbnailEditorContent() {
           const res = await fetch(`/api/makers/subscription-status?userId=${currentUser.id}`);
           if (res.ok) {
             const status = await res.json();
-            setIsPro(status.planTier === 'pro');
+            setIsPro(status.planTier === 'business' || status.planTier === 'premium');
           }
         } catch (e) {
           console.error('Failed to fetch subscription status:', e);

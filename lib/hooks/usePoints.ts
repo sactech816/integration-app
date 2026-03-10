@@ -93,7 +93,7 @@ export function usePoints({ userId, isPro }: UsePointsOptions): UsePointsReturn 
       const data = await res.json();
 
       if (!data.success && data.error === 'insufficient_balance') {
-        alert(`ポイントが不足しています。\n\n必要ポイント: ${data.required}pt\n現在の残高: ${data.balance}pt\n\nポイントを購入するか、プロプランにアップグレードしてください。`);
+        alert(`ポイントが不足しています。\n\n必要ポイント: ${data.required}pt\n現在の残高: ${data.balance}pt\n\nポイントを購入するか、有料プランにアップグレードしてください。`);
         return false;
       }
 

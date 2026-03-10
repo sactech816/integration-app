@@ -772,10 +772,13 @@ export default function HomePageClientV3() {
             {PLANS.map((plan) => {
               const isGuest = plan.id === 'guest';
               const isFree = plan.id === 'free';
-              const isPro = plan.id === 'pro';
+              const isStandard = plan.id === 'standard';
+              const isBusiness = plan.id === 'business';
+              const isPremium = plan.id === 'premium';
+              const isPaidPlan = isStandard || isBusiness || isPremium;
               // チェックマークの色
-              const checkColor = isPro ? 'text-purple-500' : isFree ? undefined : undefined;
-              const checkStyle = isPro ? undefined : isFree ? { color: '#f97316' } : { color: '#84cc16' };
+              const checkColor = isPaidPlan ? 'text-purple-500' : isFree ? undefined : undefined;
+              const checkStyle = isPaidPlan ? undefined : isFree ? { color: '#f97316' } : { color: '#84cc16' };
               // CTAハンドラ
               const handleCta = () => {
                 if (isGuest) navigateTo('create');
@@ -786,23 +789,23 @@ export default function HomePageClientV3() {
                 <div
                   key={plan.id}
                   className={`rounded-3xl p-6 flex flex-col transition ${
-                    isFree ? 'border-4 bg-white shadow-xl' : isPro ? 'border-2 border-purple-200' : 'border-2 bg-white hover:shadow-lg'
+                    isFree ? 'border-4 bg-white shadow-xl' : isPaidPlan ? 'border-2 border-purple-200' : 'border-2 bg-white hover:shadow-lg'
                   }`}
                   style={{
                     borderColor: isFree ? '#f97316' : isGuest ? '#ffedd5' : undefined,
-                    backgroundColor: isPro ? '#fffbf0' : undefined,
+                    backgroundColor: isPaidPlan ? '#fffbf0' : undefined,
                   }}
                 >
                   <div className="mb-4 text-center">
                     <span
-                      className={`text-xs font-bold px-3 py-1 rounded-full ${isPro ? 'bg-purple-100 text-purple-700' : ''}`}
-                      style={!isPro ? { backgroundColor: isFree ? '#ffedd5' : '#fffbf0', color: isFree ? '#f97316' : '#5d4037' } : undefined}
+                      className={`text-xs font-bold px-3 py-1 rounded-full ${isPaidPlan ? 'bg-purple-100 text-purple-700' : ''}`}
+                      style={!isPaidPlan ? { backgroundColor: isFree ? '#ffedd5' : '#fffbf0', color: isFree ? '#f97316' : '#5d4037' } : undefined}
                     >
                       {plan.badge}
                     </span>
                     <h3
-                      className={`text-xl font-bold mt-2 ${isPro ? 'text-purple-800' : ''}`}
-                      style={!isPro ? { color: isFree ? '#f97316' : '#5d4037' } : undefined}
+                      className={`text-xl font-bold mt-2 ${isPaidPlan ? 'text-purple-800' : ''}`}
+                      style={!isPaidPlan ? { color: isFree ? '#f97316' : '#5d4037' } : undefined}
                     >
                       {plan.name}
                     </h3>
@@ -817,7 +820,8 @@ export default function HomePageClientV3() {
                   <ul className="space-y-2 mb-6 flex-1 border-t pt-4" style={{ borderColor: '#ffedd5' }}>
                     {PLAN_FEATURES.map((feature) => {
                       const status = feature[plan.id];
-                      const note = isFree ? feature.freeNote : isPro ? feature.proNote : undefined;
+                      const noteKey = `${plan.id}Note` as keyof typeof feature;
+                      const note = feature[noteKey] as string | undefined;
                       if (status === 'no') {
                         return (
                           <li key={feature.label} className="flex items-center justify-between text-sm font-bold text-gray-400">
@@ -838,7 +842,7 @@ export default function HomePageClientV3() {
                         <li key={feature.label} className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}>
                           <span>{feature.label}</span>
                           {note
-                            ? <span className={`text-xs ${isPro ? 'text-purple-500' : ''}`} style={!isPro ? checkStyle : undefined}>{note}</span>
+                            ? <span className={`text-xs ${isPaidPlan ? 'text-purple-500' : ''}`} style={!isPaidPlan ? checkStyle : undefined}>{note}</span>
                             : <Check size={16} className={checkColor} style={checkStyle} />
                           }
                         </li>
@@ -848,7 +852,7 @@ export default function HomePageClientV3() {
                   <button
                     onClick={handleCta}
                     className={`block w-full py-3 px-4 font-bold text-center rounded-2xl transition text-sm ${
-                      isPro ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-md hover:-translate-y-1 transform'
+                      isPaidPlan ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-md hover:-translate-y-1 transform'
                       : isFree ? 'text-white shadow-md hover:-translate-y-1 transform'
                       : ''
                     }`}

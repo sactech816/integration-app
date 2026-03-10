@@ -3,6 +3,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { normalizeMakersPlanTier, isMakersProOrHigher } from '@/lib/subscription';
 
 // サービスロールクライアント
 const getServiceClient = () => {
@@ -55,19 +56,27 @@ export async function canCreatorHideCopyright(userId: string | null | undefined)
       .limit(1)
       .maybeSingle();
 
-    // プランTierを判定
-    let planTier: 'guest' | 'free' | 'pro' = 'free';
-    
-    // モニターユーザーはProとして扱う
-    if (monitor?.monitor_plan_type === 'pro') {
-      planTier = 'pro';
+    // プランTierを判定（normalizeMakersPlanTier で 'pro' → 'business' 変換）
+    let planTier = normalizeMakersPlanTier('free');
+
+    // モニターユーザー
+    if (monitor) {
+      planTier = normalizeMakersPlanTier(monitor.monitor_plan_type);
     }
     // アクティブなサブスクリプションがある場合
     else if (subscription?.status === 'active') {
-      if (subscription.plan_tier === 'pro' || 
-          subscription.plan_name?.toLowerCase().includes('pro') ||
-          subscription.plan_name?.toLowerCase().includes('プロ')) {
-        planTier = 'pro';
+      if (subscription.plan_tier) {
+        planTier = normalizeMakersPlanTier(subscription.plan_tier);
+      } else {
+        // レガシー互換: plan_nameからの判定
+        const pn = subscription.plan_name?.toLowerCase() || '';
+        if (pn.includes('premium') || pn.includes('プレミアム')) {
+          planTier = normalizeMakersPlanTier('premium');
+        } else if (pn.includes('business') || pn.includes('ビジネス') || pn.includes('pro') || pn.includes('プロ')) {
+          planTier = normalizeMakersPlanTier('business');
+        } else if (pn.includes('standard') || pn.includes('スタンダード')) {
+          planTier = normalizeMakersPlanTier('standard');
+        }
       }
     }
 
@@ -85,8 +94,8 @@ export async function canCreatorHideCopyright(userId: string | null | undefined)
       return planSettings.can_hide_copyright === true;
     }
 
-    // フォールバック: Proプランのみコピーライト非表示可能
-    return planTier === 'pro';
+    // フォールバック: business以上のプランのみコピーライト非表示可能
+    return isMakersProOrHigher(planTier);
   } catch (error) {
     console.error('Error checking creator plan permission:', error);
     return false;
@@ -110,6 +119,6 @@ export async function shouldHideFooter(
 
   // 作成者がコピーライト非表示権限を持っているかチェック
   const hasPermission = await canCreatorHideCopyright(creatorUserId);
-  
+
   return hasPermission;
 }

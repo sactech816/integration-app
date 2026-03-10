@@ -3,16 +3,20 @@
  */
 
 import { useState, useEffect } from 'react';
+import type { MakersPlanTier } from '@/lib/subscription';
 
 export interface UserPlan {
-  planTier: 'guest' | 'free' | 'pro';
+  planTier: MakersPlanTier;
   canHideCopyright: boolean;
   canUseAI: boolean;
   canUseAnalytics: boolean;
   canUseGamification: boolean;
   canDownloadHtml: boolean;
   canEmbed: boolean;
+  /** business以上のプランかどうか（旧isPro互換） */
   isProUser: boolean;
+  /** standard以上の有料プランかどうか */
+  isPaidUser: boolean;
 }
 
 const defaultPlan: UserPlan = {
@@ -24,6 +28,7 @@ const defaultPlan: UserPlan = {
   canDownloadHtml: false,
   canEmbed: false,
   isProUser: false,
+  isPaidUser: false,
 };
 
 /**
@@ -31,10 +36,10 @@ const defaultPlan: UserPlan = {
  */
 export async function fetchUserPlan(userId: string | null | undefined): Promise<UserPlan> {
   try {
-    const url = userId 
+    const url = userId
       ? `/api/user/plan?userId=${userId}`
       : '/api/user/plan';
-    
+
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error('Failed to fetch user plan');
@@ -62,7 +67,7 @@ export function useUserPlan(userId: string | null | undefined): {
   const fetchPlan = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const plan = await fetchUserPlan(userId);
       setUserPlan(plan);

@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     if (authError) return authError;
 
     const { searchParams } = new URL(request.url);
-    const planTier = searchParams.get('planTier') as PlanTier;
+    const planTier = searchParams.get('planTier') as PlanTier | 'premium';
     const service = searchParams.get('service') || 'kdl';
     const allPlans = searchParams.get('allPlans') === 'true';
 
@@ -91,7 +91,7 @@ export async function GET(request: Request) {
 
     // プリセット情報を取得（サービスとプランに応じて）
     // 集客メーカーのproはmakers_proを参照
-    const presetKey = (service === 'makers' && planTier === 'pro') ? 'makers_pro' : planTier;
+    const presetKey = (service === 'makers' && (planTier === 'pro' || planTier === 'business' || planTier === 'premium' as string)) ? 'makers_pro' : planTier;
     const presets = PLAN_AI_PRESETS[presetKey as keyof typeof PLAN_AI_PRESETS];
     
     if (!presets) {

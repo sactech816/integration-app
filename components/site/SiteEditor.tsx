@@ -274,7 +274,7 @@ const Textarea = ({label, val, onChange, rows = 3}: {label: string, val: string,
 
 export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack, setShowAuth }: SiteEditorProps) {
   const { userPlan } = useUserPlan(user?.id);
-  const isPro = userPlan?.planTier === 'pro';
+  const isPro = userPlan?.isProUser ?? false;
   const { canAfford } = usePoints({ userId: user?.id, isPro });
   const { showOnboarding, setShowOnboarding } = useOnboarding('site_editor_onboarding_dismissed', { skip: !!initialData });
 

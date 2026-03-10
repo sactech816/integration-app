@@ -40,7 +40,7 @@ export default function AdminAISettings({ userId }: AdminAISettingsProps) {
     'initial_trial', 'initial_standard', 'initial_business',  // 初回（一括）
     'lite', 'standard', 'pro', 'business', 'enterprise'       // 継続（月額）
   ] as const;
-  const makersPlans: MakersPlanTier[] = ['guest', 'free', 'pro'];
+  const makersPlans: MakersPlanTier[] = ['guest', 'free', 'standard', 'business', 'premium'];
   
   const currentPlans = selectedService === 'kdl' ? [...kdlAllPlans] : makersPlans;
 

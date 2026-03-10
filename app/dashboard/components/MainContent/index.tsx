@@ -19,7 +19,7 @@ import StepEmailDashboard from '@/components/step-email/StepEmailDashboard';
 import LineDashboard from '@/components/line/LineDashboard';
 import OrderFormList from './OrderFormList';
 import FunnelList from './FunnelList';
-import { PlanTier } from '@/lib/subscription';
+import { MakersPlanTier } from '@/lib/subscription';
 
 export type ActiveView =
   | 'dashboard'
@@ -79,7 +79,7 @@ type KdlSubscription = {
 };
 
 type UserSubscription = {
-  planTier: PlanTier;
+  planTier: MakersPlanTier;
   gamificationLimit?: number;
   aiDailyLimit?: number;
 };
@@ -186,7 +186,7 @@ export default function MainContent({
 
   // Pro機能のアンロック判定（集客メーカーProプラン、パートナー、管理者）
   // 注: KDLサブスクではなく、集客メーカーのProプランをチェック
-  const hasMakersProAccess = userSubscription?.planTier === 'pro';
+  const hasMakersProAccess = userSubscription?.planTier === 'business' || userSubscription?.planTier === 'premium';
   const isUnlocked = isAdmin || isPartner || hasMakersProAccess;
 
   // activeViewが変更されたときにスクロール位置を最上部にリセット
@@ -268,8 +268,8 @@ export default function MainContent({
       {activeView === 'newsletter' && user && (
         <NewsletterDashboard
           userId={user.id}
-          isProUser={userSubscription?.planTier === 'pro'}
-          planTier={userSubscription?.planTier === 'pro' ? 'pro' : 'free'}
+          isProUser={userSubscription?.planTier === 'business' || userSubscription?.planTier === 'premium'}
+          planTier={userSubscription?.planTier || 'free'}
           isAdmin={isAdmin}
         />
       )}
@@ -278,8 +278,8 @@ export default function MainContent({
       {activeView === 'step-email' && user && (
         <StepEmailDashboard
           userId={user.id}
-          isProUser={userSubscription?.planTier === 'pro'}
-          planTier={userSubscription?.planTier === 'pro' ? 'pro' : 'free'}
+          isProUser={userSubscription?.planTier === 'business' || userSubscription?.planTier === 'premium'}
+          planTier={userSubscription?.planTier || 'free'}
           isAdmin={isAdmin}
         />
       )}
@@ -304,14 +304,14 @@ export default function MainContent({
 
       {/* ファネル */}
       {activeView === 'funnel' && user && (
-        <FunnelList userId={user.id} isAdmin={isAdmin} hasMakersProAccess={userSubscription?.planTier === 'pro'} onNavigate={onNavigate} />
+        <FunnelList userId={user.id} isAdmin={isAdmin} hasMakersProAccess={userSubscription?.planTier === 'business' || userSubscription?.planTier === 'premium'} onNavigate={onNavigate} />
       )}
 
       {/* ゲーム作成（全ユーザー） */}
       {activeView === 'my-games' && user && (
         <MyGamification 
           userId={user.id} 
-          planTier={userSubscription?.planTier || 'none'} 
+          planTier={userSubscription?.planTier || 'guest'}
           isUnlocked={isUnlocked}
           isAdmin={isAdmin}
           gamificationLimit={userSubscription?.gamificationLimit}

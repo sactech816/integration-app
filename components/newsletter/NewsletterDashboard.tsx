@@ -34,7 +34,7 @@ interface Campaign {
 interface NewsletterDashboardProps {
   userId: string;
   isProUser: boolean;
-  planTier: 'guest' | 'free' | 'pro';
+  planTier: 'guest' | 'free' | 'standard' | 'business' | 'premium';
   isAdmin?: boolean;
 }
 
@@ -48,8 +48,8 @@ export default function NewsletterDashboard({ userId, isProUser, planTier, isAdm
   const [copiedListId, setCopiedListId] = useState<string | null>(null);
 
   // 管理者は送信数・リスト数ともに無制限
-  const monthlyLimit = isAdmin ? -1 : planTier === 'pro' ? 1000 : planTier === 'free' ? 100 : 0;
-  const listLimit = isAdmin ? -1 : planTier === 'pro' ? -1 : planTier === 'free' ? 1 : 0;
+  const monthlyLimit = isAdmin ? -1 : planTier === 'premium' ? 5000 : planTier === 'business' ? 1000 : planTier === 'standard' ? 300 : planTier === 'free' ? 100 : 0;
+  const listLimit = isAdmin ? -1 : (planTier === 'business' || planTier === 'premium') ? -1 : planTier === 'standard' ? 3 : planTier === 'free' ? 1 : 0;
 
   // オンボーディング
   const { showOnboarding, setShowOnboarding } = useOnboarding(

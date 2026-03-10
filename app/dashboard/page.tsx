@@ -37,7 +37,7 @@ import AdminOverview from './components/Admin/AdminOverview';
 import { useDashboardData } from './hooks/useDashboardData';
 import { useAdminData } from './hooks/useAdminData';
 
-import { PlanTier } from '@/lib/subscription';
+import { MakersPlanTier } from '@/lib/subscription';
 
 // KDLサブスクリプション状態の型
 type KdlSubscription = {
@@ -52,7 +52,7 @@ type KdlSubscription = {
 
 // ユーザーサブスクリプション状態の型
 type UserSubscription = {
-  planTier: PlanTier;
+  planTier: MakersPlanTier;
   gamificationLimit?: number;
   aiDailyLimit?: number;
 };
@@ -155,7 +155,7 @@ function DashboardContent() {
   }, [searchParams, fetchPurchases, fetchContents, selectedService]);
 
   // 集客メーカーProプランかどうか（アナリティクス表示の条件）
-  const hasMakersProAccess = userSubscription?.planTier === 'pro';
+  const hasMakersProAccess = userSubscription?.planTier === 'business' || userSubscription?.planTier === 'premium';
   
   // アナリティクス取得権限の判定（管理者・パートナーは即時判定可能）
   const canFetchAnalyticsImmediately = isAdmin || isPartner;
@@ -209,7 +209,7 @@ function DashboardContent() {
         const data = await response.json();
         // MakersPlanTier ('guest' | 'free' | 'pro') を設定
         // 'pro' の場合は Pro機能が有効になる
-        const planTier = data.planTier === 'pro' ? 'pro' : (data.planTier || 'none');
+        const planTier = data.planTier || 'none';
         setUserSubscription({ 
           planTier,
           gamificationLimit: data.gamificationLimit,
@@ -218,7 +218,7 @@ function DashboardContent() {
       }
     } catch (error) {
       console.error('User subscription fetch error:', error);
-      setUserSubscription({ planTier: 'none', gamificationLimit: 0, aiDailyLimit: 0 });
+      setUserSubscription({ planTier: 'guest', gamificationLimit: 0, aiDailyLimit: 0 });
     } finally {
       setLoadingUserSubscription(false);
     }

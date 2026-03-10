@@ -117,7 +117,7 @@ export async function POST(
 
         const isProUser = !!monitor ||
           (subscription?.status === 'active' && (
-            subscription.plan_tier === 'pro' ||
+            subscription.plan_tier === 'pro' || subscription.plan_tier === 'business' || subscription.plan_tier === 'premium' ||
             subscription.plan_name?.toLowerCase().includes('pro') ||
             subscription.plan_name?.toLowerCase().includes('プロ')
           ));

@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     }
 
     const subStatus = await getMakersSubscriptionStatus(userId);
-    if (subStatus.planTier !== 'pro') {
+    if (subStatus.planTier !== 'business' && subStatus.planTier !== 'premium') {
       return NextResponse.json(
         {
           error: 'PRO_REQUIRED',

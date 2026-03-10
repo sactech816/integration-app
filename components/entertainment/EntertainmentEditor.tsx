@@ -444,7 +444,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
             try {
               const res = await fetch(`/api/makers/subscription-status?userId=${user.id}`);
               const subData = res.ok ? await res.json() : null;
-              const isPro = subData?.planTier === 'pro';
+              const isPro = subData?.planTier === 'business' || subData?.planTier === 'premium';
               if (!isPro) {
                 const { count } = await supabase
                   .from(TABLES.QUIZZES)

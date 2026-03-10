@@ -24,29 +24,20 @@ import {
 import { getCampaigns, updateCampaign, deleteCampaign } from '@/app/actions/gamification';
 import type { GamificationCampaign, CampaignType } from '@/lib/types';
 import { CAMPAIGN_TYPE_LABELS } from '@/lib/types';
-import { 
-  PlanTier, 
+import {
   MakersPlanTier,
   MAKERS_GAMIFICATION_LIMITS,
 } from '@/lib/subscription';
 
 // 集客メーカー用のゲーム作成数制限を使用（フォールバック用）
-const getGamificationLimitForMakers = (planTier: PlanTier): number => {
-  let makersPlan: MakersPlanTier;
-  
-  if (planTier === 'none') {
-    makersPlan = 'free';
-  } else {
-    makersPlan = 'pro';
-  }
-  
-  const limit = MAKERS_GAMIFICATION_LIMITS[makersPlan];
+const getGamificationLimitForMakers = (planTier: MakersPlanTier): number => {
+  const limit = MAKERS_GAMIFICATION_LIMITS[planTier];
   return limit === -1 ? 999 : limit;
 };
 
 type MyGamificationProps = {
   userId: string;
-  planTier: PlanTier;
+  planTier: MakersPlanTier;
   isUnlocked?: boolean;
   isAdmin?: boolean;
   // DBから取得した制限値（service_plans.gamification_limit）
@@ -71,7 +62,7 @@ export default function MyGamification({ userId, planTier, isUnlocked = false, i
   const rawLimit = gamificationLimit !== undefined ? gamificationLimit : getGamificationLimitForMakers(planTier);
   const limit = rawLimit === -1 ? 999 : rawLimit;
   const isLimitReached = !isAdmin && (limit === 0 || campaigns.length >= limit);
-  const isPaidUser = planTier !== 'none';
+  const isPaidUser = planTier !== 'guest' && planTier !== 'free';
   // 管理者はcanCreate=true、それ以外は従来のロジック
   const canCreate = isAdmin || limit > 0;
 

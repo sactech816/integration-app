@@ -5,6 +5,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import {
+  type MakersPlanTier,
+  normalizeMakersPlanTier,
+  isMakersProOrHigher,
+  hasMakersPaidPlan,
+  MAKERS_PLAN_DEFINITIONS,
+} from '@/lib/subscription';
 
 // サービスロールクライアント
 const getServiceClient = () => {
@@ -19,14 +26,17 @@ const getServiceClient = () => {
 };
 
 export interface UserPlanResponse {
-  planTier: 'guest' | 'free' | 'pro';
+  planTier: MakersPlanTier;
   canHideCopyright: boolean;
   canUseAI: boolean;
   canUseAnalytics: boolean;
   canUseGamification: boolean;
   canDownloadHtml: boolean;
   canEmbed: boolean;
+  /** business以上（旧isPro互換） */
   isProUser: boolean;
+  /** standard以上の有料プラン */
+  isPaidUser: boolean;
   // 数量制限
   gamificationLimit: number;
   aiDailyLimit: number;
@@ -52,6 +62,7 @@ export async function GET(request: NextRequest) {
         canDownloadHtml: false,
         canEmbed: false,
         isProUser: false,
+        isPaidUser: false,
         gamificationLimit: 0,
         aiDailyLimit: 0,
       });
@@ -87,19 +98,27 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
 
     // プランTierを判定
-    let planTier: 'guest' | 'free' | 'pro' = 'free';
-    
-    // モニターユーザーはProとして扱う（集客メーカーのモニター権限があれば全てPro扱い）
+    let planTier: MakersPlanTier = 'free';
+
+    // モニターユーザーはbusiness扱い（旧Pro互換）
     if (monitor) {
-      planTier = 'pro';
+      planTier = normalizeMakersPlanTier(monitor.monitor_plan_type);
     }
     // アクティブなサブスクリプションがある場合
     else if (subscription?.status === 'active') {
-      // plan_tierがproの場合、またはplan_nameにproが含まれる場合
-      if (subscription.plan_tier === 'pro' || 
-          subscription.plan_name?.toLowerCase().includes('pro') ||
-          subscription.plan_name?.toLowerCase().includes('プロ')) {
-        planTier = 'pro';
+      if (subscription.plan_tier) {
+        // plan_tierカラムを優先（正規化付き）
+        planTier = normalizeMakersPlanTier(subscription.plan_tier);
+      } else {
+        // レガシー互換: plan_nameからの判定
+        const pn = subscription.plan_name?.toLowerCase() || '';
+        if (pn.includes('premium') || pn.includes('プレミアム')) {
+          planTier = 'premium';
+        } else if (pn.includes('business') || pn.includes('ビジネス') || pn.includes('pro') || pn.includes('プロ')) {
+          planTier = 'business';
+        } else if (pn.includes('standard') || pn.includes('スタンダード')) {
+          planTier = 'standard';
+        }
       }
     }
 
@@ -112,54 +131,21 @@ export async function GET(request: NextRequest) {
       .eq('is_active', true)
       .single();
 
-    // フォールバック値（service_plansテーブルがない場合）
-    const defaultPermissions = {
-      guest: {
-        canHideCopyright: false,
-        canUseAI: false,
-        canUseAnalytics: false,
-        canUseGamification: false,
-        canDownloadHtml: false,
-        canEmbed: false,
-        gamificationLimit: 0,
-        aiDailyLimit: 0,
-      },
-      free: {
-        canHideCopyright: false,
-        canUseAI: false,
-        canUseAnalytics: false,
-        canUseGamification: false,
-        canDownloadHtml: false,
-        canEmbed: false,
-        gamificationLimit: 0,
-        aiDailyLimit: 0,
-      },
-      pro: {
-        canHideCopyright: true,
-        canUseAI: true,
-        canUseAnalytics: true,
-        canUseGamification: true,
-        canDownloadHtml: true,
-        canEmbed: true,
-        gamificationLimit: 10,
-        aiDailyLimit: -1, // 無制限
-      },
-    };
-
-    // DBから取得した場合はその値を使用、なければフォールバック
-    const defaults = defaultPermissions[planTier];
+    // フォールバック値（MAKERS_PLAN_DEFINITIONSから取得）
+    const planDef = MAKERS_PLAN_DEFINITIONS[planTier] || MAKERS_PLAN_DEFINITIONS.free;
 
     return NextResponse.json<UserPlanResponse>({
       planTier,
-      canHideCopyright: planSettings?.can_hide_copyright ?? defaults.canHideCopyright,
-      canUseAI: planSettings?.can_use_ai ?? defaults.canUseAI,
-      canUseAnalytics: planSettings?.can_use_analytics ?? defaults.canUseAnalytics,
-      canUseGamification: planSettings?.can_use_gamification ?? defaults.canUseGamification,
-      canDownloadHtml: planSettings?.can_download_html ?? defaults.canDownloadHtml,
-      canEmbed: planSettings?.can_embed ?? defaults.canEmbed,
-      isProUser: planTier === 'pro',
-      gamificationLimit: planSettings?.gamification_limit ?? defaults.gamificationLimit,
-      aiDailyLimit: planSettings?.ai_daily_limit ?? defaults.aiDailyLimit,
+      canHideCopyright: planSettings?.can_hide_copyright ?? planDef.canHideCopyright,
+      canUseAI: planSettings?.can_use_ai ?? planDef.canUseAI,
+      canUseAnalytics: planSettings?.can_use_analytics ?? planDef.canUseAnalytics,
+      canUseGamification: planSettings?.can_use_gamification ?? planDef.canUseGamification,
+      canDownloadHtml: planSettings?.can_download_html ?? planDef.canDownloadHtml,
+      canEmbed: planSettings?.can_embed ?? planDef.canEmbed,
+      isProUser: isMakersProOrHigher(planTier),
+      isPaidUser: hasMakersPaidPlan(planTier),
+      gamificationLimit: planSettings?.gamification_limit ?? planDef.gamificationLimit,
+      aiDailyLimit: planSettings?.ai_daily_limit ?? planDef.aiDailyLimit,
     });
   } catch (error: unknown) {
     console.error('User plan API error:', error);
@@ -173,6 +159,7 @@ export async function GET(request: NextRequest) {
       canDownloadHtml: false,
       canEmbed: false,
       isProUser: false,
+      isPaidUser: false,
       gamificationLimit: 0,
       aiDailyLimit: 0,
     });

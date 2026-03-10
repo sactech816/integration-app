@@ -23,13 +23,16 @@ export default function PricingSection() {
           <p className="text-gray-600">まずは無料で、すべての機能をお試しいただけます。</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
+        <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-7xl mx-auto items-stretch">
           {PLANS.map((plan) => {
             const isGuest = plan.id === 'guest';
             const isFree = plan.id === 'free';
-            const isPro = plan.id === 'pro';
-            const checkColor = isPro ? 'text-purple-500' : isFree ? undefined : undefined;
-            const checkStyle = isPro ? undefined : isFree ? { color: '#f97316' } : { color: '#84cc16' };
+            const isPopular = plan.popular === true;
+            const isPaid = plan.id === 'standard' || plan.id === 'business' || plan.id === 'premium';
+            const isPremiumTier = plan.id === 'business' || plan.id === 'premium';
+            const checkColor = isPremiumTier ? 'text-purple-500' : isFree ? undefined : undefined;
+            const checkStyle = isPremiumTier ? undefined : isFree ? { color: '#f97316' } : { color: '#84cc16' };
+            const noteKey = `${plan.id}Note` as keyof typeof PLAN_FEATURES[number];
             const handleCta = () => {
               if (isGuest) navigateTo('create');
               else if (isFree) setShowAuth(true);
@@ -39,23 +42,23 @@ export default function PricingSection() {
               <div
                 key={plan.id}
                 className={`rounded-3xl p-6 flex flex-col transition ${
-                  isFree ? 'border-4 bg-white shadow-xl' : isPro ? 'border-2 border-purple-200' : 'border-2 bg-white hover:shadow-lg'
+                  isPopular ? 'border-4 bg-white shadow-xl' : isPremiumTier ? 'border-2 border-purple-200' : 'border-2 bg-white hover:shadow-lg'
                 }`}
                 style={{
-                  borderColor: isFree ? '#f97316' : isGuest ? '#ffedd5' : undefined,
-                  backgroundColor: isPro ? '#fffbf0' : undefined,
+                  borderColor: isPopular ? '#f97316' : isGuest ? '#ffedd5' : undefined,
+                  backgroundColor: isPremiumTier ? '#fffbf0' : undefined,
                 }}
               >
                 <div className="mb-4 text-center">
                   <span
-                    className={`text-xs font-bold px-3 py-1 rounded-full ${isPro ? 'bg-purple-100 text-purple-700' : ''}`}
-                    style={!isPro ? { backgroundColor: isFree ? '#ffedd5' : '#fffbf0', color: isFree ? '#f97316' : '#5d4037' } : undefined}
+                    className={`text-xs font-bold px-3 py-1 rounded-full ${isPremiumTier ? 'bg-purple-100 text-purple-700' : ''}`}
+                    style={!isPremiumTier ? { backgroundColor: isPopular ? '#ffedd5' : '#fffbf0', color: isPopular ? '#f97316' : '#5d4037' } : undefined}
                   >
                     {plan.badge}
                   </span>
                   <h3
-                    className={`text-xl font-bold mt-2 ${isPro ? 'text-purple-800' : ''}`}
-                    style={!isPro ? { color: isFree ? '#f97316' : '#5d4037' } : undefined}
+                    className={`text-xl font-bold mt-2 ${isPremiumTier ? 'text-purple-800' : ''}`}
+                    style={!isPremiumTier ? { color: isPopular ? '#f97316' : '#5d4037' } : undefined}
                   >
                     {plan.name}
                   </h3>
@@ -64,13 +67,13 @@ export default function PricingSection() {
                     <span className="text-xs text-gray-500">{plan.priceUnit}</span>
                   </div>
                 </div>
-                <p className="text-xs mb-6 text-center whitespace-pre-line" style={{ color: isFree ? '#5d4037' : undefined, fontWeight: isFree ? 700 : undefined }}>
+                <p className="text-xs mb-6 text-center whitespace-pre-line" style={{ color: isPopular ? '#5d4037' : undefined, fontWeight: isPopular ? 700 : undefined }}>
                   {plan.description}
                 </p>
                 <ul className="space-y-2 mb-6 flex-1 border-t pt-4" style={{ borderColor: '#ffedd5' }}>
                   {PLAN_FEATURES.map((feature) => {
                     const status = feature[plan.id];
-                    const note = isFree ? feature.freeNote : isPro ? feature.proNote : undefined;
+                    const note = (feature as any)[noteKey] as string | undefined;
                     if (status === 'no') {
                       return (
                         <li key={feature.label} className="flex items-center justify-between text-sm font-bold text-gray-400">
@@ -82,7 +85,7 @@ export default function PricingSection() {
                       return (
                         <li key={feature.label} className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}>
                           <span>{feature.label}</span>
-                          <span className="text-xs" style={isFree ? { color: '#f97316' } : undefined}>{note || '制限あり'}</span>
+                          <span className="text-xs" style={isPopular ? { color: '#f97316' } : undefined}>{note || '制限あり'}</span>
                         </li>
                       );
                     }
@@ -90,7 +93,7 @@ export default function PricingSection() {
                       <li key={feature.label} className="flex items-center justify-between text-sm font-bold" style={{ color: '#5d4037' }}>
                         <span>{feature.label}</span>
                         {note
-                          ? <span className={`text-xs ${isPro ? 'text-purple-500' : ''}`} style={!isPro ? checkStyle : undefined}>{note}</span>
+                          ? <span className={`text-xs ${isPremiumTier ? 'text-purple-500' : ''}`} style={!isPremiumTier ? checkStyle : undefined}>{note}</span>
                           : <Check size={16} className={checkColor} style={checkStyle} />}
                       </li>
                     );
@@ -99,12 +102,14 @@ export default function PricingSection() {
                 <button
                   onClick={handleCta}
                   className={`block w-full py-3 px-4 font-bold text-center rounded-2xl transition text-sm ${
-                    isPro ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-md hover:-translate-y-1 transform'
-                    : isFree ? 'text-white shadow-md hover:-translate-y-1 transform'
+                    isPremiumTier ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white shadow-md hover:-translate-y-1 transform'
+                    : isPopular ? 'text-white shadow-md hover:-translate-y-1 transform'
+                    : isPaid ? 'text-white shadow-md hover:-translate-y-1 transform'
                     : ''
                   }`}
                   style={
-                    isFree ? { backgroundColor: '#f97316' }
+                    isPopular ? { backgroundColor: '#f97316' }
+                    : isPaid && !isPremiumTier ? { backgroundColor: '#3b82f6', color: '#ffffff' }
                     : isGuest ? { backgroundColor: '#fffbf0', color: '#5d4037' }
                     : undefined
                   }
