@@ -12,6 +12,7 @@ interface ChatMessage {
 interface QuizConcept {
   theme: string;
   resultCount: number;
+  questionCount?: number;
   style: string;
   mode: 'diagnosis' | 'fortune';
 }
@@ -213,7 +214,7 @@ async function handleGeneratePhase(
   userId: string,
 ) {
   const { theme, resultCount, style, mode } = concept;
-  const questionCount = 5;
+  const questionCount = concept.questionCount || 5;
 
   const styleDescriptions: Record<string, string> = {
     cute: 'かわいくてファンシーな雰囲気。絵文字や柔らかい表現を使う',

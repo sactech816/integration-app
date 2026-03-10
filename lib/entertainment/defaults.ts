@@ -47,6 +47,8 @@ export const MODE_OPTIONS = [
 
 export const RESULT_COUNT_OPTIONS = [3, 4, 6];
 
+export const QUESTION_COUNT_OPTIONS = [3, 5, 7, 10];
+
 export const ASPECT_RATIO_OPTIONS = [
   { label: '正方形', value: '1:1' as const, icon: '⬜', desc: 'SNS投稿向き' },
   { label: '縦型', value: '3:4' as const, icon: '📱', desc: 'スマホ・カード向き' },

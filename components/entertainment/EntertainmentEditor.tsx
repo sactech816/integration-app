@@ -18,6 +18,7 @@ import {
   STYLE_OPTIONS,
   MODE_OPTIONS,
   RESULT_COUNT_OPTIONS,
+  QUESTION_COUNT_OPTIONS,
   ASPECT_RATIO_OPTIONS,
   THEME_PRESETS,
   STYLE_TO_THEME,
@@ -119,6 +120,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
   const [aiStyle, setAiStyle] = useState<string>('pop');
   const [aiMode, setAiMode] = useState<string>('diagnosis');
   const [aiResultCount, setAiResultCount] = useState(4);
+  const [aiQuestionCount, setAiQuestionCount] = useState(5);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progressSteps, setProgressSteps] = useState<ProgressStep[]>([]);
   const [generateError, setGenerateError] = useState<string | null>(null);
@@ -129,6 +131,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
   const [wizardStyle, setWizardStyle] = useState<string>('pop');
   const [wizardMode, setWizardMode] = useState<string>('diagnosis');
   const [wizardResultCount, setWizardResultCount] = useState(4);
+  const [wizardQuestionCount, setWizardQuestionCount] = useState(5);
   const [wizardGenerating, setWizardGenerating] = useState(false);
   const [wizardProgressSteps, setWizardProgressSteps] = useState<ProgressStep[]>([]);
   const [wizardError, setWizardError] = useState<string | null>(null);
@@ -215,7 +218,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phase: 'generate',
-          quizConcept: { theme: aiTheme, resultCount: aiResultCount, style: aiStyle, mode },
+          quizConcept: { theme: aiTheme, resultCount: aiResultCount, questionCount: aiQuestionCount, style: aiStyle, mode },
         }),
       });
       const data = await res.json();
@@ -323,7 +326,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phase: 'generate',
-          quizConcept: { theme: wizardTheme, resultCount: wizardResultCount, style: wizardStyle, mode: finalMode },
+          quizConcept: { theme: wizardTheme, resultCount: wizardResultCount, questionCount: wizardQuestionCount, style: wizardStyle, mode: finalMode },
         }),
       });
       const data = await res.json();
@@ -728,20 +731,66 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
                       </div>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 block mb-2">結果タイプ数</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {RESULT_COUNT_OPTIONS.map((count) => (
+                            <button
+                              key={count}
+                              onClick={() => setWizardResultCount(count)}
+                              className={`py-2.5 rounded-lg border-2 font-bold text-sm flex items-center justify-center transition-all ${
+                                wizardResultCount === count
+                                  ? 'border-pink-500 bg-pink-50 text-pink-700 shadow-sm'
+                                  : 'border-gray-200 bg-white text-gray-500'
+                              }`}
+                            >
+                              {count}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 block mb-2">質問数</label>
+                        <div className="grid grid-cols-4 gap-2">
+                          {QUESTION_COUNT_OPTIONS.map((count) => (
+                            <button
+                              key={count}
+                              onClick={() => setWizardQuestionCount(count)}
+                              className={`py-2.5 rounded-lg border-2 font-bold text-sm flex items-center justify-center transition-all ${
+                                wizardQuestionCount === count
+                                  ? 'border-pink-500 bg-pink-50 text-pink-700 shadow-sm'
+                                  : 'border-gray-200 bg-white text-gray-500'
+                              }`}
+                            >
+                              {count}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
                     <div>
-                      <label className="text-sm font-bold text-gray-700 block mb-2">結果タイプ数</label>
-                      <div className="grid grid-cols-3 gap-3">
-                        {RESULT_COUNT_OPTIONS.map((count) => (
+                      <label className="text-sm font-bold text-gray-700 block mb-2">画像サイズ</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {ASPECT_RATIO_OPTIONS.map((ar) => (
                           <button
-                            key={count}
-                            onClick={() => setWizardResultCount(count)}
-                            className={`py-3 rounded-xl border-2 font-bold text-sm flex items-center justify-center transition-all ${
-                              wizardResultCount === count
-                                ? 'border-pink-500 bg-pink-50 text-pink-700 shadow-sm'
-                                : 'border-gray-200 bg-white text-gray-500'
+                            key={ar.value}
+                            onClick={() => setForm((prev: EntertainmentForm) => ({
+                              ...prev,
+                              entertainment_meta: { ...prev.entertainment_meta, imageAspectRatio: ar.value },
+                            }))}
+                            className={`p-2.5 rounded-lg border-2 text-left transition-all ${
+                              (form.entertainment_meta.imageAspectRatio || '1:1') === ar.value
+                                ? 'border-pink-500 bg-pink-50'
+                                : 'border-gray-200 bg-white hover:border-gray-300'
                             }`}
                           >
-                            {count}タイプ
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm">{ar.icon}</span>
+                              <span className="font-bold text-xs text-gray-900">{ar.label}</span>
+                            </div>
+                            <span className="text-[10px] text-gray-500">{ar.desc}</span>
                           </button>
                         ))}
                       </div>
@@ -839,20 +888,62 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
                 </div>
               </div>
 
+              <div className="mb-4 grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-bold text-gray-700 block mb-2">結果タイプ数</label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {RESULT_COUNT_OPTIONS.map((count) => (
+                      <button
+                        key={count}
+                        onClick={() => setAiResultCount(count)}
+                        className={`py-2.5 rounded-lg font-bold text-sm border flex items-center justify-center transition-all ${
+                          aiResultCount === count
+                            ? 'border-pink-500 bg-pink-50 text-pink-700'
+                            : 'border-gray-200 bg-white text-gray-500'
+                        }`}
+                      >
+                        {count}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-bold text-gray-700 block mb-2">質問数</label>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {QUESTION_COUNT_OPTIONS.map((count) => (
+                      <button
+                        key={count}
+                        onClick={() => setAiQuestionCount(count)}
+                        className={`py-2.5 rounded-lg font-bold text-sm border flex items-center justify-center transition-all ${
+                          aiQuestionCount === count
+                            ? 'border-pink-500 bg-pink-50 text-pink-700'
+                            : 'border-gray-200 bg-white text-gray-500'
+                        }`}
+                      >
+                        {count}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               <div className="mb-4">
-                <label className="text-sm font-bold text-gray-700 block mb-2">結果タイプ数</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {RESULT_COUNT_OPTIONS.map((count) => (
+                <label className="text-sm font-bold text-gray-700 block mb-2">画像サイズ</label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {ASPECT_RATIO_OPTIONS.map((ar) => (
                     <button
-                      key={count}
-                      onClick={() => setAiResultCount(count)}
-                      className={`py-3 rounded-lg font-bold text-sm border flex items-center justify-center gap-1 transition-all ${
-                        aiResultCount === count
-                          ? 'border-pink-500 bg-pink-50 text-pink-700'
-                          : 'border-gray-200 bg-white text-gray-500'
+                      key={ar.value}
+                      onClick={() => updateForm({
+                        entertainment_meta: { ...form.entertainment_meta, imageAspectRatio: ar.value },
+                      })}
+                      className={`p-2 rounded-lg border text-center transition-all ${
+                        (form.entertainment_meta.imageAspectRatio || '1:1') === ar.value
+                          ? 'border-pink-500 bg-pink-50'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
                       }`}
                     >
-                      {count}タイプ
+                      <span className="text-sm block">{ar.icon}</span>
+                      <span className="font-bold text-[10px] text-gray-900">{ar.label}</span>
                     </button>
                   ))}
                 </div>
