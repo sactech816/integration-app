@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Site, SitePage } from '@/lib/types';
 import { BlockRenderer } from '@/components/shared/BlockRenderer';
+import { ViewTracker } from '@/components/shared/ViewTracker';
 import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
 
@@ -25,6 +26,7 @@ export default function SiteViewer({ site, currentPage, hideFooter }: SiteViewer
 
   return (
     <div className="min-h-screen bg-white">
+      <ViewTracker contentId={site.slug} contentType="site" />
       {/* ナビゲーション */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">

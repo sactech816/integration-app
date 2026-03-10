@@ -32,7 +32,7 @@ export type LinkableContentType =
   | 'newsletter'
   | 'gamification'
   | 'funnel'
-  | 'mini-site';
+  | 'site';
 
 // コンテンツ参照（DBに保存する形式）
 export interface ContentRef {
@@ -78,7 +78,7 @@ export const LINKABLE_TOOLS: LinkableToolDef[] = [
   { type: 'business', label: 'ビジネスLP', category: 'page', refType: 'slug', urlPath: '/business', color: 'amber', iconName: 'Building2' },
   { type: 'webinar', label: 'ウェビナーLP', category: 'page', refType: 'slug', urlPath: '/webinar', color: 'purple', iconName: 'Megaphone' },
   { type: 'onboarding', label: 'はじめかたガイド', category: 'page', refType: 'slug', urlPath: '/onboarding', color: 'lime', iconName: 'BookOpen' },
-  { type: 'mini-site', label: 'マイサイト', category: 'page', refType: 'slug', urlPath: '/site', color: 'cyan', iconName: 'Globe' },
+  { type: 'site', label: 'マイサイト', category: 'page', refType: 'slug', urlPath: '/site', color: 'cyan', iconName: 'Globe' },
   // 診断・クイズ
   { type: 'quiz', label: '診断クイズ', category: 'quiz', refType: 'slug', urlPath: '/quiz', color: 'indigo', iconName: 'HelpCircle' },
   { type: 'entertainment_quiz', label: 'エンタメ診断', category: 'quiz', refType: 'slug', urlPath: '/entertainment', color: 'pink', iconName: 'Sparkles' },

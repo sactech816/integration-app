@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return generateUGCMetadata({
     title: `${pageTitle} | ${site.title}`,
     description: targetPage?.description || site.description || '',
-    type: 'mini-site',
+    type: 'site',
     slug: `${slug}/${pageSlug}`,
     imageUrl: site.logo_url || null,
   });
@@ -96,7 +96,7 @@ export default async function SiteSubPage({ params }: Props) {
   return (
     <>
       <SiteViewer site={site} currentPage={targetPage} hideFooter={canHideFooter} />
-      <RelatedContent contentType="mini-site" currentSlug={slug} hide={canHideRelated} />
+      <RelatedContent contentType="site" currentSlug={slug} hide={canHideRelated} />
     </>
   );
 }

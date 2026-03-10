@@ -31,7 +31,7 @@ const TYPE_COLORS: Record<string, { bg: string; text: string; gradient: string }
 };
 
 interface RelatedContentProps {
-  contentType: 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'survey' | 'salesletter' | 'webinar' | 'mini-site';
+  contentType: 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'survey' | 'salesletter' | 'webinar' | 'site';
   currentSlug: string;
   limit?: number;
   hide?: boolean; // Proプラン: 関連コンテンツ非表示

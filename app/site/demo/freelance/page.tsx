@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     title: 'フリーランスサイトデモ｜集客メーカー',
     description: 'フリーランス向けサイトのデモです。',
     url: `${siteUrl}/site/demo/freelance`,
-    images: [{ url: `${siteUrl}/api/og?title=${encodeURIComponent('フリーランスサイトデモ')}&type=mini-site`, width: 1200, height: 630 }],
+    images: [{ url: `${siteUrl}/api/og?title=${encodeURIComponent('フリーランスサイトデモ')}&type=site`, width: 1200, height: 630 }],
     locale: 'ja_JP',
     siteName: '集客メーカー',
   },

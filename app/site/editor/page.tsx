@@ -94,7 +94,7 @@ function SiteEditorContent() {
         user={user}
         onLogout={handleLogout}
         setShowAuth={setShowAuth}
-        currentService="mini-site"
+        currentService="site"
       />
 
       <AuthModal
@@ -109,7 +109,7 @@ function SiteEditorContent() {
         isAdmin={isAdmin}
         initialData={editingSite}
         setPage={navigateTo}
-        onBack={() => navigateTo('dashboard?view=mini-site')}
+        onBack={() => navigateTo('dashboard?view=site')}
         setShowAuth={setShowAuth}
       />
     </div>

@@ -42,12 +42,12 @@ type AnnouncementManagerProps = {
   }>>;
   announcementPage: number;
   setAnnouncementPage: React.Dispatch<React.SetStateAction<number>>;
+  announcementsPerPage: number;
+  onAnnouncementsPerPageChange: (perPage: number) => void;
   onSubmit: (e: React.FormEvent) => Promise<void>;
   onEdit: (announcement: Announcement) => void;
   onDelete: (id: number) => Promise<void>;
 };
-
-const ANNOUNCEMENTS_PER_PAGE = 5;
 
 export default function AnnouncementManager({
   announcements,
@@ -59,14 +59,16 @@ export default function AnnouncementManager({
   setAnnouncementForm,
   announcementPage,
   setAnnouncementPage,
+  announcementsPerPage,
+  onAnnouncementsPerPageChange,
   onSubmit,
   onEdit,
   onDelete,
 }: AnnouncementManagerProps) {
-  const totalAnnouncementPages = Math.ceil(announcements.length / ANNOUNCEMENTS_PER_PAGE);
+  const totalAnnouncementPages = Math.ceil(announcements.length / announcementsPerPage);
   const paginatedAnnouncements = announcements.slice(
-    (announcementPage - 1) * ANNOUNCEMENTS_PER_PAGE,
-    announcementPage * ANNOUNCEMENTS_PER_PAGE
+    (announcementPage - 1) * announcementsPerPage,
+    announcementPage * announcementsPerPage
   );
 
   const resetForm = () => {
@@ -234,8 +236,17 @@ export default function AnnouncementManager({
           <div className="p-8 text-center text-gray-500">お知らせがありません</div>
         ) : (
           <>
-            <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs text-gray-500">
-              全 {announcements.length} 件
+            <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+              <span className="text-xs text-gray-500">全 {announcements.length} 件</span>
+              <select
+                value={announcementsPerPage}
+                onChange={(e) => onAnnouncementsPerPageChange(Number(e.target.value))}
+                className="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-white text-gray-900 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 outline-none"
+              >
+                <option value={10}>10件</option>
+                <option value={50}>50件</option>
+                <option value={100}>100件</option>
+              </select>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

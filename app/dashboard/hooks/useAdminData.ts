@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getAllUsersWithRoles, getAllUsersWithRolesPaginated, setPartnerStatus } from '@/app/actions/purchases';
 
@@ -42,6 +42,8 @@ type UseAdminDataReturn = {
   userTotalCount: number;
   userSearch: string;
   setUserSearch: React.Dispatch<React.SetStateAction<string>>;
+  usersPerPage: number;
+  setUsersPerPage: React.Dispatch<React.SetStateAction<number>>;
   editingUserId: string | null;
   setEditingUserId: React.Dispatch<React.SetStateAction<string | null>>;
   partnerNote: string;
@@ -85,6 +87,8 @@ type UseAdminDataReturn = {
   }>>;
   announcementPage: number;
   setAnnouncementPage: React.Dispatch<React.SetStateAction<number>>;
+  announcementsPerPage: number;
+  setAnnouncementsPerPage: React.Dispatch<React.SetStateAction<number>>;
   fetchAnnouncements: () => Promise<void>;
   handleAnnouncementSubmit: (e: React.FormEvent) => Promise<void>;
   handleEditAnnouncement: (announcement: Announcement) => void;
@@ -97,8 +101,6 @@ type UseAdminDataReturn = {
   handleExportSheets: () => Promise<void>;
 };
 
-const USERS_PER_PAGE = 10;
-
 export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
   // ユーザー管理
   const [allUsers, setAllUsers] = useState<UserWithRoles[]>([]);
@@ -106,6 +108,7 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
   const [userPage, setUserPage] = useState(1);
   const [userTotalCount, setUserTotalCount] = useState(0);
   const [userSearch, setUserSearch] = useState('');
+  const [usersPerPage, setUsersPerPage] = useState(10);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [partnerNote, setPartnerNote] = useState('');
   const [awardingPoints, setAwardingPoints] = useState<string | null>(null);
@@ -127,6 +130,7 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
     service_type: 'all',
   });
   const [announcementPage, setAnnouncementPage] = useState(1);
+  const [announcementsPerPage, setAnnouncementsPerPage] = useState(10);
 
   // エクスポート
   const [exportingCsv, setExportingCsv] = useState(false);
@@ -183,7 +187,7 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
     if (!isAdmin) return;
     setLoadingUsers(true);
     try {
-      const result = await getAllUsersWithRolesPaginated(page, USERS_PER_PAGE, search);
+      const result = await getAllUsersWithRolesPaginated(page, usersPerPage, search);
       if (result.error) {
         console.error('Fetch paginated users error:', result.error);
         alert('ユーザー一覧の取得に失敗しました: ' + result.error);
@@ -198,7 +202,18 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
     } finally {
       setLoadingUsers(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, usersPerPage]);
+
+  // usersPerPage変更時に1ページ目を再取得
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    setUserPage(1);
+    fetchUsersPage(1, userSearch);
+  }, [usersPerPage]);
 
   // パートナーステータスを切り替え
   const handleTogglePartner = useCallback(
@@ -531,6 +546,8 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
     userTotalCount,
     userSearch,
     setUserSearch,
+    usersPerPage,
+    setUsersPerPage,
     editingUserId,
     setEditingUserId,
     partnerNote,
@@ -558,6 +575,8 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
     setAnnouncementForm,
     announcementPage,
     setAnnouncementPage,
+    announcementsPerPage,
+    setAnnouncementsPerPage,
     fetchAnnouncements,
     handleAnnouncementSubmit,
     handleEditAnnouncement,

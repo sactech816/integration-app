@@ -27,7 +27,7 @@ export type RelatedItem = {
  * 同じカテゴリの関連コンテンツを取得（現在のコンテンツを除外）
  */
 export async function getRelatedContents(
-  contentType: 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'survey' | 'salesletter' | 'webinar' | 'mini-site',
+  contentType: 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'survey' | 'salesletter' | 'webinar' | 'site',
   currentSlug: string,
   limit: number = 4
 ): Promise<{ success: boolean; data?: RelatedItem[]; error?: string }> {

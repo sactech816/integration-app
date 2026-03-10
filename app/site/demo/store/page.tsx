@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     title: '店舗サイトデモ｜集客メーカー',
     description: '店舗向けサイトのデモです。メニュー・アクセス・お問い合わせが揃った複数ページ構成をご覧いただけます。',
     url: `${siteUrl}/site/demo/store`,
-    images: [{ url: `${siteUrl}/api/og?title=${encodeURIComponent('店舗サイトデモ')}&type=mini-site`, width: 1200, height: 630 }],
+    images: [{ url: `${siteUrl}/api/og?title=${encodeURIComponent('店舗サイトデモ')}&type=site`, width: 1200, height: 630 }],
     locale: 'ja_JP',
     siteName: '集客メーカー',
   },

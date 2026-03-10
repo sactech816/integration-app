@@ -5,7 +5,7 @@
 // -------------------------------------------
 // サービスタイプ
 // -------------------------------------------
-export type ServiceType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail' | 'newsletter' | 'step-email' | 'order-form' | 'funnel' | 'webinar' | 'sns-post' | 'line' | 'mini-site';
+export type ServiceType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail' | 'newsletter' | 'step-email' | 'order-form' | 'funnel' | 'webinar' | 'sns-post' | 'line' | 'site';
 
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   quiz: '診断クイズ',
@@ -26,7 +26,7 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
   webinar: 'ウェビナーLP',
   'sns-post': 'SNS投稿',
   line: 'LINE公式連携',
-  'mini-site': 'マイサイト',
+  'site': 'マイサイト',
 };
 
 export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; text: string }> = {
@@ -48,7 +48,7 @@ export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; 
   webinar: { primary: 'violet', bg: 'bg-violet-50', text: 'text-violet-600' },
   'sns-post': { primary: 'sky', bg: 'bg-sky-50', text: 'text-sky-600' },
   line: { primary: 'green', bg: 'bg-green-50', text: 'text-green-600' },
-  'mini-site': { primary: 'cyan', bg: 'bg-cyan-50', text: 'text-cyan-600' },
+  'site': { primary: 'cyan', bg: 'bg-cyan-50', text: 'text-cyan-600' },
 };
 
 // -------------------------------------------

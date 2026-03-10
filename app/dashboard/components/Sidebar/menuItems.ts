@@ -99,7 +99,7 @@ export const TOOL_ITEMS: ToolItem[] = [
     category: 'page',
   },
   {
-    id: 'mini-site',
+    id: 'site',
     label: 'マイサイトメーカー',
     icon: Globe,
     description: '複数ページサイト作成',

@@ -87,7 +87,7 @@ export default function SiteLandingPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="min-h-screen bg-white">
-        <LandingHeader currentService="mini-site" />
+        <LandingHeader currentService="site" />
 
         {/* Hero */}
         <section className="bg-gradient-to-b from-cyan-50 to-white">

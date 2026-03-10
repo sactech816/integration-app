@@ -66,7 +66,7 @@ const serviceConfig = [
     category: 'page' as ServiceCategoryId,
   },
   {
-    id: 'mini-site' as ServiceType,
+    id: 'site' as ServiceType,
     icon: Globe,
     label: 'マイサイトメーカー',
     description: '複数ページのサイトを簡単作成。ナビゲーション自動生成で店舗・講師・フリーランスに最適',

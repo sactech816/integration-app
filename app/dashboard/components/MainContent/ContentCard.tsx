@@ -94,7 +94,7 @@ const getServiceIcon = (type: ServiceType) => {
     webinar: FileText,
     'sns-post': Send,
     line: MessageCircle,
-    'mini-site': Globe,
+    'site': Globe,
   };
   return icons[type] || Sparkles; // フォールバック
 };
@@ -119,7 +119,7 @@ const getServiceColor = (type: ServiceType) => {
     webinar: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200', gradient: 'from-violet-500 to-purple-600' },
     'sns-post': { bg: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-200', gradient: 'from-sky-500 to-blue-600' },
     line: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200', gradient: 'from-green-500 to-emerald-600' },
-    'mini-site': { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200', gradient: 'from-cyan-400 to-teal-500' },
+    'site': { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200', gradient: 'from-cyan-400 to-teal-500' },
   };
   return colors[type] || colors.quiz; // フォールバック
 };

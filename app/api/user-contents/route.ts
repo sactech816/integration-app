@@ -212,9 +212,9 @@ export async function GET(req: NextRequest) {
         .order('created_at', { ascending: false }),
     };
   }
-  if (targetTypes.includes('mini-site')) {
-    queryMap['mini-site'] = {
-      type: 'mini-site',
+  if (targetTypes.includes('site')) {
+    queryMap['site'] = {
+      type: 'site',
       query: supabaseAdmin
         .from('sites')
         .select('id, slug, title')

@@ -508,7 +508,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
       const slug = site.slug || generateSlug();
 
       if (isNew && user && !isPro) {
-        const affordable = await canAfford('mini-site', 'save');
+        const affordable = await canAfford('site', 'save');
         if (!affordable) {
           alert('ポイントが不足しています');
           setIsSaving(false);

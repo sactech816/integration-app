@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return generateUGCMetadata({
     title: site.title,
     description: site.description || '',
-    type: 'mini-site',
+    type: 'site',
     slug,
     imageUrl: site.logo_url || null,
   });
@@ -100,7 +100,7 @@ export default async function SiteTopPage({ params }: Props) {
 
   const breadcrumbSchema = generateBreadcrumbSchema(
     [
-      { name: 'サイト一覧', href: '/portal?tab=mini-site' },
+      { name: 'サイト一覧', href: '/portal?tab=site' },
       { name: site.title },
     ],
     siteUrl
@@ -117,7 +117,7 @@ export default async function SiteTopPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <SiteViewer site={site} currentPage={homePage} hideFooter={canHideFooter} />
-      <RelatedContent contentType="mini-site" currentSlug={slug} hide={canHideRelated} />
+      <RelatedContent contentType="site" currentSlug={slug} hide={canHideRelated} />
     </>
   );
 }

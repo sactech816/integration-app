@@ -77,7 +77,7 @@ type SidebarNavProps = {
     rakuten_research: number;
     niconico_keyword_research: number;
     reddit_keyword_research: number;
-    mini_site: number;
+    site: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態
@@ -126,6 +126,7 @@ export default function SidebarNav({
     funnel: contentCounts.funnel,
     webinar: contentCounts.webinar,
     'sns-post': contentCounts.sns_post,
+    'site': contentCounts.site,
   };
 
   // ツールアイテムをMenuItemに変換

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     title: '講師・コンサルサイトデモ｜集客メーカー',
     description: '講師・コンサルタント向けサイトのデモです。',
     url: `${siteUrl}/site/demo/instructor`,
-    images: [{ url: `${siteUrl}/api/og?title=${encodeURIComponent('講師・コンサルサイトデモ')}&type=mini-site`, width: 1200, height: 630 }],
+    images: [{ url: `${siteUrl}/api/og?title=${encodeURIComponent('講師・コンサルサイトデモ')}&type=site`, width: 1200, height: 630 }],
     locale: 'ja_JP',
     siteName: '集客メーカー',
   },

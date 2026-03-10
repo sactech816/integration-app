@@ -45,9 +45,9 @@ type UserManagerProps = {
   onAwardPoints: (userId: string) => Promise<void>;
   deletingUser: string | null;
   onDeleteUser: (userId: string, userEmail: string) => Promise<void>;
+  usersPerPage: number;
+  onUsersPerPageChange: (perPage: number) => void;
 };
-
-const USERS_PER_PAGE = 10;
 
 const PLAN_COLORS: Record<string, string> = {
   lite: 'bg-blue-100 text-blue-700',
@@ -83,8 +83,10 @@ export default function UserManager({
   onAwardPoints,
   deletingUser,
   onDeleteUser,
+  usersPerPage,
+  onUsersPerPageChange,
 }: UserManagerProps) {
-  const totalUserPages = Math.ceil(userTotalCount / USERS_PER_PAGE);
+  const totalUserPages = Math.ceil(userTotalCount / usersPerPage);
   const [searchInput, setSearchInput] = useState(userSearch);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
@@ -119,7 +121,18 @@ export default function UserManager({
             <Users size={20} className="text-purple-600" /> ユーザー管理
             <span className="text-xs bg-purple-500 text-white px-2 py-1 rounded-full">ADMIN</span>
           </h2>
-          <span className="text-sm text-gray-500">全{userTotalCount}件</span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-500">全{userTotalCount}件</span>
+            <select
+              value={usersPerPage}
+              onChange={(e) => onUsersPerPageChange(Number(e.target.value))}
+              className="text-sm border border-gray-300 rounded-lg px-2 py-1 bg-white text-gray-900 focus:border-purple-400 focus:ring-1 focus:ring-purple-400 outline-none"
+            >
+              <option value={10}>10件</option>
+              <option value={50}>50件</option>
+              <option value={100}>100件</option>
+            </select>
+          </div>
         </div>
         {/* 検索バー */}
         <div className="mt-3 relative">

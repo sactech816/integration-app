@@ -60,7 +60,7 @@ type UseDashboardDataReturn = {
     rakuten_research: number;
     niconico_keyword_research: number;
     reddit_keyword_research: number;
-    mini_site: number;
+    site: number;
   };
   totalViews: number;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -150,7 +150,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     rakuten_research: 0,
     niconico_keyword_research: 0,
     reddit_keyword_research: 0,
-    mini_site: 0,
+    site: 0,
   });
   const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
   const [purchases, setPurchases] = useState<string[]>([]);
@@ -596,26 +596,44 @@ export function useDashboardData(): UseDashboardDataReturn {
         }
 
         // マイサイト取得
-        if (selectedService === 'mini-site') {
+        if (selectedService === 'site') {
           const query = isAdmin
             ? supabase.from(TABLES.SITES).select('*').order('created_at', { ascending: false })
             : supabase.from(TABLES.SITES).select('*').eq('user_id', user.id).order('created_at', { ascending: false });
 
           const { data: sites } = await query;
           if (sites) {
+            let analyticsMapObj: Record<string, AnalyticsData> = {};
+            if (!skipAnalytics) {
+              const slugs = sites.map((s: any) => s.slug).filter(Boolean);
+              if (slugs.length > 0) {
+                const analyticsResults = await getMultipleAnalytics(slugs, 'site');
+                analyticsResults.forEach((result) => {
+                  analyticsMapObj[result.contentId] = result.analytics;
+                });
+              }
+            }
             allContents.push(
-              ...sites.map((s: any) => ({
-                id: s.id,
-                slug: s.slug,
-                title: s.title || 'マイサイト',
-                created_at: s.created_at,
-                updated_at: s.updated_at,
-                type: 'mini-site' as ServiceType,
-                user_id: s.user_id,
-                settings: s.settings,
-                views_count: 0,
-                clicks_count: 0,
-              }))
+              ...sites.map((s: any) => {
+                const analytics = analyticsMapObj[s.slug];
+                return {
+                  id: s.id,
+                  slug: s.slug,
+                  title: s.title || 'マイサイト',
+                  created_at: s.created_at,
+                  updated_at: s.updated_at,
+                  type: 'site' as ServiceType,
+                  user_id: s.user_id,
+                  settings: s.settings,
+                  views_count: analytics?.views || 0,
+                  clicks_count: analytics?.clicks || 0,
+                  completions_count: analytics?.completions || 0,
+                  avg_scroll_depth: analytics?.avgScrollDepth || 0,
+                  avg_time_spent: analytics?.avgTimeSpent || 0,
+                  read_rate: analytics?.readRate || 0,
+                  click_rate: analytics?.clickRate || 0,
+                };
+              })
             );
           }
         }
@@ -709,7 +727,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, entertainmentQuizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult, lineResult, miniSiteResult] = await Promise.all([
+      const [quizResult, entertainmentQuizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult, lineResult, siteResult] = await Promise.all([
         // 診断クイズ数（ビジネス診断のみ）
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).or('quiz_type.is.null,quiz_type.eq.business')
@@ -804,7 +822,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         rakuten_research: 0,
         niconico_keyword_research: 0,
         reddit_keyword_research: 0,
-        mini_site: miniSiteResult.count || 0,
+        site: siteResult.count || 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);
@@ -813,21 +831,18 @@ export function useDashboardData(): UseDashboardDataReturn {
 
   // 編集
   const handleEdit = (item: ContentItem) => {
-    const basePath = item.type === 'mini-site' ? '/site' : `/${item.type}`;
-    window.location.href = `${basePath}/editor?id=${item.slug}`;
+    window.location.href = `/${item.type}/editor?id=${item.slug}`;
   };
 
   // プレビュー
   const handleView = (item: ContentItem) => {
-    const basePath = item.type === 'mini-site' ? '/site' : `/${item.type}`;
-    window.open(`${basePath}/${item.slug}`, '_blank');
+    window.open(`/${item.type}/${item.slug}`, '_blank');
   };
 
   // URLコピー
   const handleCopyUrl = (item: ContentItem) => {
     const baseUrl = window.location.origin;
-    const basePath = item.type === 'mini-site' ? '/site' : `/${item.type}`;
-    const url = `${baseUrl}${basePath}/${item.slug}`;
+    const url = `${baseUrl}/${item.type}/${item.slug}`;
     navigator.clipboard.writeText(url);
     setCopiedId(item.id);
     setTimeout(() => setCopiedId(null), 2000);
@@ -841,7 +856,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     }
 
     // サーバーアクションで削除（管理者対応）
-    const contentType = item.type as 'quiz' | 'profile' | 'business' | 'salesletter' | 'onboarding' | 'thumbnail';
+    const contentType = item.type as 'quiz' | 'profile' | 'business' | 'salesletter' | 'onboarding' | 'thumbnail' | 'site';
     const contentId = (item.type === 'quiz' || item.type === 'onboarding') ? parseInt(item.id) : item.id;
 
     console.log('[Dashboard] handleDelete called:', { 
@@ -960,6 +975,52 @@ export function useDashboardData(): UseDashboardDataReturn {
             slug: newSlug,
           }]);
           if (error) throw error;
+        }
+      } else if (item.type === 'site') {
+        // マイサイトの複製（サイト本体 + ページ）
+        const { data: originalSite } = await supabase
+          .from(TABLES.SITES)
+          .select('*')
+          .eq('id', item.id)
+          .single();
+
+        if (originalSite) {
+          const { data: newSite, error: siteError } = await supabase.from(TABLES.SITES).insert([{
+            user_id: user.id,
+            title: `${originalSite.title || 'マイサイト'} のコピー`,
+            description: originalSite.description,
+            logo_url: originalSite.logo_url,
+            settings: originalSite.settings,
+            status: 'draft',
+            slug: newSlug,
+          }]).select().single();
+
+          if (siteError) throw siteError;
+
+          // ページも複製
+          const { data: originalPages } = await supabase
+            .from(TABLES.SITE_PAGES)
+            .select('*')
+            .eq('site_id', item.id)
+            .order('sort_order', { ascending: true });
+
+          if (originalPages && originalPages.length > 0 && newSite) {
+            const pageInserts = originalPages.map((p: Record<string, unknown>) => ({
+              site_id: newSite.id,
+              slug: p.slug,
+              title: p.title,
+              description: p.description || '',
+              content: p.content || [],
+              sort_order: p.sort_order,
+              is_home: p.is_home || false,
+              show_in_nav: p.show_in_nav !== false,
+              icon: p.icon || '',
+            }));
+            const { error: pagesError } = await supabase
+              .from(TABLES.SITE_PAGES)
+              .insert(pageInserts);
+            if (pagesError) throw pagesError;
+          }
         }
       } else if (item.type === 'survey') {
         // アンケートの複製
