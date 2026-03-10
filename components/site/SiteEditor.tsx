@@ -43,11 +43,15 @@ import {
   Layout,
   Sparkles,
   Trophy,
+  Star,
+  Lock,
 } from 'lucide-react';
 import { BlockRenderer } from '@/components/shared/BlockRenderer';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
 import { usePoints } from '@/lib/hooks/usePoints';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import OnboardingModal from '@/components/shared/OnboardingModal';
+import { useOnboarding } from '@/lib/hooks/useOnboarding';
 
 interface SiteEditorProps {
   user: { id: string; email?: string } | null;
@@ -272,6 +276,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
   const { userPlan } = useUserPlan(user?.id);
   const isPro = userPlan?.planTier === 'pro';
   const { canAfford } = usePoints({ userId: user?.id, isPro });
+  const { showOnboarding, setShowOnboarding } = useOnboarding('site_editor_onboarding_dismissed', { skip: !!initialData });
 
   // サイト基本情報
   const [site, setSite] = useState<Partial<Site>>({
@@ -972,13 +977,14 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
         isOpen={openSections.template}
         onToggle={() => toggleSection('template')}
         step={1}
-        stepLabel="テンプレートを選んでサイトの下書きを作成"
+        stepLabel="テンプレートを選んでサイトの下書きを作成（任意）"
         headerBgColor="bg-purple-50"
         headerHoverColor="hover:bg-purple-100"
         accentColor="bg-purple-100 text-purple-600"
       >
-        <p className="text-sm text-gray-600 mb-3">テンプレートを選ぶとページ構成が自動でセットされます</p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="mb-4">
+          <label className="text-sm font-bold text-gray-700 block mb-3">テンプレートから選択</label>
+          <div className="grid grid-cols-2 gap-3">
           {siteTemplates.map(template => (
             <button
               key={template.id}
@@ -1003,6 +1009,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
               <p className="text-xs text-gray-500 leading-relaxed">{template.description}</p>
             </button>
           ))}
+        </div>
         </div>
       </Section>
 
@@ -1063,29 +1070,29 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
             return (
               <div
                 key={index}
-                className={`rounded-xl border overflow-hidden ${isActive ? pageColor.border : 'border-gray-200'} ${isActive ? pageColor.bg : 'bg-gray-50'}`}
+                className={`rounded-xl border overflow-hidden ${isActive ? pageColor.border : 'border-gray-200'} ${isActive ? pageColor.bg : 'bg-gray-50'} cursor-pointer`}
+                onClick={() => setActivePageIndex(index)}
               >
                 <div
-                  className={`w-full flex items-center justify-between p-4 cursor-pointer ${isActive ? pageColor.hover : 'hover:bg-gray-100'}`}
-                  onClick={() => setActivePageIndex(index)}
+                  className={`w-full flex items-center justify-between p-4 ${isActive ? pageColor.hover : 'hover:bg-gray-100'}`}
                 >
-                  <div className="flex items-center gap-3 flex-1">
-                    <GripVertical size={18} className="text-gray-400" />
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <GripVertical size={18} className="text-gray-400 flex-shrink-0" />
                     {page.is_home ? (
-                      <Home size={18} className={pageColor.icon} />
+                      <Home size={18} className={`${pageColor.icon} flex-shrink-0`} />
                     ) : (
-                      <FileText size={18} className={pageColor.icon} />
+                      <FileText size={18} className={`${pageColor.icon} flex-shrink-0`} />
                     )}
                     <input
                       type="text"
                       value={page.title || ''}
                       onChange={e => { e.stopPropagation(); updatePageMeta(index, 'title', e.target.value); }}
-                      onClick={e => e.stopPropagation()}
-                      className={`flex-1 bg-transparent border-none font-medium focus:outline-none focus:ring-0 min-w-0 ${isActive ? pageColor.text : 'text-gray-700'}`}
+                      onClick={e => { e.stopPropagation(); setActivePageIndex(index); }}
+                      className={`flex-1 bg-transparent border-none font-medium focus:outline-none focus:ring-0 min-w-0 cursor-text ${isActive ? pageColor.text : 'text-gray-700'}`}
                       placeholder="ページ名"
                     />
                   </div>
-                  <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
                     <button
                       onClick={() => movePage(index, 'up')}
                       disabled={index === 0}
@@ -1217,22 +1224,150 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
         </Section>
       )}
 
-      {/* STEP 5: 詳細設定 */}
+      {/* STEP 5: 高度な設定 */}
       <Section
-        title="詳細設定"
+        title="高度な設定"
         icon={Settings}
         isOpen={openSections.advanced}
         onToggle={() => toggleSection('advanced')}
         step={5}
-        stepLabel="スラッグ・アクセス解析タグの設定"
+        stepLabel="各種オプションを設定（任意）"
         headerBgColor="bg-gray-100"
         headerHoverColor="hover:bg-gray-200"
         accentColor="bg-gray-200 text-gray-600"
       >
-        <Input label="カスタムスラッグ" val={site.slug || ''} onChange={v => setSite(s => ({ ...s, slug: v }))} ph="my-site（英数字とハイフン）" disabled={!!site.id} />
-        <Input label="GTM ID" val={site.settings?.gtmId || ''} onChange={v => setSite(s => ({ ...s, settings: { ...s.settings, gtmId: v } }))} ph="GTM-XXXXXXX" />
-        <Input label="Facebook Pixel ID" val={site.settings?.fbPixelId || ''} onChange={v => setSite(s => ({ ...s, settings: { ...s.settings, fbPixelId: v } }))} ph="1234567890" />
-        <Input label="LINE Tag ID" val={site.settings?.lineTagId || ''} onChange={v => setSite(s => ({ ...s, settings: { ...s.settings, lineTagId: v } }))} ph="xxxxxxxx-xxxx-xxxx-xxxx" />
+        <div className="space-y-4">
+          {/* ポータル掲載 */}
+          <div className="p-4 bg-cyan-50 border border-cyan-200 rounded-xl">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h4 className="font-bold text-cyan-900 flex items-center gap-2 mb-1">
+                  <Star size={18} className="text-cyan-600"/> ポータルに掲載する
+                </h4>
+                <p className="text-xs text-cyan-700">
+                  ポータルに掲載することで、サービスの紹介およびSEO対策、AI対策として効果的となります。より多くの方にあなたのマイサイトを見てもらえます。
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer ml-4 flex-shrink-0">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={site.settings?.showInPortal === undefined ? true : site.settings?.showInPortal}
+                  onChange={e => setSite(s => ({
+                    ...s,
+                    settings: { ...s.settings, showInPortal: e.target.checked }
+                  }))}
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+              </label>
+            </div>
+          </div>
+
+          {/* フッター非表示（Proプラン特典） */}
+          <div className={`p-4 rounded-xl border ${
+            userPlan?.canHideCopyright
+              ? 'bg-orange-50 border-orange-200'
+              : 'bg-gray-100 border-gray-200'
+          }`}>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h4 className={`font-bold flex items-center gap-2 mb-1 ${
+                  userPlan?.canHideCopyright ? 'text-orange-900' : 'text-gray-500'
+                }`}>
+                  {userPlan?.canHideCopyright
+                    ? <Eye size={18} className="text-orange-600"/>
+                    : <Lock size={18} className="text-gray-400"/>
+                  }
+                  フッターを非表示にする
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    userPlan?.canHideCopyright
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-gray-400 text-white'
+                  }`}>Pro</span>
+                </h4>
+                <p className={`text-xs ${userPlan?.canHideCopyright ? 'text-orange-700' : 'text-gray-500'}`}>
+                  コンテンツ下部に表示される「マイサイトメーカーで作成しました」のフッターを非表示にします。
+                </p>
+                {!userPlan?.canHideCopyright && (
+                  <p className="text-xs text-amber-600 mt-2 font-medium">
+                    ※ Proプランにアップグレードすると利用可能になります
+                  </p>
+                )}
+              </div>
+              <label className={`relative inline-flex items-center ml-4 flex-shrink-0 ${
+                userPlan?.canHideCopyright ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
+              }`}>
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={userPlan?.canHideCopyright && (site.settings?.hideFooter || false)}
+                  onChange={e => {
+                    if (userPlan?.canHideCopyright) {
+                      setSite(s => ({
+                        ...s,
+                        settings: { ...s.settings, hideFooter: e.target.checked }
+                      }));
+                    }
+                  }}
+                  disabled={!userPlan?.canHideCopyright}
+                />
+                <div className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                  userPlan?.canHideCopyright
+                    ? 'bg-gray-200 peer-focus:outline-none peer-checked:bg-orange-600'
+                    : 'bg-gray-300'
+                }`}></div>
+              </label>
+            </div>
+          </div>
+
+          <hr className="border-gray-200" />
+
+          {/* カスタムURL */}
+          <div>
+            <label className="text-sm font-bold text-gray-900 block mb-2">
+              カスタムURL（任意）
+            </label>
+            <input
+              className={`w-full border p-3 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-cyan-500 outline-none bg-white placeholder-gray-400 transition-shadow ${site.id ? 'bg-gray-100 cursor-not-allowed border-gray-300' : 'border-gray-300'}`}
+              value={site.slug || ''}
+              onChange={e => {
+                const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                setSite(s => ({ ...s, slug: val }));
+              }}
+              placeholder="my-site"
+              disabled={!!site.id}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              例: my-site, company-page<br/>
+              ※英小文字、数字、ハイフンのみ。一度設定すると変更できません。
+            </p>
+            {site.slug && (
+              <p className="text-xs text-cyan-600 mt-1">
+                公開URL: {typeof window !== 'undefined' ? window.location.origin : ''}/site/{site.slug}
+              </p>
+            )}
+          </div>
+
+          <hr className="border-gray-200" />
+          <Input
+            label="Google Tag Manager ID"
+            val={site.settings?.gtmId || ''}
+            onChange={v => setSite(s => ({ ...s, settings: { ...s.settings, gtmId: v } }))}
+            ph="GTM-XXXXXXX"
+          />
+          <Input
+            label="Facebook Pixel ID"
+            val={site.settings?.fbPixelId || ''}
+            onChange={v => setSite(s => ({ ...s, settings: { ...s.settings, fbPixelId: v } }))}
+            ph="1234567890"
+          />
+          <Input
+            label="LINE Tag ID"
+            val={site.settings?.lineTagId || ''}
+            onChange={v => setSite(s => ({ ...s, settings: { ...s.settings, lineTagId: v } }))}
+            ph="xxxxx-xxxxx"
+          />
+        </div>
       </Section>
 
       {/* 保存ボタン（下部）- BusinessEditorと同じ */}
@@ -1418,6 +1553,44 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
           </div>
         </div>
       </div>
+
+      {/* はじめかたガイド */}
+      {showOnboarding && (
+        <OnboardingModal
+          storageKey="site_editor_onboarding_dismissed"
+          title="マイサイトエディタの使い方"
+          pages={[
+            {
+              subtitle: 'エディタの基本',
+              items: [
+                { icon: Layout, iconColor: 'blue', title: '左 = セクション設定 / 右 = ライブプレビュー', description: '左側の折りたたみセクションで編集し、右側でリアルタイムプレビューを確認できます。PC/モバイル切替にも対応しています。' },
+                { icon: Sparkles, iconColor: 'amber', title: 'テンプレートから始める', description: 'サイト専用テンプレートを選択すると、複数ページのサイト構成が自動配置されます。' },
+                { icon: FileText, iconColor: 'emerald', title: '複数ページ対応', description: 'トップページに加え、メニュー・アクセス・お問い合わせなど複数ページを追加・管理できます。' },
+              ],
+            },
+            {
+              subtitle: 'ブロックの種類',
+              items: [
+                { icon: Zap, iconColor: 'blue', title: 'ヒーロー・ファーストビュー', description: '「ヒーロー」でインパクトのあるメインビジュアルを配置できます。' },
+                { icon: Star, iconColor: 'amber', title: '特徴・ベネフィット', description: '「特徴」ブロックでサービスの強みを3列カードで表示できます。' },
+                { icon: Target, iconColor: 'red', title: 'CTAセクション', description: '「CTAセクション」でコンバージョンポイントを配置。ボタンテキストやリンクを設定します。' },
+                { icon: MessageCircle, iconColor: 'teal', title: 'お客様の声・FAQ', description: '「お客様の声」「FAQ」で信頼性を向上。「ギャラリー」で写真を一覧表示できます。' },
+              ],
+            },
+            {
+              subtitle: 'ページ管理と公開',
+              items: [
+                { icon: Globe, iconColor: 'cyan', title: 'ページ管理', description: 'STEP 3でページの追加・削除・並べ替えができます。各ページにナビゲーション表示の切替も可能です。' },
+                { icon: Lock, iconColor: 'red', title: 'Pro機能', description: 'Proプランではフッター非表示など高度なカスタマイズが可能です。' },
+                { icon: ExternalLink, iconColor: 'green', title: '公開と共有', description: '保存後URLをコピーして共有。ポータルにも掲載でき、SEO対策にもなります。' },
+              ],
+            },
+          ]}
+          gradientFrom="from-cyan-600"
+          gradientTo="to-teal-600"
+          onDismiss={() => setShowOnboarding(false)}
+        />
+      )}
     </div>
   );
 }
