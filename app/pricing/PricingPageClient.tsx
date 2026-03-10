@@ -2,12 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
-import { getReferralCode } from '@/components/affiliate/AffiliateTracker';
+import ProPlanModal from '@/components/home/ProPlanModal';
 import {
   Check,
   Crown,
@@ -31,9 +30,6 @@ import {
   Mail,
   ImagePlus,
   MessageCircle,
-  X,
-  Loader2,
-  ExternalLink,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -56,8 +52,7 @@ export default function PricingPageClient() {
   const router = useRouter();
   const [user, setUser] = useState<{ email?: string; id?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
-  const [showProPlanModal, setShowProPlanModal] = useState(false);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [showPlanModal, setShowPlanModal] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -90,32 +85,6 @@ export default function PricingPageClient() {
     }
   };
 
-  // プロプラン決済処理（トップページと同じフロー）
-  const handleProPlanCheckout = async () => {
-    setIsProcessingPayment(true);
-    try {
-      const email = user?.email;
-      const referralCode = getReferralCode();
-      if (referralCode && email) {
-        try {
-          await fetch('/api/affiliate/pending', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, referralCode, service: 'makers', planTier: 'pro', planPeriod: 'monthly', userId: user?.id || null }),
-          });
-        } catch (err) { console.warn('Failed to save pending affiliate:', err); }
-      }
-      const response = await fetch('/api/subscription/checkout', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId: 'makers_pro_monthly', userId: user?.id || null, email: email || null }),
-      });
-      const data = await response.json();
-      if (data.url) { window.location.href = data.url; }
-      else if (data.error) { throw new Error(data.error); }
-      else { alert('決済ページの準備中です。しばらくお待ちください。'); }
-    } catch (error) { console.error('決済エラー:', error); alert('決済の開始に失敗しました。もう一度お試しください。'); }
-    finally { setIsProcessingPayment(false); }
-  };
-
   // 機能の利用可否を表示するヘルパー
   const renderAvailability = (
     status: FeatureAvailability,
@@ -145,70 +114,27 @@ export default function PricingPageClient() {
       />
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} onNavigate={navigateTo} />
 
-      {/* プロプランモーダル */}
-      {showProPlanModal && (
-        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-fade-in" onClick={e => e.stopPropagation()}>
-            <div className="sticky top-0 text-white px-6 py-5 flex justify-between items-center z-10 rounded-t-3xl" style={{ backgroundColor: '#f97316' }}>
-              <div className="flex items-center gap-3"><Crown size={24} /><h3 className="font-bold text-xl">プロプラン</h3></div>
-              <button onClick={() => setShowProPlanModal(false)} className="text-white/80 hover:text-white transition p-1"><X size={24} /></button>
-            </div>
-            <div className="p-6">
-              <div className="text-center mb-6">
-                <div className="text-4xl font-black" style={{ color: '#5d4037' }}>¥3,980<span className="text-lg font-normal text-gray-500">/月</span></div>
-                <p className="text-sm text-gray-500 mt-1">税込 / いつでも解約可能</p>
-              </div>
-              <div className="rounded-2xl p-5 mb-6" style={{ backgroundColor: '#fffbf0' }}>
-                <h4 className="font-bold mb-4 flex items-center gap-2" style={{ color: '#5d4037' }}>
-                  <Sparkles size={18} style={{ color: '#f97316' }} />プロプランで使える機能
-                </h4>
-                <ul className="space-y-3">
-                  {[
-                    { text: 'フリープランの全機能', highlight: false },
-                    { text: 'AI利用', highlight: true },
-                    { text: 'フォーム・ファネル・メルマガ（フル機能）', highlight: true },
-                    { text: 'サムネイル・エンタメ診断（フル機能）', highlight: true },
-                    { text: 'ゲーミフィケーション', highlight: true },
-                    { text: 'お問い合わせ機能', highlight: true },
-                    { text: '優先サポート', highlight: true },
-                  ].map((item, idx) => (
-                    <li key={idx} className="flex items-center gap-3">
-                      <Check size={18} style={{ color: item.highlight ? '#f97316' : '#84cc16' }} />
-                      <span className={`text-sm ${item.highlight ? 'font-bold' : ''}`} style={{ color: '#5d4037' }}>{item.text}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              {!user && (
-                <div className="border rounded-2xl p-4 mb-6" style={{ backgroundColor: '#fffbf0', borderColor: '#ffedd5' }}>
-                  <p className="text-sm" style={{ color: '#5d4037' }}><span className="font-bold">ヒント：</span>ログインすると、購入履歴がアカウントに紐付けられます。</p>
-                  <button onClick={() => { setShowProPlanModal(false); setShowAuth(true); }} className="mt-2 text-sm font-bold hover:underline" style={{ color: '#f97316' }}>ログイン / 新規登録はこちら →</button>
-                </div>
-              )}
-              <button onClick={handleProPlanCheckout} disabled={isProcessingPayment}
-                className="w-full text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1 transform"
-                style={{ backgroundColor: '#f97316' }}>
-                {isProcessingPayment ? (<><Loader2 className="animate-spin" size={20} />処理中...</>) : (<><CreditCard size={20} />決済ページへ進む<ExternalLink size={16} /></>)}
-              </button>
-              <p className="text-xs text-gray-500 text-center mt-4">Stripeによる安全な決済処理。カード情報は当サイトに保存されません。</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* プラン選択モーダル（3プラン対応） */}
+      <ProPlanModal
+        isOpen={showPlanModal}
+        onClose={() => setShowPlanModal(false)}
+        user={user}
+        onShowAuth={() => { setShowPlanModal(false); setShowAuth(true); }}
+      />
 
       {/* ========== ヒーロー ========== */}
       <section className="pt-20 pb-16 text-center">
         <div className="container mx-auto px-4">
           <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full mb-6">
             <Crown size={18} />
-            <span className="font-bold text-sm">Pro Plan</span>
+            <span className="font-bold text-sm">有料プラン</span>
           </div>
           <h1 className="text-3xl md:text-5xl font-black mb-6" style={{ color: '#5d4037' }}>
-            プロプランで、<br className="md:hidden" />すべての機能を解放
+            有料プランで、<br className="md:hidden" />すべての機能を解放
           </h1>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto leading-relaxed">
             AI利用・ゲーミフィケーション・ファネル / メルマガ / フォームのフル機能など、
-            ビジネスの成長を加速させるプロ専用機能が使い放題。
+            ビジネスの成長を加速させる有料プラン専用機能が使い放題。
           </p>
         </div>
       </section>
@@ -228,7 +154,7 @@ export default function PricingPageClient() {
               const handleCta = () => {
                 if (isGuest) router.push('/#create-section');
                 else if (isFree) setShowAuth(true);
-                else setShowProPlanModal(true);
+                else setShowPlanModal(true);
               };
 
               return (
@@ -308,16 +234,16 @@ export default function PricingPageClient() {
         </div>
       </section>
 
-      {/* ========== Pro機能 詳細セクション ========== */}
+      {/* ========== 有料機能 詳細セクション ========== */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full mb-4">
               <Sparkles size={18} />
-              <span className="font-bold text-sm">Pro機能を詳しく解説</span>
+              <span className="font-bold text-sm">有料機能を詳しく解説</span>
             </div>
             <h2 className="text-3xl font-bold" style={{ color: '#5d4037' }}>
-              プロプランでできること
+              有料プランでできること
             </h2>
             <p className="text-gray-600 mt-4">
               1つひとつの機能が、あなたのビジネスの成長を加速させます。
@@ -350,7 +276,7 @@ export default function PricingPageClient() {
                           <div className="text-sm text-gray-600">{feature.freeComparison}</div>
                         </div>
                         <div className="rounded-xl p-3" style={{ backgroundColor: '#f3e8ff' }}>
-                          <div className="text-xs font-bold text-purple-600 mb-1">プロプラン</div>
+                          <div className="text-xs font-bold text-purple-600 mb-1">有料プラン</div>
                           <div className="text-sm font-bold text-purple-800">{feature.proHighlight}</div>
                         </div>
                       </div>
@@ -372,10 +298,10 @@ export default function PricingPageClient() {
               <span className="font-bold text-sm">Coming Soon</span>
             </div>
             <h2 className="text-3xl font-bold" style={{ color: '#5d4037' }}>
-              今後追加予定のPro専用機能
+              今後追加予定の有料専用機能
             </h2>
             <p className="text-gray-600 mt-4">
-              プロプランをさらに強力にする新機能を続々開発中です。
+              有料プランをさらに強力にする新機能を続々開発中です。
             </p>
           </div>
 
@@ -409,11 +335,11 @@ export default function PricingPageClient() {
         </div>
       </section>
 
-      {/* ========== FAQ（プロプランに関する質問） ========== */}
+      {/* ========== FAQ ========== */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold" style={{ color: '#5d4037' }}>プロプランに関するよくある質問</h2>
+            <h2 className="text-3xl font-bold" style={{ color: '#5d4037' }}>料金プランに関するよくある質問</h2>
           </div>
           <div className="max-w-3xl mx-auto space-y-4">
             {PRICING_FAQ.map((faq, index) => (
@@ -437,15 +363,15 @@ export default function PricingPageClient() {
       <section className="py-20" style={{ backgroundColor: '#fffbf0' }}>
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl font-bold mb-3" style={{ color: '#5d4037' }}>
-            ビジネスの成長を、プロプランで加速させましょう
+            ビジネスの成長を、有料プランで加速させましょう
           </h2>
-          <p className="text-gray-500 mb-8 text-sm">月額¥3,980 ・ いつでも解約OK</p>
+          <p className="text-gray-500 mb-8 text-sm">月額¥1,980〜 ・ いつでも解約OK</p>
           <button
-            onClick={() => setShowProPlanModal(true)}
+            onClick={() => setShowPlanModal(true)}
             className="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold px-12 py-5 rounded-2xl transition shadow-xl hover:-translate-y-1 transform text-lg"
           >
             <Crown size={24} />
-            プロプランに申し込む
+            有料プランに申し込む
           </button>
         </div>
       </section>

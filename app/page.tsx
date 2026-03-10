@@ -41,6 +41,7 @@ import RecipeTabSection from '@/components/home/RecipeTabSection';
 import PricingSection from '@/components/home/PricingSection';
 import PopularContents from '@/components/home/PopularContents';
 import PersonaRoadmap from '@/components/home/PersonaRoadmap';
+import ToolGuideBanner from '@/components/home/ToolGuideBanner';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
@@ -106,7 +107,7 @@ const faqSchema = {
   mainEntity: [
     {
       '@type': 'Question', name: '本当に無料で使えますか？追加料金はかかりませんか？',
-      acceptedAnswer: { '@type': 'Answer', text: 'はい、フリープランは永久無料です。クレジットカード登録も不要。診断クイズ、プロフィールLP、予約機能（月30件まで）などが追加料金なしで使えます。プロプランにアップグレードする際も、いつでも解約可能です。' },
+      acceptedAnswer: { '@type': 'Answer', text: 'はい、フリープランは永久無料です。クレジットカード登録も不要。診断クイズ、プロフィールLP、予約機能（月30件まで）などが追加料金なしで使えます。有料プランにアップグレードする際も、いつでも解約可能です。' },
     },
     {
       '@type': 'Question', name: 'パソコンが苦手でも使えますか？',
@@ -118,7 +119,7 @@ const faqSchema = {
     },
     {
       '@type': 'Question', name: '商用利用は可能ですか？',
-      acceptedAnswer: { '@type': 'Answer', text: 'もちろんです。フリープラン・プロプランともに商用利用が可能です。サロン集客、コンサルティング営業、アフィリエイト、クライアントワークなど、あらゆるビジネスシーンでご利用いただけます。' },
+      acceptedAnswer: { '@type': 'Answer', text: 'もちろんです。フリープラン・有料プランともに商用利用が可能です。サロン集客、コンサルティング営業、アフィリエイト、クライアントワークなど、あらゆるビジネスシーンでご利用いただけます。' },
     },
     {
       '@type': 'Question', name: '作成したページは、どこで公開されますか？',
@@ -128,10 +129,10 @@ const faqSchema = {
 };
 
 const faqs = [
-  { q: 'Q. 本当に無料で使えますか？追加料金はかかりませんか？', a: 'はい、フリープランは永久無料です。クレジットカード登録も不要。診断クイズ、プロフィールLP、予約機能（月30件まで）などが追加料金なしで使えます。プロプランにアップグレードする際も、いつでも解約可能です。' },
+  { q: 'Q. 本当に無料で使えますか？追加料金はかかりませんか？', a: 'はい、フリープランは永久無料です。クレジットカード登録も不要。診断クイズ、プロフィールLP、予約機能（月30件まで）などが追加料金なしで使えます。有料プランにアップグレードする際も、いつでも解約可能です。' },
   { q: 'Q. パソコンが苦手でも使えますか？', a: '大丈夫です。テンプレートを選んで文字を変えるだけなので、パソコン操作に自信がない方でも直感的に使えます。スマホからでも編集可能です。' },
   { q: 'Q. 他のツールからの乗り換えは簡単ですか？', a: 'はい、とても簡単です。既存のWebページやGoogleフォームの内容をコピー＆ペーストするだけで移行できます。' },
-  { q: 'Q. 商用利用は可能ですか？', a: 'もちろんです。フリープラン・プロプランともに商用利用が可能です。サロン集客、コンサルティング営業、アフィリエイト、クライアントワークなど、あらゆるビジネスシーンでご利用いただけます。' },
+  { q: 'Q. 商用利用は可能ですか？', a: 'もちろんです。フリープラン・有料プランともに商用利用が可能です。サロン集客、コンサルティング営業、アフィリエイト、クライアントワークなど、あらゆるビジネスシーンでご利用いただけます。' },
   { q: 'Q. 作成したページは、どこで公開されますか？', a: 'makers.tokyo/あなたのID というURLで公開されます。このリンクをSNSのプロフィール、名刺、チラシなどに掲載してご利用ください。' },
 ];
 
@@ -344,31 +345,8 @@ export default function HomePage() {
                 </div>
               </a>
 
-              {/* ガイドメーカーパネル */}
-              <a
-                href="/onboarding"
-                className="group relative overflow-hidden rounded-3xl border-2 p-8 md:p-10 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col justify-between min-h-[220px]"
-                style={{ borderColor: '#6366f1', background: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 50%, #c7d2fe 100%)' }}
-              >
-                <div className="absolute top-4 right-4 w-20 h-20 rounded-full opacity-20 bg-indigo-500" />
-                <div className="absolute bottom-[-20px] right-[-20px] w-32 h-32 rounded-full opacity-10 bg-indigo-500" />
-                <div>
-                  <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur px-3 py-1 rounded-full mb-4 shadow-sm">
-                    <Compass size={16} className="text-indigo-500" />
-                    <span className="text-xs font-bold text-indigo-500">はじめての方におすすめ</span>
-                  </div>
-                  <h3 className="text-2xl md:text-3xl font-black mb-2" style={{ color: '#5d4037' }}>
-                    ガイドメーカー
-                  </h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    ステップバイステップの「はじめかた」ページで<br />
-                    お客様を迷わせずにご案内
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 font-bold text-sm mt-4 text-indigo-500 group-hover:gap-3 transition-all">
-                  詳しく見る <ArrowRight size={16} />
-                </div>
-              </a>
+              {/* 集客メーカーガイド（モーダル表示） */}
+              <ToolGuideBanner />
             </div>
           </div>
         </section>
@@ -425,23 +403,23 @@ export default function HomePage() {
         {/* ========== 11. Pricing ========== */}
         <PricingSection />
 
-        {/* ========== 13.5. Pro Plan Promo ========== */}
+        {/* ========== 13.5. 有料プラン Promo ========== */}
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50 border-2 border-purple-100 rounded-3xl p-8 md:p-12">
               <div className="text-center mb-8">
                 <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-1.5 rounded-full mb-4">
-                  <Crown size={16} /><span className="font-bold text-sm">Pro Plan</span>
+                  <Crown size={16} /><span className="font-bold text-sm">有料プラン</span>
                 </div>
-                <h3 className="text-2xl md:text-3xl font-black mb-3" style={{ color: '#5d4037' }}>プロプランなら、もっとできる。</h3>
-                <p className="text-gray-600 text-sm md:text-base">無料で始めて、ビジネスの成長に合わせてアップグレード。<br className="hidden md:block" />プロプランだけの機能で、集客を加速させましょう。</p>
+                <h3 className="text-2xl md:text-3xl font-black mb-3" style={{ color: '#5d4037' }}>有料プランなら、もっとできる。</h3>
+                <p className="text-gray-600 text-sm md:text-base">無料で始めて、ビジネスの成長に合わせてアップグレード。<br className="hidden md:block" />有料プランの機能で、集客を加速させましょう。</p>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 {[
                   { icon: Zap, label: 'AI利用', desc: 'AI機能で\nコンテンツ作成を加速' },
                   { icon: Gamepad2, label: 'ゲーミフィケーション', desc: 'ガチャ・福引き等\n全種類が使い放題' },
                   { icon: Target, label: 'フル機能解放', desc: 'ファネル・メルマガ等\n制限なく利用可能' },
-                  { icon: Star, label: '今後の新機能', desc: 'Pro専用の\n新機能を優先提供' },
+                  { icon: Star, label: '今後の新機能', desc: '有料プランの\n新機能を優先提供' },
                 ].map((item) => (
                   <div key={item.label} className="text-center p-4 bg-white/70 rounded-2xl">
                     <div className="w-10 h-10 mx-auto mb-2 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center">
@@ -454,9 +432,9 @@ export default function HomePage() {
               </div>
               <div className="text-center">
                 <a href="/pricing" className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold px-8 py-4 rounded-2xl transition shadow-lg hover:-translate-y-1 transform text-sm">
-                  <Crown size={18} />プロプランの全機能を見る<ArrowRight size={18} />
+                  <Crown size={18} />有料プランの詳細を見る<ArrowRight size={18} />
                 </a>
-                <p className="text-xs text-gray-500 mt-3">月額¥3,980 ・ いつでも解約OK</p>
+                <p className="text-xs text-gray-500 mt-3">月額¥1,980〜 ・ いつでも解約OK</p>
               </div>
             </div>
           </div>

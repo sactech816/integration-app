@@ -78,7 +78,7 @@ const faqs = [
   { q: 'リッチメニューとは何ですか？', a: 'LINEトーク画面下部に表示されるメニューです。タップするとWebページやクーポン、予約ページなどに遷移できます。' },
   { q: 'ステップ配信はできますか？', a: 'はい、友だち追加日を起点に段階的にメッセージを自動配信するステップ配信に対応しています。' },
   { q: 'メッセージの配信数に制限はありますか？', a: 'LINE公式アカウント側の配信数制限に準じます。集客メーカー側での制限はありません。' },
-  { q: '料金はいくらですか？', a: 'PROプラン（月額3,980円）に含まれる機能です。メルマガ・ステップメール・診断クイズなど他のPRO機能もすべて利用可能です。' },
+  { q: '料金はいくらですか？', a: '有料プラン（月額1,980円〜）に含まれる機能です。メルマガ・ステップメール・診断クイズなど他の有料プラン機能もすべて利用可能です。' },
 ];
 
 export default function LineLandingPage() {
@@ -217,7 +217,7 @@ export default function LineLandingPage() {
             <Link href="/line/dashboard" className="inline-flex items-center gap-2 px-10 py-4 bg-white text-green-700 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
               <MessageCircle className="w-5 h-5" />LINE配信を始める
             </Link>
-            <p className="text-green-200 text-sm mt-4">PROプラン（月額3,980円）で利用可能</p>
+            <p className="text-green-200 text-sm mt-4">有料プラン（月額1,980円〜）で利用可能</p>
           </div>
         </section>
       </div>

@@ -170,10 +170,10 @@ export default function PointPurchaseModal({
             <Check size={16} className="text-indigo-600 mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-xs font-bold text-indigo-900">
-                プロプランなら毎月1,500pt付与
+                有料プランなら毎月ポイント付与
               </p>
               <p className="text-[10px] text-indigo-700 mt-0.5">
-                月額¥3,980で全機能解放 + ポイント消費なしで使い放題
+                月額¥1,980〜で機能解放 + ポイント消費なしで使い放題
               </p>
             </div>
           </div>

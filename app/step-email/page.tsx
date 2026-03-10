@@ -78,7 +78,7 @@ const faqs = [
   { q: '何通まで設定できますか？', a: 'PROプランではステップ数に制限はありません。必要なだけシナリオを設計できます。' },
   { q: 'メルマガとの違いは？', a: 'メルマガは全読者に同じタイミングで一斉送信しますが、ステップメールは登録日を起点に個別のタイミングで自動配信されます。' },
   { q: '配信を途中で止められますか？', a: 'はい、シナリオの一時停止や個別の読者への配信停止が可能です。' },
-  { q: '料金はいくらですか？', a: 'PROプラン（月額3,980円）に含まれる機能です。メルマガ・診断クイズ・LP作成など他のPRO機能もすべて利用可能です。' },
+  { q: '料金はいくらですか？', a: '有料プラン（月額1,980円〜）に含まれる機能です。メルマガ・診断クイズ・LP作成など他の有料プラン機能もすべて利用可能です。' },
 ];
 
 export default function StepEmailLandingPage() {
@@ -217,7 +217,7 @@ export default function StepEmailLandingPage() {
             <Link href="/step-email/dashboard" className="inline-flex items-center gap-2 px-10 py-4 bg-white text-cyan-700 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
               <ListOrdered className="w-5 h-5" />ステップメールを作成する
             </Link>
-            <p className="text-cyan-200 text-sm mt-4">PROプラン（月額3,980円）で利用可能</p>
+            <p className="text-cyan-200 text-sm mt-4">有料プラン（月額1,980円〜）で利用可能</p>
           </div>
         </section>
       </div>

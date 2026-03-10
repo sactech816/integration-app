@@ -78,7 +78,7 @@ const faqs = [
   { q: '配信停止はどのように管理しますか？', a: '配信するメールに自動で配信停止リンクが付きます。読者がクリックすると自動で配信停止処理が行われます。' },
   { q: '読者の登録方法は？', a: '公開購読フォームのURLを共有する方法と、管理画面から手動で追加する方法があります。' },
   { q: '何通まで送れますか？', a: 'PROプラン加入中は読者数・配信数に制限はありません。大量配信も安心してご利用いただけます。' },
-  { q: '料金はいくらですか？', a: 'PROプラン（月額3,980円）に含まれる機能です。診断クイズ・プロフィールLP・予約システムなど他のPRO機能もすべて利用可能です。' },
+  { q: '料金はいくらですか？', a: '有料プラン（月額1,980円〜）に含まれる機能です。診断クイズ・プロフィールLP・予約システムなど他の有料プラン機能もすべて利用可能です。' },
 ];
 
 export default function NewsletterLandingPage() {
@@ -217,7 +217,7 @@ export default function NewsletterLandingPage() {
             <Link href="/newsletter/campaigns/new" className="inline-flex items-center gap-2 px-10 py-4 bg-white text-violet-700 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
               <Mail className="w-5 h-5" />メルマガを作成する
             </Link>
-            <p className="text-violet-200 text-sm mt-4">PROプラン（月額3,980円）で利用可能</p>
+            <p className="text-violet-200 text-sm mt-4">有料プラン（月額1,980円〜）で利用可能</p>
           </div>
         </section>
       </div>
