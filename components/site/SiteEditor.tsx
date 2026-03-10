@@ -367,8 +367,48 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
     setPreviewKey(k => k + 1);
   }, [activePageIndex]);
 
+  const createDefaultBlock = (type: string): Block => {
+    const id = generateBlockId();
+    switch (type) {
+      case 'hero':
+        return { id, type: 'hero', data: { headline: 'キャッチコピーを入力', subheadline: 'サブテキスト', ctaText: '詳しく見る', ctaUrl: '#', backgroundColor: 'linear-gradient(-45deg, #1e293b, #334155, #475569, #334155)' } };
+      case 'features':
+        return { id, type: 'features', data: { title: '選ばれる3つの理由', columns: 3 as const, items: [{ id: generateBlockId(), icon: '🏆', title: '特徴1', description: '説明文' }, { id: generateBlockId(), icon: '🤝', title: '特徴2', description: '説明文' }, { id: generateBlockId(), icon: '📊', title: '特徴3', description: '説明文' }] } };
+      case 'two_column':
+        return { id, type: 'two_column', data: { layout: 'image-left' as const, imageUrl: '', title: 'タイトル', text: 'テキストを入力' } };
+      case 'cta_section':
+        return { id, type: 'cta_section', data: { title: '今すぐ始めましょう', description: 'お気軽にお問い合わせください', buttonText: 'お問い合わせ', buttonUrl: '#', backgroundGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' } };
+      case 'text_card':
+        return { id, type: 'text_card', data: { title: '', text: '', align: 'center' as const } };
+      case 'image':
+        return { id, type: 'image', data: { url: '', caption: '' } };
+      case 'youtube':
+        return { id, type: 'youtube', data: { url: '' } };
+      case 'links':
+        return { id, type: 'links', data: { links: [{ label: '', url: '', style: '' }] } };
+      case 'testimonial':
+        return { id, type: 'testimonial', data: { items: [{ id: generateBlockId(), name: '', role: '', comment: '', imageUrl: '' }] } };
+      case 'pricing':
+        return { id, type: 'pricing', data: { plans: [{ id: generateBlockId(), title: '', price: '', features: [], isRecommended: false }] } };
+      case 'faq':
+        return { id, type: 'faq', data: { items: [{ id: generateBlockId(), question: '', answer: '' }] } };
+      case 'lead_form':
+        return { id, type: 'lead_form', data: { title: '無料相談・お問い合わせ', buttonText: '送信する' } };
+      case 'google_map':
+        return { id, type: 'google_map', data: { address: '', title: '所在地', embedUrl: '', height: '400px' } };
+      case 'countdown':
+        return { id, type: 'countdown', data: { targetDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16), title: '期間限定キャンペーン', expiredText: 'キャンペーンは終了しました', backgroundColor: '#ef4444' } };
+      case 'gallery':
+        return { id, type: 'gallery', data: { items: [], columns: 3 as const, showCaptions: true, title: 'ギャラリー' } };
+      case 'linked_content':
+        return { id, type: 'linked_content', data: { title: '関連コンテンツ', items: [], layout: 'list' } };
+      default:
+        return { id, type: 'text_card', data: { title: '', text: '', align: 'center' as const } };
+    }
+  };
+
   const addBlock = (type: string) => {
-    const newBlock = { id: generateBlockId(), type, data: {} } as Block;
+    const newBlock = createDefaultBlock(type);
     setPages(prev => prev.map((page, i) => {
       if (i !== activePageIndex) return page;
       return { ...page, content: [...(page.content || []), newBlock] };
@@ -1011,70 +1051,80 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
         headerHoverColor="hover:bg-emerald-100"
         accentColor="bg-emerald-100 text-emerald-600"
       >
-        <div className="space-y-2">
-          {pages.map((page, index) => (
-            <div
-              key={index}
-              className={`flex items-center gap-2 p-3 rounded-xl border transition-all cursor-pointer ${
-                index === activePageIndex
-                  ? 'border-cyan-300 bg-cyan-50'
-                  : 'border-gray-200 bg-white hover:bg-gray-50'
-              }`}
-              onClick={() => setActivePageIndex(index)}
-            >
-              <GripVertical size={16} className="text-gray-300 flex-shrink-0" />
-              {page.is_home ? (
-                <Home size={16} className="text-cyan-500 flex-shrink-0" />
-              ) : (
-                <FileText size={16} className="text-gray-400 flex-shrink-0" />
-              )}
-              <input
-                type="text"
-                value={page.title || ''}
-                onChange={e => { e.stopPropagation(); updatePageMeta(index, 'title', e.target.value); }}
-                onClick={e => e.stopPropagation()}
-                className="flex-1 bg-transparent border-none text-sm font-bold text-gray-900 focus:outline-none focus:ring-0 min-w-0"
-                placeholder="ページ名"
-              />
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <button
-                  onClick={e => { e.stopPropagation(); movePage(index, 'up'); }}
-                  disabled={index === 0}
-                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+        <div className="space-y-3">
+          {pages.map((page, index) => {
+            const isActive = index === activePageIndex;
+            const pageColor = page.is_home
+              ? { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-700', icon: 'text-cyan-500', hover: 'hover:bg-cyan-100' }
+              : isActive
+                ? { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', icon: 'text-emerald-500', hover: 'hover:bg-emerald-100' }
+                : { bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700', icon: 'text-gray-400', hover: 'hover:bg-gray-100' };
+
+            return (
+              <div
+                key={index}
+                className={`rounded-xl border overflow-hidden ${isActive ? pageColor.border : 'border-gray-200'} ${isActive ? pageColor.bg : 'bg-gray-50'}`}
+              >
+                <div
+                  className={`w-full flex items-center justify-between p-4 cursor-pointer ${isActive ? pageColor.hover : 'hover:bg-gray-100'}`}
+                  onClick={() => setActivePageIndex(index)}
                 >
-                  <ArrowUp size={14} />
-                </button>
-                <button
-                  onClick={e => { e.stopPropagation(); movePage(index, 'down'); }}
-                  disabled={index === pages.length - 1}
-                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-                >
-                  <ArrowDown size={14} />
-                </button>
-                <label
-                  className="p-1 cursor-pointer"
-                  title={page.show_in_nav !== false ? 'ナビに表示中' : 'ナビ非表示'}
-                  onClick={e => e.stopPropagation()}
-                >
-                  <input
-                    type="checkbox"
-                    checked={page.show_in_nav !== false}
-                    onChange={e => updatePageMeta(index, 'show_in_nav', e.target.checked)}
-                    className="sr-only"
-                  />
-                  <Menu size={14} className={page.show_in_nav !== false ? 'text-cyan-500' : 'text-gray-300'} />
-                </label>
-                {!page.is_home && (
-                  <button
-                    onClick={e => { e.stopPropagation(); removePage(index); }}
-                    className="p-1 text-gray-400 hover:text-red-500"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                )}
+                  <div className="flex items-center gap-3 flex-1">
+                    <GripVertical size={18} className="text-gray-400" />
+                    {page.is_home ? (
+                      <Home size={18} className={pageColor.icon} />
+                    ) : (
+                      <FileText size={18} className={pageColor.icon} />
+                    )}
+                    <input
+                      type="text"
+                      value={page.title || ''}
+                      onChange={e => { e.stopPropagation(); updatePageMeta(index, 'title', e.target.value); }}
+                      onClick={e => e.stopPropagation()}
+                      className={`flex-1 bg-transparent border-none font-medium focus:outline-none focus:ring-0 min-w-0 ${isActive ? pageColor.text : 'text-gray-700'}`}
+                      placeholder="ページ名"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                    <button
+                      onClick={() => movePage(index, 'up')}
+                      disabled={index === 0}
+                      className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                    >
+                      <ArrowUp size={16} />
+                    </button>
+                    <button
+                      onClick={() => movePage(index, 'down')}
+                      disabled={index === pages.length - 1}
+                      className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                    >
+                      <ArrowDown size={16} />
+                    </button>
+                    <label
+                      className="p-1 cursor-pointer"
+                      title={page.show_in_nav !== false ? 'ナビに表示中' : 'ナビ非表示'}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={page.show_in_nav !== false}
+                        onChange={e => updatePageMeta(index, 'show_in_nav', e.target.checked)}
+                        className="sr-only"
+                      />
+                      <Menu size={16} className={page.show_in_nav !== false ? 'text-cyan-500' : 'text-gray-300'} />
+                    </label>
+                    {!page.is_home && (
+                      <button
+                        onClick={() => removePage(index)}
+                        className="p-1 text-gray-400 hover:text-red-500"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <button
           onClick={addPage}
