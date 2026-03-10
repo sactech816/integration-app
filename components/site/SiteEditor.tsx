@@ -49,6 +49,7 @@ import {
   List,
   Lock,
   Layout,
+  Sparkles,
 } from 'lucide-react';
 import { BlockRenderer } from '@/components/shared/BlockRenderer';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
@@ -90,6 +91,11 @@ const siteTemplates = [
     name: '店舗サイト',
     description: 'メニュー・アクセス・予約が揃った店舗向け',
     icon: '🏪',
+    gradient: 'from-cyan-500 to-teal-600',
+    bgLight: 'bg-cyan-50',
+    textColor: 'text-cyan-700',
+    borderColor: 'border-cyan-200',
+    hoverBorder: 'hover:border-cyan-400',
     pages: [
       { slug: 'home', title: 'トップ', is_home: true, content: [
         { id: generateBlockId(), type: 'hero', data: { headline: 'お店の名前', subheadline: 'キャッチコピーを入力してください', buttonText: '予約する', buttonUrl: '#contact' } },
@@ -115,6 +121,11 @@ const siteTemplates = [
     name: '講師・コンサル',
     description: 'プロフィール・サービス・実績を紹介',
     icon: '👨‍🏫',
+    gradient: 'from-violet-500 to-purple-600',
+    bgLight: 'bg-violet-50',
+    textColor: 'text-violet-700',
+    borderColor: 'border-violet-200',
+    hoverBorder: 'hover:border-violet-400',
     pages: [
       { slug: 'home', title: 'トップ', is_home: true, content: [
         { id: generateBlockId(), type: 'hero', data: { headline: 'あなたの名前', subheadline: '肩書き・専門分野を入力', buttonText: '詳しく見る', buttonUrl: '#service' } },
@@ -140,6 +151,11 @@ const siteTemplates = [
     name: 'フリーランス',
     description: 'ポートフォリオ・スキル・料金をまとめたサイト',
     icon: '💻',
+    gradient: 'from-blue-500 to-indigo-600',
+    bgLight: 'bg-blue-50',
+    textColor: 'text-blue-700',
+    borderColor: 'border-blue-200',
+    hoverBorder: 'hover:border-blue-400',
     pages: [
       { slug: 'home', title: 'トップ', is_home: true, content: [
         { id: generateBlockId(), type: 'hero', data: { headline: 'あなたの名前', subheadline: 'Web制作 / デザイン / etc.', buttonText: '仕事を依頼する', buttonUrl: '#contact' } },
@@ -162,6 +178,11 @@ const siteTemplates = [
     name: '白紙から作成',
     description: '自由にページ構成を設計',
     icon: '📄',
+    gradient: 'from-gray-400 to-gray-600',
+    bgLight: 'bg-gray-50',
+    textColor: 'text-gray-700',
+    borderColor: 'border-gray-200',
+    hoverBorder: 'hover:border-gray-400',
     pages: [
       { slug: 'home', title: 'トップ', is_home: true, content: [
         { id: generateBlockId(), type: 'hero', data: { headline: 'サイトタイトル', subheadline: 'サブタイトルを入力', buttonText: '', buttonUrl: '' } },
@@ -203,15 +224,22 @@ function Textarea({ label, val, onChange, rows }: { label: string; val: string; 
 }
 
 // セクション折りたたみ
-function Section({ title, icon: Icon, isOpen, onToggle, children, badge }: {
+function Section({ title, icon: Icon, isOpen, onToggle, children, badge, step, stepLabel, headerBgColor, accentColor }: {
   title: string; icon: React.ElementType; isOpen: boolean; onToggle: () => void; children: React.ReactNode; badge?: string;
+  step?: number; stepLabel?: string; headerBgColor?: string; accentColor?: string;
 }) {
+  const iconBg = isOpen ? (accentColor || 'bg-cyan-100 text-cyan-600') : 'bg-gray-200 text-gray-500';
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      {step && stepLabel && (
+        <div className={`px-5 py-2 text-xs font-bold ${headerBgColor || 'bg-gray-50'} text-gray-600 border-b border-gray-100`}>
+          STEP {step}　{stepLabel}
+        </div>
+      )}
       <button onClick={onToggle} className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-all">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-cyan-50 rounded-xl">
-            <Icon className="text-cyan-600" size={20} />
+          <div className={`p-2 rounded-xl transition-colors ${iconBg}`}>
+            <Icon size={20} />
           </div>
           <span className="font-bold text-gray-900">{title}</span>
           {badge && <span className="text-xs bg-cyan-100 text-cyan-700 px-2 py-0.5 rounded-full">{badge}</span>}
@@ -250,10 +278,9 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
   const [savedSlug, setSavedSlug] = useState('');
   const [previewKey, setPreviewKey] = useState(0);
   const [copied, setCopied] = useState(false);
-  const [showTemplateSelector, setShowTemplateSelector] = useState(!initialData);
-
   // セクション開閉
   const [openSections, setOpenSections] = useState({
+    template: !initialData,
     siteSettings: true,
     pages: true,
     blocks: true,
@@ -275,7 +302,6 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
       if (initialData.pages && initialData.pages.length > 0) {
         setPages(initialData.pages);
       }
-      setShowTemplateSelector(false);
       setSavedSlug(initialData.slug);
     }
   }, [initialData]);
@@ -298,7 +324,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
     if (template.id !== 'blank') {
       setSite(prev => ({ ...prev, title: template.name + 'サイト' }));
     }
-    setShowTemplateSelector(false);
+    setOpenSections(s => ({ ...s, template: false, siteSettings: true, pages: true, blocks: true }));
     setActivePageIndex(0);
   };
 
@@ -881,35 +907,6 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
     }
   };
 
-  // テンプレート選択画面
-  if (showTemplateSelector) {
-    return (
-      <div className="pt-20 pb-12 px-4 max-w-4xl mx-auto">
-        <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8 transition-all">
-          <ArrowLeft size={20} /> 戻る
-        </button>
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-black text-gray-900 mb-3">マイサイトメーカー</h1>
-          <p className="text-gray-600">テンプレートを選んで、あなただけのサイトを作りましょう</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {siteTemplates.map(template => (
-            <button
-              key={template.id}
-              onClick={() => applyTemplate(template.id)}
-              className="text-left p-6 bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-lg hover:border-cyan-300 transition-all group"
-            >
-              <div className="text-4xl mb-4">{template.icon}</div>
-              <h3 className="text-lg font-bold text-gray-900 group-hover:text-cyan-700 transition-colors">{template.name}</h3>
-              <p className="text-sm text-gray-600 mt-1">{template.description}</p>
-              <p className="text-xs text-gray-400 mt-3">{template.pages.length}ページ構成</p>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   // プレビューレンダリング
   const renderPreview = () => {
     const navPages = pages.filter(p => p.show_in_nav !== false);
@@ -1028,11 +1025,60 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
       </div>
 
       {/* 左パネル: エディタ */}
-      <div className={`w-full lg:w-1/2 overflow-y-auto pb-32 ${activeTab === 'preview' ? 'hidden lg:block' : ''}`}>
-        <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <div className={`w-full lg:w-1/2 overflow-y-auto pb-32 bg-gray-50 ${activeTab === 'preview' ? 'hidden lg:block' : ''}`}>
+        <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-4">
+
+          {/* テンプレート選択 */}
+          <Section
+            title="テンプレート選択"
+            icon={Sparkles}
+            isOpen={openSections.template}
+            onToggle={() => setOpenSections(s => ({ ...s, template: !s.template }))}
+            step={1}
+            stepLabel="テンプレートを選んでサイトの下書きを作成"
+            headerBgColor="bg-purple-50"
+            accentColor="bg-purple-100 text-purple-600"
+          >
+            <p className="text-sm text-gray-600 mb-3">テンプレートを選ぶとページ構成が自動でセットされます</p>
+            <div className="grid grid-cols-2 gap-3">
+              {siteTemplates.map(template => (
+                <button
+                  key={template.id}
+                  onClick={() => {
+                    if (pages.length > 0) {
+                      const confirmed = confirm(`「${template.name}」テンプレートを適用しますか？\n現在のページ構成は上書きされます。`);
+                      if (!confirmed) return;
+                    }
+                    applyTemplate(template.id);
+                  }}
+                  className={`group text-left p-4 rounded-xl border ${template.borderColor} ${template.bgLight} ${template.hoverBorder} hover:shadow-md transition-all`}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${template.gradient} flex items-center justify-center text-xl group-hover:scale-110 transition-transform shadow-sm`}>
+                      {template.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className={`text-sm font-bold ${template.textColor} truncate`}>{template.name}</h4>
+                      <p className="text-xs text-cyan-600 font-semibold">{template.pages.length}ページ</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 leading-relaxed">{template.description}</p>
+                </button>
+              ))}
+            </div>
+          </Section>
 
           {/* サイト基本設定 */}
-          <Section title="サイト設定" icon={Settings} isOpen={openSections.siteSettings} onToggle={() => setOpenSections(s => ({ ...s, siteSettings: !s.siteSettings }))}>
+          <Section
+            title="サイト設定"
+            icon={Settings}
+            isOpen={openSections.siteSettings}
+            onToggle={() => setOpenSections(s => ({ ...s, siteSettings: !s.siteSettings }))}
+            step={2}
+            stepLabel="サイトの基本情報を設定"
+            headerBgColor="bg-blue-50"
+            accentColor="bg-blue-100 text-blue-600"
+          >
             <Input label="サイト名" val={site.title || ''} onChange={v => setSite(s => ({ ...s, title: v }))} ph="サイトの名前" />
             <Input label="サイトの説明" val={site.description || ''} onChange={v => setSite(s => ({ ...s, description: v }))} ph="サイトの概要" />
             <Input label="ロゴURL" val={site.logo_url || ''} onChange={v => setSite(s => ({ ...s, logo_url: v }))} ph="https://..." />
@@ -1054,7 +1100,17 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
           </Section>
 
           {/* ページ管理 */}
-          <Section title="ページ管理" icon={FileText} isOpen={openSections.pages} onToggle={() => setOpenSections(s => ({ ...s, pages: !s.pages }))} badge={`${pages.length}ページ`}>
+          <Section
+            title="ページ管理"
+            icon={FileText}
+            isOpen={openSections.pages}
+            onToggle={() => setOpenSections(s => ({ ...s, pages: !s.pages }))}
+            badge={`${pages.length}ページ`}
+            step={3}
+            stepLabel="ページの追加・並び替え・設定"
+            headerBgColor="bg-emerald-50"
+            accentColor="bg-emerald-100 text-emerald-600"
+          >
             <div className="space-y-2">
               {pages.map((page, index) => (
                 <div

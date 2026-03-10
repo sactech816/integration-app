@@ -18,6 +18,7 @@ import {
   GitBranch,
   Image as ImageIcon,
   Video,
+  Globe,
 } from 'lucide-react';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
@@ -535,6 +536,31 @@ const webinarDemos = [
   },
 ];
 
+// マイサイトデモ
+const siteDemos = [
+  {
+    name: '店舗サイト（4ページ）',
+    description: 'カフェ・飲食店向け。メニュー・アクセス・お問い合わせ付き',
+    href: '/site/demo/store',
+    color: 'from-cyan-500 to-teal-600',
+    badge: '店舗向け',
+  },
+  {
+    name: '講師・コンサルサイト（4ページ）',
+    description: 'プロフィール・サービス・実績・お問い合わせの構成',
+    href: '/site/demo/instructor',
+    color: 'from-violet-500 to-purple-600',
+    badge: '講師向け',
+  },
+  {
+    name: 'フリーランスサイト（4ページ）',
+    description: 'ポートフォリオ・料金・FAQ・お問い合わせの構成',
+    href: '/site/demo/freelance',
+    color: 'from-blue-500 to-indigo-600',
+    badge: 'フリーランス向け',
+  },
+];
+
 export default function DemosPageClient() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
@@ -585,9 +611,9 @@ export default function DemosPageClient() {
     url: `${siteUrl}/demos`,
     mainEntity: {
       '@type': 'ItemList',
-      numberOfItems: quizDemos.length + profileDemos.length + businessDemos.length + surveyDemos.length + salesLetterDemos.length + newsletterDemos.length + orderFormDemos.length + funnelDemos.length + thumbnailDemos.length + webinarDemos.length,
+      numberOfItems: quizDemos.length + profileDemos.length + businessDemos.length + surveyDemos.length + salesLetterDemos.length + newsletterDemos.length + orderFormDemos.length + funnelDemos.length + thumbnailDemos.length + webinarDemos.length + siteDemos.length,
       itemListElement: [
-        ...[...quizDemos, ...profileDemos, ...businessDemos, ...surveyDemos, ...salesLetterDemos, ...newsletterDemos, ...orderFormDemos, ...funnelDemos, ...thumbnailDemos, ...webinarDemos].map((demo, index) => ({
+        ...[...quizDemos, ...profileDemos, ...businessDemos, ...surveyDemos, ...salesLetterDemos, ...newsletterDemos, ...orderFormDemos, ...funnelDemos, ...thumbnailDemos, ...webinarDemos, ...siteDemos].map((demo, index) => ({
           '@type': 'ListItem',
           position: index + 1,
           name: demo.name,
@@ -1067,6 +1093,50 @@ export default function DemosPageClient() {
                 </Link>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* マイサイトデモ */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Globe size={32} className="text-cyan-600" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
+              マイサイト
+            </h2>
+            <p className="text-lg text-gray-600">
+              複数ページのビジネスサイトテンプレートを体験
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {siteDemos.map((demo, index) => (
+              <Link
+                key={index}
+                href={demo.href}
+                className="group bg-white rounded-2xl border-2 border-gray-100 p-6 hover:border-transparent hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${demo.color} flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg`}>
+                    <Globe size={28} className="text-white" />
+                  </div>
+                  <span className="text-xs font-bold bg-cyan-100 text-cyan-600 px-2.5 py-1 rounded-full">
+                    {demo.badge}
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  {demo.name}
+                </h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  {demo.description}
+                </p>
+                <div className="flex items-center gap-2 text-cyan-600 font-bold text-sm group-hover:gap-4 transition-all">
+                  デモを見る
+                  <ArrowRight size={16} />
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
 
