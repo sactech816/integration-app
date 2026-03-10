@@ -971,9 +971,9 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen">
+    <div className="min-h-screen">
       {/* エディタヘッダー */}
-      <div className="w-full sticky top-16 z-40 bg-white border-b border-gray-200 shadow-sm">
+      <div className="sticky top-16 z-40 bg-white border-b border-gray-200 shadow-sm">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-xl transition-all">
@@ -1024,6 +1024,8 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
         </div>
       </div>
 
+      {/* パネルコンテナ */}
+      <div className="flex flex-col lg:flex-row">
       {/* 左パネル: エディタ */}
       <div className={`w-full lg:w-1/2 overflow-y-auto pb-32 bg-gray-50 ${activeTab === 'preview' ? 'hidden lg:block' : ''}`}>
         <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-4">
@@ -1324,6 +1326,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
           </div>
         </div>
       </div>
+      </div>{/* パネルコンテナ end */}
 
       {/* 完成モーダル */}
       <CreationCompleteModal
