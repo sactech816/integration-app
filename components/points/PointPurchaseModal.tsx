@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Coins, Check, Sparkles } from 'lucide-react';
+import { X, Coins, Check, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import PointCostTable from './PointCostTable';
 
 type Pack = {
   id: string;
@@ -30,6 +31,7 @@ export default function PointPurchaseModal({
   const [packs, setPacks] = useState<Pack[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [showCosts, setShowCosts] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -145,6 +147,22 @@ export default function PointPurchaseModal({
             })}
           </div>
         )}
+
+        {/* ポイント消費一覧（折りたたみ） */}
+        <div className="mt-4">
+          <button
+            onClick={() => setShowCosts(!showCosts)}
+            className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <span className="font-semibold">ポイント消費一覧を見る</span>
+            {showCosts ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+          {showCosts && (
+            <div className="mt-2">
+              <PointCostTable />
+            </div>
+          )}
+        </div>
 
         {/* Proプラン案内 */}
         <div className="mt-4 bg-indigo-50 border border-indigo-100 rounded-xl p-3">

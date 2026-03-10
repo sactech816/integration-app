@@ -20,6 +20,7 @@ import AffiliateManager from './components/Admin/AffiliateManager';
 import FeaturedManager from './components/Admin/FeaturedManager';
 import GamificationManager from './components/Admin/GamificationManager';
 import FeedbackManager from './components/Admin/FeedbackManager';
+import PointsManager from './components/Admin/PointsManager';
 import AccountSettings from './components/Settings/AccountSettings';
 import { Loader2 } from 'lucide-react';
 import PointPurchaseModal from '@/components/points/PointPurchaseModal';
@@ -489,6 +490,7 @@ function DashboardContent() {
         OwnershipTransfer: () => <OwnershipTransfer allUsers={adminData.allUsers} />,
         CleanupManager: () => <CleanupManager userId={user?.id} />,
         FeedbackManager: () => <FeedbackManager />,
+        PointsManager: () => <PointsManager />,
       }
     : undefined;
 

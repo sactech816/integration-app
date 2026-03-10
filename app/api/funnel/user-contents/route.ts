@@ -1,132 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-// ユーザーの作成済みコンテンツを各テーブルから取得
+// 共有API /api/user-contents を内部呼び出しし、ファネル用のキー名に変換する
+// ファネルは profile_lp / business_lp / order_form / sns_post 等のキー名を使用
 export async function GET(req: NextRequest) {
   const userId = req.nextUrl.searchParams.get('userId');
   if (!userId) {
     return NextResponse.json({ error: 'userId required' }, { status: 400 });
   }
 
-  const queries = {
-    profile_lp: supabaseAdmin
-      .from('profiles')
-      .select('id, slug, nickname, content')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false }),
-    business_lp: supabaseAdmin
-      .from('business_projects')
-      .select('id, slug, nickname, content')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false }),
-    salesletter: supabaseAdmin
-      .from('sales_letters')
-      .select('id, slug, title')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false }),
-    quiz: supabaseAdmin
-      .from('quizzes')
-      .select('id, slug, title')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false }),
-    entertainment_quiz: supabaseAdmin
-      .from('quizzes')
-      .select('id, slug, title')
-      .eq('user_id', userId)
-      .eq('quiz_type', 'entertainment')
-      .order('created_at', { ascending: false }),
-    order_form: supabaseAdmin
-      .from('order_forms')
-      .select('id, slug, title')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false }),
-    newsletter: supabaseAdmin
-      .from('newsletter_lists')
-      .select('id, name')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false }),
-    booking: supabaseAdmin
-      .from('booking_menus')
-      .select('id, title')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false }),
-    survey: supabaseAdmin
-      .from('surveys')
-      .select('id, slug, title')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false }),
-    webinar: supabaseAdmin
-      .from('webinar_lps')
-      .select('id, slug, title')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false }),
-    attendance: supabaseAdmin
-      .from('attendance_events')
-      .select('id, title')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false }),
-    onboarding: supabaseAdmin
-      .from('onboarding_modals')
-      .select('id, slug, title')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false }),
-    gamification: supabaseAdmin
-      .from('gamification_campaigns')
-      .select('id, title')
-      .eq('owner_id', userId)
-      .order('created_at', { ascending: false }),
-    sns_post: supabaseAdmin
-      .from('sns_posts')
-      .select('id, slug, title')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false }),
-  };
-
-  const results: Record<string, { id: string; label: string; slug?: string }[]> = {};
-
-  const entries = Object.entries(queries);
-  const responses = await Promise.all(entries.map(([, q]) => q));
-
-  entries.forEach(([key], i) => {
-    const { data, error } = responses[i];
-    if (error) {
-      console.error(`[user-contents] ${key} error:`, error.message);
-      results[key] = [];
-      return;
-    }
-    if (!data) {
-      results[key] = [];
-      return;
-    }
-    results[key] = data.map((item: any) => {
-      // わかりやすいラベルを生成（ID表示を避ける）
-      let label = item.title || item.name || item.nickname || '';
-
-      // profile/business: contentブロックから名前を抽出
-      if (!label && Array.isArray(item.content)) {
-        if (key === 'profile_lp') {
-          const header = item.content.find((b: any) => b.type === 'header');
-          if (header?.data?.name) label = header.data.name;
-        } else if (key === 'business_lp') {
-          const hero = item.content.find((b: any) => b.type === 'hero' || b.type === 'hero_fullwidth');
-          if (hero?.data?.headline) label = hero.data.headline;
-        }
-      }
-
-      if (!label && item.slug) label = item.slug;
-      if (!label) label = `(ID: ${String(item.id).slice(0, 8)}...)`;
-      return {
-        id: String(item.id),
-        label,
-        slug: item.slug || undefined,
-      };
-    });
+  // 共有APIを内部呼び出し
+  const baseUrl = req.nextUrl.origin;
+  const res = await fetch(`${baseUrl}/api/user-contents?userId=${userId}`, {
+    headers: { 'Content-Type': 'application/json' },
   });
 
-  return NextResponse.json({ contents: results });
+  if (!res.ok) {
+    return NextResponse.json({ error: 'Failed to fetch contents' }, { status: 500 });
+  }
+
+  const data = await res.json();
+  const contents: Record<string, any> = data.contents || {};
+
+  // 共有APIのキー名 → ファネル用キー名に変換
+  const keyMapping: Record<string, string> = {
+    'profile': 'profile_lp',
+    'business': 'business_lp',
+    'order-form': 'order_form',
+    'sns-post': 'sns_post',
+  };
+
+  const funnelContents: Record<string, any> = {};
+  for (const [key, items] of Object.entries(contents)) {
+    const funnelKey = keyMapping[key] || key;
+    funnelContents[funnelKey] = items;
+  }
+
+  return NextResponse.json({ contents: funnelContents });
 }

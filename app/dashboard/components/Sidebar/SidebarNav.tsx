@@ -22,6 +22,7 @@ import {
   MessageSquareHeart,
   Share2,
   Gamepad2,
+  Coins,
 } from 'lucide-react';
 import { TOOL_ITEMS, TOOL_CATEGORIES } from './menuItems';
 
@@ -224,6 +225,7 @@ export default function SidebarNav({
       items: [
         { id: 'admin-service', label: 'プラン・AI使用量', icon: Settings, section: 'admin', adminOnly: true },
         { id: 'admin-ai-model', label: 'AIモデル・機能制限', icon: Cpu, section: 'admin', adminOnly: true },
+        { id: 'admin-points', label: 'ポイント設定', icon: Coins, section: 'admin', adminOnly: true },
       ],
     },
     {

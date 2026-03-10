@@ -100,6 +100,22 @@ Apple HIG ベースのデザイン哲学。ブランドカラーは青（blue-50
 - **集客・イベント** (`marketing`): 予約、出欠、アンケート、メルマガ、ファネル
 - **収益化・販売** (`monetization`): 申し込みフォーム、ゲーミフィケーション、スキルマーケット、アフィリエイト
 
+### ツール間連携（コンテンツリンク）
+新しいツールが**公開URLを持つ**場合、ツール間連携システムへの追加を検討すること。
+ユーザーに「他のツールとの相互リンク機能を追加しますか？」と確認する。
+
+追加する場合の更新ファイル:
+1. **`lib/content-links.ts`** — `LinkableContentType` に型追加、`LINKABLE_TOOLS` 配列にエントリ追加（手順コメント参照）
+2. **`app/api/user-contents/route.ts`** — 該当テーブルのクエリを追加
+3. **`components/shared/ContentLinker.tsx`** — `ICON_MAP` にアイコン追加
+4. **`components/shared/LinkedContentCard.tsx`** — `ICON_MAP` にアイコン追加
+5. **`app/api/funnel/user-contents/route.ts`** — キー名変換が必要なら `keyMapping` に追加
+
+関連共有コンポーネント:
+- `ContentLinker` — モーダル付きコンテンツ選択UI（カテゴリタブ・検索付き）
+- `LinkedContentCard` — リンク済みコンテンツの表示カード（URLコピー・削除付き）
+- `useUserContents` Hook — ユーザーのコンテンツ一括取得（`lib/hooks/useUserContents.ts`）
+
 ### Pro/課金制限がある場合
 - `menuItems.ts` の `ToolItem` にはアクセス制限フラグを持たせない（サイドバー側で判定）
 - `SidebarNav.tsx` で `isDisabled` / `disabledBadge` を設定

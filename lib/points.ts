@@ -261,9 +261,23 @@ export async function checkAndConsumePoints(
     return { success: true, consumed: 0 };
   }
 
-  return consumePoints(userId, cost, `${serviceType} ${action}`, {
+  const result = await consumePoints(userId, cost, `${serviceType} ${action}`, {
     service_type: serviceType,
     action,
     content_id: contentId,
   });
+
+  // user_points レコードが存在しない場合は自動作成して再試行
+  if (!result.success && result.error === 'no_points_record') {
+    const supabase = getAdminClient();
+    await supabase
+      .from('user_points')
+      .insert({ user_id: userId, balance: 0 })
+      .single();
+
+    // 残高0なので insufficient_balance を返す
+    return { success: false, error: 'insufficient_balance', balance: 0, consumed: 0 };
+  }
+
+  return result;
 }
