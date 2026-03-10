@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Star, Clock, ShoppingBag, ExternalLink } from 'lucide-react';
 import { MarketplaceProfile } from '@/lib/types';
 import { SUPPORTED_TOOLS_MAP, KINDLE_SUBTYPES } from '@/constants/marketplace';
+import { RichTextRenderer } from '@/components/marketplace/RichTextEditor';
 
 interface SellerProfileCardProps {
   profile: MarketplaceProfile;
@@ -57,7 +58,13 @@ export default function SellerProfileCard({ profile, compact = false }: SellerPr
         <>
           {/* 自己紹介 */}
           {profile.bio && (
-            <p className="mt-4 text-gray-600 text-sm whitespace-pre-wrap">{profile.bio}</p>
+            profile.bio.startsWith('<') ? (
+              <div className="mt-4">
+                <RichTextRenderer content={profile.bio} className="text-gray-600 text-sm" />
+              </div>
+            ) : (
+              <p className="mt-4 text-gray-600 text-sm whitespace-pre-wrap">{profile.bio}</p>
+            )
           )}
 
           {/* スキル */}

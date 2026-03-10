@@ -12,6 +12,7 @@ import ReviewList from '@/components/marketplace/ReviewList';
 import { ArrowLeft, Clock, ShoppingBag, MessageSquare, Loader2, LogIn, Star, Shield, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { CATEGORY_MAP } from '@/constants/marketplace';
+import { RichTextRenderer } from '@/components/marketplace/RichTextEditor';
 
 export default function ListingDetailPage() {
   const { listingId } = useParams() as { listingId: string };
@@ -177,7 +178,11 @@ export default function ListingDetailPage() {
                   <CheckCircle2 className="w-5 h-5 text-indigo-500" />
                   サービス内容
                 </h2>
-                <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{listing.description}</p>
+                {listing.description.startsWith('<') ? (
+                  <RichTextRenderer content={listing.description} className="text-gray-700" />
+                ) : (
+                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{listing.description}</p>
+                )}
               </div>
 
               {/* レビュー */}

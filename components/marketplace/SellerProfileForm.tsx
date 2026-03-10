@@ -5,6 +5,9 @@ import { Loader2, Plus, X, Check, UploadCloud, Shuffle, ImageIcon, User } from '
 import { MarketplaceProfile } from '@/lib/types';
 import { RESPONSE_TIME_OPTIONS, SUPPORTED_TOOLS, KINDLE_SUBTYPES } from '@/constants/marketplace';
 import { supabase } from '@/lib/supabase';
+import dynamic from 'next/dynamic';
+
+const RichTextEditor = dynamic(() => import('@/components/marketplace/RichTextEditor'), { ssr: false });
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 
@@ -260,12 +263,11 @@ export default function SellerProfileForm({ profile, accessToken, onSaved }: Sel
       {/* 自己紹介 */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">自己紹介</label>
-        <textarea
+        <RichTextEditor
           value={bio}
-          onChange={e => setBio(e.target.value)}
-          rows={4}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          placeholder="スキルや経験をアピールしましょう"
+          onChange={setBio}
+          placeholder="スキルや経験をアピールしましょう（太字・リンク・箇条書きが使えます）"
+          minHeight="120px"
         />
       </div>
 

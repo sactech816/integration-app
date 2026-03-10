@@ -7,6 +7,9 @@ import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { MarketplaceListing, MarketplacePriceType } from '@/lib/types';
 import { MARKETPLACE_CATEGORIES, PRICE_TYPE_LABELS } from '@/constants/marketplace';
 import { supabase } from '@/lib/supabase';
+import dynamic from 'next/dynamic';
+
+const RichTextEditor = dynamic(() => import('@/components/marketplace/RichTextEditor'), { ssr: false });
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 
@@ -265,12 +268,11 @@ export default function ListingForm({ listing, accessToken, onSaved, onCancel }:
         <label className="block text-sm font-medium text-gray-700 mb-1">
           サービス説明 <span className="text-red-500">*</span>
         </label>
-        <textarea
+        <RichTextEditor
           value={description}
-          onChange={e => setDescription(e.target.value)}
-          rows={6}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900"
-          placeholder="提供するサービスの内容、含まれるもの、対応範囲などを詳しく記載してください"
+          onChange={setDescription}
+          placeholder="提供するサービスの内容、含まれるもの、対応範囲などを詳しく記載してください（太字・リンク・箇条書きが使えます）"
+          minHeight="160px"
         />
       </div>
 

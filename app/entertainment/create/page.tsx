@@ -1,19 +1,14 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import EntertainmentModeSelector from '@/components/entertainment/EntertainmentModeSelector';
 import EntertainmentEditor from '@/components/entertainment/EntertainmentEditor';
-import EntertainmentWizard from '@/components/entertainment/EntertainmentWizard';
 import { type EntertainmentForm, defaultEntertainmentForm } from '@/lib/entertainment/defaults';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/shared/Header';
 import AuthModal from '@/components/shared/AuthModal';
 import { Loader2 } from 'lucide-react';
 
-type Mode = 'select' | 'editor' | 'wizard';
-
 function EntertainmentCreateContent() {
-  const [mode, setMode] = useState<Mode>('select');
   const [form, setForm] = useState<EntertainmentForm>(defaultEntertainmentForm);
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
@@ -83,28 +78,11 @@ function EntertainmentCreateContent() {
         onNavigate={navigateTo}
       />
 
-      {mode === 'select' && (
-        <EntertainmentModeSelector onSelect={setMode} />
-      )}
-
-      {mode === 'wizard' && (
-        <EntertainmentWizard
-          form={form}
-          setForm={setForm}
-          onComplete={() => setMode('editor')}
-          onSwitchMode={() => setMode('editor')}
-        />
-      )}
-
-      {mode === 'editor' && (
-        <EntertainmentEditor
-          form={form}
-          setForm={setForm}
-          onSwitchMode={() => setMode('wizard')}
-          onBack={() => setMode('select')}
-          user={user}
-        />
-      )}
+      <EntertainmentEditor
+        form={form}
+        setForm={setForm}
+        user={user}
+      />
     </div>
   );
 }

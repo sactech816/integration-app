@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, Edit3, Sparkles, Wand2, MessageSquare, Trophy, Save,
   Loader2, Plus, Trash2, ChevronDown, ChevronUp, RefreshCw, Eye,
-  Palette, Share2, Image as ImageIcon, PartyPopper,
+  Palette, Share2, Image as ImageIcon, PartyPopper, ArrowRight,
 } from 'lucide-react';
 import { generateSlug } from '@/lib/utils';
 import { supabase, TABLES } from '@/lib/supabase';
@@ -89,13 +89,16 @@ const Section = ({
 interface EntertainmentEditorProps {
   form: EntertainmentForm;
   setForm: (form: EntertainmentForm | ((prev: EntertainmentForm) => EntertainmentForm)) => void;
-  onSwitchMode: () => void;
-  onBack: () => void;
+  onSwitchMode?: () => void;
+  onBack?: () => void;
   user?: { id: string; email?: string } | null;
 }
 
 export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBack, user }: EntertainmentEditorProps) {
   const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
+
+  // 左パネルタブ: wizard（AI一括生成） or editor（手動編集）
+  const [leftTab, setLeftTab] = useState<'wizard' | 'editor'>('wizard');
 
   const [openSections, setOpenSections] = useState({
     ai: true,
@@ -111,7 +114,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
   const [savedSlug, setSavedSlug] = useState<string | null>(null);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
 
-  // AI生成
+  // AI生成（エディタ内STEP1用）
   const [aiTheme, setAiTheme] = useState('');
   const [aiStyle, setAiStyle] = useState<string>('pop');
   const [aiMode, setAiMode] = useState<string>('diagnosis');
@@ -119,6 +122,16 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
   const [isGenerating, setIsGenerating] = useState(false);
   const [progressSteps, setProgressSteps] = useState<ProgressStep[]>([]);
   const [generateError, setGenerateError] = useState<string | null>(null);
+
+  // ウィザードステップ
+  const [wizardStep, setWizardStep] = useState<'theme' | 'settings' | 'generating'>('theme');
+  const [wizardTheme, setWizardTheme] = useState('');
+  const [wizardStyle, setWizardStyle] = useState<string>('pop');
+  const [wizardMode, setWizardMode] = useState<string>('diagnosis');
+  const [wizardResultCount, setWizardResultCount] = useState(4);
+  const [wizardGenerating, setWizardGenerating] = useState(false);
+  const [wizardProgressSteps, setWizardProgressSteps] = useState<ProgressStep[]>([]);
+  const [wizardError, setWizardError] = useState<string | null>(null);
 
   // 画像生成
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
@@ -276,6 +289,116 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
     }
   };
 
+  // --- ウィザード一括生成（テーマ→設定→生成→画像→エディタ切替） ---
+  const QUICK_THEMES = [
+    { label: 'どうぶつ占い', emoji: '🐾' },
+    { label: '推しキャラ診断', emoji: '💫' },
+    { label: '前世タイプ診断', emoji: '🔮' },
+    { label: '脳内メーカー', emoji: '🧠' },
+    { label: 'ラーメン診断', emoji: '🍜' },
+    { label: '恋愛パターン診断', emoji: '💕' },
+  ];
+
+  const handleWizardGenerate = async () => {
+    if (!wizardTheme.trim()) { alert('テーマを入力してください'); return; }
+    setWizardStep('generating');
+    setWizardGenerating(true);
+    setWizardError(null);
+    setWizardProgressSteps([
+      { label: 'タイトル・説明文を生成', status: 'in_progress' },
+      { label: '質問を生成', status: 'pending' },
+      { label: `結果${wizardResultCount}タイプを生成`, status: 'pending' },
+      { label: '結果画像を生成', status: 'pending' },
+    ]);
+
+    try {
+      await new Promise((r) => setTimeout(r, 500));
+      setWizardProgressSteps((prev) =>
+        prev.map((s, i) => (i === 0 ? { ...s, status: 'completed' } : i === 1 ? { ...s, status: 'in_progress' } : s))
+      );
+
+      const finalMode = wizardTheme.includes('占い') ? 'fortune' : wizardMode;
+      const res = await fetch('/api/entertainment/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phase: 'generate',
+          quizConcept: { theme: wizardTheme, resultCount: wizardResultCount, style: wizardStyle, mode: finalMode },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'クイズ生成に失敗しました');
+
+      setWizardProgressSteps((prev) =>
+        prev.map((s, i) => (i <= 1 ? { ...s, status: 'completed' } : i === 2 ? { ...s, status: 'in_progress' } : s))
+      );
+      await new Promise((r) => setTimeout(r, 300));
+
+      const updated = applyGeneratedData(form, data, wizardStyle, finalMode);
+      setForm(updated);
+
+      setWizardProgressSteps((prev) =>
+        prev.map((s, i) => (i <= 2 ? { ...s, status: 'completed' } : { ...s, status: 'in_progress' }))
+      );
+
+      // 画像生成を試行
+      let imageGenSuccess = false;
+      try {
+        const imgRes = await fetch('/api/entertainment/generate-images', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            results: updated.results,
+            style: wizardStyle,
+            theme: wizardTheme,
+            aspectRatio: form.entertainment_meta.imageAspectRatio || '1:1',
+          }),
+        });
+        const imgData = await imgRes.json();
+        if (imgRes.ok && imgData.images && Object.keys(imgData.images).length > 0) {
+          imageGenSuccess = true;
+          setForm((prev: EntertainmentForm) => ({
+            ...prev,
+            results: prev.results.map((r) => ({
+              ...r,
+              image_url: imgData.images[r.type] || r.image_url,
+            })),
+            entertainment_meta: {
+              ...prev.entertainment_meta,
+              resultImages: imgData.images,
+            },
+          }));
+        }
+      } catch (imgErr) {
+        console.warn('画像生成エラー:', imgErr);
+      }
+
+      if (!imageGenSuccess) {
+        setWizardProgressSteps((prev) =>
+          prev.map((s, i) =>
+            i === 3
+              ? { ...s, status: 'completed', label: '画像生成（スキップ — エディタで生成可能）' }
+              : { ...s, status: 'completed' }
+          )
+        );
+      }
+
+      setWizardProgressSteps((prev) => prev.map((s) => ({ ...s, status: 'completed' })));
+      await new Promise((r) => setTimeout(r, 500));
+
+      // エディタタブに自動切替
+      setLeftTab('editor');
+      setOpenSections({ ai: false, basic: true, questions: true, results: true, settings: false });
+      resetPreview();
+      setWizardProgressSteps([]);
+    } catch (err) {
+      setWizardError(err instanceof Error ? err.message : '生成に失敗しました');
+      setWizardStep('settings');
+    } finally {
+      setWizardGenerating(false);
+    }
+  };
+
   // --- 保存 ---
   const handleSave = async () => {
     if (!supabase) { alert('データベースに接続されていません'); return; }
@@ -416,21 +539,18 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
       {/* ヘッダー */}
       <div className="bg-white border-b px-4 md:px-6 py-4 flex justify-between sticky top-16 z-40 shadow-sm">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full text-gray-700">
+          <button
+            onClick={() => onBack ? onBack() : window.history.back()}
+            className="p-2 hover:bg-gray-100 rounded-full text-gray-700"
+          >
             <ArrowLeft size={20} />
           </button>
           <div className="flex items-center gap-2">
             <PartyPopper className="w-5 h-5 text-pink-500 hidden sm:block" />
-            <h2 className="font-bold text-lg text-gray-900 line-clamp-1">エンタメ診断エディタ</h2>
+            <h2 className="font-bold text-lg text-gray-900 line-clamp-1">エンタメ診断メーカー</h2>
           </div>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={onSwitchMode}
-            className="hidden sm:flex bg-purple-50 border border-purple-200 text-purple-700 px-3 py-2 rounded-lg font-bold items-center gap-2 text-sm"
-          >
-            <Wand2 size={16} /> ウィザード
-          </button>
           {savedSlug && (
             <button
               onClick={() => setShowCompleteModal(true)}
@@ -483,7 +603,179 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
       {/* メインコンテンツ */}
       <div className="flex flex-1 overflow-hidden">
         {/* 左側: 編集パネル */}
-        <div className={`w-full lg:w-1/2 overflow-y-auto p-4 md:p-6 bg-gray-50 ${mobileTab === 'preview' ? 'hidden lg:block' : ''}`}>
+        <div className={`w-full lg:w-1/2 overflow-y-auto bg-gray-50 ${mobileTab === 'preview' ? 'hidden lg:block' : ''}`}>
+
+          {/* ウィザード/エディタ切り替えタブ */}
+          <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
+            <div className="flex max-w-2xl mx-auto">
+              <button
+                onClick={() => setLeftTab('wizard')}
+                className={`flex-1 py-3 px-4 font-bold text-sm flex items-center justify-center gap-2 transition-colors ${
+                  leftTab === 'wizard'
+                    ? 'text-pink-600 border-b-2 border-pink-600 bg-pink-50'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Wand2 size={16} /> AIウィザード
+              </button>
+              <button
+                onClick={() => setLeftTab('editor')}
+                className={`flex-1 py-3 px-4 font-bold text-sm flex items-center justify-center gap-2 transition-colors ${
+                  leftTab === 'editor'
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Edit3 size={16} /> エディタ
+              </button>
+            </div>
+          </div>
+
+          {/* === ウィザードタブ === */}
+          {leftTab === 'wizard' && (
+            <div className="p-4 md:p-6">
+              <div className="max-w-2xl mx-auto space-y-6">
+                {wizardError && (
+                  <div className="px-4 py-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm">{wizardError}</div>
+                )}
+
+                {wizardStep === 'theme' && (
+                  <>
+                    <div className="text-center">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-pink-100 text-pink-600 rounded-full text-xs font-bold mb-3">
+                        STEP 1 / 2
+                      </div>
+                      <h2 className="text-xl font-extrabold text-gray-900 mb-1">どんな診断を作りますか？</h2>
+                      <p className="text-sm text-gray-600">テーマを入力するか、下から選んでください</p>
+                    </div>
+
+                    <textarea
+                      className="w-full border-2 border-pink-200 p-4 rounded-xl text-gray-900 text-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 outline-none bg-white placeholder:text-gray-400 resize-none"
+                      rows={2}
+                      placeholder="例: どうぶつ占い"
+                      value={wizardTheme}
+                      onChange={(e) => setWizardTheme(e.target.value)}
+                    />
+
+                    <div className="grid grid-cols-2 gap-3">
+                      {QUICK_THEMES.map((t) => (
+                        <button
+                          key={t.label}
+                          onClick={() => { setWizardTheme(t.label); setWizardStep('settings'); }}
+                          className="bg-white border-2 border-gray-200 rounded-xl p-3 text-left hover:border-pink-400 hover:shadow-md transition-all"
+                        >
+                          <span className="text-xl mb-1 block">{t.emoji}</span>
+                          <span className="font-bold text-sm text-gray-900">{t.label}</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => { if (wizardTheme.trim()) setWizardStep('settings'); }}
+                      disabled={!wizardTheme.trim()}
+                      className="w-full bg-gradient-to-r from-pink-500 to-purple-500 disabled:from-gray-300 disabled:to-gray-300 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-all"
+                    >
+                      次へ <ArrowRight size={20} />
+                    </button>
+                  </>
+                )}
+
+                {wizardStep === 'settings' && (
+                  <>
+                    <div className="text-center">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-pink-100 text-pink-600 rounded-full text-xs font-bold mb-3">
+                        STEP 2 / 2
+                      </div>
+                      <h2 className="text-xl font-extrabold text-gray-900 mb-1">設定を選んでください</h2>
+                      <p className="text-sm text-gray-600">テーマ: 「{wizardTheme}」</p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-bold text-gray-700 block mb-2">モード</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {MODE_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.value}
+                            onClick={() => setWizardMode(opt.value)}
+                            className={`p-3 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+                              wizardMode === opt.value
+                                ? 'border-pink-500 bg-pink-50 text-pink-700 shadow-sm'
+                                : 'border-gray-200 bg-white text-gray-600'
+                            }`}
+                          >
+                            {opt.emoji} {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-bold text-gray-700 block mb-2">スタイル</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {STYLE_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.value}
+                            onClick={() => setWizardStyle(opt.value)}
+                            className={`p-3 rounded-xl border-2 font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+                              wizardStyle === opt.value
+                                ? 'border-pink-500 bg-pink-50 text-pink-700 shadow-sm'
+                                : 'border-gray-200 bg-white text-gray-600'
+                            }`}
+                          >
+                            {opt.emoji} {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-bold text-gray-700 block mb-2">結果タイプ数</label>
+                      <div className="grid grid-cols-3 gap-3">
+                        {RESULT_COUNT_OPTIONS.map((count) => (
+                          <button
+                            key={count}
+                            onClick={() => setWizardResultCount(count)}
+                            className={`py-3 rounded-xl border-2 font-bold text-sm flex items-center justify-center transition-all ${
+                              wizardResultCount === count
+                                ? 'border-pink-500 bg-pink-50 text-pink-700 shadow-sm'
+                                : 'border-gray-200 bg-white text-gray-500'
+                            }`}
+                          >
+                            {count}タイプ
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setWizardStep('theme')}
+                        className="flex-1 bg-gray-100 text-gray-700 py-4 rounded-xl font-bold text-base flex items-center justify-center gap-2 border border-gray-300"
+                      >
+                        <ArrowLeft size={18} /> 戻る
+                      </button>
+                      <button
+                        onClick={handleWizardGenerate}
+                        className="flex-[2] bg-gradient-to-r from-pink-500 to-purple-500 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-all"
+                      >
+                        <Sparkles size={20} /> 生成する！
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {wizardStep === 'generating' && (
+                  <div className="flex items-center justify-center min-h-[40vh]">
+                    <WizardProgress steps={wizardProgressSteps} />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* === エディタタブ === */}
+          {leftTab === 'editor' && (
+          <div className="p-4 md:p-6">
           <div className="max-w-2xl mx-auto space-y-4">
 
             {/* STEP 1: AI生成 */}
@@ -948,6 +1240,9 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
               </button>
             </div>
           </div>
+          </div>
+          )}
+          {/* === /エディタタブ === */}
         </div>
 
         {/* 右側: プレビュー */}
