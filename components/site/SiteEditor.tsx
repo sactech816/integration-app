@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { generateSlug } from '@/lib/utils';
 import { Site, SitePage, Block, generateBlockId } from '@/lib/types';
@@ -32,24 +32,17 @@ import {
   Home,
   Menu,
   LayoutGrid,
-  Smartphone,
-  Monitor,
   Copy,
   Check,
   MapPin,
   DollarSign,
-  Star,
   Link as LinkIcon,
-  Book,
   Timer,
   Images,
-  Brain,
   Link2,
-  UserCircle,
-  List,
-  Lock,
   Layout,
   Sparkles,
+  Trophy,
 } from 'lucide-react';
 import { BlockRenderer } from '@/components/shared/BlockRenderer';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
@@ -191,66 +184,89 @@ const siteTemplates = [
   },
 ];
 
-// ヘルパー: Input
-function Input({ label, val, onChange, ph, disabled }: { label: string; val: string; onChange: (v: string) => void; ph?: string; disabled?: boolean }) {
-  return (
-    <div className="mb-4">
-      <label className="text-sm font-bold text-gray-900 block mb-2">{label}</label>
-      <input
-        type="text"
-        value={val || ''}
-        onChange={e => onChange(e.target.value)}
-        placeholder={ph}
-        disabled={disabled}
-        className={`w-full border border-gray-300 p-3 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-cyan-500 outline-none bg-white placeholder-gray-400 transition-shadow ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-      />
-    </div>
-  );
-}
-
-// ヘルパー: Textarea
-function Textarea({ label, val, onChange, rows }: { label: string; val: string; onChange: (v: string) => void; rows?: number }) {
-  return (
-    <div className="mb-4">
-      <label className="text-sm font-bold text-gray-900 block mb-2">{label}</label>
-      <textarea
-        value={val || ''}
-        onChange={e => onChange(e.target.value)}
-        rows={rows || 3}
-        className="w-full border border-gray-300 p-3 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-cyan-500 outline-none bg-white placeholder-gray-400 transition-shadow"
-      />
-    </div>
-  );
-}
-
-// セクション折りたたみ
-function Section({ title, icon: Icon, isOpen, onToggle, children, badge, step, stepLabel, headerBgColor, headerHoverColor, accentColor }: {
-  title: string; icon: React.ElementType; isOpen: boolean; onToggle: () => void; children: React.ReactNode; badge?: string;
-  step?: number; stepLabel?: string; headerBgColor?: string; headerHoverColor?: string; accentColor?: string;
-}) {
-  const iconBg = isOpen ? (accentColor || 'bg-cyan-100 text-cyan-600') : 'bg-gray-200 text-gray-500';
-  return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden mb-4 bg-white">
-      {step && stepLabel && (
-        <div className={`px-5 py-2 ${headerBgColor || 'bg-gray-50'} border-b border-gray-200/50`}>
-          <span className="text-xs font-bold text-gray-600 bg-white/60 px-2 py-0.5 rounded">STEP {step}</span>
-          <span className="text-sm text-gray-700 ml-2">{stepLabel}</span>
+// セクションコンポーネント（BusinessEditorと同じ構造）
+const Section = ({
+  title,
+  icon: Icon,
+  isOpen,
+  onToggle,
+  children,
+  badge,
+  step,
+  stepLabel,
+  headerBgColor = 'bg-gray-50',
+  headerHoverColor = 'hover:bg-gray-100',
+  accentColor = 'bg-cyan-100 text-cyan-600'
+}: {
+  title: string,
+  icon: React.ComponentType<{ size?: number }>,
+  isOpen: boolean,
+  onToggle: () => void,
+  children: React.ReactNode,
+  badge?: string,
+  step?: number,
+  stepLabel?: string,
+  headerBgColor?: string,
+  headerHoverColor?: string,
+  accentColor?: string
+}) => (
+  <div className="border border-gray-200 rounded-xl overflow-hidden mb-4 bg-white">
+    {step && stepLabel && (
+      <div className={`px-5 py-2 ${headerBgColor} border-b border-gray-200/50`}>
+        <span className="text-xs font-bold text-gray-600 bg-white/60 px-2 py-0.5 rounded">
+          STEP {step}
+        </span>
+        <span className="text-sm text-gray-700 ml-2">{stepLabel}</span>
+      </div>
+    )}
+    <button
+      onClick={onToggle}
+      className={`w-full px-5 py-4 flex items-center justify-between ${headerBgColor} ${headerHoverColor} transition-colors`}
+    >
+      <div className="flex items-center gap-3">
+        <div className={`p-2 rounded-lg ${isOpen ? accentColor : 'bg-gray-200 text-gray-500'}`}>
+          <Icon size={18} />
         </div>
-      )}
-      <button onClick={onToggle} className={`w-full px-5 py-4 flex items-center justify-between ${headerBgColor || 'bg-gray-50'} ${headerHoverColor || 'hover:bg-gray-100'} transition-all`}>
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg transition-colors ${iconBg}`}>
-            <Icon size={18} />
-          </div>
-          <span className="font-bold text-gray-900">{title}</span>
-          {badge && <span className="text-xs bg-white/80 text-gray-700 px-2 py-0.5 rounded-full border border-gray-200">{badge}</span>}
-        </div>
-        {isOpen ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
-      </button>
-      {isOpen && <div className="p-5 border-t border-gray-100 space-y-4">{children}</div>}
-    </div>
-  );
-}
+        <span className="font-bold text-gray-900">{title}</span>
+        {badge && (
+          <span className="text-xs bg-white/80 text-gray-700 px-2 py-0.5 rounded-full border border-gray-200">{badge}</span>
+        )}
+      </div>
+      {isOpen ? <ChevronUp size={20} className="text-gray-500" /> : <ChevronDown size={20} className="text-gray-500" />}
+    </button>
+    {isOpen && (
+      <div className="p-5 border-t border-gray-100">
+        {children}
+      </div>
+    )}
+  </div>
+);
+
+// 入力コンポーネント（BusinessEditorと同じ構造、色のみcyan）
+const Input = ({label, val, onChange, ph, disabled = false}: {label: string, val: string, onChange: (v: string) => void, ph?: string, disabled?: boolean}) => (
+  <div className="mb-4">
+    <label className="text-sm font-bold text-gray-900 block mb-2">{label}</label>
+    <input
+      className={`w-full border border-gray-300 p-3 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-cyan-500 outline-none bg-white placeholder-gray-400 transition-shadow ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+      value={val || ''}
+      onChange={e => onChange(e.target.value)}
+      placeholder={ph}
+      disabled={disabled}
+    />
+  </div>
+);
+
+const Textarea = ({label, val, onChange, rows = 3}: {label: string, val: string, onChange: (v: string) => void, rows?: number}) => (
+  <div className="mb-4">
+    <label className="text-sm font-bold text-gray-900 block mb-2">{label}</label>
+    <textarea
+      className="w-full border border-gray-300 p-3 rounded-lg text-gray-900 focus:ring-2 focus:ring-cyan-500 outline-none bg-white placeholder-gray-400 transition-shadow"
+      rows={rows}
+      value={val || ''}
+      onChange={e => onChange(e.target.value)}
+    />
+  </div>
+);
 
 export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack, setShowAuth }: SiteEditorProps) {
   const { userPlan } = useUserPlan(user?.id);
@@ -277,9 +293,9 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
   const [isSaving, setIsSaving] = useState(false);
   const [showComplete, setShowComplete] = useState(false);
   const [savedSlug, setSavedSlug] = useState('');
+  const [justSavedSlug, setJustSavedSlug] = useState<string | null>(null);
   const [previewKey, setPreviewKey] = useState(0);
   const [copied, setCopied] = useState(false);
-  // セクション開閉
   const [openSections, setOpenSections] = useState({
     template: !initialData,
     siteSettings: true,
@@ -287,6 +303,10 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
     blocks: true,
     advanced: false,
   });
+
+  const toggleSection = (key: keyof typeof openSections) => {
+    setOpenSections(s => ({ ...s, [key]: !s[key] }));
+  };
 
   // 初期データ読み込み
   useEffect(() => {
@@ -304,6 +324,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
         setPages(initialData.pages);
       }
       setSavedSlug(initialData.slug);
+      setJustSavedSlug(initialData.slug);
     }
   }, [initialData]);
 
@@ -441,7 +462,6 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
       const isNew = !site.id;
       const slug = site.slug || generateSlug();
 
-      // ポイントチェック（新規のみ）
       if (isNew && user && !isPro) {
         const affordable = await canAfford('mini-site', 'save');
         if (!affordable) {
@@ -452,7 +472,6 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
       }
 
       if (isNew) {
-        // サイト作成
         const { data: siteData, error: siteError } = await supabase
           .from('sites')
           .insert({
@@ -469,7 +488,6 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
 
         if (siteError) throw siteError;
 
-        // ページ一括作成
         const pageInserts = pages.map((p, i) => ({
           site_id: siteData.id,
           slug: p.slug || `page-${i}`,
@@ -490,12 +508,10 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
 
         setSite(prev => ({ ...prev, id: siteData.id, slug }));
         setSavedSlug(slug);
+        setJustSavedSlug(slug);
         setShowComplete(true);
-
-        // URL更新
         window.history.replaceState({}, '', `/site/editor?id=${slug}`);
       } else {
-        // サイト更新
         const { error: siteError } = await supabase
           .from('sites')
           .update({
@@ -509,7 +525,6 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
 
         if (siteError) throw siteError;
 
-        // 既存ページ削除→再作成（簡易的なアプローチ）
         await supabase.from('site_pages').delete().eq('site_id', site.id);
 
         const pageInserts = pages.map((p, i) => ({
@@ -533,7 +548,6 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
         alert('更新しました');
       }
 
-      // キャッシュ無効化
       try {
         await fetch(`/api/revalidate?path=/site/${slug}`);
       } catch {}
@@ -580,7 +594,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
               <select
                 value={(data.align as string) || 'left'}
                 onChange={e => updateBlock(block.id, { align: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full border border-gray-300 p-3 rounded-lg text-gray-900 focus:ring-2 focus:ring-cyan-500 outline-none bg-white"
               >
                 <option value="left">左寄せ</option>
                 <option value="center">中央</option>
@@ -897,7 +911,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
                 type="datetime-local"
                 value={(data.endDate as string) || ''}
                 onChange={e => updateBlock(block.id, { endDate: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full border border-gray-300 p-3 rounded-lg text-gray-900 focus:ring-2 focus:ring-cyan-500 outline-none bg-white"
               />
             </div>
           </div>
@@ -908,6 +922,283 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
     }
   };
 
+  // エディタ部分のレンダリング（BusinessEditorのrenderEditor()パターン）
+  const renderEditor = () => (
+    <div>
+      {/* STEP 1: テンプレート選択 */}
+      <Section
+        title="テンプレート選択"
+        icon={Sparkles}
+        isOpen={openSections.template}
+        onToggle={() => toggleSection('template')}
+        step={1}
+        stepLabel="テンプレートを選んでサイトの下書きを作成"
+        headerBgColor="bg-purple-50"
+        headerHoverColor="hover:bg-purple-100"
+        accentColor="bg-purple-100 text-purple-600"
+      >
+        <p className="text-sm text-gray-600 mb-3">テンプレートを選ぶとページ構成が自動でセットされます</p>
+        <div className="grid grid-cols-2 gap-3">
+          {siteTemplates.map(template => (
+            <button
+              key={template.id}
+              onClick={() => {
+                if (pages.length > 0) {
+                  const confirmed = confirm(`「${template.name}」テンプレートを適用しますか？\n現在のページ構成は上書きされます。`);
+                  if (!confirmed) return;
+                }
+                applyTemplate(template.id);
+              }}
+              className={`group text-left p-4 rounded-xl border ${template.borderColor} ${template.bgLight} ${template.hoverBorder} hover:shadow-md transition-all`}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${template.gradient} flex items-center justify-center text-xl group-hover:scale-110 transition-transform shadow-sm`}>
+                  {template.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className={`text-sm font-bold ${template.textColor} truncate`}>{template.name}</h4>
+                  <p className="text-xs text-cyan-600 font-semibold">{template.pages.length}ページ</p>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 leading-relaxed">{template.description}</p>
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      {/* STEP 2: サイト設定 */}
+      <Section
+        title="サイト設定"
+        icon={Settings}
+        isOpen={openSections.siteSettings}
+        onToggle={() => toggleSection('siteSettings')}
+        step={2}
+        stepLabel="サイトの基本情報を設定"
+        headerBgColor="bg-blue-50"
+        headerHoverColor="hover:bg-blue-100"
+        accentColor="bg-blue-100 text-blue-600"
+      >
+        <Input label="サイト名" val={site.title || ''} onChange={v => setSite(s => ({ ...s, title: v }))} ph="サイトの名前" />
+        <Input label="サイトの説明" val={site.description || ''} onChange={v => setSite(s => ({ ...s, description: v }))} ph="サイトの概要" />
+        <Input label="ロゴURL" val={site.logo_url || ''} onChange={v => setSite(s => ({ ...s, logo_url: v }))} ph="https://..." />
+        <div className="mb-4">
+          <label className="text-sm font-bold text-gray-900 block mb-2">メインカラー</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={site.settings?.theme?.primaryColor || '#0891b2'}
+              onChange={e => setSite(s => ({
+                ...s,
+                settings: { ...s.settings, theme: { ...s.settings?.theme, primaryColor: e.target.value } },
+              }))}
+              className="w-12 h-12 rounded-xl border border-gray-300 cursor-pointer"
+            />
+            <span className="text-sm text-gray-500">{site.settings?.theme?.primaryColor || '#0891b2'}</span>
+          </div>
+        </div>
+      </Section>
+
+      {/* STEP 3: ページ管理 */}
+      <Section
+        title="ページ管理"
+        icon={FileText}
+        isOpen={openSections.pages}
+        onToggle={() => toggleSection('pages')}
+        badge={`${pages.length}ページ`}
+        step={3}
+        stepLabel="ページの追加・並び替え・設定"
+        headerBgColor="bg-emerald-50"
+        headerHoverColor="hover:bg-emerald-100"
+        accentColor="bg-emerald-100 text-emerald-600"
+      >
+        <div className="space-y-2">
+          {pages.map((page, index) => (
+            <div
+              key={index}
+              className={`flex items-center gap-2 p-3 rounded-xl border transition-all cursor-pointer ${
+                index === activePageIndex
+                  ? 'border-cyan-300 bg-cyan-50'
+                  : 'border-gray-200 bg-white hover:bg-gray-50'
+              }`}
+              onClick={() => setActivePageIndex(index)}
+            >
+              <GripVertical size={16} className="text-gray-300 flex-shrink-0" />
+              {page.is_home ? (
+                <Home size={16} className="text-cyan-500 flex-shrink-0" />
+              ) : (
+                <FileText size={16} className="text-gray-400 flex-shrink-0" />
+              )}
+              <input
+                type="text"
+                value={page.title || ''}
+                onChange={e => { e.stopPropagation(); updatePageMeta(index, 'title', e.target.value); }}
+                onClick={e => e.stopPropagation()}
+                className="flex-1 bg-transparent border-none text-sm font-bold text-gray-900 focus:outline-none focus:ring-0 min-w-0"
+                placeholder="ページ名"
+              />
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button
+                  onClick={e => { e.stopPropagation(); movePage(index, 'up'); }}
+                  disabled={index === 0}
+                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                >
+                  <ArrowUp size={14} />
+                </button>
+                <button
+                  onClick={e => { e.stopPropagation(); movePage(index, 'down'); }}
+                  disabled={index === pages.length - 1}
+                  className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                >
+                  <ArrowDown size={14} />
+                </button>
+                <label
+                  className="p-1 cursor-pointer"
+                  title={page.show_in_nav !== false ? 'ナビに表示中' : 'ナビ非表示'}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <input
+                    type="checkbox"
+                    checked={page.show_in_nav !== false}
+                    onChange={e => updatePageMeta(index, 'show_in_nav', e.target.checked)}
+                    className="sr-only"
+                  />
+                  <Menu size={14} className={page.show_in_nav !== false ? 'text-cyan-500' : 'text-gray-300'} />
+                </label>
+                {!page.is_home && (
+                  <button
+                    onClick={e => { e.stopPropagation(); removePage(index); }}
+                    className="p-1 text-gray-400 hover:text-red-500"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={addPage}
+          className="w-full p-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-cyan-500 hover:text-cyan-600 transition-colors flex items-center justify-center gap-2 font-medium mt-3"
+        >
+          <Plus size={20} /> ページを追加
+        </button>
+      </Section>
+
+      {/* STEP 4: ブロック編集（BusinessEditorのSTEP3と同じパターン） */}
+      {currentPage && (
+        <Section
+          title={`ブロック編集: ${currentPage.title || '無題'}`}
+          icon={Layout}
+          isOpen={openSections.blocks}
+          onToggle={() => toggleSection('blocks')}
+          badge={`${(currentPage.content || []).length}個`}
+          step={4}
+          stepLabel="コンテンツブロックを追加・編集"
+          headerBgColor="bg-orange-50"
+          headerHoverColor="hover:bg-orange-100"
+          accentColor="bg-orange-100 text-orange-600"
+        >
+          {/* ブロック一覧 */}
+          <div className="space-y-3 min-h-[100px]">
+            {(!currentPage.content || currentPage.content.length === 0) && (
+              <div className="text-center py-8 text-gray-400">
+                <Layout size={32} className="mx-auto mb-2 opacity-50" />
+                <p className="text-sm">ブロックがありません</p>
+                <p className="text-xs mt-1">下のボタンからブロックを追加してください</p>
+              </div>
+            )}
+            {(currentPage.content || []).map((block, index) => {
+              const blockType = blockTypes.find(bt => bt.type === block.type);
+              const BlockIcon = blockType?.icon || Type;
+
+              return (
+                <EditorBlockItem
+                  key={block.id}
+                  block={block}
+                  index={index}
+                  totalBlocks={(currentPage.content || []).length}
+                  blockType={blockType}
+                  Icon={BlockIcon}
+                  isExpanded={expandedBlocks.has(block.id)}
+                  onToggle={() => {
+                    setExpandedBlocks(prev => {
+                      const next = new Set(prev);
+                      if (next.has(block.id)) next.delete(block.id);
+                      else next.add(block.id);
+                      return next;
+                    });
+                  }}
+                  onMoveUp={() => moveBlock(block.id, 'up')}
+                  onMoveDown={() => moveBlock(block.id, 'down')}
+                  onRemove={() => removeBlock(block.id)}
+                  renderBlockEditor={renderBlockEditor}
+                />
+              );
+            })}
+          </div>
+
+          {/* ブロック追加（BusinessEditorと同じUI） */}
+          <div className="relative mt-4">
+            <button
+              onClick={() => setShowBlockSelector(!showBlockSelector)}
+              className="w-full p-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-cyan-500 hover:text-cyan-600 transition-colors flex items-center justify-center gap-2 font-medium"
+            >
+              <Plus size={20} />
+              ブロックを追加
+            </button>
+
+            {showBlockSelector && (
+              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl shadow-xl border border-gray-100 p-4 z-50 max-h-80 overflow-y-auto">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                  {blockTypes.map(bt => (
+                    <button
+                      key={bt.type}
+                      onClick={() => addBlock(bt.type)}
+                      className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-cyan-50 transition-colors border border-transparent hover:border-cyan-200"
+                    >
+                      <bt.icon size={24} className="text-cyan-600" />
+                      <span className="text-xs font-medium text-gray-700">{bt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </Section>
+      )}
+
+      {/* STEP 5: 詳細設定 */}
+      <Section
+        title="詳細設定"
+        icon={Settings}
+        isOpen={openSections.advanced}
+        onToggle={() => toggleSection('advanced')}
+        step={5}
+        stepLabel="スラッグ・アクセス解析タグの設定"
+        headerBgColor="bg-gray-100"
+        headerHoverColor="hover:bg-gray-200"
+        accentColor="bg-gray-200 text-gray-600"
+      >
+        <Input label="カスタムスラッグ" val={site.slug || ''} onChange={v => setSite(s => ({ ...s, slug: v }))} ph="my-site（英数字とハイフン）" disabled={!!site.id} />
+        <Input label="GTM ID" val={site.settings?.gtmId || ''} onChange={v => setSite(s => ({ ...s, settings: { ...s.settings, gtmId: v } }))} ph="GTM-XXXXXXX" />
+        <Input label="Facebook Pixel ID" val={site.settings?.fbPixelId || ''} onChange={v => setSite(s => ({ ...s, settings: { ...s.settings, fbPixelId: v } }))} ph="1234567890" />
+        <Input label="LINE Tag ID" val={site.settings?.lineTagId || ''} onChange={v => setSite(s => ({ ...s, settings: { ...s.settings, lineTagId: v } }))} ph="xxxxxxxx-xxxx-xxxx-xxxx" />
+      </Section>
+
+      {/* 保存ボタン（下部）- BusinessEditorと同じ */}
+      <div className="sticky bottom-4 bg-white p-4 rounded-xl shadow-lg border border-gray-200">
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="w-full bg-gradient-to-r from-cyan-600 to-teal-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:from-cyan-700 hover:to-teal-700 transition-all shadow-md text-lg"
+        >
+          {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
+          {initialData?.id ? '更新して保存' : '保存して公開'}
+        </button>
+      </div>
+    </div>
+  );
+
   // プレビューレンダリング
   const renderPreview = () => {
     const navPages = pages.filter(p => p.show_in_nav !== false);
@@ -915,7 +1206,6 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
 
     return (
       <div className="bg-white min-h-full" key={previewKey}>
-        {/* ナビゲーション */}
         <nav className="bg-white border-b border-gray-200 sticky top-0 z-10">
           <div className="max-w-5xl mx-auto px-4">
             <div className="flex items-center justify-between h-14">
@@ -948,7 +1238,6 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
           </div>
         </nav>
 
-        {/* ページコンテンツ */}
         <div className="max-w-5xl mx-auto">
           {(currentPage?.content || []).map((block, i) => (
             <div key={block.id || i}>
@@ -963,376 +1252,15 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
           )}
         </div>
 
-        {/* フッター */}
         <footer className="border-t border-gray-200 mt-12 py-8 text-center text-xs text-gray-400">
-          <p>© {new Date().getFullYear()} {site.title || 'サイト名'}</p>
+          <p>&copy; {new Date().getFullYear()} {site.title || 'サイト名'}</p>
         </footer>
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* エディタヘッダー */}
-      <div className="sticky top-16 z-40 bg-white border-b border-gray-200 shadow-sm">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-xl transition-all">
-              <ArrowLeft size={20} className="text-gray-600" />
-            </button>
-            <div>
-              <h1 className="font-bold text-gray-900 text-sm">マイサイトメーカー</h1>
-              <p className="text-xs text-gray-500">{site.id ? '編集中' : '新規作成'}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {savedSlug && (
-              <>
-                <button
-                  onClick={() => setShowComplete(true)}
-                  className="hidden sm:flex bg-gradient-to-r from-cyan-600 to-teal-600 text-white px-3 sm:px-4 py-2 rounded-lg font-bold items-center gap-2 hover:from-cyan-700 hover:to-teal-700 transition-all shadow-md"
-                >
-                  <ExternalLink size={16} />
-                  <span className="hidden md:inline">作成完了画面</span>
-                </button>
-                <button
-                  onClick={copyUrl}
-                  className="hidden sm:flex bg-cyan-50 border border-cyan-200 text-cyan-700 px-3 sm:px-4 py-2 rounded-lg font-bold items-center gap-2 hover:bg-cyan-100 transition-all"
-                >
-                  {copied ? <Check size={16} /> : <Copy size={16} />}
-                  <span className="hidden md:inline">{copied ? 'コピー済み' : '公開URL'}</span>
-                </button>
-              </>
-            )}
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="bg-cyan-600 text-white px-4 md:px-6 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-cyan-700 shadow-md transition-all whitespace-nowrap disabled:opacity-50"
-            >
-              {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-              <span className="hidden sm:inline">保存</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* モバイルタブ */}
-      <div className="lg:hidden sticky top-[121px] z-40 bg-white border-b border-gray-200">
-        <div className="flex">
-          <button
-            onClick={() => setActiveTab('edit')}
-            className={`flex-1 py-3 text-sm font-bold text-center transition-all ${activeTab === 'edit' ? 'text-cyan-600 border-b-2 border-cyan-600' : 'text-gray-500'}`}
-          >
-            <Edit3 size={16} className="inline mr-1" /> 編集
-          </button>
-          <button
-            onClick={() => setActiveTab('preview')}
-            className={`flex-1 py-3 text-sm font-bold text-center transition-all ${activeTab === 'preview' ? 'text-cyan-600 border-b-2 border-cyan-600' : 'text-gray-500'}`}
-          >
-            <Eye size={16} className="inline mr-1" /> プレビュー
-          </button>
-        </div>
-      </div>
-
-      {/* パネルコンテナ */}
-      <div className="flex-1 overflow-hidden">
-      {/* 左パネル: エディタ */}
-      <div className={`w-full lg:w-1/2 overflow-y-auto pb-32 bg-gray-50 ${activeTab === 'preview' ? 'hidden lg:block' : ''}`}>
-        <div className="max-w-2xl mx-auto p-4 md:p-6">
-
-          {/* テンプレート選択 */}
-          <Section
-            title="テンプレート選択"
-            icon={Sparkles}
-            isOpen={openSections.template}
-            onToggle={() => setOpenSections(s => ({ ...s, template: !s.template }))}
-            step={1}
-            stepLabel="テンプレートを選んでサイトの下書きを作成"
-            headerBgColor="bg-purple-50"
-            headerHoverColor="hover:bg-purple-100"
-            accentColor="bg-purple-100 text-purple-600"
-          >
-            <p className="text-sm text-gray-600 mb-3">テンプレートを選ぶとページ構成が自動でセットされます</p>
-            <div className="grid grid-cols-2 gap-3">
-              {siteTemplates.map(template => (
-                <button
-                  key={template.id}
-                  onClick={() => {
-                    if (pages.length > 0) {
-                      const confirmed = confirm(`「${template.name}」テンプレートを適用しますか？\n現在のページ構成は上書きされます。`);
-                      if (!confirmed) return;
-                    }
-                    applyTemplate(template.id);
-                  }}
-                  className={`group text-left p-4 rounded-xl border ${template.borderColor} ${template.bgLight} ${template.hoverBorder} hover:shadow-md transition-all`}
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${template.gradient} flex items-center justify-center text-xl group-hover:scale-110 transition-transform shadow-sm`}>
-                      {template.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className={`text-sm font-bold ${template.textColor} truncate`}>{template.name}</h4>
-                      <p className="text-xs text-cyan-600 font-semibold">{template.pages.length}ページ</p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 leading-relaxed">{template.description}</p>
-                </button>
-              ))}
-            </div>
-          </Section>
-
-          {/* サイト基本設定 */}
-          <Section
-            title="サイト設定"
-            icon={Settings}
-            isOpen={openSections.siteSettings}
-            onToggle={() => setOpenSections(s => ({ ...s, siteSettings: !s.siteSettings }))}
-            step={2}
-            stepLabel="サイトの基本情報を設定"
-            headerBgColor="bg-blue-50"
-            headerHoverColor="hover:bg-blue-100"
-            accentColor="bg-blue-100 text-blue-600"
-          >
-            <Input label="サイト名" val={site.title || ''} onChange={v => setSite(s => ({ ...s, title: v }))} ph="サイトの名前" />
-            <Input label="サイトの説明" val={site.description || ''} onChange={v => setSite(s => ({ ...s, description: v }))} ph="サイトの概要" />
-            <Input label="ロゴURL" val={site.logo_url || ''} onChange={v => setSite(s => ({ ...s, logo_url: v }))} ph="https://..." />
-            <div>
-              <label className="text-sm font-bold text-gray-900 block mb-2">メインカラー</label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={site.settings?.theme?.primaryColor || '#0891b2'}
-                  onChange={e => setSite(s => ({
-                    ...s,
-                    settings: { ...s.settings, theme: { ...s.settings?.theme, primaryColor: e.target.value } },
-                  }))}
-                  className="w-12 h-12 rounded-xl border border-gray-300 cursor-pointer"
-                />
-                <span className="text-sm text-gray-500">{site.settings?.theme?.primaryColor || '#0891b2'}</span>
-              </div>
-            </div>
-          </Section>
-
-          {/* ページ管理 */}
-          <Section
-            title="ページ管理"
-            icon={FileText}
-            isOpen={openSections.pages}
-            onToggle={() => setOpenSections(s => ({ ...s, pages: !s.pages }))}
-            badge={`${pages.length}ページ`}
-            step={3}
-            stepLabel="ページの追加・並び替え・設定"
-            headerBgColor="bg-emerald-50"
-            headerHoverColor="hover:bg-emerald-100"
-            accentColor="bg-emerald-100 text-emerald-600"
-          >
-            <div className="space-y-2">
-              {pages.map((page, index) => (
-                <div
-                  key={index}
-                  className={`flex items-center gap-2 p-3 rounded-xl border transition-all cursor-pointer ${
-                    index === activePageIndex
-                      ? 'border-cyan-300 bg-cyan-50'
-                      : 'border-gray-200 bg-white hover:bg-gray-50'
-                  }`}
-                  onClick={() => setActivePageIndex(index)}
-                >
-                  <GripVertical size={16} className="text-gray-300 flex-shrink-0" />
-                  {page.is_home ? (
-                    <Home size={16} className="text-cyan-500 flex-shrink-0" />
-                  ) : (
-                    <FileText size={16} className="text-gray-400 flex-shrink-0" />
-                  )}
-                  <input
-                    type="text"
-                    value={page.title || ''}
-                    onChange={e => { e.stopPropagation(); updatePageMeta(index, 'title', e.target.value); }}
-                    onClick={e => e.stopPropagation()}
-                    className="flex-1 bg-transparent border-none text-sm font-bold text-gray-900 focus:outline-none focus:ring-0 min-w-0"
-                    placeholder="ページ名"
-                  />
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <button
-                      onClick={e => { e.stopPropagation(); movePage(index, 'up'); }}
-                      disabled={index === 0}
-                      className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
-                    >
-                      <ArrowUp size={14} className="text-gray-500" />
-                    </button>
-                    <button
-                      onClick={e => { e.stopPropagation(); movePage(index, 'down'); }}
-                      disabled={index === pages.length - 1}
-                      className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
-                    >
-                      <ArrowDown size={14} className="text-gray-500" />
-                    </button>
-                    <label
-                      className="p-1 cursor-pointer"
-                      title={page.show_in_nav !== false ? 'ナビに表示中' : 'ナビ非表示'}
-                      onClick={e => e.stopPropagation()}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={page.show_in_nav !== false}
-                        onChange={e => updatePageMeta(index, 'show_in_nav', e.target.checked)}
-                        className="sr-only"
-                      />
-                      <Menu size={14} className={page.show_in_nav !== false ? 'text-cyan-500' : 'text-gray-300'} />
-                    </label>
-                    {!page.is_home && (
-                      <button
-                        onClick={e => { e.stopPropagation(); removePage(index); }}
-                        className="p-1 hover:bg-red-100 rounded"
-                      >
-                        <Trash2 size={14} className="text-red-400" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={addPage}
-              className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-cyan-400 hover:text-cyan-600 font-bold text-sm transition-all"
-            >
-              <Plus size={16} className="inline mr-1" /> ページを追加
-            </button>
-          </Section>
-
-          {/* ブロック編集 */}
-          {currentPage && (
-            <Section
-              title={`ブロック編集: ${currentPage.title || '無題'}`}
-              icon={Layout}
-              isOpen={openSections.blocks}
-              onToggle={() => setOpenSections(s => ({ ...s, blocks: !s.blocks }))}
-              badge={`${(currentPage.content || []).length}個`}
-            >
-              <div className="space-y-3">
-                {(currentPage.content || []).map((block, blockIndex) => {
-                  const blockDef = blockTypes.find(bt => bt.type === block.type);
-                  const isExpanded = expandedBlocks.has(block.id);
-                  const BlockIcon = blockDef?.icon || FileText;
-
-                  return (
-                    <div key={block.id} className={`rounded-xl border overflow-hidden transition-all ${blockDef?.color?.border || 'border-gray-200'}`}>
-                      <button
-                        onClick={() => {
-                          setExpandedBlocks(prev => {
-                            const next = new Set(prev);
-                            if (next.has(block.id)) next.delete(block.id);
-                            else next.add(block.id);
-                            return next;
-                          });
-                        }}
-                        className={`w-full flex items-center gap-2 p-3 ${blockDef?.color?.bg || 'bg-gray-50'} hover:opacity-80 transition-all`}
-                      >
-                        <GripVertical size={14} className="text-gray-300" />
-                        <BlockIcon size={16} className={blockDef?.color?.icon || 'text-gray-500'} />
-                        <span className={`text-sm font-bold flex-1 text-left ${blockDef?.color?.text || 'text-gray-700'}`}>
-                          {blockDef?.label || block.type}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          <button onClick={e => { e.stopPropagation(); moveBlock(block.id, 'up'); }} disabled={blockIndex === 0} className="p-1 hover:bg-white/50 rounded disabled:opacity-30">
-                            <ArrowUp size={12} />
-                          </button>
-                          <button onClick={e => { e.stopPropagation(); moveBlock(block.id, 'down'); }} disabled={blockIndex === (currentPage.content || []).length - 1} className="p-1 hover:bg-white/50 rounded disabled:opacity-30">
-                            <ArrowDown size={12} />
-                          </button>
-                          <button onClick={e => { e.stopPropagation(); removeBlock(block.id); }} className="p-1 hover:bg-red-100 rounded">
-                            <Trash2 size={12} className="text-red-400" />
-                          </button>
-                          {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                        </div>
-                      </button>
-                      {isExpanded && (
-                        <div className="p-4 bg-white">
-                          {renderBlockEditor(block)}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* ブロック追加ボタン */}
-              <div className="relative mt-4">
-                <button
-                  onClick={() => setShowBlockSelector(!showBlockSelector)}
-                  className="w-full p-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-cyan-500 hover:text-cyan-600 transition-colors flex items-center justify-center gap-2 font-medium"
-                >
-                  <Plus size={20} />
-                  ブロックを追加
-                </button>
-
-                {showBlockSelector && (
-                  <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl shadow-xl border border-gray-100 p-4 z-50 max-h-80 overflow-y-auto">
-                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                      {blockTypes.map(bt => {
-                        const BtIcon = bt.icon;
-                        return (
-                          <button
-                            key={bt.type}
-                            onClick={() => addBlock(bt.type)}
-                            className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-cyan-200"
-                          >
-                            <BtIcon size={24} className="text-cyan-600" />
-                            <span className="text-xs font-medium text-gray-700">{bt.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Section>
-          )}
-
-          {/* 詳細設定 */}
-          <Section title="詳細設定" icon={Settings} isOpen={openSections.advanced} onToggle={() => setOpenSections(s => ({ ...s, advanced: !s.advanced }))}>
-            <Input label="カスタムスラッグ" val={site.slug || ''} onChange={v => setSite(s => ({ ...s, slug: v }))} ph="my-site（英数字とハイフン）" disabled={!!site.id} />
-            <Input label="GTM ID" val={site.settings?.gtmId || ''} onChange={v => setSite(s => ({ ...s, settings: { ...s.settings, gtmId: v } }))} ph="GTM-XXXXXXX" />
-            <Input label="Facebook Pixel ID" val={site.settings?.fbPixelId || ''} onChange={v => setSite(s => ({ ...s, settings: { ...s.settings, fbPixelId: v } }))} ph="1234567890" />
-            <Input label="LINE Tag ID" val={site.settings?.lineTagId || ''} onChange={v => setSite(s => ({ ...s, settings: { ...s.settings, lineTagId: v } }))} ph="xxxxxxxx-xxxx-xxxx-xxxx" />
-          </Section>
-        </div>
-
-        {/* スティッキー保存ボタン */}
-        <div className="sticky bottom-4 mx-4 lg:max-w-2xl lg:mx-auto">
-          <div className="bg-white p-4 rounded-xl shadow-lg border border-gray-200">
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="w-full bg-gradient-to-r from-cyan-600 to-teal-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:from-cyan-700 hover:to-teal-700 transition-all shadow-md text-lg disabled:opacity-50"
-            >
-              {isSaving ? <Loader2 size={24} className="animate-spin" /> : <Save size={24} />}
-              {site.id ? '更新して保存' : '保存して公開'}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 右パネル: プレビュー */}
-      <div className={`w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] overflow-y-auto bg-gray-800 border-l border-gray-700 ${activeTab === 'edit' ? 'hidden lg:block' : ''}`}>
-        <div className="p-4">
-          {/* ブラウザ風ヘッダー */}
-          <div className="bg-gray-700 rounded-t-xl px-4 py-2 flex items-center gap-2">
-            <div className="flex gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-red-400" />
-              <div className="w-3 h-3 rounded-full bg-yellow-400" />
-              <div className="w-3 h-3 rounded-full bg-green-400" />
-            </div>
-            <div className="flex-1 bg-gray-600 rounded-lg px-3 py-1 text-xs text-gray-300 truncate">
-              {savedSlug ? `makers.tokyo/site/${savedSlug}` : 'makers.tokyo/site/...'}
-            </div>
-          </div>
-          <div className="bg-white rounded-b-xl overflow-hidden">
-            {renderPreview()}
-          </div>
-        </div>
-      </div>
-      </div>{/* パネルコンテナ end */}
-
+    <div className="min-h-screen bg-gray-100 flex flex-col font-sans text-gray-900">
       {/* 完成モーダル */}
       <CreationCompleteModal
         isOpen={showComplete && !!savedSlug}
@@ -1344,6 +1272,185 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
         showSocialShare
         showQrCode
       />
+
+      {/* ヘッダー（BusinessEditorと同じ構造） */}
+      <div className="bg-white border-b px-4 md:px-6 py-4 flex justify-between sticky top-16 z-40 shadow-sm">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full text-gray-700">
+            <ArrowLeft size={20} />
+          </button>
+          <h2 className="font-bold text-lg text-gray-900 line-clamp-1">
+            {initialData ? 'マイサイト編集' : 'マイサイト新規作成'}
+          </h2>
+        </div>
+        <div className="flex gap-2">
+          {justSavedSlug && (
+            <button
+              onClick={() => setShowComplete(true)}
+              className="hidden sm:flex bg-gradient-to-r from-cyan-600 to-teal-600 text-white px-3 sm:px-4 py-2 rounded-lg font-bold items-center gap-2 hover:from-cyan-700 hover:to-teal-700 shadow-md text-sm sm:text-base"
+            >
+              <Trophy size={16} className="sm:w-[18px] sm:h-[18px]" /> <span className="hidden md:inline">作成完了画面</span><span className="md:hidden">完了</span>
+            </button>
+          )}
+          {justSavedSlug && (
+            <button
+              onClick={() => window.open(`/site/${justSavedSlug}`, '_blank')}
+              className="hidden sm:flex bg-cyan-50 border border-cyan-200 text-cyan-700 px-3 sm:px-4 py-2 rounded-lg font-bold items-center gap-2 hover:bg-cyan-100 text-sm sm:text-base"
+            >
+              <ExternalLink size={16} className="sm:w-[18px] sm:h-[18px]" /> <span className="hidden md:inline">公開URL</span><span className="md:hidden">URL</span>
+            </button>
+          )}
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="bg-cyan-600 text-white px-4 md:px-6 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-cyan-700 shadow-md"
+          >
+            {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+            <span className="hidden sm:inline">保存</span>
+          </button>
+        </div>
+      </div>
+
+      {/* モバイル用タブバー（BusinessEditorと同じ構造） */}
+      <div className="lg:hidden bg-white border-b border-gray-200 sticky top-[121px] z-40">
+        <div className="flex">
+          <button
+            onClick={() => setActiveTab('edit')}
+            className={`flex-1 py-3 px-4 font-bold text-sm flex items-center justify-center gap-2 ${
+              activeTab === 'edit'
+                ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <Edit3 size={18} /> 編集
+          </button>
+          <button
+            onClick={() => setActiveTab('preview')}
+            className={`flex-1 py-3 px-4 font-bold text-sm flex items-center justify-center gap-2 ${
+              activeTab === 'preview'
+                ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <Eye size={18} /> プレビュー
+          </button>
+        </div>
+      </div>
+
+      {/* メインコンテンツ（BusinessEditorと同じ構造） */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* 左側: 編集パネル */}
+        <div className={`w-full lg:w-1/2 overflow-y-auto p-4 md:p-6 bg-gray-50 ${activeTab === 'preview' ? 'hidden lg:block' : ''}`}>
+          <div className="max-w-2xl mx-auto">
+            {renderEditor()}
+          </div>
+        </div>
+
+        {/* 右側: プレビュー */}
+        <div className={`w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] flex-col bg-gray-800 border-l border-gray-700 ${activeTab === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
+          {/* PC用プレビューヘッダー */}
+          <div className="hidden lg:flex bg-gray-900 px-4 py-3 items-center justify-between border-b border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              </div>
+              <span className="text-gray-400 text-sm font-medium">プレビュー</span>
+            </div>
+            <div className="bg-gray-700 rounded-lg px-3 py-1 text-xs text-gray-300 truncate max-w-[200px]">
+              {savedSlug ? `makers.tokyo/site/${savedSlug}` : 'makers.tokyo/site/...'}
+            </div>
+          </div>
+          {/* プレビューコンテンツ */}
+          <div className="flex-1 overflow-auto bg-white">
+            {renderPreview()}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// エディタ用ブロックアイテム（BusinessEditorと同じコンポーネント）
+function EditorBlockItem({
+  block,
+  index,
+  totalBlocks,
+  blockType,
+  Icon,
+  isExpanded,
+  onToggle,
+  onMoveUp,
+  onMoveDown,
+  onRemove,
+  renderBlockEditor,
+}: {
+  block: Block;
+  index: number;
+  totalBlocks: number;
+  blockType: { label: string; type: string; color?: { bg: string; border: string; text: string; icon: string; hover: string } } | undefined;
+  Icon: React.ElementType;
+  isExpanded: boolean;
+  onToggle: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onRemove: () => void;
+  renderBlockEditor: (block: Block) => React.ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  const handleToggle = useCallback(() => {
+    const wasCollapsed = !isExpanded;
+    onToggle();
+    if (wasCollapsed && ref.current) {
+      setTimeout(() => {
+        const el = ref.current;
+        if (!el) return;
+        let scrollParent = el.parentElement;
+        while (scrollParent && getComputedStyle(scrollParent).overflowY !== 'auto') {
+          scrollParent = scrollParent.parentElement;
+        }
+        if (scrollParent) {
+          const elRect = el.getBoundingClientRect();
+          const containerRect = scrollParent.getBoundingClientRect();
+          const offset = elRect.top - containerRect.top + scrollParent.scrollTop - 12;
+          scrollParent.scrollTo({ top: offset, behavior: 'smooth' });
+        } else {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 50);
+    }
+  }, [isExpanded, onToggle]);
+
+  return (
+    <div ref={ref} className={`rounded-xl border overflow-hidden ${blockType?.color?.border || 'border-gray-200'} ${blockType?.color?.bg || 'bg-gray-50'}`}>
+      <div
+        className={`w-full flex items-center justify-between p-4 cursor-pointer ${blockType?.color?.hover || 'hover:bg-gray-100'}`}
+        onClick={handleToggle}
+      >
+        <div className="flex items-center gap-3 flex-1">
+          <GripVertical size={18} className="text-gray-400" />
+          <Icon size={18} className={blockType?.color?.icon || 'text-cyan-600'} />
+          <span className={`font-medium ${blockType?.color?.text || 'text-gray-700'}`}>
+            {blockType?.label || block.type}
+          </span>
+        </div>
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <button onClick={onMoveUp} disabled={index === 0} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ArrowUp size={16} /></button>
+          <button onClick={onMoveDown} disabled={index === totalBlocks - 1} className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"><ArrowDown size={16} /></button>
+          <button onClick={onRemove} className="p-1 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
+          <button onClick={handleToggle} className="p-1 text-gray-400">
+            {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </button>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="p-4 border-t border-gray-200 bg-white">
+          {renderBlockEditor(block)}
+        </div>
+      )}
     </div>
   );
 }

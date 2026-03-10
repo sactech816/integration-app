@@ -68,7 +68,8 @@
       "Bash(git -C \"d:\\\\obsidian\\\\integration-app\" show HEAD:app/youtube-keyword-research/editor/page.tsx)",
       "Bash(git -C \"d:\\\\obsidian\\\\integration-app\" show HEAD:components/youtube-keyword-research/YouTubeKeywordResearchEditor.tsx)",
       "Bash(git -C \"d:\\\\obsidian\\\\integration-app\" show HEAD:lib/types.ts)",
-      "Bash(taskkill //f //im node.exe)"
+      "Bash(taskkill //f //im node.exe)",
+      "Bash(git -C /d/obsidian/bigfive-app log --oneline)"
     ],
     "deny": [
       "Bash(sudo:*)",
