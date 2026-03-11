@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Site, SitePage } from '@/lib/types';
-import { BlockRenderer } from '@/components/shared/BlockRenderer';
+import { SiteBlockRenderer } from '@/components/site/SiteBlockRenderer';
 import { ViewTracker } from '@/components/shared/ViewTracker';
 import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
@@ -27,34 +27,43 @@ export default function SiteViewer({ site, currentPage, hideFooter }: SiteViewer
   return (
     <div className="min-h-screen bg-white">
       <ViewTracker contentId={site.slug} contentType="site" />
-      {/* ナビゲーション */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
-            {/* ロゴ+サイト名 */}
-            <Link href={baseUrl} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+
+      {/* ─── ナビゲーション ─── */}
+      <nav className="bg-white/80 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-between h-[68px]">
+            {/* ロゴ + サイト名 */}
+            <Link href={baseUrl} className="flex items-center gap-3 hover:opacity-70 transition-opacity">
               {site.logo_url && (
-                <img src={site.logo_url} alt="" className="h-10 w-10 rounded-xl object-cover" />
+                <img src={site.logo_url} alt="" className="h-9 w-9 rounded-lg object-cover" />
               )}
-              <span className="font-bold text-gray-900 text-lg">{site.title}</span>
+              <span className="text-sm font-bold tracking-[0.12em] uppercase text-gray-900">
+                {site.title}
+              </span>
             </Link>
 
             {/* デスクトップナビ */}
-            <div className="hidden md:flex items-center gap-1">
+            <div className="hidden md:flex items-center gap-8">
               {navPages.map(page => {
                 const isActive = page.id === currentPage.id;
                 return (
                   <Link
                     key={page.id}
                     href={getPageUrl(page)}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    className={`relative text-[13px] font-medium tracking-wide transition-colors duration-200 py-1 ${
                       isActive
-                        ? 'text-white shadow-md'
-                        : 'text-gray-600 hover:bg-gray-100'
+                        ? 'text-gray-900'
+                        : 'text-gray-400 hover:text-gray-700'
                     }`}
-                    style={isActive ? { backgroundColor: primaryColor } : {}}
                   >
                     {page.title}
+                    {/* アクティブインジケーター */}
+                    <span
+                      className={`absolute -bottom-[1px] left-0 right-0 h-[2px] transition-all duration-300 ${
+                        isActive ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      style={{ backgroundColor: primaryColor }}
+                    />
                   </Link>
                 );
               })}
@@ -62,80 +71,104 @@ export default function SiteViewer({ site, currentPage, hideFooter }: SiteViewer
 
             {/* モバイルメニューボタン */}
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-all"
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden p-2.5 -mr-2.5 rounded-lg hover:bg-gray-100/80 transition-colors"
+              aria-label="メニューを開く"
             >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              <Menu size={22} className="text-gray-700" />
             </button>
           </div>
         </div>
-
-        {/* モバイルメニュー */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 bg-white">
-            <div className="px-4 py-3 space-y-1">
-              {navPages.map(page => {
-                const isActive = page.id === currentPage.id;
-                return (
-                  <Link
-                    key={page.id}
-                    href={getPageUrl(page)}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`block px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                      isActive
-                        ? 'text-white'
-                        : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                    style={isActive ? { backgroundColor: primaryColor } : {}}
-                  >
-                    {page.title}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </nav>
 
-      {/* ページコンテンツ */}
+      {/* ─── モバイルメニュー（フルスクリーンオーバーレイ） ─── */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-[100] bg-white flex flex-col animate-in fade-in duration-200">
+          {/* メニューヘッダー */}
+          <div className="flex items-center justify-between px-6 h-[68px] border-b border-gray-100">
+            <span className="text-sm font-bold tracking-[0.12em] uppercase text-gray-900">
+              {site.title}
+            </span>
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-2.5 -mr-2.5 rounded-lg hover:bg-gray-100/80 transition-colors"
+              aria-label="メニューを閉じる"
+            >
+              <X size={22} className="text-gray-700" />
+            </button>
+          </div>
+          {/* メニューリンク */}
+          <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6">
+            {navPages.map(page => {
+              const isActive = page.id === currentPage.id;
+              return (
+                <Link
+                  key={page.id}
+                  href={getPageUrl(page)}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`text-2xl font-light tracking-wider transition-colors ${
+                    isActive ? 'text-gray-900' : 'text-gray-400'
+                  }`}
+                >
+                  {page.title}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ─── ページコンテンツ ─── */}
       <main>
         {(currentPage.content || []).map((block, i) => (
           <div key={block.id || i}>
-            <BlockRenderer block={block} variant="business" />
+            <SiteBlockRenderer
+              block={block}
+              primaryColor={primaryColor}
+              sectionIndex={i}
+            />
           </div>
         ))}
       </main>
 
-      {/* フッター */}
+      {/* ─── フッター ─── */}
       {!hideFooter && (
-        <footer className="border-t border-gray-200 mt-16">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="flex items-center gap-3">
-                {site.logo_url && (
-                  <img src={site.logo_url} alt="" className="h-8 w-8 rounded-lg object-cover" />
-                )}
-                <span className="font-bold text-gray-700">{site.title}</span>
-              </div>
-              <div className="flex flex-wrap justify-center gap-4">
+        <footer className="border-t border-gray-100 bg-white">
+          <div className="max-w-6xl mx-auto px-6 lg:px-8 py-16">
+            <div className="text-center">
+              {/* サイト名 */}
+              <p className="text-xs font-bold tracking-[0.15em] uppercase text-gray-300 mb-6">
+                {site.title}
+              </p>
+              {/* ナビリンク */}
+              <nav className="flex flex-wrap justify-center gap-x-8 gap-y-3 mb-10">
                 {navPages.map(page => (
                   <Link
                     key={page.id}
                     href={getPageUrl(page)}
-                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                    className="text-xs text-gray-400 hover:text-gray-600 transition-colors tracking-wide"
                   >
                     {page.title}
                   </Link>
                 ))}
+              </nav>
+              {/* コピーライト */}
+              <div className="pt-8 border-t border-gray-50">
+                <p className="text-[11px] text-gray-300 tracking-wide">
+                  &copy; {new Date().getFullYear()} {site.title}
+                </p>
+                <p className="text-[11px] text-gray-300 mt-2">
+                  Powered by{' '}
+                  <a
+                    href="https://makers.tokyo"
+                    className="hover:text-gray-500 transition-colors"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    集客メーカー
+                  </a>
+                </p>
               </div>
-            </div>
-            <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-              <p className="text-xs text-gray-400">
-                © {new Date().getFullYear()} {site.title}
-              </p>
-              <p className="text-xs text-gray-300 mt-2">
-                Powered by <a href="https://makers.tokyo" className="hover:text-gray-500 transition-colors">集客メーカー</a>
-              </p>
             </div>
           </div>
         </footer>

@@ -7,6 +7,8 @@ import confetti from 'canvas-confetti';
 import { supabase } from '@/lib/supabase';
 import type { Quiz, QuizResult, EntertainmentMeta } from '@/lib/types';
 
+const isSvgUrl = (url: string) => url.includes('.svg') || url.includes('dicebear');
+
 interface EntertainmentResultViewProps {
   quiz: Quiz;
   result: QuizResult;
@@ -182,6 +184,7 @@ export default function EntertainmentResultView({
                     className={`object-cover transition-all duration-700 ${imageLoaded ? 'scale-100 opacity-100' : 'scale-110 opacity-0'}`}
                     sizes="(max-width: 640px) 100vw, 448px"
                     onLoad={() => setImageLoaded(true)}
+                    unoptimized={isSvgUrl(resultImage)}
                     priority
                   />
                 </div>
@@ -306,6 +309,7 @@ export default function EntertainmentResultView({
                     width={48}
                     height={48}
                     className="object-cover w-full h-full"
+                    unoptimized={isSvgUrl(meta.resultImages[compatibleResult.type])}
                   />
                 </div>
               ) : (
@@ -408,7 +412,7 @@ export default function EntertainmentResultView({
                     >
                       {rImage ? (
                         <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-2">
-                          <Image src={rImage} alt={r.title} fill className="object-cover" sizes="160px" />
+                          <Image src={rImage} alt={r.title} fill className="object-cover" sizes="160px" unoptimized={isSvgUrl(rImage)} />
                           {isCurrentType && (
                             <div className="absolute top-1 right-1 bg-yellow-400 text-yellow-900 text-[10px] font-black px-1.5 py-0.5 rounded-full">
                               YOU

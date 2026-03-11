@@ -148,7 +148,7 @@ const allTools: ToolDef[] = [
 ];
 
 // ===== ToolCard コンポーネント =====
-function ToolCard({ tool, highlight }: { tool: ToolDef; highlight?: boolean }) {
+function ToolCard({ tool, highlight, genreBg }: { tool: ToolDef; highlight?: boolean; genreBg?: string }) {
   const Icon = tool.icon;
   return (
     <Link
@@ -156,7 +156,9 @@ function ToolCard({ tool, highlight }: { tool: ToolDef; highlight?: boolean }) {
       className={`group relative rounded-2xl border-2 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
         highlight
           ? `${tool.bgColor} border-orange-300 shadow-md ring-2 ring-orange-200 ring-offset-1`
-          : 'bg-white border-gray-100 hover:border-transparent'
+          : genreBg
+            ? `${genreBg} border-transparent hover:bg-white hover:border-gray-100 shadow-sm hover:shadow-xl`
+            : 'bg-white border-gray-100 hover:border-transparent'
       }`}
     >
       {tool.isPro && (
@@ -292,22 +294,24 @@ export default function ToolsPageClient() {
 
         {/* ===== タブ1: ジャンル別 ===== */}
         {viewMode === 'genre' && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <section className="py-12">
             {genreCategories.map((cat) => {
               const catTools = allTools.filter(t => t.genre === cat.id);
               if (catTools.length === 0) return null;
               return (
-                <div key={cat.id} className="mb-16">
-                  {/* セクション見出し */}
-                  <div className={`flex items-center gap-3 mb-8`}>
-                    <div className={`h-10 w-1.5 rounded-full bg-gradient-to-b ${cat.headerBg}`} />
-                    <div>
-                      <h2 className={`text-2xl font-black ${cat.color}`}>{cat.label}</h2>
-                      <p className="text-sm text-gray-500">{catTools.length}個のツール</p>
+                <div key={cat.id} className={`${cat.bgColor} py-12 border-b ${cat.borderColor}`}>
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    {/* セクション見出し */}
+                    <div className={`flex items-center gap-3 mb-8`}>
+                      <div className={`h-10 w-1.5 rounded-full bg-gradient-to-b ${cat.headerBg}`} />
+                      <div>
+                        <h2 className={`text-2xl font-black ${cat.color}`}>{cat.label}</h2>
+                        <p className="text-sm text-gray-500">{catTools.length}個のツール</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {catTools.map((tool) => <ToolCard key={tool.name} tool={tool} />)}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {catTools.map((tool) => <ToolCard key={tool.name} tool={tool} genreBg={cat.bgColor} />)}
+                    </div>
                   </div>
                 </div>
               );

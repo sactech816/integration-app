@@ -138,7 +138,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
   const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
 
   // 左パネルタブ: wizard（AI一括生成） or editor（手動編集）
-  const [leftTab, setLeftTab] = useState<'wizard' | 'editor'>('wizard');
+  const [leftTab, setLeftTab] = useState<'wizard' | 'editor'>('editor');
 
   const [openSections, setOpenSections] = useState({
     ai: true,
@@ -659,12 +659,26 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
         </div>
         <div className="flex gap-2">
           {savedSlug && (
-            <button
-              onClick={() => setShowCompleteModal(true)}
-              className="hidden sm:flex bg-gradient-to-r from-pink-600 to-purple-600 text-white px-3 py-2 rounded-lg font-bold items-center gap-2 text-sm shadow-md"
-            >
-              <Trophy size={16} /> <span className="hidden md:inline">完了画面</span>
-            </button>
+            <>
+              <button
+                onClick={() => setShowCompleteModal(true)}
+                className="hidden sm:flex bg-gradient-to-r from-pink-600 to-purple-600 text-white px-3 py-2 rounded-lg font-bold items-center gap-2 text-sm shadow-md"
+              >
+                <Trophy size={16} /> <span className="hidden md:inline">完了画面</span>
+              </button>
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}/entertainment/${savedSlug}`;
+                  navigator.clipboard.writeText(url);
+                  alert('公開URLをコピーしました！');
+                }}
+                className="hidden sm:flex bg-green-50 border border-green-200 text-green-700 px-3 sm:px-4 py-2 rounded-lg font-bold items-center gap-2 text-sm sm:text-base"
+              >
+                <Share2 size={16} className="sm:w-[18px] sm:h-[18px]" />
+                <span className="hidden md:inline">公開URL</span>
+                <span className="md:hidden">URL</span>
+              </button>
+            </>
           )}
           <button
             onClick={handleSave}
@@ -1303,7 +1317,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
                       <label className="text-sm font-bold text-gray-900 block mb-2">画像</label>
                       {r.image_url ? (
                         <div className="relative group">
-                          <img src={r.image_url} alt={r.title} className="w-full h-32 object-cover rounded-lg border" />
+                          <img src={r.image_url} alt={r.title} className="w-full aspect-square max-w-[200px] mx-auto object-cover rounded-lg border" />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
                             <button
                               onClick={() => { setImagePickerOpen(ri); setImagePickerTab('preset'); setUrlInput(''); }}
