@@ -10,6 +10,7 @@ import {
 import { generateSlug } from '@/lib/utils';
 import { supabase, TABLES } from '@/lib/supabase';
 import QuizPlayer from '@/components/quiz/QuizPlayer';
+import EntertainmentResultView from './EntertainmentResultView';
 import WizardProgress, { type ProgressStep } from './WizardProgress';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import { triggerGamificationEvent } from '@/lib/gamification/events';
@@ -148,6 +149,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
     settings: false,
   });
   const [previewKey, setPreviewKey] = useState(0);
+  const [previewResult, setPreviewResult] = useState<any>(null);
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState<number | null>(null);
@@ -186,7 +188,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
 
   const [error, setError] = useState<string | null>(null);
 
-  const resetPreview = () => setPreviewKey((k) => k + 1);
+  const resetPreview = () => { setPreviewKey((k) => k + 1); setPreviewResult(null); };
   const toggleSection = (key: keyof typeof openSections) =>
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
@@ -1639,7 +1641,21 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             <div className="max-w-md mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
-              <QuizPlayer key={previewKey} quiz={previewQuizData} isPreview={true} />
+              {previewResult ? (
+                <EntertainmentResultView
+                  quiz={previewQuizData}
+                  result={previewResult}
+                  onRetry={() => resetPreview()}
+                  onBack={() => resetPreview()}
+                />
+              ) : (
+                <QuizPlayer
+                  key={previewKey}
+                  quiz={previewQuizData}
+                  isPreview={true}
+                  onResult={(result: any) => setPreviewResult(result)}
+                />
+              )}
             </div>
           </div>
         </div>

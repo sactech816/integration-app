@@ -294,24 +294,22 @@ export default function ToolsPageClient() {
 
         {/* ===== タブ1: ジャンル別 ===== */}
         {viewMode === 'genre' && (
-          <section className="py-12">
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             {genreCategories.map((cat) => {
               const catTools = allTools.filter(t => t.genre === cat.id);
               if (catTools.length === 0) return null;
               return (
-                <div key={cat.id} className={`${cat.bgColor} py-12 border-b ${cat.borderColor}`}>
-                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* セクション見出し */}
-                    <div className={`flex items-center gap-3 mb-8`}>
-                      <div className={`h-10 w-1.5 rounded-full bg-gradient-to-b ${cat.headerBg}`} />
-                      <div>
-                        <h2 className={`text-2xl font-black ${cat.color}`}>{cat.label}</h2>
-                        <p className="text-sm text-gray-500">{catTools.length}個のツール</p>
-                      </div>
+                <div key={cat.id} className="mb-16">
+                  {/* セクション見出し */}
+                  <div className={`flex items-center gap-3 mb-8`}>
+                    <div className={`h-10 w-1.5 rounded-full bg-gradient-to-b ${cat.headerBg}`} />
+                    <div>
+                      <h2 className={`text-2xl font-black ${cat.color}`}>{cat.label}</h2>
+                      <p className="text-sm text-gray-500">{catTools.length}個のツール</p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {catTools.map((tool) => <ToolCard key={tool.name} tool={tool} genreBg={cat.bgColor} />)}
-                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {catTools.map((tool) => <ToolCard key={tool.name} tool={tool} genreBg={cat.bgColor} />)}
                   </div>
                 </div>
               );
@@ -353,7 +351,7 @@ export default function ToolsPageClient() {
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {catTools.map((tool) => <ToolCard key={tool.name} tool={tool} />)}
+                    {catTools.map((tool) => <ToolCard key={tool.name} tool={tool} genreBg={cat.bgColor} />)}
                   </div>
                 </div>
               );
