@@ -94,7 +94,7 @@ export default function DashboardLayout({ sidebar, children, rightPanel, activeV
       <aside
         style={{ width: sidebarWidth }}
         className={`
-          fixed top-0 left-0 z-40 h-full bg-white border-r border-gray-200
+          fixed top-16 left-0 z-40 h-[calc(100vh-4rem)] bg-white border-r border-gray-200
           transform transition-transform duration-300 ease-in-out
           lg:translate-x-0
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}

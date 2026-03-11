@@ -101,8 +101,6 @@ function DashboardContent() {
     const view = searchParams?.get('view');
     if (view && ['announcements', 'booking', 'attendance', 'survey', 'quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'newsletter', 'step-email', 'line', 'youtube-analysis', 'youtube-keyword-research', 'kindle-keywords', 'google-keyword-research', 'rakuten-research', 'niconico-keyword-research', 'reddit-keyword-research', 'order-form', 'funnel', 'webinar', 'sns-post', 'site', 'affiliate', 'settings'].includes(view)) {
       setActiveView(view as ActiveView);
-      // URLパラメータをクリア
-      window.history.replaceState({}, '', '/dashboard');
     }
   }, [searchParams]);
   
@@ -142,7 +140,6 @@ function DashboardContent() {
 
         if (data.success) {
           alert('決済が完了しました！Pro機能が利用可能になりました。');
-          window.history.replaceState({}, '', '/dashboard');
           fetchPurchases();
           fetchContents(selectedService);
         }
@@ -270,6 +267,10 @@ function DashboardContent() {
   // サイドバーのメニュー項目クリック時の処理
   const handleMenuItemClick = (itemId: string) => {
     setActiveView(itemId as ActiveView);
+
+    // URLを現在のビューに同期（replaceStateなので履歴は増えない）
+    const newUrl = itemId === 'dashboard' ? '/dashboard' : `/dashboard?view=${itemId}`;
+    window.history.replaceState({}, '', newUrl);
 
     // サービス選択の場合はselectedServiceも更新
     // （fetchContentsはuseEffect[selectedService]で自動実行されるため、ここでは呼ばない）

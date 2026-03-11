@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Check, Crown, Building2, ChevronRight } from 'lucide-react';
 import { useHomeAuth } from './HomeAuthContext';
-import { PLANS, PLAN_DETAILS } from '@/constants/pricing';
+import { PLANS, PLAN_DETAILS, type PlanDetailItem } from '@/constants/pricing';
 
 export default function PricingSection() {
   const { setShowAuth, setShowProPlanModal } = useHomeAuth();
@@ -76,12 +76,21 @@ export default function PricingSection() {
                 </div>
 
                 <ul className="space-y-1.5 mb-4 flex-1 border-t pt-3" style={{ borderColor: '#ffedd5' }}>
-                  {highlights.map((h, i) => (
-                    <li key={i} className="flex items-start gap-1.5 text-xs font-bold" style={{ color: '#5d4037' }}>
-                      <Check size={14} className="mt-0.5 shrink-0" style={{ color: isPopular ? '#f97316' : isPremiumTier ? '#8b5cf6' : '#84cc16' }} />
-                      <span>{h}</span>
-                    </li>
-                  ))}
+                  {highlights.map((h, i) => {
+                    if (h.startsWith('▸ ')) {
+                      return (
+                        <li key={i} className="text-xs font-bold pb-1 mb-1 border-b" style={{ color: isPremiumTier ? '#8b5cf6' : '#3b82f6', borderColor: '#f0e6d3' }}>
+                          {h.slice(2)}
+                        </li>
+                      );
+                    }
+                    return (
+                      <li key={i} className="flex items-start gap-1.5 text-xs font-bold" style={{ color: '#5d4037' }}>
+                        <Check size={14} className="mt-0.5 shrink-0" style={{ color: isPopular ? '#f97316' : isPremiumTier ? '#8b5cf6' : '#84cc16' }} />
+                        <span>{h}</span>
+                      </li>
+                    );
+                  })}
                 </ul>
 
                 <button
@@ -164,18 +173,33 @@ export default function PricingSection() {
               <div className="p-6 md:p-8">
                 <div className="grid md:grid-cols-2 gap-6">
                   {activeDetail.sections.map((section, idx) => (
-                    <div key={idx} className="bg-gray-50 rounded-2xl p-5">
-                      <h5 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: '#5d4037' }}>
+                    <div
+                      key={idx}
+                      className={`rounded-2xl p-5 ${section.highlight ? 'border-2' : 'bg-gray-50'}`}
+                      style={section.highlight ? { backgroundColor: activeDetail.color + '08', borderColor: activeDetail.color + '30' } : undefined}
+                    >
+                      <h5 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: section.highlight ? activeDetail.color : '#5d4037' }}>
                         <span className="w-2 h-2 rounded-full" style={{ backgroundColor: activeDetail.color }} />
                         {section.title}
                       </h5>
                       <ul className="space-y-2">
-                        {section.items.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                            <Check size={14} className="mt-0.5 shrink-0" style={{ color: activeDetail.color }} />
-                            <span>{item}</span>
-                          </li>
-                        ))}
+                        {section.items.map((item, i) => {
+                          const isObj = typeof item === 'object';
+                          const text = isObj ? (item as PlanDetailItem).text : item;
+                          const href = isObj ? (item as PlanDetailItem).href : undefined;
+                          return (
+                            <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                              <Check size={14} className="mt-0.5 shrink-0" style={{ color: activeDetail.color }} />
+                              {href ? (
+                                <a href={href} className="hover:underline" style={{ color: activeDetail.color }}>
+                                  {text} →
+                                </a>
+                              ) : (
+                                <span>{text}</span>
+                              )}
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   ))}
@@ -261,6 +285,7 @@ function getHighlights(planId: string): string[] {
       ];
     case 'standard':
       return [
+        '▸ フリープラン全機能に加えて',
         '全ツール各10個まで作成・編集',
         'テキストAI（10回/日）',
         'アクセス解析',
@@ -269,6 +294,7 @@ function getHighlights(planId: string): string[] {
       ];
     case 'business':
       return [
+        '▸ スタンダード全機能に加えて',
         '全ツール無制限作成',
         'テキストAI（50回/日）',
         '画像AI（5回/日）',
@@ -282,6 +308,7 @@ function getHighlights(planId: string): string[] {
       ];
     case 'premium':
       return [
+        '▸ ビジネス全機能に加えて',
         'テキストAI（200回/日）',
         '画像AI（20回/日）',
         'メルマガ（月1,000通）',

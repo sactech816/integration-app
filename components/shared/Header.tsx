@@ -201,10 +201,13 @@ const Header: React.FC<HeaderProps> = ({
 
               {isServiceMenuOpen && (
                 <>
-                  <div className="absolute top-full left-0 w-full h-2" />
-                  <div className="absolute top-full -left-20 pt-2 w-[1060px] z-[120]">
-                    <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-5 animate-fade-in">
-                      <div className="grid grid-cols-6 gap-4">
+                  {/* ブリッジ: ボタンとパネルの間のホバー切れ防止 */}
+                  <div className="fixed left-0 right-0 top-16 h-2 z-[119]" />
+                  {/* 全幅メガメニューパネル */}
+                  <div className="fixed left-0 right-0 top-[4.25rem] z-[120] animate-fade-in">
+                    <div className="border-b border-gray-200 bg-white shadow-xl">
+                      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+                        <div className="grid grid-cols-6 gap-5">
                         {/* LP・ページ作成 */}
                         <div>
                           <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-2 flex items-center gap-1">
@@ -471,6 +474,7 @@ const Header: React.FC<HeaderProps> = ({
                           </div>
                         </div>
                       )}
+                      </div>
                     </div>
                   </div>
                 </>
