@@ -372,13 +372,23 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
         let result;
 
         if (existingId) {
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from('onboarding_modals')
             .update(updateData)
-            .eq('id', existingId)
-            .select();
+            .eq('id', existingId);
           if (error) throw new Error(error.message || 'データベースエラー');
-          result = data?.[0];
+
+          // 更新成功 - 既存のslugを維持
+          const currentSlug = initialData?.slug || savedSlug;
+          if (currentSlug) {
+            fetch('/api/revalidate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ path: `/onboarding/${currentSlug}` }),
+            }).catch(() => {});
+          }
+          alert('保存しました！');
+          return;
         } else {
           let attempts = 0;
           const maxAttempts = 5;
@@ -414,7 +424,10 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
           if (customSlug) setCustomSlug('');
         }
 
-        if (result) {
+        if (!result) {
+          throw new Error('保存に失敗しました。ページを再読み込みしてもう一度お試しください。');
+        }
+        {
           const wasNewCreation = !existingId;
           setSavedId(result.id);
           setSavedSlug(result.slug);

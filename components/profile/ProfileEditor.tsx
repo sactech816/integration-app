@@ -955,11 +955,26 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
             settings: profile.settings,
           };
 
-          result = await supabase
+          const updateResult = await supabase
             .from('profiles')
             .update(updatePayload)
-            .eq('id', existingId)
-            .select();
+            .eq('id', existingId);
+
+          if (updateResult?.error) {
+            throw new Error(updateResult.error.message || 'データベースエラー');
+          }
+
+          // 更新成功 - 既存のslug/idを維持
+          const currentSlug = initialData?.slug || savedSlug;
+          if (currentSlug) {
+            fetch('/api/revalidate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ path: `/profile/${currentSlug}` }),
+            }).catch(() => {});
+          }
+          alert('保存しました！');
+          return;
         } else {
           // 新規作成の場合：ユニークなslugを生成（リトライ付き）
           let attempts = 0;
@@ -1006,40 +1021,42 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         }
 
         const savedData = result?.data?.[0];
-        if (savedData) {
-          setSavedSlug(savedData.slug);
-          setSavedId(savedData.id);
+        if (!savedData) {
+          throw new Error('保存に失敗しました。ページを再読み込みしてもう一度お試しください。');
+        }
 
-          // ISRキャッシュを無効化
-          fetch('/api/revalidate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: `/profile/${savedData.slug}` }),
-          }).catch(() => {});
+        setSavedSlug(savedData.slug);
+        setSavedId(savedData.id);
 
-          if (!initialData && !savedId) {
-            // 完全な新規作成の場合のみ成功モーダルを表示
-            setShowSuccessModal(true);
+        // ISRキャッシュを無効化
+        fetch('/api/revalidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: `/profile/${savedData.slug}` }),
+        }).catch(() => {});
 
-            // ゲスト作成の場合、ログイン時に引き継ぐためlocalStorageに保存
-            if (!user) {
-              try {
-                const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
-                stored.push({ table: 'profiles', id: savedData.id });
-                localStorage.setItem('guest_content', JSON.stringify(stored));
-              } catch {}
-            }
+        if (!initialData && !savedId) {
+          // 完全な新規作成の場合のみ成功モーダルを表示
+          setShowSuccessModal(true);
 
-            // ゲーミフィケーションイベント発火（プロフィール作成）
-            if (user?.id) {
-              triggerGamificationEvent(user.id, 'profile_create', {
-                contentId: savedData.slug,
-                contentTitle: savedData.nickname || 'プロフィール',
-              });
-            }
-          } else {
-            alert('保存しました！');
+          // ゲスト作成の場合、ログイン時に引き継ぐためlocalStorageに保存
+          if (!user) {
+            try {
+              const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
+              stored.push({ table: 'profiles', id: savedData.id });
+              localStorage.setItem('guest_content', JSON.stringify(stored));
+            } catch {}
           }
+
+          // ゲーミフィケーションイベント発火（プロフィール作成）
+          if (user?.id) {
+            triggerGamificationEvent(user.id, 'profile_create', {
+              contentId: savedData.slug,
+              contentTitle: savedData.nickname || 'プロフィール',
+            });
+          }
+        } else {
+          alert('保存しました！');
         }
       } catch (error) {
         console.error('Save error:', error);

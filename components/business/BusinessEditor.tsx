@@ -725,16 +725,29 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             },
           };
 
-          result = await supabase
+          const updateResult = await supabase
             ?.from('business_projects')
             .update(updatePayload)
-            .eq('id', existingId)
-            .select();
+            .eq('id', existingId);
 
-          if (result?.error) {
-            console.error('Business LP update error:', result.error);
-            throw new Error(result.error.message || 'データベースエラー');
+          if (updateResult?.error) {
+            console.error('Business LP update error:', updateResult.error);
+            throw new Error(updateResult.error.message || 'データベースエラー');
           }
+
+          // 更新成功 - 既存のslug/idを維持
+          const currentSlug = initialData?.slug || savedSlug;
+          if (currentSlug) {
+            setJustSavedSlug(currentSlug);
+            // ISRキャッシュを無効化
+            fetch('/api/revalidate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ path: `/business/${currentSlug}` }),
+            }).catch(() => {});
+          }
+          alert('保存しました！');
+          return;
         } else {
           // 新規作成の場合：ユニークなslugを生成（リトライ付き）
           let attempts = 0;
@@ -784,33 +797,35 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
         }
 
         const savedData = result?.data?.[0];
-        if (savedData) {
-          setSavedSlug(savedData.slug);
-          setSavedId(savedData.id);
-          setJustSavedSlug(savedData.slug);
+        if (!savedData) {
+          throw new Error('保存に失敗しました。ページを再読み込みしてもう一度お試しください。');
+        }
 
-          // ISRキャッシュを無効化
-          fetch('/api/revalidate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: `/business/${savedData.slug}` }),
-          }).catch(() => {});
+        setSavedSlug(savedData.slug);
+        setSavedId(savedData.id);
+        setJustSavedSlug(savedData.slug);
 
-          if (!initialData && !savedId) {
-            // 完全な新規作成の場合のみ成功モーダルを表示
-            setShowSuccessModal(true);
+        // ISRキャッシュを無効化
+        fetch('/api/revalidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: `/business/${savedData.slug}` }),
+        }).catch(() => {});
 
-            // ゲスト作成の場合、ログイン時に引き継ぐためlocalStorageに保存
-            if (!user) {
-              try {
-                const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
-                stored.push({ table: 'business_projects', id: savedData.id });
-                localStorage.setItem('guest_content', JSON.stringify(stored));
-              } catch {}
-            }
-          } else {
-            alert('保存しました！');
+        if (!initialData && !savedId) {
+          // 完全な新規作成の場合のみ成功モーダルを表示
+          setShowSuccessModal(true);
+
+          // ゲスト作成の場合、ログイン時に引き継ぐためlocalStorageに保存
+          if (!user) {
+            try {
+              const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
+              stored.push({ table: 'business_projects', id: savedData.id });
+              localStorage.setItem('guest_content', JSON.stringify(stored));
+            } catch {}
           }
+        } else {
+          alert('保存しました！');
         }
       } catch (error) {
         console.error('Save error:', error);

@@ -523,13 +523,23 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
         let result;
 
         if (savedId) {
-          const { data, error: dbError } = await supabase
+          const { error: dbError } = await supabase
             .from(TABLES.QUIZZES)
             .update(insertData)
-            .eq('id', savedId)
-            .select();
+            .eq('id', savedId);
           if (dbError) throw new Error(dbError.message || 'データベースエラー');
-          result = data?.[0];
+
+          // 更新成功 - 既存のslugを維持
+          const currentSlug = savedSlug;
+          if (currentSlug) {
+            fetch('/api/revalidate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ path: `/entertainment/${currentSlug}` }),
+            }).catch(() => {});
+          }
+          alert('保存しました！');
+          return;
         } else {
           // 新規作成時: エンタメ診断の作成数制限チェック
           if (user?.id) {
@@ -574,7 +584,10 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
           if (insertError) throw new Error(insertError.message || 'データベースエラー');
         }
 
-        if (result) {
+        if (!result) {
+          throw new Error('保存に失敗しました。ページを再読み込みしてもう一度お試しください。');
+        }
+        {
           const wasNew = !savedId;
           setSavedId(result.id);
           setSavedSlug(result.slug);

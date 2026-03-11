@@ -331,20 +331,20 @@ export default function SalesLetterEditor({
           const result = await supabase
             .from('sales_letters')
             .update(payload)
-            .eq('id', existingId)
-            .select();
+            .eq('id', existingId);
 
           if (result.error) throw new Error(result.error.message || 'データベースエラー');
 
-          const updatedData = result.data?.[0];
-          setCompletedSlug(updatedData?.slug);
-
-          // ISRキャッシュを無効化
-          fetch('/api/revalidate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: `/s/${updatedData?.slug}` }),
-          }).catch(() => {});
+          // 更新成功 - 既存のslugを維持
+          const currentSlug = slug || completedSlug;
+          if (currentSlug) {
+            setCompletedSlug(currentSlug);
+            fetch('/api/revalidate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ path: `/s/${currentSlug}` }),
+            }).catch(() => {});
+          }
 
           alert('保存しました！');
         } else {

@@ -549,16 +549,25 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
 
                     console.log('QuizEditor UPDATE:', { existingId, updateData });
 
-                    const { data, error } = await supabase
+                    const { error } = await supabase
                         .from('quizzes')
                         .update(updateData)
-                        .eq('id', existingId)
-                        .select();
-
-                    console.log('QuizEditor UPDATE result:', { data, error });
+                        .eq('id', existingId);
 
                     if (error) throw new Error(error.message || 'データベースエラー');
-                    result = data?.[0];
+
+                    // 更新成功 - 既存のslug/idを維持
+                    const currentSlug = regenerateSlug ? updateData.slug : (initialData?.slug || savedSlug);
+                    if (currentSlug) {
+                        setSavedSlug(currentSlug);
+                        fetch('/api/revalidate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ path: `/quiz/${currentSlug}` }),
+                        }).catch(() => {});
+                    }
+                    alert('保存しました！');
+                    return;
                 } else {
                     // 新規作成の場合：ユニークなslugを生成（リトライ付き）
                     let attempts = 0;
@@ -598,7 +607,10 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                     if (customSlug) setCustomSlug(''); // 保存後はクリア
                 }
 
-                if (result) {
+                if (!result) {
+                    throw new Error('保存に失敗しました。ページを再読み込みしてもう一度お試しください。');
+                }
+                {
                     const wasNewCreation = !existingId; // 保存前の状態で判定
 
                     setSavedId(result.id);

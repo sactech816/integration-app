@@ -509,14 +509,24 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
 
         if (existingId) {
           // 更新（user_idは変更しない）
-          const { data, error } = await supabase
+          const { error } = await supabase
             .from("surveys")
             .update(updateData)
-            .eq("id", existingId)
-            .select();
+            .eq("id", existingId);
 
           if (error) throw new Error(error.message || 'データベースエラー');
-          result = data?.[0];
+
+          // 更新成功 - 既存のslugを維持
+          const currentSlug = initialData?.slug || savedSlug;
+          if (currentSlug) {
+            fetch('/api/revalidate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ path: `/survey/${currentSlug}` }),
+            }).catch(() => {});
+          }
+          alert("保存しました！");
+          return;
         } else {
           // 新規作成（slugとuser_idを追加）
           const newSlug = generateSlug();
@@ -535,7 +545,10 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
           result = data?.[0];
         }
 
-        if (result) {
+        if (!result) {
+          throw new Error('保存に失敗しました。ページを再読み込みしてもう一度お試しください。');
+        }
+        {
           const wasNewCreation = !existingId; // 保存前の状態で判定
 
           setSavedId(result.id);

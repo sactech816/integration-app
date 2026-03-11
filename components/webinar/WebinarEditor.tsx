@@ -561,7 +561,7 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
         let result;
 
         if (existingId) {
-          result = await supabase
+          const updateResult = await supabase
             ?.from('webinar_lps')
             .update({
               content: lp.content,
@@ -573,10 +573,22 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
               title: finalTitle,
               updated_at: new Date().toISOString(),
             })
-            .eq('id', existingId)
-            .select();
+            .eq('id', existingId);
 
-          if (result?.error) throw new Error(result.error.message || 'データベースエラー');
+          if (updateResult?.error) throw new Error(updateResult.error.message || 'データベースエラー');
+
+          // 更新成功 - 既存のslug/idを維持
+          const currentSlug = initialData?.slug || savedSlug;
+          if (currentSlug) {
+            setJustSavedSlug(currentSlug);
+            fetch('/api/revalidate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ path: `/webinar/${currentSlug}` }),
+            }).catch(() => {});
+          }
+          alert('保存しました！');
+          return;
         } else {
           let attempts = 0;
           const maxAttempts = 5;
@@ -619,30 +631,32 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
         }
 
         const savedData = result?.data?.[0];
-        if (savedData) {
-          setSavedSlug(savedData.slug);
-          setSavedId(savedData.id);
-          setJustSavedSlug(savedData.slug);
+        if (!savedData) {
+          throw new Error('保存に失敗しました。ページを再読み込みしてもう一度お試しください。');
+        }
 
-          // ISRキャッシュを無効化
-          fetch('/api/revalidate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: `/webinar/${savedData.slug}` }),
-          }).catch(() => {});
+        setSavedSlug(savedData.slug);
+        setSavedId(savedData.id);
+        setJustSavedSlug(savedData.slug);
 
-          if (!initialData && !savedId) {
-            setShowSuccessModal(true);
-            if (!user) {
-              try {
-                const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
-                stored.push({ table: 'webinar_lps', id: savedData.id });
-                localStorage.setItem('guest_content', JSON.stringify(stored));
-              } catch {}
-            }
-          } else {
-            alert('保存しました！');
+        // ISRキャッシュを無効化
+        fetch('/api/revalidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: `/webinar/${savedData.slug}` }),
+        }).catch(() => {});
+
+        if (!initialData && !savedId) {
+          setShowSuccessModal(true);
+          if (!user) {
+            try {
+              const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
+              stored.push({ table: 'webinar_lps', id: savedData.id });
+              localStorage.setItem('guest_content', JSON.stringify(stored));
+            } catch {}
           }
+        } else {
+          alert('保存しました！');
         }
       } catch (error) {
         console.error('Save error:', error);
