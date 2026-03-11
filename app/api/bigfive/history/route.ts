@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('bigfive_results')
-      .select('id, test_type, openness, conscientiousness, extraversion, agreeableness, neuroticism, mbti_code, is_public, created_at')
+      .select('id, test_type, openness, conscientiousness, extraversion, agreeableness, neuroticism, mbti_code, is_public, pdf_purchased, pdf_storage_path, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(limit);

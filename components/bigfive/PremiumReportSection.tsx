@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { FileText, Brain, Target, Sparkles, Loader2, Download, Crown } from 'lucide-react';
+import { FileText, Brain, Target, Sparkles, Loader2, Download, Crown, Mail, CheckCircle } from 'lucide-react';
 import ChatInterface from './ChatInterface';
 
 interface PremiumReportSectionProps {
@@ -53,6 +53,8 @@ export default function PremiumReportSection({
   const [purchasing, setPurchasing] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [pdfEmailSent, setPdfEmailSent] = useState(false);
 
   // payment=success パラメータ検知で自動レポート生成
   useEffect(() => {
@@ -144,6 +146,34 @@ export default function PremiumReportSection({
       printWindow.onload = () => printWindow.print();
     }
   }, [reportHtml]);
+
+  const handleDownloadPdf = useCallback(async () => {
+    setDownloadingPdf(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/bigfive/download-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resultId }),
+      });
+      const data = await res.json();
+
+      if (data.url) {
+        // ダウンロード開始
+        window.open(data.url, '_blank');
+        if (!data.cached) {
+          setPdfEmailSent(true);
+          setTimeout(() => setPdfEmailSent(false), 5000);
+        }
+      } else {
+        setError(data.error || 'PDFダウンロードに失敗しました');
+      }
+    } catch (err) {
+      setError('通信エラーが発生しました');
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }, [resultId]);
 
   // === 未購入: 購入CTA ===
   if (!isPurchased) {
@@ -263,14 +293,27 @@ export default function PremiumReportSection({
               {showReport ? '閉じる' : 'レポートを見る'}
             </button>
             <button
-              onClick={handlePrint}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-700 hover:text-blue-800 bg-blue-50 border border-blue-200 rounded-lg transition-all"
+              onClick={handleDownloadPdf}
+              disabled={downloadingPdf}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-700 hover:text-blue-800 bg-blue-50 border border-blue-200 rounded-lg transition-all disabled:opacity-50"
             >
-              <Download className="w-3.5 h-3.5" />
-              PDF保存
+              {downloadingPdf ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" />生成中...</>
+              ) : (
+                <><Download className="w-3.5 h-3.5" />PDFダウンロード</>
+              )}
             </button>
           </div>
         </div>
+
+        {pdfEmailSent && (
+          <div className="mx-6 mt-3 flex items-center gap-2 px-4 py-2.5 bg-green-50 border border-green-200 rounded-lg">
+            <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+            <p className="text-sm text-green-700">
+              PDFのダウンロードリンクをメールにも送信しました。マイページからいつでも再ダウンロードできます。
+            </p>
+          </div>
+        )}
 
         {showReport && (
           <div className="p-6 overflow-x-auto">
