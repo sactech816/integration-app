@@ -69,7 +69,11 @@
       "Bash(git -C \"d:\\\\obsidian\\\\integration-app\" show HEAD:components/youtube-keyword-research/YouTubeKeywordResearchEditor.tsx)",
       "Bash(git -C \"d:\\\\obsidian\\\\integration-app\" show HEAD:lib/types.ts)",
       "Bash(taskkill //f //im node.exe)",
-      "Bash(git -C /d/obsidian/bigfive-app log --oneline)"
+      "Bash(git -C /d/obsidian/bigfive-app log --oneline)",
+      "Bash(git log:*)",
+      "Bash(while read:*)",
+      "Bash(do if:*)",
+      "Bash(then echo:*)"
     ],
     "deny": [
       "Bash(sudo:*)",

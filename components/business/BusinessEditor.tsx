@@ -729,12 +729,11 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             ?.from('business_projects')
             .update(updatePayload)
             .eq('id', existingId)
-            .select()
-            .single();
+            .select();
 
           if (result?.error) {
             console.error('Business LP update error:', result.error);
-            throw result.error;
+            throw new Error(result.error.message || 'データベースエラー');
           }
         } else {
           // 新規作成の場合：ユニークなslugを生成（リトライ付き）
@@ -757,8 +756,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             result = await supabase
               ?.from('business_projects')
               .insert(insertPayload)
-              .select()
-              .single();
+              .select();
 
             // slug重複エラー（23505）の場合はリトライ（カスタムslugの場合はリトライしない）
             if (result?.error?.code === '23505' && result?.error?.message?.includes('slug') && !customSlug.trim()) {
@@ -781,20 +779,21 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             if (result.error.code === '23505' && result.error.message?.includes('slug')) {
               throw new Error('このカスタムURLは既に使用されています。別のURLを指定してください。');
             }
-            throw result.error;
+            throw new Error(result.error.message || 'データベースエラー');
           }
         }
 
-        if (result?.data) {
-          setSavedSlug(result.data.slug);
-          setSavedId(result.data.id);
-          setJustSavedSlug(result.data.slug);
+        const savedData = result?.data?.[0];
+        if (savedData) {
+          setSavedSlug(savedData.slug);
+          setSavedId(savedData.id);
+          setJustSavedSlug(savedData.slug);
 
           // ISRキャッシュを無効化
           fetch('/api/revalidate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: `/business/${result.data.slug}` }),
+            body: JSON.stringify({ path: `/business/${savedData.slug}` }),
           }).catch(() => {});
 
           if (!initialData && !savedId) {
@@ -805,7 +804,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             if (!user) {
               try {
                 const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
-                stored.push({ table: 'business_projects', id: result.data.id });
+                stored.push({ table: 'business_projects', id: savedData.id });
                 localStorage.setItem('guest_content', JSON.stringify(stored));
               } catch {}
             }

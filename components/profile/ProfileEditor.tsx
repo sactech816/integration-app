@@ -959,8 +959,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
             .from('profiles')
             .update(updatePayload)
             .eq('id', existingId)
-            .select()
-            .single();
+            .select();
         } else {
           // 新規作成の場合：ユニークなslugを生成（リトライ付き）
           let attempts = 0;
@@ -979,8 +978,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
             result = await supabase
               .from('profiles')
               .insert(insertPayload)
-              .select()
-              .single();
+              .select();
 
             // slug重複エラー（23505）の場合はリトライ
             if (result.error?.code === '23505' && result.error?.message?.includes('profiles_slug_key')) {
@@ -1007,15 +1005,16 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
           throw new Error(result.error.message || 'データベースエラー');
         }
 
-        if (result?.data) {
-          setSavedSlug(result.data.slug);
-          setSavedId(result.data.id);
+        const savedData = result?.data?.[0];
+        if (savedData) {
+          setSavedSlug(savedData.slug);
+          setSavedId(savedData.id);
 
           // ISRキャッシュを無効化
           fetch('/api/revalidate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: `/profile/${result.data.slug}` }),
+            body: JSON.stringify({ path: `/profile/${savedData.slug}` }),
           }).catch(() => {});
 
           if (!initialData && !savedId) {
@@ -1026,7 +1025,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
             if (!user) {
               try {
                 const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
-                stored.push({ table: 'profiles', id: result.data.id });
+                stored.push({ table: 'profiles', id: savedData.id });
                 localStorage.setItem('guest_content', JSON.stringify(stored));
               } catch {}
             }
@@ -1034,8 +1033,8 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
             // ゲーミフィケーションイベント発火（プロフィール作成）
             if (user?.id) {
               triggerGamificationEvent(user.id, 'profile_create', {
-                contentId: result.data.slug,
-                contentTitle: result.data.nickname || 'プロフィール',
+                contentId: savedData.slug,
+                contentTitle: savedData.nickname || 'プロフィール',
               });
             }
           } else {

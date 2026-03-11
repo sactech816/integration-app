@@ -547,8 +547,8 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
     const existingId = initialData?.id || savedId;
     // 新規作成時のみカスタムスラッグをバリデーション（編集時は既存スラッグなのでスキップ）
     if (!existingId && customSlug && !validateCustomSlug(customSlug)) return;
-    if (existingId && !user) {
-      if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
+    if (!user) {
+      if (confirm(existingId ? '編集・更新にはログインが必要です。ログイン画面を開きますか？' : 'ウェビナーLPの作成にはログインが必要です。ログイン画面を開きますか？')) {
         setShowAuth(true);
       }
       return;
@@ -574,10 +574,9 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
               updated_at: new Date().toISOString(),
             })
             .eq('id', existingId)
-            .select()
-            .single();
+            .select();
 
-          if (result?.error) throw result.error;
+          if (result?.error) throw new Error(result.error.message || 'データベースエラー');
         } else {
           let attempts = 0;
           const maxAttempts = 5;
@@ -598,8 +597,7 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
                 user_id: user?.id || null,
                 status: 'published',
               })
-              .select()
-              .single();
+              .select();
 
             if (result?.error?.code === '23505' && result?.error?.message?.includes('slug') && !customSlug.trim()) {
               attempts++;
@@ -616,20 +614,21 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
             if (result.error.code === '23505' && result.error.message?.includes('slug')) {
               throw new Error('このカスタムURLは既に使用されています。別のURLを指定してください。');
             }
-            throw result.error;
+            throw new Error(result.error.message || 'データベースエラー');
           }
         }
 
-        if (result?.data) {
-          setSavedSlug(result.data.slug);
-          setSavedId(result.data.id);
-          setJustSavedSlug(result.data.slug);
+        const savedData = result?.data?.[0];
+        if (savedData) {
+          setSavedSlug(savedData.slug);
+          setSavedId(savedData.id);
+          setJustSavedSlug(savedData.slug);
 
           // ISRキャッシュを無効化
           fetch('/api/revalidate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: `/webinar/${result.data.slug}` }),
+            body: JSON.stringify({ path: `/webinar/${savedData.slug}` }),
           }).catch(() => {});
 
           if (!initialData && !savedId) {
@@ -637,7 +636,7 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
             if (!user) {
               try {
                 const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
-                stored.push({ table: 'webinar_lps', id: result.data.id });
+                stored.push({ table: 'webinar_lps', id: savedData.id });
                 localStorage.setItem('guest_content', JSON.stringify(stored));
               } catch {}
             }
