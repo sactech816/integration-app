@@ -10,7 +10,7 @@ import type { BigFiveResult } from '@/lib/bigfive';
 import { supabase } from '@/lib/supabase';
 import PremiumReportSection from '@/components/bigfive/PremiumReportSection';
 import Footer from '@/components/shared/Footer';
-import { Brain, Sparkles, Clock, FileText, Share2, ArrowRight, CheckCircle, Crown, Target } from 'lucide-react';
+import { Brain, Sparkles, Clock, FileText, Share2, ArrowRight, CheckCircle, Crown, Target, Download, ExternalLink } from 'lucide-react';
 
 type Phase = 'landing' | 'quiz' | 'result';
 type TestMode = 'simple' | 'full';
@@ -211,6 +211,48 @@ export default function BigFivePage() {
                 <p className="text-center text-sm text-gray-500">
                   診断完了後に <span className="font-bold text-gray-900">¥500</span> で購入可能
                 </p>
+              </div>
+
+              {/* サンプルレポート */}
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8">
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 rounded-full mb-3">
+                    <FileText className="w-4 h-4 text-indigo-500" />
+                    <span className="text-sm font-medium text-indigo-700">サンプルレポート</span>
+                  </div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-1">
+                    診断結果レポートのサンプルを見る
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    代表的な4タイプの診断レポートを無料でご覧いただけます
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { code: 'INTJ', name: '建築家', color: 'from-blue-500 to-indigo-600', desc: '戦略的な思考者' },
+                    { code: 'ENFP', name: '広報運動家', color: 'from-pink-500 to-rose-600', desc: '情熱的な自由人' },
+                    { code: 'ISTJ', name: '管理者', color: 'from-emerald-500 to-teal-600', desc: '実直な実務家' },
+                    { code: 'INFJ', name: '提唱者', color: 'from-purple-500 to-violet-600', desc: '静かな影響者' },
+                  ].map((t) => (
+                    <a
+                      key={t.code}
+                      href={`/api/bigfive/sample-pdf?type=${t.code}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group relative bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg hover:border-indigo-200 transition-all text-center"
+                    >
+                      <div className={`w-12 h-12 mx-auto rounded-xl bg-gradient-to-br ${t.color} flex items-center justify-center mb-2`}>
+                        <span className="text-white font-bold text-xs">{t.code}</span>
+                      </div>
+                      <p className="font-bold text-gray-900 text-sm">{t.name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{t.desc}</p>
+                      <div className="mt-2 flex items-center justify-center gap-1 text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ExternalLink className="w-3 h-3" />
+                        レポートを見る
+                      </div>
+                    </a>
+                  ))}
+                </div>
               </div>
 
               {/* 特徴セクション */}
