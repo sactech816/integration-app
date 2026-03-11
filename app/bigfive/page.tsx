@@ -10,7 +10,8 @@ import type { BigFiveResult } from '@/lib/bigfive';
 import { supabase } from '@/lib/supabase';
 import PremiumReportSection from '@/components/bigfive/PremiumReportSection';
 import Footer from '@/components/shared/Footer';
-import { Brain, Sparkles, Clock, FileText, Share2, ArrowRight, CheckCircle, Crown, Target, Download, ExternalLink } from 'lucide-react';
+import { Brain, Sparkles, Clock, FileText, Share2, ArrowRight, CheckCircle, Crown, Target, Download, ExternalLink, Mail, Loader2, X, UserPlus } from 'lucide-react';
+import { saveLead } from '@/app/actions/leads';
 
 type Phase = 'landing' | 'quiz' | 'result';
 type TestMode = 'simple' | 'full';
@@ -25,6 +26,64 @@ export default function BigFivePage() {
   const [user, setUser] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [sampleModal, setSampleModal] = useState<{ code: string; name: string } | null>(null);
+  const [sampleEmail, setSampleEmail] = useState('');
+  const [sampleSubmitting, setSampleSubmitting] = useState(false);
+  const [sampleError, setSampleError] = useState<string | null>(null);
+  const [sampleDone, setSampleDone] = useState(false);
+  const [unlockedSamples, setUnlockedSamples] = useState<Set<string>>(new Set());
+
+  // localStorage から解放済みサンプルを復元
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('bigfive_unlocked_samples');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setUnlockedSamples(new Set(parsed));
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  const handleSampleClick = (code: string, name: string) => {
+    if (unlockedSamples.has(code)) {
+      window.open(`/api/bigfive/sample-pdf?type=${code}`, '_blank');
+      return;
+    }
+    setSampleModal({ code, name });
+    setSampleEmail('');
+    setSampleError(null);
+    setSampleDone(false);
+  };
+
+  const handleSampleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sampleModal) return;
+    setSampleError(null);
+    setSampleSubmitting(true);
+
+    try {
+      const result = await saveLead('bigfive_sample', 'bigfive_sample', sampleEmail, {
+        resultType: sampleModal.code,
+      });
+
+      if (result.success) {
+        setSampleDone(true);
+        // 解放済みに追加 & localStorage に保存
+        const next = new Set(unlockedSamples);
+        next.add(sampleModal.code);
+        setUnlockedSamples(next);
+        localStorage.setItem('bigfive_unlocked_samples', JSON.stringify([...next]));
+        // PDFを自動で開く
+        window.open(`/api/bigfive/sample-pdf?type=${sampleModal.code}`, '_blank');
+      } else {
+        setSampleError(result.error || '登録に失敗しました');
+      }
+    } catch {
+      setSampleError('エラーが発生しました');
+    } finally {
+      setSampleSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     supabase?.auth.getUser().then(({ data }) => {
@@ -234,12 +293,10 @@ export default function BigFivePage() {
                     { code: 'ISTJ', name: '管理者', color: 'from-emerald-500 to-teal-600', desc: '実直な実務家' },
                     { code: 'INFJ', name: '提唱者', color: 'from-purple-500 to-violet-600', desc: '静かな影響者' },
                   ].map((t) => (
-                    <a
+                    <button
                       key={t.code}
-                      href={`/api/bigfive/sample-pdf?type=${t.code}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group relative bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg hover:border-indigo-200 transition-all text-center"
+                      onClick={() => handleSampleClick(t.code, t.name)}
+                      className="group relative bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg hover:border-indigo-200 transition-all text-center cursor-pointer"
                     >
                       <div className={`w-12 h-12 mx-auto rounded-xl bg-gradient-to-br ${t.color} flex items-center justify-center mb-2`}>
                         <span className="text-white font-bold text-xs">{t.code}</span>
@@ -247,10 +304,13 @@ export default function BigFivePage() {
                       <p className="font-bold text-gray-900 text-sm">{t.name}</p>
                       <p className="text-xs text-gray-500 mt-0.5">{t.desc}</p>
                       <div className="mt-2 flex items-center justify-center gap-1 text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                        <ExternalLink className="w-3 h-3" />
-                        レポートを見る
+                        {unlockedSamples.has(t.code) ? (
+                          <><ExternalLink className="w-3 h-3" />レポートを見る</>
+                        ) : (
+                          <><Download className="w-3 h-3" />無料で見る</>
+                        )}
                       </div>
-                    </a>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -349,6 +409,128 @@ export default function BigFivePage() {
           )}
         </div>
       </main>
+      {/* メールアドレス入力モーダル */}
+      {sampleModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => !sampleSubmitting && setSampleModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 relative" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setSampleModal(null)}
+              disabled={sampleSubmitting}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {!sampleDone ? (
+              <>
+                <div className="text-center mb-6">
+                  <div className="w-14 h-14 mx-auto rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-3">
+                    <span className="text-white font-bold text-sm">{sampleModal.code}</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">
+                    {sampleModal.name}タイプのサンプルレポート
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    メールアドレスを登録して無料でご覧いただけます
+                  </p>
+                </div>
+
+                <form onSubmit={handleSampleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      メールアドレス <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      <input
+                        type="email"
+                        value={sampleEmail}
+                        onChange={(e) => setSampleEmail(e.target.value)}
+                        required
+                        placeholder="example@email.com"
+                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {sampleError && (
+                    <p className="text-red-500 text-sm text-center">{sampleError}</p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={sampleSubmitting || !sampleEmail}
+                    className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                  >
+                    {sampleSubmitting ? (
+                      <><Loader2 className="animate-spin" size={18} />送信中...</>
+                    ) : (
+                      <><Download className="w-4 h-4" />無料でレポートを見る</>
+                    )}
+                  </button>
+
+                  <p className="text-xs text-gray-400 text-center">
+                    登録いただいたメールアドレスに、性格診断に関する情報をお届けすることがあります
+                  </p>
+                </form>
+              </>
+            ) : (
+              /* 登録完了 → 成功画面 + 集客メーカー登録CTA */
+              <div className="text-center space-y-5">
+                <div>
+                  <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-3" />
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">レポートを表示しました！</h3>
+                  <p className="text-sm text-gray-500">
+                    新しいタブでサンプルレポートが開きます。<br />
+                    ポップアップがブロックされた場合は下のボタンからどうぞ。
+                  </p>
+                </div>
+
+                <a
+                  href={`/api/bigfive/sample-pdf?type=${sampleModal.code}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-indigo-50 border border-indigo-200 text-indigo-700 font-medium rounded-xl hover:bg-indigo-100 transition-all"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  レポートを開く
+                </a>
+
+                <div className="border-t border-gray-100 pt-5">
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <UserPlus className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-bold text-gray-900">集客メーカーに無料登録</span>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-3">
+                      実際に診断を受けて、あなた専用のレポートを作成しませんか？<br />
+                      無料で診断・結果保存ができます。
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setSampleModal(null);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="flex-1 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-md text-sm transition-all"
+                      >
+                        診断を受ける
+                      </button>
+                      <button
+                        onClick={() => setSampleModal(null)}
+                        className="px-4 py-2.5 bg-white border border-gray-200 text-gray-600 font-medium rounded-lg text-sm hover:bg-gray-50 transition-all"
+                      >
+                        閉じる
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <Footer />
     </>
   );

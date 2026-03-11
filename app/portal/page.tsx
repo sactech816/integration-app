@@ -79,7 +79,7 @@ const TABS: { type: ServiceType | 'all'; label: string; icon: React.ComponentTyp
 ];
 
 // サービスカラー取得
-const getServiceColor = (type: ServiceType) => {
+const getServiceColor = (type: string) => {
   const colors: Record<string, { bg: string; text: string; border: string; gradient: string; hoverText: string }> = {
     quiz: { 
       bg: 'bg-indigo-50', 
@@ -149,7 +149,7 @@ const getServiceColor = (type: ServiceType) => {
 };
 
 // サービスアイコン取得
-const getServiceIcon = (type: ServiceType) => {
+const getServiceIcon = (type: string) => {
   const icons: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
     quiz: Sparkles,
     profile: UserCircle,

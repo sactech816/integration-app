@@ -102,6 +102,16 @@ export async function GET(request: NextRequest) {
       bookingCount = count || 0;
     }
 
+    // Big Five サンプルDLリード数（管理者のみ）
+    let bigfiveSampleCount = 0;
+    {
+      const { count } = await supabase
+        .from('leads')
+        .select('*', { count: 'exact', head: true })
+        .eq('content_type', 'bigfive_sample');
+      bigfiveSampleCount = count || 0;
+    }
+
     // 管理者チェック: 登録ユーザーのインポートは管理者のみ
     let registeredUsersCount = 0;
     const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
@@ -124,7 +134,8 @@ export async function GET(request: NextRequest) {
         quiz: quizCount,
         profile: profileCount,
         business: businessCount,
-        total: quizCount + profileCount + businessCount,
+        bigfive_sample: bigfiveSampleCount,
+        total: quizCount + profileCount + businessCount + bigfiveSampleCount,
       },
       orderForms: orderFormCount,
       bookings: bookingCount,

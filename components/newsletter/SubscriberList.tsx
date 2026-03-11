@@ -25,7 +25,7 @@ interface ListDetail {
 }
 
 interface ImportSources {
-  leads: { quiz: number; profile: number; business: number; total: number };
+  leads: { quiz: number; profile: number; business: number; bigfive_sample?: number; total: number };
   orderForms: number;
   bookings: number;
   registeredUsers: number;
@@ -40,6 +40,7 @@ const SOURCE_LABELS: Record<string, string> = {
   booking: '予約メーカー',
   order_form: '申込フォーム',
   subscribe_form: '登録フォーム',
+  bigfive_sample: '性格診断サンプル',
   registered_users: '登録ユーザー',
 };
 
@@ -637,6 +638,24 @@ export default function SubscriberList({ listId }: { listId: string }) {
                           <span className="ml-2 text-sm text-gray-500">({importSources.bookings}件)</span>
                         </div>
                       </label>
+
+                      {/* 性格診断サンプルDLリード */}
+                      {(importSources.leads.bigfive_sample ?? 0) > 0 && (
+                        <label className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
+                          selectedSources.has('bigfive_sample') ? 'border-violet-300 bg-violet-50' : 'border-gray-200 hover:border-violet-200 bg-white'
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={selectedSources.has('bigfive_sample')}
+                            onChange={() => toggleSource('bigfive_sample')}
+                            className="w-5 h-5 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                          />
+                          <div className="flex-1">
+                            <span className="text-sm font-semibold text-gray-900">性格診断サンプルDLリード</span>
+                            <span className="ml-2 text-sm text-gray-500">({importSources.leads.bigfive_sample}件)</span>
+                          </div>
+                        </label>
+                      )}
 
                       {/* 登録ユーザー（管理者のみ） */}
                       {importSources.registeredUsers > 0 && (

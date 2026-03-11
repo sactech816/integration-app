@@ -50,7 +50,10 @@ export async function POST(
     let contacts: { email: string; name?: string }[] = [];
     let subscriberSource = 'manual'; // newsletter_subscribers.source に記録する値
 
-    if (source === 'leads') {
+    if (source === 'leads' && contentType === 'bigfive_sample') {
+      contacts = await collectFromBigfiveSampleLeads(supabase);
+      subscriberSource = 'bigfive_sample';
+    } else if (source === 'leads') {
       contacts = await collectFromLeads(supabase, userId, contentType);
       subscriberSource = contentType || 'quiz'; // 'quiz', 'profile', 'business'
     } else if (source === 'order_forms') {
@@ -304,6 +307,24 @@ async function collectFromBookings(
   return (data || []).map((b: { guest_email: string; guest_name?: string }) => ({
     email: b.guest_email,
     name: b.guest_name,
+  }));
+}
+
+/**
+ * Big Five サンプルDLリードからメールを収集（管理者専用）
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function collectFromBigfiveSampleLeads(
+  supabase: any,
+): Promise<{ email: string; name?: string }[]> {
+  const { data } = await supabase
+    .from('leads')
+    .select('email, name')
+    .eq('content_type', 'bigfive_sample');
+
+  return (data || []).map((l: { email: string; name?: string }) => ({
+    email: l.email,
+    name: l.name,
   }));
 }
 
