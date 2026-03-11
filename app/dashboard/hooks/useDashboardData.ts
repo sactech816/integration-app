@@ -985,7 +985,7 @@ export function useDashboardData(): UseDashboardDataReturn {
           .single();
 
         if (originalSite) {
-          const { data: newSite, error: siteError } = await supabase.from(TABLES.SITES).insert([{
+          const { data: newSiteArr, error: siteError } = await supabase.from(TABLES.SITES).insert([{
             user_id: user.id,
             title: `${originalSite.title || 'マイサイト'} のコピー`,
             description: originalSite.description,
@@ -993,9 +993,10 @@ export function useDashboardData(): UseDashboardDataReturn {
             settings: originalSite.settings,
             status: 'draft',
             slug: newSlug,
-          }]).select().single();
+          }]).select();
 
-          if (siteError) throw siteError;
+          if (siteError) throw new Error(siteError.message || 'データベースエラー');
+          const newSite = newSiteArr?.[0];
 
           // ページも複製
           const { data: originalPages } = await supabase
