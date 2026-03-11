@@ -9,7 +9,9 @@ import {
     Download, Code, FileText, Image as ImageIcon, BarChart2,
     Mail, Shield, Scale, ExternalLink, Smile, MessageCircle,
     Magnet, Building2, UserCircle, Crown, Flame, Rocket,
-    Calendar, ClipboardList, Gamepad2, PenTool, CalendarCheck
+    Calendar, ClipboardList, Gamepad2, PenTool, CalendarCheck,
+    Brain, Globe, Video, BookOpen, Palette, Send, MailCheck, Filter,
+    Store, Gift, ShoppingCart, MousePointer, LineChart, MessageSquare
 } from 'lucide-react';
 import Header from './Header';
 import Footer from './Footer';
@@ -395,122 +397,134 @@ export const HowToPage = ({
                     集客メーカー 機能一覧・使い方ガイド
                 </h1>
                 
-                {/* 全ツール紹介 */}
-                <div className="grid md:grid-cols-4 gap-4 mb-12">
-                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 border border-indigo-100">
-                        <div className="flex items-center gap-2 mb-3 text-indigo-700 font-bold text-lg">
-                            <Sparkles size={20} className="text-indigo-500"/> 診断クイズメーカー
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">
-                            性格診断・適職診断・心理テスト・検定クイズなど様々な診断コンテンツを作成。
-                        </p>
-                        <ul className="space-y-1 text-xs text-gray-700">
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-indigo-500 flex-shrink-0"/> AI自動生成</li>
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-indigo-500 flex-shrink-0"/> アクセス解析</li>
-                        </ul>
+                {/* ===== LP・ページ作成 ===== */}
+                <section className="mb-10">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 rounded-lg bg-emerald-100"><Globe size={20} className="text-emerald-600"/></div>
+                        <h2 className="text-xl font-bold text-gray-900">LP・ページ作成</h2>
+                        <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">6ツール</span>
                     </div>
-                    
-                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 border border-emerald-100">
-                        <div className="flex items-center gap-2 mb-3 text-emerald-700 font-bold text-lg">
-                            <UserCircle size={20} className="text-emerald-500"/> プロフィールメーカー
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">
-                            SNSプロフィールに最適なリンクまとめページを作成。
-                        </p>
-                        <ul className="space-y-1 text-xs text-gray-700">
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-emerald-500 flex-shrink-0"/> ブロック形式エディタ</li>
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-emerald-500 flex-shrink-0"/> おしゃれな背景</li>
-                        </ul>
+                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {[
+                            { icon: UserCircle, name: 'プロフィールメーカー', desc: 'SNSプロフィールに最適なリンクまとめLP', features: ['ブロック形式エディタ', 'おしゃれな背景テーマ'], color: 'emerald', href: '/dashboard?view=profile' },
+                            { icon: Building2, name: 'LPメーカー', desc: '商品・サービスのランディングページ作成', features: ['AI Flyer機能', 'CTA最適化テンプレート'], color: 'amber', href: '/dashboard?view=business' },
+                            { icon: Video, name: 'ウェビナーLPメーカー', desc: 'セミナー・ウェビナーの集客LP', features: ['動画埋め込み', '申込フォーム連携'], color: 'blue', href: '/dashboard?view=webinar' },
+                            { icon: BookOpen, name: 'ガイドメーカー', desc: 'ステップ形式のガイド・マニュアル作成', features: ['ステップ形式', 'AI自動生成'], color: 'orange', href: '/dashboard?view=onboarding' },
+                            { icon: Globe, name: 'ホームページメーカー', desc: '複数ページの本格的なサイト作成', features: ['複数ページ対応', 'レスポンシブ'], color: 'indigo', href: '/dashboard?view=site' },
+                            { icon: MousePointer, name: 'フォームメーカー', desc: '申し込み・決済フォーム作成', features: ['Stripe決済連携', '自動返信メール'], color: 'rose', href: '/dashboard?view=order-form' },
+                        ].map((t) => (
+                            <a key={t.name} href={t.href} className={`bg-gradient-to-br from-${t.color}-50 to-${t.color}-50/50 rounded-2xl p-5 border border-${t.color}-100 hover:shadow-md transition-all block`}>
+                                <div className={`flex items-center gap-2 mb-2 text-${t.color}-700 font-bold`}><t.icon size={18} className={`text-${t.color}-500`}/> {t.name}</div>
+                                <p className="text-sm text-gray-600 mb-2">{t.desc}</p>
+                                <ul className="space-y-1 text-xs text-gray-700">{t.features.map((f) => <li key={f} className="flex gap-2"><CheckCircle size={14} className={`text-${t.color}-500 flex-shrink-0`}/> {f}</li>)}</ul>
+                            </a>
+                        ))}
                     </div>
-                    
-                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-5 border border-amber-100">
-                        <div className="flex items-center gap-2 mb-3 text-amber-700 font-bold text-lg">
-                            <Building2 size={20} className="text-amber-500"/> LPメーカー
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">
-                            商品・サービスのランディングページを作成。CV最適化テンプレート付き。
-                        </p>
-                        <ul className="space-y-1 text-xs text-gray-700">
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-amber-500 flex-shrink-0"/> AI Flyer機能</li>
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-amber-500 flex-shrink-0"/> CTAボタン</li>
-                        </ul>
-                    </div>
+                </section>
 
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100">
-                        <div className="flex items-center gap-2 mb-3 text-blue-700 font-bold text-lg">
-                            <Calendar size={20} className="text-blue-500"/> 予約メーカー
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">
-                            ビジネス向け予約管理システム。スプレッドシート連動も可能。
-                        </p>
-                        <ul className="space-y-1 text-xs text-gray-700">
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-blue-500 flex-shrink-0"/> カレンダー連携</li>
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-blue-500 flex-shrink-0"/> Excel出力</li>
-                        </ul>
+                {/* ===== 診断・クイズ ===== */}
+                <section className="mb-10">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 rounded-lg bg-indigo-100"><Sparkles size={20} className="text-indigo-600"/></div>
+                        <h2 className="text-xl font-bold text-gray-900">診断・クイズ</h2>
+                        <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full font-medium">3ツール</span>
                     </div>
+                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {[
+                            { icon: Sparkles, name: '診断クイズメーカー', desc: '性格診断・適職診断・心理テストなど多彩な診断コンテンツ', features: ['AI自動生成', 'リード獲得フォーム'], color: 'indigo', href: '/dashboard?view=quiz' },
+                            { icon: Brain, name: 'Big Five性格診断', desc: '科学的なビッグファイブ理論に基づく性格診断', features: ['30ファセット分析', 'MBTI風タイプ判定'], color: 'purple', href: '/bigfive' },
+                            { icon: Smile, name: 'エンタメ診断メーカー', desc: 'バズりやすいエンタメ系診断を作成', features: ['SNS映えデザイン', '画像生成対応'], color: 'pink', href: '/dashboard?view=entertainment' },
+                        ].map((t) => (
+                            <a key={t.name} href={t.href} className={`bg-gradient-to-br from-${t.color}-50 to-${t.color}-50/50 rounded-2xl p-5 border border-${t.color}-100 hover:shadow-md transition-all block`}>
+                                <div className={`flex items-center gap-2 mb-2 text-${t.color}-700 font-bold`}><t.icon size={18} className={`text-${t.color}-500`}/> {t.name}</div>
+                                <p className="text-sm text-gray-600 mb-2">{t.desc}</p>
+                                <ul className="space-y-1 text-xs text-gray-700">{t.features.map((f) => <li key={f} className="flex gap-2"><CheckCircle size={14} className={`text-${t.color}-500 flex-shrink-0`}/> {f}</li>)}</ul>
+                            </a>
+                        ))}
+                    </div>
+                </section>
 
-                    <div className="bg-gradient-to-br from-cyan-50 to-sky-50 rounded-2xl p-5 border border-cyan-100">
-                        <div className="flex items-center gap-2 mb-3 text-cyan-700 font-bold text-lg">
-                            <CalendarCheck size={20} className="text-cyan-500"/> 出欠メーカー
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">
-                            飲み会・イベントの日程調整を簡単に。無料で何度でも作成可能。
-                        </p>
-                        <ul className="space-y-1 text-xs text-gray-700">
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-cyan-500 flex-shrink-0"/> ログイン不要</li>
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-cyan-500 flex-shrink-0"/> リアルタイム集計</li>
-                        </ul>
+                {/* ===== ライティング・制作 ===== */}
+                <section className="mb-10">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 rounded-lg bg-rose-100"><PenTool size={20} className="text-rose-600"/></div>
+                        <h2 className="text-xl font-bold text-gray-900">ライティング・制作</h2>
+                        <span className="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full font-medium">5ツール</span>
                     </div>
+                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {[
+                            { icon: PenTool, name: 'セールスライター', desc: 'セールスレター・LP文章をAIで自動生成', features: ['AI自動生成', '心理トリガー活用'], color: 'rose', href: '/dashboard?view=salesletter' },
+                            { icon: Palette, name: 'サムネイルメーカー', desc: 'YouTube・SNS用のサムネイルをAIで作成', features: ['AIデザイン生成', 'テンプレート豊富'], color: 'orange', href: '/dashboard?view=thumbnail' },
+                            { icon: MessageCircle, name: 'SNS投稿メーカー', desc: 'SNS投稿文をAIで効率的に作成', features: ['プラットフォーム最適化', 'ハッシュタグ提案'], color: 'cyan', href: '/dashboard?view=sns-post' },
+                            { icon: BookOpen, name: 'Kindle体験版', desc: 'AIで書籍原稿を執筆。Kindle出版を支援', features: ['AI執筆支援', '章立て自動生成'], color: 'amber', href: '/kindle' },
+                            { icon: Search, name: 'ネタ発掘リサーチ', desc: 'YouTube・Google・楽天・ニコニコ・Redditのキーワード分析', features: ['複数プラットフォーム対応', 'トレンド分析'], color: 'teal', href: '/dashboard' },
+                        ].map((t) => (
+                            <a key={t.name} href={t.href} className={`bg-gradient-to-br from-${t.color}-50 to-${t.color}-50/50 rounded-2xl p-5 border border-${t.color}-100 hover:shadow-md transition-all block`}>
+                                <div className={`flex items-center gap-2 mb-2 text-${t.color}-700 font-bold`}><t.icon size={18} className={`text-${t.color}-500`}/> {t.name}</div>
+                                <p className="text-sm text-gray-600 mb-2">{t.desc}</p>
+                                <ul className="space-y-1 text-xs text-gray-700">{t.features.map((f) => <li key={f} className="flex gap-2"><CheckCircle size={14} className={`text-${t.color}-500 flex-shrink-0`}/> {f}</li>)}</ul>
+                            </a>
+                        ))}
+                    </div>
+                </section>
 
-                    <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-5 border border-teal-100">
-                        <div className="flex items-center gap-2 mb-3 text-teal-700 font-bold text-lg">
-                            <ClipboardList size={20} className="text-teal-500"/> アンケートメーカー
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">
-                            アンケート・投票・フィードバック収集を無料で作成。
-                        </p>
-                        <ul className="space-y-1 text-xs text-gray-700">
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-teal-500 flex-shrink-0"/> 簡単作成</li>
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-teal-500 flex-shrink-0"/> 集計機能</li>
-                        </ul>
+                {/* ===== 集客・マーケティング ===== */}
+                <section className="mb-10">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 rounded-lg bg-blue-100"><Megaphone size={20} className="text-blue-600"/></div>
+                        <h2 className="text-xl font-bold text-gray-900">集客・マーケティング</h2>
+                        <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">7ツール</span>
                     </div>
+                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {[
+                            { icon: Calendar, name: '予約メーカー', desc: 'ビジネス向け予約管理。カレンダー連携対応', features: ['スプレッドシート連携', 'メール自動通知'], color: 'blue', href: '/dashboard?view=booking' },
+                            { icon: CalendarCheck, name: '出欠メーカー', desc: '飲み会・イベントの日程調整をログイン不要で', features: ['ログイン不要', 'リアルタイム集計'], color: 'cyan', href: '/dashboard?view=attendance' },
+                            { icon: ClipboardList, name: 'アンケートメーカー', desc: 'アンケート・投票・フィードバック収集', features: ['簡単作成', '結果自動集計'], color: 'teal', href: '/dashboard?view=survey' },
+                            { icon: Send, name: 'メルマガメーカー', desc: 'メールマガジンを作成・配信', features: ['テンプレート付き', 'ツール連携インポート'], color: 'violet', href: '/dashboard?view=newsletter' },
+                            { icon: MailCheck, name: 'ステップメール', desc: '自動配信メールでナーチャリング', features: ['タイミング設定', 'シナリオ分岐'], color: 'indigo', href: '/dashboard?view=step-email' },
+                            { icon: Filter, name: 'ファネルメーカー', desc: '集客導線（ファネル）を視覚的に構築', features: ['ドラッグ＆ドロップ', 'ツール間連携'], color: 'purple', href: '/dashboard?view=funnel' },
+                            { icon: MessageSquare, name: 'LINE公式連携', desc: 'LINE公式アカウントと連携して配信', features: ['自動応答', 'セグメント配信'], color: 'green', href: '/dashboard?view=line' },
+                        ].map((t) => (
+                            <a key={t.name} href={t.href} className={`bg-gradient-to-br from-${t.color}-50 to-${t.color}-50/50 rounded-2xl p-5 border border-${t.color}-100 hover:shadow-md transition-all block`}>
+                                <div className={`flex items-center gap-2 mb-2 text-${t.color}-700 font-bold`}><t.icon size={18} className={`text-${t.color}-500`}/> {t.name}</div>
+                                <p className="text-sm text-gray-600 mb-2">{t.desc}</p>
+                                <ul className="space-y-1 text-xs text-gray-700">{t.features.map((f) => <li key={f} className="flex gap-2"><CheckCircle size={14} className={`text-${t.color}-500 flex-shrink-0`}/> {f}</li>)}</ul>
+                            </a>
+                        ))}
+                    </div>
+                </section>
 
-                    <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-2xl p-5 border border-rose-100">
-                        <div className="flex items-center gap-2 mb-3 text-rose-700 font-bold text-lg">
-                            <PenTool size={20} className="text-rose-500"/> セールスライター
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">
-                            セールスレター・LP文章をAIで自動生成。売れるコピーを簡単作成。
-                        </p>
-                        <ul className="space-y-1 text-xs text-gray-700">
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-rose-500 flex-shrink-0"/> AI自動生成</li>
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-rose-500 flex-shrink-0"/> テンプレート</li>
-                        </ul>
+                {/* ===== 収益化・販売 ===== */}
+                <section className="mb-10">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="p-2 rounded-lg bg-amber-100"><ShoppingCart size={20} className="text-amber-600"/></div>
+                        <h2 className="text-xl font-bold text-gray-900">収益化・販売</h2>
+                        <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-medium">3ツール</span>
                     </div>
-
-                    <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-5 border border-purple-100">
-                        <div className="flex items-center gap-2 mb-3 text-purple-700 font-bold text-lg">
-                            <Gamepad2 size={20} className="text-purple-500"/> ゲーミフィケーション
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">
-                            福引き・ガチャ・スロット・スクラッチ・スタンプラリー等。
-                        </p>
-                        <ul className="space-y-1 text-xs text-gray-700">
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-purple-500 flex-shrink-0"/> 6種類のゲーム</li>
-                            <li className="flex gap-2"><CheckCircle size={14} className="text-purple-500 flex-shrink-0"/> エンゲージメント向上</li>
-                        </ul>
+                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {[
+                            { icon: Gamepad2, name: 'ゲーミフィケーション', desc: 'ガチャ・スロット・福引・スクラッチ・スタンプラリー等', features: ['7種類のゲーム', 'エンゲージメント向上'], color: 'purple', href: '/dashboard?view=my-games' },
+                            { icon: Store, name: 'スキルマーケット', desc: 'スキルを出品して収益化', features: ['プロに依頼', 'スキルを販売'], color: 'indigo', href: '/marketplace' },
+                            { icon: Gift, name: 'アフィリエイト', desc: '紹介プログラムで収益化', features: ['紹介リンク生成', 'レポート機能'], color: 'emerald', href: '/dashboard?view=affiliate' },
+                        ].map((t) => (
+                            <a key={t.name} href={t.href} className={`bg-gradient-to-br from-${t.color}-50 to-${t.color}-50/50 rounded-2xl p-5 border border-${t.color}-100 hover:shadow-md transition-all block`}>
+                                <div className={`flex items-center gap-2 mb-2 text-${t.color}-700 font-bold`}><t.icon size={18} className={`text-${t.color}-500`}/> {t.name}</div>
+                                <p className="text-sm text-gray-600 mb-2">{t.desc}</p>
+                                <ul className="space-y-1 text-xs text-gray-700">{t.features.map((f) => <li key={f} className="flex gap-2"><CheckCircle size={14} className={`text-${t.color}-500 flex-shrink-0`}/> {f}</li>)}</ul>
+                            </a>
+                        ))}
                     </div>
-                </div>
+                </section>
 
                 {/* 料金プラン */}
                 <div className="grid md:grid-cols-2 gap-8 mb-12">
                     <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
                         <div className="flex items-center gap-2 mb-4 text-gray-700 font-bold text-xl">
-                            <Unlock size={24} className="text-blue-500"/> 基本機能 (無料)
+                            <Unlock size={24} className="text-blue-500"/> 無料プラン
                         </div>
                         <ul className="space-y-4 text-sm text-gray-800">
-                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Zap size={16}/></span><span><strong>全エディタ:</strong> 診断・プロフィール・ビジネスLP作成</span></li>
-                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Sparkles size={16}/></span><span><strong>AI自動生成:</strong> テーマ入力で自動作成</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Zap size={16}/></span><span><strong>全24ツール利用可:</strong> LP・診断・ライティング・予約・出欠・アンケート等</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Sparkles size={16}/></span><span><strong>AI自動生成:</strong> テーマ入力で自動作成（月間回数制限あり）</span></li>
                             <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><FileText size={16}/></span><span><strong>豊富なテンプレート:</strong> すぐに使える雛形</span></li>
                             <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Eye size={16}/></span><span><strong>リアルタイムプレビュー:</strong> 作成中に確認</span></li>
                             <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><BarChart2 size={16}/></span><span><strong>アクセス解析:</strong> 閲覧数・完了率を確認</span></li>
@@ -518,18 +532,19 @@ export const HowToPage = ({
                         </ul>
                     </div>
 
-                    <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-100 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg">PRO</div>
-                        <div className="flex items-center gap-2 mb-4 text-orange-900 font-bold text-xl">
-                            <Lock size={24} className="text-orange-500"/> Pro機能 (開発支援で開放)
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">有料プラン</div>
+                        <div className="flex items-center gap-2 mb-4 text-blue-900 font-bold text-xl">
+                            <Crown size={24} className="text-blue-500"/> スタンダード〜プレミアム
                         </div>
-                        <p className="text-xs text-orange-700 mb-4">※コンテンツごとに任意の金額(500円〜)を開発支援いただくと開放されます。</p>
+                        <p className="text-xs text-blue-700 mb-4">月額 ¥1,980〜 で全機能をフル活用</p>
                         <ul className="space-y-4 text-sm text-gray-800">
-                            <li className="flex gap-3"><span className="bg-orange-100 text-orange-600 p-1 rounded"><Download size={16}/></span><span><strong>HTML書き出し:</strong> 自社サーバーに設置可能</span></li>
-                            <li className="flex gap-3"><span className="bg-orange-100 text-orange-600 p-1 rounded"><Code size={16}/></span><span><strong>埋め込みタグ:</strong> ブログやHPに埋め込み</span></li>
-                            <li className="flex gap-3"><span className="bg-orange-100 text-orange-600 p-1 rounded"><FileText size={16}/></span><span><strong>リストCSV出力:</strong> メールアドレス一括DL</span></li>
-                            <li className="flex gap-3"><span className="bg-orange-100 text-orange-600 p-1 rounded"><Heart size={16}/></span><span><strong>開発者支援:</strong> 継続的なアップデート</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Sparkles size={16}/></span><span><strong>AI生成無制限:</strong> 全ツールでAI機能を無制限に</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Send size={16}/></span><span><strong>メルマガ配信:</strong> 月500〜1,000通のメール配信</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Download size={16}/></span><span><strong>HTML書き出し:</strong> 自社サーバーに設置可能</span></li>
+                            <li className="flex gap-3"><span className="bg-blue-100 text-blue-600 p-1 rounded"><Code size={16}/></span><span><strong>埋め込み・CSV出力:</strong> ブログ埋め込み、リードCSV出力</span></li>
                         </ul>
+                        <a href="/pricing" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-800">料金プラン詳細 <ExternalLink size={14}/></a>
                     </div>
                 </div>
 

@@ -662,32 +662,66 @@ const Header: React.FC<HeaderProps> = ({
                           <div className="text-xs text-gray-500">心理トリガーを押さえた鉄板ロジック</div>
                         </div>
                       </Link>
+                      <div className="border-t border-gray-100 my-1" />
+                      <div className="px-4 py-1.5">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">ジャンル別ガイド</span>
+                      </div>
                       <Link
-                        href="/gamification/effective-use"
+                        href="/guide/page-creation"
                         onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                       >
-                        <div className="p-2 rounded-lg bg-purple-50">
-                          <Gamepad2 size={18} className="text-purple-500" />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-gray-900 text-sm">ゲーミフィケーション活用法</div>
-                          <div className="text-xs text-gray-500">エンゲージメントを高める</div>
-                        </div>
+                        <Globe size={16} className="text-blue-500 ml-2" />
+                        <span className="text-sm text-gray-700">LP・ページ作成</span>
+                      </Link>
+                      <Link
+                        href="/guide/quiz-diagnosis"
+                        onClick={closeMenus}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                      >
+                        <Brain size={16} className="text-indigo-500 ml-2" />
+                        <span className="text-sm text-gray-700">診断・クイズ</span>
+                      </Link>
+                      <Link
+                        href="/guide/writing"
+                        onClick={closeMenus}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                      >
+                        <PenTool size={16} className="text-emerald-500 ml-2" />
+                        <span className="text-sm text-gray-700">ライティング・制作</span>
+                      </Link>
+                      <Link
+                        href="/guide/marketing"
+                        onClick={closeMenus}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                      >
+                        <Calendar size={16} className="text-blue-500 ml-2" />
+                        <span className="text-sm text-gray-700">集客・マーケティング</span>
+                      </Link>
+                      <Link
+                        href="/guide/monetization"
+                        onClick={closeMenus}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                      >
+                        <Gift size={16} className="text-amber-500 ml-2" />
+                        <span className="text-sm text-gray-700">収益化・販売</span>
                       </Link>
                       <div className="border-t border-gray-100 my-1" />
                       <Link
+                        href="/gamification/effective-use"
+                        onClick={closeMenus}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                      >
+                        <Gamepad2 size={16} className="text-purple-500 ml-2" />
+                        <span className="text-sm text-gray-700">ゲーミフィケーション活用法</span>
+                      </Link>
+                      <Link
                         href="/marketplace"
                         onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
                       >
-                        <div className="p-2 rounded-lg bg-indigo-50">
-                          <Store size={18} className="text-indigo-600" />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-gray-900 text-sm">スキルマーケット</div>
-                          <div className="text-xs text-gray-500">プロに依頼・スキルを出品</div>
-                        </div>
+                        <Store size={16} className="text-indigo-500 ml-2" />
+                        <span className="text-sm text-gray-700">スキルマーケット</span>
                       </Link>
                       <div className="border-t border-gray-100 my-1" />
                       <Link
@@ -1151,6 +1185,24 @@ const Header: React.FC<HeaderProps> = ({
                     </Link>
                     <Link href="/selling-content" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <TrendingUp size={16} className="text-green-500" /><span className="text-gray-700 text-sm">売れるコンテンツの作り方</span>
+                    </Link>
+                    <div className="pt-1 pb-0.5 px-3">
+                      <span className="text-xs font-bold text-gray-400">ジャンル別</span>
+                    </div>
+                    <Link href="/guide/page-creation" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Globe size={16} className="text-blue-500" /><span className="text-gray-700 text-sm">LP・ページ作成</span>
+                    </Link>
+                    <Link href="/guide/quiz-diagnosis" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Brain size={16} className="text-indigo-500" /><span className="text-gray-700 text-sm">診断・クイズ</span>
+                    </Link>
+                    <Link href="/guide/writing" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <PenTool size={16} className="text-emerald-500" /><span className="text-gray-700 text-sm">ライティング・制作</span>
+                    </Link>
+                    <Link href="/guide/marketing" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Calendar size={16} className="text-blue-500" /><span className="text-gray-700 text-sm">集客・マーケティング</span>
+                    </Link>
+                    <Link href="/guide/monetization" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Gift size={16} className="text-amber-500" /><span className="text-gray-700 text-sm">収益化・販売</span>
                     </Link>
                     <Link href="/gamification/effective-use" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <Gamepad2 size={16} className="text-purple-500" /><span className="text-gray-700 text-sm">ゲーミフィケーション活用法</span>

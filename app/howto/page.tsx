@@ -5,14 +5,14 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 export const metadata: Metadata = {
   title: '使い方・機能一覧',
-  description: '集客メーカーの使い方ガイド。診断クイズ・プロフィールLP・ビジネスLPの作成方法、機能一覧、料金プランをご紹介します。AI自動生成で簡単にプロ品質のコンテンツが作れます。初心者でも安心の分かりやすい解説。',
-  keywords: ['集客メーカー', '使い方', '機能一覧', '診断クイズ作成', 'LP作成', 'AI自動生成', 'チュートリアル', 'ガイド'],
+  description: '集客メーカーの使い方ガイド。診断クイズ・LP作成・メルマガ・予約管理・性格診断・セールスライター・ファネルなど30以上のツールの機能一覧と料金プランをご紹介。AI自動生成で簡単にプロ品質のコンテンツが作れます。',
+  keywords: ['集客メーカー', '使い方', '機能一覧', '診断クイズ作成', 'LP作成', 'メルマガ', '予約管理', 'Big Five性格診断', 'AI自動生成', 'ガイド'],
   alternates: {
     canonical: `${siteUrl}/howto`,
   },
   openGraph: {
-    title: '使い方・機能一覧 | 集客メーカー | 診断クイズ・プロフィールLP・ビジネスLPが簡単作成',
-    description: '診断クイズ・プロフィールLP・ビジネスLPをAIで簡単作成。使い方ガイドと機能一覧。',
+    title: '使い方・機能一覧 | 集客メーカー | 30以上のAI集客ツールが使い放題',
+    description: '診断クイズ・LP作成・メルマガ・予約管理・性格診断など30以上のツールをAIで簡単作成。使い方ガイドと機能一覧。',
     type: 'website',
     url: `${siteUrl}/howto`,
     siteName: '集客メーカー',
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: '使い方・機能一覧 | 集客メーカー',
-    description: '診断クイズ・LP作成の使い方を分かりやすく解説',
+    description: '30以上の集客ツールの使い方を分かりやすく解説。診断クイズ・LP・メルマガ・予約管理など。',
     images: [`${siteUrl}/og-image.png`],
   },
 };
@@ -38,7 +38,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'HowTo',
   name: '集客メーカーの使い方',
-  description: '診断クイズ・プロフィールLP・ビジネスLPの作成方法をステップバイステップで解説',
+  description: '診断クイズ・LP・メルマガ・予約管理・性格診断など30以上のツールの使い方をステップバイステップで解説',
   image: `${siteUrl}/og-image.png`,
   step: [
     {
