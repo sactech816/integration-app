@@ -7,6 +7,7 @@ interface HomeAuthContextType {
   setShowAuth: (show: boolean) => void;
   setShowProPlanModal: (show: boolean) => void;
   setWelcomeGuideOpen: (open: boolean) => void;
+  setShowToolGuide: (show: boolean) => void;
 }
 
 export const HomeAuthContext = createContext<HomeAuthContextType>({
@@ -14,6 +15,7 @@ export const HomeAuthContext = createContext<HomeAuthContextType>({
   setShowAuth: () => {},
   setShowProPlanModal: () => {},
   setWelcomeGuideOpen: () => {},
+  setShowToolGuide: () => {},
 });
 
 export function useHomeAuth() {

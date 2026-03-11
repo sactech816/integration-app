@@ -41,7 +41,14 @@ import {
   ClipboardCheck,
   Share2,
   Gift,
-  Send
+  Send,
+  Globe,
+  BarChart3,
+  Search,
+  ShoppingBag,
+  Tv,
+  ListOrdered,
+  MessageCircle
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -195,12 +202,15 @@ const Header: React.FC<HeaderProps> = ({
               {isServiceMenuOpen && (
                 <>
                   <div className="absolute top-full left-0 w-full h-2" />
-                  <div className="absolute top-full -left-20 pt-2 w-[880px] z-[120]">
-                    <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-4 animate-fade-in">
-                      <div className="grid grid-cols-5 gap-3">
+                  <div className="absolute top-full -left-20 pt-2 w-[1060px] z-[120]">
+                    <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-5 animate-fade-in">
+                      <div className="grid grid-cols-6 gap-4">
                         {/* LP・ページ作成 */}
                         <div>
-                          <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-2">LP・ページ作成</p>
+                          <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                            LP・ページ作成
+                          </p>
                           <div className="space-y-0.5">
                             <Link href="/profile/editor" onClick={(e) => handleServiceClick(e, 'profile')} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors">
                               <div className="p-1 rounded-md bg-indigo-50 shrink-0"><UserCircle size={14} className="text-indigo-600" /></div>
@@ -218,12 +228,26 @@ const Header: React.FC<HeaderProps> = ({
                               <div className="p-1 rounded-md bg-indigo-50 shrink-0"><MousePointerClick size={14} className="text-indigo-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">はじめかた</span>
                             </Link>
+                            <Link href="/site/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors">
+                              <div className="p-1 rounded-md bg-indigo-50 shrink-0"><Globe size={14} className="text-indigo-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">マイサイト</span>
+                            </Link>
+                            <Link href="/order-form/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors">
+                              <div className="p-1 rounded-md bg-indigo-50 shrink-0"><ClipboardCheck size={14} className="text-indigo-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
+                                フォーム
+                                <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full ml-1">PRO</span>
+                              </span>
+                            </Link>
                           </div>
                         </div>
 
                         {/* 診断・クイズ */}
                         <div>
-                          <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-2">診断・クイズ</p>
+                          <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            診断・クイズ
+                          </p>
                           <div className="space-y-0.5">
                             <Link href="/quiz/editor" onClick={(e) => handleServiceClick(e, 'quiz')} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors">
                               <div className="p-1 rounded-md bg-emerald-50 shrink-0"><Sparkles size={14} className="text-emerald-600" /></div>
@@ -237,11 +261,33 @@ const Header: React.FC<HeaderProps> = ({
                               </span>
                             </Link>
                           </div>
+
+                          <p className="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-2 mt-4 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                            収益化・販売
+                          </p>
+                          <div className="space-y-0.5">
+                            <Link href="/gamification/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-purple-50 transition-colors">
+                              <div className="p-1 rounded-md bg-purple-50 shrink-0"><Gamepad2 size={14} className="text-purple-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ゲーミフィケーション</span>
+                            </Link>
+                            <Link href="/marketplace" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-purple-50 transition-colors">
+                              <div className="p-1 rounded-md bg-purple-50 shrink-0"><Store size={14} className="text-purple-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">スキルマーケット</span>
+                            </Link>
+                            <Link href="/affiliate" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-purple-50 transition-colors">
+                              <div className="p-1 rounded-md bg-purple-50 shrink-0"><Share2 size={14} className="text-purple-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">アフィリエイト</span>
+                            </Link>
+                          </div>
                         </div>
 
                         {/* ライティング・制作 */}
                         <div>
-                          <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-2">ライティング・制作</p>
+                          <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            ライティング・制作
+                          </p>
                           <div className="space-y-0.5">
                             <Link href="/salesletter/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
                               <div className="p-1 rounded-md bg-amber-50 shrink-0"><PenTool size={14} className="text-amber-600" /></div>
@@ -272,12 +318,19 @@ const Header: React.FC<HeaderProps> = ({
                                 <span className="text-[9px] font-bold text-amber-600 bg-amber-100 px-1 py-0.5 rounded-full ml-1">デモ</span>
                               </span>
                             </Link>
+                            <Link href="/kindle-keywords/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
+                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><BookOpen size={14} className="text-amber-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">Kindleキーワード</span>
+                            </Link>
                           </div>
                         </div>
 
                         {/* 集客・イベント */}
                         <div>
-                          <p className="text-[10px] font-bold text-cyan-500 uppercase tracking-wider mb-2">集客・イベント</p>
+                          <p className="text-[10px] font-bold text-cyan-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
+                            集客・イベント
+                          </p>
                           <div className="space-y-0.5">
                             <Link href="/booking/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-cyan-50 transition-colors">
                               <div className="p-1 rounded-md bg-cyan-50 shrink-0"><Calendar size={14} className="text-cyan-600" /></div>
@@ -298,35 +351,73 @@ const Header: React.FC<HeaderProps> = ({
                                 <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full ml-1">PRO</span>
                               </span>
                             </Link>
+                            <Link href="/step-email/sequences/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-cyan-50 transition-colors">
+                              <div className="p-1 rounded-md bg-cyan-50 shrink-0"><ListOrdered size={14} className="text-cyan-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ステップメール</span>
+                            </Link>
                             <Link href="/funnel/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-cyan-50 transition-colors">
                               <div className="p-1 rounded-md bg-cyan-50 shrink-0"><GitBranch size={14} className="text-cyan-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ファネル</span>
                             </Link>
+                            <Link href="/dashboard?view=line" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-green-50 transition-colors">
+                              <div className="p-1 rounded-md bg-green-50 shrink-0"><MessageCircle size={14} className="text-green-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">LINE公式連携</span>
+                            </Link>
                           </div>
                         </div>
 
-                        {/* 収益化・販売 */}
+                        {/* リサーチ */}
                         <div>
-                          <p className="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-2">収益化・販売</p>
+                          <p className="text-[10px] font-bold text-teal-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                            リサーチ
+                          </p>
                           <div className="space-y-0.5">
-                            <Link href="/order-form/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-purple-50 transition-colors">
-                              <div className="p-1 rounded-md bg-purple-50 shrink-0"><ClipboardCheck size={14} className="text-purple-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
-                                フォーム
-                                <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full ml-1">PRO</span>
-                              </span>
+                            <Link href="/youtube-analysis/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-teal-50 transition-colors">
+                              <div className="p-1 rounded-md bg-teal-50 shrink-0"><BarChart3 size={14} className="text-teal-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">YouTube競合分析</span>
                             </Link>
-                            <Link href="/gamification/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-purple-50 transition-colors">
-                              <div className="p-1 rounded-md bg-purple-50 shrink-0"><Gamepad2 size={14} className="text-purple-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ゲーミフィケーション</span>
+                            <Link href="/youtube-keyword-research/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-teal-50 transition-colors">
+                              <div className="p-1 rounded-md bg-teal-50 shrink-0"><Search size={14} className="text-teal-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">YouTubeキーワード</span>
                             </Link>
-                            <Link href="/marketplace" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-purple-50 transition-colors">
-                              <div className="p-1 rounded-md bg-purple-50 shrink-0"><Store size={14} className="text-purple-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">スキルマーケット</span>
+                            <Link href="/google-keyword-research/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-teal-50 transition-colors">
+                              <div className="p-1 rounded-md bg-teal-50 shrink-0"><Search size={14} className="text-teal-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">Googleキーワード</span>
                             </Link>
-                            <Link href="/affiliate" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-purple-50 transition-colors">
-                              <div className="p-1 rounded-md bg-purple-50 shrink-0"><Share2 size={14} className="text-purple-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">アフィリエイト</span>
+                            <Link href="/rakuten-research/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-rose-50 transition-colors">
+                              <div className="p-1 rounded-md bg-rose-50 shrink-0"><ShoppingBag size={14} className="text-rose-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">楽天リサーチ</span>
+                            </Link>
+                            <Link href="/niconico-keyword-research/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-orange-50 transition-colors">
+                              <div className="p-1 rounded-md bg-orange-50 shrink-0"><Tv size={14} className="text-orange-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ニコニコリサーチ</span>
+                            </Link>
+                            <Link href="/reddit-keyword-research/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-orange-50 transition-colors">
+                              <div className="p-1 rounded-md bg-orange-50 shrink-0"><Globe size={14} className="text-orange-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">Redditリサーチ</span>
+                            </Link>
+                          </div>
+                        </div>
+
+                        {/* Kindle出版 */}
+                        <div>
+                          <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-2 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            Kindle出版
+                          </p>
+                          <div className="space-y-0.5">
+                            <Link href="/kindle/lp" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
+                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><BookOpen size={14} className="text-amber-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">Kindle出版とは</span>
+                            </Link>
+                            <Link href="/kindle/agency" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
+                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><Building2 size={14} className="text-amber-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">代理店パートナー</span>
+                            </Link>
+                            <Link href="/kindle/discovery" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
+                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><Lightbulb size={14} className="text-amber-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ネタ発掘診断</span>
                             </Link>
                           </div>
                         </div>
@@ -337,7 +428,7 @@ const Header: React.FC<HeaderProps> = ({
                         <Link href="/portal" onClick={closeMenus}
                           className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">
                           <LayoutGrid size={13} />
-                          <span>作品集（ポータル）</span>
+                          <span>作品集</span>
                         </Link>
                         <Link href="/demos" onClick={closeMenus}
                           className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">
@@ -517,69 +608,14 @@ const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            {/* ===== Kindle出版ドロップダウン ===== */}
-            <div
-              className="relative"
-              onMouseEnter={() => setIsKindleMenuOpen(true)}
-              onMouseLeave={() => setIsKindleMenuOpen(false)}
+            {/* ===== 料金プラン直リンク ===== */}
+            <Link
+              href="/pricing"
+              className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg px-3 py-2 transition-all"
             >
-              <button
-                className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-amber-600 hover:bg-amber-50 rounded-lg px-3 py-2 transition-all"
-              >
-                <BookOpen size={16} />
-                <span>Kindle出版</span>
-                <ChevronDown size={14} className={`transition-transform ${isKindleMenuOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {isKindleMenuOpen && (
-                <>
-                  <div className="absolute top-full left-0 w-full h-2" />
-                  <div className="absolute top-full left-0 pt-2 w-64 z-[120]">
-                    <div className="bg-white rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in">
-                      <Link
-                        href="/kindle/lp"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="p-2 rounded-lg bg-amber-50">
-                          <BookOpen size={18} className="text-amber-600" />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-gray-900 text-sm">Kindle出版とは</div>
-                          <div className="text-xs text-gray-500">AIでKindle本を執筆</div>
-                        </div>
-                      </Link>
-                      <Link
-                        href="/kindle/agency"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="p-2 rounded-lg bg-blue-50">
-                          <Building2 size={18} className="text-blue-600" />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-gray-900 text-sm">代理店パートナー募集</div>
-                          <div className="text-xs text-gray-500">ビジネスパートナーを募集中</div>
-                        </div>
-                      </Link>
-                      <Link
-                        href="/kindle/discovery"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="p-2 rounded-lg bg-yellow-50">
-                          <Lightbulb size={18} className="text-yellow-600" />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-gray-900 text-sm">ネタ発掘診断</div>
-                          <div className="text-xs text-gray-500">AIがあなたの本のテーマを提案</div>
-                        </div>
-                      </Link>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
+              <Sparkles size={16} />
+              <span>料金プラン</span>
+            </Link>
 
           </nav>
 

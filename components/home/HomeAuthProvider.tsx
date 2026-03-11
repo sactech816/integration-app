@@ -9,6 +9,7 @@ import AnnouncementBanner from '@/components/shared/AnnouncementBanner';
 import AffiliateTracker from '@/components/affiliate/AffiliateTracker';
 import WelcomeGuide from '@/components/home/WelcomeGuide';
 import ProPlanModal from '@/components/home/ProPlanModal';
+import ToolGuideModal from '@/components/home/ToolGuideModal';
 import { HomeAuthContext } from './HomeAuthContext';
 import { setUserId } from '@/lib/gtag';
 
@@ -17,6 +18,7 @@ export default function HomeAuthProvider({ children }: { children: ReactNode }) 
   const [showAuth, setShowAuth] = useState(false);
   const [showProPlanModal, setShowProPlanModal] = useState(false);
   const [welcomeGuideOpen, setWelcomeGuideOpen] = useState(false);
+  const [showToolGuide, setShowToolGuide] = useState(false);
 
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | null = null;
@@ -64,7 +66,7 @@ export default function HomeAuthProvider({ children }: { children: ReactNode }) 
   };
 
   return (
-    <HomeAuthContext.Provider value={{ user, setShowAuth, setShowProPlanModal, setWelcomeGuideOpen }}>
+    <HomeAuthContext.Provider value={{ user, setShowAuth, setShowProPlanModal, setWelcomeGuideOpen, setShowToolGuide }}>
       <div
         className="min-h-screen"
         style={{
@@ -100,11 +102,16 @@ export default function HomeAuthProvider({ children }: { children: ReactNode }) 
             setShowAuth(true);
           }}
         />
+        <ToolGuideModal
+          isOpen={showToolGuide}
+          onClose={() => setShowToolGuide(false)}
+        />
         <WelcomeGuide
           externalOpen={welcomeGuideOpen}
           onOpenChange={(open: boolean) => {
             if (!open) setWelcomeGuideOpen(false);
           }}
+          onOpenToolGuide={() => setShowToolGuide(true)}
         />
 
         {children}

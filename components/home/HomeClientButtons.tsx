@@ -43,7 +43,7 @@ export function ScrollButton({
   );
 }
 
-/** Button that opens welcome guide */
+/** Button that opens tool guide modal */
 export function WelcomeGuideButton({
   children,
   className,
@@ -53,9 +53,9 @@ export function WelcomeGuideButton({
   className?: string;
   style?: React.CSSProperties;
 }) {
-  const { setWelcomeGuideOpen } = useHomeAuth();
+  const { setShowToolGuide } = useHomeAuth();
   return (
-    <button onClick={() => setWelcomeGuideOpen(true)} className={className} style={style}>
+    <button onClick={() => setShowToolGuide(true)} className={className} style={style}>
       {children}
     </button>
   );

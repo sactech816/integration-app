@@ -80,9 +80,10 @@ const GUIDE_PAGES: GuidePage[] = [
 interface WelcomeGuideProps {
   externalOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onOpenToolGuide?: () => void;
 }
 
-export default function WelcomeGuide({ externalOpen, onOpenChange }: WelcomeGuideProps) {
+export default function WelcomeGuide({ externalOpen, onOpenChange, onOpenToolGuide }: WelcomeGuideProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [isBannerVisible, setIsBannerVisible] = useState(false);
@@ -134,7 +135,7 @@ export default function WelcomeGuide({ externalOpen, onOpenChange }: WelcomeGuid
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <button
-                onClick={openGuide}
+                onClick={onOpenToolGuide || openGuide}
                 className="text-white text-xs font-bold py-1.5 px-4 rounded-full shadow-sm transition hover:opacity-90"
                 style={{ backgroundColor: '#f97316' }}
               >
