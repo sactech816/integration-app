@@ -5,6 +5,7 @@ import {
   ArrowLeft, Edit3, Sparkles, Wand2, MessageSquare, Trophy, Save,
   Loader2, Plus, Trash2, ChevronDown, ChevronUp, RefreshCw, Eye,
   Palette, Share2, Image as ImageIcon, PartyPopper, ArrowRight,
+  Upload, Link, Grid3X3, X,
 } from 'lucide-react';
 import { generateSlug } from '@/lib/utils';
 import { supabase, TABLES } from '@/lib/supabase';
@@ -51,6 +52,44 @@ const Textarea = ({ label, val, onChange, rows = 3 }: { label: string; val: stri
     />
   </div>
 );
+
+// --- プリセット画像（フリーイラスト） ---
+const PRESET_IMAGES = [
+  // 動物系
+  { url: 'https://api.dicebear.com/9.x/thumbs/svg?seed=cat&backgroundColor=ffdfbf', label: 'ねこ', category: 'animal' },
+  { url: 'https://api.dicebear.com/9.x/thumbs/svg?seed=dog&backgroundColor=c0aede', label: 'いぬ', category: 'animal' },
+  { url: 'https://api.dicebear.com/9.x/thumbs/svg?seed=bear&backgroundColor=b6e3f4', label: 'くま', category: 'animal' },
+  { url: 'https://api.dicebear.com/9.x/thumbs/svg?seed=rabbit&backgroundColor=ffd5dc', label: 'うさぎ', category: 'animal' },
+  { url: 'https://api.dicebear.com/9.x/thumbs/svg?seed=bird&backgroundColor=d1f4d1', label: 'とり', category: 'animal' },
+  { url: 'https://api.dicebear.com/9.x/thumbs/svg?seed=fox&backgroundColor=ffe4b5', label: 'きつね', category: 'animal' },
+  { url: 'https://api.dicebear.com/9.x/thumbs/svg?seed=panda&backgroundColor=e8e8e8', label: 'パンダ', category: 'animal' },
+  { url: 'https://api.dicebear.com/9.x/thumbs/svg?seed=lion&backgroundColor=fff3b0', label: 'ライオン', category: 'animal' },
+  // キャラ系
+  { url: 'https://api.dicebear.com/9.x/fun-emoji/svg?seed=happy&backgroundColor=ffdfbf', label: 'ハッピー', category: 'emoji' },
+  { url: 'https://api.dicebear.com/9.x/fun-emoji/svg?seed=cool&backgroundColor=b6e3f4', label: 'クール', category: 'emoji' },
+  { url: 'https://api.dicebear.com/9.x/fun-emoji/svg?seed=love&backgroundColor=ffd5dc', label: 'ラブ', category: 'emoji' },
+  { url: 'https://api.dicebear.com/9.x/fun-emoji/svg?seed=star&backgroundColor=fff3b0', label: 'スター', category: 'emoji' },
+  { url: 'https://api.dicebear.com/9.x/fun-emoji/svg?seed=magic&backgroundColor=c0aede', label: 'マジック', category: 'emoji' },
+  { url: 'https://api.dicebear.com/9.x/fun-emoji/svg?seed=fire&backgroundColor=ffcccc', label: 'ファイヤー', category: 'emoji' },
+  { url: 'https://api.dicebear.com/9.x/fun-emoji/svg?seed=thunder&backgroundColor=fffacd', label: 'サンダー', category: 'emoji' },
+  { url: 'https://api.dicebear.com/9.x/fun-emoji/svg?seed=ocean&backgroundColor=d1f4d1', label: 'オーシャン', category: 'emoji' },
+  // アバター系
+  { url: 'https://api.dicebear.com/9.x/bottts/svg?seed=robot1&backgroundColor=b6e3f4', label: 'ロボA', category: 'avatar' },
+  { url: 'https://api.dicebear.com/9.x/bottts/svg?seed=robot2&backgroundColor=c0aede', label: 'ロボB', category: 'avatar' },
+  { url: 'https://api.dicebear.com/9.x/bottts/svg?seed=robot3&backgroundColor=ffdfbf', label: 'ロボC', category: 'avatar' },
+  { url: 'https://api.dicebear.com/9.x/bottts/svg?seed=robot4&backgroundColor=ffd5dc', label: 'ロボD', category: 'avatar' },
+  { url: 'https://api.dicebear.com/9.x/shapes/svg?seed=shape1&backgroundColor=b6e3f4', label: 'シェイプA', category: 'avatar' },
+  { url: 'https://api.dicebear.com/9.x/shapes/svg?seed=shape2&backgroundColor=d1f4d1', label: 'シェイプB', category: 'avatar' },
+  { url: 'https://api.dicebear.com/9.x/shapes/svg?seed=shape3&backgroundColor=fff3b0', label: 'シェイプC', category: 'avatar' },
+  { url: 'https://api.dicebear.com/9.x/shapes/svg?seed=shape4&backgroundColor=c0aede', label: 'シェイプD', category: 'avatar' },
+];
+
+const PRESET_CATEGORIES = [
+  { id: 'all', label: 'すべて' },
+  { id: 'animal', label: 'どうぶつ' },
+  { id: 'emoji', label: '絵文字' },
+  { id: 'avatar', label: 'アバター' },
+];
 
 // --- Section ---
 const Section = ({
@@ -138,6 +177,12 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
 
   // 画像生成
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
+  // 画像ピッカー状態（結果パターンごと）
+  const [imagePickerOpen, setImagePickerOpen] = useState<number | null>(null);
+  const [imagePickerTab, setImagePickerTab] = useState<'preset' | 'upload' | 'url'>('preset');
+  const [presetCategory, setPresetCategory] = useState('all');
+  const [urlInput, setUrlInput] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
 
@@ -289,6 +334,54 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
       console.warn('画像生成エラー:', err);
     } finally {
       setIsGeneratingImages(false);
+    }
+  };
+
+  // --- 結果パターン画像設定 ---
+  const setResultImage = (index: number, url: string) => {
+    const rs = [...form.results];
+    rs[index] = { ...rs[index], image_url: url };
+    const resultImages = { ...form.entertainment_meta.resultImages, [rs[index].type]: url };
+    updateForm({
+      results: rs,
+      entertainment_meta: { ...form.entertainment_meta, resultImages },
+    });
+  };
+
+  const removeResultImage = (index: number) => {
+    const rs = [...form.results];
+    const type = rs[index].type;
+    rs[index] = { ...rs[index], image_url: undefined };
+    const resultImages = { ...form.entertainment_meta.resultImages };
+    delete resultImages[type];
+    updateForm({
+      results: rs,
+      entertainment_meta: { ...form.entertainment_meta, resultImages },
+    });
+  };
+
+  const handleImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!supabase) return alert('データベースに接続されていません');
+    if (file.size > 5 * 1024 * 1024) return alert('ファイルサイズは5MB以下にしてください');
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
+      const filePath = `${user?.id || 'anonymous'}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage.from('entertainment-images').upload(filePath, file);
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('entertainment-images').getPublicUrl(filePath);
+      setResultImage(index, data.publicUrl);
+      setImagePickerOpen(null);
+    } catch (err: any) {
+      alert('アップロードエラー: ' + err.message);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -1193,9 +1286,161 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
                         updateForm({ results: rs });
                       }}
                     />
-                    {r.image_url && (
-                      <img src={r.image_url} alt={r.title} className="w-full h-32 object-cover rounded-lg mt-2 border" />
-                    )}
+
+                    {/* 画像セクション */}
+                    <div className="mt-2">
+                      <label className="text-sm font-bold text-gray-900 block mb-2">画像</label>
+                      {r.image_url ? (
+                        <div className="relative group">
+                          <img src={r.image_url} alt={r.title} className="w-full h-32 object-cover rounded-lg border" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => { setImagePickerOpen(ri); setImagePickerTab('preset'); setUrlInput(''); }}
+                              className="bg-white text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors"
+                            >
+                              変更
+                            </button>
+                            <button
+                              onClick={() => removeResultImage(ri)}
+                              className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-600 transition-colors"
+                            >
+                              削除
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => { setImagePickerOpen(ri); setImagePickerTab('preset'); setUrlInput(''); }}
+                          className="w-full h-24 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-1 text-gray-400 hover:border-pink-400 hover:text-pink-500 hover:bg-pink-50/50 transition-all"
+                        >
+                          <ImageIcon size={20} />
+                          <span className="text-xs font-bold">画像を設定</span>
+                        </button>
+                      )}
+
+                      {/* 画像ピッカーモーダル */}
+                      {imagePickerOpen === ri && (
+                        <div className="mt-2 border border-gray-200 rounded-xl bg-white shadow-lg overflow-hidden">
+                          {/* タブ */}
+                          <div className="flex border-b border-gray-200">
+                            {[
+                              { id: 'preset' as const, label: 'フリー画像', icon: Grid3X3 },
+                              { id: 'upload' as const, label: 'アップロード', icon: Upload },
+                              { id: 'url' as const, label: 'URL入力', icon: Link },
+                            ].map((tab) => (
+                              <button
+                                key={tab.id}
+                                onClick={() => setImagePickerTab(tab.id)}
+                                className={`flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors ${
+                                  imagePickerTab === tab.id
+                                    ? 'bg-pink-50 text-pink-700 border-b-2 border-pink-500'
+                                    : 'text-gray-500 hover:bg-gray-50'
+                                }`}
+                              >
+                                <tab.icon size={14} />
+                                {tab.label}
+                              </button>
+                            ))}
+                            <button
+                              onClick={() => setImagePickerOpen(null)}
+                              className="px-3 text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+
+                          <div className="p-3">
+                            {/* プリセット画像 */}
+                            {imagePickerTab === 'preset' && (
+                              <div>
+                                <div className="flex gap-1.5 mb-3">
+                                  {PRESET_CATEGORIES.map((cat) => (
+                                    <button
+                                      key={cat.id}
+                                      onClick={() => setPresetCategory(cat.id)}
+                                      className={`px-2.5 py-1 rounded-full text-xs font-bold transition-colors ${
+                                        presetCategory === cat.id
+                                          ? 'bg-pink-100 text-pink-700'
+                                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                      }`}
+                                    >
+                                      {cat.label}
+                                    </button>
+                                  ))}
+                                </div>
+                                <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+                                  {PRESET_IMAGES
+                                    .filter((img) => presetCategory === 'all' || img.category === presetCategory)
+                                    .map((img, i) => (
+                                      <button
+                                        key={i}
+                                        onClick={() => { setResultImage(ri, img.url); setImagePickerOpen(null); }}
+                                        className={`relative rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${
+                                          r.image_url === img.url ? 'border-pink-500 ring-2 ring-pink-200' : 'border-gray-200 hover:border-pink-300'
+                                        }`}
+                                      >
+                                        <img src={img.url} alt={img.label} className="w-full aspect-square object-cover bg-gray-50" />
+                                        <div className="absolute bottom-0 inset-x-0 bg-black/50 text-white text-[10px] font-bold text-center py-0.5">
+                                          {img.label}
+                                        </div>
+                                      </button>
+                                    ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* アップロード */}
+                            {imagePickerTab === 'upload' && (
+                              <div className="text-center py-4">
+                                <label className="cursor-pointer inline-flex flex-col items-center gap-2 px-6 py-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-pink-400 hover:bg-pink-50/50 transition-all">
+                                  {isUploading ? (
+                                    <Loader2 className="animate-spin text-pink-500" size={24} />
+                                  ) : (
+                                    <Upload size={24} className="text-gray-400" />
+                                  )}
+                                  <span className="text-sm font-bold text-gray-600">
+                                    {isUploading ? 'アップロード中...' : 'クリックして画像を選択'}
+                                  </span>
+                                  <span className="text-xs text-gray-400">JPG, PNG, GIF, WebP（5MB以下）</span>
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/gif,image/webp"
+                                    className="hidden"
+                                    onChange={(e) => handleImageUpload(ri, e)}
+                                    disabled={isUploading}
+                                  />
+                                </label>
+                              </div>
+                            )}
+
+                            {/* URL入力 */}
+                            {imagePickerTab === 'url' && (
+                              <div className="flex gap-2">
+                                <input
+                                  className="flex-1 border border-gray-300 p-2.5 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-pink-500 outline-none"
+                                  placeholder="https://example.com/image.jpg"
+                                  value={urlInput}
+                                  onChange={(e) => setUrlInput(e.target.value)}
+                                />
+                                <button
+                                  onClick={() => {
+                                    if (urlInput.trim()) {
+                                      setResultImage(ri, urlInput.trim());
+                                      setUrlInput('');
+                                      setImagePickerOpen(null);
+                                    }
+                                  }}
+                                  disabled={!urlInput.trim()}
+                                  className="px-4 py-2.5 bg-pink-500 text-white rounded-lg text-sm font-bold hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                  設定
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
                 <button

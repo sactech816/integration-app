@@ -14,10 +14,50 @@ const demoPages: SitePage[] = [
     show_in_nav: true,
     sort_order: 0,
     content: [
-      { id: generateBlockId(), type: 'hero', data: { headline: 'Café & Bakery DEMO', subheadline: '焼きたてパンと自家焙煎コーヒーのお店', buttonText: 'ご予約はこちら', buttonUrl: '#contact' } },
-      { id: generateBlockId(), type: 'text_card', data: { title: 'コンセプト', text: '毎朝5時から焼き上げるパンと、自家焙煎コーヒー。地元の素材にこだわり、一つひとつ丁寧に作っています。テイクアウトもイートインもお気軽にどうぞ。', align: 'center' } },
-      { id: generateBlockId(), type: 'features', data: { title: '当店の特徴', items: [{ icon: '🍞', title: '焼きたてパン', description: '毎朝5時から焼き上げる20種類以上' }, { icon: '☕', title: '自家焙煎コーヒー', description: '厳選した豆を店内で焙煎' }, { icon: '🌿', title: '地元素材', description: '地元農家から直接仕入れ' }] } },
-      { id: generateBlockId(), type: 'gallery', data: { items: [] } },
+      {
+        id: generateBlockId(), type: 'hero',
+        data: {
+          headline: 'The Roastery Roppongi',
+          subheadline: 'Specialty Coffee & Artisan Bakery — 毎朝届く、焙煎したての一杯',
+          buttonText: '席を予約する',
+          buttonUrl: '#contact',
+        },
+      },
+      {
+        id: generateBlockId(), type: 'text_card',
+        data: {
+          title: 'Our Philosophy',
+          text: '六本木の路地裏に佇む、焙煎士が一杯ずつ淹れるスペシャルティコーヒーショップ。世界各地の農園から厳選したシングルオリジンを、店内の焙煎機で毎朝ローストしています。併設のベーカリーでは、北海道産小麦と発酵バターで焼き上げるクロワッサンやカンパーニュをご用意。「素材の個性を最大限に引き出す」をコンセプトに、コーヒーとパンの最高のペアリングをお届けします。',
+          align: 'center',
+        },
+      },
+      {
+        id: generateBlockId(), type: 'features',
+        data: {
+          title: 'What Makes Us Special',
+          items: [
+            { icon: '☕', title: 'シングルオリジン専門', description: 'エチオピア・コロンビア・グアテマラなど、常時8種類以上のシングルオリジンをご用意' },
+            { icon: '🔥', title: '店内自家焙煎', description: 'ドイツ製プロバット焙煎機で毎朝ロースト。焙煎日から72時間以内の豆のみ提供' },
+            { icon: '🥐', title: 'アルチザンベーカリー', description: '北海道産小麦・発酵バター・天然酵母。フランス仕込みの製法で毎朝5時から焼き上げ' },
+          ],
+        },
+      },
+      {
+        id: generateBlockId(), type: 'youtube',
+        data: {
+          url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk',
+        },
+      },
+      {
+        id: generateBlockId(), type: 'testimonial',
+        data: {
+          title: 'お客様の声',
+          items: [
+            { name: 'M.S. 様', role: 'IT企業勤務', comment: '毎朝出勤前に立ち寄っています。エチオピアのナチュラルが絶品で、クロワッサンとのペアリングが最高です。六本木で一番好きなカフェ。', image: '' },
+            { name: 'K.T. 様', role: 'デザイナー', comment: '焙煎したての豆の香りに包まれる空間が素晴らしい。リモートワークにも最適な落ち着いた雰囲気で、週3回は通っています。', image: '' },
+          ],
+        },
+      },
     ] as unknown as any[],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -31,8 +71,66 @@ const demoPages: SitePage[] = [
     show_in_nav: true,
     sort_order: 1,
     content: [
-      { id: generateBlockId(), type: 'text_card', data: { title: 'メニュー', text: '季節のおすすめパンと定番メニューをご紹介します。', align: 'center' } },
-      { id: generateBlockId(), type: 'pricing', data: { title: '料金表', plans: [{ name: 'パンセット', price: '¥800', features: ['お好きなパン2個', 'ドリンク1杯', 'ミニサラダ付き'], recommended: false }, { name: 'モーニングセット', price: '¥1,200', features: ['トースト or クロワッサン', 'スクランブルエッグ', 'サラダ・スープ', 'コーヒー or 紅茶'], recommended: true }, { name: 'アフタヌーンセット', price: '¥1,500', features: ['パン3種盛り', 'スイーツ1品', 'ドリンク1杯'], recommended: false }] } },
+      {
+        id: generateBlockId(), type: 'text_card',
+        data: {
+          title: 'Menu',
+          text: '厳選素材で仕上げるドリンクとフードのラインナップ。\n季節ごとに変わるスペシャルティも、ぜひお楽しみください。',
+          align: 'center',
+        },
+      },
+      {
+        id: generateBlockId(), type: 'pricing',
+        data: {
+          title: 'セットメニュー',
+          plans: [
+            {
+              name: 'Morning Set',
+              price: '¥1,200',
+              features: [
+                'クロワッサン or カンパーニュトースト',
+                'スクランブルエッグ & グリーンサラダ',
+                'ハンドドリップコーヒー（お好きな豆）',
+                '7:00〜10:00 限定',
+              ],
+              recommended: false,
+            },
+            {
+              name: 'Pairing Set',
+              price: '¥1,800',
+              features: [
+                'バリスタおすすめの豆でハンドドリップ',
+                '季節のヴィエノワズリー2種',
+                'ミニデザート',
+                '焙煎士のテイスティングノート付き',
+              ],
+              recommended: true,
+            },
+            {
+              name: 'Afternoon Tea Set',
+              price: '¥2,500',
+              features: [
+                'スペシャルティコーヒー or 紅茶',
+                'パティシエ特製スイーツ3種',
+                '焼き菓子アソート',
+                '14:00〜17:00 限定',
+              ],
+              recommended: false,
+            },
+          ],
+        },
+      },
+      {
+        id: generateBlockId(), type: 'features',
+        data: {
+          title: 'ドリンクメニュー',
+          items: [
+            { icon: '☕', title: 'ハンドドリップ', description: '¥600〜 ── 8種類のシングルオリジンから選択' },
+            { icon: '🥛', title: 'カフェラテ / カプチーノ', description: '¥650〜 ── 北海道産ミルク使用。オーツミルク変更可' },
+            { icon: '🍵', title: '抹茶ラテ / ほうじ茶ラテ', description: '¥700 ── 京都・宇治の石臼挽き茶葉を使用' },
+          ],
+        },
+      },
     ] as unknown as any[],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -46,8 +144,22 @@ const demoPages: SitePage[] = [
     show_in_nav: true,
     sort_order: 2,
     content: [
-      { id: generateBlockId(), type: 'text_card', data: { title: 'アクセス', text: '〒100-0001 東京都千代田区千代田1-1\n\n営業時間：7:00〜18:00（定休日：火曜日）\nTEL：03-1234-5678\n\n最寄り駅：東京メトロ 大手町駅 徒歩5分', align: 'left' } },
-      { id: generateBlockId(), type: 'google_map', data: { address: '東京都千代田区千代田1-1', embedUrl: '' } },
+      {
+        id: generateBlockId(), type: 'text_card',
+        data: {
+          title: 'Access',
+          text: '〒106-6108 東京都港区六本木6丁目10-1 六本木ヒルズ ウェストウォーク 1F\n\n営業時間：7:00〜20:00（L.O. 19:30）\n定休日：不定休\nTEL：03-6434-XXXX\n\n東京メトロ 日比谷線「六本木」駅 1C出口 徒歩3分\n都営大江戸線「六本木」駅 3番出口 徒歩6分\n都営大江戸線「麻布十番」駅 7番出口 徒歩8分',
+          align: 'left',
+        },
+      },
+      {
+        id: generateBlockId(), type: 'google_map',
+        data: {
+          title: '六本木ヒルズ ウェストウォーク',
+          address: '東京都港区六本木6丁目10-1 六本木ヒルズ',
+          embedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3241.748!2d139.72679!3d35.66047!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188b771049dc33%3A0x4e27aa62cbe24495!2z5YWt5pys5pyo44OS44Or44K6!5e0!3m2!1sja!2sjp!4v1',
+        },
+      },
     ] as unknown as any[],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -61,8 +173,18 @@ const demoPages: SitePage[] = [
     show_in_nav: true,
     sort_order: 3,
     content: [
-      { id: generateBlockId(), type: 'text_card', data: { title: 'お問い合わせ', text: 'ご予約・お問い合わせはお気軽にどうぞ。', align: 'center' } },
-      { id: generateBlockId(), type: 'lead_form', data: { title: 'お問い合わせフォーム', buttonText: '送信する' } },
+      {
+        id: generateBlockId(), type: 'text_card',
+        data: {
+          title: 'Contact',
+          text: 'ご予約・貸切・ケータリングなど、お気軽にお問い合わせください。\n法人様のミーティング利用やイベント開催もご相談いただけます。',
+          align: 'center',
+        },
+      },
+      {
+        id: generateBlockId(), type: 'lead_form',
+        data: { title: 'お問い合わせフォーム', buttonText: '送信する' },
+      },
     ] as unknown as any[],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -73,11 +195,11 @@ const demoSite: Site = {
   id: 'demo-store',
   user_id: 'demo',
   slug: 'demo-store',
-  title: 'Café & Bakery DEMO',
-  description: '焼きたてパンと自家焙煎コーヒーのお店',
+  title: 'The Roastery Roppongi',
+  description: 'Specialty Coffee & Artisan Bakery',
   logo_url: '',
   settings: {
-    theme: { primaryColor: '#0891b2' },
+    theme: { primaryColor: '#1a1a1a' },
   },
   status: 'published',
   pages: demoPages,
@@ -90,19 +212,18 @@ export default function StoreDemoClient() {
 
   return (
     <div>
-      <div className="bg-cyan-600 text-white text-center py-2 text-sm font-semibold">
-        これはデモページです。ページメニューをクリックすると各ページを確認できます。
+      <div className="bg-neutral-900 text-white text-center py-2.5 text-sm font-medium tracking-wide">
+        DEMO — ページメニューをクリックして各ページをご覧ください
       </div>
       <SiteViewer site={{ ...demoSite, pages: demoPages }} currentPage={currentPage} />
-      {/* ページ切替ナビ（デモ用） */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white shadow-2xl rounded-2xl border border-gray-200 px-4 py-2 flex gap-2 z-50">
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl border border-gray-200/60 px-4 py-2 flex gap-2 z-50">
         {demoPages.map(p => (
           <button
             key={p.id}
             onClick={() => setCurrentPage(p)}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
               currentPage.id === p.id
-                ? 'bg-cyan-600 text-white shadow-md'
+                ? 'bg-neutral-900 text-white shadow-md'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
