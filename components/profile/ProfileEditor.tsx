@@ -927,12 +927,12 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       return;
     }
 
-    // カスタムスラッグのバリデーション
-    if (customSlug && !validateCustomSlug(customSlug)) {
+    const existingId = initialData?.id || savedId;
+
+    // カスタムスラッグのバリデーション（新規作成時のみ。既存データのslugは確定済みなのでスキップ）
+    if (!existingId && customSlug && !validateCustomSlug(customSlug)) {
       return;
     }
-
-    const existingId = initialData?.id || savedId;
 
     // 編集にはログインが必要
     if (existingId && !user) {
