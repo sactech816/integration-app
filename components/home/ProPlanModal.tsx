@@ -5,7 +5,6 @@ import { getReferralCode } from '@/components/affiliate/AffiliateTracker';
 import {
   Crown,
   X,
-  Sparkles,
   Check,
   CreditCard,
   ExternalLink,
@@ -49,11 +48,10 @@ const PLANS: PlanInfo[] = [
     hoverColor: '#2563eb',
     bgLight: '#eff6ff',
     features: [
-      'フリープランの全機能',
-      'AI利用（月30回）',
+      '全ツール各10個まで作成',
+      'テキストAI 10回/日',
       'アクセス解析',
-      'フォーム・ファネル拡張',
-      'サムネイル5件 / エンタメ診断3件',
+      'HTMLダウンロード・埋め込みコード',
     ],
   },
   {
@@ -68,12 +66,12 @@ const PLANS: PlanInfo[] = [
     bgLight: '#fffbf0',
     highlight: true,
     features: [
-      'スタンダードの全機能',
-      'AI無制限',
-      'HTML / 埋め込み / 広告非表示',
-      'ゲーミフィケーション（10件）',
-      'メルマガ月1,000通',
-      'お問い合わせ機能',
+      '全ツール無制限作成',
+      'テキストAI 50回/日 + 画像AI',
+      'メルマガ・ステップメール 月500通',
+      'ファネル・ゲーミフィケーション無制限',
+      'コピーライト・広告非表示',
+      '決済手数料0%',
     ],
   },
   {
@@ -87,9 +85,9 @@ const PLANS: PlanInfo[] = [
     hoverColor: '#7c3aed',
     bgLight: '#f5f3ff',
     features: [
-      'ビジネスの全機能',
-      '全機能無制限',
-      'メルマガ月5,000通',
+      'テキストAI 200回/日 + 画像AI 20回/日',
+      'メルマガ・ステップメール 月2,000通',
+      'Googleカレンダー連携',
       '優先サポート',
     ],
   },
@@ -163,10 +161,7 @@ export default function ProPlanModal({ isOpen, onClose, user, onShowAuth }: ProP
             <Crown size={24} />
             <h3 className="font-bold text-xl">有料プランを選ぶ</h3>
           </div>
-          <button
-            onClick={onClose}
-            className="text-white/80 hover:text-white transition p-1"
-          >
+          <button onClick={onClose} className="text-white/80 hover:text-white transition p-1">
             <X size={24} />
           </button>
         </div>
@@ -174,19 +169,12 @@ export default function ProPlanModal({ isOpen, onClose, user, onShowAuth }: ProP
         <div className="p-6">
           {/* ログイン案内 */}
           {!user && (
-            <div
-              className="border rounded-2xl p-4 mb-6"
-              style={{ backgroundColor: '#fffbf0', borderColor: '#ffedd5' }}
-            >
+            <div className="border rounded-2xl p-4 mb-6" style={{ backgroundColor: '#fffbf0', borderColor: '#ffedd5' }}>
               <p className="text-sm" style={{ color: '#5d4037' }}>
                 <span className="font-bold">ヒント：</span>
                 ログインすると、購入履歴がアカウントに紐付けられます。
               </p>
-              <button
-                onClick={onShowAuth}
-                className="mt-2 text-sm font-bold hover:underline"
-                style={{ color: '#f97316' }}
-              >
+              <button onClick={onShowAuth} className="mt-2 text-sm font-bold hover:underline" style={{ color: '#f97316' }}>
                 ログイン / 新規登録はこちら →
               </button>
             </div>
@@ -201,36 +189,29 @@ export default function ProPlanModal({ isOpen, onClose, user, onShowAuth }: ProP
                 <div
                   key={plan.key}
                   className={`relative rounded-2xl border-2 p-5 flex flex-col transition-all ${
-                    plan.highlight
-                      ? 'shadow-lg scale-[1.02]'
-                      : 'shadow-md hover:shadow-lg'
+                    plan.highlight ? 'shadow-lg scale-[1.02]' : 'shadow-md hover:shadow-lg'
                   }`}
                   style={{
                     borderColor: plan.highlight ? plan.color : '#e5e7eb',
                     backgroundColor: plan.bgLight,
                   }}
                 >
-                  {/* 人気バッジ */}
                   {plan.highlight && (
                     <div
-                      className="absolute -top-3 left-1/2 -translate-x-1/2 text-white text-xs font-bold px-3 py-1 rounded-full"
+                      className="absolute -top-3 left-1/2 -translate-x-1/2 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1"
                       style={{ backgroundColor: plan.color }}
                     >
-                      <Sparkles size={12} className="inline mr-1" />
+                      <Star size={12} />
                       おすすめ
                     </div>
                   )}
 
-                  {/* プラン名・バッジ */}
                   <div className="flex items-center gap-2 mb-1">
                     <Icon size={20} style={{ color: plan.color }} />
-                    <span className="font-bold text-lg" style={{ color: '#1f2937' }}>
-                      {plan.name}
-                    </span>
+                    <span className="font-bold text-lg" style={{ color: '#1f2937' }}>{plan.name}</span>
                   </div>
                   <span className="text-xs text-gray-500 mb-3">{plan.badge}</span>
 
-                  {/* 価格 */}
                   <div className="mb-4">
                     <span className="text-3xl font-black" style={{ color: '#1f2937' }}>
                       ¥{plan.price.toLocaleString()}
@@ -238,21 +219,15 @@ export default function ProPlanModal({ isOpen, onClose, user, onShowAuth }: ProP
                     <span className="text-sm text-gray-500">/月</span>
                   </div>
 
-                  {/* 機能リスト */}
                   <ul className="space-y-2 mb-5 flex-1">
                     {plan.features.map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-2">
-                        <Check
-                          size={16}
-                          className="mt-0.5 shrink-0"
-                          style={{ color: plan.color }}
-                        />
+                        <Check size={16} className="mt-0.5 shrink-0" style={{ color: plan.color }} />
                         <span className="text-sm text-gray-700">{feature}</span>
                       </li>
                     ))}
                   </ul>
 
-                  {/* CTAボタン */}
                   <button
                     onClick={() => handleCheckout(plan)}
                     disabled={isProcessingPayment}
@@ -279,17 +254,8 @@ export default function ProPlanModal({ isOpen, onClose, user, onShowAuth }: ProP
             })}
           </div>
 
-          {/* 単品購入案内 */}
-          <div className="mt-6 text-center border-t border-gray-200 pt-5">
-            <p className="text-sm text-gray-600">
-              サブスク不要で個別機能だけ使いたい方は
-              <span className="font-bold text-gray-800">単品購入</span>
-              （¥300〜）もご利用いただけます。
-            </p>
-          </div>
-
           {/* 注意書き */}
-          <p className="text-xs text-gray-500 text-center mt-4">
+          <p className="text-xs text-gray-500 text-center mt-5">
             税込 / いつでも解約可能 / Stripeによる安全な決済処理
           </p>
         </div>
