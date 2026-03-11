@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { isValidEmail } from '@/lib/security/sanitize';
+import { rateLimit, createRateLimitResponse } from '@/lib/security/rate-limit';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -17,6 +18,12 @@ const getServiceClient = () => {
  */
 export async function POST(request: NextRequest) {
   try {
+    // レート制限（フォーム送信: 3回/分）
+    const rateLimitResult = rateLimit(request, 'form');
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult.resetIn);
+    }
+
     const { listId, email } = await request.json();
 
     if (!listId || !email || !isValidEmail(email)) {

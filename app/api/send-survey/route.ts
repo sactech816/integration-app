@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 import { SurveyQuestion } from '@/lib/types';
+import { escapeHtml, isValidEmail } from '@/lib/security/sanitize';
+import { rateLimit, createRateLimitResponse } from '@/lib/security/rate-limit';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -19,6 +21,12 @@ function getSupabase() {
 
 export async function POST(request: Request) {
   try {
+    // レート制限（フォーム送信: 3回/分）
+    const rateLimitResult = rateLimit(request, 'form');
+    if (!rateLimitResult.success) {
+      return createRateLimitResponse(rateLimitResult.resetIn);
+    }
+
     const {
       survey_id,
       survey_title,
@@ -31,7 +39,7 @@ export async function POST(request: Request) {
     } = await request.json();
 
     // バリデーション
-    if (!creator_email || !respondent_email) {
+    if (!creator_email || !respondent_email || !isValidEmail(creator_email) || !isValidEmail(respondent_email)) {
       return NextResponse.json(
         { error: 'メールアドレスが必要です' },
         { status: 400 }
@@ -54,7 +62,13 @@ export async function POST(request: Request) {
       }
     }
 
-    // 回答を見やすくフォーマット
+    // サニタイズ
+    const safeSurveyTitle = escapeHtml(survey_title);
+    const safeRespondentName = escapeHtml(respondent_name);
+    const safeRespondentEmail = escapeHtml(respondent_email);
+    const safeCreatorName = escapeHtml(creator_name);
+
+    // 回答を見やすくフォーマット（内部でエスケープ済み）
     const formattedAnswers = formatAnswersForEmail(questions, answers);
 
     // 【1通目】作成者（管理者）への通知メール
@@ -83,12 +97,12 @@ export async function POST(request: Request) {
           <div class="container">
             <div class="header">
               <h1 style="margin: 0; font-size: 24px;">📋 アンケート回答通知</h1>
-              <p style="margin: 10px 0 0 0; opacity: 0.9;">${survey_title}</p>
+              <p style="margin: 10px 0 0 0; opacity: 0.9;">${safeSurveyTitle}</p>
             </div>
             <div class="content">
               <div class="respondent-info">
-                <p style="margin: 0;"><strong>回答者:</strong> ${respondent_name} 様</p>
-                <p style="margin: 5px 0 0 0;"><strong>メール:</strong> ${respondent_email}</p>
+                <p style="margin: 0;"><strong>回答者:</strong> ${safeRespondentName} 様</p>
+                <p style="margin: 5px 0 0 0;"><strong>メール:</strong> ${safeRespondentEmail}</p>
               </div>
               
               <h2 style="color: #1f2937; border-bottom: 2px solid #0d9488; padding-bottom: 10px;">回答内容</h2>
@@ -131,11 +145,11 @@ export async function POST(request: Request) {
           <div class="container">
             <div class="header">
               <h1 style="margin: 0; font-size: 24px;">✅ 回答完了</h1>
-              <p style="margin: 10px 0 0 0; opacity: 0.9;">${survey_title}</p>
+              <p style="margin: 10px 0 0 0; opacity: 0.9;">${safeSurveyTitle}</p>
             </div>
             <div class="content">
               <div class="thank-you">
-                <p><strong>${respondent_name}</strong> 様</p>
+                <p><strong>${safeRespondentName}</strong> 様</p>
                 <p>アンケートへのご回答ありがとうございました。<br>以下の内容で受け付けました。</p>
               </div>
               
@@ -145,7 +159,7 @@ export async function POST(request: Request) {
               
               <div class="footer">
                 <p>このメールは自動送信されています。</p>
-                ${creator_name ? `<p>お問い合わせ: ${creator_name}</p>` : ''}
+                ${creator_name ? `<p>お問い合わせ: ${safeCreatorName}</p>` : ''}
               </div>
             </div>
           </div>
@@ -172,7 +186,7 @@ function formatAnswersForEmail(
   return questions
     .map((q, index) => {
       const answer = answers[q.id];
-      let displayAnswer = answer !== undefined ? String(answer) : '(未回答)';
+      let displayAnswer = answer !== undefined ? escapeHtml(String(answer)) : '(未回答)';
 
       // 評価式の場合は星で表示
       if (q.type === 'rating' && typeof answer === 'number') {
@@ -182,7 +196,7 @@ function formatAnswersForEmail(
 
       return `
         <div class="answer-block">
-          <div class="question">Q${index + 1}. ${q.text}</div>
+          <div class="question">Q${index + 1}. ${escapeHtml(q.text)}</div>
           <div class="answer">${displayAnswer}</div>
         </div>
       `;

@@ -119,7 +119,7 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
             return 'メールアドレスが確認されていません。確認メールをご確認ください。';
         }
         if (msg.includes('User not found')) {
-            return 'このメールアドレスは登録されていません。';
+            return 'メールアドレスまたはパスワードが正しくありません。';
         }
         if (msg.includes('Email rate limit exceeded')) {
             return '送信回数が上限に達しました。しばらく時間をおいてから再度お試しください。';
@@ -202,7 +202,7 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                         setLoading(false);
                         return;
                     } else {
-                        setErrorMessage('このメールアドレスは既に登録されています。\nログインタブに切り替えてお試しください。\nパスワードを忘れた場合は「パスワードをお忘れですか？」をクリックしてください。');
+                        setErrorMessage('このメールアドレスでのアカウント作成を完了できませんでした。\nログインタブに切り替えてお試しいただくか、\n「パスワードをお忘れですか？」からリセットをお試しください。');
                         setIsLogin(true);
                         setPassword('');
                         setLoading(false);
@@ -229,7 +229,7 @@ const AuthModal = ({ isOpen, onClose, setUser, isPasswordReset = false, setShowP
                         setLoading(false);
                         return;
                     } else {
-                        setErrorMessage('このメールアドレスは既に登録されています。\nログインタブに切り替えてお試しください。');
+                        setErrorMessage('このメールアドレスでのアカウント作成を完了できませんでした。\nログインタブに切り替えてお試しいただくか、\n「パスワードをお忘れですか？」からリセットをお試しください。');
                         setIsLogin(true);
                         setPassword('');
                         setLoading(false);
