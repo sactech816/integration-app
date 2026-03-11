@@ -524,7 +524,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
       }
 
       if (isNew) {
-        const { data: siteData, error: siteError } = await supabase
+        const { data: siteDataArr, error: siteError } = await supabase
           .from('sites')
           .insert({
             title: site.title,
@@ -535,10 +535,11 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
             slug,
             user_id: user?.id,
           })
-          .select()
-          .single();
+          .select();
 
-        if (siteError) throw siteError;
+        if (siteError) throw new Error(siteError.message || 'データベースエラー');
+        const siteData = siteDataArr?.[0];
+        if (!siteData) throw new Error('サイトデータの取得に失敗しました');
 
         const pageInserts = pages.map((p, i) => ({
           site_id: siteData.id,
@@ -556,7 +557,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
           .from('site_pages')
           .insert(pageInserts);
 
-        if (pagesError) throw pagesError;
+        if (pagesError) throw new Error(pagesError.message || 'ページ保存エラー');
 
         setSite(prev => ({ ...prev, id: siteData.id, slug }));
         setSavedSlug(slug);
@@ -575,7 +576,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
           })
           .eq('id', site.id);
 
-        if (siteError) throw siteError;
+        if (siteError) throw new Error(siteError.message || 'データベースエラー');
 
         await supabase.from('site_pages').delete().eq('site_id', site.id);
 
@@ -595,7 +596,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
           .from('site_pages')
           .insert(pageInserts);
 
-        if (pagesError) throw pagesError;
+        if (pagesError) throw new Error(pagesError.message || 'ページ保存エラー');
 
         alert('更新しました');
       }

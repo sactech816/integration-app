@@ -120,12 +120,11 @@ export default function SurveyList({ userId, isAdmin, userEmail, isUnlocked = fa
           user_id: userId,
           show_results_after_submission: survey.show_results_after_submission,
         })
-        .select()
-        .single();
+        .select();
 
-      if (error) throw error;
-      if (data) {
-        setSurveys((prev) => [data, ...prev]);
+      if (error) throw new Error(error.message || 'データベースエラー');
+      if (data?.[0]) {
+        setSurveys((prev) => [data[0], ...prev]);
       }
     } catch (error) {
       console.error('複製エラー:', error);

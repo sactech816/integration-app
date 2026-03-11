@@ -365,12 +365,13 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth, ga
           const { data, error } = await supabase
             .from('gamification_campaigns')
             .insert(campaignData)
-            .select()
-            .single();
+            .select();
 
-          if (error) throw error;
-          campaignId = data.id;
-          setSavedId(data.id);
+          if (error) throw new Error(error.message || 'データベースエラー');
+          const savedData = data?.[0];
+          if (!savedData) throw new Error('データの取得に失敗しました');
+          campaignId = savedData.id;
+          setSavedId(savedData.id);
         }
 
         // 既存の景品を削除

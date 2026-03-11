@@ -553,13 +553,12 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                         .from('quizzes')
                         .update(updateData)
                         .eq('id', existingId)
-                        .select()
-                        .single();
+                        .select();
 
                     console.log('QuizEditor UPDATE result:', { data, error });
 
-                    if (error) throw error;
-                    result = data;
+                    if (error) throw new Error(error.message || 'データベースエラー');
+                    result = data?.[0];
                 } else {
                     // 新規作成の場合：ユニークなslugを生成（リトライ付き）
                     let attempts = 0;
@@ -577,8 +576,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                         const { data, error } = await supabase
                             .from('quizzes')
                             .insert(insertData)
-                            .select()
-                            .single();
+                            .select();
 
                         // slug重複エラー（23505）の場合はリトライ（カスタムslugの場合はリトライしない）
                         if (error?.code === '23505' && error?.message?.includes('slug') && !customSlug) {
@@ -588,7 +586,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                         }
 
                         insertError = error;
-                        result = data;
+                        result = data?.[0];
                         break;
                     }
 
@@ -596,7 +594,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                         throw new Error('ユニークなURLの生成に失敗しました。もう一度お試しください。');
                     }
 
-                    if (insertError) throw insertError;
+                    if (insertError) throw new Error(insertError.message || 'データベースエラー');
                     if (customSlug) setCustomSlug(''); // 保存後はクリア
                 }
 

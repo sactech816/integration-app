@@ -332,18 +332,18 @@ export default function SalesLetterEditor({
             .from('sales_letters')
             .update(payload)
             .eq('id', existingId)
-            .select()
-            .single();
+            .select();
 
-          if (result.error) throw result.error;
+          if (result.error) throw new Error(result.error.message || 'データベースエラー');
 
-          setCompletedSlug(result.data.slug);
+          const updatedData = result.data?.[0];
+          setCompletedSlug(updatedData?.slug);
 
           // ISRキャッシュを無効化
           fetch('/api/revalidate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ path: `/s/${result.data.slug}` }),
+            body: JSON.stringify({ path: `/s/${updatedData?.slug}` }),
           }).catch(() => {});
 
           alert('保存しました！');
@@ -363,11 +363,10 @@ export default function SalesLetterEditor({
               settings,
             };
 
-            const { data, error } = await supabase
+            const { data: insertResult, error } = await supabase
               .from('sales_letters')
               .insert(payload)
-              .select()
-              .single();
+              .select();
 
             // slug重複エラー（23505）の場合はリトライ（カスタムslugの場合はリトライしない）
             if (error?.code === '23505' && error?.message?.includes('slug') && !customSlug) {
@@ -382,15 +381,17 @@ export default function SalesLetterEditor({
             }
 
             // 成功
-            setSavedId(data.id);
-            setSlug(data.slug);
-            setCompletedSlug(data.slug);
+            const savedData = insertResult?.[0];
+            if (!savedData) throw new Error('保存結果の取得に失敗しました');
+            setSavedId(savedData.id);
+            setSlug(savedData.slug);
+            setCompletedSlug(savedData.slug);
 
             // ゲストが新規作成した場合、ログイン後に紐付けるためlocalStorageに保存
             if (!user) {
               try {
                 const stored = JSON.parse(localStorage.getItem('guest_content') || '[]');
-                stored.push({ table: 'sales_letters', id: data.id });
+                stored.push({ table: 'sales_letters', id: savedData.id });
                 localStorage.setItem('guest_content', JSON.stringify(stored));
               } catch {}
             }
@@ -399,7 +400,7 @@ export default function SalesLetterEditor({
             fetch('/api/revalidate', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ path: `/s/${data.slug}` }),
+              body: JSON.stringify({ path: `/s/${savedData.slug}` }),
             }).catch(() => {});
 
             if (customSlug) setCustomSlug(''); // カスタムslugをクリア
@@ -409,7 +410,7 @@ export default function SalesLetterEditor({
 
           // エラーハンドリング
           if (insertError) {
-            throw insertError;
+            throw new Error(insertError.message || 'データベースエラー');
           }
           throw new Error('保存に失敗しました（リトライ上限到達）');
         }

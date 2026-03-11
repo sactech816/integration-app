@@ -513,11 +513,10 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
             .from("surveys")
             .update(updateData)
             .eq("id", existingId)
-            .select()
-            .single();
+            .select();
 
-          if (error) throw error;
-          result = data;
+          if (error) throw new Error(error.message || 'データベースエラー');
+          result = data?.[0];
         } else {
           // 新規作成（slugとuser_idを追加）
           const newSlug = generateSlug();
@@ -530,11 +529,10 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
           const { data, error } = await supabase
             .from("surveys")
             .insert(insertData)
-            .select()
-            .single();
+            .select();
 
-          if (error) throw error;
-          result = data;
+          if (error) throw new Error(error.message || 'データベースエラー');
+          result = data?.[0];
         }
 
         if (result) {

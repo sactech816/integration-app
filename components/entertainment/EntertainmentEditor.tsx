@@ -527,10 +527,9 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
             .from(TABLES.QUIZZES)
             .update(insertData)
             .eq('id', savedId)
-            .select()
-            .single();
-          if (dbError) throw dbError;
-          result = data;
+            .select();
+          if (dbError) throw new Error(dbError.message || 'データベースエラー');
+          result = data?.[0];
         } else {
           // 新規作成時: エンタメ診断の作成数制限チェック
           if (user?.id) {
@@ -562,18 +561,17 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
             const { data, error: dbError } = await supabase
               .from(TABLES.QUIZZES)
               .insert({ ...insertData, slug, user_id: user?.id || null })
-              .select()
-              .single();
+              .select();
             if (dbError?.code === '23505' && dbError?.message?.includes('slug')) {
               attempts++;
               continue;
             }
             insertError = dbError;
-            result = data;
+            result = data?.[0];
             break;
           }
           if (attempts >= 5) throw new Error('ユニークなURLの生成に失敗しました');
-          if (insertError) throw insertError;
+          if (insertError) throw new Error(insertError.message || 'データベースエラー');
         }
 
         if (result) {

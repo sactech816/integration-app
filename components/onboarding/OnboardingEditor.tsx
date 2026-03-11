@@ -376,10 +376,9 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
             .from('onboarding_modals')
             .update(updateData)
             .eq('id', existingId)
-            .select()
-            .single();
-          if (error) throw error;
-          result = data;
+            .select();
+          if (error) throw new Error(error.message || 'データベースエラー');
+          result = data?.[0];
         } else {
           let attempts = 0;
           const maxAttempts = 5;
@@ -396,8 +395,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
             const { data, error } = await supabase
               .from('onboarding_modals')
               .insert(insertData)
-              .select()
-              .single();
+              .select();
 
             if (error?.code === '23505' && error?.message?.includes('slug') && !customSlug) {
               attempts++;
@@ -405,14 +403,14 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
             }
 
             insertError = error;
-            result = data;
+            result = data?.[0];
             break;
           }
 
           if (attempts >= maxAttempts) {
             throw new Error('ユニークなURLの生成に失敗しました。もう一度お試しください。');
           }
-          if (insertError) throw insertError;
+          if (insertError) throw new Error(insertError.message || 'データベースエラー');
           if (customSlug) setCustomSlug('');
         }
 
