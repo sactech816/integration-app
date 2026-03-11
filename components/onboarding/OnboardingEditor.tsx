@@ -465,7 +465,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
       } finally {
         setIsSaving(false);
       }
-    });
+    }, existingId);
   };
 
   const handlePublish = (slug: string) => {

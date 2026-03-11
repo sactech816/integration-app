@@ -317,7 +317,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
       } finally {
         setIsSaving(false);
       }
-    });
+    }, editingThumbnail?.id);
   };
 
   // ダウンロード（通常モード: PNG直接 / 編集テキストモード: SVGまたはPNG）

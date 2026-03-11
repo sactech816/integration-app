@@ -34,4 +34,5 @@ export const TABLES = {
   LINE_SEND_LOGS: 'line_send_logs',
   SITES: 'sites',
   SITE_PAGES: 'site_pages',
+  BIGFIVE_RESULTS: 'bigfive_results',
 } as const;

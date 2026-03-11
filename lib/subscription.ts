@@ -672,7 +672,7 @@ export const MAKERS_GAMIFICATION_LIMITS: Record<MakersPlanTier, number> = {
   guest: 0,       // ゲスト: 作成不可
   free: 0,        // フリー: 作成不可
   standard: 0,    // スタンダード: 作成不可
-  business: 10,   // ビジネス: 10件まで
+  business: -1,   // ビジネス: 無制限
   premium: -1,    // プレミアム: 無制限
 };
 
@@ -727,12 +727,11 @@ export interface MakersPlanDefinition {
   canHideCopyright: boolean;
   canUseAffiliate: boolean;
   aiDailyLimit: number;
+  toolCreationLimit: number;      // 汎用ツール作成上限（-1 = 無制限）
   gamificationLimit: number;
   newsletterMonthlyLimit: number; // 月間メルマガ送信数制限（-1 = 無制限）
   newsletterListLimit: number;    // メルマガリスト作成数制限（-1 = 無制限）
   funnelLimit: number;            // ファネル作成数制限（-1 = 無制限）
-  entertainmentQuizLimit: number; // エンタメ診断作成数制限（-1 = 無制限）
-  thumbnailLimit: number;         // サムネイル作成数制限（-1 = 無制限）
   features: string[];
 }
 
@@ -753,12 +752,11 @@ export const MAKERS_PLAN_DEFINITIONS: Record<MakersPlanTier, MakersPlanDefinitio
     canHideCopyright: false,
     canUseAffiliate: false,
     aiDailyLimit: 0,
+    toolCreationLimit: 1,
     gamificationLimit: 0,
     newsletterMonthlyLimit: 0,
     newsletterListLimit: 0,
     funnelLimit: 0,
-    entertainmentQuizLimit: 0,
-    thumbnailLimit: 0,
     features: ['新規作成', 'ポータル掲載', 'URL発行'],
   },
   free: {
@@ -775,15 +773,14 @@ export const MAKERS_PLAN_DEFINITIONS: Record<MakersPlanTier, MakersPlanDefinitio
     canDownloadHtml: false,
     canEmbed: false,
     canHideCopyright: false,
-    canUseAffiliate: false,
+    canUseAffiliate: true,
     aiDailyLimit: 0,
+    toolCreationLimit: 1,
     gamificationLimit: 0,
-    newsletterMonthlyLimit: 30,
+    newsletterMonthlyLimit: 0,
     newsletterListLimit: 1,
     funnelLimit: 1,
-    entertainmentQuizLimit: 1,
-    thumbnailLimit: 1,
-    features: ['新規作成', 'ポータル掲載', 'URL発行', '編集・更新', 'アフィリエイト機能', 'メルマガ（月30通）'],
+    features: ['新規作成', 'ポータル掲載', 'URL発行', '編集・更新', 'アフィリエイト機能'],
   },
   standard: {
     id: 'standard',
@@ -796,21 +793,20 @@ export const MAKERS_PLAN_DEFINITIONS: Record<MakersPlanTier, MakersPlanDefinitio
     canUseAI: true,
     canUseAnalytics: true,
     canUseGamification: false,
-    canDownloadHtml: false,
-    canEmbed: false,
+    canDownloadHtml: true,
+    canEmbed: true,
     canHideCopyright: false,
     canUseAffiliate: true,
-    aiDailyLimit: 30,
+    aiDailyLimit: 10,
+    toolCreationLimit: 10,
     gamificationLimit: 0,
-    newsletterMonthlyLimit: 300,
+    newsletterMonthlyLimit: 0,
     newsletterListLimit: 3,
     funnelLimit: 3,
-    entertainmentQuizLimit: 3,
-    thumbnailLimit: 5,
     features: [
       '新規作成', 'ポータル掲載', 'URL発行', '編集・更新',
-      'アフィリエイト機能', 'AI利用（月30回）', 'アクセス解析',
-      'メルマガ（月300通）', 'ファネル（3件）',
+      'アフィリエイト機能', 'AI利用（1日10回）', 'アクセス解析',
+      'HTMLダウンロード', '埋め込みコード発行', 'ファネル（3件）',
     ],
   },
   business: {
@@ -828,19 +824,18 @@ export const MAKERS_PLAN_DEFINITIONS: Record<MakersPlanTier, MakersPlanDefinitio
     canEmbed: true,
     canHideCopyright: true,
     canUseAffiliate: true,
-    aiDailyLimit: -1, // 無制限
-    gamificationLimit: 10,
-    newsletterMonthlyLimit: 1000,
+    aiDailyLimit: 50,
+    toolCreationLimit: -1, // 無制限
+    gamificationLimit: -1, // 無制限
+    newsletterMonthlyLimit: 500,
     newsletterListLimit: -1, // 無制限
     funnelLimit: -1, // 無制限
-    entertainmentQuizLimit: -1, // 無制限
-    thumbnailLimit: -1, // 無制限
     features: [
       '新規作成', 'ポータル掲載', 'URL発行', '編集・更新',
-      'アフィリエイト機能', 'アクセス解析', 'AI利用（無制限）',
-      'ゲーミフィケーション（10件）', 'HTMLダウンロード',
+      'アフィリエイト機能', 'アクセス解析', 'AI利用（1日50回）',
+      'ゲーミフィケーション（無制限）', 'HTMLダウンロード',
       '埋め込みコード発行', 'コピーライト非表示',
-      'メルマガ（月1,000通）', 'お問い合わせ',
+      'メルマガ（月500通）', 'お問い合わせ',
     ],
   },
   premium: {
@@ -858,19 +853,18 @@ export const MAKERS_PLAN_DEFINITIONS: Record<MakersPlanTier, MakersPlanDefinitio
     canEmbed: true,
     canHideCopyright: true,
     canUseAffiliate: true,
-    aiDailyLimit: -1, // 無制限
+    aiDailyLimit: 200,
+    toolCreationLimit: -1, // 無制限
     gamificationLimit: -1, // 無制限
-    newsletterMonthlyLimit: 5000,
+    newsletterMonthlyLimit: 1000,
     newsletterListLimit: -1, // 無制限
     funnelLimit: -1, // 無制限
-    entertainmentQuizLimit: -1, // 無制限
-    thumbnailLimit: -1, // 無制限
     features: [
       '新規作成', 'ポータル掲載', 'URL発行', '編集・更新',
-      'アフィリエイト機能', 'アクセス解析', 'AI利用（無制限）',
+      'アフィリエイト機能', 'アクセス解析', 'AI利用（1日200回）',
       'ゲーミフィケーション（無制限）', 'HTMLダウンロード',
       '埋め込みコード発行', 'コピーライト非表示',
-      'メルマガ（月5,000通）', 'お問い合わせ',
+      'メルマガ（月1,000通）', 'お問い合わせ',
       '優先サポート', 'カスタムドメイン',
     ],
   },
@@ -1005,19 +999,164 @@ export function getFunnelLimit(planTier: MakersPlanTier): number {
   return plan.funnelLimit;
 }
 
+// ========================================
+// ツール作成数制限（統一チェック）
+// ========================================
+
+/** 常に無制限のツール（toolCreationLimitを適用しない） */
+export const UNLIMITED_TOOLS = new Set([
+  'attendance',
+  'marketplace',
+  'order-form',
+]);
+
+/** 専用の制限を持つツール（toolCreationLimitではなく個別関数で制御） */
+export const SPECIAL_LIMIT_TOOLS = new Set([
+  'funnel',
+  'newsletter',
+  'gamification',
+]);
+
+/** ツール種別→テーブル名マッピング */
+export const TOOL_TABLE_MAP: Record<string, { table: string; userIdColumn: string; extraFilter?: Record<string, string> }> = {
+  profile:            { table: 'profiles', userIdColumn: 'user_id' },
+  business:           { table: 'business_projects', userIdColumn: 'user_id' },
+  quiz:               { table: 'quizzes', userIdColumn: 'user_id', extraFilter: { quiz_type: 'business' } },
+  entertainment_quiz: { table: 'quizzes', userIdColumn: 'user_id', extraFilter: { quiz_type: 'entertainment' } },
+  salesletter:        { table: 'sales_letters', userIdColumn: 'user_id' },
+  survey:             { table: 'surveys', userIdColumn: 'user_id' },
+  booking:            { table: 'booking_menus', userIdColumn: 'user_id' },
+  webinar:            { table: 'webinar_lps', userIdColumn: 'user_id' },
+  onboarding:         { table: 'onboarding_modals', userIdColumn: 'user_id' },
+  thumbnail:          { table: 'thumbnails', userIdColumn: 'user_id' },
+  sns_post:           { table: 'sns_posts', userIdColumn: 'user_id' },
+  'step-email':       { table: 'step_email_sequences', userIdColumn: 'user_id' },
+  site:               { table: 'sites', userIdColumn: 'user_id' },
+};
+
+/** ツール日本語名 */
+export const TOOL_NAME_JA: Record<string, string> = {
+  profile: 'プロフィールLP',
+  business: 'ビジネスLP',
+  quiz: '診断クイズ',
+  entertainment_quiz: 'エンタメ診断',
+  salesletter: 'セールスレター',
+  survey: 'アンケート',
+  booking: '予約メニュー',
+  webinar: 'ウェビナーLP',
+  onboarding: 'はじめかたガイド',
+  thumbnail: 'サムネイル',
+  sns_post: 'SNS投稿',
+  'step-email': 'ステップメール',
+  site: 'マイサイト',
+  funnel: 'ファネル',
+  newsletter: 'メルマガリスト',
+  gamification: 'ゲーミフィケーション',
+  attendance: '出欠表',
+  marketplace: 'スキルマーケット',
+  'order-form': 'フォームメーカー',
+};
+
 /**
- * エンタメ診断作成数制限チェック
+ * 汎用ツール作成数制限チェック
+ * UNLIMITED_TOOLS/SPECIAL_LIMIT_TOOLS以外の全ツールに適用
  */
-export function getEntertainmentQuizLimit(planTier: MakersPlanTier): number {
-  const plan = MAKERS_PLAN_DEFINITIONS[planTier] || MAKERS_PLAN_DEFINITIONS.free;
-  return plan.entertainmentQuizLimit;
+export async function checkToolCreationLimit(
+  userId: string,
+  planTier: MakersPlanTier,
+  toolType: string
+): Promise<{ allowed: boolean; current: number; limit: number; message?: string }> {
+  // 常に無制限のツール
+  if (UNLIMITED_TOOLS.has(toolType)) {
+    return { allowed: true, current: 0, limit: -1 };
+  }
+
+  // 専用の制限を持つツール
+  if (SPECIAL_LIMIT_TOOLS.has(toolType)) {
+    // funnel/newsletter/gamificationは専用関数を使うべき
+    // ここではフォールバックとしてtoolCreationLimitで判定
+    const planDef = MAKERS_PLAN_DEFINITIONS[planTier] || MAKERS_PLAN_DEFINITIONS.free;
+    if (toolType === 'funnel') {
+      const limit = planDef.funnelLimit;
+      if (limit === -1) return { allowed: true, current: 0, limit: -1 };
+      if (limit === 0) return { allowed: false, current: 0, limit: 0, message: planLimitErrorMessage(toolType, limit, planTier) };
+    }
+    if (toolType === 'newsletter') {
+      const limit = planDef.newsletterListLimit;
+      if (limit === -1) return { allowed: true, current: 0, limit: -1 };
+      if (limit === 0) return { allowed: false, current: 0, limit: 0, message: planLimitErrorMessage(toolType, limit, planTier) };
+    }
+    if (toolType === 'gamification') {
+      const limit = getMakersGamificationLimit(planTier);
+      if (limit === -1) return { allowed: true, current: 0, limit: -1 };
+      if (limit === 0) return { allowed: false, current: 0, limit: 0, message: planLimitErrorMessage(toolType, limit, planTier) };
+    }
+    // 制限ありの場合はDB countが必要 → 各専用ルートで処理
+    return { allowed: true, current: 0, limit: -1 };
+  }
+
+  const planDef = MAKERS_PLAN_DEFINITIONS[planTier] || MAKERS_PLAN_DEFINITIONS.free;
+  const limit = planDef.toolCreationLimit;
+
+  // 無制限プラン
+  if (limit === -1) {
+    return { allowed: true, current: 0, limit: -1 };
+  }
+
+  const toolConfig = TOOL_TABLE_MAP[toolType];
+  if (!toolConfig) {
+    console.warn(`[checkToolCreationLimit] Unknown tool type: ${toolType}`);
+    return { allowed: true, current: 0, limit: -1 };
+  }
+
+  const supabase = getServiceClient();
+  if (!supabase) {
+    return { allowed: true, current: 0, limit: -1 };
+  }
+
+  let query = supabase
+    .from(toolConfig.table)
+    .select('*', { count: 'exact', head: true })
+    .eq(toolConfig.userIdColumn, userId);
+
+  if (toolConfig.extraFilter) {
+    for (const [key, value] of Object.entries(toolConfig.extraFilter)) {
+      query = query.eq(key, value);
+    }
+  }
+
+  const { count } = await query;
+  const current = count || 0;
+
+  if (current >= limit) {
+    return { allowed: false, current, limit, message: planLimitErrorMessage(toolType, limit, planTier) };
+  }
+
+  return { allowed: true, current, limit };
 }
 
 /**
- * サムネイル作成数制限チェック
+ * 統一エラーメッセージ生成
  */
-export function getThumbnailLimit(planTier: MakersPlanTier): number {
+export function planLimitErrorMessage(
+  toolType: string,
+  limit: number,
+  planTier: MakersPlanTier
+): string {
+  const toolName = TOOL_NAME_JA[toolType] || toolType;
+  const tierName = MAKERS_PLAN_DEFINITIONS[planTier]?.nameJa || planTier;
+
+  if (limit === 0) {
+    return `${toolName}は上位プランでご利用いただけます。料金ページでプラン詳細をご確認ください。`;
+  }
+  return `${tierName}では${toolName}は${limit}個まで作成できます。上位プランにアップグレードすると、より多く作成できます。`;
+}
+
+/**
+ * 汎用ツール作成上限を取得
+ */
+export function getToolCreationLimit(planTier: MakersPlanTier): number {
   const plan = MAKERS_PLAN_DEFINITIONS[planTier] || MAKERS_PLAN_DEFINITIONS.free;
-  return plan.thumbnailLimit;
+  return plan.toolCreationLimit;
 }
 

@@ -68,7 +68,7 @@ export async function POST(
     const limitCheck = await checkNewsletterSendLimit(userId, subStatus.planTier, subscribers.length);
     if (!limitCheck.canSend) {
       return NextResponse.json({
-        error: `月間送信上限に達しています（${limitCheck.used}/${limitCheck.limit}通使用済み、残り${limitCheck.remaining}通）。PROプランにアップグレードすると月1,000通まで送信できます。`,
+        error: `月間送信上限に達しています（${limitCheck.used}/${limitCheck.limit}通使用済み、残り${limitCheck.remaining}通）。上位プランにアップグレードすると送信数を増やせます。`,
       }, { status: 403 });
     }
 

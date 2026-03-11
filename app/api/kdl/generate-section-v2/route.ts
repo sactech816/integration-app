@@ -198,7 +198,7 @@ export async function POST(request: Request) {
     // モード検証: Premiumアクセスがないのにqualityモードを指定した場合
     if (mode === 'quality' && !credits.hasPremiumAccess) {
       return NextResponse.json({ 
-        error: '高品質AIはProプラン以上でご利用いただけます。',
+        error: '高品質AIはビジネスプラン以上でご利用いただけます。',
         errorCode: 'PREMIUM_ACCESS_REQUIRED',
         suggestUpgrade: true 
       }, { status: 403 });
@@ -348,7 +348,7 @@ ${WRITING_STYLES[styleId].name}（${WRITING_STYLES[styleId].description}）`;
 function generateMockContent(sectionTitle: string, styleId: WritingStyleId = 'descriptive'): string {
   return `<h3>${sectionTitle}（デモモード）</h3>
 <p>これはデモモードで生成されたコンテンツです。実際のAI APIキーを設定すると、高品質なコンテンツが生成されます。</p>
-<p><strong>ハイブリッドクレジットシステム</strong>により、Proプラン以上のユーザーは「高品質AI」モードと「高速AI」モードを選択できます。</p>
+<p><strong>ハイブリッドクレジットシステム</strong>により、ビジネスプラン以上のユーザーは「高品質AI」モードと「高速AI」モードを選択できます。</p>
 <ul>
 <li>高品質AIモード: Claude Sonnet 4.5, GPT-5 Miniなどの高性能モデル</li>
 <li>高速AIモード: Gemini 2.5 Flashなどの高速・低コストモデル</li>

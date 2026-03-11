@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     // PRO限定チェック
     const subStatus = await getMakersSubscriptionStatus(userId);
     if (!subStatus.hasActiveSubscription || (subStatus.planTier !== 'business' && subStatus.planTier !== 'premium')) {
-      return NextResponse.json({ error: 'AI機能はPROプランでご利用いただけます' }, { status: 403 });
+      return NextResponse.json({ error: 'メルマガAI生成はビジネスプラン以上でご利用いただけます' }, { status: 403 });
     }
 
     const aiSettings = await getAISettings(subStatus.planTier);

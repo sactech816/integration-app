@@ -244,7 +244,7 @@ export default function StampRallyEditor({ user, initialData, onBack, setShowAut
       } finally {
         setIsSaving(false);
       }
-    });
+    }, initialData?.id);
   };
 
   // 左パネル（編集フォーム）

@@ -414,7 +414,7 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
       } finally {
         setSaving(false);
       }
-    });
+    }, savedFunnelId);
   };
 
   const getStepTypeConfig = (type: string) => STEP_TYPES.find((t) => t.value === type);

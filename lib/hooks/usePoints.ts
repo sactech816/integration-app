@@ -50,11 +50,24 @@ export function usePoints({ userId, isPro }: UsePointsOptions): UsePointsReturn 
     onSuccess: () => Promise<void>,
     contentId?: string
   ): Promise<boolean> => {
-    // ポイント消費は廃止済み — サブスクプランに移行
-    // 全プランで保存・更新を許可（プラン別の機能制限はUI側で制御）
+    // 新規作成時のみ作成数制限をチェック（contentIdがある＝既存の編集はスキップ）
+    if (!contentId && userId) {
+      try {
+        const res = await fetch(`/api/check-creation-limit?userId=${encodeURIComponent(userId)}&toolType=${encodeURIComponent(serviceType)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.allowed) {
+            alert(data.message || `作成上限（${data.limit}個）に達しています。上位プランにアップグレードしてください。`);
+            return false;
+          }
+        }
+      } catch (e) {
+        console.warn('[consumeAndExecute] Creation limit check failed, proceeding:', e);
+      }
+    }
     await onSuccess();
     return true;
-  }, []);
+  }, [userId]);
 
   return { balance, loading, refreshBalance, canAfford, consumeAndExecute };
 }

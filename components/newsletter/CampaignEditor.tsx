@@ -881,7 +881,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
       } finally {
         setSaving(false);
       }
-    });
+    }, campaignId);
   };
 
   const handleSendConfirmed = async () => {

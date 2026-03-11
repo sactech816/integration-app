@@ -758,7 +758,7 @@ export default function OrderFormEditor({ formId }: { formId?: string }) {
       } finally {
         setSaving(false);
       }
-    });
+    }, formId);
   };
 
   if (loading) {

@@ -245,7 +245,7 @@ function getDefaultPlans(service: string): Record<string, any[]> {
     {
       service: 'makers',
       plan_tier: 'pro',
-      display_name: 'プロプラン',
+      display_name: 'ビジネス',
       price: 3980,
       can_create: true,
       can_edit: true,

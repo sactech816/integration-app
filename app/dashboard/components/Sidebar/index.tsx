@@ -38,6 +38,7 @@ type SidebarProps = {
     niconico_keyword_research: number;
     reddit_keyword_research: number;
     site: number;
+    bigfive: number;
   };
   totalViews: number;
   onLogout: () => void;

@@ -127,7 +127,7 @@ export default function NewBookingMenuPage() {
         console.error('Save error:', err);
         result = { success: false, error: '保存中にエラーが発生しました' };
       }
-    });
+    }, undefined);
 
     if (!pointsOk) {
       return result;

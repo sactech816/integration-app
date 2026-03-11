@@ -133,11 +133,32 @@ export async function POST(request: NextRequest) {
           break;
         }
 
+        // ── Big Five PDF購入の処理 ──
+        if (session.mode === 'payment' && session.metadata?.type === 'bigfive_pdf') {
+          const userId = session.metadata?.userId;
+          const resultId = session.metadata?.resultId;
+
+          if (userId && resultId) {
+            await supabase
+              .from('bigfive_results')
+              .update({
+                pdf_purchased: true,
+                pdf_purchased_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', resultId)
+              .eq('user_id', userId);
+
+            console.log(`✅ BigFive PDF purchased: user=${userId}, result=${resultId}`);
+          }
+          break;
+        }
+
         // ── サブスクリプションモードの処理 ──
         if (session.mode === 'subscription') {
           const userId = session.metadata?.userId;
           const planId = session.metadata?.planId;
-          const planName = session.metadata?.planName || 'プロプラン';
+          const planName = session.metadata?.planName || 'ビジネス';
           const subscriptionId = session.subscription as string;
           
           console.log(`✅ Checkout completed: user=${userId}, plan=${planId}, subscription=${subscriptionId}`);
@@ -213,7 +234,7 @@ export async function POST(request: NextRequest) {
                       'makers',
                       subscriptionId,
                       userId,
-                      'pro',
+                      planTier,
                       'monthly',
                       amount
                     );

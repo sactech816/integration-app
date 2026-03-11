@@ -402,7 +402,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth, ga
       } finally {
         setIsSaving(false);
       }
-    });
+    }, initialData?.id);
   };
 
   // 確率チェック

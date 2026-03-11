@@ -665,7 +665,7 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
       } finally {
         setIsSaving(false);
       }
-    });
+    }, existingId);
   };
 
   const addBlock = (type: string) => {

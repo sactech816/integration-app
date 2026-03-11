@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error: 'PRO_REQUIRED',
-          message: 'AI編集はPro機能です。Proプランにアップグレードしてください。',
+          message: 'AI編集はビジネスプラン以上でご利用いただけます。',
         },
         { status: 403 }
       );

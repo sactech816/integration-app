@@ -410,7 +410,7 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
       } finally {
         setSaving(false);
       }
-    });
+    }, sequenceId);
   };
 
   // --- Activate / Pause / Resume ---

@@ -582,7 +582,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
       } finally {
         setIsSaving(false);
       }
-    });
+    }, existingId?.toString());
   };
 
   const handleCopyUrl = () => {

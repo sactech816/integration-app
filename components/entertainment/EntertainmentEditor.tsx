@@ -629,7 +629,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
       } finally {
         setIsSaving(false);
       }
-    });
+    }, savedId?.toString());
   };
 
   const previewQuizData = quizFromForm(form);

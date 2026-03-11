@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         .eq('user_id', userId);
       if ((count || 0) >= limit) {
         return NextResponse.json(
-          { error: `フリープランではファネルは${limit}つまで作成できます。プロプランにアップグレードすると無制限に作成できます。` },
+          { error: `${subscription.planTier === 'free' ? 'フリープラン' : 'ご利用中のプラン'}ではファネルは${limit}個まで作成できます。上位プランにアップグレードすると、より多く作成できます。` },
           { status: 403 }
         );
       }

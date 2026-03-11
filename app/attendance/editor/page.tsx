@@ -334,7 +334,7 @@ function AttendanceEditorContent() {
       } finally {
         setSubmitting(false);
       }
-    });
+    }, editId || undefined);
 
     if (!pointsOk) {
       setSubmitting(false);

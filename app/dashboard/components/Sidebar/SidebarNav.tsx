@@ -74,10 +74,12 @@ type SidebarNavProps = {
     youtube_analysis: number;
     youtube_keyword_research: number;
     google_keyword_research: number;
+    kindle_keywords: number;
     rakuten_research: number;
     niconico_keyword_research: number;
     reddit_keyword_research: number;
     site: number;
+    bigfive: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態
@@ -127,6 +129,7 @@ export default function SidebarNav({
     webinar: contentCounts.webinar,
     'sns-post': contentCounts.sns_post,
     'site': contentCounts.site,
+    'bigfive': contentCounts.bigfive,
   };
 
   // ツールアイテムをMenuItemに変換

@@ -185,7 +185,7 @@ export default function SNSPostEditor({ user, editingPost, setShowAuth }: SNSPos
       } finally {
         setIsSaving(false);
       }
-    });
+    }, editingPost?.id);
   };
 
   // Copy helpers

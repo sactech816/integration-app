@@ -31,6 +31,7 @@ import {
   ShoppingBag,
   Tv,
   Globe,
+  Brain,
   LucideIcon,
 } from 'lucide-react';
 
@@ -116,6 +117,15 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: '診断クイズ作成',
     color: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200' },
     href: '/quiz/editor',
+    category: 'quiz',
+  },
+  {
+    id: 'bigfive',
+    label: 'Big Five性格診断',
+    icon: Brain,
+    description: '科学的性格診断',
+    color: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200' },
+    href: '/bigfive',
     category: 'quiz',
   },
   {

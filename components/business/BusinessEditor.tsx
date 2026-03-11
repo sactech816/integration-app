@@ -834,7 +834,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       } finally {
         setIsSaving(false);
       }
-    });
+    }, existingId?.toString());
   };
 
   const addBlock = (type: string) => {

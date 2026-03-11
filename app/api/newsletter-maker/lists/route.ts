@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
           .eq('user_id', userId);
         if ((count || 0) >= listLimit) {
           return NextResponse.json({
-            error: `リスト作成数の上限（${listLimit}個）に達しています。PROプランにアップグレードすると無制限に作成できます。`,
+            error: `メルマガリストの作成上限（${listLimit}個）に達しています。上位プランにアップグレードすると、より多く作成できます。`,
           }, { status: 403 });
         }
       }

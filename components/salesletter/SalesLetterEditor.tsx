@@ -425,7 +425,7 @@ export default function SalesLetterEditor({
       } finally {
         setIsSaving(false);
       }
-    });
+    }, existingId?.toString());
   };
 
   // テンプレート選択

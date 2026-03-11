@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             error: 'FREE_TRIAL_EXCEEDED',
-            message: 'サムネイルメーカーはPro機能です。無料トライアル（1回）を使い切りました。',
+            message: 'サムネイル画像生成はビジネスプラン以上でご利用いただけます。無料トライアル（1回）を使い切りました。',
             usedCount: generateCount,
             limit: FREE_TRIAL_LIMIT,
           },

@@ -1065,7 +1065,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       } finally {
         setIsSaving(false);
       }
-    });
+    }, existingId?.toString());
   };
 
   const addBlock = (type: string) => {
