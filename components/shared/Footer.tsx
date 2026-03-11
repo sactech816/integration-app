@@ -7,7 +7,7 @@ import {
   Calendar, ClipboardList, Gamepad2, BookOpen, Monitor, CalendarCheck,
   PenTool, MousePointerClick, Image, Store, PartyPopper, Mail, GitBranch,
   Video, ClipboardCheck, Share2, Gift, Send, Globe, BarChart3, Search,
-  ShoppingBag, Tv, ListOrdered, MessageCircle
+  ShoppingBag, Tv, ListOrdered, MessageCircle, Brain
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -106,6 +106,12 @@ const Footer: React.FC<FooterProps> = () => {
                 <Link href="/entertainment/create" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <PartyPopper size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
                   エンタメ診断
+                </Link>
+              </li>
+              <li>
+                <Link href="/bigfive" className="flex items-center gap-2 hover:text-white transition-colors group">
+                  <Brain size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
+                  性格診断
                 </Link>
               </li>
             </ul>

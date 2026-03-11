@@ -48,7 +48,8 @@ import {
   ShoppingBag,
   Tv,
   ListOrdered,
-  MessageCircle
+  MessageCircle,
+  Brain
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -74,22 +75,27 @@ const Header: React.FC<HeaderProps> = ({
   const [isServiceMenuOpen, setIsServiceMenuOpen] = useState(false);
   const [isGuideMenuOpen, setIsGuideMenuOpen] = useState(false);
   const [isKindleMenuOpen, setIsKindleMenuOpen] = useState(false);
+  const [isDiagnosisMenuOpen, setIsDiagnosisMenuOpen] = useState(false);
+  // ハンバーガーメニュー用アコーディオン state
+  const [mobileAccordion, setMobileAccordion] = useState<string | null>(null);
+  const toggleAccordion = (key: string) => setMobileAccordion(prev => prev === key ? null : key);
 
   // ホバーメニュー遅延クローズ用タイマー
   const serviceMenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const guideMenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const kindleMenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const diagnosisMenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleMenuEnter = useCallback((menu: 'service' | 'guide' | 'kindle') => {
-    const timerRef = menu === 'service' ? serviceMenuTimer : menu === 'guide' ? guideMenuTimer : kindleMenuTimer;
-    const setter = menu === 'service' ? setIsServiceMenuOpen : menu === 'guide' ? setIsGuideMenuOpen : setIsKindleMenuOpen;
+  const handleMenuEnter = useCallback((menu: 'service' | 'guide' | 'kindle' | 'diagnosis') => {
+    const timerRef = menu === 'service' ? serviceMenuTimer : menu === 'guide' ? guideMenuTimer : menu === 'diagnosis' ? diagnosisMenuTimer : kindleMenuTimer;
+    const setter = menu === 'service' ? setIsServiceMenuOpen : menu === 'guide' ? setIsGuideMenuOpen : menu === 'diagnosis' ? setIsDiagnosisMenuOpen : setIsKindleMenuOpen;
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
     setter(true);
   }, []);
 
-  const handleMenuLeave = useCallback((menu: 'service' | 'guide' | 'kindle') => {
-    const timerRef = menu === 'service' ? serviceMenuTimer : menu === 'guide' ? guideMenuTimer : kindleMenuTimer;
-    const setter = menu === 'service' ? setIsServiceMenuOpen : menu === 'guide' ? setIsGuideMenuOpen : setIsKindleMenuOpen;
+  const handleMenuLeave = useCallback((menu: 'service' | 'guide' | 'kindle' | 'diagnosis') => {
+    const timerRef = menu === 'service' ? serviceMenuTimer : menu === 'guide' ? guideMenuTimer : menu === 'diagnosis' ? diagnosisMenuTimer : kindleMenuTimer;
+    const setter = menu === 'service' ? setIsServiceMenuOpen : menu === 'guide' ? setIsGuideMenuOpen : menu === 'diagnosis' ? setIsDiagnosisMenuOpen : setIsKindleMenuOpen;
     timerRef.current = setTimeout(() => { setter(false); timerRef.current = null; }, 150);
   }, []);
 
@@ -99,6 +105,7 @@ const Header: React.FC<HeaderProps> = ({
       if (serviceMenuTimer.current) clearTimeout(serviceMenuTimer.current);
       if (guideMenuTimer.current) clearTimeout(guideMenuTimer.current);
       if (kindleMenuTimer.current) clearTimeout(kindleMenuTimer.current);
+      if (diagnosisMenuTimer.current) clearTimeout(diagnosisMenuTimer.current);
     };
   }, []);
 
@@ -110,6 +117,7 @@ const Header: React.FC<HeaderProps> = ({
         setIsServiceMenuOpen(false);
         setIsGuideMenuOpen(false);
         setIsKindleMenuOpen(false);
+        setIsDiagnosisMenuOpen(false);
       }
     };
     window.addEventListener('keydown', handleEsc);
@@ -122,6 +130,7 @@ const Header: React.FC<HeaderProps> = ({
     setIsServiceMenuOpen(false);
     setIsGuideMenuOpen(false);
     setIsKindleMenuOpen(false);
+    setIsDiagnosisMenuOpen(false);
   };
 
   // サービスエディタリンクのクリックハンドラ（同一パス時は新規作成として扱う）
@@ -530,6 +539,53 @@ const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
+            {/* ===== 診断ドロップダウン ===== */}
+            <div
+              className="relative"
+              onMouseEnter={() => handleMenuEnter('diagnosis')}
+              onMouseLeave={() => handleMenuLeave('diagnosis')}
+            >
+              <button
+                className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg px-3 py-2 transition-all"
+              >
+                <Brain size={16} />
+                <span>診断</span>
+                <ChevronDown size={14} className={`transition-transform ${isDiagnosisMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isDiagnosisMenuOpen && (
+                <>
+                  <div className="absolute top-full left-0 w-full h-4" />
+                  <div
+                    className="absolute top-full left-0 pt-2 w-64 z-[120]"
+                    onMouseEnter={() => handleMenuEnter('diagnosis')}
+                    onMouseLeave={() => handleMenuLeave('diagnosis')}
+                  >
+                    <div className="bg-white rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in">
+                      <Link
+                        href="/bigfive"
+                        onClick={closeMenus}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-indigo-50 transition-colors"
+                      >
+                        <div className="p-2 rounded-lg bg-indigo-50">
+                          <Brain size={18} className="text-indigo-600" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900 text-sm">性格診断</div>
+                          <div className="text-xs text-gray-500">Big Five 科学的性格診断</div>
+                        </div>
+                      </Link>
+                      <div className="border-t border-gray-100 my-1" />
+                      <div className="px-4 py-2">
+                        <p className="text-[10px] text-gray-400 font-medium">Coming Soon</p>
+                        <p className="text-xs text-gray-400 mt-1">生年月日診断・九星気学診断 など</p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
             {/* ===== 活用ガイドドロップダウン（お知らせ・開発支援を統合） ===== */}
             <div
               className="relative"
@@ -783,7 +839,263 @@ const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
 
-              {/* ===== ナビゲーション ===== */}
+              {/* ===== 診断 ===== */}
+              <div>
+                <button
+                  onClick={() => toggleAccordion('diagnosis')}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-indigo-50 transition-colors"
+                >
+                  <span className="flex items-center gap-3">
+                    <Brain size={18} className="text-indigo-600" />
+                    <span className="font-bold text-gray-900 text-sm">診断</span>
+                  </span>
+                  <ChevronDown size={16} className={`text-gray-400 transition-transform ${mobileAccordion === 'diagnosis' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileAccordion === 'diagnosis' && (
+                  <div className="ml-4 space-y-0.5 mt-1 border-l-2 border-indigo-100 pl-3">
+                    <Link href="/bigfive" onClick={closeMenus}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-indigo-50 transition-colors">
+                      <Brain size={16} className="text-indigo-500" />
+                      <span className="text-gray-700 text-sm">性格診断（Big Five）</span>
+                    </Link>
+                    <div className="px-3 py-2 text-xs text-gray-400">Coming Soon: 生年月日診断・九星気学診断</div>
+                  </div>
+                )}
+              </div>
+
+              {/* ===== LP・ページ作成 ===== */}
+              <div>
+                <button
+                  onClick={() => toggleAccordion('page')}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-indigo-50 transition-colors"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                    <span className="font-bold text-gray-900 text-sm">LP・ページ作成</span>
+                  </span>
+                  <ChevronDown size={16} className={`text-gray-400 transition-transform ${mobileAccordion === 'page' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileAccordion === 'page' && (
+                  <div className="ml-4 space-y-0.5 mt-1 border-l-2 border-indigo-100 pl-3">
+                    <Link href="/profile/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <UserCircle size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">プロフィール</span>
+                    </Link>
+                    <Link href="/business/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Building2 size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">LPメーカー</span>
+                    </Link>
+                    <Link href="/webinar/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Video size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">ウェビナーLP</span>
+                    </Link>
+                    <Link href="/onboarding/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <MousePointerClick size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">ガイドメーカー</span>
+                    </Link>
+                    <Link href="/site/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Globe size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">ホームページ</span>
+                    </Link>
+                    <Link href="/order-form/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <ClipboardCheck size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">フォーム</span>
+                      <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full">PRO</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* ===== 診断・クイズ作成 ===== */}
+              <div>
+                <button
+                  onClick={() => toggleAccordion('quiz')}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-emerald-50 transition-colors"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="font-bold text-gray-900 text-sm">診断・クイズ作成</span>
+                  </span>
+                  <ChevronDown size={16} className={`text-gray-400 transition-transform ${mobileAccordion === 'quiz' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileAccordion === 'quiz' && (
+                  <div className="ml-4 space-y-0.5 mt-1 border-l-2 border-emerald-100 pl-3">
+                    <Link href="/quiz/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Sparkles size={16} className="text-emerald-600" /><span className="text-gray-700 text-sm">診断クイズ</span>
+                    </Link>
+                    <Link href="/entertainment/create" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <PartyPopper size={16} className="text-emerald-600" /><span className="text-gray-700 text-sm">エンタメ診断</span>
+                      <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full">PRO</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* ===== ライティング・制作 ===== */}
+              <div>
+                <button
+                  onClick={() => toggleAccordion('writing')}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-amber-50 transition-colors"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    <span className="font-bold text-gray-900 text-sm">ライティング・制作</span>
+                  </span>
+                  <ChevronDown size={16} className={`text-gray-400 transition-transform ${mobileAccordion === 'writing' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileAccordion === 'writing' && (
+                  <div className="ml-4 space-y-0.5 mt-1 border-l-2 border-amber-100 pl-3">
+                    <Link href="/salesletter/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <PenTool size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">セールスライター</span>
+                    </Link>
+                    <Link href="/thumbnail/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Image size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">サムネイル</span>
+                      <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full">PRO</span>
+                    </Link>
+                    <Link href="/sns-post" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Send size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">SNS投稿</span>
+                    </Link>
+                    <Link href="/kindle/demo" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Gift size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">Kindle執筆</span>
+                    </Link>
+                    <Link href="/kindle/discovery/demo" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Lightbulb size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">ネタ発掘</span>
+                    </Link>
+                    <Link href="/kindle-keywords/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <BookOpen size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">Kindleキーワード</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* ===== 集客・イベント ===== */}
+              <div>
+                <button
+                  onClick={() => toggleAccordion('marketing')}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-cyan-50 transition-colors"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-cyan-500" />
+                    <span className="font-bold text-gray-900 text-sm">集客・イベント</span>
+                  </span>
+                  <ChevronDown size={16} className={`text-gray-400 transition-transform ${mobileAccordion === 'marketing' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileAccordion === 'marketing' && (
+                  <div className="ml-4 space-y-0.5 mt-1 border-l-2 border-cyan-100 pl-3">
+                    <Link href="/booking/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Calendar size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">予約メーカー</span>
+                    </Link>
+                    <Link href="/attendance/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <CalendarCheck size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">出欠メーカー</span>
+                    </Link>
+                    <Link href="/survey/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <ClipboardList size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">アンケート</span>
+                    </Link>
+                    <Link href="/newsletter/campaigns/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Mail size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">メルマガ</span>
+                      <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full">PRO</span>
+                    </Link>
+                    <Link href="/step-email/sequences/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <ListOrdered size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">ステップメール</span>
+                    </Link>
+                    <Link href="/funnel/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <GitBranch size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">ファネル</span>
+                    </Link>
+                    <Link href="/dashboard?view=line" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <MessageCircle size={16} className="text-green-600" /><span className="text-gray-700 text-sm">LINE公式連携</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* ===== リサーチ ===== */}
+              <div>
+                <button
+                  onClick={() => toggleAccordion('research')}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-teal-50 transition-colors"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-teal-500" />
+                    <span className="font-bold text-gray-900 text-sm">リサーチ</span>
+                  </span>
+                  <ChevronDown size={16} className={`text-gray-400 transition-transform ${mobileAccordion === 'research' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileAccordion === 'research' && (
+                  <div className="ml-4 space-y-0.5 mt-1 border-l-2 border-teal-100 pl-3">
+                    <Link href="/youtube-analysis/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <BarChart3 size={16} className="text-teal-600" /><span className="text-gray-700 text-sm">YouTube競合分析</span>
+                    </Link>
+                    <Link href="/youtube-keyword-research/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Search size={16} className="text-teal-600" /><span className="text-gray-700 text-sm">YouTubeキーワード</span>
+                    </Link>
+                    <Link href="/google-keyword-research/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Search size={16} className="text-teal-600" /><span className="text-gray-700 text-sm">Googleキーワード</span>
+                    </Link>
+                    <Link href="/rakuten-research/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <ShoppingBag size={16} className="text-rose-600" /><span className="text-gray-700 text-sm">楽天リサーチ</span>
+                    </Link>
+                    <Link href="/niconico-keyword-research/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Tv size={16} className="text-orange-600" /><span className="text-gray-700 text-sm">ニコニコリサーチ</span>
+                    </Link>
+                    <Link href="/reddit-keyword-research/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Globe size={16} className="text-orange-600" /><span className="text-gray-700 text-sm">Redditリサーチ</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* ===== 収益化・販売 ===== */}
+              <div>
+                <button
+                  onClick={() => toggleAccordion('monetize')}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-purple-50 transition-colors"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-purple-500" />
+                    <span className="font-bold text-gray-900 text-sm">収益化・販売</span>
+                  </span>
+                  <ChevronDown size={16} className={`text-gray-400 transition-transform ${mobileAccordion === 'monetize' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileAccordion === 'monetize' && (
+                  <div className="ml-4 space-y-0.5 mt-1 border-l-2 border-purple-100 pl-3">
+                    <Link href="/gamification/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Gamepad2 size={16} className="text-purple-600" /><span className="text-gray-700 text-sm">ゲーミフィケーション</span>
+                    </Link>
+                    <Link href="/marketplace" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Store size={16} className="text-purple-600" /><span className="text-gray-700 text-sm">スキルマーケット</span>
+                    </Link>
+                    <Link href="/affiliate" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Share2 size={16} className="text-purple-600" /><span className="text-gray-700 text-sm">アフィリエイト</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* ===== Kindle出版 ===== */}
+              <div>
+                <button
+                  onClick={() => toggleAccordion('kindle')}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-amber-50 transition-colors"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    <span className="font-bold text-gray-900 text-sm">Kindle出版</span>
+                  </span>
+                  <ChevronDown size={16} className={`text-gray-400 transition-transform ${mobileAccordion === 'kindle' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileAccordion === 'kindle' && (
+                  <div className="ml-4 space-y-0.5 mt-1 border-l-2 border-amber-100 pl-3">
+                    <Link href="/kindle/lp" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <BookOpen size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">Kindle出版とは</span>
+                    </Link>
+                    <Link href="/kindle/agency" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Building2 size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">代理店パートナー</span>
+                    </Link>
+                    <Link href="/kindle/free-trial" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Gift size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">Kindle体験版</span>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* ===== 区切り線 ===== */}
+              <div className="border-t border-gray-100" />
+
+              {/* ===== クイックリンク ===== */}
               <div className="space-y-1">
                 <Link href="/tools" onClick={closeMenus}
                   className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
@@ -795,16 +1107,6 @@ const Header: React.FC<HeaderProps> = ({
                   <LayoutGrid size={18} className="text-purple-600" />
                   <span className="font-medium text-gray-700 text-sm">作品集（ポータル）</span>
                 </Link>
-                <Link href="/marketplace" onClick={closeMenus}
-                  className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Store size={18} className="text-indigo-600" />
-                  <span className="font-medium text-gray-700 text-sm">スキルマーケット</span>
-                </Link>
-                <Link href="/kindle/free-trial" onClick={closeMenus}
-                  className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Gift size={18} className="text-amber-600" />
-                  <span className="font-medium text-gray-700 text-sm">Kindle体験版</span>
-                </Link>
                 <Link href="/demos" onClick={closeMenus}
                   className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
                   <Monitor size={18} className="text-indigo-600" />
@@ -815,40 +1117,6 @@ const Header: React.FC<HeaderProps> = ({
                   <Bell size={18} className="text-orange-500" />
                   <span className="font-medium text-gray-700 text-sm">お知らせ</span>
                 </Link>
-              </div>
-
-              {/* ===== 活用ガイド ===== */}
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <TrendingUp size={12} className="text-orange-500" />
-                  活用ガイド
-                </p>
-                <div className="space-y-1">
-                  <Link href="/howto" onClick={closeMenus}
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-                    <FileText size={18} className="text-blue-500" />
-                    <span className="font-medium text-gray-700 text-sm">使い方・機能一覧</span>
-                  </Link>
-                  <Link href="/effective-use" onClick={closeMenus}
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-                    <Lightbulb size={18} className="text-yellow-500" />
-                    <span className="font-medium text-gray-700 text-sm">効果的な活用法9選</span>
-                  </Link>
-                  <Link href="/selling-content" onClick={closeMenus}
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-                    <TrendingUp size={18} className="text-green-500" />
-                    <span className="font-medium text-gray-700 text-sm">売れるコンテンツの作り方</span>
-                  </Link>
-                  <Link href="/gamification/effective-use" onClick={closeMenus}
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-                    <Gamepad2 size={18} className="text-purple-500" />
-                    <span className="font-medium text-gray-700 text-sm">ゲーミフィケーション活用法</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* ===== 料金・開発支援 ===== */}
-              <div className="space-y-1">
                 <Link href="/pricing" onClick={closeMenus}
                   className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
                   <Sparkles size={18} className="text-purple-600" />
@@ -861,43 +1129,67 @@ const Header: React.FC<HeaderProps> = ({
                 </Link>
               </div>
 
-              {/* ===== サポート ===== */}
+              {/* ===== 活用ガイド ===== */}
               <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">サポート</p>
-                <div className="space-y-1">
-                  <Link href="/faq" onClick={closeMenus}
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-                    <HelpCircle size={18} className="text-gray-500" />
-                    <span className="font-medium text-gray-700 text-sm">よくある質問</span>
-                  </Link>
-                  <Link href="/contact" onClick={closeMenus}
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-                    <Mail size={18} className="text-gray-500" />
-                    <span className="font-medium text-gray-700 text-sm">お問い合わせ</span>
-                  </Link>
-                </div>
+                <button
+                  onClick={() => toggleAccordion('guide')}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-orange-50 transition-colors"
+                >
+                  <span className="flex items-center gap-3">
+                    <TrendingUp size={18} className="text-orange-500" />
+                    <span className="font-bold text-gray-900 text-sm">活用ガイド</span>
+                  </span>
+                  <ChevronDown size={16} className={`text-gray-400 transition-transform ${mobileAccordion === 'guide' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileAccordion === 'guide' && (
+                  <div className="ml-4 space-y-0.5 mt-1 border-l-2 border-orange-100 pl-3">
+                    <Link href="/howto" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <FileText size={16} className="text-blue-500" /><span className="text-gray-700 text-sm">使い方・機能一覧</span>
+                    </Link>
+                    <Link href="/effective-use" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Lightbulb size={16} className="text-yellow-500" /><span className="text-gray-700 text-sm">効果的な活用法9選</span>
+                    </Link>
+                    <Link href="/selling-content" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <TrendingUp size={16} className="text-green-500" /><span className="text-gray-700 text-sm">売れるコンテンツの作り方</span>
+                    </Link>
+                    <Link href="/gamification/effective-use" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Gamepad2 size={16} className="text-purple-500" /><span className="text-gray-700 text-sm">ゲーミフィケーション活用法</span>
+                    </Link>
+                  </div>
+                )}
               </div>
 
-              {/* ===== 法的情報 ===== */}
+              {/* ===== サポート・法的情報 ===== */}
               <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">法的情報</p>
-                <div className="space-y-1">
-                  <Link href="/legal" onClick={closeMenus}
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-                    <Scale size={16} className="text-gray-400" />
-                    <span className="text-gray-600 text-sm">特定商取引法に基づく表記</span>
-                  </Link>
-                  <Link href="/privacy" onClick={closeMenus}
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-                    <Shield size={16} className="text-gray-400" />
-                    <span className="text-gray-600 text-sm">プライバシーポリシー</span>
-                  </Link>
-                  <Link href="/sitemap-html" onClick={closeMenus}
-                    className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-                    <FileText size={16} className="text-gray-400" />
-                    <span className="text-gray-600 text-sm">サイトマップ</span>
-                  </Link>
-                </div>
+                <button
+                  onClick={() => toggleAccordion('support')}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <span className="flex items-center gap-3">
+                    <HelpCircle size={18} className="text-gray-500" />
+                    <span className="font-bold text-gray-900 text-sm">サポート・法的情報</span>
+                  </span>
+                  <ChevronDown size={16} className={`text-gray-400 transition-transform ${mobileAccordion === 'support' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileAccordion === 'support' && (
+                  <div className="ml-4 space-y-0.5 mt-1 border-l-2 border-gray-200 pl-3">
+                    <Link href="/faq" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <HelpCircle size={16} className="text-gray-400" /><span className="text-gray-600 text-sm">よくある質問</span>
+                    </Link>
+                    <Link href="/contact" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Mail size={16} className="text-gray-400" /><span className="text-gray-600 text-sm">お問い合わせ</span>
+                    </Link>
+                    <Link href="/legal" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Scale size={16} className="text-gray-400" /><span className="text-gray-600 text-sm">特定商取引法に基づく表記</span>
+                    </Link>
+                    <Link href="/privacy" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Shield size={16} className="text-gray-400" /><span className="text-gray-600 text-sm">プライバシーポリシー</span>
+                    </Link>
+                    <Link href="/sitemap-html" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <FileText size={16} className="text-gray-400" /><span className="text-gray-600 text-sm">サイトマップ</span>
+                    </Link>
+                  </div>
+                )}
               </div>
 
               {/* ===== ログアウト ===== */}

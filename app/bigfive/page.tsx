@@ -9,6 +9,7 @@ import { QUESTIONS_SIMPLE, QUESTIONS_FULL, calculateBigFive } from '@/lib/bigfiv
 import type { BigFiveResult } from '@/lib/bigfive';
 import { supabase } from '@/lib/supabase';
 import PremiumReportSection from '@/components/bigfive/PremiumReportSection';
+import Footer from '@/components/shared/Footer';
 import { Brain, Sparkles, Clock, FileText, Share2, ArrowRight, CheckCircle, Crown, Target } from 'lucide-react';
 
 type Phase = 'landing' | 'quiz' | 'result';
@@ -306,6 +307,7 @@ export default function BigFivePage() {
           )}
         </div>
       </main>
+      <Footer />
     </>
   );
 }

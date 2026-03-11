@@ -7,6 +7,7 @@ import BigFiveResultView from '@/components/bigfive/BigFiveResultView';
 import PremiumReportSection from '@/components/bigfive/PremiumReportSection';
 import type { BigFiveResult, TraitResult } from '@/lib/bigfive';
 import { supabase } from '@/lib/supabase';
+import Footer from '@/components/shared/Footer';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function BigFiveResultPage() {
@@ -141,6 +142,7 @@ export default function BigFiveResultPage() {
           )}
         </div>
       </main>
+      <Footer />
     </>
   );
 }
