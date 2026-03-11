@@ -114,6 +114,11 @@ export const PLANS: PlanDefinition[] = [
   },
 ];
 
+// ========== ツール名一覧（表示用） ==========
+
+/** 全ツールの短縮名（カード・詳細説明で使用） */
+export const ALL_TOOL_NAMES = 'プロフィール / LP / ウェビナーLP / マイサイト / ガイド / 診断クイズ / エンタメ診断 / セールスライター / サムネイル / SNS投稿 / 予約 / 出欠表 / アンケート / メルマガ / ステップメール / ファネル / フォーム（決済付） / ゲーミフィケーション / スキルマーケット / Kindle体験版 ほか多数';
+
 // ========== 機能一覧（簡潔な比較表用） ==========
 
 export const PLAN_FEATURES: PlanFeature[] = [
@@ -136,8 +141,8 @@ export const PLAN_FEATURES: PlanFeature[] = [
   { label: 'コピーライト非表示', guest: 'no', free: 'no', standard: 'no', business: 'yes', premium: 'yes' },
   { label: '広告枠非表示', guest: 'no', free: 'no', standard: 'no', business: 'yes', premium: 'yes' },
   { label: 'フォーム決済手数料', guest: 'no', free: 'limited', standard: 'limited', business: 'yes', premium: 'yes', freeNote: '5%', standardNote: '5%', businessNote: '0%', premiumNote: '0%' },
-  { label: 'メルマガ配信', guest: 'no', free: 'no', standard: 'no', business: 'limited', premium: 'limited', businessNote: '月500通', premiumNote: '月2,000通' },
-  { label: 'ステップメール', guest: 'no', free: 'no', standard: 'no', business: 'limited', premium: 'limited', businessNote: '月500通', premiumNote: '月2,000通' },
+  { label: 'メルマガ配信', guest: 'no', free: 'no', standard: 'no', business: 'limited', premium: 'limited', businessNote: '月500通', premiumNote: '月1,000通' },
+  { label: 'ステップメール', guest: 'no', free: 'no', standard: 'no', business: 'limited', premium: 'limited', businessNote: '月500通', premiumNote: '月1,000通' },
   { label: 'ファネル', guest: 'no', free: 'no', standard: 'no', business: 'yes', premium: 'yes' },
   { label: 'ゲーミフィケーション', guest: 'no', free: 'no', standard: 'no', business: 'yes', premium: 'yes' },
   // Premium
@@ -355,8 +360,8 @@ export const PLAN_DETAILS: PlanDetail[] = [
       {
         title: 'メルマガ・ステップメール（大量配信）',
         items: [
-          'メルマガ配信: 月2,000通まで',
-          'ステップメール: 月2,000通まで',
+          'メルマガ配信: 月1,000通まで',
+          'ステップメール: 月1,000通まで',
           '大規模なリストにもしっかり届く配信量',
         ],
       },

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Building2, ChevronRight } from 'lucide-react';
+import { Check, Crown, Building2, ChevronRight } from 'lucide-react';
 import { useHomeAuth } from './HomeAuthContext';
 import { PLANS, PLAN_DETAILS } from '@/constants/pricing';
 
@@ -43,7 +43,6 @@ export default function PricingSection() {
               else setShowProPlanModal(true);
             };
 
-            // 各プランのハイライト項目
             const highlights = getHighlights(plan.id);
 
             return (
@@ -57,7 +56,6 @@ export default function PricingSection() {
                   backgroundColor: isPremiumTier ? '#fffbf0' : undefined,
                 }}
               >
-                {/* バッジ・名前・価格 */}
                 <div className="mb-3 text-center">
                   <span
                     className={`text-xs font-bold px-3 py-1 rounded-full ${isPremiumTier ? 'bg-purple-100 text-purple-700' : ''}`}
@@ -77,7 +75,6 @@ export default function PricingSection() {
                   </div>
                 </div>
 
-                {/* ハイライト */}
                 <ul className="space-y-1.5 mb-4 flex-1 border-t pt-3" style={{ borderColor: '#ffedd5' }}>
                   {highlights.map((h, i) => (
                     <li key={i} className="flex items-start gap-1.5 text-xs font-bold" style={{ color: '#5d4037' }}>
@@ -87,7 +84,6 @@ export default function PricingSection() {
                   ))}
                 </ul>
 
-                {/* 詳しく見るリンク */}
                 <button
                   onClick={() => {
                     setActiveTab(plan.id);
@@ -98,7 +94,6 @@ export default function PricingSection() {
                   詳しく見る <ChevronRight size={12} />
                 </button>
 
-                {/* CTA */}
                 <button
                   onClick={handleCta}
                   className={`block w-full py-2.5 px-4 font-bold text-center rounded-2xl transition text-sm ${
@@ -122,7 +117,7 @@ export default function PricingSection() {
         </div>
 
         {/* ===== プラン詳細（タブ形式） ===== */}
-        <div id="plan-details" className="max-w-4xl mx-auto">
+        <div id="plan-details" className="max-w-4xl mx-auto mb-16">
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold" style={{ color: '#5d4037' }}>プラン内容を詳しく見る</h3>
             <p className="text-gray-500 text-sm mt-2">タブを切り替えて、各プランの詳細をご確認ください。</p>
@@ -136,10 +131,8 @@ export default function PricingSection() {
                 <button
                   key={detail.id}
                   onClick={() => setActiveTab(detail.id)}
-                  className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
-                    isActive
-                      ? 'text-white shadow-md scale-105'
-                      : 'bg-white border-2 hover:shadow-md'
+                  className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all ${
+                    isActive ? 'text-white shadow-lg scale-105' : 'bg-white border-2 hover:shadow-md'
                   }`}
                   style={{
                     backgroundColor: isActive ? detail.color : undefined,
@@ -153,42 +146,63 @@ export default function PricingSection() {
             })}
           </div>
 
-          {/* タブコンテンツ */}
+          {/* タブコンテンツ（/pricing と同じ2カラムレイアウト） */}
           {activeDetail && (
-            <div className="bg-white rounded-3xl border-2 shadow-lg overflow-hidden" style={{ borderColor: activeDetail.color + '40' }}>
-              {/* ヘッダー */}
-              <div className="px-6 py-5 border-b" style={{ backgroundColor: activeDetail.color + '10', borderColor: activeDetail.color + '30' }}>
-                <h4 className="text-xl font-bold" style={{ color: activeDetail.color }}>
-                  {activeDetail.name}
-                </h4>
-                <p className="text-sm text-gray-600 mt-1">{activeDetail.tagline}</p>
+            <div className="bg-white rounded-3xl border-2 shadow-xl overflow-hidden" style={{ borderColor: activeDetail.color + '40' }}>
+              <div className="px-6 md:px-8 py-6 border-b" style={{ backgroundColor: activeDetail.color + '10', borderColor: activeDetail.color + '30' }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: activeDetail.color }}>
+                    <Crown size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <h4 className="text-xl font-bold" style={{ color: activeDetail.color }}>{activeDetail.name}</h4>
+                    <p className="text-sm text-gray-600">{activeDetail.tagline}</p>
+                  </div>
+                </div>
               </div>
 
-              {/* セクション */}
-              <div className="p-6 space-y-6">
-                {activeDetail.sections.map((section, idx) => (
-                  <div key={idx}>
-                    <h5 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: '#5d4037' }}>
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: activeDetail.color }} />
-                      {section.title}
-                    </h5>
-                    <ul className="space-y-2 pl-4">
-                      {section.items.map((item, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                          <Check size={14} className="mt-0.5 shrink-0" style={{ color: activeDetail.color }} />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
+              <div className="p-6 md:p-8">
+                <div className="grid md:grid-cols-2 gap-6">
+                  {activeDetail.sections.map((section, idx) => (
+                    <div key={idx} className="bg-gray-50 rounded-2xl p-5">
+                      <h5 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: '#5d4037' }}>
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: activeDetail.color }} />
+                        {section.title}
+                      </h5>
+                      <ul className="space-y-2">
+                        {section.items.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                            <Check size={14} className="mt-0.5 shrink-0" style={{ color: activeDetail.color }} />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+
+                {activeDetail.id !== 'guest' && (
+                  <div className="mt-8 text-center">
+                    <button
+                      onClick={() => {
+                        if (activeDetail.id === 'free') setShowAuth(true);
+                        else setShowProPlanModal(true);
+                      }}
+                      className="inline-flex items-center gap-2 text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg hover:-translate-y-0.5 transform transition-all text-sm"
+                      style={{ backgroundColor: activeDetail.color }}
+                    >
+                      {activeDetail.id === 'free' ? '無料で登録する' : `${activeDetail.name}に申し込む`}
+                      <ChevronRight size={16} />
+                    </button>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
         </div>
 
         {/* ===== 法人向けカスタマイズバナー ===== */}
-        <div className="max-w-4xl mx-auto mt-16">
+        <div className="max-w-4xl mx-auto">
           <div
             className="relative overflow-hidden rounded-3xl border-2 p-8 md:p-10"
             style={{ borderColor: '#c4b5fd', background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #f5f3ff 100%)' }}
@@ -226,37 +240,52 @@ function getHighlights(planId: string): string[] {
   switch (planId) {
     case 'guest':
       return [
-        'プロフィール・LP 各1個',
-        '出欠表・スキルマーケット無制限',
-        'ポータル掲載・URL発行',
+        'プロフィール（1個）',
+        'LP（1個）',
+        '出欠表（無制限）',
+        'スキルマーケット（無制限）',
+        'ポータル掲載',
+        'URL発行',
       ];
     case 'free':
       return [
         '全ツール各1個ずつ作成・編集',
-        '出欠表・スキルマーケット・フォーム無制限',
+        '（プロフィール / LP / 診断クイズ / 予約 / サイト 等20種以上）',
+        '出欠表（無制限）',
+        'スキルマーケット（無制限）',
+        'フォームメーカー（無制限）',
         'アフィリエイト',
-        'ポータル掲載・SEO対策・URL発行',
+        'ポータル掲載',
+        'SEO（AEO）対策',
+        'URL発行',
       ];
     case 'standard':
       return [
-        '全ツール各10個まで',
-        'テキストAI 10回/日',
+        '全ツール各10個まで作成・編集',
+        'テキストAI（10回/日）',
         'アクセス解析',
-        'HTMLダウンロード・埋め込みコード',
+        'HTMLダウンロード',
+        '埋め込みコード',
       ];
     case 'business':
       return [
         '全ツール無制限作成',
-        'テキストAI 50回/日 + 画像AI',
-        'メルマガ・ステップメール 月500通',
-        'ファネル・ゲーミフィケーション無制限',
-        'コピーライト・広告非表示',
-        '決済手数料0%',
+        'テキストAI（50回/日）',
+        '画像AI（5回/日）',
+        'メルマガ（月500通）',
+        'ステップメール（月500通）',
+        'ファネル（無制限）',
+        'ゲーミフィケーション（無制限）',
+        'コピーライト非表示',
+        '広告枠非表示',
+        '決済手数料 0%',
       ];
     case 'premium':
       return [
-        'テキストAI 200回/日 + 画像AI 20回/日',
-        'メルマガ・ステップメール 月2,000通',
+        'テキストAI（200回/日）',
+        '画像AI（20回/日）',
+        'メルマガ（月1,000通）',
+        'ステップメール（月1,000通）',
         'Googleカレンダー連携',
         '優先サポート',
       ];
