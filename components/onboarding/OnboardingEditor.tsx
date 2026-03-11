@@ -193,7 +193,7 @@ interface OnboardingEditorProps {
 export default function OnboardingEditor({ user, initialData, setPage, onBack, setShowAuth, isUnlocked = false }: OnboardingEditorProps) {
   // フォーム状態
   const [form, setForm] = useState({
-    title: initialData?.title || '新規はじめかたガイド',
+    title: initialData?.title || '新規ガイド',
     description: initialData?.description || '',
     pages: (initialData?.pages as OnboardingModalPage[]) || [
       {
@@ -480,7 +480,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
       <CreationCompleteModal
         isOpen={showDonationModal}
         onClose={() => setShowDonationModal(false)}
-        title="はじめかたガイド"
+        title="ガイドメーカー"
         publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/onboarding/${customSlug || justSavedSlug}`}
         contentTitle={form.title}
         theme="amber"
@@ -491,7 +491,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
         <div className="flex items-center gap-3">
           <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full text-gray-700"><ArrowLeft /></button>
           <h2 className="font-bold text-lg text-gray-900 line-clamp-1">
-            {initialData ? 'はじめかたガイド編集' : 'はじめかたガイド作成'}
+            {initialData ? 'ガイド編集' : 'ガイド作成'}
           </h2>
           <span className="hidden md:inline text-xs px-2 py-1 rounded font-bold bg-orange-100 text-orange-700">
             モーダル

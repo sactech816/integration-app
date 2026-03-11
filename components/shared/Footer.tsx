@@ -77,7 +77,7 @@ const Footer: React.FC<FooterProps> = () => {
               <li>
                 <Link href="/site/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Globe size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  マイサイト
+                  ホームページメーカー
                 </Link>
               </li>
               <li>

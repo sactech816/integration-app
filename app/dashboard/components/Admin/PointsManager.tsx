@@ -76,7 +76,7 @@ const SERVICE_LABELS: Record<string, string> = {
   profile: 'プロフィールLP',
   business: 'ビジネスLP',
   webinar: 'ウェビナーLP',
-  onboarding: 'はじめかた',
+  onboarding: 'ガイドメーカー',
   quiz: '診断クイズ',
   entertainment_quiz: 'エンタメ診断',
   salesletter: 'セールスライター',

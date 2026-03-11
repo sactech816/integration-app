@@ -536,7 +536,7 @@ const webinarDemos = [
   },
 ];
 
-// マイサイトデモ
+// ホームページメーカーデモ
 const siteDemos = [
   {
     name: '店舗サイト（4ページ）',
@@ -1096,14 +1096,14 @@ export default function DemosPageClient() {
           </div>
         </section>
 
-        {/* マイサイトデモ */}
+        {/* ホームページメーカーデモ */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-3 mb-4">
               <Globe size={32} className="text-cyan-600" />
             </div>
             <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">
-              マイサイト
+              ホームページメーカー
             </h2>
             <p className="text-lg text-gray-600">
               複数ページのビジネスサイトテンプレートを体験

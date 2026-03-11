@@ -155,9 +155,9 @@ const TYPE_CONFIG: Record<UGCType, {
   },
   'site': {
     pathPrefix: 'site',
-    label: 'マイサイトメーカー',
-    defaultKeywords: ['マイサイト', 'ホームページ', 'Webサイト', 'ポートフォリオ'],
-    descriptionTemplate: (title) => `「${title}」のWebサイト。集客メーカーのマイサイトメーカーで作成されたサイトです。`,
+    label: 'ホームページメーカー',
+    defaultKeywords: ['ホームページ', 'Webサイト', 'ポートフォリオ', 'HP作成'],
+    descriptionTemplate: (title) => `「${title}」のWebサイト。集客メーカーのホームページメーカーで作成されたサイトです。`,
   },
 };
 

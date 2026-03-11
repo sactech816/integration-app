@@ -442,7 +442,7 @@ export function useDashboardData(): UseDashboardDataReturn {
                 return {
                   id: String(m.id),
                   slug: m.slug,
-                  title: m.title || 'はじめかたガイド',
+                  title: m.title || 'ガイドメーカー',
                   created_at: m.created_at,
                   updated_at: m.updated_at,
                   type: 'onboarding' as ServiceType,
@@ -621,7 +621,7 @@ export function useDashboardData(): UseDashboardDataReturn {
                 return {
                   id: s.id,
                   slug: s.slug,
-                  title: s.title || 'マイサイト',
+                  title: s.title || 'ホームページメーカー',
                   created_at: s.created_at,
                   updated_at: s.updated_at,
                   type: 'site' as ServiceType,
@@ -961,7 +961,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         if (original) {
           const { error } = await supabase.from(TABLES.ONBOARDING_MODALS).insert([{
             user_id: user.id,
-            title: `${original.title || 'はじめかたガイド'} のコピー`,
+            title: `${original.title || 'ガイドメーカー'} のコピー`,
             description: original.description,
             pages: original.pages,
             gradient_from: original.gradient_from,
@@ -992,7 +992,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         if (originalSite) {
           const { data: newSiteArr, error: siteError } = await supabase.from(TABLES.SITES).insert([{
             user_id: user.id,
-            title: `${originalSite.title || 'マイサイト'} のコピー`,
+            title: `${originalSite.title || 'ホームページメーカー'} のコピー`,
             description: originalSite.description,
             logo_url: originalSite.logo_url,
             settings: originalSite.settings,

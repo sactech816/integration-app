@@ -1294,7 +1294,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
                   }`}>Pro</span>
                 </h4>
                 <p className={`text-xs ${userPlan?.canHideCopyright ? 'text-orange-700' : 'text-gray-500'}`}>
-                  コンテンツ下部に表示される「マイサイトメーカーで作成しました」のフッターを非表示にします。
+                  コンテンツ下部に表示される「ホームページメーカーで作成しました」のフッターを非表示にします。
                 </p>
                 {!userPlan?.canHideCopyright && (
                   <p className="text-xs text-amber-600 mt-2 font-medium">
@@ -1458,9 +1458,9 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
       <CreationCompleteModal
         isOpen={showComplete && !!savedSlug}
         onClose={() => setShowComplete(false)}
-        title="マイサイト"
+        title="ホームページメーカー"
         publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/site/${savedSlug}`}
-        contentTitle={site.title || 'マイサイトを作りました！'}
+        contentTitle={site.title || 'ホームページを作りました！'}
         theme="teal"
         showSocialShare
         showQrCode
@@ -1473,7 +1473,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
             <ArrowLeft size={20} />
           </button>
           <h2 className="font-bold text-lg text-gray-900 line-clamp-1">
-            {initialData ? 'マイサイト編集' : 'マイサイト新規作成'}
+            {initialData ? 'ホームページ編集' : 'ホームページ新規作成'}
           </h2>
         </div>
         <div className="flex gap-2">

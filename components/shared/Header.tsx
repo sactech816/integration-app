@@ -260,11 +260,11 @@ const Header: React.FC<HeaderProps> = ({
                             </Link>
                             <Link href="/onboarding/editor" onClick={(e) => handleServiceClick(e, 'onboarding')} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors">
                               <div className="p-1 rounded-md bg-indigo-50 shrink-0"><MousePointerClick size={14} className="text-indigo-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">はじめかた</span>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ガイドメーカー</span>
                             </Link>
                             <Link href="/site/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors">
                               <div className="p-1 rounded-md bg-indigo-50 shrink-0"><Globe size={14} className="text-indigo-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">マイサイト</span>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ホームページ</span>
                             </Link>
                             <Link href="/order-form/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors">
                               <div className="p-1 rounded-md bg-indigo-50 shrink-0"><ClipboardCheck size={14} className="text-indigo-600" /></div>
@@ -452,6 +452,24 @@ const Header: React.FC<HeaderProps> = ({
                             <Link href="/kindle/discovery" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
                               <div className="p-1 rounded-md bg-amber-50 shrink-0"><Lightbulb size={14} className="text-amber-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ネタ発掘診断</span>
+                            </Link>
+                            <Link href="/kindle/demo" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
+                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><Gift size={14} className="text-amber-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
+                                Kindle出版執筆
+                                <span className="text-[9px] font-bold text-amber-600 bg-amber-100 px-1 py-0.5 rounded-full ml-1">デモ</span>
+                              </span>
+                            </Link>
+                            <Link href="/kindle/discovery/demo" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
+                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><Lightbulb size={14} className="text-amber-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
+                                ネタ発掘診断
+                                <span className="text-[9px] font-bold text-amber-600 bg-amber-100 px-1 py-0.5 rounded-full ml-1">デモ</span>
+                              </span>
+                            </Link>
+                            <Link href="/kindle/free-trial" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
+                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><Gift size={14} className="text-amber-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">Kindle出版（1章執筆お試し）</span>
                             </Link>
                           </div>
                         </div>

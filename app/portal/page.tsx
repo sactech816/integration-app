@@ -73,7 +73,7 @@ const TABS: { type: ServiceType | 'all'; label: string; icon: React.ComponentTyp
   { type: 'survey', label: 'アンケート', icon: FileText },
   { type: 'salesletter', label: 'セールスレター', icon: PenTool },
   { type: 'gamification', label: 'ゲーミフィケーション', icon: Gamepad2 },
-  { type: 'onboarding', label: 'はじめかたガイド', icon: BookOpen },
+  { type: 'onboarding', label: 'ガイドメーカー', icon: BookOpen },
   { type: 'entertainment_quiz', label: 'エンタメ診断', icon: PartyPopper },
   { type: 'webinar', label: 'ウェビナーLP', icon: Video },
 ];
@@ -485,7 +485,7 @@ function PortalPageContent() {
           allItems.push(...onboardings.map((o) => ({
             id: String(o.id),
             slug: o.slug,
-            title: o.title || 'はじめかたガイド',
+            title: o.title || 'ガイドメーカー',
             description: o.description,
             imageUrl: undefined,
             created_at: o.created_at,

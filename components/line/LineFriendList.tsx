@@ -23,7 +23,7 @@ const SOURCE_LABELS: Record<string, string> = {
   booking: '予約',
   attendance: '出欠',
   gamification: 'ゲーミフィケーション',
-  onboarding: 'はじめかた',
+  onboarding: 'ガイドメーカー',
   newsletter: 'メルマガ',
   'order-form': '申し込みフォーム',
   funnel: 'ファネル',

@@ -68,7 +68,7 @@ const serviceConfig = [
   {
     id: 'site' as ServiceType,
     icon: Globe,
-    label: 'マイサイトメーカー',
+    label: 'ホームページメーカー',
     description: '複数ページのサイトを簡単作成。ナビゲーション自動生成で店舗・講師・フリーランスに最適',
     gradient: 'from-cyan-500 to-teal-600',
     bgLight: 'bg-cyan-50',

@@ -151,7 +151,7 @@ export default function FeaturedManager() {
       gamification: 'ゲーミフィケーション',
       attendance: '出欠表',
       booking: '予約',
-      onboarding: 'はじめかたガイド',
+      onboarding: 'ガイドメーカー',
       thumbnail: 'サムネイル',
       newsletter: 'メルマガ',
       'step-email': 'ステップメール',
@@ -160,7 +160,7 @@ export default function FeaturedManager() {
       webinar: 'ウェビナーLP',
       'sns-post': 'SNS投稿',
       line: 'LINE公式連携',
-      'site': 'マイサイト',
+      'site': 'ホームページメーカー',
     };
     return labels[type] || type;
   };

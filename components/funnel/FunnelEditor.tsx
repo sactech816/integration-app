@@ -48,7 +48,7 @@ const STEP_TYPES = [
   { value: 'survey', label: 'アンケート', refType: 'slug', placeholder: '例: customer-survey', hint: 'アンケートのURLの末尾部分', ctaNote: 'アンケート回答後にファネルCTAで次へ進みます', color: 'cyan', hasContent: true },
   { value: 'webinar', label: 'ウェビナーLP', refType: 'slug', placeholder: '例: seminar-lp', hint: 'ウェビナーLPのURLの末尾部分', ctaNote: '閲覧後にファネルCTAで次へ進みます', color: 'purple', hasContent: true },
   { value: 'attendance', label: '出欠表', refType: 'id', placeholder: '例: event-id', hint: '出欠表のID', ctaNote: '回答後にファネルCTAで次へ進みます', color: 'orange', hasContent: true },
-  { value: 'onboarding', label: 'はじめかたガイド', refType: 'slug', placeholder: '例: getting-started', hint: 'はじめかたガイドのURLの末尾部分', ctaNote: '閲覧後にファネルCTAで次へ進みます', color: 'lime', hasContent: true },
+  { value: 'onboarding', label: 'ガイドメーカー', refType: 'slug', placeholder: '例: getting-started', hint: 'ガイドのURLの末尾部分', ctaNote: '閲覧後にファネルCTAで次へ進みます', color: 'lime', hasContent: true },
   { value: 'gamification', label: 'ゲーミフィケーション', refType: 'id', placeholder: '例: campaign-id', hint: 'キャンペーンのID', ctaNote: '参加後にファネルCTAで次へ進みます', color: 'fuchsia', hasContent: true },
   { value: 'sns_post', label: 'SNS投稿', refType: 'slug', placeholder: '例: my-post', hint: 'SNS投稿のURLの末尾部分', ctaNote: '閲覧後にファネルCTAで次へ進みます', color: 'sky', hasContent: true },
   { value: 'custom_url', label: '外部URL', refType: 'url', placeholder: 'https://example.com', hint: '外部サイトのURLをそのまま入力', ctaNote: '外部ページを表示します', color: 'gray', hasContent: false },

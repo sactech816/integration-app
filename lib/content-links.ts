@@ -77,8 +77,8 @@ export const LINKABLE_TOOLS: LinkableToolDef[] = [
   { type: 'profile', label: 'プロフィールLP', category: 'page', refType: 'slug', urlPath: '/profile', color: 'emerald', iconName: 'User' },
   { type: 'business', label: 'ビジネスLP', category: 'page', refType: 'slug', urlPath: '/business', color: 'amber', iconName: 'Building2' },
   { type: 'webinar', label: 'ウェビナーLP', category: 'page', refType: 'slug', urlPath: '/webinar', color: 'purple', iconName: 'Megaphone' },
-  { type: 'onboarding', label: 'はじめかたガイド', category: 'page', refType: 'slug', urlPath: '/onboarding', color: 'lime', iconName: 'BookOpen' },
-  { type: 'site', label: 'マイサイト', category: 'page', refType: 'slug', urlPath: '/site', color: 'cyan', iconName: 'Globe' },
+  { type: 'onboarding', label: 'ガイドメーカー', category: 'page', refType: 'slug', urlPath: '/onboarding', color: 'lime', iconName: 'BookOpen' },
+  { type: 'site', label: 'ホームページメーカー', category: 'page', refType: 'slug', urlPath: '/site', color: 'cyan', iconName: 'Globe' },
   // 診断・クイズ
   { type: 'quiz', label: '診断クイズ', category: 'quiz', refType: 'slug', urlPath: '/quiz', color: 'indigo', iconName: 'HelpCircle' },
   { type: 'entertainment_quiz', label: 'エンタメ診断', category: 'quiz', refType: 'slug', urlPath: '/entertainment', color: 'pink', iconName: 'Sparkles' },

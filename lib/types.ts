@@ -17,7 +17,7 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
   gamification: 'ゲーミフィケーション',
   attendance: '出欠表',
   booking: '予約',
-  onboarding: 'はじめかたガイド',
+  onboarding: 'ガイドメーカー',
   thumbnail: 'サムネイルメーカー',
   newsletter: 'メルマガ',
   'step-email': 'ステップメール',
@@ -26,7 +26,7 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
   webinar: 'ウェビナーLP',
   'sns-post': 'SNS投稿',
   line: 'LINE公式連携',
-  'site': 'マイサイト',
+  'site': 'ホームページメーカー',
 };
 
 export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; text: string }> = {
