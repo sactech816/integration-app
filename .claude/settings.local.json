@@ -73,7 +73,9 @@
       "Bash(git log:*)",
       "Bash(while read:*)",
       "Bash(do if:*)",
-      "Bash(then echo:*)"
+      "Bash(then echo:*)",
+      "Bash(wc -l d:obsidianbigfive-appcomponents/* d:obsidianbigfive-appapp/*)",
+      "Bash(xargs wc:*)"
     ],
     "deny": [
       "Bash(sudo:*)",

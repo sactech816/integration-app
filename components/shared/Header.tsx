@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -74,6 +74,33 @@ const Header: React.FC<HeaderProps> = ({
   const [isServiceMenuOpen, setIsServiceMenuOpen] = useState(false);
   const [isGuideMenuOpen, setIsGuideMenuOpen] = useState(false);
   const [isKindleMenuOpen, setIsKindleMenuOpen] = useState(false);
+
+  // ホバーメニュー遅延クローズ用タイマー
+  const serviceMenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const guideMenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const kindleMenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMenuEnter = useCallback((menu: 'service' | 'guide' | 'kindle') => {
+    const timerRef = menu === 'service' ? serviceMenuTimer : menu === 'guide' ? guideMenuTimer : kindleMenuTimer;
+    const setter = menu === 'service' ? setIsServiceMenuOpen : menu === 'guide' ? setIsGuideMenuOpen : setIsKindleMenuOpen;
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    setter(true);
+  }, []);
+
+  const handleMenuLeave = useCallback((menu: 'service' | 'guide' | 'kindle') => {
+    const timerRef = menu === 'service' ? serviceMenuTimer : menu === 'guide' ? guideMenuTimer : kindleMenuTimer;
+    const setter = menu === 'service' ? setIsServiceMenuOpen : menu === 'guide' ? setIsGuideMenuOpen : setIsKindleMenuOpen;
+    timerRef.current = setTimeout(() => { setter(false); timerRef.current = null; }, 150);
+  }, []);
+
+  // タイマークリーンアップ
+  useEffect(() => {
+    return () => {
+      if (serviceMenuTimer.current) clearTimeout(serviceMenuTimer.current);
+      if (guideMenuTimer.current) clearTimeout(guideMenuTimer.current);
+      if (kindleMenuTimer.current) clearTimeout(kindleMenuTimer.current);
+    };
+  }, []);
 
   // ESCキーでメニューを閉じる
   useEffect(() => {
@@ -188,8 +215,8 @@ const Header: React.FC<HeaderProps> = ({
             {/* ===== 新規作成メガメニュー ===== */}
             <div
               className="relative"
-              onMouseEnter={() => setIsServiceMenuOpen(true)}
-              onMouseLeave={() => setIsServiceMenuOpen(false)}
+              onMouseEnter={() => handleMenuEnter('service')}
+              onMouseLeave={() => handleMenuLeave('service')}
             >
               <button
                 className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg px-3 py-2 transition-all"
@@ -202,9 +229,13 @@ const Header: React.FC<HeaderProps> = ({
               {isServiceMenuOpen && (
                 <>
                   {/* ブリッジ: ボタンとパネルの間のホバー切れ防止 */}
-                  <div className="fixed left-0 right-0 top-16 h-2 z-[119]" />
+                  <div className="fixed left-0 right-0 top-16 h-4 z-[119]" />
                   {/* 全幅メガメニューパネル */}
-                  <div className="fixed left-0 right-0 top-[4.25rem] z-[120] animate-fade-in">
+                  <div
+                    className="fixed left-0 right-0 top-[4.25rem] z-[120] animate-fade-in"
+                    onMouseEnter={() => handleMenuEnter('service')}
+                    onMouseLeave={() => handleMenuLeave('service')}
+                  >
                     <div className="border-b border-gray-200 bg-white shadow-xl">
                       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
                         <div className="grid grid-cols-6 gap-5">
@@ -484,8 +515,8 @@ const Header: React.FC<HeaderProps> = ({
             {/* ===== 活用ガイドドロップダウン（お知らせ・開発支援を統合） ===== */}
             <div
               className="relative"
-              onMouseEnter={() => setIsGuideMenuOpen(true)}
-              onMouseLeave={() => setIsGuideMenuOpen(false)}
+              onMouseEnter={() => handleMenuEnter('guide')}
+              onMouseLeave={() => handleMenuLeave('guide')}
             >
               <button
                 className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-lg px-3 py-2 transition-all"
@@ -497,8 +528,12 @@ const Header: React.FC<HeaderProps> = ({
 
               {isGuideMenuOpen && (
                 <>
-                  <div className="absolute top-full left-0 w-full h-2" />
-                  <div className="absolute top-full left-0 pt-2 w-72 z-[120]">
+                  <div className="absolute top-full left-0 w-full h-4" />
+                  <div
+                    className="absolute top-full left-0 pt-2 w-72 z-[120]"
+                    onMouseEnter={() => handleMenuEnter('guide')}
+                    onMouseLeave={() => handleMenuLeave('guide')}
+                  >
                     <div className="bg-white rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in">
                       <Link
                         href="/announcements"
