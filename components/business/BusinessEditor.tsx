@@ -691,22 +691,28 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
   };
 
   const handleSave = async () => {
+    console.log('[BusinessEditor] handleSave called', { customSlug, user: !!user, initialDataId: initialData?.id, savedId });
+
     // カスタムスラッグのバリデーション
     if (customSlug && !validateCustomSlug(customSlug)) {
+      console.log('[BusinessEditor] customSlug validation failed');
       return;
     }
 
     // 既存コンテンツの更新はログインが必要
     const existingId = initialData?.id || savedId;
     if (existingId && !user) {
+      console.log('[BusinessEditor] existingId but no user, showing auth');
       if (confirm('編集・更新にはログインが必要です。ログイン画面を開きますか？')) {
         setShowAuth(true);
       }
       return;
     }
 
+    console.log('[BusinessEditor] calling consumeAndExecute');
     await consumeAndExecute('business', 'save', async () => {
       setIsSaving(true);
+      console.log('[BusinessEditor] inside consumeAndExecute callback, existingId:', existingId);
       try {
         // タイトルが未入力の場合はデフォルト名を使用
         const finalTitle = lp.title?.trim() || '無題のビジネスLP';
@@ -730,6 +736,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             .update(updatePayload)
             .eq('id', existingId);
 
+          console.log('[BusinessEditor] updateResult:', updateResult);
           if (updateResult?.error) {
             console.error('Business LP update error:', updateResult.error);
             throw new Error(updateResult.error.message || 'データベースエラー');
@@ -737,6 +744,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
 
           // 更新成功 - 既存のslug/idを維持
           const currentSlug = initialData?.slug || savedSlug;
+          console.log('[BusinessEditor] update success, currentSlug:', currentSlug);
           if (currentSlug) {
             setJustSavedSlug(currentSlug);
             // ISRキャッシュを無効化
