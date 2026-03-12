@@ -348,24 +348,6 @@ const Header: React.FC<HeaderProps> = ({
                               <div className="p-1 rounded-md bg-amber-50 shrink-0"><Send size={14} className="text-amber-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">SNS投稿</span>
                             </Link>
-                            <Link href="/kindle/demo" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
-                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><Gift size={14} className="text-amber-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
-                                Kindle執筆
-                                <span className="text-[9px] font-bold text-amber-600 bg-amber-100 px-1 py-0.5 rounded-full ml-1">デモ</span>
-                              </span>
-                            </Link>
-                            <Link href="/kindle/discovery/demo" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
-                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><Lightbulb size={14} className="text-amber-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
-                                ネタ発掘
-                                <span className="text-[9px] font-bold text-amber-600 bg-amber-100 px-1 py-0.5 rounded-full ml-1">デモ</span>
-                              </span>
-                            </Link>
-                            <Link href="/kindle-keywords/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
-                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><BookOpen size={14} className="text-amber-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">Kindleキーワード</span>
-                            </Link>
                           </div>
                         </div>
 
@@ -455,31 +437,27 @@ const Header: React.FC<HeaderProps> = ({
                               <div className="p-1 rounded-md bg-amber-50 shrink-0"><BookOpen size={14} className="text-amber-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">Kindle出版とは</span>
                             </Link>
-                            <Link href="/kindle/agency" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
-                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><Building2 size={14} className="text-amber-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">代理店パートナー</span>
-                            </Link>
-                            <Link href="/kindle/discovery" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
-                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><Lightbulb size={14} className="text-amber-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ネタ発掘診断</span>
-                            </Link>
-                            <Link href="/kindle/demo" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
+                            <Link href="/kindle/free-trial" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
                               <div className="p-1 rounded-md bg-amber-50 shrink-0"><Gift size={14} className="text-amber-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
-                                Kindle出版執筆
-                                <span className="text-[9px] font-bold text-amber-600 bg-amber-100 px-1 py-0.5 rounded-full ml-1">デモ</span>
+                                1章無料お試し
+                                <span className="text-[9px] font-bold text-green-600 bg-green-100 px-1 py-0.5 rounded-full ml-1">無料</span>
                               </span>
                             </Link>
                             <Link href="/kindle/discovery/demo" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
                               <div className="p-1 rounded-md bg-amber-50 shrink-0"><Lightbulb size={14} className="text-amber-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
                                 ネタ発掘診断
-                                <span className="text-[9px] font-bold text-amber-600 bg-amber-100 px-1 py-0.5 rounded-full ml-1">デモ</span>
+                                <span className="text-[9px] font-bold text-green-600 bg-green-100 px-1 py-0.5 rounded-full ml-1">無料</span>
                               </span>
                             </Link>
-                            <Link href="/kindle/free-trial" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
-                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><Gift size={14} className="text-amber-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">Kindle出版（1章執筆お試し）</span>
+                            <Link href="/kindle-keywords/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
+                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><Search size={14} className="text-amber-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">Kindleキーワードリサーチ</span>
+                            </Link>
+                            <Link href="/kindle/agency" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
+                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><Building2 size={14} className="text-amber-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">代理店パートナー</span>
                             </Link>
                           </div>
                         </div>
@@ -1090,11 +1068,22 @@ const Header: React.FC<HeaderProps> = ({
                     <Link href="/kindle/lp" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <BookOpen size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">Kindle出版とは</span>
                     </Link>
+                    <Link href="/kindle/free-trial" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Gift size={16} className="text-amber-600" />
+                      <span className="text-gray-700 text-sm">
+                        1章無料お試し
+                        <span className="text-[9px] font-bold text-green-600 bg-green-100 px-1 py-0.5 rounded-full ml-1">無料</span>
+                      </span>
+                    </Link>
+                    <Link href="/kindle/discovery/demo" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Lightbulb size={16} className="text-amber-600" />
+                      <span className="text-gray-700 text-sm">
+                        ネタ発掘診断
+                        <span className="text-[9px] font-bold text-green-600 bg-green-100 px-1 py-0.5 rounded-full ml-1">無料</span>
+                      </span>
+                    </Link>
                     <Link href="/kindle/agency" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <Building2 size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">代理店パートナー</span>
-                    </Link>
-                    <Link href="/kindle/free-trial" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Gift size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">Kindle体験版</span>
                     </Link>
                   </div>
                 )}

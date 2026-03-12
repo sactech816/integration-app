@@ -176,6 +176,9 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   // 表紙生成関連
   const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
 
+  // 完成後の次のステップ提案モーダル
+  const [showNextStepsModal, setShowNextStepsModal] = useState(false);
+
   // 文体変換関連
   const [isStyleTransformOpen, setIsStyleTransformOpen] = useState(false);
   const [selectedTargetStyle, setSelectedTargetStyle] = useState<string>('dialogue');
@@ -661,6 +664,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
       }
       
       showToast('success', '🎉 執筆完了！おめでとうございます！');
+      setShowNextStepsModal(true);
     } catch (error: any) {
       console.error('Mark complete error:', error);
       showToast('error', '完了処理に失敗しました: ' + error.message);
@@ -2318,6 +2322,95 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
       )}
 
       {/* 表紙作成モーダル */}
+      {/* 完成後の次のステップ提案モーダル */}
+      {showNextStepsModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
+          <div className="bg-white rounded-2xl w-full max-w-lg mx-4 shadow-2xl overflow-hidden">
+            {/* ヘッダー */}
+            <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-6 py-5 text-center">
+              <div className="text-3xl mb-2">🎉</div>
+              <h2 className="text-xl font-bold">執筆完了おめでとうございます！</h2>
+              <p className="text-sm text-white/80 mt-1">次のステップで出版を成功させましょう</p>
+            </div>
+
+            {/* ステップリスト */}
+            <div className="p-6 space-y-3">
+              {/* 表紙作成 */}
+              <button
+                onClick={() => { setShowNextStepsModal(false); setIsCoverModalOpen(true); }}
+                className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border border-gray-200 hover:border-amber-300 hover:bg-amber-50 transition-all text-left group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+                  <ImageIcon size={20} className="text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-900 text-sm">表紙を作成する</p>
+                  <p className="text-xs text-gray-500">AIで魅力的なKindle表紙をデザイン</p>
+                </div>
+                <ArrowRightToLine size={16} className="text-gray-300 group-hover:text-amber-500 transition-colors" />
+              </button>
+
+              {/* Word出力 */}
+              <button
+                onClick={() => { setShowNextStepsModal(false); /* Word出力は既存のhandleDownloadWord関数を呼ぶ */ }}
+                className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all text-left group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                  <FileDown size={20} className="text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-900 text-sm">Word形式で出力</p>
+                  <p className="text-xs text-gray-500">KDP登録用の原稿ファイルを作成</p>
+                </div>
+                <ArrowRightToLine size={16} className="text-gray-300 group-hover:text-blue-500 transition-colors" />
+              </button>
+
+              {/* 出版準備ガイド */}
+              <a
+                href="/kindle/publish-guide"
+                target="_blank"
+                onClick={() => setShowNextStepsModal(false)}
+                className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border border-gray-200 hover:border-green-300 hover:bg-green-50 transition-all text-left group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
+                  <Rocket size={20} className="text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-900 text-sm">出版準備ガイドを見る</p>
+                  <p className="text-xs text-gray-500">KDPへの登録手順を確認</p>
+                </div>
+                <ArrowRightToLine size={16} className="text-gray-300 group-hover:text-green-500 transition-colors" />
+              </a>
+
+              {/* Book LP作成 */}
+              <button
+                onClick={() => { setShowNextStepsModal(false); setIsLPModalOpen(true); }}
+                className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all text-left group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
+                  <BookOpen size={20} className="text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-900 text-sm">書籍LPを作成する</p>
+                  <p className="text-xs text-gray-500">販促用のランディングページで読者を獲得</p>
+                </div>
+                <ArrowRightToLine size={16} className="text-gray-300 group-hover:text-purple-500 transition-colors" />
+              </button>
+            </div>
+
+            {/* フッター */}
+            <div className="px-6 pb-5">
+              <button
+                onClick={() => setShowNextStepsModal(false)}
+                className="w-full py-2.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                あとで確認する
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isCoverModalOpen && userId && (
         <KindleCoverGenerator
           bookId={book.id}

@@ -8,7 +8,8 @@ import { supabase } from '@/lib/supabase';
 import { calculateFortune, getSexagenaryName, STAR_INFO } from '@/lib/fortune';
 import type { FortuneResult } from '@/lib/fortune';
 import type { NineStar } from '@/lib/fortune/nine-star';
-import { Sparkles, Star, Calendar, Share2, TrendingUp, BookOpen, Crown, Loader2, ChevronRight } from 'lucide-react';
+import { Sparkles, Star, Calendar, Share2, TrendingUp, BookOpen, Crown, Loader2, ChevronRight, FileText, Heart, Compass } from 'lucide-react';
+import Link from 'next/link';
 import { trackFortuneEvent } from '@/lib/fortune/tracking';
 import FortunePremiumReport from '@/components/fortune/FortunePremiumReport';
 import MakersPromoBanner from '@/components/shared/MakersPromoBanner';
@@ -232,6 +233,91 @@ function FortuneContent() {
             </button>
           </div>
         </div>
+
+        {/* プレミアムレポート紹介（結果表示前） */}
+        {!displayResult && (
+          <>
+            <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border border-indigo-200 rounded-2xl shadow-md p-6 sm:p-8">
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/80 rounded-full mb-3">
+                  <Crown className="w-4 h-4 text-yellow-500" />
+                  <span className="text-sm font-medium text-gray-700">プレミアムレポート</span>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">
+                  鑑定後、AI があなた専用のレポートを生成
+                </h2>
+                <p className="text-sm text-gray-600">
+                  3つの占術を統合した詳細分析で、あなたの本質をもっと深く知る
+                </p>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                {[
+                  { icon: FileText, title: '総合鑑定書', desc: '3占術を統合した詳細レポート', color: 'text-indigo-600', bg: 'bg-indigo-100' },
+                  { icon: Heart, title: '相性分析', desc: '相性の良いタイプ・注意点', color: 'text-pink-600', bg: 'bg-pink-100' },
+                  { icon: Compass, title: '開運アドバイス', desc: 'ラッキーカラー・方位・アイテム', color: 'text-emerald-600', bg: 'bg-emerald-100' },
+                  { icon: Star, title: '人生指南', desc: '仕事・健康・財運・対人運', color: 'text-amber-600', bg: 'bg-amber-100' },
+                ].map((f) => (
+                  <div key={f.title} className="bg-white/80 border border-white rounded-xl p-3 text-center">
+                    <div className={`w-8 h-8 ${f.bg} rounded-lg flex items-center justify-center mx-auto mb-2`}>
+                      <f.icon className={`w-4 h-4 ${f.color}`} />
+                    </div>
+                    <p className="text-xs font-semibold text-gray-900">{f.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{f.desc}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-center text-sm text-gray-500">
+                鑑定完了後に <span className="font-bold text-gray-900">¥500</span><span className="text-xs text-gray-500">（税込）</span> で購入可能
+              </p>
+              <div className="text-center mt-4">
+                <Link href="/fortune/sample-report" className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+                  <FileText className="w-4 h-4" />
+                  レポートのサンプルを見る →
+                </Link>
+              </div>
+            </div>
+
+            {/* サンプルレポート */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8">
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 rounded-full mb-3">
+                  <FileText className="w-4 h-4 text-indigo-500" />
+                  <span className="text-sm font-medium text-indigo-700">サンプルレポート</span>
+                </div>
+                <h2 className="text-lg font-bold text-gray-900 mb-1">
+                  鑑定結果レポートのサンプルを見る
+                </h2>
+                <p className="text-sm text-gray-500">
+                  代表的な4タイプの鑑定レポートを無料でご覧いただけます
+                </p>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { key: 'shiheki', name: '四緑木星', sub: '調和の知識人', color: 'from-emerald-500 to-teal-600', icon: '🌿' },
+                  { key: 'ichihaku', name: '一白水星', sub: '先駆者の直感', color: 'from-blue-500 to-indigo-600', icon: '💧' },
+                  { key: 'kyushi', name: '九紫火星', sub: '華麗なる導き手', color: 'from-rose-500 to-pink-600', icon: '🔥' },
+                  { key: 'rokuhaku', name: '六白金星', sub: '天性のリーダー', color: 'from-amber-500 to-orange-600', icon: '✨' },
+                ].map((t) => (
+                  <Link
+                    key={t.key}
+                    href="/fortune/sample-report"
+                    className="group relative bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg hover:border-indigo-200 transition-all text-center"
+                  >
+                    <div className={`w-12 h-12 mx-auto rounded-xl bg-gradient-to-br ${t.color} flex items-center justify-center mb-2`}>
+                      <span className="text-xl">{t.icon}</span>
+                    </div>
+                    <p className="font-bold text-gray-900 text-sm">{t.name}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{t.sub}</p>
+                    <div className="mt-2 flex items-center justify-center gap-1 text-xs text-indigo-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                      <FileText className="w-3 h-3" />
+                      無料で見る
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         {/* 結果表示 */}
         {displayResult && (

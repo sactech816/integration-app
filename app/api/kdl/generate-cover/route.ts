@@ -122,18 +122,24 @@ export async function POST(request: Request) {
     // テンプレートからプロンプト構築
     const template = templateId ? getKindleCoverTemplateById(templateId) : null;
     let prompt = template?.promptTemplate ||
-      `Design a professional Kindle book cover (portrait orientation, 1600x2560 pixels ratio).
-Title: "{{title}}" displayed prominently in large, bold Japanese text.
-{{subtitle}}
-{{author}}
-Style: Clean, professional book cover design.
-{{colorModifier}}
-CRITICAL REQUIREMENTS:
-- All Japanese text (日本語) MUST be rendered accurately, clearly, and completely readable
-- The title is the MOST important visual element
-- Professional quality suitable for commercial publication
+      `Design a professional Kindle book cover (portrait, 9:16 aspect ratio, 1600x2560px).
+
+LAYOUT:
+- Title "{{title}}" prominently displayed in large, bold Japanese typography
+- {{subtitle}}
+- {{author}}
+- Clean, professional design with strong typographic hierarchy
+
+DESIGN DIRECTION:
+- Modern Japanese book cover aesthetic
+- Typography-driven, professional quality
 - Must look compelling at small thumbnail sizes on Amazon/Kindle store
-- Do NOT include any placeholder text or lorem ipsum`;
+{{colorModifier}}
+
+CRITICAL TEXT RULES:
+- Japanese text (日本語) must be 100% accurate and perfectly legible
+- Title is the MOST important visual element — large, bold, unmissable
+- NO placeholder text, NO lorem ipsum, NO English unless in the original title`;
 
     prompt = prompt.replace(/\{\{title\}\}/g, title);
     prompt = prompt.replace(
@@ -155,7 +161,13 @@ CRITICAL REQUIREMENTS:
     }
 
     // 日本語テキスト描画の強化指示
-    prompt += '\n\nFINAL CRITICAL INSTRUCTION: This is a Japanese book cover. All Japanese text (日本語) must be rendered with 100% accuracy. Every character must be correct and clearly legible. The text rendering quality is the single most important aspect of this cover.';
+    prompt += `
+
+FINAL CRITICAL INSTRUCTIONS:
+1. This is a JAPANESE (日本語) book cover. Every Japanese character must be rendered with 100% accuracy — no missing strokes, no garbled text, no incorrect kanji.
+2. Text legibility is the #1 priority. If text and visual elements conflict, text wins.
+3. The cover must be instantly compelling at thumbnail size (120x192px) on the Amazon Kindle store.
+4. Output a single cover image with no borders, no mockup frames, no device frames.`;
 
     // Gemini 3 Pro Image で生成
     const ai = new GoogleGenAI({ apiKey });

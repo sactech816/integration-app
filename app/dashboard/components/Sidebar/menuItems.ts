@@ -178,11 +178,11 @@ export const TOOL_ITEMS: ToolItem[] = [
   },
   {
     id: 'kindle',
-    label: 'Kindle体験版',
+    label: 'Kindle出版メーカー',
     icon: BookOpen,
     description: 'AI書籍執筆',
     color: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' },
-    href: '/kindle/demo',
+    href: '/kindle',
     category: 'writing',
   },
   {
@@ -191,7 +191,7 @@ export const TOOL_ITEMS: ToolItem[] = [
     icon: Lightbulb,
     description: '執筆ネタ発掘',
     color: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' },
-    href: '/kindle/discovery/demo',
+    href: '/kindle/discovery',
     category: 'writing',
   },
 
