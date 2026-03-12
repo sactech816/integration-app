@@ -611,153 +611,114 @@ const Header: React.FC<HeaderProps> = ({
 
               {isGuideMenuOpen && (
                 <>
-                  <div className="absolute top-full left-0 w-full h-4" />
+                  {/* ブリッジ: ボタンとパネルの間のホバー切れ防止 */}
+                  <div className="fixed left-0 right-0 top-16 h-4 z-[119]" />
+                  {/* 全幅メガメニューパネル */}
                   <div
-                    className="absolute top-full left-0 pt-2 w-72 z-[120]"
+                    className="fixed left-0 right-0 top-[4.25rem] z-[120] animate-fade-in"
                     onMouseEnter={() => handleMenuEnter('guide')}
                     onMouseLeave={() => handleMenuLeave('guide')}
                   >
-                    <div className="bg-white rounded-xl shadow-xl border border-gray-100 py-2 animate-fade-in">
-                      <Link
-                        href="/announcements"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="p-2 rounded-lg bg-orange-50">
-                          <Bell size={18} className="text-orange-500" />
+                    <div className="border-b border-gray-200 bg-white shadow-xl">
+                      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+                        <div className="grid grid-cols-4 gap-6">
+                          {/* 基本ガイド */}
+                          <div>
+                            <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                              基本ガイド
+                            </p>
+                            <div className="space-y-0.5">
+                              <Link href="/announcements" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-orange-50 transition-colors">
+                                <div className="p-1 rounded-md bg-orange-50 shrink-0"><Bell size={14} className="text-orange-500" /></div>
+                                <span className="font-medium text-gray-900 text-xs whitespace-nowrap">お知らせ</span>
+                              </Link>
+                              <Link href="/howto" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
+                                <div className="p-1 rounded-md bg-blue-50 shrink-0"><FileText size={14} className="text-blue-600" /></div>
+                                <span className="font-medium text-gray-900 text-xs whitespace-nowrap">使い方・機能一覧</span>
+                              </Link>
+                              <Link href="/effective-use" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-orange-50 transition-colors">
+                                <div className="p-1 rounded-md bg-orange-50 shrink-0"><Lightbulb size={14} className="text-orange-500" /></div>
+                                <span className="font-medium text-gray-900 text-xs whitespace-nowrap">効果的な活用法9選</span>
+                              </Link>
+                              <Link href="/selling-content" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-green-50 transition-colors">
+                                <div className="p-1 rounded-md bg-green-50 shrink-0"><TrendingUp size={14} className="text-green-500" /></div>
+                                <span className="font-medium text-gray-900 text-xs whitespace-nowrap">売れるコンテンツの作り方</span>
+                              </Link>
+                            </div>
+                          </div>
+
+                          {/* ジャンル別ガイド */}
+                          <div>
+                            <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              ジャンル別ガイド
+                            </p>
+                            <div className="space-y-0.5">
+                              <Link href="/guide/page-creation" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
+                                <div className="p-1 rounded-md bg-blue-50 shrink-0"><Globe size={14} className="text-blue-500" /></div>
+                                <span className="font-medium text-gray-900 text-xs whitespace-nowrap">LP・ページ作成</span>
+                              </Link>
+                              <Link href="/guide/quiz-diagnosis" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors">
+                                <div className="p-1 rounded-md bg-indigo-50 shrink-0"><Brain size={14} className="text-indigo-500" /></div>
+                                <span className="font-medium text-gray-900 text-xs whitespace-nowrap">診断・クイズ</span>
+                              </Link>
+                              <Link href="/guide/writing" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors">
+                                <div className="p-1 rounded-md bg-emerald-50 shrink-0"><PenTool size={14} className="text-emerald-500" /></div>
+                                <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ライティング・制作</span>
+                              </Link>
+                              <Link href="/guide/marketing" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-cyan-50 transition-colors">
+                                <div className="p-1 rounded-md bg-cyan-50 shrink-0"><Calendar size={14} className="text-cyan-500" /></div>
+                                <span className="font-medium text-gray-900 text-xs whitespace-nowrap">集客・マーケティング</span>
+                              </Link>
+                              <Link href="/guide/monetization" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
+                                <div className="p-1 rounded-md bg-amber-50 shrink-0"><Gift size={14} className="text-amber-500" /></div>
+                                <span className="font-medium text-gray-900 text-xs whitespace-nowrap">収益化・販売</span>
+                              </Link>
+                            </div>
+                          </div>
+
+                          {/* その他のガイド */}
+                          <div>
+                            <p className="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                              その他のガイド
+                            </p>
+                            <div className="space-y-0.5">
+                              <Link href="/gamification/effective-use" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-purple-50 transition-colors">
+                                <div className="p-1 rounded-md bg-purple-50 shrink-0"><Gamepad2 size={14} className="text-purple-500" /></div>
+                                <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ゲーミフィケーション活用法</span>
+                              </Link>
+                              <Link href="/marketplace" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors">
+                                <div className="p-1 rounded-md bg-indigo-50 shrink-0"><Store size={14} className="text-indigo-500" /></div>
+                                <span className="font-medium text-gray-900 text-xs whitespace-nowrap">スキルマーケット</span>
+                              </Link>
+                            </div>
+                          </div>
+
+                          {/* サポート */}
+                          <div>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                              サポート
+                            </p>
+                            <div className="space-y-0.5">
+                              <Link href="/faq" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                                <div className="p-1 rounded-md bg-gray-50 shrink-0"><HelpCircle size={14} className="text-gray-400" /></div>
+                                <span className="font-medium text-gray-900 text-xs whitespace-nowrap">よくある質問</span>
+                              </Link>
+                              <Link href="/contact" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                                <div className="p-1 rounded-md bg-gray-50 shrink-0"><Mail size={14} className="text-gray-400" /></div>
+                                <span className="font-medium text-gray-900 text-xs whitespace-nowrap">お問い合わせ</span>
+                              </Link>
+                              <Link href="/donation" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-rose-50 transition-colors">
+                                <div className="p-1 rounded-md bg-rose-50 shrink-0"><Heart size={14} className="text-rose-400" /></div>
+                                <span className="font-medium text-rose-600 text-xs whitespace-nowrap">開発支援・サポート</span>
+                              </Link>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-semibold text-gray-900 text-sm">お知らせ</div>
-                          <div className="text-xs text-gray-500">最新のお知らせを確認</div>
-                        </div>
-                      </Link>
-                      <div className="border-t border-gray-100 my-1" />
-                      <Link
-                        href="/howto"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="p-2 rounded-lg bg-blue-50">
-                          <FileText size={18} className="text-blue-600" />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-gray-900 text-sm">使い方・機能一覧</div>
-                          <div className="text-xs text-gray-500">基本操作をわかりやすく解説</div>
-                        </div>
-                      </Link>
-                      <Link
-                        href="/effective-use"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="p-2 rounded-lg bg-orange-50">
-                          <Lightbulb size={18} className="text-orange-500" />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-gray-900 text-sm">効果的な活用法9選</div>
-                          <div className="text-xs text-gray-500">集客効果を最大化するヒント</div>
-                        </div>
-                      </Link>
-                      <Link
-                        href="/selling-content"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="p-2 rounded-lg bg-green-50">
-                          <TrendingUp size={18} className="text-green-500" />
-                        </div>
-                        <div>
-                          <div className="font-semibold text-gray-900 text-sm">売れるコンテンツの作り方</div>
-                          <div className="text-xs text-gray-500">心理トリガーを押さえた鉄板ロジック</div>
-                        </div>
-                      </Link>
-                      <div className="border-t border-gray-100 my-1" />
-                      <div className="px-4 py-1.5">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">ジャンル別ガイド</span>
                       </div>
-                      <Link
-                        href="/guide/page-creation"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <Globe size={16} className="text-blue-500 ml-2" />
-                        <span className="text-sm text-gray-700">LP・ページ作成</span>
-                      </Link>
-                      <Link
-                        href="/guide/quiz-diagnosis"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <Brain size={16} className="text-indigo-500 ml-2" />
-                        <span className="text-sm text-gray-700">診断・クイズ</span>
-                      </Link>
-                      <Link
-                        href="/guide/writing"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <PenTool size={16} className="text-emerald-500 ml-2" />
-                        <span className="text-sm text-gray-700">ライティング・制作</span>
-                      </Link>
-                      <Link
-                        href="/guide/marketing"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <Calendar size={16} className="text-blue-500 ml-2" />
-                        <span className="text-sm text-gray-700">集客・マーケティング</span>
-                      </Link>
-                      <Link
-                        href="/guide/monetization"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <Gift size={16} className="text-amber-500 ml-2" />
-                        <span className="text-sm text-gray-700">収益化・販売</span>
-                      </Link>
-                      <div className="border-t border-gray-100 my-1" />
-                      <Link
-                        href="/gamification/effective-use"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <Gamepad2 size={16} className="text-purple-500 ml-2" />
-                        <span className="text-sm text-gray-700">ゲーミフィケーション活用法</span>
-                      </Link>
-                      <Link
-                        href="/marketplace"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <Store size={16} className="text-indigo-500 ml-2" />
-                        <span className="text-sm text-gray-700">スキルマーケット</span>
-                      </Link>
-                      <div className="border-t border-gray-100 my-1" />
-                      <Link
-                        href="/faq"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <HelpCircle size={18} className="text-gray-400 ml-2" />
-                        <span className="text-sm text-gray-600">よくある質問</span>
-                      </Link>
-                      <Link
-                        href="/contact"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <Mail size={18} className="text-gray-400 ml-2" />
-                        <span className="text-sm text-gray-600">お問い合わせ</span>
-                      </Link>
-                      <div className="border-t border-gray-100 my-1" />
-                      <Link
-                        href="/donation"
-                        onClick={closeMenus}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
-                      >
-                        <Heart size={18} className="text-rose-400 ml-2" />
-                        <span className="text-sm text-rose-600 font-medium">開発支援・サポート</span>
-                      </Link>
                     </div>
                   </div>
                 </>
