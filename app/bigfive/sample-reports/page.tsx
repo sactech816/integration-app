@@ -39,26 +39,26 @@ const SIMPLE_REPORT = `
   <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
     <h2 style="font-size: 20px; color: #3B82F6; margin: 0 0 16px;">パーソナリティマップ</h2>
     <div style="text-align: center;">
-      <svg viewBox="0 0 400 400" width="320" height="320" style="margin: 0 auto;">
+      <svg viewBox="-100 0 600 390" width="100%" style="margin: 0 auto; max-width: 480px;">
         <!-- 背景五角形 -->
-        <polygon points="200,40 362,157 300,340 100,340 38,157" fill="none" stroke="#e2e8f0" stroke-width="1"/>
-        <polygon points="200,88 329,178 280,316 120,316 71,178" fill="none" stroke="#e2e8f0" stroke-width="1"/>
-        <polygon points="200,136 296,199 260,292 140,292 104,199" fill="none" stroke="#e2e8f0" stroke-width="1"/>
-        <polygon points="200,184 263,220 240,268 160,268 137,220" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+        <polygon points="200,50 350,160 290,330 110,330 50,160" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+        <polygon points="200,90 320,175 270,310 130,310 80,175" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+        <polygon points="200,130 290,190 250,290 150,290 110,190" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+        <polygon points="200,170 260,205 230,270 170,270 140,205" fill="none" stroke="#e2e8f0" stroke-width="1"/>
         <!-- データ -->
-        <polygon points="200,64 345,168 280,328 140,292 71,157" fill="rgba(59,130,246,0.15)" stroke="#3B82F6" stroke-width="2.5"/>
+        <polygon points="200,70 338,167 275,322 145,285 72,160" fill="rgba(59,130,246,0.15)" stroke="#3B82F6" stroke-width="2.5"/>
         <!-- ラベル -->
-        <text x="200" y="25" text-anchor="middle" fill="#374151" font-size="13" font-weight="600">開放性 82%</text>
-        <text x="380" y="160" text-anchor="start" fill="#374151" font-size="13" font-weight="600">誠実性 75%</text>
-        <text x="315" y="360" text-anchor="middle" fill="#374151" font-size="13" font-weight="600">外向性 58%</text>
-        <text x="85" y="360" text-anchor="middle" fill="#374151" font-size="13" font-weight="600">協調性 65%</text>
-        <text x="20" y="160" text-anchor="end" fill="#374151" font-size="13" font-weight="600">神経症傾向 42%</text>
+        <text x="200" y="30" text-anchor="middle" fill="#374151" font-size="14" font-weight="600">開放性 82%</text>
+        <text x="370" y="163" text-anchor="start" fill="#374151" font-size="14" font-weight="600">誠実性 75%</text>
+        <text x="305" y="360" text-anchor="middle" fill="#374151" font-size="14" font-weight="600">外向性 58%</text>
+        <text x="95" y="360" text-anchor="middle" fill="#374151" font-size="14" font-weight="600">協調性 65%</text>
+        <text x="30" y="163" text-anchor="end" fill="#374151" font-size="14" font-weight="600">神経症傾向 42%</text>
         <!-- ポイント -->
-        <circle cx="200" cy="64" r="5" fill="#3B82F6"/>
-        <circle cx="345" cy="168" r="5" fill="#3B82F6"/>
-        <circle cx="280" cy="328" r="5" fill="#3B82F6"/>
-        <circle cx="140" cy="292" r="5" fill="#3B82F6"/>
-        <circle cx="71" cy="157" r="5" fill="#3B82F6"/>
+        <circle cx="200" cy="70" r="5" fill="#3B82F6"/>
+        <circle cx="338" cy="167" r="5" fill="#3B82F6"/>
+        <circle cx="275" cy="322" r="5" fill="#3B82F6"/>
+        <circle cx="145" cy="285" r="5" fill="#3B82F6"/>
+        <circle cx="72" cy="160" r="5" fill="#3B82F6"/>
       </svg>
     </div>
   </div>
@@ -246,22 +246,22 @@ const FULL_REPORT = `
   <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
     <h2 style="font-size: 20px; color: #6366F1; margin: 0 0 16px;">パーソナリティマップ</h2>
     <div style="text-align: center;">
-      <svg viewBox="0 0 400 400" width="320" height="320" style="margin: 0 auto;">
-        <polygon points="200,40 362,157 300,340 100,340 38,157" fill="none" stroke="#e2e8f0" stroke-width="1"/>
-        <polygon points="200,88 329,178 280,316 120,316 71,178" fill="none" stroke="#e2e8f0" stroke-width="1"/>
-        <polygon points="200,136 296,199 260,292 140,292 104,199" fill="none" stroke="#e2e8f0" stroke-width="1"/>
-        <polygon points="200,184 263,220 240,268 160,268 137,220" fill="none" stroke="#e2e8f0" stroke-width="1"/>
-        <polygon points="200,64 345,168 280,328 140,292 71,157" fill="rgba(99,102,241,0.15)" stroke="#6366F1" stroke-width="2.5"/>
-        <text x="200" y="25" text-anchor="middle" fill="#374151" font-size="13" font-weight="600">開放性 82%</text>
-        <text x="380" y="160" text-anchor="start" fill="#374151" font-size="13" font-weight="600">誠実性 75%</text>
-        <text x="315" y="360" text-anchor="middle" fill="#374151" font-size="13" font-weight="600">外向性 58%</text>
-        <text x="85" y="360" text-anchor="middle" fill="#374151" font-size="13" font-weight="600">協調性 65%</text>
-        <text x="20" y="160" text-anchor="end" fill="#374151" font-size="13" font-weight="600">神経症傾向 42%</text>
-        <circle cx="200" cy="64" r="5" fill="#6366F1"/>
-        <circle cx="345" cy="168" r="5" fill="#6366F1"/>
-        <circle cx="280" cy="328" r="5" fill="#6366F1"/>
-        <circle cx="140" cy="292" r="5" fill="#6366F1"/>
-        <circle cx="71" cy="157" r="5" fill="#6366F1"/>
+      <svg viewBox="-100 0 600 390" width="100%" style="margin: 0 auto; max-width: 480px;">
+        <polygon points="200,50 350,160 290,330 110,330 50,160" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+        <polygon points="200,90 320,175 270,310 130,310 80,175" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+        <polygon points="200,130 290,190 250,290 150,290 110,190" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+        <polygon points="200,170 260,205 230,270 170,270 140,205" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+        <polygon points="200,70 338,167 275,322 145,285 72,160" fill="rgba(99,102,241,0.15)" stroke="#6366F1" stroke-width="2.5"/>
+        <text x="200" y="30" text-anchor="middle" fill="#374151" font-size="14" font-weight="600">開放性 82%</text>
+        <text x="370" y="163" text-anchor="start" fill="#374151" font-size="14" font-weight="600">誠実性 75%</text>
+        <text x="305" y="360" text-anchor="middle" fill="#374151" font-size="14" font-weight="600">外向性 58%</text>
+        <text x="95" y="360" text-anchor="middle" fill="#374151" font-size="14" font-weight="600">協調性 65%</text>
+        <text x="30" y="163" text-anchor="end" fill="#374151" font-size="14" font-weight="600">神経症傾向 42%</text>
+        <circle cx="200" cy="70" r="5" fill="#6366F1"/>
+        <circle cx="338" cy="167" r="5" fill="#6366F1"/>
+        <circle cx="275" cy="322" r="5" fill="#6366F1"/>
+        <circle cx="145" cy="285" r="5" fill="#6366F1"/>
+        <circle cx="72" cy="160" r="5" fill="#6366F1"/>
       </svg>
     </div>
   </div>
@@ -560,16 +560,16 @@ const DETAILED_REPORT = `
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
       <div style="text-align: center;">
         <h4 style="font-size: 14px; color: #6b7280; margin: 0 0 8px;">Big Five レーダーチャート</h4>
-        <svg viewBox="0 0 300 300" width="260" height="260">
-          <polygon points="150,30 271,118 225,255 75,255 29,118" fill="none" stroke="#e2e8f0" stroke-width="1"/>
-          <polygon points="150,66 247,136 210,241 90,241 53,136" fill="none" stroke="#e2e8f0" stroke-width="1"/>
-          <polygon points="150,102 223,155 195,226 105,226 77,155" fill="none" stroke="#e2e8f0" stroke-width="1"/>
-          <polygon points="150,48 259,127 218,248 82,248 41,127" fill="rgba(245,158,11,0.15)" stroke="#f59e0b" stroke-width="2.5"/>
-          <text x="150" y="18" text-anchor="middle" fill="#374151" font-size="11" font-weight="600">O 82%</text>
-          <text x="285" y="120" text-anchor="start" fill="#374151" font-size="11" font-weight="600">C 75%</text>
-          <text x="235" y="270" text-anchor="middle" fill="#374151" font-size="11" font-weight="600">E 58%</text>
-          <text x="65" y="270" text-anchor="middle" fill="#374151" font-size="11" font-weight="600">A 65%</text>
-          <text x="15" y="120" text-anchor="end" fill="#374151" font-size="11" font-weight="600">N 42%</text>
+        <svg viewBox="-30 0 360 290" width="100%" style="max-width: 280px;">
+          <polygon points="150,35 265,118 220,248 80,248 35,118" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+          <polygon points="150,65 240,132 205,235 95,235 60,132" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+          <polygon points="150,95 215,146 190,222 110,222 85,146" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+          <polygon points="150,50 253,125 213,242 87,242 47,125" fill="rgba(245,158,11,0.15)" stroke="#f59e0b" stroke-width="2.5"/>
+          <text x="150" y="20" text-anchor="middle" fill="#374151" font-size="12" font-weight="600">O 82%</text>
+          <text x="280" y="121" text-anchor="start" fill="#374151" font-size="12" font-weight="600">C 75%</text>
+          <text x="230" y="270" text-anchor="middle" fill="#374151" font-size="12" font-weight="600">E 58%</text>
+          <text x="70" y="270" text-anchor="middle" fill="#374151" font-size="12" font-weight="600">A 65%</text>
+          <text x="20" y="121" text-anchor="end" fill="#374151" font-size="12" font-weight="600">N 42%</text>
         </svg>
       </div>
       <div style="text-align: center;">

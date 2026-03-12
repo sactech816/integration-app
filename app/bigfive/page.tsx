@@ -250,6 +250,7 @@ export default function BigFivePage() {
             traits: calcResult.traits,
             mbtiCode: calcResult.mbtiType.code,
             mbtiDimensions: calcResult.mbtiType.dimensions,
+            discType: calcResult.discType,
             facetScores,
             answers,
             durationSeconds,
@@ -343,7 +344,7 @@ export default function BigFivePage() {
               {/* テストモード選択 */}
               <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
                 {/* 簡易版 */}
-                <div className="bg-white border border-gray-300 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
+                <div className="bg-white border border-gray-300 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all flex flex-col">
                   <div className="flex items-center gap-2 mb-3">
                     <Clock className="w-5 h-5 text-blue-500" />
                     <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">お試し</span>
@@ -351,14 +352,14 @@ export default function BigFivePage() {
                   <h3 className="text-lg font-bold text-gray-900 mb-2">簡易診断（10問）</h3>
                   <p className="text-sm text-gray-600 mb-4">約1〜2分で完了。性格の傾向をサッと確認。</p>
                   <ul className="space-y-1.5 mb-5 text-sm text-gray-600">
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />5特性スコア</li>
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />16パーソナリティタイプ</li>
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />DISC行動スタイル</li>
-                    <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-yellow-500" />AIプレミアムレポート（¥500）</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />5特性スコア</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />16パーソナリティタイプ</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />DISC行動スタイル</li>
+                    <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-yellow-500 flex-shrink-0" />AIプレミアムレポート（¥500）</li>
                   </ul>
                   <button
                     onClick={() => handleStartQuiz('simple')}
-                    className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                    className="w-full py-3 mt-auto bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
                   >
                     簡易診断を始める
                     <ArrowRight className="w-4 h-4" />
@@ -366,7 +367,7 @@ export default function BigFivePage() {
                 </div>
 
                 {/* 本格版 */}
-                <div className="bg-white border border-indigo-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all ring-2 ring-indigo-100">
+                <div className="bg-white border border-indigo-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all ring-2 ring-indigo-100 flex flex-col">
                   <div className="flex items-center gap-2 mb-3">
                     <Sparkles className="w-5 h-5 text-indigo-500" />
                     <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">おすすめ</span>
@@ -374,14 +375,14 @@ export default function BigFivePage() {
                   <h3 className="text-lg font-bold text-gray-900 mb-2">本格診断（50問）</h3>
                   <p className="text-sm text-gray-600 mb-4">約5〜10分。30ファセットの詳細分析付き。</p>
                   <ul className="space-y-1.5 mb-5 text-sm text-gray-600">
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />5特性 + 30ファセット分析</li>
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />16パーソナリティタイプ</li>
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />DISC行動スタイル</li>
-                    <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-yellow-500" />AIプレミアムレポート（¥1,000）</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />5特性 + 30ファセット分析</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />16パーソナリティタイプ</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />DISC行動スタイル</li>
+                    <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-yellow-500 flex-shrink-0" />AIプレミアムレポート（¥1,000）</li>
                   </ul>
                   <button
                     onClick={() => handleStartQuiz('full')}
-                    className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                    className="w-full py-3 mt-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
                   >
                     本格診断を始める
                     <ArrowRight className="w-4 h-4" />
@@ -389,7 +390,7 @@ export default function BigFivePage() {
                 </div>
 
                 {/* 詳細版 */}
-                <div className="bg-white border border-amber-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all ring-2 ring-amber-100">
+                <div className="bg-white border border-amber-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all ring-2 ring-amber-100 flex flex-col">
                   <div className="flex items-center gap-2 mb-3">
                     <Crown className="w-5 h-5 text-amber-500" />
                     <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">最高精度</span>
@@ -397,15 +398,15 @@ export default function BigFivePage() {
                   <h3 className="text-lg font-bold text-gray-900 mb-2">詳細診断（145問）</h3>
                   <p className="text-sm text-gray-600 mb-4">約15〜20分。全診断を網羅した完全版。</p>
                   <ul className="space-y-1.5 mb-5 text-sm text-gray-600">
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />高精度30ファセット分析</li>
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />16パーソナリティタイプ</li>
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />DISC行動スタイル</li>
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />エニアグラム9タイプ</li>
-                    <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-yellow-500" />AIプレミアムレポート（¥2,000）</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />高精度30ファセット分析</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />16パーソナリティタイプ</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />DISC行動スタイル</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />エニアグラム9タイプ</li>
+                    <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-yellow-500 flex-shrink-0" />AIプレミアムレポート（¥2,000）</li>
                   </ul>
                   <button
                     onClick={() => handleStartQuiz('detailed')}
-                    className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                    className="w-full py-3 mt-auto bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
                   >
                     詳細診断を始める
                     <ArrowRight className="w-4 h-4" />
@@ -620,29 +621,112 @@ export default function BigFivePage() {
                 />
               )}
               {!user && (
-                <div className="mt-8 bg-blue-50 border border-blue-200 rounded-2xl p-6 text-center">
-                  <p className="text-sm text-blue-700 font-medium">
-                    ログインすると、AI プレミアムレポートを購入できます
-                  </p>
+                <div className="mt-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 rounded-2xl shadow-md p-6 sm:p-8">
+                  <div className="text-center">
+                    <Crown className="w-8 h-8 text-yellow-500 mx-auto mb-3" />
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">AIプレミアムレポート</h3>
+                    <p className="text-sm text-gray-600 mb-1">
+                      15ページ以上の詳細な性格分析レポートをAIが生成します
+                    </p>
+                    <p className="text-xs text-gray-500 mb-5">
+                      キャリア適性・人間関係・自己成長のガイダンス付き
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+                      {[
+                        { icon: FileText, title: '専門レポート', color: 'text-blue-600', bg: 'bg-blue-100' },
+                        { icon: Brain, title: 'パーソナリティマップ', color: 'text-purple-600', bg: 'bg-purple-100' },
+                        { icon: Target, title: '実用ガイダンス', color: 'text-emerald-600', bg: 'bg-emerald-100' },
+                        { icon: Sparkles, title: 'AIメンター', color: 'text-amber-600', bg: 'bg-amber-100' },
+                      ].map((f) => (
+                        <div key={f.title} className="bg-white/80 rounded-lg p-2 text-center">
+                          <f.icon className={`w-4 h-4 ${f.color} mx-auto mb-1`} />
+                          <p className="text-xs font-medium text-gray-700">{f.title}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setShowAuth(true)}
+                      className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-200"
+                    >
+                      <UserPlus className="w-5 h-5" />
+                      ログインして購入する
+                    </button>
+                    <p className="text-xs text-gray-400 mt-2">
+                      {testMode === 'simple' ? '¥500' : testMode === 'full' ? '¥1,000' : '¥2,000'}（税込）・Stripeによる安全な決済
+                    </p>
+                  </div>
                 </div>
               )}
 
-              {/* アクションボタン */}
-              <div className="flex flex-wrap gap-3 justify-center mt-8">
-                {resultId && (
-                  <button
-                    onClick={handleShare}
-                    className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-300 rounded-xl shadow-md hover:shadow-lg text-gray-700 font-medium transition-all"
-                  >
-                    <Share2 className="w-4 h-4" />
-                    {copied ? 'コピーしました！' : '結果を共有'}
-                  </button>
-                )}
+              {/* SNSシェア & アクションボタン */}
+              {resultId && (
+                <div className="mt-8 bg-white border border-gray-200 rounded-2xl shadow-md p-6">
+                  <div className="text-center mb-4">
+                    <h3 className="text-sm font-bold text-gray-900 mb-1">診断結果をシェア</h3>
+                    <p className="text-xs text-gray-500">友達にも診断を勧めてみましょう</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 justify-center mb-4">
+                    {/* X (Twitter) */}
+                    <button
+                      onClick={async () => {
+                        await handleShare();
+                        const url = `${window.location.origin}/bigfive/result/${resultId}`;
+                        const mbtiCode = result?.mbtiType?.code || '';
+                        const text = `Big Five性格診断の結果は「${mbtiCode}」タイプでした！\n科学的な性格分析を無料で試せます。\n\n`;
+                        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'width=550,height=420');
+                      }}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-black hover:bg-gray-800 text-white font-medium rounded-xl transition-all text-sm shadow-sm"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                      ポスト
+                    </button>
+                    {/* LINE */}
+                    <button
+                      onClick={async () => {
+                        await handleShare();
+                        const url = `${window.location.origin}/bigfive/result/${resultId}`;
+                        const mbtiCode = result?.mbtiType?.code || '';
+                        const text = `Big Five性格診断の結果は「${mbtiCode}」タイプでした！科学的な性格分析を無料で試せます👉`;
+                        window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank', 'width=550,height=420');
+                      }}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-[#06C755] hover:bg-[#05b34d] text-white font-medium rounded-xl transition-all text-sm shadow-sm"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+                      LINE
+                    </button>
+                    {/* Facebook */}
+                    <button
+                      onClick={async () => {
+                        await handleShare();
+                        const url = `${window.location.origin}/bigfive/result/${resultId}`;
+                        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'width=550,height=420');
+                      }}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-[#1877F2] hover:bg-[#166FE5] text-white font-medium rounded-xl transition-all text-sm shadow-sm"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                      Facebook
+                    </button>
+                    {/* URLコピー */}
+                    <button
+                      onClick={handleShare}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-xl border border-gray-300 transition-all text-sm shadow-sm"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      {copied ? 'コピー済み!' : 'URLコピー'}
+                    </button>
+                  </div>
+                </div>
+              )}
 
+              <div className="flex flex-wrap gap-3 justify-center mt-4">
                 {!user && (
-                  <p className="text-sm text-gray-500 text-center w-full mt-2">
-                    ログインすると結果が保存され、PDF レポートも購入できます
-                  </p>
+                  <button
+                    onClick={() => setShowAuth(true)}
+                    className="px-5 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-xl border border-blue-200 transition-all flex items-center gap-2"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    ログインして結果を保存
+                  </button>
                 )}
 
                 <button
