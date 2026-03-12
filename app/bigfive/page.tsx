@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Header from '@/components/shared/Header';
 import BigFiveQuiz from '@/components/bigfive/BigFiveQuiz';
 import BigFiveResultView from '@/components/bigfive/BigFiveResultView';
@@ -445,6 +446,12 @@ export default function BigFivePage() {
                 <p className="text-center text-sm text-gray-500">
                   診断完了後に <span className="font-bold text-gray-900">¥500〜¥2,000</span> で購入可能（診断コースにより異なります）
                 </p>
+                <div className="text-center mt-4">
+                  <Link href="/bigfive/sample-reports" className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+                    <FileText className="w-4 h-4" />
+                    レポートのサンプルを見る →
+                  </Link>
+                </div>
               </div>
 
               {/* サンプルレポート */}
