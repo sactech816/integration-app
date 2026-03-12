@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { Question } from '@/lib/bigfive/questions';
-import { ChevronLeft, ChevronRight, PartyPopper, Flame, Trophy, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, PartyPopper, Flame, Trophy, ArrowRight, AlertCircle } from 'lucide-react';
 
 interface MilestoneConfig {
   /** 何問目で表示するか（1-indexed） */
@@ -109,11 +109,30 @@ export default function BigFiveQuiz({ questions, onComplete, milestones = [], co
       setTimeout(() => checkMilestone(newCount), 400);
     }
 
-    // 自動で次の質問へ（最後の質問以外）
+    // 自動で次の質問へ
     if (!isLastQuestion) {
-      setTimeout(() => setCurrentIndex(prev => prev + 1), 300);
+      // 次の質問が回答済みなら未回答の質問へジャンプ（スキップした質問がある場合）
+      const nextIdx = safeIndex + 1;
+      const nextQ = questions[nextIdx];
+      if (nextQ && answers[nextQ.id] !== undefined) {
+        // 次が回答済み → 先の未回答を探す
+        const nextUnanswered = questions.findIndex((q, idx) => idx > safeIndex && answers[q.id] === undefined);
+        if (nextUnanswered !== -1) {
+          setTimeout(() => setCurrentIndex(nextUnanswered), 300);
+        } else {
+          setTimeout(() => setCurrentIndex(prev => prev + 1), 300);
+        }
+      } else {
+        setTimeout(() => setCurrentIndex(prev => prev + 1), 300);
+      }
+    } else {
+      // 最後の質問：未回答があれば最初の未回答へジャンプ
+      const nextUnanswered = questions.findIndex((q) => q.id !== currentQuestion.id && answers[q.id] === undefined);
+      if (nextUnanswered !== -1) {
+        setTimeout(() => setCurrentIndex(nextUnanswered), 300);
+      }
     }
-  }, [currentQuestion.id, isLastQuestion, answeredCount, questions.length, answers, checkMilestone]);
+  }, [currentQuestion.id, isLastQuestion, safeIndex, answeredCount, questions.length, answers, checkMilestone]);
 
   const handleSubmit = useCallback(() => {
     const duration = Math.round((Date.now() - startTime) / 1000);
@@ -253,10 +272,32 @@ export default function BigFiveQuiz({ questions, onComplete, milestones = [], co
           </div>
         </div>
 
-        {/* 未回答警告 */}
-        {isLastQuestion && !allAnswered && answers[currentQuestion.id] !== undefined && (
-          <div className="mb-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 text-center">
-            まだ <span className="font-bold">{unansweredCount}問</span> 未回答の質問があります。戻って回答してください。
+        {/* 未回答警告 + ジャンプリンク */}
+        {!allAnswered && answers[currentQuestion.id] !== undefined && unansweredCount <= Math.min(10, questions.length) && (
+          <div className="mb-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+            <div className="flex items-center gap-2 justify-center mb-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>
+                まだ <span className="font-bold">{unansweredCount}問</span> 未回答の質問があります
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5 justify-center">
+              {questions.map((q, idx) =>
+                answers[q.id] === undefined ? (
+                  <button
+                    key={q.id}
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`min-w-[36px] h-8 px-2 rounded-lg text-xs font-bold transition-all duration-200 ${
+                      idx === safeIndex
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                    }`}
+                  >
+                    Q{idx + 1}
+                  </button>
+                ) : null
+              )}
+            </div>
           </div>
         )}
 

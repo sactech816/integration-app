@@ -166,6 +166,39 @@ export async function POST(request: NextRequest) {
           break;
         }
 
+        // ── Fortune プレミアムレポート購入の処理 ──
+        if (session.mode === 'payment' && session.metadata?.type === 'fortune_report') {
+          const userId = session.metadata?.userId;
+          const resultId = session.metadata?.resultId;
+
+          if (userId && resultId) {
+            await supabase
+              .from('fortune_results')
+              .update({
+                report_purchased: true,
+                report_purchased_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', resultId)
+              .eq('user_id', userId);
+
+            console.log(`✅ Fortune report purchased: user=${userId}, result=${resultId}`);
+
+            // ファネルイベント記録
+            await supabase
+              .from('fortune_funnel_events')
+              .insert({
+                user_id: userId,
+                event_type: 'report_purchase',
+                metadata: {
+                  result_id: resultId,
+                  amount: session.amount_total,
+                },
+              });
+          }
+          break;
+        }
+
         // ── サブスクリプションモードの処理 ──
         if (session.mode === 'subscription') {
           const userId = session.metadata?.userId;

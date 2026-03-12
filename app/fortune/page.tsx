@@ -9,6 +9,7 @@ import { calculateFortune, getSexagenaryName, STAR_INFO } from '@/lib/fortune';
 import type { FortuneResult } from '@/lib/fortune';
 import type { NineStar } from '@/lib/fortune/nine-star';
 import { Sparkles, Star, Calendar, Share2, TrendingUp, BookOpen, Crown, Loader2, ChevronRight } from 'lucide-react';
+import { trackFortuneEvent } from '@/lib/fortune/tracking';
 
 // DB解釈文の表示データ型
 type DisplayData = {
@@ -41,6 +42,7 @@ function FortuneContent() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user: u } }) => setUser(u));
+    trackFortuneEvent('page_view');
   }, []);
 
   // URLパラメータがある場合は自動診断
@@ -53,6 +55,7 @@ function FortuneContent() {
 
   const handleDiagnose = async () => {
     setLoading(true);
+    trackFortuneEvent('quiz_start', { year, month, day });
 
     // URL更新
     router.push(`/fortune?year=${year}&month=${month}&day=${day}`, { scroll: false });
@@ -100,7 +103,10 @@ function FortuneContent() {
         }),
       });
       const saveData = await res.json();
-      if (saveData.id) setResultId(saveData.id);
+      if (saveData.id) {
+        setResultId(saveData.id);
+        trackFortuneEvent('quiz_complete', { resultId: saveData.id, year, month, day });
+      }
 
       // 4. 表示用データセット
       setDisplayResult({

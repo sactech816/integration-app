@@ -9,6 +9,8 @@ import { getSexagenaryName, STAR_INFO } from '@/lib/fortune';
 import type { FortuneResult } from '@/lib/fortune';
 import type { NineStar } from '@/lib/fortune/nine-star';
 import { Sparkles, Star, TrendingUp, BookOpen, Crown, Loader2, Share2, ArrowLeft } from 'lucide-react';
+import FortunePremiumReport from '@/components/fortune/FortunePremiumReport';
+import { trackFortuneEvent } from '@/lib/fortune/tracking';
 
 export default function FortuneResultPage() {
   const params = useParams();
@@ -21,6 +23,7 @@ export default function FortuneResultPage() {
   const [contents, setContents] = useState<Record<string, { title: string; description: string; source: string }>>({});
   const [user, setUser] = useState<any>(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user: u } }) => setUser(u));
@@ -43,6 +46,15 @@ export default function FortuneResultPage() {
       }
 
       setResult(data.result);
+
+      // オーナー判定
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser && data.result.user_id === currentUser.id) {
+        setIsOwner(true);
+      }
+
+      // ファネルイベント
+      trackFortuneEvent('page_view', { resultId: id });
 
       // 解釈テキスト取得
       const snapshot: FortuneResult = data.result.result_snapshot;
@@ -261,6 +273,15 @@ export default function FortuneResultPage() {
             )}
           </div>
         </div>
+
+        {/* プレミアムレポート（オーナーのみ） */}
+        {isOwner && (
+          <FortunePremiumReport
+            resultId={id}
+            isPurchased={!!result.report_purchased}
+            existingReportHtml={result.report_content || null}
+          />
+        )}
 
         {/* CTA */}
         <div className="text-center py-6">

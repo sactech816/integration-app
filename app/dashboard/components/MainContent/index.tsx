@@ -20,6 +20,7 @@ import LineDashboard from '@/components/line/LineDashboard';
 import OrderFormList from './OrderFormList';
 import FunnelList from './FunnelList';
 import BigFiveHistory from '@/components/bigfive/BigFiveHistory';
+import FortuneHistory from '@/components/fortune/FortuneHistory';
 import { MakersPlanTier } from '@/lib/subscription';
 
 export type ActiveView =
@@ -392,6 +393,10 @@ export default function MainContent({
 
       {activeView === 'bigfive' && (
         <BigFiveHistory />
+      )}
+
+      {activeView === 'fortune' && (
+        <FortuneHistory />
       )}
 
       {/* デフォルト */}
