@@ -353,6 +353,7 @@ export default function BigFivePage() {
                     <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />5特性スコア</li>
                     <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />16パーソナリティタイプ</li>
                     <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />DISC行動スタイル</li>
+                    <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-yellow-500" />AIプレミアムレポート（¥500）</li>
                   </ul>
                   <button
                     onClick={() => handleStartQuiz('simple')}
@@ -375,7 +376,7 @@ export default function BigFivePage() {
                     <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />5特性 + 30ファセット分析</li>
                     <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />16パーソナリティタイプ</li>
                     <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />DISC行動スタイル</li>
-                    <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-yellow-500" />AIプレミアムレポート（¥500）</li>
+                    <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-yellow-500" />AIプレミアムレポート（¥1,000）</li>
                   </ul>
                   <button
                     onClick={() => handleStartQuiz('full')}
@@ -399,7 +400,7 @@ export default function BigFivePage() {
                     <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />16パーソナリティタイプ</li>
                     <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />DISC行動スタイル</li>
                     <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />エニアグラム9タイプ</li>
-                    <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-yellow-500" />AIプレミアムレポート（¥980）</li>
+                    <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-yellow-500" />AIプレミアムレポート（¥2,000）</li>
                   </ul>
                   <button
                     onClick={() => handleStartQuiz('detailed')}
@@ -442,7 +443,7 @@ export default function BigFivePage() {
                   ))}
                 </div>
                 <p className="text-center text-sm text-gray-500">
-                  診断完了後に <span className="font-bold text-gray-900">¥500</span> で購入可能
+                  診断完了後に <span className="font-bold text-gray-900">¥500〜¥2,000</span> で購入可能（診断コースにより異なります）
                 </p>
               </div>
 
@@ -538,6 +539,28 @@ export default function BigFivePage() {
                 key={`quiz-${testMode}`}
                 questions={testMode === 'simple' ? QUESTIONS_SIMPLE : testMode === 'full' ? QUESTIONS_FULL : QUESTIONS_DETAILED}
                 onComplete={handleQuizComplete}
+                milestones={
+                  testMode === 'full' ? [
+                    { at: 25, title: '折り返し地点！', message: '半分完了しました。この調子で残り25問も回答していきましょう。', icon: 'halfway' as const, buttonText: '後半も頑張る' },
+                  ] : testMode === 'detailed' ? [
+                    { at: 50, title: '50問完了！', message: '半分完了しました。残り50問で性格分析の精度がさらに高まります。', icon: 'halfway' as const, buttonText: '引き続き回答する' },
+                  ] : []
+                }
+                completionModal={
+                  testMode === 'simple' ? {
+                    title: 'お疲れ様でした！',
+                    message: '10問すべての回答が完了しました。あなたの性格タイプを分析しています...',
+                    buttonText: '診断結果を見る',
+                  } : testMode === 'full' ? {
+                    title: '50問完了！お疲れ様でした！',
+                    message: 'すべての質問に回答しました。30ファセットを含む詳細な性格分析をお楽しみください。',
+                    buttonText: '診断結果を見る',
+                  } : {
+                    title: 'Big Five 100問完了！',
+                    message: '性格特性の分析が完了しました。続いてエニアグラム診断（45問）に進みます。',
+                    buttonText: 'エニアグラム診断へ',
+                  }
+                }
               />
             </div>
           )}
@@ -562,6 +585,11 @@ export default function BigFivePage() {
                   isReverse: false,
                 }))}
                 onComplete={handleEnneagramComplete}
+                completionModal={{
+                  title: '全145問完了！お疲れ様でした！',
+                  message: 'Big Five + エニアグラムの総合分析が完了しました。あなたの多角的な性格プロファイルをご覧ください。',
+                  buttonText: '診断結果を見る',
+                }}
               />
             </div>
           )}
@@ -581,6 +609,7 @@ export default function BigFivePage() {
                 <PremiumReportSection
                   resultId={resultId}
                   isPurchased={false}
+                  testType={testMode}
                 />
               )}
               {!user && (

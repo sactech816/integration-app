@@ -49,7 +49,8 @@ import {
   Tv,
   ListOrdered,
   MessageCircle,
-  Brain
+  Brain,
+  Star
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 
@@ -575,11 +576,19 @@ const Header: React.FC<HeaderProps> = ({
                           <div className="text-xs text-gray-500">Big Five 科学的性格診断</div>
                         </div>
                       </Link>
-                      <div className="border-t border-gray-100 my-1" />
-                      <div className="px-4 py-2">
-                        <p className="text-[10px] text-gray-400 font-medium">Coming Soon</p>
-                        <p className="text-xs text-gray-400 mt-1">生年月日診断・九星気学診断 など</p>
-                      </div>
+                      <Link
+                        href="/fortune"
+                        onClick={closeMenus}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-indigo-50 transition-colors"
+                      >
+                        <div className="p-2 rounded-lg bg-indigo-50">
+                          <Star size={18} className="text-indigo-600" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900 text-sm">生年月日占い</div>
+                          <div className="text-xs text-gray-500">九星気学・数秘術・四柱推命</div>
+                        </div>
+                      </Link>
                     </div>
                   </div>
                 </>
@@ -892,7 +901,11 @@ const Header: React.FC<HeaderProps> = ({
                       <Brain size={16} className="text-indigo-500" />
                       <span className="text-gray-700 text-sm">性格診断（Big Five）</span>
                     </Link>
-                    <div className="px-3 py-2 text-xs text-gray-400">Coming Soon: 生年月日診断・九星気学診断</div>
+                    <Link href="/fortune" onClick={closeMenus}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-indigo-50 transition-colors">
+                      <Star size={16} className="text-indigo-500" />
+                      <span className="text-gray-700 text-sm">生年月日占い</span>
+                    </Link>
                   </div>
                 )}
               </div>

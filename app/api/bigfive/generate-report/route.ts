@@ -58,7 +58,14 @@ function reconstructResult(row: any): BigFiveResult {
     scores: { D: 50, I: 50, S: 50, C: 50 },
   };
 
-  return { traits, mbtiType, discType, testType: row.test_type || 'full' };
+  const result: any = { traits, mbtiType, discType, testType: row.test_type || 'full' };
+
+  // エニアグラム復元（詳細診断のみ）
+  if (row.enneagram_result) {
+    result.enneagramType = row.enneagram_result;
+  }
+
+  return result as BigFiveResult;
 }
 
 export async function POST(request: NextRequest) {
@@ -105,7 +112,7 @@ export async function POST(request: NextRequest) {
       model: 'gemini-2.5-flash',
     });
 
-    const systemPrompt = buildReportSystemPrompt();
+    const systemPrompt = buildReportSystemPrompt(result.testType);
     const userPrompt = buildReportUserPrompt(result);
 
     const aiResponse = await provider.generate({

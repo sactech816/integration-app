@@ -9,7 +9,14 @@ interface PremiumReportSectionProps {
   isPurchased: boolean;
   existingReportHtml?: string | null;
   onPurchaseStart?: () => void;
+  testType?: 'simple' | 'full' | 'detailed';
 }
+
+const PRICE_MAP: Record<string, { price: number; label: string }> = {
+  simple: { price: 500, label: '¥500' },
+  full: { price: 1000, label: '¥1,000' },
+  detailed: { price: 2000, label: '¥2,000' },
+};
 
 const FEATURES = [
   {
@@ -47,7 +54,9 @@ export default function PremiumReportSection({
   isPurchased,
   existingReportHtml,
   onPurchaseStart,
+  testType = 'simple',
 }: PremiumReportSectionProps) {
+  const priceInfo = PRICE_MAP[testType] || PRICE_MAP.simple;
   const [reportHtml, setReportHtml] = useState<string | null>(existingReportHtml || null);
   const [generating, setGenerating] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
@@ -208,7 +217,7 @@ export default function PremiumReportSection({
             {/* 価格 + CTA */}
             <div className="text-center">
               <div className="mb-4">
-                <span className="text-3xl font-bold text-gray-900">¥500</span>
+                <span className="text-3xl font-bold text-gray-900">{priceInfo.label}</span>
                 <span className="text-sm text-gray-500 ml-1">（税込）</span>
               </div>
               <button

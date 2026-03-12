@@ -12,7 +12,18 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-12-15.clover' as any,
 });
 
-const PDF_PRICE = 500; // ¥500
+// テストタイプ別料金
+const PDF_PRICES: Record<string, number> = {
+  simple: 500,    // ¥500
+  full: 1000,     // ¥1,000
+  detailed: 2000, // ¥2,000
+};
+
+const PDF_DESCRIPTIONS: Record<string, string> = {
+  simple: '簡易診断 AIプレミアムレポート（5特性分析・16タイプ診断付き）',
+  full: '本格診断 AIプレミアムレポート（30ファセット詳細分析・DISC・キャリアガイダンス付き）',
+  detailed: '詳細診断 AIプレミアムレポート（完全版 Big Five + エニアグラム + DISC 総合分析）',
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,10 +40,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '診断結果IDが必要です' }, { status: 400 });
     }
 
-    // 結果の所有者確認
+    // 結果の所有者確認（test_typeも取得）
     const { data: result } = await supabase
       .from('bigfive_results')
-      .select('id, user_id, pdf_purchased')
+      .select('id, user_id, pdf_purchased, test_type')
       .eq('id', resultId)
       .eq('user_id', user.id)
       .single();
@@ -44,6 +55,10 @@ export async function POST(request: NextRequest) {
     if (result.pdf_purchased) {
       return NextResponse.json({ error: '既に購入済みです', alreadyPurchased: true }, { status: 400 });
     }
+
+    const testType = result.test_type || 'simple';
+    const price = PDF_PRICES[testType] || PDF_PRICES.simple;
+    const description = PDF_DESCRIPTIONS[testType] || PDF_DESCRIPTIONS.simple;
 
     let origin = request.headers.get('origin');
     if (!origin) {
@@ -61,9 +76,9 @@ export async function POST(request: NextRequest) {
           currency: 'jpy',
           product_data: {
             name: 'Big Five 性格診断 プレミアムレポート',
-            description: 'AI専門レポート・パーソナリティマップ・実用ガイダンス・AIアシスタント付き',
+            description,
           },
-          unit_amount: PDF_PRICE,
+          unit_amount: price,
         },
         quantity: 1,
       }],
@@ -75,6 +90,7 @@ export async function POST(request: NextRequest) {
         type: 'bigfive_pdf',
         resultId,
         userId: user.id,
+        testType,
       },
     });
 

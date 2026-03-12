@@ -24,6 +24,8 @@ export async function POST(request: NextRequest) {
       traits,
       mbtiCode,
       mbtiDimensions,
+      discType,
+      enneagramResult,
       facetScores,
       answers,
       durationSeconds,
@@ -46,6 +48,8 @@ export async function POST(request: NextRequest) {
         facet_scores: facetScores || null,
         mbti_code: mbtiCode || null,
         mbti_dimensions: mbtiDimensions || null,
+        disc_type: discType || null,
+        enneagram_result: enneagramResult || null,
         answers: answers || null,
         duration_seconds: durationSeconds || null,
       })

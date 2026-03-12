@@ -51,7 +51,7 @@ export default function BigFiveResultPage() {
         }
 
         // DBデータからBigFiveResult型に変換
-        const testType = dbResult.test_type as 'simple' | 'full';
+        const testType = dbResult.test_type as 'simple' | 'full' | 'detailed';
         const facetScores = dbResult.facet_scores || {};
 
         const traits = {} as BigFiveResult['traits'];
@@ -132,7 +132,7 @@ export default function BigFiveResultPage() {
               <div className="text-center mb-8">
                 <h1 className="text-2xl font-bold text-gray-900">Big Five 性格診断結果</h1>
               </div>
-              <BigFiveResultView result={result} showFacets={result.testType === 'full'} />
+              <BigFiveResultView result={result} showFacets={result.testType === 'full' || result.testType === 'detailed'} />
 
               {/* プレミアムレポート（所有者のみ） */}
               {isOwner && (
@@ -140,6 +140,7 @@ export default function BigFiveResultPage() {
                   resultId={params.id as string}
                   isPurchased={isPurchased}
                   existingReportHtml={reportHtml}
+                  testType={result.testType}
                 />
               )}
             </div>
