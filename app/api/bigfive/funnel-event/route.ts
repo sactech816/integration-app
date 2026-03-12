@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 
-const VALID_EVENT_TYPES = ['sample_request', 'quiz_start', 'quiz_complete', 'pdf_purchase'] as const;
+const VALID_EVENT_TYPES = ['sample_request', 'quiz_start', 'quiz_bigfive_complete', 'quiz_complete', 'pdf_purchase'] as const;
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

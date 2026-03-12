@@ -1,6 +1,16 @@
 -- =============================================================================
--- Big Five ファネルトラッキング
+-- Big Five ファネルトラッキング + スキーマ修正
 -- =============================================================================
+
+-- 0. bigfive_results に不足カラムを追加（DISC・エニアグラム・詳細モード対応）
+ALTER TABLE bigfive_results
+  ADD COLUMN IF NOT EXISTS disc_type JSONB,
+  ADD COLUMN IF NOT EXISTS enneagram_result JSONB;
+
+-- test_type の CHECK制約を更新（'detailed' を追加）
+ALTER TABLE bigfive_results DROP CONSTRAINT IF EXISTS bigfive_results_test_type_check;
+ALTER TABLE bigfive_results ADD CONSTRAINT bigfive_results_test_type_check
+  CHECK (test_type IN ('simple', 'full', 'detailed'));
 
 -- 1. newsletter_subscribers に不足カラムを追加
 --    source: v2マイグレーション未適用の場合に備えて追加
@@ -21,7 +31,7 @@ CREATE TABLE IF NOT EXISTS bigfive_funnel_events (
   session_id TEXT,
   email TEXT,
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  event_type TEXT NOT NULL CHECK (event_type IN ('sample_request', 'quiz_start', 'quiz_complete', 'pdf_purchase')),
+  event_type TEXT NOT NULL CHECK (event_type IN ('sample_request', 'quiz_start', 'quiz_bigfive_complete', 'quiz_complete', 'pdf_purchase')),
   metadata JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT now()
 );

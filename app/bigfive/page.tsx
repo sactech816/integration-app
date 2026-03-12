@@ -620,6 +620,27 @@ export default function BigFivePage() {
                   testType={testMode}
                 />
               )}
+              {user && !resultId && (
+                <div className="mt-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 rounded-2xl shadow-md p-6 sm:p-8">
+                  <div className="text-center">
+                    <Crown className="w-8 h-8 text-yellow-500 mx-auto mb-3" />
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">AIプレミアムレポート</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      AIがあなた専用の詳細な性格分析レポートを生成します
+                    </p>
+                    {saving ? (
+                      <div className="flex items-center justify-center gap-2 text-gray-500">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span className="text-sm">診断結果を保存中...</span>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-red-500">
+                        診断結果の保存に失敗しました。もう一度診断してください。
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
               {!user && (
                 <div className="mt-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 rounded-2xl shadow-md p-6 sm:p-8">
                   <div className="text-center">

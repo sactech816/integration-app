@@ -10,6 +10,7 @@ import type { FortuneResult } from '@/lib/fortune';
 import type { NineStar } from '@/lib/fortune/nine-star';
 import { Sparkles, Star, Calendar, Share2, TrendingUp, BookOpen, Crown, Loader2, ChevronRight } from 'lucide-react';
 import { trackFortuneEvent } from '@/lib/fortune/tracking';
+import FortunePremiumReport from '@/components/fortune/FortunePremiumReport';
 
 // DB解釈文の表示データ型
 type DisplayData = {
@@ -248,6 +249,15 @@ function FortuneContent() {
                   <Share2 size={16} />
                   シェア
                 </button>
+                {resultId && (
+                  <button
+                    onClick={() => router.push(`/fortune/result/${resultId}`)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium shadow-sm hover:bg-indigo-700 transition-all"
+                  >
+                    <ChevronRight size={16} />
+                    詳細結果ページ
+                  </button>
+                )}
               </div>
             </div>
 
@@ -380,6 +390,14 @@ function FortuneContent() {
                 )}
               </div>
             </div>
+
+            {/* プレミアムレポート（ログインユーザーのみ） */}
+            {resultId && user && (
+              <FortunePremiumReport
+                resultId={resultId}
+                isPurchased={false}
+              />
+            )}
 
             {/* Big Five性格診断への誘導 */}
             <div className="bg-white border border-gray-300 rounded-2xl shadow-md p-6">
