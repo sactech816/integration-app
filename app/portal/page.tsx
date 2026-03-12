@@ -200,6 +200,7 @@ function PortalPageContent() {
     'sns-post': 0,
     line: 0,
     'site': 0,
+    fortune: 0,
   });
   const [featuredContents, setFeaturedContents] = useState<FeaturedContentWithDetails[]>([]);
   const [popularContents, setPopularContents] = useState<PopularContent[]>([]);
@@ -271,6 +272,7 @@ function PortalPageContent() {
           'sns-post': counts['sns-post'] || 0,
           line: counts.line || 0,
           'site': counts['site'] || 0,
+          fortune: counts.fortune || 0,
         });
       }
     } catch (error) {

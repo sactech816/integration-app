@@ -27,6 +27,7 @@ import {
   MousePointerClick,
   Send,
   Globe,
+  Star,
 } from 'lucide-react';
 import { ServiceType, SERVICE_LABELS, Block } from '@/lib/types';
 
@@ -95,6 +96,7 @@ const getServiceIcon = (type: ServiceType) => {
     'sns-post': Send,
     line: MessageCircle,
     'site': Globe,
+    fortune: Star,
   };
   return icons[type] || Sparkles; // フォールバック
 };
@@ -120,6 +122,7 @@ const getServiceColor = (type: ServiceType) => {
     'sns-post': { bg: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-200', gradient: 'from-sky-500 to-blue-600' },
     line: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200', gradient: 'from-green-500 to-emerald-600' },
     'site': { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200', gradient: 'from-cyan-400 to-teal-500' },
+    fortune: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200', gradient: 'from-indigo-500 to-purple-600' },
   };
   return colors[type] || colors.quiz; // フォールバック
 };

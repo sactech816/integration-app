@@ -161,6 +161,7 @@ export default function FeaturedManager() {
       'sns-post': 'SNS投稿',
       line: 'LINE公式連携',
       'site': 'ホームページメーカー',
+      fortune: '生年月日占い',
     };
     return labels[type] || type;
   };

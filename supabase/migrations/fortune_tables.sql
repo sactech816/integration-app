@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS fortune_contents (
   title TEXT NOT NULL,                   -- "七赤金星", "ライフパス3" 等
   content_md TEXT,                       -- Markdown形式の解説文
   type_slug TEXT,                        -- "nine_star", "numerology", "four_pillars"
+  detailed_content JSONB,              -- プレミアム詳細データ（personality/compatibility/lucky_items/life_advice）
   lucky_color VARCHAR,
   lucky_item VARCHAR,
   created_at TIMESTAMPTZ DEFAULT now(),

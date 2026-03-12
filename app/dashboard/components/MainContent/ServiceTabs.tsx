@@ -44,6 +44,7 @@ const SHORT_LABELS: Record<ServiceType, string> = {
   'sns-post': 'SNS',
   line: 'LINE',
   'site': 'サイト',
+  fortune: '占い',
 };
 
 const getServiceColor = (type: ServiceType) => {
