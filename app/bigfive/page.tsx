@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase';
 import PremiumReportSection from '@/components/bigfive/PremiumReportSection';
 import BigFiveGuideModal from '@/components/bigfive/BigFiveGuideModal';
 import Footer from '@/components/shared/Footer';
+import MakersPromoBanner from '@/components/shared/MakersPromoBanner';
 import { Brain, Sparkles, Clock, FileText, Share2, ArrowRight, CheckCircle, Crown, Target, Download, ExternalLink, Mail, Loader2, X, UserPlus, HelpCircle, BookOpen } from 'lucide-react';
 // メルマガリストID（Big Fiveサンプル申込者用）
 const BIGFIVE_NEWSLETTER_LIST_ID = '2ee250e1-b763-4718-82b1-ef20ed86075a';
@@ -757,6 +758,12 @@ export default function BigFivePage() {
                   もう一度診断する
                 </button>
               </div>
+
+              {/* 集客メーカー導線 */}
+              <MakersPromoBanner
+                headline="性格を知ることは、集客の第一歩"
+                description="あなたの強みを活かした診断クイズやLP、セールスレターを簡単作成。集客メーカーで、自分らしいビジネスを始めましょう。"
+              />
             </div>
           )}
         </div>

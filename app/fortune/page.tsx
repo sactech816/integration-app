@@ -11,6 +11,7 @@ import type { NineStar } from '@/lib/fortune/nine-star';
 import { Sparkles, Star, Calendar, Share2, TrendingUp, BookOpen, Crown, Loader2, ChevronRight } from 'lucide-react';
 import { trackFortuneEvent } from '@/lib/fortune/tracking';
 import FortunePremiumReport from '@/components/fortune/FortunePremiumReport';
+import MakersPromoBanner from '@/components/shared/MakersPromoBanner';
 
 // DB解釈文の表示データ型
 type DisplayData = {
@@ -398,6 +399,12 @@ function FortuneContent() {
                 isPurchased={false}
               />
             )}
+
+            {/* 集客メーカー導線 */}
+            <MakersPromoBanner
+              headline="運勢を味方に、ビジネスを加速させよう"
+              description="あなたの特性を活かした集客戦略を。診断クイズやLP、予約フォームなど、ビジネスに必要なツールが揃う集客プラットフォームです。"
+            />
 
             {/* Big Five性格診断への誘導 */}
             <div className="bg-white border border-gray-300 rounded-2xl shadow-md p-6">

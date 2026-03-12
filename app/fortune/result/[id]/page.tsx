@@ -10,6 +10,7 @@ import type { FortuneResult } from '@/lib/fortune';
 import type { NineStar } from '@/lib/fortune/nine-star';
 import { Sparkles, Star, TrendingUp, BookOpen, Crown, Loader2, Share2, ArrowLeft } from 'lucide-react';
 import FortunePremiumReport from '@/components/fortune/FortunePremiumReport';
+import MakersPromoBanner from '@/components/shared/MakersPromoBanner';
 import { trackFortuneEvent } from '@/lib/fortune/tracking';
 
 export default function FortuneResultPage() {
@@ -282,6 +283,12 @@ export default function FortuneResultPage() {
             existingReportHtml={result.report_content || null}
           />
         )}
+
+        {/* 集客メーカー導線 */}
+        <MakersPromoBanner
+          headline="運勢を味方に、ビジネスを加速させよう"
+          description="あなたの特性を活かした集客戦略を。診断クイズやLP、予約フォームなど、ビジネスに必要なツールが揃う集客プラットフォームです。"
+        />
 
         {/* CTA */}
         <div className="text-center py-6">

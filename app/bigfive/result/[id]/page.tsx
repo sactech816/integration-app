@@ -8,6 +8,7 @@ import PremiumReportSection from '@/components/bigfive/PremiumReportSection';
 import type { BigFiveResult, TraitResult } from '@/lib/bigfive';
 import { supabase } from '@/lib/supabase';
 import Footer from '@/components/shared/Footer';
+import MakersPromoBanner from '@/components/shared/MakersPromoBanner';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function BigFiveResultPage() {
@@ -143,6 +144,12 @@ export default function BigFiveResultPage() {
                   testType={result.testType}
                 />
               )}
+
+              {/* 集客メーカー導線 */}
+              <MakersPromoBanner
+                headline="性格を知ることは、集客の第一歩"
+                description="あなたの強みを活かした診断クイズやLP、セールスレターを簡単作成。集客メーカーで、自分らしいビジネスを始めましょう。"
+              />
             </div>
           )}
         </div>
