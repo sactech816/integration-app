@@ -89,9 +89,9 @@ export default function ConciergeWidget({ onOpenChange }: ConciergeWidgetProps) 
         </div>
       )}
 
-      {/* チャットパネル — 右下に展開 */}
+      {/* チャットパネル — 矢印・ご意見箱の上に展開 */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-[60]">
+        <div className="fixed bottom-24 right-6 z-[60]">
           <ConciergeChat
             messages={messages}
             avatarState={avatarState}

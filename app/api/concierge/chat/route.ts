@@ -110,11 +110,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'サーバー設定エラー' }, { status: 500 });
     }
 
-    // プランチェック + レート制限
-    const subscription = await getMakersSubscriptionStatus(user.id);
+    // セッションID（日付ベース）
+    const sessionId = requestSessionId || `session_${new Date().toISOString().slice(0, 10)}`;
+
+    // プランチェック・レート制限・会話履歴を並列取得
+    const [subscription, dailyUsage, { data: history }] = await Promise.all([
+      getMakersSubscriptionStatus(user.id),
+      getDailyUsage(serviceClient, user.id),
+      serviceClient
+        .from('concierge_messages')
+        .select('role, content')
+        .eq('user_id', user.id)
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: false })
+        .limit(MAX_HISTORY),
+    ]);
+
     const planTier = subscription.planTier || 'free';
     const dailyLimit = DAILY_LIMITS[planTier] || DAILY_LIMITS.free;
-    const dailyUsage = await getDailyUsage(serviceClient, user.id);
 
     if (dailyUsage >= dailyLimit) {
       return NextResponse.json({
@@ -122,18 +135,6 @@ export async function POST(request: NextRequest) {
         remainingMessages: 0,
       }, { status: 429 });
     }
-
-    // セッションID（日付ベース）
-    const sessionId = requestSessionId || `session_${new Date().toISOString().slice(0, 10)}`;
-
-    // 直近の会話履歴取得
-    const { data: history } = await serviceClient
-      .from('concierge_messages')
-      .select('role, content')
-      .eq('user_id', user.id)
-      .eq('session_id', sessionId)
-      .order('created_at', { ascending: false })
-      .limit(MAX_HISTORY);
 
     const previousMessages = (history || []).reverse();
 
@@ -169,32 +170,32 @@ export async function POST(request: NextRequest) {
     // ツールアクション抽出
     const { text: replyText, actions } = parseToolActions(aiResponse.content);
 
-    // メッセージをDB保存（Service Role Keyで直接INSERT）
-    await serviceClient.from('concierge_messages').insert([
-      {
-        user_id: user.id,
-        session_id: sessionId,
-        role: 'user',
-        content: message.trim(),
-      },
-      {
-        user_id: user.id,
-        session_id: sessionId,
-        role: 'assistant',
-        content: replyText,
-        metadata: { actions },
-      },
+    // DB保存 + AI使用量ログを並列実行
+    await Promise.all([
+      serviceClient.from('concierge_messages').insert([
+        {
+          user_id: user.id,
+          session_id: sessionId,
+          role: 'user',
+          content: message.trim(),
+        },
+        {
+          user_id: user.id,
+          session_id: sessionId,
+          role: 'assistant',
+          content: replyText,
+          metadata: { actions },
+        },
+      ]),
+      logAIUsage({
+        userId: user.id,
+        actionType: 'concierge_chat',
+        service: 'makers',
+        modelUsed: aiResponse.model,
+        inputTokens: aiResponse.usage?.inputTokens,
+        outputTokens: aiResponse.usage?.outputTokens,
+      }),
     ]);
-
-    // AI使用量ログ
-    await logAIUsage({
-      userId: user.id,
-      actionType: 'concierge_chat',
-      service: 'makers',
-      modelUsed: aiResponse.model,
-      inputTokens: aiResponse.usage?.inputTokens,
-      outputTokens: aiResponse.usage?.outputTokens,
-    });
 
     return NextResponse.json({
       reply: replyText,
