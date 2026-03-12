@@ -7,7 +7,11 @@ import { supabase } from '@/lib/supabase';
 import FeedbackModal from './FeedbackModal';
 import AuthModal from './AuthModal';
 
-export default function FloatingButtons() {
+interface FloatingButtonsProps {
+  conciergeOpen?: boolean;
+}
+
+export default function FloatingButtons({ conciergeOpen = false }: FloatingButtonsProps) {
   const pathname = usePathname();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);

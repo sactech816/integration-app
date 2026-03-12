@@ -37,4 +37,5 @@ export const TABLES = {
   BIGFIVE_RESULTS: 'bigfive_results',
   FORTUNE_RESULTS: 'fortune_results',
   FORTUNE_CONTENTS: 'fortune_contents',
+  CONCIERGE_MESSAGES: 'concierge_messages',
 } as const;

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Sans_JP, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
-import FloatingButtons from '@/components/shared/FloatingButtons';
+import FloatingWidgets from '@/components/shared/FloatingWidgets';
 
 const notoSansJP = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
@@ -191,7 +191,7 @@ export default function RootLayout({
         className={`${notoSansJP.variable} ${jetbrainsMono.variable} antialiased font-sans`}
       >
         {children}
-        <FloatingButtons />
+        <FloatingWidgets />
       </body>
     </html>
   );
