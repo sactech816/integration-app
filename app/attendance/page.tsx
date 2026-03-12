@@ -7,7 +7,7 @@ import {
 import LandingHeader from '@/components/shared/LandingHeader';
 
 export const metadata: Metadata = {
-  title: '出欠メーカー（イベント出欠管理）| 集客メーカー',
+  title: '出欠メーカー（イベント出欠管理）【無料】| 集客メーカー',
   description:
     'イベント・セミナー・研修の出欠確認をオンライン化。出欠フォームを無料で作成、参加者リスト管理・リマインダー送信・QRコードチェックインに対応。幹事・イベント主催者に最適。',
   keywords: ['出欠確認', '出欠管理', 'イベント管理', 'RSVP', '無料', 'セミナー', '研修', '幹事', '参加者管理'],

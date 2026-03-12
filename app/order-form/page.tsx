@@ -7,10 +7,10 @@ import {
 import LandingHeader from '@/components/shared/LandingHeader';
 
 export const metadata: Metadata = {
-  title: '申し込みフォームメーカー（決済付きフォーム作成）| 集客メーカー',
+  title: '申し込みフォームメーカー（決済付きフォーム作成）【無料】| 集客メーカー',
   description:
-    '決済機能付きの申し込みフォームを簡単に作成。Stripe・UnivaPay対応。セミナー・講座・コンサル申し込みの受付と決済を1つのフォームで完結。',
-  keywords: ['申し込みフォーム', '決済フォーム', 'Stripe', '決済機能', 'フォーム作成', 'オンライン決済', 'UnivaPay', 'セミナー申し込み'],
+    '決済機能付きの申し込みフォームを無料で作成。Stripe・UnivaPay対応。セミナー・講座・コンサル申し込みの受付と決済を1つのフォームで完結。',
+  keywords: ['申し込みフォーム', '決済フォーム', 'Stripe', '決済機能', 'フォーム作成', '無料', 'オンライン決済', 'UnivaPay', 'セミナー申し込み'],
   openGraph: {
     title: '申し込みフォームメーカー | 集客メーカー',
     description: '決済付き申し込みフォームを簡単作成。Stripe・UnivaPay対応でセミナー・講座・コンサル受付に。',

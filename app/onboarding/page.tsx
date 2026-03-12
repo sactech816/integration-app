@@ -7,7 +7,7 @@ import {
 import LandingHeader from '@/components/shared/LandingHeader';
 
 export const metadata: Metadata = {
-  title: 'ガイドメーカー（オンボーディングガイド作成）| 集客メーカー',
+  title: 'ガイドメーカー（オンボーディングガイド作成）【無料】| 集客メーカー',
   description:
     'サービス・商品の使い始め方をわかりやすく伝えるオンボーディングガイドを無料で作成。ステップバイステップのガイドページで顧客の離脱を防ぎ、満足度を向上。講師・SaaS・コーチに最適。',
   keywords: ['オンボーディング', 'はじめかた', 'スタートガイド', '使い方ガイド', '無料', '顧客サポート', 'SaaS', '講師', 'コーチ'],

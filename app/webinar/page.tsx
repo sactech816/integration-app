@@ -7,7 +7,7 @@ import {
 import LandingHeader from '@/components/shared/LandingHeader';
 
 export const metadata: Metadata = {
-  title: 'ウェビナーLPメーカー（ウェビナーLP作成ツール）| 集客メーカー',
+  title: 'ウェビナーLPメーカー（ウェビナーLP作成ツール）【無料】| 集客メーカー',
   description:
     'ウェビナー・オンラインセミナー専用のランディングページを無料で作成。動画埋め込み・カウントダウンタイマー・時間制御CTA・講師紹介・リードフォーム搭載。高コンバージョンなウェビナーLPを数分で構築。',
   keywords: ['ウェビナー', 'ウェビナーLP', 'ランディングページ', 'オンラインセミナー', 'セミナー集客', 'LP作成', '無料'],

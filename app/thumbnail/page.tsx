@@ -7,7 +7,7 @@ import {
 import LandingHeader from '@/components/shared/LandingHeader';
 
 export const metadata: Metadata = {
-  title: 'サムネイルメーカー（画像作成ツール）| 集客メーカー',
+  title: 'サムネイルメーカー（画像作成ツール）【無料】| 集客メーカー',
   description:
     'YouTube・ブログ・SNS用サムネイル画像を無料で作成。テンプレートから選んでテキスト・画像を編集するだけ。高画質でダウンロード可能。コンテンツクリエイター・ブロガー・YouTuberに最適。',
   keywords: ['サムネイル作成', 'YouTube サムネイル', 'ブログ アイキャッチ', 'SNS画像', '無料', 'テンプレート', '画像作成'],

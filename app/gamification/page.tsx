@@ -7,7 +7,7 @@ import {
 import LandingHeader from '@/components/shared/LandingHeader';
 
 export const metadata: Metadata = {
-  title: 'ゲーミフィケーション（集客キャンペーン）| 集客メーカー',
+  title: 'ゲーミフィケーション（集客キャンペーン）【無料】| 集客メーカー',
   description:
     'ガチャ・スクラッチ・スロット・スタンプラリー・ログインボーナスなどのゲーミフィケーションキャンペーンを無料で作成。EC・店舗・イベントの集客・顧客エンゲージメント向上に最適。',
   keywords: ['ゲーミフィケーション', 'ガチャ', 'スクラッチ', 'スタンプラリー', '集客キャンペーン', '無料', 'EC', '来店促進'],

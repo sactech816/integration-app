@@ -11,7 +11,8 @@ import { supabase } from '@/lib/supabase';
 import PremiumReportSection from '@/components/bigfive/PremiumReportSection';
 import Footer from '@/components/shared/Footer';
 import { Brain, Sparkles, Clock, FileText, Share2, ArrowRight, CheckCircle, Crown, Target, Download, ExternalLink, Mail, Loader2, X, UserPlus } from 'lucide-react';
-import { saveLead } from '@/app/actions/leads';
+// メルマガリストID（Big Fiveサンプル申込者用）
+const BIGFIVE_NEWSLETTER_LIST_ID = '2ee250e1-b763-4718-82b1-ef20ed86075a';
 
 type Phase = 'landing' | 'quiz' | 'result';
 type TestMode = 'simple' | 'full';
@@ -62,11 +63,14 @@ export default function BigFivePage() {
     setSampleSubmitting(true);
 
     try {
-      const result = await saveLead('bigfive_sample', 'bigfive_sample', sampleEmail, {
-        resultType: sampleModal.code,
+      // メルマガリストに直接登録
+      const res = await fetch(`/api/newsletter-maker/subscribe/${BIGFIVE_NEWSLETTER_LIST_ID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: sampleEmail, source: 'bigfive_sample' }),
       });
 
-      if (result.success) {
+      if (res.ok) {
         setSampleDone(true);
         // 解放済みに追加 & localStorage に保存
         const next = new Set(unlockedSamples);
@@ -76,7 +80,8 @@ export default function BigFivePage() {
         // PDFを自動で開く
         window.open(`/api/bigfive/sample-pdf?type=${sampleModal.code}`, '_blank');
       } else {
-        setSampleError(result.error || '登録に失敗しました');
+        const data = await res.json().catch(() => ({}));
+        setSampleError(data.error || '登録に失敗しました');
       }
     } catch {
       setSampleError('エラーが発生しました');

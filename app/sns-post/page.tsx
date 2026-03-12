@@ -7,9 +7,9 @@ import {
 import LandingHeader from '@/components/shared/LandingHeader';
 
 export const metadata: Metadata = {
-  title: 'SNS投稿メーカー（SNS投稿文作成ツール）| 集客メーカー',
+  title: 'SNS投稿メーカー（SNS投稿文作成ツール）【無料】| 集客メーカー',
   description:
-    'X（Twitter）・Instagram・Threads対応のSNS投稿文をAIで自動生成。プラットフォーム別の文字数最適化・ハッシュタグ提案・トーン選択で、効果的なSNS投稿を数秒で作成。',
+    'SNS投稿文を無料で作成。X（Twitter）・Instagram・Threads対応、AIが自動生成。プラットフォーム別の文字数最適化・ハッシュタグ提案・トーン選択で、効果的なSNS投稿を数秒で作成。',
   keywords: ['SNS投稿', 'SNS投稿作成', 'Twitter投稿', 'Instagram投稿', 'Threads', 'AI投稿生成', 'ハッシュタグ', '無料'],
   openGraph: {
     title: 'SNS投稿メーカー | 集客メーカー',

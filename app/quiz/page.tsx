@@ -15,7 +15,7 @@ import QuizLandingHeader from '@/components/quiz/QuizLandingHeader';
 
 // ─── SEO Metadata ────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: '診断クイズ作成ツール | 集客メーカー',
+  title: '診断クイズ作成ツール【無料】| 集客メーカー',
   description:
     '診断クイズを作成して集客・リード獲得を自動化。AIが質問・結果を自動生成、コンサルタント・コーチ・講師・士業に最適な無料の診断クイズ作成ツール。最短5分で作成・公開できます。',
   keywords: [

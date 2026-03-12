@@ -7,7 +7,7 @@ import {
 import LandingHeader from '@/components/shared/LandingHeader';
 
 export const metadata: Metadata = {
-  title: 'LPメーカー（ランディングページ作成）| 集客メーカー',
+  title: 'LPメーカー（ランディングページ作成）【無料】| 集客メーカー',
   description:
     'AIを使ってランディングページ（LP）を無料で作成。AIがコピーを自動生成、申込みフォーム付きの高コンバージョンLPが最短10分で完成。整体院・コーチ・セミナー主催者に最適。',
   keywords: ['ランディングページ', 'LP作成', '集客', 'AI', '無料', 'コンバージョン', 'コーチング', 'セミナー', '整体'],

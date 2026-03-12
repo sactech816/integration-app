@@ -7,7 +7,7 @@ import {
 import LandingHeader from '@/components/shared/LandingHeader';
 
 export const metadata: Metadata = {
-  title: 'アンケートメーカー（アンケート作成ツール）| 集客メーカー',
+  title: 'アンケートメーカー（アンケート作成ツール）【無料】| 集客メーカー',
   description:
     'アンケートフォームを無料で作成。複数の質問タイプ・回答データの可視化・CSVダウンロードに対応。顧客満足度調査・従業員エンゲージメント・セミナー後アンケートに最適。',
   keywords: ['アンケート', 'アンケート作成', '顧客満足度調査', '従業員エンゲージメント', '無料', 'フォーム作成', '回答分析'],

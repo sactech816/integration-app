@@ -7,7 +7,7 @@ import {
 import LandingHeader from '@/components/shared/LandingHeader';
 
 export const metadata: Metadata = {
-  title: 'プロフィールメーカー | 集客メーカー',
+  title: 'プロフィールメーカー【無料】| 集客メーカー',
   description:
     'プロフィールページを無料で作成。AIが自己紹介文を自動生成、SNSリンク・問い合わせフォームを一体化。フリーランサー・コーチ・コンサルタント・講師の個人ブランディングに最適。',
   keywords: ['プロフィールページ', '自己紹介ページ', '個人ページ', '集客', '無料作成', 'フリーランス', 'コーチ', 'コンサルタント'],

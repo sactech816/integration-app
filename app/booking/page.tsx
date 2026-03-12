@@ -7,7 +7,7 @@ import {
 import LandingHeader from '@/components/shared/LandingHeader';
 
 export const metadata: Metadata = {
-  title: '予約メーカー（オンライン予約システム）| 集客メーカー',
+  title: '予約メーカー（オンライン予約システム）【無料】| 集客メーカー',
   description:
     'オンライン予約システムを無料で導入。24時間受付・自動確認メール・時間枠管理に対応。美容室・コーチ・整体・コンサルタントなどのサービス業に最適な予約管理ツール。',
   keywords: ['オンライン予約', '予約システム', '無料', '24時間受付', '自動確認メール', '美容室', 'コーチ', '整体', '予約管理'],

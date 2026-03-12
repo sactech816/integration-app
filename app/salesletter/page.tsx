@@ -7,7 +7,7 @@ import {
 import LandingHeader from '@/components/shared/LandingHeader';
 
 export const metadata: Metadata = {
-  title: 'セールスライター（セールスレター作成）| 集客メーカー',
+  title: 'セールスライター（セールスレター作成）【無料】| 集客メーカー',
   description:
     'AIを使ってセールスレター・長文コピーを無料で作成。AIDA・PASフレームワークに対応、読むと買いたくなるコピーをAIが自動生成。オンライン講座・コーチング・情報販売に最適。',
   keywords: ['セールスレター', 'セールスコピー', '長文LP', 'AI', '無料', 'コピーライティング', 'オンライン講座', 'コーチング'],

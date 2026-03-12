@@ -28,7 +28,7 @@ export async function POST(
     }
 
     const { listId } = await params;
-    const { email, name } = await request.json();
+    const { email, name, source } = await request.json();
 
     if (!email || !isValidEmail(email)) {
       return NextResponse.json({ error: '有効なメールアドレスを入力してください' }, { status: 400 });
@@ -73,6 +73,7 @@ export async function POST(
           email,
           name: name || null,
           status: 'subscribed',
+          source: source || 'subscribe_form',
           subscribed_at: new Date().toISOString(),
           unsubscribed_at: null,
         },
