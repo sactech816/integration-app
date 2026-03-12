@@ -86,7 +86,11 @@ export default function BigFiveResultPage() {
           },
         };
 
-        setResult({ traits, mbtiType, testType });
+        const discType = dbResult.disc_type || {
+          primary: 'S' as const, secondary: 'C' as const, name: '安定型（S）', description: '',
+          scores: { D: 50, I: 50, S: 50, C: 50 },
+        };
+        setResult({ traits, mbtiType, discType, testType });
       } catch (e) {
         setError('結果の取得に失敗しました');
       } finally {

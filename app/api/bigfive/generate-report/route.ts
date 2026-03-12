@@ -52,7 +52,13 @@ function reconstructResult(row: any): BigFiveResult {
     },
   };
 
-  return { traits, mbtiType, testType: row.test_type || 'full' };
+  // DISC復元
+  const discType = row.disc_type || {
+    primary: 'S', secondary: 'C', name: '安定型（S）', description: '',
+    scores: { D: 50, I: 50, S: 50, C: 50 },
+  };
+
+  return { traits, mbtiType, discType, testType: row.test_type || 'full' };
 }
 
 export async function POST(request: NextRequest) {

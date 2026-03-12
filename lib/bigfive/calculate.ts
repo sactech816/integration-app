@@ -25,6 +25,19 @@ export interface TraitResult {
   facets: FacetScore[];
 }
 
+export interface DISCType {
+  primary: 'D' | 'I' | 'S' | 'C';
+  secondary: 'D' | 'I' | 'S' | 'C';
+  name: string;
+  description: string;
+  scores: {
+    D: number; // 主導型 (Dominance)
+    I: number; // 感化型 (Influence)
+    S: number; // 安定型 (Steadiness)
+    C: number; // 慎重型 (Conscientiousness)
+  };
+}
+
 export interface BigFiveResult {
   traits: {
     openness: TraitResult;
@@ -34,7 +47,8 @@ export interface BigFiveResult {
     neuroticism: TraitResult;
   };
   mbtiType: MBTIType;
-  testType: 'simple' | 'full';
+  discType: DISCType;
+  testType: 'simple' | 'full' | 'detailed';
 }
 
 export interface MBTIType {
@@ -126,7 +140,7 @@ const MBTI_TYPES: Record<string, { name: string; description: string }> = {
 export function calculateBigFive(
   answers: Record<number, number>,
   questions: Question[],
-  testType: 'simple' | 'full'
+  testType: 'simple' | 'full' | 'detailed'
 ): BigFiveResult {
   // --- 特性別スコア計算 ---
   const traitScores: BigFiveScores = {
@@ -195,7 +209,10 @@ export function calculateBigFive(
   // --- MBTI変換 ---
   const mbtiType = convertToMBTI(traits);
 
-  return { traits, mbtiType, testType };
+  // --- DISC変換 ---
+  const discType = convertToDISC(traits);
+
+  return { traits, mbtiType, discType, testType };
 }
 
 // =============================================================================
@@ -221,6 +238,61 @@ function getLevel(percentage: number): TraitResult['level'] {
 //
 // 参考: McCrae & Costa (1989), Furnham (1996)
 // =============================================================================
+
+// =============================================================================
+// Big Five → DISC行動スタイル変換
+//
+// 学術的根拠:
+// - D (主導型): 高外向性 + 低協調性（自己主張が強く、結果志向）
+// - I (感化型): 高外向性 + 高協調性（社交的で、人を巻き込む）
+// - S (安定型): 低外向性 + 高協調性（穏やかで、安定志向）
+// - C (慎重型): 低外向性 + 低協調性 + 高誠実性（分析的で、正確さ重視）
+//
+// DISC理論はウィリアム・マーストン (1928) に基づく。概念はパブリックドメイン。
+// =============================================================================
+
+const DISC_TYPES: Record<string, { name: string; description: string }> = {
+  D: { name: '主導型（D）', description: '目標達成への強い意志を持ち、決断力と行動力で周囲を引っ張るリーダータイプ。チャレンジを楽しみ、効率的に結果を出すことを重視します。' },
+  I: { name: '感化型（I）', description: '明るく社交的で、人々を巻き込み鼓舞する力に優れたコミュニケーター。アイデアと熱意で周囲にポジティブな影響を与えます。' },
+  S: { name: '安定型（S）', description: '穏やかで忍耐強く、チームの調和を大切にするサポーター。安定した環境の中で着実に力を発揮し、信頼される存在です。' },
+  C: { name: '慎重型（C）', description: '分析力と正確さに優れ、論理的に物事を進めるアナリスト。品質とデータを重視し、細部にまで目を配る慎重な姿勢を持ちます。' },
+};
+
+function convertToDISC(traits: BigFiveResult['traits']): DISCType {
+  const e = traits.extraversion.percentage;
+  const a = traits.agreeableness.percentage;
+  const c = traits.conscientiousness.percentage;
+  const n = traits.neuroticism.percentage;
+
+  // DISC各スタイルへのスコア算出（0-100に正規化）
+  // D: 高外向性 + 低協調性 + 低神経症（自信があり、対立を恐れない）
+  const dScore = Math.round((e * 0.4 + (100 - a) * 0.35 + (100 - n) * 0.25));
+  // I: 高外向性 + 高協調性 + 高開放性（社交的で楽観的）
+  const iScore = Math.round((e * 0.4 + a * 0.3 + traits.openness.percentage * 0.3));
+  // S: 低外向性 + 高協調性 + 低開放性（安定志向で忠実）
+  const sScore = Math.round(((100 - e) * 0.35 + a * 0.35 + (100 - traits.openness.percentage) * 0.3));
+  // C: 低外向性 + 高誠実性 + 低協調性（分析的で独立的）
+  const cScore = Math.round(((100 - e) * 0.3 + c * 0.4 + (100 - a) * 0.3));
+
+  const scores = { D: dScore, I: iScore, S: sScore, C: cScore };
+
+  // プライマリ・セカンダリ判定
+  const sorted = (Object.entries(scores) as [DISCType['primary'], number][])
+    .sort((x, y) => y[1] - x[1]);
+
+  const primary = sorted[0][0];
+  const secondary = sorted[1][0];
+
+  const typeInfo = DISC_TYPES[primary];
+
+  return {
+    primary,
+    secondary,
+    name: typeInfo.name,
+    description: typeInfo.description,
+    scores,
+  };
+}
 
 function convertToMBTI(traits: BigFiveResult['traits']): MBTIType {
   const e = traits.extraversion.percentage;

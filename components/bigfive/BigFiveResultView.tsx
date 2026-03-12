@@ -1,12 +1,14 @@
 'use client';
 
 import { BigFiveResult, FACET_LABELS } from '@/lib/bigfive';
+import type { EnneagramResult } from '@/lib/bigfive';
 import { getTraitDetail } from '@/lib/bigfive/trait-details';
-import { Brain, Users, Target, Heart, Zap, ChevronDown, ChevronUp } from 'lucide-react';
+import { Brain, Users, Target, Heart, Zap, ChevronDown, ChevronUp, Shield, Compass, Star } from 'lucide-react';
 import { useState } from 'react';
 
 interface BigFiveResultViewProps {
   result: BigFiveResult;
+  enneagramResult?: EnneagramResult;
   showFacets?: boolean;
 }
 
@@ -26,8 +28,22 @@ const LEVEL_LABELS = {
   very_high: { text: 'とても高い', color: 'text-red-600' },
 };
 
-export default function BigFiveResultView({ result, showFacets = true }: BigFiveResultViewProps) {
+const DISC_CONFIG = {
+  D: { label: '主導型', color: 'from-red-500 to-rose-600', bgColor: 'bg-red-50', textColor: 'text-red-700', borderColor: 'border-red-200' },
+  I: { label: '感化型', color: 'from-yellow-500 to-amber-600', bgColor: 'bg-yellow-50', textColor: 'text-yellow-700', borderColor: 'border-yellow-200' },
+  S: { label: '安定型', color: 'from-green-500 to-emerald-600', bgColor: 'bg-green-50', textColor: 'text-green-700', borderColor: 'border-green-200' },
+  C: { label: '慎重型', color: 'from-blue-500 to-indigo-600', bgColor: 'bg-blue-50', textColor: 'text-blue-700', borderColor: 'border-blue-200' },
+};
+
+const TRIAD_LABELS = {
+  gut: { name: '本能センター', color: 'text-red-600', bg: 'bg-red-50' },
+  heart: { name: '感情センター', color: 'text-pink-600', bg: 'bg-pink-50' },
+  head: { name: '思考センター', color: 'text-blue-600', bg: 'bg-blue-50' },
+};
+
+export default function BigFiveResultView({ result, enneagramResult, showFacets = true }: BigFiveResultViewProps) {
   const [expandedTrait, setExpandedTrait] = useState<string | null>(null);
+  const hasFacets = result.testType === 'full' || result.testType === 'detailed';
 
   return (
     <div className="space-y-8">
@@ -54,6 +70,117 @@ export default function BigFiveResultView({ result, showFacets = true }: BigFive
           ))}
         </div>
       </div>
+
+      {/* DISC行動スタイル */}
+      {result.discType && (
+        <div className="bg-white border border-gray-300 rounded-2xl shadow-md p-6 sm:p-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Compass className="w-5 h-5 text-blue-600" />
+            <h3 className="text-lg font-bold text-gray-900">DISC 行動スタイル</h3>
+          </div>
+
+          {/* プライマリタイプ */}
+          <div className={`${DISC_CONFIG[result.discType.primary].bgColor} ${DISC_CONFIG[result.discType.primary].borderColor} border rounded-xl p-4 mb-4`}>
+            <div className="flex items-center gap-3 mb-2">
+              <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${DISC_CONFIG[result.discType.primary].color} flex items-center justify-center`}>
+                <span className="text-white font-bold text-lg">{result.discType.primary}</span>
+              </div>
+              <div>
+                <p className={`font-bold ${DISC_CONFIG[result.discType.primary].textColor}`}>
+                  {result.discType.name}
+                </p>
+                <p className="text-xs text-gray-500">
+                  サブスタイル: {DISC_CONFIG[result.discType.secondary].label}（{result.discType.secondary}）
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-700 leading-relaxed">{result.discType.description}</p>
+          </div>
+
+          {/* 4タイプスコアバー */}
+          <div className="grid grid-cols-2 gap-3">
+            {(Object.keys(DISC_CONFIG) as ('D' | 'I' | 'S' | 'C')[]).map((key) => {
+              const config = DISC_CONFIG[key];
+              const score = result.discType.scores[key];
+              const isPrimary = key === result.discType.primary;
+              return (
+                <div key={key} className={`rounded-xl p-3 ${isPrimary ? `${config.bgColor} ${config.borderColor} border` : 'bg-gray-50'}`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`text-sm font-semibold ${isPrimary ? config.textColor : 'text-gray-600'}`}>
+                      {key} - {config.label}
+                    </span>
+                    <span className={`text-sm font-bold ${isPrimary ? config.textColor : 'text-gray-500'}`}>{score}%</span>
+                  </div>
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full bg-gradient-to-r ${config.color} rounded-full transition-all duration-700`}
+                      style={{ width: `${score}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* エニアグラム */}
+      {enneagramResult && (
+        <div className="bg-white border border-gray-300 rounded-2xl shadow-md p-6 sm:p-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Star className="w-5 h-5 text-amber-500" />
+            <h3 className="text-lg font-bold text-gray-900">エニアグラム</h3>
+          </div>
+
+          {/* メインタイプ */}
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 mb-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                <span className="text-white font-bold text-xl">{enneagramResult.primaryType}</span>
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-lg">{enneagramResult.name}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-amber-700">ウィング: {enneagramResult.wing}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${TRIAD_LABELS[enneagramResult.triad].bg} ${TRIAD_LABELS[enneagramResult.triad].color} font-medium`}>
+                    {TRIAD_LABELS[enneagramResult.triad].name}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <p className="text-sm text-gray-700 leading-relaxed">{enneagramResult.description}</p>
+          </div>
+
+          {/* 9タイプスコア */}
+          <div className="space-y-2">
+            {Object.entries(enneagramResult.scores)
+              .sort(([, a], [, b]) => b - a)
+              .map(([typeNum, score]) => {
+                const isPrimary = parseInt(typeNum) === enneagramResult.primaryType;
+                return (
+                  <div key={typeNum} className="flex items-center gap-3">
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                      isPrimary ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      {typeNum}
+                    </span>
+                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${
+                          isPrimary ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-gray-300'
+                        }`}
+                        style={{ width: `${score}%` }}
+                      />
+                    </div>
+                    <span className={`text-xs font-medium w-8 text-right ${isPrimary ? 'text-amber-700' : 'text-gray-500'}`}>
+                      {score}%
+                    </span>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
 
       {/* 5特性スコア一覧 */}
       <div className="space-y-4">
@@ -107,7 +234,7 @@ export default function BigFiveResultView({ result, showFacets = true }: BigFive
                   </div>
 
                   {/* ファセット詳細 */}
-                  {showFacets && result.testType === 'full' && trait.facets.length > 0 && (
+                  {showFacets && hasFacets && trait.facets.length > 0 && (
                     <div className="mb-4">
                       <h5 className="text-sm font-semibold text-gray-600 mb-2">ファセット分析</h5>
                       <div className="space-y-2">

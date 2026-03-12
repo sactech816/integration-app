@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/shared/Header';
 import BigFiveQuiz from '@/components/bigfive/BigFiveQuiz';
 import BigFiveResultView from '@/components/bigfive/BigFiveResultView';
-import { QUESTIONS_SIMPLE, QUESTIONS_FULL, calculateBigFive } from '@/lib/bigfive';
-import type { BigFiveResult } from '@/lib/bigfive';
+import { QUESTIONS_SIMPLE, QUESTIONS_FULL, QUESTIONS_DETAILED, calculateBigFive, ENNEAGRAM_QUESTIONS, calculateEnneagram } from '@/lib/bigfive';
+import type { BigFiveResult, EnneagramResult } from '@/lib/bigfive';
 import { supabase } from '@/lib/supabase';
 import PremiumReportSection from '@/components/bigfive/PremiumReportSection';
 import Footer from '@/components/shared/Footer';
@@ -14,8 +14,8 @@ import { Brain, Sparkles, Clock, FileText, Share2, ArrowRight, CheckCircle, Crow
 // メルマガリストID（Big Fiveサンプル申込者用）
 const BIGFIVE_NEWSLETTER_LIST_ID = '2ee250e1-b763-4718-82b1-ef20ed86075a';
 
-type Phase = 'landing' | 'quiz' | 'result';
-type TestMode = 'simple' | 'full';
+type Phase = 'landing' | 'quiz' | 'enneagram' | 'result';
+type TestMode = 'simple' | 'full' | 'detailed';
 
 // ブラウザセッションID（ファネル追跡用）
 function getOrCreateSessionId(): string {
@@ -51,6 +51,9 @@ export default function BigFivePage() {
   const [phase, setPhase] = useState<Phase>('landing');
   const [testMode, setTestMode] = useState<TestMode>('simple');
   const [result, setResult] = useState<BigFiveResult | null>(null);
+  const [enneagramResult, setEnneagramResult] = useState<EnneagramResult | null>(null);
+  const [bigFiveAnswers, setBigFiveAnswers] = useState<Record<number, number>>({});
+  const [bigFiveDuration, setBigFiveDuration] = useState(0);
   const [showAuth, setShowAuth] = useState(false);
   const [resultId, setResultId] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
@@ -141,9 +144,85 @@ export default function BigFivePage() {
     trackFunnelEvent('quiz_start', { metadata: { test_mode: mode } });
   };
 
+  // エニアグラム完了ハンドラ
+  const handleEnneagramComplete = async (enneaAnswers: Record<number, number>, enneaDuration: number) => {
+    const enneaResult = calculateEnneagram(enneaAnswers);
+    setEnneagramResult(enneaResult);
+
+    // Big Five結果を計算（保存済みの回答を使用）
+    const questions = QUESTIONS_DETAILED;
+    const calcResult = calculateBigFive(bigFiveAnswers, questions, 'detailed');
+    setResult(calcResult);
+    setPhase('result');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    const totalDuration = bigFiveDuration + enneaDuration;
+
+    // ログイン済みなら自動保存
+    if (user) {
+      setSaving(true);
+      try {
+        const facetScores: Record<string, Record<string, number>> = {};
+        for (const [trait, traitResult] of Object.entries(calcResult.traits)) {
+          facetScores[trait] = {};
+          for (const facet of traitResult.facets) {
+            facetScores[trait][facet.name] = facet.percentage;
+          }
+        }
+
+        const res = await fetch('/api/bigfive/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            testType: 'detailed',
+            traits: calcResult.traits,
+            mbtiCode: calcResult.mbtiType.code,
+            mbtiDimensions: calcResult.mbtiType.dimensions,
+            discType: calcResult.discType,
+            enneagramResult: enneaResult,
+            facetScores,
+            answers: { ...bigFiveAnswers, ...enneaAnswers },
+            durationSeconds: totalDuration,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setResultId(data.id);
+          trackFunnelEvent('quiz_complete', {
+            metadata: {
+              test_mode: 'detailed',
+              mbti_code: calcResult.mbtiType.code,
+              disc_type: calcResult.discType.primary,
+              enneagram_type: enneaResult.primaryType,
+              result_id: data.id,
+              duration_seconds: totalDuration,
+            },
+          });
+        }
+      } catch (e) {
+        console.error('Save error:', e);
+      } finally {
+        setSaving(false);
+      }
+    }
+  };
+
   const handleQuizComplete = async (answers: Record<number, number>, durationSeconds: number) => {
-    const questions = testMode === 'simple' ? QUESTIONS_SIMPLE : QUESTIONS_FULL;
+    const questions = testMode === 'simple' ? QUESTIONS_SIMPLE : testMode === 'full' ? QUESTIONS_FULL : QUESTIONS_DETAILED;
     const calcResult = calculateBigFive(answers, questions, testMode);
+
+    // 詳細モードの場合、エニアグラムフェーズへ遷移
+    if (testMode === 'detailed') {
+      setBigFiveAnswers(answers);
+      setBigFiveDuration(durationSeconds);
+      setResult(calcResult);
+      setPhase('enneagram');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      trackFunnelEvent('quiz_bigfive_complete', { metadata: { test_mode: 'detailed' } });
+      return;
+    }
+
     setResult(calcResult);
     setPhase('result');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -242,19 +321,19 @@ export default function BigFivePage() {
               </div>
 
               {/* テストモード選択 */}
-              <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+              <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
                 {/* 簡易版 */}
                 <div className="bg-white border border-gray-300 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all">
                   <div className="flex items-center gap-2 mb-3">
                     <Clock className="w-5 h-5 text-blue-500" />
-                    <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">無料</span>
+                    <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">お試し</span>
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">簡易診断（10問）</h3>
-                  <p className="text-sm text-gray-600 mb-4">約1〜2分で完了。5つの性格特性の傾向がわかります。</p>
+                  <p className="text-sm text-gray-600 mb-4">約1〜2分で完了。性格の傾向をサッと確認。</p>
                   <ul className="space-y-1.5 mb-5 text-sm text-gray-600">
                     <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />5特性スコア</li>
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />MBTI風タイプ判定</li>
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />基本的な性格解説</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />16パーソナリティタイプ</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />DISC行動スタイル</li>
                   </ul>
                   <button
                     onClick={() => handleStartQuiz('simple')}
@@ -275,8 +354,8 @@ export default function BigFivePage() {
                   <p className="text-sm text-gray-600 mb-4">約5〜10分。30ファセットの詳細分析付き。</p>
                   <ul className="space-y-1.5 mb-5 text-sm text-gray-600">
                     <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />5特性 + 30ファセット分析</li>
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />MBTI風タイプ判定</li>
-                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />詳細な適職・人間関係アドバイス</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />16パーソナリティタイプ</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />DISC行動スタイル</li>
                     <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-yellow-500" />AIプレミアムレポート（¥500）</li>
                   </ul>
                   <button
@@ -284,6 +363,30 @@ export default function BigFivePage() {
                     className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
                   >
                     本格診断を始める
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* 詳細版 */}
+                <div className="bg-white border border-amber-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-all ring-2 ring-amber-100">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Crown className="w-5 h-5 text-amber-500" />
+                    <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">最高精度</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">詳細診断（145問）</h3>
+                  <p className="text-sm text-gray-600 mb-4">約15〜20分。全診断を網羅した完全版。</p>
+                  <ul className="space-y-1.5 mb-5 text-sm text-gray-600">
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />高精度30ファセット分析</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />16パーソナリティタイプ</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />DISC行動スタイル</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-500" />エニアグラム9タイプ</li>
+                    <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-yellow-500" />AIプレミアムレポート（¥980）</li>
+                  </ul>
+                  <button
+                    onClick={() => handleStartQuiz('detailed')}
+                    className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    詳細診断を始める
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -394,15 +497,41 @@ export default function BigFivePage() {
             <div>
               <div className="text-center mb-8">
                 <h2 className="text-xl font-bold text-gray-900">
-                  {testMode === 'simple' ? '簡易診断（10問）' : '本格診断（50問）'}
+                  {testMode === 'simple' ? '簡易診断（10問）' : testMode === 'full' ? '本格診断（50問）' : '詳細診断（100問 + エニアグラム45問）'}
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
                   それぞれの文が、どの程度あなたに当てはまるかお答えください
                 </p>
+                {testMode === 'detailed' && (
+                  <p className="text-xs text-indigo-500 mt-2">ステップ 1/2: Big Five 性格特性（100問）</p>
+                )}
               </div>
               <BigFiveQuiz
-                questions={testMode === 'simple' ? QUESTIONS_SIMPLE : QUESTIONS_FULL}
+                questions={testMode === 'simple' ? QUESTIONS_SIMPLE : testMode === 'full' ? QUESTIONS_FULL : QUESTIONS_DETAILED}
                 onComplete={handleQuizComplete}
+              />
+            </div>
+          )}
+
+          {/* === エニアグラム（詳細モードのみ） === */}
+          {phase === 'enneagram' && (
+            <div>
+              <div className="text-center mb-8">
+                <h2 className="text-xl font-bold text-gray-900">エニアグラム診断（45問）</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  あなたの深層的な動機と行動パターンを分析します
+                </p>
+                <p className="text-xs text-indigo-500 mt-2">ステップ 2/2: エニアグラム性格タイプ</p>
+              </div>
+              <BigFiveQuiz
+                questions={ENNEAGRAM_QUESTIONS.map(q => ({
+                  id: q.id,
+                  text: q.text,
+                  trait: 'openness' as const,
+                  facet: '',
+                  isReverse: false,
+                }))}
+                onComplete={handleEnneagramComplete}
               />
             </div>
           )}
@@ -415,7 +544,7 @@ export default function BigFivePage() {
                 {saving && <p className="text-sm text-gray-500">保存中...</p>}
               </div>
 
-              <BigFiveResultView result={result} showFacets={testMode === 'full'} />
+              <BigFiveResultView result={result} enneagramResult={enneagramResult ?? undefined} showFacets={testMode !== 'simple'} />
 
               {/* プレミアムレポート */}
               {user && resultId && (
@@ -451,7 +580,7 @@ export default function BigFivePage() {
                 )}
 
                 <button
-                  onClick={() => { setPhase('landing'); setResult(null); setResultId(null); }}
+                  onClick={() => { setPhase('landing'); setResult(null); setResultId(null); setEnneagramResult(null); setBigFiveAnswers({}); setBigFiveDuration(0); }}
                   className="px-5 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-all"
                 >
                   もう一度診断する

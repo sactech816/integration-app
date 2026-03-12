@@ -1,6 +1,7 @@
 // =============================================================================
 // Big Five 性格診断 — 質問データ
-// TIPI-J（簡易10問）+ IPIP-50（本格50問）+ ファセットマッピング
+// TIPI-J（簡易10問）+ IPIP-50（本格50問）+ IPIP-100拡張（追加50問）
+// + ファセットマッピング
 // =============================================================================
 
 export interface Question {
@@ -101,3 +102,73 @@ export const QUESTIONS_FULL: Question[] = [
   { id: 509, text: "発想が豊かで、アイデアが次々と浮かぶ", trait: "openness", facet: "imagination", isReverse: false },
   { id: 510, text: "難しい本を読むのは避ける方だ", trait: "openness", facet: "liberalism", isReverse: true },
 ];
+
+// =============================================================================
+// 【詳細版】追加50問（IPIP-100拡張）
+// 既存50問のファセットカバレッジを補強し、各ファセット最低3問を確保
+// IPIP (International Personality Item Pool) はパブリックドメイン
+// =============================================================================
+export const QUESTIONS_EXTENDED: Question[] = [
+  // --- 外向性 (Extraversion) 追加10問 ---
+  { id: 601, text: "初対面の人ともすぐに打ち解けられる", trait: "extraversion", facet: "friendliness", isReverse: false },
+  { id: 602, text: "一人で過ごす時間の方が落ち着く", trait: "extraversion", facet: "gregariousness", isReverse: true },
+  { id: 603, text: "グループの中で自然とリーダー役を引き受ける", trait: "extraversion", facet: "assertiveness", isReverse: false },
+  { id: 604, text: "スリルや冒険的な体験にわくわくする", trait: "extraversion", facet: "excitement_seeking", isReverse: false },
+  { id: 605, text: "いつも何かしら体を動かしていたい", trait: "extraversion", facet: "activity_level", isReverse: false },
+  { id: 606, text: "楽しい気分でいることが多い", trait: "extraversion", facet: "cheerfulness", isReverse: false },
+  { id: 607, text: "大人数の場所に行くと疲れてしまう", trait: "extraversion", facet: "gregariousness", isReverse: true },
+  { id: 608, text: "自分の意見をはっきり伝えることができる", trait: "extraversion", facet: "assertiveness", isReverse: false },
+  { id: 609, text: "変化のない生活は退屈に感じる", trait: "extraversion", facet: "excitement_seeking", isReverse: false },
+  { id: 610, text: "よく笑い、周りの人を明るくする方だ", trait: "extraversion", facet: "cheerfulness", isReverse: false },
+
+  // --- 協調性 (Agreeableness) 追加10問 ---
+  { id: 701, text: "大抵の人は善意を持っていると思う", trait: "agreeableness", facet: "trust", isReverse: false },
+  { id: 702, text: "約束は必ず守るようにしている", trait: "agreeableness", facet: "morality", isReverse: false },
+  { id: 703, text: "ボランティア活動に関心がある", trait: "agreeableness", facet: "altruism", isReverse: false },
+  { id: 704, text: "争いごとはできるだけ避けたい", trait: "agreeableness", facet: "cooperation", isReverse: false },
+  { id: 705, text: "自分の能力を過大評価しないようにしている", trait: "agreeableness", facet: "modesty", isReverse: false },
+  { id: 706, text: "映画や小説で泣くことがある", trait: "agreeableness", facet: "sympathy", isReverse: false },
+  { id: 707, text: "人の話を途中でさえぎってしまうことがある", trait: "agreeableness", facet: "cooperation", isReverse: true },
+  { id: 708, text: "ルールや規範をごまかすことがある", trait: "agreeableness", facet: "morality", isReverse: true },
+  { id: 709, text: "自慢話をすることがある", trait: "agreeableness", facet: "modesty", isReverse: true },
+  { id: 710, text: "他人の苦しみを見て見ぬふりはできない", trait: "agreeableness", facet: "sympathy", isReverse: false },
+
+  // --- 誠実性 (Conscientiousness) 追加10問 ---
+  { id: 801, text: "自分で決めた目標は最後までやり遂げる", trait: "conscientiousness", facet: "achievement_striving", isReverse: false },
+  { id: 802, text: "誘惑に負けてしまうことがある", trait: "conscientiousness", facet: "self_discipline", isReverse: true },
+  { id: 803, text: "物事を始める前にリスクをよく考える", trait: "conscientiousness", facet: "cautiousness", isReverse: false },
+  { id: 804, text: "義務や責任を果たすことに誇りを持っている", trait: "conscientiousness", facet: "dutifulness", isReverse: false },
+  { id: 805, text: "自分の能力で大抵のことは解決できると思う", trait: "conscientiousness", facet: "self_efficacy", isReverse: false },
+  { id: 806, text: "持ち物はいつも整理整頓している", trait: "conscientiousness", facet: "orderliness", isReverse: false },
+  { id: 807, text: "面倒な仕事でも手を抜かずにやる", trait: "conscientiousness", facet: "dutifulness", isReverse: false },
+  { id: 808, text: "衝動的に買い物をしてしまうことがある", trait: "conscientiousness", facet: "self_discipline", isReverse: true },
+  { id: 809, text: "目標を達成するために計画的に行動する", trait: "conscientiousness", facet: "achievement_striving", isReverse: false },
+  { id: 810, text: "難しい問題に直面しても自分で解決策を見つけられる", trait: "conscientiousness", facet: "self_efficacy", isReverse: false },
+
+  // --- 神経症的傾向 (Neuroticism) 追加10問 ---
+  { id: 901, text: "些細な批判でも深く傷つくことがある", trait: "neuroticism", facet: "vulnerability", isReverse: false },
+  { id: 902, text: "人前で恥ずかしい思いをするのが怖い", trait: "neuroticism", facet: "self_consciousness", isReverse: false },
+  { id: 903, text: "怒りを爆発させてしまうことがある", trait: "neuroticism", facet: "anger", isReverse: false },
+  { id: 904, text: "食べすぎや飲みすぎを止められないことがある", trait: "neuroticism", facet: "immoderation", isReverse: false },
+  { id: 905, text: "気持ちが沈んで何もやる気が起きない日がある", trait: "neuroticism", facet: "depression", isReverse: false },
+  { id: 906, text: "不安な気持ちに振り回されやすい", trait: "neuroticism", facet: "anxiety", isReverse: false },
+  { id: 907, text: "ちょっとしたことですぐに腹が立つ", trait: "neuroticism", facet: "anger", isReverse: false },
+  { id: 908, text: "困難な状況でも冷静に判断できる", trait: "neuroticism", facet: "vulnerability", isReverse: true },
+  { id: 909, text: "欲しいものがあると我慢できない方だ", trait: "neuroticism", facet: "immoderation", isReverse: false },
+  { id: 910, text: "自分が他人にどう見られているか気になる", trait: "neuroticism", facet: "self_consciousness", isReverse: false },
+
+  // --- 開放性 (Openness) 追加10問 ---
+  { id: 1001, text: "空想にふけることが好きだ", trait: "openness", facet: "imagination", isReverse: false },
+  { id: 1002, text: "音楽や映画に深く心を動かされることがある", trait: "openness", facet: "emotionality", isReverse: false },
+  { id: 1003, text: "伝統よりも新しい考え方を好む", trait: "openness", facet: "liberalism", isReverse: false },
+  { id: 1004, text: "行ったことのない場所を訪れるのが好きだ", trait: "openness", facet: "adventurousness", isReverse: false },
+  { id: 1005, text: "科学や技術の最新動向に興味がある", trait: "openness", facet: "intellect", isReverse: false },
+  { id: 1006, text: "美しいデザインや芸術作品に惹かれる", trait: "openness", facet: "artistic", isReverse: false },
+  { id: 1007, text: "感情の機微を繊細に感じ取る方だ", trait: "openness", facet: "emotionality", isReverse: false },
+  { id: 1008, text: "慣れたやり方を変えるのには抵抗がある", trait: "openness", facet: "liberalism", isReverse: true },
+  { id: 1009, text: "複雑なパズルや問題を解くのが楽しい", trait: "openness", facet: "intellect", isReverse: false },
+  { id: 1010, text: "白昼夢を見ることが多い", trait: "openness", facet: "imagination", isReverse: false },
+];
+
+// IPIP-100: 50問 + 追加50問 = 100問を結合
+export const QUESTIONS_DETAILED: Question[] = [...QUESTIONS_FULL, ...QUESTIONS_EXTENDED];
