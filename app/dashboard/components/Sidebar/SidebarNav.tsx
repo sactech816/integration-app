@@ -131,6 +131,7 @@ export default function SidebarNav({
     'sns-post': contentCounts.sns_post,
     'site': contentCounts.site,
     'bigfive': contentCounts.bigfive,
+    'fortune': contentCounts.fortune,
   };
 
   // ツールアイテムをMenuItemに変換
