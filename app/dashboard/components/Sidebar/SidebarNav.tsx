@@ -80,6 +80,7 @@ type SidebarNavProps = {
     reddit_keyword_research: number;
     site: number;
     bigfive: number;
+    fortune: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態

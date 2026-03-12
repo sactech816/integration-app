@@ -9,8 +9,9 @@ import { QUESTIONS_SIMPLE, QUESTIONS_FULL, QUESTIONS_DETAILED, calculateBigFive,
 import type { BigFiveResult, EnneagramResult } from '@/lib/bigfive';
 import { supabase } from '@/lib/supabase';
 import PremiumReportSection from '@/components/bigfive/PremiumReportSection';
+import BigFiveGuideModal from '@/components/bigfive/BigFiveGuideModal';
 import Footer from '@/components/shared/Footer';
-import { Brain, Sparkles, Clock, FileText, Share2, ArrowRight, CheckCircle, Crown, Target, Download, ExternalLink, Mail, Loader2, X, UserPlus } from 'lucide-react';
+import { Brain, Sparkles, Clock, FileText, Share2, ArrowRight, CheckCircle, Crown, Target, Download, ExternalLink, Mail, Loader2, X, UserPlus, HelpCircle, BookOpen } from 'lucide-react';
 // メルマガリストID（Big Fiveサンプル申込者用）
 const BIGFIVE_NEWSLETTER_LIST_ID = '2ee250e1-b763-4718-82b1-ef20ed86075a';
 
@@ -65,6 +66,7 @@ export default function BigFivePage() {
   const [sampleError, setSampleError] = useState<string | null>(null);
   const [sampleDone, setSampleDone] = useState(false);
   const [unlockedSamples, setUnlockedSamples] = useState<Set<string>>(new Set());
+  const [showGuide, setShowGuide] = useState(false);
 
   // localStorage から解放済みサンプルを復元
   useEffect(() => {
@@ -302,21 +304,38 @@ export default function BigFivePage() {
       <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
 
+          {/* ガイドモーダル（初回自動表示） */}
+          {phase === 'landing' && (
+            <BigFiveGuideModal
+              forceOpen={showGuide}
+              onClose={() => setShowGuide(false)}
+            />
+          )}
+
           {/* === ランディング === */}
           {phase === 'landing' && (
             <div className="space-y-8">
               {/* ヒーロー */}
               <div className="text-center space-y-4">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full">
-                  <Brain className="w-5 h-5 text-indigo-600" />
-                  <span className="text-sm font-medium text-indigo-700">科学的性格診断</span>
+                <div className="flex items-center justify-center gap-2">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full">
+                    <Brain className="w-5 h-5 text-indigo-600" />
+                    <span className="text-sm font-medium text-indigo-700">科学的性格診断</span>
+                  </div>
+                  <button
+                    onClick={() => setShowGuide(true)}
+                    className="w-8 h-8 rounded-full bg-indigo-50 hover:bg-indigo-100 flex items-center justify-center transition-colors"
+                    title="使い方ガイド"
+                  >
+                    <HelpCircle className="w-4 h-4 text-indigo-500" />
+                  </button>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
                   Big Five 性格診断
                 </h1>
                 <p className="text-gray-600 max-w-xl mx-auto leading-relaxed">
                   世界中の心理学研究で使われている「ビッグファイブ理論」に基づく性格診断です。
-                  5つの性格特性と30のファセット、さらにMBTI風16タイプも分かります。
+                  5つの性格特性と30のファセット、さらに16パーソナリティタイプも分かります。
                 </p>
               </div>
 
@@ -488,6 +507,15 @@ export default function BigFivePage() {
                     </div>
                   ))}
                 </div>
+                <div className="text-center mt-4">
+                  <a
+                    href="/bigfive/about"
+                    className="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    診断手法について詳しく見る
+                  </a>
+                </div>
               </div>
             </div>
           )}
@@ -507,6 +535,7 @@ export default function BigFivePage() {
                 )}
               </div>
               <BigFiveQuiz
+                key={`quiz-${testMode}`}
                 questions={testMode === 'simple' ? QUESTIONS_SIMPLE : testMode === 'full' ? QUESTIONS_FULL : QUESTIONS_DETAILED}
                 onComplete={handleQuizComplete}
               />
@@ -524,6 +553,7 @@ export default function BigFivePage() {
                 <p className="text-xs text-indigo-500 mt-2">ステップ 2/2: エニアグラム性格タイプ</p>
               </div>
               <BigFiveQuiz
+                key="quiz-enneagram"
                 questions={ENNEAGRAM_QUESTIONS.map(q => ({
                   id: q.id,
                   text: q.text,

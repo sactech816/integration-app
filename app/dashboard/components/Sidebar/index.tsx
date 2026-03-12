@@ -39,6 +39,7 @@ type SidebarProps = {
     reddit_keyword_research: number;
     site: number;
     bigfive: number;
+    fortune: number;
   };
   totalViews: number;
   onLogout: () => void;

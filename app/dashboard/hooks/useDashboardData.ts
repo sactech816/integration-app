@@ -62,6 +62,7 @@ type UseDashboardDataReturn = {
     reddit_keyword_research: number;
     site: number;
     bigfive: number;
+    fortune: number;
   };
   totalViews: number;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -153,6 +154,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     reddit_keyword_research: 0,
     site: 0,
     bigfive: 0,
+    fortune: 0,
   });
   const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
   const [purchases, setPurchases] = useState<string[]>([]);
@@ -729,7 +731,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, entertainmentQuizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult, lineResult, siteResult, bigfiveResult] = await Promise.all([
+      const [quizResult, entertainmentQuizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult, lineResult, siteResult, bigfiveResult, fortuneResult] = await Promise.all([
         // 診断クイズ数（ビジネス診断のみ）
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).or('quiz_type.is.null,quiz_type.eq.business')
@@ -798,6 +800,8 @@ export function useDashboardData(): UseDashboardDataReturn {
           : supabase.from(TABLES.SITES).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         // Big Five診断数
         supabase.from(TABLES.BIGFIVE_RESULTS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // 生年月日占い診断数
+        supabase.from(TABLES.FORTUNE_RESULTS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
       ]);
 
       setContentCounts({
@@ -828,6 +832,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         reddit_keyword_research: 0,
         site: siteResult.count || 0,
         bigfive: bigfiveResult?.count || 0,
+        fortune: fortuneResult?.count || 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);

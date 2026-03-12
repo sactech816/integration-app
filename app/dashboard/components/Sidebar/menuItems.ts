@@ -32,6 +32,7 @@ import {
   Tv,
   Globe,
   Brain,
+  Star,
   LucideIcon,
 } from 'lucide-react';
 
@@ -135,6 +136,15 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: 'エンタメ診断作成',
     color: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200' },
     href: '/entertainment/create',
+    category: 'quiz',
+  },
+  {
+    id: 'fortune',
+    label: '生年月日占い',
+    icon: Star,
+    description: '九星気学・数秘術・四柱推命',
+    color: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200' },
+    href: '/fortune',
     category: 'quiz',
   },
 

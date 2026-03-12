@@ -3,7 +3,8 @@
 import { BigFiveResult, FACET_LABELS } from '@/lib/bigfive';
 import type { EnneagramResult } from '@/lib/bigfive';
 import { getTraitDetail } from '@/lib/bigfive/trait-details';
-import { Brain, Users, Target, Heart, Zap, ChevronDown, ChevronUp, Shield, Compass, Star } from 'lucide-react';
+import { getPersonalityTypeDetail } from '@/lib/bigfive/personality-types';
+import { Brain, Users, Target, Heart, Zap, ChevronDown, ChevronUp, Compass, Star, Sparkles, ThumbsUp, AlertCircle, HeartHandshake, User } from 'lucide-react';
 import { useState } from 'react';
 
 interface BigFiveResultViewProps {
@@ -44,17 +45,34 @@ const TRIAD_LABELS = {
 export default function BigFiveResultView({ result, enneagramResult, showFacets = true }: BigFiveResultViewProps) {
   const [expandedTrait, setExpandedTrait] = useState<string | null>(null);
   const hasFacets = result.testType === 'full' || result.testType === 'detailed';
+  const typeDetail = getPersonalityTypeDetail(result.mbtiType.code);
 
   return (
     <div className="space-y-8">
-      {/* MBTI風タイプ表示 */}
+      {/* 16パーソナリティタイプ表示 */}
       <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 sm:p-8 text-white text-center shadow-lg">
-        <p className="text-sm font-medium text-indigo-200 mb-2">あなたのタイプ</p>
-        <p className="text-4xl sm:text-5xl font-bold tracking-wider mb-2">{result.mbtiType.code}</p>
-        <p className="text-xl font-semibold text-indigo-100 mb-4">{result.mbtiType.name}</p>
-        <p className="text-sm text-indigo-100 leading-relaxed max-w-lg mx-auto">{result.mbtiType.description}</p>
+        <p className="text-sm font-medium text-indigo-200 mb-2">あなたの16パーソナリティタイプ</p>
+        <p className="text-4xl sm:text-5xl font-bold tracking-wider mb-1">{result.mbtiType.code}</p>
+        <p className="text-xl font-semibold text-indigo-100">{result.mbtiType.name}</p>
+        {typeDetail && (
+          <p className="text-sm font-medium text-indigo-200 mb-3">— {typeDetail.nickname} —</p>
+        )}
+        <p className="text-sm text-indigo-100 leading-relaxed max-w-lg mx-auto">
+          {typeDetail?.description || result.mbtiType.description}
+        </p>
 
-        {/* MBTI 4次元バー */}
+        {/* キーワードタグ */}
+        {typeDetail && (
+          <div className="flex flex-wrap gap-2 justify-center mt-4">
+            {typeDetail.keywords.map((kw, i) => (
+              <span key={i} className="px-3 py-1 bg-white/20 rounded-full text-xs font-medium text-white">
+                {kw}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* 4次元バー */}
         <div className="grid grid-cols-2 gap-3 mt-6 max-w-md mx-auto">
           {Object.entries(result.mbtiType.dimensions).map(([key, dim]) => (
             <div key={key} className="bg-white/15 rounded-xl px-3 py-2">
@@ -70,6 +88,77 @@ export default function BigFiveResultView({ result, enneagramResult, showFacets 
           ))}
         </div>
       </div>
+
+      {/* タイプ詳細情報 */}
+      {typeDetail && (
+        <div className="bg-white border border-gray-300 rounded-2xl shadow-md p-6 sm:p-8">
+          <div className="flex items-center gap-2 mb-5">
+            <User className="w-5 h-5 text-indigo-600" />
+            <h3 className="text-lg font-bold text-gray-900">{result.mbtiType.code} タイプの特徴</h3>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4 mb-5">
+            {/* 強み */}
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <ThumbsUp className="w-4 h-4 text-green-600" />
+                <h4 className="text-sm font-bold text-green-800">強み</h4>
+              </div>
+              <ul className="space-y-1.5">
+                {typeDetail.strengths.map((s, i) => (
+                  <li key={i} className="text-sm text-green-700 flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5 flex-shrink-0">+</span>{s}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* 弱み */}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle className="w-4 h-4 text-amber-600" />
+                <h4 className="text-sm font-bold text-amber-800">注意点</h4>
+              </div>
+              <ul className="space-y-1.5">
+                {typeDetail.weaknesses.map((w, i) => (
+                  <li key={i} className="text-sm text-amber-700 flex items-start gap-2">
+                    <span className="text-amber-500 mt-0.5 flex-shrink-0">!</span>{w}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* 相性の良いタイプ & 有名人 */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <HeartHandshake className="w-4 h-4 text-purple-600" />
+                <h4 className="text-sm font-bold text-purple-800">相性の良いタイプ</h4>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {typeDetail.compatibleTypes.map((ct, i) => (
+                  <span key={i} className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-sm font-bold">
+                    {ct}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-4 h-4 text-indigo-600" />
+                <h4 className="text-sm font-bold text-indigo-800">同じタイプの有名人</h4>
+              </div>
+              <ul className="space-y-1">
+                {typeDetail.famousPeople.map((fp, i) => (
+                  <li key={i} className="text-sm text-indigo-700">{fp}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* DISC行動スタイル */}
       {result.discType && (

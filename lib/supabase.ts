@@ -35,4 +35,6 @@ export const TABLES = {
   SITES: 'sites',
   SITE_PAGES: 'site_pages',
   BIGFIVE_RESULTS: 'bigfive_results',
+  FORTUNE_RESULTS: 'fortune_results',
+  FORTUNE_CONTENTS: 'fortune_contents',
 } as const;

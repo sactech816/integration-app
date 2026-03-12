@@ -11,5 +11,8 @@ export type { BigFiveResult, TraitResult, FacetScore, MBTIType, DISCType } from 
 export { TRAIT_DETAILS, getTraitDetail } from './trait-details';
 export type { TraitDetail } from './trait-details';
 
+export { PERSONALITY_TYPES, getPersonalityTypeDetail } from './personality-types';
+export type { PersonalityTypeDetail } from './personality-types';
+
 export { ENNEAGRAM_QUESTIONS, ENNEAGRAM_TYPES, calculateEnneagram } from './enneagram';
 export type { EnneagramQuestion, EnneagramResult } from './enneagram';
