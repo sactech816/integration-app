@@ -267,7 +267,7 @@ export default function QuizLandingPage() {
               <span className="text-blue-600">集客を自動化</span>する
             </h1>
             <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-              AIが設問・結果を自動生成。作成した診断クイズを公開するだけで、
+              AIが設問・結果を自動生成。無料で作成した診断クイズを公開するだけで、
               <br className="hidden sm:block" />
               24時間365日あなたの代わりに見込み顧客を集め続けます。
             </p>

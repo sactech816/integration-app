@@ -101,7 +101,7 @@ export default function AttendanceLandingPage() {
               <span className="text-cyan-600">かんたんオンライン化</span>
             </h1>
             <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-              出欠フォームを作成してURLをシェアするだけ。
+              出欠フォームを無料で作成してURLをシェアするだけ。
               <br className="hidden sm:block" />
               参加者管理・リマインダー・当日のQR受付まで一括対応します。
             </p>

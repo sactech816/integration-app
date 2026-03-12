@@ -103,7 +103,7 @@ export default function OnboardingLandingPage() {
             <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
               サービス・商品の使い始め方をステップバイステップで案内。
               <br className="hidden sm:block" />
-              お客様の「どうすればいいの？」をゼロにして、満足度を高めます。
+              お客様の「どうすればいいの？」をゼロにして、無料で満足度を高めます。
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/onboarding/editor" className="inline-flex items-center gap-2 px-8 py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">

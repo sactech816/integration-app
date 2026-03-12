@@ -103,7 +103,7 @@ export default function BookingLandingPage() {
             <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
               電話対応不要。お客様がいつでもオンライン予約できる仕組みを
               <br className="hidden sm:block" />
-              数分でセットアップ。自動確認メールで対応コストもゼロに。
+              無料で数分でセットアップ。自動確認メールで対応コストもゼロに。
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/booking/new" className="inline-flex items-center gap-2 px-8 py-4 bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">

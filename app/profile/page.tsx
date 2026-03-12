@@ -103,7 +103,7 @@ export default function ProfileLandingPage() {
             <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
               AIが自己紹介文を自動生成。SNSリンク・問い合わせフォームを一体化した
               <br className="hidden sm:block" />
-              集客できる個人ページを、最短5分で作成・公開できます。
+              集客できる個人ページを、無料で最短5分で作成・公開できます。
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/profile/editor" className="inline-flex items-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">

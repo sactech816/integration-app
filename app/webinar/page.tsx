@@ -103,7 +103,7 @@ export default function WebinarLandingPage() {
             <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
               動画・カウントダウン・時間制御CTAなど、ウェビナーに特化したブロックで
               <br className="hidden sm:block" />
-              高コンバージョンなランディングページを数分で作成できます。
+              高コンバージョンなランディングページを無料で数分で作成できます。
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/webinar/editor" className="inline-flex items-center gap-2 px-8 py-4 bg-violet-600 hover:bg-violet-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">

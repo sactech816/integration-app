@@ -103,7 +103,7 @@ export default function BusinessLandingPage() {
             <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
               AIがセールスコピーを自動生成。申込みフォーム付きの
               <br className="hidden sm:block" />
-              本格ランディングページが最短10分で完成します。
+              本格ランディングページが無料で最短10分で完成します。
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/business/editor" className="inline-flex items-center gap-2 px-8 py-4 bg-amber-600 hover:bg-amber-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">

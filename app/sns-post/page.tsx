@@ -101,7 +101,7 @@ export default function SNSPostLandingPage() {
               <span className="text-rose-600">AIで素早く作成</span>
             </h1>
             <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-              トピックを入力するだけで、各SNSに最適化された投稿文を自動生成。
+              トピックを入力するだけで、各SNSに最適化された投稿文を無料で自動生成。
               <br className="hidden sm:block" />
               ハッシュタグ提案・トーン選択で、効果的な発信をサポートします。
             </p>

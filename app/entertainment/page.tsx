@@ -145,7 +145,7 @@ export default function EntertainmentLandingPage() {
         <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
           AIと会話するだけで、どうぶつ占い・性格診断・脳内メーカーのような
           <br className="hidden sm:block" />
-          楽しいエンタメ診断をすぐに作成できます
+          楽しいエンタメ診断を無料ですぐに作成できます
         </p>
         <Link
           href="/entertainment/create"

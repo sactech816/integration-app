@@ -165,7 +165,7 @@ export default function HomePage() {
 
           <div className="container mx-auto px-4 text-center relative z-10">
             <span className="inline-block py-1.5 px-5 rounded-full bg-white text-sm font-bold mb-6 tracking-wide border-2 shadow-sm" style={{ color: '#f97316', borderColor: '#f97316' }}>
-              ぜーんぶ月額0円で使い放題
+              ぜーんぶ無料で使い放題
             </span>
             <h1 className="text-3xl md:text-4xl lg:text-6xl font-black leading-tight mb-6" style={{ color: '#5d4037' }}>
               集客に必要なもの、<br />
@@ -337,7 +337,7 @@ export default function HomePage() {
                   </h3>
                   <p className="text-sm text-gray-600 leading-relaxed">
                     LP・診断・予約・メルマガ・ファネル・リサーチ…<br />
-                    カテゴリ別に全ツールをチェック
+                    すべて無料で使えるツールをカテゴリ別にチェック
                   </p>
                 </div>
                 <div className="flex items-center gap-2 font-bold text-sm mt-4 group-hover:gap-3 transition-all" style={{ color: '#f97316' }}>

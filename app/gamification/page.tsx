@@ -112,7 +112,7 @@ export default function GamificationLandingPage() {
             <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
               ガチャ・スクラッチ・スタンプラリーなどのゲーミフィケーションキャンペーンを
               <br className="hidden sm:block" />
-              コーディング不要でかんたんに作成・公開できます。
+              コーディング不要・無料でかんたんに作成・公開できます。
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/gamification/new" className="inline-flex items-center gap-2 px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">

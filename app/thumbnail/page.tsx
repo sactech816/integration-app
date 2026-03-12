@@ -103,7 +103,7 @@ export default function ThumbnailLandingPage() {
             <p className="text-lg text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
               豊富なテンプレートからデザインを選んで、テキストと画像を変えるだけ。
               <br className="hidden sm:block" />
-              デザインの知識不要で、プロ品質のサムネイルが完成します。
+              デザインの知識不要で、プロ品質のサムネイルが無料で完成します。
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/thumbnail/editor" className="inline-flex items-center gap-2 px-8 py-4 bg-slate-700 hover:bg-slate-800 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
