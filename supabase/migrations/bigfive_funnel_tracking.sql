@@ -2,8 +2,10 @@
 -- Big Five ファネルトラッキング
 -- =============================================================================
 
--- 1. newsletter_subscribers にメタデータ列とユーザーリンク列を追加
+-- 1. newsletter_subscribers に不足カラムを追加
+--    source: v2マイグレーション未適用の場合に備えて追加
 ALTER TABLE newsletter_subscribers
+  ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'manual',
   ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}',
   ADD COLUMN IF NOT EXISTS linked_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
 

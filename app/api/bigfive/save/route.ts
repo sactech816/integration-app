@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+
+function getServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,6 +55,23 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('BigFive save error:', error);
       return NextResponse.json({ error: '保存に失敗しました' }, { status: 500 });
+    }
+
+    // サンプル申込者との遅延リンク（メール照合）
+    if (user.email) {
+      try {
+        const serviceClient = getServiceClient();
+        if (serviceClient) {
+          await serviceClient
+            .from('newsletter_subscribers')
+            .update({ linked_user_id: user.id })
+            .eq('email', user.email)
+            .eq('source', 'bigfive_sample')
+            .is('linked_user_id', null);
+        }
+      } catch (e) {
+        console.error('BigFive email linking error:', e);
+      }
     }
 
     return NextResponse.json({ id: data.id });

@@ -17,6 +17,35 @@ const BIGFIVE_NEWSLETTER_LIST_ID = '2ee250e1-b763-4718-82b1-ef20ed86075a';
 type Phase = 'landing' | 'quiz' | 'result';
 type TestMode = 'simple' | 'full';
 
+// ブラウザセッションID（ファネル追跡用）
+function getOrCreateSessionId(): string {
+  const key = 'bigfive_session_id';
+  try {
+    let id = localStorage.getItem(key);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(key, id);
+    }
+    return id;
+  } catch {
+    return crypto.randomUUID();
+  }
+}
+
+// ファネルイベント送信（fire-and-forget）
+function trackFunnelEvent(eventType: string, extra?: { email?: string; metadata?: Record<string, any> }) {
+  fetch('/api/bigfive/funnel-event', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      eventType,
+      sessionId: getOrCreateSessionId(),
+      email: extra?.email,
+      metadata: extra?.metadata,
+    }),
+  }).catch(() => {});
+}
+
 export default function BigFivePage() {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>('landing');
@@ -67,10 +96,19 @@ export default function BigFivePage() {
       const res = await fetch(`/api/newsletter-maker/subscribe/${BIGFIVE_NEWSLETTER_LIST_ID}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: sampleEmail, source: 'bigfive_sample' }),
+        body: JSON.stringify({
+          email: sampleEmail,
+          source: 'bigfive_sample',
+          metadata: { sample_type: sampleModal.code },
+        }),
       });
 
       if (res.ok) {
+        // ファネルイベント記録
+        trackFunnelEvent('sample_request', {
+          email: sampleEmail,
+          metadata: { sample_type: sampleModal.code, sample_name: sampleModal.name },
+        });
         setSampleDone(true);
         // 解放済みに追加 & localStorage に保存
         const next = new Set(unlockedSamples);
@@ -100,6 +138,7 @@ export default function BigFivePage() {
     setTestMode(mode);
     setPhase('quiz');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    trackFunnelEvent('quiz_start', { metadata: { test_mode: mode } });
   };
 
   const handleQuizComplete = async (answers: Record<number, number>, durationSeconds: number) => {
@@ -138,6 +177,14 @@ export default function BigFivePage() {
         if (res.ok) {
           const data = await res.json();
           setResultId(data.id);
+          trackFunnelEvent('quiz_complete', {
+            metadata: {
+              test_mode: testMode,
+              mbti_code: calcResult.mbtiType.code,
+              result_id: data.id,
+              duration_seconds: durationSeconds,
+            },
+          });
         }
       } catch (e) {
         console.error('Save error:', e);

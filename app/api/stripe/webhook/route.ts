@@ -150,6 +150,18 @@ export async function POST(request: NextRequest) {
               .eq('user_id', userId);
 
             console.log(`✅ BigFive PDF purchased: user=${userId}, result=${resultId}`);
+
+            // ファネルイベント記録
+            await supabase
+              .from('bigfive_funnel_events')
+              .insert({
+                user_id: userId,
+                event_type: 'pdf_purchase',
+                metadata: {
+                  result_id: resultId,
+                  amount: session.amount_total,
+                },
+              });
           }
           break;
         }
