@@ -13,6 +13,7 @@ interface ConciergeChatProps {
   remainingMessages: number | null;
   currentPage?: string;
   onSend: (text: string) => void;
+  onFeedback?: (messageId: string, feedback: 1 | -1) => void;
   onClose: () => void;
   onClear: () => void;
 }
@@ -56,6 +57,7 @@ export default function ConciergeChat({
   remainingMessages,
   currentPage,
   onSend,
+  onFeedback,
   onClose,
   onClear,
 }: ConciergeChatProps) {
@@ -143,6 +145,7 @@ export default function ConciergeChat({
             isLast={idx === messages.length - 1 && !isLoading}
             onNavigate={onClose}
             onSend={onSend}
+            onFeedback={onFeedback}
           />
         ))}
 

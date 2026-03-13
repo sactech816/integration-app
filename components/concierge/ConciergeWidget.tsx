@@ -1,12 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import { useConciergeChat } from '@/lib/hooks/useConciergeChat';
 import ConciergeAvatar from './ConciergeAvatar';
 import ConciergeChat from './ConciergeChat';
-import AuthModal from '@/components/shared/AuthModal';
 
 interface ConciergeWidgetProps {
   onOpenChange?: (isOpen: boolean) => void;
@@ -14,8 +12,6 @@ interface ConciergeWidgetProps {
 
 export default function ConciergeWidget({ onOpenChange }: ConciergeWidgetProps) {
   const pathname = usePathname();
-  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
-  const [showAuth, setShowAuth] = useState(false);
 
   const {
     messages,
@@ -24,32 +20,10 @@ export default function ConciergeWidget({ onOpenChange }: ConciergeWidgetProps) 
     avatarState,
     remainingMessages,
     sendMessage,
+    sendFeedback,
     toggleOpen,
     clearHistory,
   } = useConciergeChat();
-
-  // ユーザー情報を取得
-  useEffect(() => {
-    if (!supabase) return;
-
-    const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser({ id: session.user.id, email: session.user.email });
-      }
-    };
-    init();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser({ id: session.user.id, email: session.user.email });
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   // 親コンポーネントに開閉状態を通知
   useEffect(() => {
@@ -61,21 +35,13 @@ export default function ConciergeWidget({ onOpenChange }: ConciergeWidgetProps) 
   const isPublicPage = publicPrefixes.some(p => pathname.startsWith(p)) && !pathname.includes('/editor');
   if (isPublicPage) return null;
 
-  const handleToggle = () => {
-    if (!user) {
-      setShowAuth(true);
-      return;
-    }
-    toggleOpen();
-  };
-
   return (
     <>
       {/* トリガーボタン — チャットが閉じている時のみ表示 */}
       {!isOpen && (
         <div className="fixed bottom-24 right-6 z-[60]">
           <button
-            onClick={handleToggle}
+            onClick={toggleOpen}
             className="relative w-14 h-14 rounded-full shadow-lg
               bg-gradient-to-br from-blue-500 to-blue-600
               flex items-center justify-center
@@ -99,23 +65,12 @@ export default function ConciergeWidget({ onOpenChange }: ConciergeWidgetProps) 
             remainingMessages={remainingMessages}
             currentPage={pathname}
             onSend={sendMessage}
+            onFeedback={sendFeedback}
             onClose={toggleOpen}
             onClear={clearHistory}
           />
         </div>
       )}
-
-      {/* 未ログインユーザー向けAuthModal */}
-      <AuthModal
-        isOpen={showAuth}
-        onClose={() => setShowAuth(false)}
-        setUser={(u: any) => {
-          if (u?.id) {
-            setUser({ id: u.id, email: u.email });
-          }
-        }}
-        defaultTab="login"
-      />
     </>
   );
 }

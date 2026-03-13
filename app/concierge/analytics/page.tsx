@@ -5,16 +5,16 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getAdminEmails } from '@/lib/constants';
 import Header from '@/components/shared/Header';
-import AuthModal from '@/components/shared/AuthModal';
 import {
-  BarChart3, MessageSquare, Users, TrendingUp,
-  ChevronRight, Search, Calendar, HelpCircle,
+  BarChart3, MessageSquare, Users, TrendingUp, ThumbsUp,
+  ChevronRight, Search, Calendar, HelpCircle, DollarSign, Clock, UserCheck,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell,
 } from 'recharts';
 
-type Tab = 'overview' | 'logs' | 'questions';
+type Tab = 'overview' | 'segments' | 'costs' | 'logs' | 'questions';
 
 interface DailyChart {
   date: string;
@@ -24,7 +24,9 @@ interface DailyChart {
 
 interface SessionItem {
   userId: string;
+  visitorId: string;
   sessionId: string;
+  userType: string;
   lastMessage: string;
   lastAt: string;
   messageCount: number;
@@ -57,17 +59,19 @@ export default function ConciergeAnalyticsPage() {
   const [range, setRange] = useState(7);
 
   // Overview data
-  const [overviewData, setOverviewData] = useState<{
-    totalMessages: number;
-    uniqueUsers: number;
-    periodMessages: number;
-    dailyChart: DailyChart[];
-  } | null>(null);
+  const [overviewData, setOverviewData] = useState<any>(null);
+
+  // Segments data
+  const [segmentsData, setSegmentsData] = useState<any>(null);
+
+  // Costs data
+  const [costsData, setCostsData] = useState<any>(null);
 
   // Logs data
   const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [selectedSession, setSelectedSession] = useState<{
     userId: string;
+    visitorId: string;
     sessionId: string;
   } | null>(null);
   const [sessionMessages, setSessionMessages] = useState<SessionMessage[]>([]);
@@ -102,6 +106,8 @@ export default function ConciergeAnalyticsPage() {
       const data = await res.json();
 
       if (tab === 'overview') setOverviewData(data);
+      if (tab === 'segments') setSegmentsData(data);
+      if (tab === 'costs') setCostsData(data);
       if (tab === 'logs') setSessions(data.sessions || []);
       if (tab === 'questions') setQuestionsData(data);
     } catch {
@@ -113,11 +119,11 @@ export default function ConciergeAnalyticsPage() {
     if (isAdmin) fetchData(activeTab);
   }, [isAdmin, activeTab, range, fetchData]);
 
-  const loadSession = async (userId: string, sessionId: string) => {
-    setSelectedSession({ userId, sessionId });
+  const loadSession = async (userId: string, visitorId: string, sessionId: string) => {
+    setSelectedSession({ userId, visitorId, sessionId });
     try {
       const res = await fetch(
-        `/api/concierge/analytics?tab=session&userId=${userId}&sessionId=${sessionId}`
+        `/api/concierge/analytics?tab=session&userId=${userId || ''}&visitorId=${visitorId || ''}&sessionId=${sessionId}`
       );
       if (!res.ok) return;
       const data = await res.json();
@@ -151,6 +157,8 @@ export default function ConciergeAnalyticsPage() {
 
   const tabs = [
     { id: 'overview' as Tab, label: '概要', icon: BarChart3 },
+    { id: 'segments' as Tab, label: 'ユーザー分析', icon: UserCheck },
+    { id: 'costs' as Tab, label: 'コスト分析', icon: DollarSign },
     { id: 'logs' as Tab, label: '会話ログ', icon: MessageSquare },
     { id: 'questions' as Tab, label: 'よくある質問', icon: HelpCircle },
   ];
@@ -222,11 +230,19 @@ export default function ConciergeAnalyticsPage() {
                 <LogsTab sessions={sessions} onSelect={loadSession} />
               )
             )}
+            {activeTab === 'segments' && segmentsData && (
+              <SegmentsTab data={segmentsData} range={range} />
+            )}
+            {activeTab === 'costs' && costsData && (
+              <CostsTab data={costsData} range={range} />
+            )}
             {activeTab === 'questions' && questionsData && (
               <QuestionsTab data={questionsData} range={range} />
             )}
             {/* ローディング */}
             {((activeTab === 'overview' && !overviewData) ||
+              (activeTab === 'segments' && !segmentsData) ||
+              (activeTab === 'costs' && !costsData) ||
               (activeTab === 'questions' && !questionsData)) && (
               <div className="flex justify-center py-20">
                 <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full" />
@@ -243,14 +259,16 @@ export default function ConciergeAnalyticsPage() {
 function OverviewTab({ data, range }: { data: any; range: number }) {
   const stats = [
     { label: '総メッセージ数', value: data.totalMessages, icon: MessageSquare, color: 'blue' },
-    { label: 'ユニークユーザー', value: data.uniqueUsers, icon: Users, color: 'green' },
     { label: `${range}日間のメッセージ`, value: data.periodMessages, icon: TrendingUp, color: 'purple' },
+    { label: 'ログインユーザー', value: data.uniqueLoggedIn, icon: UserCheck, color: 'green' },
+    { label: 'ゲストユーザー', value: data.uniqueGuests, icon: Users, color: 'amber' },
   ];
 
   const colorMap: Record<string, string> = {
     blue: 'bg-blue-50 text-blue-700',
     green: 'bg-green-50 text-green-700',
     purple: 'bg-purple-50 text-purple-700',
+    amber: 'bg-amber-50 text-amber-700',
   };
 
   return (
@@ -258,7 +276,7 @@ function OverviewTab({ data, range }: { data: any; range: number }) {
       <h1 className="text-xl font-bold text-gray-900 mb-6">概要</h1>
 
       {/* 統計カード */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         {stats.map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="bg-white rounded-2xl border border-gray-200 shadow-md p-5">
             <div className="flex items-center gap-3">
@@ -266,13 +284,39 @@ function OverviewTab({ data, range }: { data: any; range: number }) {
                 <Icon className="w-5 h-5" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">{value.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-gray-900">{(value ?? 0).toLocaleString()}</div>
                 <div className="text-xs text-gray-500">{label}</div>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* 満足度 */}
+      {data.satisfaction && data.satisfaction.total > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 mb-6">
+          <h2 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <ThumbsUp className="w-4 h-4" />
+            満足度
+          </h2>
+          <div className="flex items-center gap-6">
+            <div className="text-3xl font-bold text-gray-900">
+              {data.satisfaction.rate}%
+            </div>
+            <div className="flex items-center gap-4 text-sm text-gray-600">
+              <span className="flex items-center gap-1">
+                <ThumbsUp className="w-4 h-4 text-blue-500" />
+                {data.satisfaction.thumbsUp}
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="rotate-180 inline-block"><ThumbsUp className="w-4 h-4 text-red-400" /></span>
+                {data.satisfaction.thumbsDown}
+              </span>
+              <span className="text-gray-400">（合計 {data.satisfaction.total} 件）</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 日別チャート */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6">
@@ -301,8 +345,16 @@ function OverviewTab({ data, range }: { data: any; range: number }) {
 /** 会話ログタブ */
 function LogsTab({ sessions, onSelect }: {
   sessions: SessionItem[];
-  onSelect: (userId: string, sessionId: string) => void;
+  onSelect: (userId: string, visitorId: string, sessionId: string) => void;
 }) {
+  const typeLabel: Record<string, { text: string; cls: string }> = {
+    guest: { text: 'ゲスト', cls: 'bg-gray-100 text-gray-600' },
+    free: { text: '無料', cls: 'bg-blue-50 text-blue-600' },
+    standard: { text: 'スタンダード', cls: 'bg-green-50 text-green-700' },
+    business: { text: 'ビジネス', cls: 'bg-purple-50 text-purple-700' },
+    premium: { text: 'プレミアム', cls: 'bg-amber-50 text-amber-700' },
+  };
+
   return (
     <div>
       <h1 className="text-xl font-bold text-gray-900 mb-6">会話ログ</h1>
@@ -313,29 +365,39 @@ function LogsTab({ sessions, onSelect }: {
         </div>
       ) : (
         <div className="space-y-2">
-          {sessions.map((s, i) => (
-            <button
-              key={i}
-              onClick={() => onSelect(s.userId, s.sessionId)}
-              className="w-full bg-white rounded-xl border border-gray-200 shadow-sm p-4
-                hover:border-blue-200 hover:shadow-md transition-all text-left flex items-center gap-4"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="text-sm text-gray-900 font-medium truncate">
-                  {s.lastMessage}
+          {sessions.map((s, i) => {
+            const badge = typeLabel[s.userType] || typeLabel.guest;
+            return (
+              <button
+                key={i}
+                onClick={() => onSelect(s.userId, s.visitorId, s.sessionId)}
+                className="w-full bg-white rounded-xl border border-gray-200 shadow-sm p-4
+                  hover:border-blue-200 hover:shadow-md transition-all text-left flex items-center gap-4"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${badge.cls}`}>
+                      {badge.text}
+                    </span>
+                    <span className="text-sm text-gray-900 font-medium truncate">
+                      {s.lastMessage}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {new Date(s.lastAt).toLocaleString('ja-JP')}
+                    </span>
+                    <span>{s.messageCount} メッセージ</span>
+                    <span className="font-mono text-gray-400">
+                      {(s.userId || s.visitorId || '').slice(0, 8)}...
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {new Date(s.lastAt).toLocaleString('ja-JP')}
-                  </span>
-                  <span>{s.messageCount} メッセージ</span>
-                  <span className="font-mono text-gray-400">{s.userId.slice(0, 8)}...</span>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-            </button>
-          ))}
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -344,10 +406,11 @@ function LogsTab({ sessions, onSelect }: {
 
 /** セッション詳細 */
 function SessionDetail({ session, messages, onBack }: {
-  session: { userId: string; sessionId: string };
+  session: { userId: string; visitorId: string; sessionId: string };
   messages: SessionMessage[];
   onBack: () => void;
 }) {
+  const identifier = session.userId || session.visitorId || '';
   return (
     <div>
       <button
@@ -358,7 +421,7 @@ function SessionDetail({ session, messages, onBack }: {
       </button>
       <h1 className="text-xl font-bold text-gray-900 mb-2">会話詳細</h1>
       <p className="text-xs text-gray-500 mb-6">
-        ユーザー: {session.userId.slice(0, 12)}... / セッション: {session.sessionId}
+        {session.userId ? 'ユーザー' : 'ビジター'}: {identifier.slice(0, 12)}... / セッション: {session.sessionId}
       </p>
 
       <div className="space-y-3">
@@ -382,6 +445,217 @@ function SessionDetail({ session, messages, onBack }: {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** ユーザー分析タブ */
+function SegmentsTab({ data, range }: { data: any; range: number }) {
+  const PIE_COLORS = ['#9CA3AF', '#3B82F6', '#10B981', '#8B5CF6', '#F59E0B'];
+
+  return (
+    <div>
+      <h1 className="text-xl font-bold text-gray-900 mb-6">
+        ユーザー分析（過去{range}日間）
+      </h1>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* ユーザー区分 円グラフ */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6">
+          <h2 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            ユーザー区分別メッセージ数
+          </h2>
+          {data.userTypes && data.userTypes.some((t: any) => t.count > 0) ? (
+            <div className="flex items-center gap-4">
+              <ResponsiveContainer width="50%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={data.userTypes.filter((t: any) => t.count > 0)}
+                    dataKey="count"
+                    nameKey="label"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label={({ label, percent }: any) => `${label} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {data.userTypes.filter((t: any) => t.count > 0).map((_: any, i: number) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="space-y-2">
+                {data.userTypes.map((t: any, i: number) => (
+                  <div key={t.type} className="flex items-center gap-2 text-sm">
+                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: PIE_COLORS[i] }} />
+                    <span className="text-gray-700">{t.label}</span>
+                    <span className="font-bold text-gray-900">{t.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 text-center py-8">データがありません</p>
+          )}
+        </div>
+
+        {/* タイムゾーンランキング */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6">
+          <h2 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            タイムゾーン TOP10
+          </h2>
+          {data.timezones && data.timezones.length > 0 ? (
+            <div className="space-y-2">
+              {data.timezones.map((tz: any, i: number) => (
+                <div key={tz.timezone} className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-gray-400 w-5 text-right">{i + 1}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-gray-800 font-medium">{tz.timezone}</span>
+                      <span className="text-xs text-gray-500">{tz.count}回</span>
+                    </div>
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-purple-500 rounded-full"
+                        style={{ width: `${(tz.count / data.timezones[0].count) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 text-center py-8">データがありません</p>
+          )}
+        </div>
+      </div>
+
+      {/* 時間帯チャート */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6">
+        <h2 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <Clock className="w-4 h-4" />
+          時間帯別メッセージ数
+        </h2>
+        {data.hourlyChart ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={data.hourlyChart}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="hour" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Bar dataKey="count" fill="#8B5CF6" name="メッセージ数" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <p className="text-sm text-gray-400 text-center py-12">データがありません</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** コスト分析タブ */
+function CostsTab({ data, range }: { data: any; range: number }) {
+  const stats = [
+    { label: '合計コスト（円）', value: `¥${(data.totalCostJPY ?? 0).toLocaleString()}`, icon: DollarSign, color: 'bg-red-50 text-red-700' },
+    { label: '合計コスト（USD）', value: `$${data.totalCostUSD ?? 0}`, icon: DollarSign, color: 'bg-green-50 text-green-700' },
+    { label: '1会話あたりコスト', value: `¥${data.costPerConversation ?? 0}`, icon: TrendingUp, color: 'bg-blue-50 text-blue-700' },
+    { label: '合計会話数', value: (data.totalConversations ?? 0).toLocaleString(), icon: MessageSquare, color: 'bg-purple-50 text-purple-700' },
+  ];
+
+  return (
+    <div>
+      <h1 className="text-xl font-bold text-gray-900 mb-6">
+        コスト分析（過去{range}日間）
+      </h1>
+
+      {/* コスト統計カード */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        {stats.map(({ label, value, icon: Icon, color }) => (
+          <div key={label} className="bg-white rounded-2xl border border-gray-200 shadow-md p-5">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
+                <Icon className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-xl font-bold text-gray-900">{value}</div>
+                <div className="text-xs text-gray-500">{label}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* トークン使用量 */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 mb-6">
+        <h2 className="text-sm font-bold text-gray-800 mb-3">トークン使用量</h2>
+        <div className="flex gap-6 text-sm">
+          <div>
+            <span className="text-gray-500">入力: </span>
+            <span className="font-bold text-gray-900">{(data.totalInputTokens ?? 0).toLocaleString()}</span>
+          </div>
+          <div>
+            <span className="text-gray-500">出力: </span>
+            <span className="font-bold text-gray-900">{(data.totalOutputTokens ?? 0).toLocaleString()}</span>
+          </div>
+          <div>
+            <span className="text-gray-500">合計: </span>
+            <span className="font-bold text-gray-900">{((data.totalInputTokens ?? 0) + (data.totalOutputTokens ?? 0)).toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 日別コストチャート */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6 mb-6">
+        <h2 className="text-sm font-bold text-gray-800 mb-4">日別コスト（円）</h2>
+        {data.dailyCostChart && data.dailyCostChart.length > 0 ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={data.dailyCostChart}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value: number) => [`¥${value}`, 'コスト']} />
+              <Bar dataKey="cost" fill="#EF4444" name="コスト（円）" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <p className="text-sm text-gray-400 text-center py-12">データがありません</p>
+        )}
+      </div>
+
+      {/* ユーザー区分別コスト */}
+      {data.typeCostData && data.typeCostData.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-6">
+          <h2 className="text-sm font-bold text-gray-800 mb-4">ユーザー区分別コスト</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-2 px-3 text-gray-600 font-medium">区分</th>
+                  <th className="text-right py-2 px-3 text-gray-600 font-medium">会話数</th>
+                  <th className="text-right py-2 px-3 text-gray-600 font-medium">入力トークン</th>
+                  <th className="text-right py-2 px-3 text-gray-600 font-medium">出力トークン</th>
+                  <th className="text-right py-2 px-3 text-gray-600 font-medium">コスト（円）</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.typeCostData.map((t: any) => (
+                  <tr key={t.type} className="border-b border-gray-100">
+                    <td className="py-2 px-3 font-medium text-gray-800">{t.label}</td>
+                    <td className="py-2 px-3 text-right text-gray-700">{t.conversations}</td>
+                    <td className="py-2 px-3 text-right text-gray-700">{t.inputTokens.toLocaleString()}</td>
+                    <td className="py-2 px-3 text-right text-gray-700">{t.outputTokens.toLocaleString()}</td>
+                    <td className="py-2 px-3 text-right font-bold text-gray-900">¥{t.cost}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

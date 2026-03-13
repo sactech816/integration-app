@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import type {
   AvatarState,
@@ -9,6 +9,18 @@ import type {
   ConciergeChatHistoryResponse,
 } from '@/components/concierge/types';
 
+/** localStorage にビジターIDを保存・取得 */
+function getOrCreateVisitorId(): string {
+  const key = 'concierge_visitor_id';
+  if (typeof window === 'undefined') return '';
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = `v_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
 interface UseConciergeChat {
   messages: ConciergeMessage[];
   isLoading: boolean;
@@ -16,6 +28,7 @@ interface UseConciergeChat {
   avatarState: AvatarState;
   remainingMessages: number | null;
   sendMessage: (text: string) => Promise<void>;
+  sendFeedback: (messageId: string, feedback: 1 | -1) => Promise<void>;
   toggleOpen: () => void;
   clearHistory: () => void;
   loadHistory: () => Promise<void>;
@@ -29,13 +42,23 @@ export function useConciergeChat(): UseConciergeChat {
   const [remainingMessages, setRemainingMessages] = useState<number | null>(null);
   const sessionIdRef = useRef<string>(`session_${new Date().toISOString().slice(0, 10)}`);
   const historyLoadedRef = useRef(false);
+  const visitorIdRef = useRef<string>('');
   const pathname = usePathname();
+
+  // ビジターID初期化
+  useEffect(() => {
+    visitorIdRef.current = getOrCreateVisitorId();
+  }, []);
 
   const loadHistory = useCallback(async () => {
     if (historyLoadedRef.current) return;
 
     try {
-      const res = await fetch(`/api/concierge/chat?sessionId=${sessionIdRef.current}`);
+      const params = new URLSearchParams({
+        sessionId: sessionIdRef.current,
+        visitorId: visitorIdRef.current,
+      });
+      const res = await fetch(`/api/concierge/chat?${params}`);
       if (!res.ok) return;
 
       const data: ConciergeChatHistoryResponse = await res.json();
@@ -62,7 +85,6 @@ export function useConciergeChat(): UseConciergeChat {
   }, [loadHistory]);
 
   const sendMessage = useCallback(async (text: string) => {
-    // 楽観的にユーザーメッセージを追加
     const userMsg: ConciergeMessage = {
       id: `temp_${Date.now()}`,
       role: 'user',
@@ -80,18 +102,20 @@ export function useConciergeChat(): UseConciergeChat {
         body: JSON.stringify({
           message: text,
           sessionId: sessionIdRef.current,
+          visitorId: visitorIdRef.current,
           currentPage: pathname,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          language: navigator.language,
         }),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        // レート制限
         if (res.status === 429) {
           const errorMsg: ConciergeMessage = {
             id: `err_${Date.now()}`,
             role: 'assistant',
-            content: err.error || '本日のメッセージ上限に達しました。明日またお話しましょう！',
+            content: err.error || '本日のメッセージ上限に達しました。',
             created_at: new Date().toISOString(),
           };
           setMessages((prev) => [...prev, errorMsg]);
@@ -119,7 +143,6 @@ export function useConciergeChat(): UseConciergeChat {
         sessionIdRef.current = data.sessionId;
       }
 
-      // 話し中アニメーション（1.5秒）
       setAvatarState('talking');
       setTimeout(() => setAvatarState('idle'), 1500);
     } catch (err: any) {
@@ -136,6 +159,21 @@ export function useConciergeChat(): UseConciergeChat {
     }
   }, [pathname]);
 
+  const sendFeedback = useCallback(async (messageId: string, feedback: 1 | -1) => {
+    try {
+      await fetch('/api/concierge/chat', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId, feedback }),
+      });
+      setMessages((prev) =>
+        prev.map(m => m.id === messageId ? { ...m, feedback } : m)
+      );
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const clearHistory = useCallback(() => {
     setMessages([]);
     historyLoadedRef.current = false;
@@ -149,6 +187,7 @@ export function useConciergeChat(): UseConciergeChat {
     avatarState,
     remainingMessages,
     sendMessage,
+    sendFeedback,
     toggleOpen,
     clearHistory,
     loadHistory,

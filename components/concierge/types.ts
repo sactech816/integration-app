@@ -6,6 +6,7 @@ export interface ConciergeMessage {
   content: string;
   actions?: ToolAction[];
   suggestions?: string[];
+  feedback?: 1 | -1 | null;
   created_at: string;
 }
 

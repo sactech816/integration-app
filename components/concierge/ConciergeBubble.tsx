@@ -1,5 +1,6 @@
 'use client';
 
+import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import ConciergeToolButton from './ConciergeToolButton';
 import type { ConciergeMessage } from './types';
 
@@ -8,6 +9,7 @@ interface ConciergeBubbleProps {
   isLast?: boolean;
   onNavigate?: () => void;
   onSend?: (text: string) => void;
+  onFeedback?: (messageId: string, feedback: 1 | -1) => void;
 }
 
 /** マークダウン記号をプレーンテキストに変換 */
@@ -25,7 +27,7 @@ function stripMarkdown(text: string): string {
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'); // [link](url)
 }
 
-export default function ConciergeBubble({ message, isLast, onNavigate, onSend }: ConciergeBubbleProps) {
+export default function ConciergeBubble({ message, isLast, onNavigate, onSend, onFeedback }: ConciergeBubbleProps) {
   const isUser = message.role === 'user';
   const displayText = isUser ? message.content : stripMarkdown(message.content);
 
@@ -51,6 +53,34 @@ export default function ConciergeBubble({ message, isLast, onNavigate, onSend }:
                 onNavigate={onNavigate}
               />
             ))}
+          </div>
+        )}
+
+        {/* 👍👎 フィードバックボタン（AI応答のみ） */}
+        {!isUser && onFeedback && !message.id.startsWith('err_') && (
+          <div className="flex items-center gap-1 mt-2 pt-1.5">
+            <button
+              onClick={() => onFeedback(message.id, 1)}
+              className={`p-1 rounded-md transition-all ${
+                message.feedback === 1
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-gray-300 hover:text-gray-500 hover:bg-gray-50'
+              }`}
+              title="役に立った"
+            >
+              <ThumbsUp className="w-3 h-3" />
+            </button>
+            <button
+              onClick={() => onFeedback(message.id, -1)}
+              className={`p-1 rounded-md transition-all ${
+                message.feedback === -1
+                  ? 'text-red-500 bg-red-50'
+                  : 'text-gray-300 hover:text-gray-500 hover:bg-gray-50'
+              }`}
+              title="改善が必要"
+            >
+              <ThumbsDown className="w-3 h-3" />
+            </button>
           </div>
         )}
 

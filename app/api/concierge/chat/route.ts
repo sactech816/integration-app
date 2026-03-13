@@ -1,8 +1,13 @@
 /**
  * コンシェルジュ AIチャット
- * GET  /api/concierge/chat?sessionId=xxx — チャット履歴取得
+ * GET  /api/concierge/chat?sessionId=xxx&visitorId=xxx — チャット履歴取得
  * POST /api/concierge/chat — メッセージ送信 + AI応答
- * Body: { message, sessionId?, currentPage? }
+ * Body: { message, sessionId?, visitorId?, currentPage?, timezone?, language? }
+ * PATCH /api/concierge/chat — フィードバック（👍👎）
+ * Body: { messageId, feedback: 1|-1 }
+ *
+ * ゲスト（未ログイン）: visitorId で識別、1日5回まで
+ * ログインユーザー: user_id で識別、プラン別制限
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -19,12 +24,15 @@ const MAX_HISTORY = 10;
 
 // プラン別の日次メッセージ制限
 const DAILY_LIMITS: Record<string, number> = {
-  guest: 0,
+  guest: 5,
   free: 10,
   standard: 30,
   business: 100,
   premium: 100,
 };
+
+// Haiku のトークン単価（USD per 1M tokens）
+const HAIKU_COST = { input: 0.80, output: 4.00 };
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -33,39 +41,65 @@ function getServiceClient() {
   return createClient(url, key);
 }
 
-/** 今日のメッセージ送信数を取得 */
-async function getDailyUsage(serviceClient: any, userId: string): Promise<number> {
+/** 今日のメッセージ送信数を取得（ユーザーID or ビジターID） */
+async function getDailyUsage(
+  serviceClient: any,
+  identifier: { userId?: string; visitorId?: string }
+): Promise<number> {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
-  const { count } = await serviceClient
+  let query = serviceClient
     .from('concierge_messages')
     .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
     .eq('role', 'user')
     .gte('created_at', todayStart.toISOString());
 
+  if (identifier.userId) {
+    query = query.eq('user_id', identifier.userId);
+  } else if (identifier.visitorId) {
+    query = query.eq('visitor_id', identifier.visitorId);
+  }
+
+  const { count } = await query;
   return count || 0;
 }
 
-// GET — チャット履歴取得
+// GET — チャット履歴取得（ログイン・ゲスト両対応）
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 });
+    const serviceClient = getServiceClient();
+    if (!serviceClient) {
+      return NextResponse.json({ error: 'サーバー設定エラー' }, { status: 500 });
     }
 
-    const sessionId = request.nextUrl.searchParams.get('sessionId');
+    // ユーザー取得（失敗してもOK = ゲスト）
+    let userId: string | null = null;
+    try {
+      const supabase = await createServerSupabaseClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      userId = user?.id || null;
+    } catch { /* ゲスト */ }
 
-    let query = supabase
+    const { searchParams } = request.nextUrl;
+    const sessionId = searchParams.get('sessionId');
+    const visitorId = searchParams.get('visitorId');
+
+    if (!userId && !visitorId) {
+      return NextResponse.json({ messages: [], sessionId: `session_${new Date().toISOString().slice(0, 10)}` });
+    }
+
+    let query = serviceClient
       .from('concierge_messages')
-      .select('id, role, content, metadata, created_at')
-      .eq('user_id', user.id)
+      .select('id, role, content, metadata, created_at, feedback')
       .order('created_at', { ascending: true })
       .limit(30);
+
+    if (userId) {
+      query = query.eq('user_id', userId);
+    } else {
+      query = query.eq('visitor_id', visitorId);
+    }
 
     if (sessionId) {
       query = query.eq('session_id', sessionId);
@@ -73,12 +107,11 @@ export async function GET(request: NextRequest) {
 
     const { data: messages } = await query;
 
-    // セッションIDを取得（最新メッセージから）
     const latestSessionId = (messages?.[0] as any)?.session_id ||
       `session_${new Date().toISOString().slice(0, 10)}`;
 
     return NextResponse.json({
-      messages: (messages || []).map(m => ({
+      messages: (messages || []).map((m: any) => ({
         ...m,
         actions: m.metadata?.actions || [],
         suggestions: m.metadata?.suggestions || [],
@@ -91,19 +124,35 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST — メッセージ送信 + AI応答
+// POST — メッセージ送信 + AI応答（ログイン・ゲスト両対応）
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    // ユーザー取得（失敗してもOK = ゲスト）
+    let userId: string | null = null;
+    let userEmail: string | null = null;
+    try {
+      const supabase = await createServerSupabaseClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      userId = user?.id || null;
+      userEmail = user?.email || null;
+    } catch { /* ゲスト */ }
 
-    if (!user) {
-      return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 });
-    }
+    const {
+      message,
+      sessionId: requestSessionId,
+      visitorId,
+      currentPage,
+      timezone,
+      language,
+    } = await request.json();
 
-    const { message, sessionId: requestSessionId, currentPage } = await request.json();
     if (!message?.trim()) {
       return NextResponse.json({ error: 'メッセージが必要です' }, { status: 400 });
+    }
+
+    // ゲストの場合 visitorId 必須
+    if (!userId && !visitorId) {
+      return NextResponse.json({ error: 'visitorId が必要です' }, { status: 400 });
     }
 
     const serviceClient = getServiceClient();
@@ -115,24 +164,41 @@ export async function POST(request: NextRequest) {
     const sessionId = requestSessionId || `session_${new Date().toISOString().slice(0, 10)}`;
 
     // プランチェック・レート制限・会話履歴を並列取得
+    const identifier = userId ? { userId } : { visitorId };
+
+    const subscriptionPromise = userId
+      ? getMakersSubscriptionStatus(userId)
+      : Promise.resolve({ planTier: 'guest' });
+
+    let historyQuery = serviceClient
+      .from('concierge_messages')
+      .select('role, content')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: false })
+      .limit(MAX_HISTORY);
+
+    if (userId) {
+      historyQuery = historyQuery.eq('user_id', userId);
+    } else {
+      historyQuery = historyQuery.eq('visitor_id', visitorId);
+    }
+
     const [subscription, dailyUsage, { data: history }] = await Promise.all([
-      getMakersSubscriptionStatus(user.id),
-      getDailyUsage(serviceClient, user.id),
-      serviceClient
-        .from('concierge_messages')
-        .select('role, content')
-        .eq('user_id', user.id)
-        .eq('session_id', sessionId)
-        .order('created_at', { ascending: false })
-        .limit(MAX_HISTORY),
+      subscriptionPromise,
+      getDailyUsage(serviceClient, identifier),
+      historyQuery,
     ]);
 
-    const planTier = subscription.planTier || 'free';
-    const dailyLimit = DAILY_LIMITS[planTier] || DAILY_LIMITS.free;
+    const planTier = (subscription as any).planTier || 'guest';
+    const userType = userId ? planTier : 'guest';
+    const dailyLimit = DAILY_LIMITS[planTier] || DAILY_LIMITS.guest;
 
     if (dailyUsage >= dailyLimit) {
+      const limitMsg = userId
+        ? `本日のメッセージ上限（${dailyLimit}回）に達しました。`
+        : `ゲストの方は1日${dailyLimit}回までご利用いただけます。ログインするとより多くご利用いただけます！`;
       return NextResponse.json({
-        error: `本日のメッセージ上限（${dailyLimit}回）に達しました。`,
+        error: limitMsg,
         remainingMessages: 0,
       }, { status: 429 });
     }
@@ -148,7 +214,7 @@ export async function POST(request: NextRequest) {
     // メッセージ構築
     const messages: AIMessage[] = [
       { role: 'system', content: systemPrompt },
-      ...previousMessages.map(m => ({
+      ...previousMessages.map((m: any) => ({
         role: m.role as 'user' | 'assistant',
         content: m.content,
       })),
@@ -171,32 +237,59 @@ export async function POST(request: NextRequest) {
     // ツールアクション抽出
     const { text: replyText, actions, suggestions } = parseToolActions(aiResponse.content);
 
+    const inputTokens = aiResponse.usage?.inputTokens || 0;
+    const outputTokens = aiResponse.usage?.outputTokens || 0;
+
+    // コンテキスト情報
+    const contextData = {
+      page: currentPage || null,
+      timezone: timezone || null,
+      language: language || null,
+    };
+
+    // DB保存（共通フィールド）
+    const commonFields = {
+      user_id: userId || null,
+      visitor_id: visitorId || null,
+      session_id: sessionId,
+      user_type: userType,
+      context: contextData,
+    };
+
     // DB保存 + AI使用量ログを並列実行
-    await Promise.all([
-      serviceClient.from('concierge_messages').insert([
+    const savePromises: Promise<any>[] = [
+      Promise.resolve(serviceClient.from('concierge_messages').insert([
         {
-          user_id: user.id,
-          session_id: sessionId,
+          ...commonFields,
           role: 'user',
           content: message.trim(),
         },
         {
-          user_id: user.id,
-          session_id: sessionId,
+          ...commonFields,
           role: 'assistant',
           content: replyText,
           metadata: { actions, suggestions },
+          input_tokens: inputTokens,
+          output_tokens: outputTokens,
         },
-      ]),
-      logAIUsage({
-        userId: user.id,
-        actionType: 'concierge_chat',
-        service: 'makers',
-        modelUsed: aiResponse.model,
-        inputTokens: aiResponse.usage?.inputTokens,
-        outputTokens: aiResponse.usage?.outputTokens,
-      }),
-    ]);
+      ])),
+    ];
+
+    // ログインユーザーのみAI使用量ログ
+    if (userId) {
+      savePromises.push(
+        logAIUsage({
+          userId,
+          actionType: 'concierge_chat',
+          service: 'makers',
+          modelUsed: aiResponse.model,
+          inputTokens,
+          outputTokens,
+        })
+      );
+    }
+
+    await Promise.all(savePromises);
 
     return NextResponse.json({
       reply: replyText,
@@ -211,5 +304,35 @@ export async function POST(request: NextRequest) {
       { error: err.message || 'チャットに失敗しました' },
       { status: 500 }
     );
+  }
+}
+
+// PATCH — フィードバック（👍👎）
+export async function PATCH(request: NextRequest) {
+  try {
+    const { messageId, feedback } = await request.json();
+
+    if (!messageId || ![1, -1].includes(feedback)) {
+      return NextResponse.json({ error: 'messageId と feedback (1 or -1) が必要です' }, { status: 400 });
+    }
+
+    const serviceClient = getServiceClient();
+    if (!serviceClient) {
+      return NextResponse.json({ error: 'サーバー設定エラー' }, { status: 500 });
+    }
+
+    const { error } = await serviceClient
+      .from('concierge_messages')
+      .update({ feedback })
+      .eq('id', messageId)
+      .eq('role', 'assistant');
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
