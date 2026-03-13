@@ -1,7 +1,7 @@
 'use client';
 
 import PersonaLPLayout from '@/components/home/PersonaLPLayout';
-import { Video, Mail, Calendar, Shield, BookOpen, Users } from 'lucide-react';
+import { Video, Mail, Calendar, Shield, BookOpen, Users, FileText, Repeat, MousePointerClick } from 'lucide-react';
 
 export default function CoachPageClient() {
   return (
@@ -88,6 +88,18 @@ export default function CoachPageClient() {
           color: '#f59e0b',
         },
       ]}
+
+      supportPack={{
+        packName: 'セミナー集客パック',
+        packDescription: 'セミナー告知→フォローアップ→個別相談予約の流れを、プロが一緒に構築します。',
+        personaSlug: 'coach',
+        includes: [
+          { icon: FileText, title: 'ウェビナーLP初期設定代行', description: 'あなたのセミナー内容をヒアリングし、最適なLP構成で作成をサポート' },
+          { icon: Mail, title: 'ステップメール5通分のシナリオ設計', description: 'セミナー後のフォローアップメールの文面を一緒に作成' },
+          { icon: MousePointerClick, title: '予約導線の構築', description: '予約フォーム設定 + LP・メールからの導線を設計' },
+          { icon: Repeat, title: '30日間メールサポート', description: '運用開始後の疑問や改善相談に対応' },
+        ],
+      }}
 
       freeFeatures={[
         'ウェビナーLPを無料で作成・公開',

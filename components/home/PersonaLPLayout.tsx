@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { ArrowRight, Sparkles, Check, ChevronRight, Crown } from 'lucide-react';
+import { ArrowRight, Sparkles, Check, ChevronRight, Crown, Headset } from 'lucide-react';
 import HomeAuthProvider from '@/components/home/HomeAuthProvider';
 import { AuthCTAButton } from '@/components/home/HomeClientButtons';
 import type { LucideIcon } from 'lucide-react';
@@ -26,6 +26,19 @@ export interface PersonaTestimonial {
   before: string;
   after: string;
   persona: string;
+}
+
+export interface SupportPackItem {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}
+
+export interface SupportPackProps {
+  packName: string;
+  packDescription: string;
+  includes: SupportPackItem[];
+  personaSlug: string;
 }
 
 export interface PersonaLPProps {
@@ -57,6 +70,9 @@ export interface PersonaLPProps {
   // 他のタイプへのリンク
   otherTypes: { label: string; href: string; color: string }[];
 
+  // サポートパック
+  supportPack?: SupportPackProps;
+
   // 有料プラン誘導
   freeFeatures?: string[];
   upgradeFeatures?: UpgradeFeature[];
@@ -84,6 +100,7 @@ export default function PersonaLPLayout({
   steps,
   testimonial,
   otherTypes,
+  supportPack,
   freeFeatures,
   upgradeFeatures,
   faqItems,
@@ -314,10 +331,83 @@ export default function PersonaLPLayout({
         </div>
       </section>
 
-      {/* ========== 有料プラン誘導 ========== */}
-      {freeFeatures && upgradeFeatures && (
+      {/* ========== サポートパック ========== */}
+      {supportPack && (
         <section className="py-20 bg-white">
           <div className="max-w-3xl mx-auto px-4">
+            <div className="text-center mb-10">
+              <div
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold mb-4"
+                style={{ backgroundColor: `${heroColor}15`, color: heroColor }}
+              >
+                <Headset size={16} />
+                プロのサポート
+              </div>
+              <h2 className="text-2xl md:text-3xl font-black mb-4" style={{ color: '#5d4037' }}>
+                プロと一緒に、最短で<br className="sm:hidden" />仕組みをつくりませんか？
+              </h2>
+              <p className="text-gray-600">
+                {supportPack.packDescription}
+              </p>
+            </div>
+
+            <div className="p-8 rounded-3xl border-2 relative overflow-hidden" style={{ borderColor: heroColor, backgroundColor: `${heroColor}05` }}>
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-10" style={{ backgroundColor: heroColor }} />
+              <div className="relative z-10">
+                <div
+                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold mb-6"
+                  style={{ backgroundColor: `${heroColor}15`, color: heroColor }}
+                >
+                  {supportPack.packName}
+                </div>
+
+                <div className="space-y-4 mb-8">
+                  {supportPack.includes.map((item, i) => {
+                    const ItemIcon = item.icon;
+                    return (
+                      <div key={i} className="flex items-start gap-3">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                          style={{ backgroundColor: `${heroColor}15`, color: heroColor }}
+                        >
+                          <ItemIcon size={16} />
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm" style={{ color: '#5d4037' }}>{item.title}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="text-center">
+                  <a
+                    href={`/support?persona=${supportPack.personaSlug}`}
+                    className="inline-flex items-center gap-2 text-white text-sm font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                    style={{ backgroundColor: heroColor }}
+                  >
+                    <Headset size={16} />
+                    まずは無料で相談する
+                    <ArrowRight size={14} />
+                  </a>
+                  <p className="text-xs text-gray-400 mt-3">※ ツール利用は無料のまま。サポートだけの追加オプションです。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ========== 有料プラン誘導 ========== */}
+      {freeFeatures && upgradeFeatures && (
+        <section className="py-20" style={{ backgroundColor: '#fffbf0' }}>
+          <div className="max-w-3xl mx-auto px-4">
+            {supportPack && (
+              <p className="text-center text-sm text-gray-500 mb-6">
+                自分のペースで進めたい方には、セルフサービスプランもあります
+              </p>
+            )}
             <div className="text-center mb-10">
               <h2 className="text-2xl md:text-3xl font-black mb-4" style={{ color: '#5d4037' }}>
                 さらに成果を加速させるなら

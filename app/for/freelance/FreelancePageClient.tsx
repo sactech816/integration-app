@@ -1,7 +1,7 @@
 'use client';
 
 import PersonaLPLayout from '@/components/home/PersonaLPLayout';
-import { UserCircle, Sparkles, Calendar, Users, Zap, TrendingUp } from 'lucide-react';
+import { UserCircle, Sparkles, Calendar, Users, Zap, TrendingUp, FileText, Share2, Repeat } from 'lucide-react';
 
 export default function FreelancePageClient() {
   return (
@@ -88,6 +88,18 @@ export default function FreelancePageClient() {
           color: '#f59e0b',
         },
       ]}
+
+      supportPack={{
+        packName: 'フリーランス集客パック',
+        packDescription: 'あなたの強みを引き出し、SNSからお客様につながる導線をプロが一緒に構築します。',
+        personaSlug: 'freelance',
+        includes: [
+          { icon: FileText, title: 'プロフィールLP作成サポート', description: 'あなたの強みを引き出すヒアリング + LP作成をサポート' },
+          { icon: Share2, title: 'SNS発信戦略', description: 'ターゲットに刺さるSNS投稿テンプレートを一緒に作成' },
+          { icon: TrendingUp, title: '集客導線の設計', description: 'SNS→プロフィールLP→お問い合わせの流れを構築' },
+          { icon: Repeat, title: '30日間メールサポート', description: '運用開始後の疑問や改善相談に対応' },
+        ],
+      }}
 
       freeFeatures={[
         'プロフィールLPを無制限に作成・公開',

@@ -1,7 +1,7 @@
 'use client';
 
 import PersonaLPLayout from '@/components/home/PersonaLPLayout';
-import { Building2, GitBranch, ClipboardCheck, Mail, BarChart3, Users, Settings } from 'lucide-react';
+import { Building2, GitBranch, ClipboardCheck, Mail, BarChart3, Users, Settings, FileText, BookOpen, Repeat } from 'lucide-react';
 
 export default function BusinessPageClient() {
   return (
@@ -88,6 +88,18 @@ export default function BusinessPageClient() {
           color: '#3b82f6',
         },
       ]}
+
+      supportPack={{
+        packName: '法人導入サポートパック',
+        packDescription: '現在のツール環境を分析し、最適な移行・導入プランをプロが一緒に設計します。',
+        personaSlug: 'business',
+        includes: [
+          { icon: BarChart3, title: '導入コンサルティング', description: '現在のツール環境を分析し、最適な移行プランを提案' },
+          { icon: FileText, title: 'LP・フォーム初期構築代行', description: '最初のキャンペーンLP + フォームを代行作成' },
+          { icon: BookOpen, title: 'チーム運用マニュアル作成', description: '社内向けの操作ガイド・テンプレート活用ガイドを作成' },
+          { icon: Repeat, title: '60日間メール・チャットサポート', description: '導入後の定着まで手厚くサポート' },
+        ],
+      }}
 
       freeFeatures={[
         'ビジネスLPを無料で作成・公開',

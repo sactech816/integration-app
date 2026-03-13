@@ -1,7 +1,7 @@
 'use client';
 
 import PersonaLPLayout from '@/components/home/PersonaLPLayout';
-import { UserCircle, Sparkles, Share2, Heart, Lightbulb, Target } from 'lucide-react';
+import { UserCircle, Sparkles, Share2, Heart, Lightbulb, Target, FileText, TrendingUp, Repeat } from 'lucide-react';
 
 export default function StarterPageClient() {
   return (
@@ -93,6 +93,18 @@ export default function StarterPageClient() {
         before: 'アメブロとInstagramで発信していたけど、サービス内容を伝えるページがなく、問い合わせはDMで月1件あるかないか。何から手をつければいいか分からず、半年が過ぎていた。',
         after: 'プロフィールLPをつくってSNSに貼ったら、「サービス内容がよく分かった」と言われるように。診断クイズをシェアしたら友人経由で初めてのお客様が。月5件のお問い合わせが来るようになった。',
         persona: '30代女性・ヨガインストラクター（起業準備中）のイメージ',
+      }}
+
+      supportPack={{
+        packName: '起業スタートパック',
+        packDescription: '何から始めればいいか分からない方へ。ビジネスの土台づくりをプロが一緒にサポートします。',
+        personaSlug: 'starter',
+        includes: [
+          { icon: Lightbulb, title: 'ビジネスコンセプト整理', description: 'ヒアリングであなたの強み・ターゲットを明確化' },
+          { icon: FileText, title: 'プロフィールLP作成サポート', description: 'コンセプトを反映した自己紹介ページを一緒に作成' },
+          { icon: TrendingUp, title: '初期集客プラン設計', description: '診断クイズ + SNS投稿の初期設計をサポート' },
+          { icon: Repeat, title: '30日間メールサポート', description: '運用開始後の疑問や改善相談に対応' },
+        ],
       }}
 
       freeFeatures={[

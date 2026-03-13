@@ -1,7 +1,7 @@
 'use client';
 
 import PersonaLPLayout from '@/components/home/PersonaLPLayout';
-import { PenTool, GitBranch, Mail, Zap, TrendingUp, RefreshCw } from 'lucide-react';
+import { PenTool, GitBranch, Mail, Zap, TrendingUp, RefreshCw, FileText, Sparkles, Repeat } from 'lucide-react';
 
 export default function CreatorPageClient() {
   return (
@@ -88,6 +88,18 @@ export default function CreatorPageClient() {
           color: '#10b981',
         },
       ]}
+
+      supportPack={{
+        packName: 'コンテンツ販売スタートパック',
+        packDescription: '商品の魅力を最大限に伝え、売れ続ける仕組みをプロが一緒に構築します。',
+        personaSlug: 'creator',
+        includes: [
+          { icon: FileText, title: '販売LP作成サポート', description: 'あなたのコンテンツの魅力を最大限に伝えるLP構成を一緒に設計' },
+          { icon: Sparkles, title: '診断クイズシナリオ設計', description: '見込み客を惹きつける診断クイズのシナリオを一緒に作成' },
+          { icon: GitBranch, title: 'ファネル設計コンサル', description: '集客→教育→販売の導線を設計' },
+          { icon: Repeat, title: '30日間メールサポート', description: '運用開始後の疑問や改善相談に対応' },
+        ],
+      }}
 
       freeFeatures={[
         'セールスレターをAIで自動生成',

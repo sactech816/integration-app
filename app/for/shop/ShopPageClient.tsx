@@ -1,7 +1,7 @@
 'use client';
 
 import PersonaLPLayout from '@/components/home/PersonaLPLayout';
-import { Sparkles, Gamepad2, Calendar, Heart, Share2, RefreshCw } from 'lucide-react';
+import { Sparkles, Gamepad2, Calendar, Heart, Share2, RefreshCw, FileText, MapPin, Repeat } from 'lucide-react';
 
 export default function ShopPageClient() {
   return (
@@ -88,6 +88,18 @@ export default function ShopPageClient() {
           color: '#3b82f6',
         },
       ]}
+
+      supportPack={{
+        packName: '店舗集客パック',
+        packDescription: 'お店の魅力を伝え、リピーターが増える仕組みをプロが一緒に構築します。',
+        personaSlug: 'shop',
+        includes: [
+          { icon: FileText, title: 'ホームページ作成サポート', description: '店舗情報・メニュー・アクセスを見やすく配置したページを作成' },
+          { icon: Gamepad2, title: '予約・来店促進の仕組み', description: '予約フォーム設定 + クーポン診断クイズの設計' },
+          { icon: MapPin, title: 'Googleマップ・SNS連携アドバイス', description: 'MEO対策の基本設定をサポート' },
+          { icon: Repeat, title: '30日間メールサポート', description: '運用開始後の疑問や改善相談に対応' },
+        ],
+      }}
 
       freeFeatures={[
         '診断クイズを無料で作成・公開',
