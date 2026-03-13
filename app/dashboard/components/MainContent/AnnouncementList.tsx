@@ -33,6 +33,7 @@ export default function AnnouncementList() {
         .from('announcements')
         .select('*')
         .eq('is_active', true)
+        .order('display_order', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false });
 
       if (!error && data) {
@@ -91,9 +92,18 @@ export default function AnnouncementList() {
                   {announcement.title}
                 </h3>
 
-                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
-                  {announcement.content}
-                </p>
+                <div
+                  className="text-sm text-gray-600 leading-relaxed prose prose-sm max-w-none
+                    prose-headings:text-gray-900 prose-headings:font-bold
+                    prose-h2:text-base prose-h2:mt-3 prose-h2:mb-1
+                    prose-h3:text-sm prose-h3:mt-2 prose-h3:mb-1
+                    prose-p:my-1 prose-p:leading-relaxed
+                    prose-ul:my-1 prose-ol:my-1
+                    prose-li:my-0.5
+                    prose-a:text-indigo-600 prose-a:underline hover:prose-a:text-indigo-800
+                    prose-img:rounded-lg prose-img:max-w-full"
+                  dangerouslySetInnerHTML={{ __html: announcement.content }}
+                />
 
                 {announcement.link_url && (
                   <div className="mt-3 pt-3 border-t border-gray-100">

@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
-import { Bell, Plus, X } from 'lucide-react';
+import React, { lazy, Suspense } from 'react';
+import { Bell, Plus, X, ArrowUp, ArrowDown } from 'lucide-react';
 import Pagination from '../shared/Pagination';
+
+const AnnouncementRichEditor = lazy(() => import('./AnnouncementRichEditor'));
 
 type Announcement = {
   id: number;
@@ -14,6 +16,7 @@ type Announcement = {
   announcement_date?: string;
   service_type: string;
   created_at: string;
+  display_order?: number | null;
 };
 
 type AnnouncementManagerProps = {
@@ -47,6 +50,7 @@ type AnnouncementManagerProps = {
   onSubmit: (e: React.FormEvent) => Promise<void>;
   onEdit: (announcement: Announcement) => void;
   onDelete: (id: number) => Promise<void>;
+  onReorder?: (id: number, direction: 'up' | 'down') => Promise<void>;
 };
 
 export default function AnnouncementManager({
@@ -64,6 +68,7 @@ export default function AnnouncementManager({
   onSubmit,
   onEdit,
   onDelete,
+  onReorder,
 }: AnnouncementManagerProps) {
   const totalAnnouncementPages = Math.ceil(announcements.length / announcementsPerPage);
   const paginatedAnnouncements = announcements.slice(
@@ -83,6 +88,14 @@ export default function AnnouncementManager({
       announcement_date: '',
       service_type: 'all',
     });
+  };
+
+  // HTMLコンテンツからプレーンテキストのプレビューを取得
+  const getContentPreview = (content: string) => {
+    if (!content) return '';
+    // HTMLタグを除去してプレビュー用テキストを取得
+    const text = content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
+    return text.length > 60 ? text.substring(0, 60) + '...' : text;
   };
 
   return (
@@ -136,13 +149,16 @@ export default function AnnouncementManager({
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">内容 *</label>
-              <textarea
-                required
-                value={announcementForm.content}
-                onChange={(e) => setAnnouncementForm({ ...announcementForm, content: e.target.value })}
-                className="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 text-gray-900 h-32"
-                placeholder="お知らせの内容"
-              />
+              <p className="text-xs text-gray-500 mb-2">
+                文字色・サイズ変更、太字・下線、リンク、画像挿入が可能です
+              </p>
+              <Suspense fallback={<div className="w-full border border-gray-300 p-3 rounded-lg bg-gray-50 h-48 animate-pulse" />}>
+                <AnnouncementRichEditor
+                  value={announcementForm.content}
+                  onChange={(html) => setAnnouncementForm({ ...announcementForm, content: html })}
+                  placeholder="お知らせの内容を入力..."
+                />
+              </Suspense>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -237,7 +253,7 @@ export default function AnnouncementManager({
         ) : (
           <>
             <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-              <span className="text-xs text-gray-500">全 {announcements.length} 件</span>
+              <span className="text-xs text-gray-500">全 {announcements.length} 件（作成日順 / 手動並び順対応）</span>
               <select
                 value={announcementsPerPage}
                 onChange={(e) => onAnnouncementsPerPageChange(Number(e.target.value))}
@@ -252,6 +268,11 @@ export default function AnnouncementManager({
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
+                    {onReorder && (
+                      <th className="px-2 py-3 text-center text-xs font-bold text-gray-700 uppercase w-16">
+                        順序
+                      </th>
+                    )}
                     <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">
                       タイトル
                     </th>
@@ -270,64 +291,104 @@ export default function AnnouncementManager({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {paginatedAnnouncements.map((announcement) => (
-                    <tr key={announcement.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{announcement.title}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-bold ${
-                            announcement.service_type === 'all'
-                              ? 'bg-blue-100 text-blue-700'
+                  {paginatedAnnouncements.map((announcement, idx) => {
+                    const globalIdx = (announcementPage - 1) * announcementsPerPage + idx;
+                    const isFirst = globalIdx === 0;
+                    const isLast = globalIdx === announcements.length - 1;
+
+                    return (
+                      <tr key={announcement.id} className="hover:bg-gray-50">
+                        {onReorder && (
+                          <td className="px-2 py-3 text-center">
+                            <div className="flex flex-col items-center gap-0.5">
+                              <button
+                                onClick={() => onReorder(announcement.id, 'up')}
+                                disabled={isFirst}
+                                className={`p-0.5 rounded transition-colors ${
+                                  isFirst
+                                    ? 'text-gray-300 cursor-not-allowed'
+                                    : 'text-gray-500 hover:text-indigo-600 hover:bg-indigo-50'
+                                }`}
+                                title="上に移動"
+                              >
+                                <ArrowUp size={14} />
+                              </button>
+                              <span className="text-xs text-gray-400">{globalIdx + 1}</span>
+                              <button
+                                onClick={() => onReorder(announcement.id, 'down')}
+                                disabled={isLast}
+                                className={`p-0.5 rounded transition-colors ${
+                                  isLast
+                                    ? 'text-gray-300 cursor-not-allowed'
+                                    : 'text-gray-500 hover:text-indigo-600 hover:bg-indigo-50'
+                                }`}
+                                title="下に移動"
+                              >
+                                <ArrowDown size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-gray-900">{announcement.title}</div>
+                          <div className="text-xs text-gray-500 mt-0.5">{getContentPreview(announcement.content)}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-bold ${
+                              announcement.service_type === 'all'
+                                ? 'bg-blue-100 text-blue-700'
+                                : announcement.service_type === 'quiz'
+                                ? 'bg-purple-100 text-purple-700'
+                                : announcement.service_type === 'profile'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-amber-100 text-amber-700'
+                            }`}
+                          >
+                            {announcement.service_type === 'all'
+                              ? '全サービス'
                               : announcement.service_type === 'quiz'
-                              ? 'bg-purple-100 text-purple-700'
+                              ? '診断クイズ'
                               : announcement.service_type === 'profile'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-amber-100 text-amber-700'
-                          }`}
-                        >
-                          {announcement.service_type === 'all'
-                            ? '全サービス'
-                            : announcement.service_type === 'quiz'
-                            ? '診断クイズ'
-                            : announcement.service_type === 'profile'
-                            ? 'プロフィールLP'
-                            : 'ビジネスLP'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-bold ${
-                            announcement.is_active
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {announcement.is_active ? '表示中' : '非表示'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-gray-600 text-xs">
-                        {announcement.announcement_date
-                          ? new Date(announcement.announcement_date).toLocaleDateString('ja-JP')
-                          : new Date(announcement.created_at).toLocaleDateString('ja-JP')}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => onEdit(announcement)}
-                            className="text-indigo-600 hover:text-indigo-700 font-bold text-xs"
+                              ? 'プロフィールLP'
+                              : 'ビジネスLP'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-bold ${
+                              announcement.is_active
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}
                           >
-                            編集
-                          </button>
-                          <button
-                            onClick={() => onDelete(announcement.id)}
-                            className="text-red-600 hover:text-red-700 font-bold text-xs"
-                          >
-                            削除
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            {announcement.is_active ? '表示中' : '非表示'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 text-xs">
+                          {announcement.announcement_date
+                            ? new Date(announcement.announcement_date).toLocaleDateString('ja-JP')
+                            : new Date(announcement.created_at).toLocaleDateString('ja-JP')}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => onEdit(announcement)}
+                              className="text-indigo-600 hover:text-indigo-700 font-bold text-xs"
+                            >
+                              編集
+                            </button>
+                            <button
+                              onClick={() => onDelete(announcement.id)}
+                              className="text-red-600 hover:text-red-700 font-bold text-xs"
+                            >
+                              削除
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

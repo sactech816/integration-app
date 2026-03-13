@@ -43,6 +43,7 @@ export default function AnnouncementsPageClient() {
           .from('announcements')
           .select('*')
           .eq('is_active', true)
+          .order('display_order', { ascending: true, nullsFirst: false })
           .order('created_at', { ascending: false });
         
         if (!error && data) {
@@ -136,9 +137,18 @@ export default function AnnouncementsPageClient() {
                     {announcement.title}
                   </h2>
                   
-                  <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
-                    {announcement.content}
-                  </p>
+                  <div
+                    className="text-gray-600 leading-relaxed prose prose-sm max-w-none
+                      prose-headings:text-gray-900 prose-headings:font-bold
+                      prose-h2:text-lg prose-h2:mt-4 prose-h2:mb-2
+                      prose-h3:text-base prose-h3:mt-3 prose-h3:mb-1
+                      prose-p:my-1.5 prose-p:leading-relaxed
+                      prose-ul:my-2 prose-ol:my-2
+                      prose-li:my-0.5
+                      prose-a:text-purple-600 prose-a:underline hover:prose-a:text-purple-800
+                      prose-img:rounded-lg prose-img:max-w-full"
+                    dangerouslySetInnerHTML={{ __html: announcement.content }}
+                  />
 
                   {/* リンクがある場合は表示 */}
                   {announcement.link_url && (

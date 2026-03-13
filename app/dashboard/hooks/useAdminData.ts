@@ -31,6 +31,7 @@ type Announcement = {
   announcement_date?: string;
   service_type: string;
   created_at: string;
+  display_order?: number | null;
 };
 
 type UseAdminDataReturn = {
@@ -93,6 +94,7 @@ type UseAdminDataReturn = {
   handleAnnouncementSubmit: (e: React.FormEvent) => Promise<void>;
   handleEditAnnouncement: (announcement: Announcement) => void;
   handleDeleteAnnouncement: (id: number) => Promise<void>;
+  handleReorderAnnouncement: (id: number, direction: 'up' | 'down') => Promise<void>;
 
   // エクスポート
   exportingCsv: boolean;
@@ -345,13 +347,14 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
     [fetchUsersPage, userPage, userSearch]
   );
 
-  // お知らせを取得
+  // お知らせを取得（display_order優先、なければcreated_at降順）
   const fetchAnnouncements = useCallback(async () => {
     if (!supabase || !isAdmin) return;
     try {
       const { data, error } = await supabase
         .from('announcements')
         .select('*')
+        .order('display_order', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false });
       if (error) throw error;
       setAnnouncements(data || []);
@@ -444,6 +447,45 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
       }
     },
     [isAdmin, fetchAnnouncements]
+  );
+
+  // お知らせ並び順変更
+  const handleReorderAnnouncement = useCallback(
+    async (id: number, direction: 'up' | 'down') => {
+      if (!supabase || !isAdmin) return;
+
+      const currentIndex = announcements.findIndex((a) => a.id === id);
+      if (currentIndex === -1) return;
+      const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (swapIndex < 0 || swapIndex >= announcements.length) return;
+
+      const current = announcements[currentIndex];
+      const swap = announcements[swapIndex];
+
+      // display_orderを交換（未設定の場合はインデックスベースで付与）
+      const currentOrder = current.display_order ?? currentIndex;
+      const swapOrder = swap.display_order ?? swapIndex;
+
+      try {
+        const { error: err1 } = await supabase
+          .from('announcements')
+          .update({ display_order: swapOrder })
+          .eq('id', current.id);
+        if (err1) throw err1;
+
+        const { error: err2 } = await supabase
+          .from('announcements')
+          .update({ display_order: currentOrder })
+          .eq('id', swap.id);
+        if (err2) throw err2;
+
+        await fetchAnnouncements();
+      } catch (e) {
+        console.error('並び順変更エラー:', e);
+        alert('並び順の変更に失敗しました');
+      }
+    },
+    [isAdmin, announcements, fetchAnnouncements]
   );
 
   // CSVエクスポート
@@ -581,6 +623,7 @@ export function useAdminData(isAdmin: boolean): UseAdminDataReturn {
     handleAnnouncementSubmit,
     handleEditAnnouncement,
     handleDeleteAnnouncement,
+    handleReorderAnnouncement,
 
     // エクスポート
     exportingCsv,

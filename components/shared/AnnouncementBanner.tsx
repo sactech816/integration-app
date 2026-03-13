@@ -34,6 +34,7 @@ const AnnouncementBanner: React.FC<AnnouncementBannerProps> = ({ serviceType = '
           .from('announcements')
           .select('*')
           .eq('is_active', true)
+          .order('display_order', { ascending: true, nullsFirst: false })
           .order('created_at', { ascending: false })
           .limit(1);
 

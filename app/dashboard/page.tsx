@@ -477,6 +477,7 @@ function DashboardContent() {
             onSubmit={adminData.handleAnnouncementSubmit}
             onEdit={adminData.handleEditAnnouncement}
             onDelete={adminData.handleDeleteAnnouncement}
+            onReorder={adminData.handleReorderAnnouncement}
           />
         ),
         MonitorManager: () => user ? (
