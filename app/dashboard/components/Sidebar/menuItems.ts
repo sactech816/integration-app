@@ -33,6 +33,7 @@ import {
   Globe,
   Brain,
   Star,
+  Bot,
   LucideIcon,
 } from 'lucide-react';
 
@@ -357,6 +358,15 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: '紹介プログラム',
     color: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200' },
     href: '/affiliate',
+    category: 'monetization',
+  },
+  {
+    id: 'concierge',
+    label: 'コンシェルジュメーカー',
+    icon: Bot,
+    description: 'AIコンシェルジュ作成',
+    color: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200' },
+    href: '/concierge/editor?new',
     category: 'monetization',
   },
 ];

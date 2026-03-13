@@ -38,4 +38,6 @@ export const TABLES = {
   FORTUNE_RESULTS: 'fortune_results',
   FORTUNE_CONTENTS: 'fortune_contents',
   CONCIERGE_MESSAGES: 'concierge_messages',
+  CONCIERGE_CONFIGS: 'concierge_configs',
+  CONCIERGE_VISITOR_MESSAGES: 'concierge_visitor_messages',
 } as const;
