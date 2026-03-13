@@ -7,7 +7,11 @@ import Header from '@/components/shared/Header';
 import AuthModal from '@/components/shared/AuthModal';
 import ConciergeEditorPanel from '@/components/concierge/editor/ConciergeEditorPanel';
 import ConciergePreview from '@/components/concierge/editor/ConciergePreview';
-import { Loader2 } from 'lucide-react';
+import ConciergeTemplateSelector from '@/components/concierge/editor/ConciergeTemplateSelector';
+import ConciergeAISetupPanel from '@/components/concierge/editor/ConciergeAISetupPanel';
+import { Loader2, Save } from 'lucide-react';
+import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import type { ConciergeTemplate } from '@/lib/concierge/templates';
 
 interface ConciergeConfig {
   id?: string;
@@ -66,6 +70,16 @@ function ConciergeEditorContent() {
   };
   const [isSaving, setIsSaving] = useState(false);
   const [config, setConfig] = useState<ConciergeConfig>(DEFAULT_CONFIG);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [isNewCreation, setIsNewCreation] = useState(!editId || isNew);
+
+  // ステップ管理: 新規作成時はテンプレート選択から
+  const [step, setStep] = useState<'template' | 'ai-setup' | 'editor'>(
+    isNew && !editId ? 'template' : 'editor'
+  );
+
+  // AI設定モーダル（エディタ内から開く用）
+  const [showAIModal, setShowAIModal] = useState(false);
 
   // モバイルタブ
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
@@ -101,6 +115,25 @@ function ConciergeEditorContent() {
     setConfig(prev => ({ ...prev, ...updates }));
   }, []);
 
+  const handleSelectTemplate = useCallback((template: ConciergeTemplate | null) => {
+    if (template) {
+      setConfig(prev => ({
+        ...prev,
+        name: template.config.name,
+        greeting: template.config.greeting,
+        personality: template.config.personality,
+        knowledge_text: template.config.knowledge_text,
+        faq_items: template.config.faq_items,
+      }));
+    }
+    setStep('editor');
+  }, []);
+
+  const handleAIGenerated = useCallback((generated: Partial<ConciergeConfig>) => {
+    setConfig(prev => ({ ...prev, ...generated }));
+    setStep('editor');
+  }, []);
+
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
@@ -119,8 +152,11 @@ function ConciergeEditorContent() {
       if (!config.id) {
         // 新規作成 → URLを更新
         router.replace(`/concierge/editor?id=${saved.id}`);
+        setIsNewCreation(false);
+        setShowCompleteModal(true);
+      } else {
+        alert('更新しました！');
       }
-      alert(config.id ? '更新しました！' : '保存して公開しました！');
     } catch (err: any) {
       alert(err.message || '保存に失敗しました');
     } finally {
@@ -133,7 +169,7 @@ function ConciergeEditorContent() {
       <>
         <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
         <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
         </div>
       </>
     );
@@ -147,7 +183,7 @@ function ConciergeEditorContent() {
           <p className="text-gray-600">ログインが必要です</p>
           <button
             onClick={() => setShowAuth(true)}
-            className="px-6 py-3 bg-blue-500 text-white rounded-xl shadow-md hover:bg-blue-600 transition-all font-semibold"
+            className="px-6 py-3 bg-teal-500 text-white rounded-xl shadow-md hover:bg-teal-600 transition-all font-semibold"
           >
             ログイン
           </button>
@@ -159,6 +195,36 @@ function ConciergeEditorContent() {
           defaultTab="login"
         />
       </>
+    );
+  }
+
+  // テンプレート選択ステップ
+  if (step === 'template') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
+        <div className="pt-8 pb-16 px-4">
+          <ConciergeTemplateSelector
+            onSelectTemplate={handleSelectTemplate}
+            onSelectAI={() => setStep('ai-setup')}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // AI設定ステップ
+  if (step === 'ai-setup') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
+        <div className="pt-8 pb-16 px-4 max-w-3xl mx-auto">
+          <ConciergeAISetupPanel
+            onApply={handleAIGenerated}
+            onBack={() => setStep('template')}
+          />
+        </div>
+      </div>
     );
   }
 
@@ -194,9 +260,10 @@ function ConciergeEditorContent() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-6 py-2.5 bg-blue-500 text-white rounded-xl shadow-md hover:bg-blue-600 transition-all font-semibold disabled:opacity-50 min-w-[44px] min-h-[44px]"
+              className="hidden lg:flex items-center gap-1.5 px-4 py-2 bg-teal-600 text-white rounded-xl shadow-md hover:bg-teal-700 transition-all font-semibold disabled:opacity-50 min-h-[44px] text-sm"
             >
-              {isSaving ? '保存中...' : config.id ? '更新して保存' : '保存して公開'}
+              <Save className="w-4 h-4" />
+              {isSaving ? '保存中...' : config.id ? '更新' : '保存'}
             </button>
           </div>
         </div>
@@ -211,7 +278,7 @@ function ConciergeEditorContent() {
               onClick={() => setMobileTab(tab)}
               className={`flex-1 py-3 text-sm font-medium transition-all ${
                 mobileTab === tab
-                  ? 'text-blue-600 border-b-2 border-blue-500'
+                  ? 'text-teal-600 border-b-2 border-teal-500'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -224,11 +291,24 @@ function ConciergeEditorContent() {
       {/* メインコンテンツ */}
       <div className="max-w-screen-2xl mx-auto flex">
         {/* 左: エディタ */}
-        <div className={`w-full lg:w-1/2 p-4 lg:p-6 ${mobileTab !== 'editor' ? 'hidden lg:block' : ''}`}>
+        <div className={`w-full lg:w-1/2 p-4 lg:p-6 pb-32 ${mobileTab !== 'editor' ? 'hidden lg:block' : ''}`}>
           <ConciergeEditorPanel
             config={config}
             onUpdate={updateConfig}
+            onOpenAISetup={() => setShowAIModal(true)}
           />
+
+          {/* sticky保存ボタン */}
+          <div className="sticky bottom-4 mt-6 bg-white p-4 rounded-xl shadow-lg border border-gray-200">
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="w-full bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md text-lg disabled:opacity-50"
+            >
+              <Save className="w-5 h-5" />
+              {isSaving ? '保存中...' : config.id ? '更新して保存' : '保存して公開'}
+            </button>
+          </div>
         </div>
 
         {/* 右: プレビュー */}
@@ -238,6 +318,31 @@ function ConciergeEditorContent() {
           </div>
         </div>
       </div>
+
+      {/* AI設定モーダル */}
+      {showAIModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4 p-6">
+            <ConciergeAISetupPanel
+              onApply={(generated) => {
+                updateConfig(generated);
+                setShowAIModal(false);
+              }}
+              onBack={() => setShowAIModal(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 作成完了モーダル */}
+      <CreationCompleteModal
+        isOpen={showCompleteModal}
+        onClose={() => setShowCompleteModal(false)}
+        title="コンシェルジュ"
+        publicUrl={typeof window !== 'undefined' && config.slug ? `${window.location.origin}/concierge/${config.slug}` : ''}
+        contentTitle={config.name}
+        theme="teal"
+      />
     </div>
   );
 }
@@ -248,7 +353,7 @@ export default function ConciergeEditorPage() {
       <div className="pt-16">
         <Suspense fallback={
           <div className="min-h-screen flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
           </div>
         }>
           <ConciergeEditorContent />

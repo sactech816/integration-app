@@ -20,6 +20,20 @@ import { getMakersSubscriptionStatus } from '@/lib/subscription';
 import type { AIMessage } from '@/lib/ai-provider';
 import { createClient } from '@supabase/supabase-js';
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
+function jsonResponse(data: any, init?: { status?: number }) {
+  return NextResponse.json(data, { ...init, headers: CORS_HEADERS });
+}
+
 const MAX_HISTORY = 10;
 
 // プラン別の日次メッセージ制限

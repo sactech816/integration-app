@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import {
-  User, MessageSquare, Palette, Settings, BookOpen, Plus, Trash2,
+  User, MessageSquare, Palette, Settings, BookOpen, Plus, Trash2, Sparkles,
 } from 'lucide-react';
+import ConciergeEmbedCodeGenerator from './ConciergeEmbedCodeGenerator';
 
 interface FAQItem {
   question: string;
@@ -26,6 +27,7 @@ interface ConciergeConfig {
 interface Props {
   config: ConciergeConfig;
   onUpdate: (updates: Partial<ConciergeConfig>) => void;
+  onOpenAISetup?: () => void;
 }
 
 type EditorTab = 'basic' | 'knowledge' | 'design' | 'settings';
@@ -42,10 +44,10 @@ const COLOR_PRESETS = [
   '#F59E0B', '#10B981', '#06B6D4', '#6366F1',
 ];
 
-export default function ConciergeEditorPanel({ config, onUpdate }: Props) {
+export default function ConciergeEditorPanel({ config, onUpdate, onOpenAISetup }: Props) {
   const [activeTab, setActiveTab] = useState<EditorTab>('basic');
 
-  const inputClass = "w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all";
+  const inputClass = "w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all";
 
   return (
     <div>
@@ -57,7 +59,7 @@ export default function ConciergeEditorPanel({ config, onUpdate }: Props) {
             onClick={() => setActiveTab(id)}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-medium transition-all ${
               activeTab === id
-                ? 'bg-white text-blue-700 shadow-sm'
+                ? 'bg-white text-teal-700 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -120,7 +122,7 @@ export default function ConciergeEditorPanel({ config, onUpdate }: Props) {
               <button
                 onClick={() => onUpdate({ is_published: !config.is_published })}
                 className={`relative w-12 h-7 rounded-full transition-all ${
-                  config.is_published ? 'bg-blue-500' : 'bg-gray-300'
+                  config.is_published ? 'bg-teal-500' : 'bg-gray-300'
                 }`}
               >
                 <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-all ${
@@ -138,6 +140,17 @@ export default function ConciergeEditorPanel({ config, onUpdate }: Props) {
       {/* ナレッジ */}
       {activeTab === 'knowledge' && (
         <div className="space-y-5">
+          {/* AI生成ボタン */}
+          {onOpenAISetup && (
+            <button
+              onClick={onOpenAISetup}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-teal-50 to-cyan-50 border-2 border-teal-200 text-teal-700 rounded-xl hover:border-teal-400 hover:shadow-md transition-all font-semibold text-sm"
+            >
+              <Sparkles className="w-4 h-4" />
+              AIでナレッジ・FAQを自動生成する
+            </button>
+          )}
+
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               ナレッジ（知識ベース）
@@ -164,7 +177,7 @@ export default function ConciergeEditorPanel({ config, onUpdate }: Props) {
                   const newFaq = [...config.faq_items, { question: '', answer: '' }];
                   onUpdate({ faq_items: newFaq });
                 }}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all font-medium"
+                className="flex items-center gap-1 px-3 py-1.5 text-xs bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100 transition-all font-medium"
               >
                 <Plus className="w-3 h-3" />
                 追加
@@ -199,7 +212,7 @@ export default function ConciergeEditorPanel({ config, onUpdate }: Props) {
                         onUpdate({ faq_items: newFaq });
                       }}
                       placeholder="質問"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 mb-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 mb-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                     <textarea
                       value={faq.answer}
@@ -210,7 +223,7 @@ export default function ConciergeEditorPanel({ config, onUpdate }: Props) {
                       }}
                       placeholder="回答"
                       rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     />
                   </div>
                 ))}
@@ -293,7 +306,7 @@ export default function ConciergeEditorPanel({ config, onUpdate }: Props) {
                   })}
                   className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     config.design.position === pos.value
-                      ? 'bg-blue-500 text-white shadow-md'
+                      ? 'bg-teal-500 text-white shadow-md'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
@@ -375,19 +388,10 @@ export default function ConciergeEditorPanel({ config, onUpdate }: Props) {
 
           {/* 埋め込みコード */}
           {config.slug && (
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                埋め込みコード
-              </label>
-              <div className="bg-gray-900 rounded-xl p-4">
-                <code className="text-sm text-green-400 break-all">
-                  {`<script src="${typeof window !== 'undefined' ? window.location.origin : ''}/embed/concierge.js" data-id="${config.slug}"></script>`}
-                </code>
-              </div>
-              <p className="text-xs text-gray-400 mt-1">
-                このコードをサイトの &lt;body&gt; 末尾に貼り付けてください
-              </p>
-            </div>
+            <ConciergeEmbedCodeGenerator
+              slug={config.slug}
+              name={config.name}
+            />
           )}
         </div>
       )}

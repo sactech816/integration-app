@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { createClient } from '@supabase/supabase-js';
 import { escapeHtml, isValidEmail, truncate, containsSuspiciousPattern } from '@/lib/security/sanitize';
 import { rateLimit, createRateLimitResponse } from '@/lib/security/rate-limit';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+// サポートパック問い合わせ者を登録するメルマガリストID
+const NEWSLETTER_LIST_ID = 'b4634fb2-b0c3-46b8-9d25-8c731582b797';
 
 const PACK_NAMES: Record<string, string> = {
   coach: 'セミナー集客パック',
@@ -56,7 +60,7 @@ export async function POST(request: Request) {
     // 管理者宛メール送信
     const data = await resend.emails.send({
       from: 'onboarding@resend.dev',
-      to: 'YOUR_EMAIL@gmail.com', // ★ご自身のメールアドレスへ
+      to: 'support@makers.tokyo',
       subject: `【サポートパック相談】${escapedPackName}（${escapedName}様）`,
       html: `
         <h2>サポートパックのお問い合わせがありました</h2>
@@ -72,6 +76,28 @@ export async function POST(request: Request) {
         <p style="color: #9ca3af; font-size: 12px;">このメールは集客メーカーのサポートパックお問い合わせフォームから送信されました。</p>
       `,
     });
+
+    // メルマガリストに購読者として追加
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (supabaseUrl && serviceKey) {
+        const supabase = createClient(supabaseUrl, serviceKey);
+        await supabase.from('newsletter_subscribers').upsert({
+          list_id: NEWSLETTER_LIST_ID,
+          email,
+          name: safeName || null,
+          status: 'subscribed',
+          source: 'support_inquiry',
+          metadata: { pack: safePack || null },
+          subscribed_at: new Date().toISOString(),
+          unsubscribed_at: null,
+        }, { onConflict: 'list_id,email' });
+      }
+    } catch (nlError) {
+      // メルマガ登録失敗はお問い合わせ送信を妨げない
+      console.warn('[Support Inquiry API] Newsletter subscription failed:', nlError);
+    }
 
     return NextResponse.json(data);
   } catch (error) {
