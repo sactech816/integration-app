@@ -23,6 +23,8 @@ import {
   Share2,
   Gamepad2,
   Coins,
+  Bot,
+  BarChart3,
 } from 'lucide-react';
 import { TOOL_ITEMS, TOOL_CATEGORIES } from './menuItems';
 
@@ -242,6 +244,15 @@ export default function SidebarNav({
       items: [
         { id: 'admin-affiliate', label: 'アフィリエイト管理', icon: Share2, section: 'admin', adminOnly: true },
         { id: 'admin-feedbacks', label: 'ご意見箱', icon: MessageSquareHeart, section: 'admin', adminOnly: true },
+      ],
+    },
+    {
+      id: 'group-concierge',
+      label: 'コンシェルジュ',
+      icon: Bot,
+      items: [
+        { id: 'admin-concierge-maker', label: 'コンシェルジュメーカー', icon: Bot, section: 'admin', adminOnly: true },
+        { id: 'admin-concierge-analytics', label: 'コンシェルジュ分析', icon: BarChart3, section: 'admin', adminOnly: true },
       ],
     },
     {

@@ -360,13 +360,4 @@ export const TOOL_ITEMS: ToolItem[] = [
     href: '/affiliate',
     category: 'monetization',
   },
-  {
-    id: 'concierge',
-    label: 'コンシェルジュメーカー',
-    icon: Bot,
-    description: 'AIコンシェルジュ作成',
-    color: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200' },
-    href: '/concierge/editor?new',
-    category: 'monetization',
-  },
 ];

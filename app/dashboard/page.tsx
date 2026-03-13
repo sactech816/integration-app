@@ -355,6 +355,16 @@ function DashboardContent() {
       setActiveView('marketplace-seller' as ActiveView);
       return;
     }
+
+    // コンシェルジュ機能（管理者専用）
+    if (itemId === 'admin-concierge-maker') {
+      router.push('/concierge/editor?new');
+      return;
+    }
+    if (itemId === 'admin-concierge-analytics') {
+      router.push('/concierge/analytics');
+      return;
+    }
   };
 
   // ナビゲーション処理

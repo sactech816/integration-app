@@ -50,9 +50,11 @@ import {
   ListOrdered,
   MessageCircle,
   Brain,
-  Star
+  Star,
+  Bot,
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
+import { getAdminEmails } from '@/lib/constants';
 
 interface HeaderProps {
   setPage?: (page: string) => void;
@@ -77,6 +79,13 @@ const Header: React.FC<HeaderProps> = ({
   const [isGuideMenuOpen, setIsGuideMenuOpen] = useState(false);
   const [isKindleMenuOpen, setIsKindleMenuOpen] = useState(false);
   const [isDiagnosisMenuOpen, setIsDiagnosisMenuOpen] = useState(false);
+  // 管理者判定
+  const isAdmin = (() => {
+    if (!user?.email) return false;
+    const adminEmails = getAdminEmails();
+    return adminEmails.some((e: string) => user.email?.toLowerCase() === e.toLowerCase());
+  })();
+
   // ハンバーガーメニュー用アコーディオン state
   const [mobileAccordion, setMobileAccordion] = useState<string | null>(null);
   const toggleAccordion = (key: string) => setMobileAccordion(prev => prev === key ? null : key);
@@ -324,6 +333,25 @@ const Header: React.FC<HeaderProps> = ({
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">アフィリエイト</span>
                             </Link>
                           </div>
+
+                          {isAdmin && (
+                            <>
+                              <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-2 mt-4 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                コンシェルジュ
+                              </p>
+                              <div className="space-y-0.5">
+                                <Link href="/concierge/editor?new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
+                                  <div className="p-1 rounded-md bg-blue-50 shrink-0"><Bot size={14} className="text-blue-600" /></div>
+                                  <span className="font-medium text-gray-900 text-xs whitespace-nowrap">コンシェルジュメーカー</span>
+                                </Link>
+                                <Link href="/concierge/analytics" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
+                                  <div className="p-1 rounded-md bg-blue-50 shrink-0"><BarChart3 size={14} className="text-blue-600" /></div>
+                                  <span className="font-medium text-gray-900 text-xs whitespace-nowrap">コンシェルジュ分析</span>
+                                </Link>
+                              </div>
+                            </>
+                          )}
                         </div>
 
                         {/* ライティング・制作 */}
