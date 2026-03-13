@@ -13,7 +13,10 @@ export default function CoachPageClient() {
           <span style={{ color: '#6366f1' }}>予約が自然に入る。</span>
         </>
       }
+      headlinePlainText="「実力」を正しく伝え、予約が自然に入る。"
       subheadline="コーチ・コンサルの集客は「信頼」がすべて。あなたの専門性を可視化し、見込み客を育て、自然に予約につなげる仕組みをつくりませんか。"
+      breadcrumbLabel="コーチ・コンサル・講師の方へ"
+      breadcrumbSlug="coach"
       heroColor="#6366f1"
       heroBgGradient="linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%)"
 
@@ -88,6 +91,12 @@ export default function CoachPageClient() {
         after: 'ウェビナーLPでセミナー告知を一本化したら、参加者が平均15名に。ステップメールで自動フォローを始めたら、個別相談への転換率が40%に向上。月8件の個別相談が安定して入るようになり、成約率も上がった。',
         persona: '40代男性・ビジネスコンサルタント（独立3年目）のイメージ',
       }}
+
+      faqItems={[
+        { question: 'ウェビナーLPは無料で作れますか？', answer: 'はい、ウェビナーLPはフリープランで無料作成・公開できます。講師プロフィール・参加者の声・申込ボタンなどのテンプレートが用意されています。' },
+        { question: 'ステップメールは何通まで無料で送れますか？', answer: 'フリープランではステップメールのシナリオを1つ作成でき、基本的なフォローアップメールを自動送信できます。より多くのシナリオや配信数が必要な場合は有料プランをご検討ください。' },
+        { question: '既存のメールリストを取り込めますか？', answer: 'はい、CSVファイルでメールリストをインポートできます。既存の見込み客リストをそのまま活用してステップメールを配信できます。' },
+      ]}
 
       otherTypes={[
         { label: 'これから起業する方', href: '/for/starter', color: '#f59e0b' },

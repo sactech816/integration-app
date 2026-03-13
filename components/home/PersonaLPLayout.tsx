@@ -26,6 +26,7 @@ export interface PersonaLPProps {
   // ヒーロー
   badge: string;
   headline: ReactNode;
+  headlinePlainText: string; // SEO用プレーンテキスト
   subheadline: string;
   heroColor: string;
   heroBgGradient: string;
@@ -49,11 +50,17 @@ export interface PersonaLPProps {
 
   // 他のタイプへのリンク
   otherTypes: { label: string; href: string; color: string }[];
+
+  // SEO
+  faqItems?: { question: string; answer: string }[];
+  breadcrumbLabel: string;
+  breadcrumbSlug: string;
 }
 
 export default function PersonaLPLayout({
   badge,
   headline,
+  headlinePlainText,
   subheadline,
   heroColor,
   heroBgGradient,
@@ -67,9 +74,58 @@ export default function PersonaLPLayout({
   steps,
   testimonial,
   otherTypes,
+  faqItems,
+  breadcrumbLabel,
+  breadcrumbSlug,
 }: PersonaLPProps) {
+  const siteUrl = 'https://makers.tokyo';
+
+  // 構造化データ: BreadcrumbList
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: '集客メーカー', item: siteUrl },
+      { '@type': 'ListItem', position: 2, name: breadcrumbLabel, item: `${siteUrl}/for/${breadcrumbSlug}` },
+    ],
+  };
+
+  // 構造化データ: FAQPage
+  const faqSchema = faqItems && faqItems.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+    })),
+  } : null;
+
+  // 構造化データ: HowTo (ステップ)
+  const howToSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: stepsTitle,
+    description: stepsDescription,
+    step: steps.map((s) => ({
+      '@type': 'HowToStep',
+      position: s.number,
+      name: s.title,
+      text: s.description,
+      itemListElement: {
+        '@type': 'HowToTool',
+        name: s.toolName,
+      },
+    })),
+  };
+
   return (
     <HomeAuthProvider>
+      {/* 構造化データ */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }} />
+
       {/* ========== Hero ========== */}
       <section
         className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden"
@@ -85,11 +141,11 @@ export default function PersonaLPLayout({
             {badge}
           </div>
 
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black leading-tight mb-6" style={{ color: '#5d4037' }}>
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-black leading-tight mb-6" style={{ color: '#5d4037' }} data-speakable>
             {headline}
           </h1>
 
-          <p className="text-base md:text-lg text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base md:text-lg text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed" data-speakable>
             {subheadline}
           </p>
 
@@ -107,7 +163,7 @@ export default function PersonaLPLayout({
       {/* ========== 共感セクション ========== */}
       <section className="py-16 bg-white">
         <div className="max-w-3xl mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-black text-center mb-10" style={{ color: '#5d4037' }}>
+          <h2 className="text-2xl md:text-3xl font-black text-center mb-10" style={{ color: '#5d4037' }} data-speakable>
             {empathyTitle}
           </h2>
           <div className="space-y-3">
@@ -134,10 +190,10 @@ export default function PersonaLPLayout({
       <section className="py-20" style={{ backgroundColor: '#fffbf0' }}>
         <div className="max-w-5xl mx-auto px-4">
           <div className="text-center mb-14">
-            <h2 className="text-2xl md:text-3xl font-black mb-4" style={{ color: '#5d4037' }}>
+            <h2 className="text-2xl md:text-3xl font-black mb-4" style={{ color: '#5d4037' }} data-speakable>
               {benefitTitle}
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">{benefitDescription}</p>
+            <p className="text-gray-600 max-w-2xl mx-auto" data-speakable>{benefitDescription}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {benefits.map((b, i) => {
@@ -151,7 +207,7 @@ export default function PersonaLPLayout({
                     <Icon size={32} />
                   </div>
                   <h3 className="text-lg font-bold mb-3" style={{ color: '#5d4037' }}>{b.title}</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">{b.description}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed" data-speakable>{b.description}</p>
                 </div>
               );
             })}
@@ -169,10 +225,10 @@ export default function PersonaLPLayout({
             >
               あなた専用の集客ステップ
             </div>
-            <h2 className="text-2xl md:text-3xl font-black mb-4" style={{ color: '#5d4037' }}>
+            <h2 className="text-2xl md:text-3xl font-black mb-4" style={{ color: '#5d4037' }} data-speakable>
               {stepsTitle}
             </h2>
-            <p className="text-gray-600">{stepsDescription}</p>
+            <p className="text-gray-600" data-speakable>{stepsDescription}</p>
           </div>
 
           <div className="space-y-8">
@@ -180,7 +236,6 @@ export default function PersonaLPLayout({
               const Icon = step.icon;
               return (
                 <div key={i} className="relative">
-                  {/* 接続線 */}
                   {i < steps.length - 1 && (
                     <div
                       className="absolute left-8 top-full w-0.5 h-8 hidden md:block"
@@ -188,7 +243,6 @@ export default function PersonaLPLayout({
                     />
                   )}
                   <div className="flex items-start gap-6 p-6 sm:p-8 rounded-3xl border border-gray-100 bg-white hover:shadow-lg transition-all duration-300">
-                    {/* ステップ番号 */}
                     <div
                       className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 text-white text-xl font-black shadow-lg"
                       style={{ backgroundColor: step.color }}
@@ -197,7 +251,7 @@ export default function PersonaLPLayout({
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-xl font-bold mb-2" style={{ color: '#5d4037' }}>{step.title}</h3>
-                      <p className="text-gray-600 text-sm leading-relaxed mb-3">{step.description}</p>
+                      <p className="text-gray-600 text-sm leading-relaxed mb-3" data-speakable>{step.description}</p>
                       <div
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold border"
                         style={{ color: step.color, borderColor: `${step.color}40`, backgroundColor: `${step.color}08` }}
@@ -223,14 +277,12 @@ export default function PersonaLPLayout({
           </h2>
           <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-lg">
             <div className="grid md:grid-cols-2">
-              {/* Before */}
               <div className="p-8 border-b md:border-b-0 md:border-r border-gray-100">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-xs font-bold mb-4">
                   BEFORE
                 </div>
                 <p className="text-gray-600 leading-relaxed text-sm">{testimonial.before}</p>
               </div>
-              {/* After */}
               <div className="p-8" style={{ backgroundColor: `${heroColor}05` }}>
                 <div
                   className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold mb-4"
@@ -238,7 +290,7 @@ export default function PersonaLPLayout({
                 >
                   AFTER
                 </div>
-                <p className="text-gray-700 leading-relaxed text-sm font-medium">{testimonial.after}</p>
+                <p className="text-gray-700 leading-relaxed text-sm font-medium" data-speakable>{testimonial.after}</p>
               </div>
             </div>
             <div className="px-8 py-4 border-t border-gray-100 text-center">
@@ -248,6 +300,32 @@ export default function PersonaLPLayout({
         </div>
       </section>
 
+      {/* ========== FAQ（SEOリッチリザルト対応） ========== */}
+      {faqItems && faqItems.length > 0 && (
+        <section className="py-20 bg-white">
+          <div className="max-w-3xl mx-auto px-4">
+            <h2 className="text-2xl md:text-3xl font-black text-center mb-10" style={{ color: '#5d4037' }}>
+              よくある質問
+            </h2>
+            <div className="space-y-4">
+              {faqItems.map((faq, i) => (
+                <div key={i} className="rounded-2xl overflow-hidden border border-orange-50 bg-white">
+                  <details className="group">
+                    <summary data-speakable="question" className="flex justify-between items-center px-6 py-5 font-bold cursor-pointer select-none list-none" style={{ color: '#5d4037' }}>
+                      <span>{faq.question}</span>
+                      <span className="transition group-open:rotate-180" style={{ color: heroColor }}>▼</span>
+                    </summary>
+                    <div data-speakable="answer" className="px-6 pb-5 text-sm text-gray-600 leading-relaxed border-t pt-4" style={{ borderColor: '#ffedd5' }}>
+                      {faq.answer}
+                    </div>
+                  </details>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ========== CTA ========== */}
       <section className="py-20 relative overflow-hidden" style={{ backgroundColor: heroColor }}>
         <div className="absolute top-0 left-0 w-full h-full opacity-10">
@@ -255,7 +333,7 @@ export default function PersonaLPLayout({
           <div className="absolute bottom-20 left-20 w-64 h-64 bg-yellow-300 rounded-full blur-3xl" />
         </div>
         <div className="container mx-auto px-4 text-center relative z-10">
-          <h2 className="text-3xl md:text-4xl font-black mb-6 text-white leading-tight">
+          <h2 className="text-3xl md:text-4xl font-black mb-6 text-white leading-tight" data-speakable>
             「いつかやろう」を、<br />今日にしませんか？
           </h2>
           <p className="text-lg mb-10 max-w-xl mx-auto leading-relaxed text-white/80">

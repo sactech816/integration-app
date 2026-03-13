@@ -13,7 +13,10 @@ export default function BusinessPageClient() {
           <span style={{ color: '#8b5cf6' }}>ひとつにまとめる。</span>
         </>
       }
+      headlinePlainText="マーケティング基盤を、ひとつにまとめる。"
       subheadline="LP作成、リード獲得、アンケート、メール配信…バラバラのツールを行き来するのはもう終わり。集客から成約まで、チームで使える統合プラットフォームを。"
+      breadcrumbLabel="法人・チームの方へ"
+      breadcrumbSlug="business"
       heroColor="#8b5cf6"
       heroBgGradient="linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%)"
 
@@ -88,6 +91,12 @@ export default function BusinessPageClient() {
         after: '集客メーカーに統合したら、ツール費用が月額4,980円に。テンプレートベースなので新しい担当者もすぐに使えた。LP公開→アンケート→ステップメールの流れが1日で構築でき、施策のスピードが3倍に。',
         persona: '中小企業・マーケティング担当（従業員15名）のイメージ',
       }}
+
+      faqItems={[
+        { question: '既存のWixやWordPressから移行できますか？', answer: 'はい、テキストや画像をコピー＆ペーストするだけで移行できます。特別な技術知識は不要で、テンプレートに沿って入力するだけです。' },
+        { question: 'チームで共同利用できますか？', answer: 'はい、1アカウントで作成したコンテンツはチームで共有可能です。テンプレートベースなので、担当者が変わってもすぐに引き継げます。' },
+        { question: '複数ツールの統合でどれくらいコスト削減できますか？', answer: 'LP作成（Wix等: 月2,000円〜）、フォーム（有料ツール: 月1,000円〜）、メール配信（Mailchimp等: 月3,000円〜）を一元化。Businessプラン月額4,980円で、年間10万円以上のコスト削減が可能です。' },
+      ]}
 
       otherTypes={[
         { label: 'これから起業する方', href: '/for/starter', color: '#f59e0b' },

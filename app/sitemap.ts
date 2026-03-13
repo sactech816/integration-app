@@ -97,6 +97,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'yearly',
       priority: 0.3,
     },
+    // ペルソナ別LP
+    { url: `${BASE_URL}/for/starter`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.9 },
+    { url: `${BASE_URL}/for/freelance`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.9 },
+    { url: `${BASE_URL}/for/coach`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.9 },
+    { url: `${BASE_URL}/for/creator`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.9 },
+    { url: `${BASE_URL}/for/shop`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.9 },
+    { url: `${BASE_URL}/for/business`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.9 },
+    { url: `${BASE_URL}/for/hp-activate`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.9 },
     // デモページ
     {
       url: `${BASE_URL}/quiz/demo`,

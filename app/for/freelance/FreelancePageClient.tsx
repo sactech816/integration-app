@@ -13,7 +13,10 @@ export default function FreelancePageClient() {
           <span style={{ color: '#3b82f6' }}>「お客様」に変える。</span>
         </>
       }
+      headlinePlainText="フォロワーを、「お客様」に変える。"
       subheadline="毎日がんばって発信しているのに、売上につながらない。それは「仕組み」がないから。フォロワーが自然にお客様に変わる流れを、今日からつくれます。"
+      breadcrumbLabel="フリーランス・SNS発信者の方へ"
+      breadcrumbSlug="freelance"
       heroColor="#3b82f6"
       heroBgGradient="linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%)"
 
@@ -88,6 +91,12 @@ export default function FreelancePageClient() {
         after: 'プロフィールLPに変えたら「サービスの全体像が分かりやすい」と好評。診断クイズがストーリーでシェアされて新規フォロワーが増え、予約フォームを設置したら月15件の予約が自動で入るように。売上は月25万円に。',
         persona: '20代女性・パーソナルスタイリスト（フリーランス）のイメージ',
       }}
+
+      faqItems={[
+        { question: 'プロフィールLPとlit.linkの違いは？', answer: 'lit.linkはリンクをまとめるだけですが、プロフィールLPはサービス内容・料金・お客様の声・予約ボタンまで1ページに凝縮できます。「何をしている人か」が一目で伝わり、予約や問い合わせにつながります。' },
+        { question: '診断クイズは無料で作れますか？', answer: 'はい、診断クイズはフリープランで無料作成・公開できます。AIが質問と結果を自動生成するので、5分で本格的な診断クイズが完成します。' },
+        { question: '予約フォームの月額費用はかかりますか？', answer: 'フリープランでは月30件まで無料で予約を受け付けられます。それ以上の件数が必要な場合は有料プラン（月額1,980円〜）でご利用いただけます。' },
+      ]}
 
       otherTypes={[
         { label: 'これから起業する方', href: '/for/starter', color: '#f59e0b' },

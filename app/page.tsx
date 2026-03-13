@@ -218,6 +218,35 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ========== 3.5. 既存HPお持ちの方向けバナー ========== */}
+        <section className="py-12 bg-white border-b" style={{ borderColor: '#ffedd5' }}>
+          <div className="max-w-4xl mx-auto px-4">
+            <a
+              href="/for/hp-activate"
+              className="group block relative overflow-hidden rounded-3xl border-2 border-emerald-200 p-8 md:p-10 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+              style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%)' }}
+            >
+              <div className="absolute top-4 right-4 w-20 h-20 rounded-full bg-emerald-500 opacity-10" />
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur px-3 py-1 rounded-full mb-3 shadow-sm text-emerald-600 text-xs font-bold border border-emerald-200">
+                    既存HP・LPをお持ちの方へ
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-black mb-1" style={{ color: '#5d4037' }}>
+                    HPをつくって終わり、になっていませんか？
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    AIチャットボット＆ガイドを埋め込むだけで、動きのないサイトが<span className="font-bold text-emerald-600">24時間働く営業マン</span>に。
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 font-bold text-sm text-emerald-600 group-hover:gap-3 transition-all flex-shrink-0">
+                  詳しく見る <ArrowRight size={16} />
+                </div>
+              </div>
+            </a>
+          </div>
+        </section>
+
         {/* ========== 4. 3つの力 — なぜ集客メーカーなのか ========== */}
         <section className="py-24 bg-white">
           <div className="container mx-auto px-4">

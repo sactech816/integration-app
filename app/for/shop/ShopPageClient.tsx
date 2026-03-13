@@ -13,7 +13,10 @@ export default function ShopPageClient() {
           <span style={{ color: '#10b981' }}>口コミが自然に広がる。</span>
         </>
       }
+      headlinePlainText="リピーターが増え、口コミが自然に広がる。"
       subheadline="来店してくれたお客様が「また来たい」「友達にも教えたい」と思う体験をつくること。それが、広告費ゼロでも集客できる最強の仕組みです。"
+      breadcrumbLabel="店舗・教室・サロンの方へ"
+      breadcrumbSlug="shop"
       heroColor="#10b981"
       heroBgGradient="linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%)"
 
@@ -88,6 +91,12 @@ export default function ShopPageClient() {
         after: '来店時のガチャ（次回使える割引やプレゼントが当たる）とスタンプラリーを導入。お客様が「今日ガチャで当たった！」とInstagramに投稿してくれるように。リピート率が60%に上がり、口コミ経由の新規も増えて月商50万円を突破。',
         persona: '30代女性・ネイルサロンオーナー（個人経営）のイメージ',
       }}
+
+      faqItems={[
+        { question: 'ガチャやスタンプラリーは無料で作れますか？', answer: 'ガチャ・スタンプラリーはStandard以上のプランで作成できます。まずは無料の診断クイズと予約フォームから始めて、効果を実感してからアップグレードするのがおすすめです。' },
+        { question: '店舗にQRコードを置くだけで使えますか？', answer: 'はい、診断クイズ・ガチャ・予約フォームそれぞれにURLが発行されるので、QRコードを印刷して店頭に設置するだけで利用開始できます。' },
+        { question: '複数店舗で使えますか？', answer: 'はい、1アカウントで複数の診断クイズやガチャを作成できるので、店舗ごとに異なるコンテンツを設置できます。チーム管理にはBusiness以上のプランがおすすめです。' },
+      ]}
 
       otherTypes={[
         { label: 'これから起業する方', href: '/for/starter', color: '#f59e0b' },

@@ -13,7 +13,10 @@ export default function StarterPageClient() {
           <span style={{ color: '#f59e0b' }}>もう迷わない。</span>
         </>
       }
+      headlinePlainText="何から始めればいいか、もう迷わない。"
       subheadline="起業の第一歩は「自分を知ってもらう仕組み」をつくること。テンプレートを選ぶだけで、今日からあなたのビジネスが動き出します。"
+      breadcrumbLabel="これから起業する方へ"
+      breadcrumbSlug="starter"
       heroColor="#f59e0b"
       heroBgGradient="linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%)"
 
@@ -88,6 +91,12 @@ export default function StarterPageClient() {
         after: 'プロフィールLPをつくってSNSに貼ったら、「サービス内容がよく分かった」と言われるように。診断クイズをシェアしたら友人経由で初めてのお客様が。月5件のお問い合わせが来るようになった。',
         persona: '30代女性・ヨガインストラクター（起業準備中）のイメージ',
       }}
+
+      faqItems={[
+        { question: '起業準備中でも使えますか？', answer: 'はい、まだ商品やサービスが決まっていなくても大丈夫です。まずはプロフィールLPであなたの想いを発信し、診断クイズで見込み客との接点をつくることから始められます。' },
+        { question: 'プロフィールLPは無料で作れますか？', answer: 'はい、プロフィールLP・診断クイズ・SNS投稿メーカーはすべて無料で作成・公開できます。クレジットカード登録も不要です。' },
+        { question: 'パソコンが苦手でも大丈夫ですか？', answer: 'テンプレートを選んでテキストを入力するだけなので、パソコンが苦手な方でも5分で完成します。スマホからも編集可能です。' },
+      ]}
 
       otherTypes={[
         { label: 'フリーランス・SNS発信者', href: '/for/freelance', color: '#3b82f6' },

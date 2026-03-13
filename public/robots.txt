@@ -10,6 +10,9 @@ Allow: /booking/
 Allow: /portal
 Allow: /tools
 
+# ペルソナ別LPを許可
+Allow: /for/
+
 # 管理画面とエディタページを禁止
 Disallow: /api/
 Disallow: /dashboard/
