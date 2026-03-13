@@ -289,7 +289,7 @@ const Header: React.FC<HeaderProps> = ({
                               <div className="p-1 rounded-md bg-indigo-50 shrink-0"><ClipboardCheck size={14} className="text-indigo-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
                                 フォーム
-                                <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full ml-1">PRO</span>
+                                <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">B</span>
                               </span>
                             </Link>
                           </div>
@@ -310,7 +310,7 @@ const Header: React.FC<HeaderProps> = ({
                               <div className="p-1 rounded-md bg-emerald-50 shrink-0"><PartyPopper size={14} className="text-emerald-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
                                 エンタメ診断
-                                <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full ml-1">PRO</span>
+                                <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">B</span>
                               </span>
                             </Link>
                           </div>
@@ -343,11 +343,17 @@ const Header: React.FC<HeaderProps> = ({
                               <div className="space-y-0.5">
                                 <Link href="/concierge/editor?new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
                                   <div className="p-1 rounded-md bg-blue-50 shrink-0"><Bot size={14} className="text-blue-600" /></div>
-                                  <span className="font-medium text-gray-900 text-xs whitespace-nowrap">コンシェルジュメーカー</span>
+                                  <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
+                                    コンシェルジュメーカー
+                                    <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full ml-1">P</span>
+                                  </span>
                                 </Link>
                                 <Link href="/concierge/analytics" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
                                   <div className="p-1 rounded-md bg-blue-50 shrink-0"><BarChart3 size={14} className="text-blue-600" /></div>
-                                  <span className="font-medium text-gray-900 text-xs whitespace-nowrap">コンシェルジュ分析</span>
+                                  <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
+                                    コンシェルジュ分析
+                                    <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full ml-1">P</span>
+                                  </span>
                                 </Link>
                               </div>
                             </>
@@ -369,7 +375,7 @@ const Header: React.FC<HeaderProps> = ({
                               <div className="p-1 rounded-md bg-amber-50 shrink-0"><Image size={14} className="text-amber-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
                                 サムネイル
-                                <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full ml-1">PRO</span>
+                                <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">B</span>
                               </span>
                             </Link>
                             <Link href="/sns-post" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
@@ -402,7 +408,7 @@ const Header: React.FC<HeaderProps> = ({
                               <div className="p-1 rounded-md bg-cyan-50 shrink-0"><Mail size={14} className="text-cyan-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
                                 メルマガ
-                                <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full ml-1">PRO</span>
+                                <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">B</span>
                               </span>
                             </Link>
                             <Link href="/step-email/sequences/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-cyan-50 transition-colors">
@@ -908,7 +914,7 @@ const Header: React.FC<HeaderProps> = ({
                     </Link>
                     <Link href="/order-form/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <ClipboardCheck size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">フォーム</span>
-                      <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full">PRO</span>
+                      <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full">B</span>
                     </Link>
                   </div>
                 )}
@@ -933,7 +939,7 @@ const Header: React.FC<HeaderProps> = ({
                     </Link>
                     <Link href="/entertainment/create" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <PartyPopper size={16} className="text-emerald-600" /><span className="text-gray-700 text-sm">エンタメ診断</span>
-                      <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full">PRO</span>
+                      <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full">B</span>
                     </Link>
                   </div>
                 )}
@@ -958,7 +964,7 @@ const Header: React.FC<HeaderProps> = ({
                     </Link>
                     <Link href="/thumbnail/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <Image size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">サムネイル</span>
-                      <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full">PRO</span>
+                      <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full">B</span>
                     </Link>
                     <Link href="/sns-post" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <Send size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">SNS投稿</span>
@@ -1001,7 +1007,7 @@ const Header: React.FC<HeaderProps> = ({
                     </Link>
                     <Link href="/newsletter/campaigns/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <Mail size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">メルマガ</span>
-                      <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1 py-0.5 rounded-full">PRO</span>
+                      <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full">B</span>
                     </Link>
                     <Link href="/step-email/sequences/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <ListOrdered size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">ステップメール</span>

@@ -160,28 +160,28 @@ export default function SidebarNav({
     if (tool.id === 'youtube-keyword-research') {
       const proDisabled = !hasMakersProAccess && !isAdmin;
       item.isDisabled = proDisabled;
-      item.disabledBadge = proDisabled ? 'Pro' : undefined;
+      item.disabledBadge = proDisabled ? 'B' : undefined;
     }
 
-    // KindleキーワードリサーチはPro限定
+    // KindleキーワードリサーチはBusiness限定
     if (tool.id === 'kindle-keywords') {
       const proDisabled = !hasMakersProAccess && !isAdmin;
       item.isDisabled = proDisabled;
-      item.disabledBadge = proDisabled ? 'Pro' : undefined;
+      item.disabledBadge = proDisabled ? 'B' : undefined;
     }
 
-    // GoogleキーワードリサーチはPro限定
+    // GoogleキーワードリサーチはBusiness限定
     if (tool.id === 'google-keyword-research') {
       const proDisabled = !hasMakersProAccess && !isAdmin;
       item.isDisabled = proDisabled;
-      item.disabledBadge = proDisabled ? 'Pro' : undefined;
+      item.disabledBadge = proDisabled ? 'B' : undefined;
     }
 
-    // 楽天市場リサーチはPro限定
+    // 楽天市場リサーチはBusiness限定
     if (tool.id === 'rakuten-research') {
       const proDisabled = !hasMakersProAccess && !isAdmin;
       item.isDisabled = proDisabled;
-      item.disabledBadge = proDisabled ? 'Pro' : undefined;
+      item.disabledBadge = proDisabled ? 'B' : undefined;
     }
 
     return item;
@@ -356,9 +356,13 @@ export default function SidebarNav({
           <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
             item.disabledBadge === 'モニター'
               ? 'bg-purple-100 text-purple-600'
-              : item.disabledBadge === 'Pro'
-                ? 'bg-pink-100 text-pink-600'
-                : 'bg-gray-200 text-gray-500'
+              : item.disabledBadge === 'S'
+                ? 'bg-blue-100 text-blue-600'
+                : item.disabledBadge === 'B'
+                  ? 'bg-purple-100 text-purple-600'
+                  : item.disabledBadge === 'P'
+                    ? 'bg-amber-100 text-amber-700'
+                    : 'bg-gray-200 text-gray-500'
           }`}>
             {item.disabledBadge}
           </span>
