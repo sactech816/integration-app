@@ -85,8 +85,11 @@ export default function ConciergeChat({
   };
 
   return (
-    <div className="concierge-slide-up flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden
-      w-[calc(100vw-2rem)] sm:w-[380px] h-[min(500px,70vh)] sm:h-[520px]">
+    <div
+      className="concierge-slide-up flex flex-col bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden
+        w-[calc(100vw-2rem)] sm:w-[380px] h-[min(500px,70vh)] sm:h-[520px]"
+      style={{ overscrollBehavior: 'contain' }}
+    >
 
       {/* ヘッダー */}
       <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
@@ -111,7 +114,11 @@ export default function ConciergeChat({
       </div>
 
       {/* メッセージ一覧 */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 scrollbar-hide">
+      <div
+        className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 scrollbar-hide"
+        style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
+        onTouchMove={(e) => e.stopPropagation()}
+      >
         {messages.length === 0 && (
           <div className="text-center py-8">
             <ConciergeAvatar state="idle" size={64} />
