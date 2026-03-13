@@ -63,6 +63,7 @@ export default function ShopPageClient() {
           description: '「あなたにぴったりのメニュー診断」「あなたの肌タイプ診断」など、お客様が楽しみながらあなたのお店を知れる診断クイズを作成。SNSでシェアされて、新しいお客様が自然にやってきます。',
           toolName: '診断クイズ',
           toolDescription: 'AIが質問・結果を自動生成',
+          toolUrl: '/quiz',
           icon: Sparkles,
           color: '#10b981',
         },
@@ -72,6 +73,7 @@ export default function ShopPageClient() {
           description: '来店時にQRコードを読み取ってガチャを回す、スタンプを貯めるなど、来店自体が楽しいイベントに。「今日は何が当たるかな？」がお客様の来店動機になり、リピート率が劇的に上がります。',
           toolName: 'ガチャ / スタンプラリー',
           toolDescription: '来店特典をゲーム化',
+          toolUrl: '/gamification',
           icon: Gamepad2,
           color: '#ec4899',
         },
@@ -81,9 +83,22 @@ export default function ShopPageClient() {
           description: '施術後・レッスン後に「次回のご予約はこちら」とQRコードを提示。カレンダーから空き日時を選ぶだけなので、お客様も楽。「帰ったら予約しよう」の「帰ったら忘れた」を防ぎます。',
           toolName: '予約フォーム',
           toolDescription: 'QRコードで即予約',
+          toolUrl: '/booking',
           icon: Calendar,
           color: '#3b82f6',
         },
+      ]}
+
+      freeFeatures={[
+        '診断クイズを無料で作成・公開',
+        'プロフィールLPでお店の魅力を発信',
+        'SNS投稿文をAIで自動生成',
+        'アクセス解析で反応を確認',
+      ]}
+      upgradeFeatures={[
+        { text: 'ガチャ・スタンプラリーでリピート促進', plan: 'Standard' },
+        { text: '予約フォームで次回予約を自動化', plan: 'Standard' },
+        { text: 'メルマガでお客様に定期配信', plan: 'Standard' },
       ]}
 
       testimonial={{

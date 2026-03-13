@@ -63,6 +63,7 @@ export default function BusinessPageClient() {
           description: 'テンプレートを選んでテキストを入力するだけで、プロ品質のLPが完成。外注せずに社内でスピーディーに制作できるので、施策の立ち上げが圧倒的に速くなります。',
           toolName: 'ビジネスLP',
           toolDescription: 'テンプレートから即制作',
+          toolUrl: '/business',
           icon: Building2,
           color: '#8b5cf6',
         },
@@ -72,6 +73,7 @@ export default function BusinessPageClient() {
           description: '顧客アンケート、お問い合わせフォーム、資料請求フォームをテンプレートから作成。Googleフォームでは出せないブランド感を維持しながら、回答データを一元管理。',
           toolName: 'アンケート / 申込フォーム',
           toolDescription: 'ブランドに合ったフォーム',
+          toolUrl: '/survey',
           icon: ClipboardCheck,
           color: '#10b981',
         },
@@ -81,9 +83,22 @@ export default function BusinessPageClient() {
           description: '資料請求やアンケート回答者に自動でフォローアップメールを配信。「お役立ち情報→事例→商談のご案内」のシナリオを設定すれば、営業の負担を減らしながらリードを育てられます。',
           toolName: 'ステップメール',
           toolDescription: '自動メールシナリオ配信',
+          toolUrl: '/step-email',
           icon: Mail,
           color: '#3b82f6',
         },
+      ]}
+
+      freeFeatures={[
+        'ビジネスLPを無料で作成・公開',
+        'アンケート・フォームを無制限に作成',
+        '診断クイズでリード獲得',
+        'アクセス解析でデータを一元管理',
+      ]}
+      upgradeFeatures={[
+        { text: 'ステップメールで自動ナーチャリング', plan: 'Standard' },
+        { text: 'ファネルで施策の導線を一元管理', plan: 'Standard' },
+        { text: 'チーム管理・複数メンバー対応', plan: 'Business' },
       ]}
 
       testimonial={{

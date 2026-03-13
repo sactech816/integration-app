@@ -63,6 +63,7 @@ export default function CreatorPageClient() {
           description: '商品名・特徴・ターゲットを入力するだけで、AIが売れるセールスレターを自動生成。ヘッドライン、ベネフィット、お客様の声、CTA — プロのライターが書いたような構成が一瞬で完成します。',
           toolName: 'セールスライター',
           toolDescription: 'AIが売れる文章を自動生成',
+          toolUrl: '/salesletter',
           icon: PenTool,
           color: '#ec4899',
         },
@@ -72,6 +73,7 @@ export default function CreatorPageClient() {
           description: 'ファネルで「無料コンテンツ→メルマガ登録→ステップメール→商品案内」の導線を構築。見込み客が自然に購入に至る流れをつくれば、毎回SNSで告知する必要はありません。',
           toolName: 'ファネル',
           toolDescription: '集客導線を一元管理',
+          toolUrl: '/funnel',
           icon: GitBranch,
           color: '#8b5cf6',
         },
@@ -81,9 +83,22 @@ export default function CreatorPageClient() {
           description: '購入者・見込み客リストに定期的にメルマガを配信。お役立ち情報で信頼を積み重ね、新商品のリリース時には「待ってました！」と言ってもらえる関係を。',
           toolName: 'メルマガ',
           toolDescription: '配信・リスト管理を簡単に',
+          toolUrl: '/newsletter',
           icon: Mail,
           color: '#10b981',
         },
+      ]}
+
+      freeFeatures={[
+        'セールスレターをAIで自動生成',
+        'ファネルで集客導線を構築',
+        '診断クイズで見込み客との接点づくり',
+        'アクセス解析で効果を確認',
+      ]}
+      upgradeFeatures={[
+        { text: 'メルマガで購入者リストに一斉配信', plan: 'Standard' },
+        { text: 'ステップメールで自動フォローアップ', plan: 'Standard' },
+        { text: '申込フォームでデジタル商品の販売', plan: 'Standard' },
       ]}
 
       testimonial={{

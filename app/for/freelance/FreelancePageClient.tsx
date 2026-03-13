@@ -63,6 +63,7 @@ export default function FreelancePageClient() {
           description: 'サービス内容・料金・お客様の声・予約ボタンを1ページにまとめたプロフィールLP。SNSのプロフィール欄に貼るだけで、フォロワーがあなたのサービスを理解できます。',
           toolName: 'プロフィールLP',
           toolDescription: 'lit.linkより伝わるページ',
+          toolUrl: '/profile',
           icon: UserCircle,
           color: '#3b82f6',
         },
@@ -72,6 +73,7 @@ export default function FreelancePageClient() {
           description: '「あなたに合ったダイエット法は？」「あなたの強みタイプ診断」など、ターゲットが思わずシェアしたくなる診断クイズ。結果画面にあなたのサービスを自然に紹介できます。',
           toolName: '診断クイズ',
           toolDescription: 'AIが質問・結果を自動生成',
+          toolUrl: '/quiz',
           icon: Sparkles,
           color: '#10b981',
         },
@@ -81,9 +83,22 @@ export default function FreelancePageClient() {
           description: '「いつ空いてますか？」のDMやり取りは卒業。カレンダー型の予約フォームで、見込み客がそのまま予約完了。あなたは承認するだけです。',
           toolName: '予約フォーム',
           toolDescription: '日程調整を自動化',
+          toolUrl: '/booking',
           icon: Calendar,
           color: '#f59e0b',
         },
+      ]}
+
+      freeFeatures={[
+        'プロフィールLPを無制限に作成・公開',
+        '診断クイズをAIで自動生成',
+        'SNS投稿文をAIで自動生成',
+        'アクセス解析でページの反応を確認',
+      ]}
+      upgradeFeatures={[
+        { text: 'ビジネスLPで本格的なサービスページ作成', plan: 'Standard' },
+        { text: '予約フォームで月30件以上の予約受付', plan: 'Standard' },
+        { text: 'ファネルで集客導線を一元管理', plan: 'Standard' },
       ]}
 
       testimonial={{

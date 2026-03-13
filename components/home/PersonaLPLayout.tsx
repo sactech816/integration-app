@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { ArrowRight, Sparkles, Check, ChevronRight } from 'lucide-react';
+import { ArrowRight, Sparkles, Check, ChevronRight, Crown } from 'lucide-react';
 import HomeAuthProvider from '@/components/home/HomeAuthProvider';
 import { AuthCTAButton } from '@/components/home/HomeClientButtons';
 import type { LucideIcon } from 'lucide-react';
@@ -12,8 +12,14 @@ export interface PersonaStep {
   description: string;
   toolName: string;
   toolDescription: string;
+  toolUrl: string;
   icon: LucideIcon;
   color: string;
+}
+
+export interface UpgradeFeature {
+  text: string;
+  plan: string; // 例: 'Standard' | 'Business'
 }
 
 export interface PersonaTestimonial {
@@ -51,6 +57,10 @@ export interface PersonaLPProps {
   // 他のタイプへのリンク
   otherTypes: { label: string; href: string; color: string }[];
 
+  // 有料プラン誘導
+  freeFeatures?: string[];
+  upgradeFeatures?: UpgradeFeature[];
+
   // SEO
   faqItems?: { question: string; answer: string }[];
   breadcrumbLabel: string;
@@ -74,6 +84,8 @@ export default function PersonaLPLayout({
   steps,
   testimonial,
   otherTypes,
+  freeFeatures,
+  upgradeFeatures,
   faqItems,
   breadcrumbLabel,
   breadcrumbSlug,
@@ -252,14 +264,16 @@ export default function PersonaLPLayout({
                     <div className="flex-1 min-w-0">
                       <h3 className="text-xl font-bold mb-2" style={{ color: '#5d4037' }}>{step.title}</h3>
                       <p className="text-gray-600 text-sm leading-relaxed mb-3" data-speakable>{step.description}</p>
-                      <div
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold border"
+                      <a
+                        href={step.toolUrl}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold border transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
                         style={{ color: step.color, borderColor: `${step.color}40`, backgroundColor: `${step.color}08` }}
                       >
                         <Icon size={16} />
                         {step.toolName}
                         <span className="text-gray-400 text-xs">— {step.toolDescription}</span>
-                      </div>
+                        <ArrowRight size={14} className="opacity-50" />
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -299,6 +313,77 @@ export default function PersonaLPLayout({
           </div>
         </div>
       </section>
+
+      {/* ========== 有料プラン誘導 ========== */}
+      {freeFeatures && upgradeFeatures && (
+        <section className="py-20 bg-white">
+          <div className="max-w-3xl mx-auto px-4">
+            <div className="text-center mb-10">
+              <h2 className="text-2xl md:text-3xl font-black mb-4" style={{ color: '#5d4037' }}>
+                さらに成果を加速させるなら
+              </h2>
+              <p className="text-gray-600">
+                まずは無料で十分始められます。効果を実感してから、次のステップへ。
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* 無料でできること */}
+              <div className="p-6 rounded-2xl border border-gray-200 bg-white">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-bold mb-4">
+                  フリープラン（¥0）
+                </div>
+                <ul className="space-y-3">
+                  {freeFeatures.map((feat, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <Check size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-gray-700">{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* 有料でさらに */}
+              <div className="p-6 rounded-2xl border-2 relative overflow-hidden" style={{ borderColor: heroColor, backgroundColor: `${heroColor}05` }}>
+                <div className="absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl opacity-10" style={{ backgroundColor: heroColor }} />
+                <div className="relative z-10">
+                  <div
+                    className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold mb-4"
+                    style={{ backgroundColor: `${heroColor}15`, color: heroColor }}
+                  >
+                    <Crown size={12} />
+                    有料プラン（¥1,980〜/月）
+                  </div>
+                  <ul className="space-y-3">
+                    {upgradeFeatures.map((feat, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <Sparkles size={16} style={{ color: heroColor }} className="mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700">
+                          {feat.text}
+                          <span className="text-xs text-gray-400 ml-1">({feat.plan}〜)</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center mt-8">
+              <p className="text-sm text-gray-500 mb-4">
+                まずは無料プランで効果を実感 → 必要に応じてアップグレード
+              </p>
+              <a
+                href="/pricing"
+                className="inline-flex items-center gap-2 text-sm font-bold hover:underline transition"
+                style={{ color: heroColor }}
+              >
+                プラン詳細を見る <ArrowRight size={14} />
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ========== FAQ（SEOリッチリザルト対応） ========== */}
       {faqItems && faqItems.length > 0 && (

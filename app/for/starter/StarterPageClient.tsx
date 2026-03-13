@@ -63,6 +63,7 @@ export default function StarterPageClient() {
           description: 'テンプレートを選んで、名前・肩書き・サービス内容を入れるだけ。5分であなた専用のWebページが完成します。SNSのプロフィール欄に貼れば、名刺代わりに。',
           toolName: 'プロフィールLP',
           toolDescription: 'テンプレートから簡単作成',
+          toolUrl: '/profile',
           icon: UserCircle,
           color: '#3b82f6',
         },
@@ -72,6 +73,7 @@ export default function StarterPageClient() {
           description: '「あなたの起業タイプ診断」「あなたに合った働き方は？」など、ターゲットが思わずやりたくなる診断クイズを作成。結果画面からあなたのサービスページへ自然に誘導できます。',
           toolName: '診断クイズ',
           toolDescription: 'AIが質問・結果を自動生成',
+          toolUrl: '/quiz',
           icon: Sparkles,
           color: '#10b981',
         },
@@ -81,6 +83,7 @@ export default function StarterPageClient() {
           description: 'あなたのビジネスに合わせて、反応が取れるSNS投稿文をAIが自動生成。投稿→プロフィールLP→サービスページという集客の流れが自然に生まれます。',
           toolName: 'SNS投稿メーカー',
           toolDescription: 'AI自動生成＆テンプレート',
+          toolUrl: '/sns-post',
           icon: Share2,
           color: '#f59e0b',
         },
@@ -91,6 +94,18 @@ export default function StarterPageClient() {
         after: 'プロフィールLPをつくってSNSに貼ったら、「サービス内容がよく分かった」と言われるように。診断クイズをシェアしたら友人経由で初めてのお客様が。月5件のお問い合わせが来るようになった。',
         persona: '30代女性・ヨガインストラクター（起業準備中）のイメージ',
       }}
+
+      freeFeatures={[
+        'プロフィールLPを無制限に作成・公開',
+        '診断クイズをAIで自動生成',
+        'SNS投稿文をAIで自動生成',
+        'アクセス解析でページの反応を確認',
+      ]}
+      upgradeFeatures={[
+        { text: 'ビジネスLPで本格的なサービスページ作成', plan: 'Standard' },
+        { text: '予約フォームで問い合わせを自動化', plan: 'Standard' },
+        { text: 'メルマガで見込み客との関係を継続', plan: 'Standard' },
+      ]}
 
       faqItems={[
         { question: '起業準備中でも使えますか？', answer: 'はい、まだ商品やサービスが決まっていなくても大丈夫です。まずはプロフィールLPであなたの想いを発信し、診断クイズで見込み客との接点をつくることから始められます。' },
