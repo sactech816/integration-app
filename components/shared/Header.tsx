@@ -334,30 +334,26 @@ const Header: React.FC<HeaderProps> = ({
                             </Link>
                           </div>
 
-                          {isAdmin && (
-                            <>
-                              <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-2 mt-4 flex items-center gap-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                コンシェルジュ
-                              </p>
-                              <div className="space-y-0.5">
-                                <Link href="/concierge/editor?new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
-                                  <div className="p-1 rounded-md bg-blue-50 shrink-0"><Bot size={14} className="text-blue-600" /></div>
-                                  <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
-                                    コンシェルジュメーカー
-                                    <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full ml-1">P</span>
-                                  </span>
-                                </Link>
-                                <Link href="/concierge/analytics" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
-                                  <div className="p-1 rounded-md bg-blue-50 shrink-0"><BarChart3 size={14} className="text-blue-600" /></div>
-                                  <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
-                                    コンシェルジュ分析
-                                    <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full ml-1">P</span>
-                                  </span>
-                                </Link>
-                              </div>
-                            </>
-                          )}
+                          <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-2 mt-4 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                            コンシェルジュ
+                          </p>
+                          <div className="space-y-0.5">
+                            <Link href="/concierge" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
+                              <div className="p-1 rounded-md bg-blue-50 shrink-0"><Bot size={14} className="text-blue-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
+                                コンシェルジュメーカー
+                                <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full ml-1">P</span>
+                              </span>
+                            </Link>
+                            <Link href="/concierge/analytics/about" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
+                              <div className="p-1 rounded-md bg-blue-50 shrink-0"><BarChart3 size={14} className="text-blue-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
+                                コンシェルジュ分析
+                                <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full ml-1">P</span>
+                              </span>
+                            </Link>
+                          </div>
                         </div>
 
                         {/* ライティング・制作 */}
