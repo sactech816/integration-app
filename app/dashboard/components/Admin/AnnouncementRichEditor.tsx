@@ -35,6 +35,12 @@ const FontSize = TextStyle.extend({
   },
 });
 
+const IMAGE_SIZES = [
+  { label: '小', width: '200px' },
+  { label: '中', width: '400px' },
+  { label: '大', width: '100%' },
+];
+
 interface AnnouncementRichEditorProps {
   value: string;
   onChange: (html: string) => void;
@@ -71,6 +77,7 @@ export default function AnnouncementRichEditor({
   const [showSizePicker, setShowSizePicker] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const [showImageInput, setShowImageInput] = useState(false);
+  const [imageSize, setImageSize] = useState<string>('100%');
   const colorRef = useRef<HTMLDivElement>(null);
   const sizeRef = useRef<HTMLDivElement>(null);
 
@@ -143,23 +150,36 @@ export default function AnnouncementRichEditor({
     setShowLinkInput(false);
   }, [editor]);
 
+  const insertImageWithSize = useCallback((src: string) => {
+    if (!editor) return;
+    // Tiptap Image拡張はstyle属性を直接サポートしないため、
+    // 挿入後にHTMLを直接操作してサイズを適用
+    const sizeStyle = imageSize === '100%' ? '' : `max-width: ${imageSize}; width: ${imageSize};`;
+    if (sizeStyle) {
+      editor.chain().focus().insertContent(
+        `<img src="${src}" style="${sizeStyle}" class="rounded-lg my-2 h-auto" />`
+      ).run();
+    } else {
+      editor.chain().focus().setImage({ src }).run();
+    }
+  }, [editor, imageSize]);
+
   const addImage = useCallback(() => {
     if (!editor || !imageUrl) return;
-    editor.chain().focus().setImage({ src: imageUrl }).run();
+    insertImageWithSize(imageUrl);
     setImageUrl('');
     setShowImageInput(false);
-  }, [editor, imageUrl]);
+  }, [editor, imageUrl, insertImageWithSize]);
 
   const handleImageUpload = useCallback(async (file: File) => {
     if (!editor) return;
-    // FileをBase64に変換してインライン画像として挿入
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = reader.result as string;
-      editor.chain().focus().setImage({ src: base64 }).run();
+      insertImageWithSize(base64);
     };
     reader.readAsDataURL(file);
-  }, [editor]);
+  }, [editor, insertImageWithSize]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -379,35 +399,54 @@ export default function AnnouncementRichEditor({
 
       {/* 画像挿入 */}
       {showImageInput && (
-        <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 bg-gray-50">
-          <input
-            type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="画像URL (https://...)"
-            className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded text-gray-900 placeholder:text-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-transparent"
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addImage(); } }}
-          />
-          <button type="button" onClick={addImage} className="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700">挿入</button>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="px-3 py-1 text-xs font-medium text-indigo-600 border border-indigo-300 rounded hover:bg-indigo-50"
-          >
-            ファイル選択
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleImageUpload(file);
-              e.target.value = '';
-            }}
-          />
-          <button type="button" onClick={() => { setShowImageInput(false); setImageUrl(''); }} className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700">閉じる</button>
+        <div className="px-3 py-2 border-b border-gray-200 bg-gray-50 space-y-2">
+          <div className="flex items-center gap-2">
+            <input
+              type="url"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="画像URL (https://...)"
+              className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded text-gray-900 placeholder:text-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-transparent"
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addImage(); } }}
+            />
+            <button type="button" onClick={addImage} className="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700">挿入</button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="px-3 py-1 text-xs font-medium text-indigo-600 border border-indigo-300 rounded hover:bg-indigo-50"
+            >
+              ファイル選択
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImageUpload(file);
+                e.target.value = '';
+              }}
+            />
+            <button type="button" onClick={() => { setShowImageInput(false); setImageUrl(''); }} className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700">閉じる</button>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 font-medium">表示サイズ:</span>
+            {IMAGE_SIZES.map((s) => (
+              <button
+                key={s.width}
+                type="button"
+                onClick={() => setImageSize(s.width)}
+                className={`px-3 py-1 text-xs rounded-full font-medium transition-colors ${
+                  imageSize === s.width
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
