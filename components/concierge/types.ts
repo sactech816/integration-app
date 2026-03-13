@@ -5,6 +5,7 @@ export interface ConciergeMessage {
   role: 'user' | 'assistant';
   content: string;
   actions?: ToolAction[];
+  suggestions?: string[];
   created_at: string;
 }
 
@@ -17,6 +18,7 @@ export interface ToolAction {
 export interface ConciergeChatResponse {
   reply: string;
   actions: ToolAction[];
+  suggestions: string[];
   remainingMessages: number;
   sessionId: string;
 }

@@ -6,44 +6,44 @@ const TOOL_KNOWLEDGE = `
 ## 利用可能なツール一覧
 
 ### LP・ページ作成
-- プロフィールメーカー: 自己紹介・プロフィールLPを作成 [ACTION:profile|プロフィールLPを作る|/profile/editor?new]
-- LPメーカー: ビジネス用ランディングページを作成 [ACTION:business|LPを作る|/business/editor?new]
-- ウェビナーLPメーカー: ウェビナー集客用LPを作成 [ACTION:webinar|ウェビナーLPを作る|/webinar/editor?new]
-- ガイドメーカー: サイト内ガイド・チュートリアルを作成 [ACTION:onboarding|ガイドを作る|/onboarding/editor?new]
-- ホームページメーカー: 複数ページのサイトを作成 [ACTION:site|ホームページを作る|/site/editor?new]
-- フォームメーカー: 申し込み・決済フォームを作成 [ACTION:order-form|フォームを作る|/order-form/new]
+- プロフィールメーカー: 自己紹介・プロフィールLPを作成 [ACTION:profile|プロフィールメーカーを見る|/profile]
+- LPメーカー: ビジネス用ランディングページを作成 [ACTION:business|LPメーカーを見る|/business]
+- ウェビナーLPメーカー: ウェビナー集客用LPを作成 [ACTION:webinar|ウェビナーLPを見る|/webinar]
+- ガイドメーカー: サイト内ガイド・チュートリアルを作成 [ACTION:onboarding|ガイドメーカーを見る|/onboarding]
+- ホームページメーカー: 複数ページのサイトを作成 [ACTION:site|ホームページメーカーを見る|/site]
+- フォームメーカー: 申し込み・決済フォームを作成 [ACTION:order-form|フォームメーカーを見る|/order-form]
 
 ### 診断・クイズ
-- 診断クイズメーカー: 性格診断・適性診断などのクイズを作成 [ACTION:quiz|診断クイズを作る|/quiz/editor?new]
-- エンタメ診断メーカー: 楽しい診断コンテンツを作成 [ACTION:entertainment|エンタメ診断を作る|/entertainment/create]
-- Big Five性格診断: 科学的な性格診断を受ける [ACTION:bigfive|性格診断を受ける|/bigfive]
+- 診断クイズメーカー: 性格診断・適性診断などのクイズを作成 [ACTION:quiz|診断クイズを見る|/quiz]
+- エンタメ診断メーカー: 楽しい診断コンテンツを作成 [ACTION:entertainment|エンタメ診断を見る|/entertainment]
+- Big Five性格診断: 科学的な性格診断を受ける [ACTION:bigfive|性格診断を見る|/bigfive]
 - 生年月日占い: 九星気学・数秘術・四柱推命 [ACTION:fortune|占いを見る|/fortune]
 
 ### ライティング・制作
-- セールスライター: AIでセールスレターを作成 [ACTION:salesletter|セールスレターを作る|/salesletter/editor?new]
-- サムネイルメーカー: AIでサムネイル画像を作成 [ACTION:thumbnail|サムネイルを作る|/thumbnail/editor?new]
-- SNS投稿メーカー: SNS投稿テンプレートを作成 [ACTION:sns-post|SNS投稿を作る|/sns-post/editor?new]
-- Kindle出版メーカー: AIで書籍を執筆 [ACTION:kindle|Kindle執筆を始める|/kindle]
+- セールスライター: AIでセールスレターを作成 [ACTION:salesletter|セールスライターを見る|/salesletter]
+- サムネイルメーカー: AIでサムネイル画像を作成 [ACTION:thumbnail|サムネイルメーカーを見る|/thumbnail]
+- SNS投稿メーカー: SNS投稿テンプレートを作成 [ACTION:sns-post|SNS投稿メーカーを見る|/sns-post]
+- Kindle出版メーカー: AIで書籍を執筆 [ACTION:kindle|Kindle出版メーカーを見る|/kindle]
 
 ### 集客・イベント
-- 予約メーカー: 予約受付ページを作成 [ACTION:booking|予約ページを作る|/booking/new]
-- 出欠メーカー: イベント出欠管理 [ACTION:attendance|出欠管理を始める|/attendance/editor?new]
-- アンケートメーカー: アンケートを作成 [ACTION:survey|アンケートを作る|/survey/editor?new]
-- メルマガメーカー: メールマガジンを配信 [ACTION:newsletter|メルマガを作る|/newsletter/campaigns/new]
-- ステップメールメーカー: 自動配信ステップメールを設定 [ACTION:step-email|ステップメールを作る|/step-email/sequences/new]
-- ファネルメーカー: マーケティングファネルを構築 [ACTION:funnel|ファネルを作る|/funnel/new]
-- LINE公式連携: LINE公式アカウントと連携して配信 [ACTION:line|LINE連携を見る|/dashboard?view=line]
+- 予約メーカー: 予約受付ページを作成 [ACTION:booking|予約メーカーを見る|/booking]
+- 出欠メーカー: イベント出欠管理 [ACTION:attendance|出欠メーカーを見る|/attendance]
+- アンケートメーカー: アンケートを作成 [ACTION:survey|アンケートメーカーを見る|/survey]
+- メルマガメーカー: メールマガジンを配信 [ACTION:newsletter|メルマガメーカーを見る|/newsletter]
+- ステップメールメーカー: 自動配信ステップメールを設定 [ACTION:step-email|ステップメールを見る|/step-email]
+- ファネルメーカー: マーケティングファネルを構築 [ACTION:funnel|ファネルメーカーを見る|/funnel]
+- LINE公式連携: LINE公式アカウントと連携して配信 [ACTION:line|LINE連携を見る|/line]
 
 ### 収益化・販売
-- ゲーミフィケーション: ガチャ・スロットなどのゲームを作成 [ACTION:gamification|ゲームを作る|/gamification]
-- スキルマーケット: スキルを出品して販売 [ACTION:marketplace|スキルマーケットへ|/marketplace/seller]
+- ゲーミフィケーション: ガチャ・スロットなどのゲームを作成 [ACTION:gamification|ゲーミフィケーションを見る|/gamification]
+- スキルマーケット: スキルを出品して販売 [ACTION:marketplace|スキルマーケットを見る|/marketplace]
 - アフィリエイト: 紹介プログラムで収益化 [ACTION:affiliate|アフィリエイトを見る|/affiliate]
 
 ### リサーチツール
-- YouTube競合分析: YouTube動画の統計を分析 [ACTION:youtube-analysis|YouTube分析を始める|/youtube-analysis/editor]
-- YouTubeキーワードリサーチ: YouTube検索キーワードを分析 [ACTION:youtube-keyword|YouTubeキーワード分析|/youtube-keyword-research/editor]
-- Kindleキーワードリサーチ: Kindle出版のキーワードを分析 [ACTION:kindle-keywords|Kindleキーワード分析|/kindle-keywords/editor]
-- Googleキーワードリサーチ: Google検索の競合分析 [ACTION:google-keyword|Googleキーワード分析|/google-keyword-research/editor]
+- YouTube競合分析: YouTube動画の統計を分析 [ACTION:youtube-analysis|YouTube分析を見る|/youtube-analysis]
+- YouTubeキーワードリサーチ: YouTube検索キーワードを分析 [ACTION:youtube-keyword|YouTubeキーワード分析を見る|/youtube-keyword-research]
+- Kindleキーワードリサーチ: Kindle出版のキーワードを分析 [ACTION:kindle-keywords|Kindleキーワード分析を見る|/kindle-keywords]
+- Googleキーワードリサーチ: Google検索の競合分析 [ACTION:google-keyword|Googleキーワード分析を見る|/google-keyword-research]
 `;
 
 export function buildConciergeSystemPrompt(options: {
@@ -68,6 +68,16 @@ export function buildConciergeSystemPrompt(options: {
 4. 存在しない機能を案内しない
 5. 料金・課金の質問には「マイページで確認できます」と案内する [ACTION:mypage|マイページを見る|/mypage]
 6. わからない質問には「お問い合わせからご連絡ください」と案内する
+
+## フォローアップ候補（重要）
+毎回の回答末尾に、ユーザーが次に聞きそうな関連質問を2〜3個提示する。
+書式: [SUGGEST:候補テキスト]
+例:
+[SUGGEST:LPの作り方を詳しく知りたい]
+[SUGGEST:診断クイズで集客する方法は？]
+[SUGGEST:料金プランを教えて]
+
+候補は回答内容に関連するものを選ぶ。会話が自然に続くような質問にする。
 
 ## 文体ルール（重要）
 - マークダウン記法は一切使わない（*, **, #, - リスト、コードブロック等は禁止）

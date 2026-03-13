@@ -97,6 +97,7 @@ export default function ConciergeWidget({ onOpenChange }: ConciergeWidgetProps) 
             avatarState={avatarState}
             isLoading={isLoading}
             remainingMessages={remainingMessages}
+            currentPage={pathname}
             onSend={sendMessage}
             onClose={toggleOpen}
             onClear={clearHistory}

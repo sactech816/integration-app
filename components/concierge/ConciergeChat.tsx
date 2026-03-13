@@ -11,9 +11,42 @@ interface ConciergeChatProps {
   avatarState: AvatarState;
   isLoading: boolean;
   remainingMessages: number | null;
+  currentPage?: string;
   onSend: (text: string) => void;
   onClose: () => void;
   onClear: () => void;
+}
+
+/** ページ別クイックアクション */
+function getQuickActions(page?: string): string[] {
+  if (!page) return ['何ができる？', 'LPを作りたい', '集客したい'];
+
+  if (page.startsWith('/kindle'))
+    return ['本の構成を考えたい', '表紙を作りたい', 'キーワード分析したい'];
+  if (page.startsWith('/quiz'))
+    return ['診断クイズの作り方', '結果タイプの設定方法', '診断で集客するコツ'];
+  if (page.startsWith('/entertainment'))
+    return ['エンタメ診断の作り方', '面白い診断のコツ', '診断をシェアしたい'];
+  if (page.startsWith('/profile'))
+    return ['プロフィールLPの作り方', '写真の設定方法', '公開・共有の仕方'];
+  if (page.startsWith('/business'))
+    return ['LPの作り方', 'コンバージョンを上げるコツ', 'フォームを追加したい'];
+  if (page.startsWith('/salesletter'))
+    return ['セールスレターの書き方', 'AIで文章を生成したい', 'LPと連携したい'];
+  if (page.startsWith('/newsletter') || page.startsWith('/step-email'))
+    return ['メルマガの始め方', 'ステップメールとの違い', '読者を増やすコツ'];
+  if (page.startsWith('/funnel'))
+    return ['ファネルの作り方', 'どんな流れがいい？', 'ツールを組み合わせたい'];
+  if (page.startsWith('/gamification'))
+    return ['ガチャの作り方', 'スロットを作りたい', '集客に活用するコツ'];
+  if (page.startsWith('/booking'))
+    return ['予約ページの作り方', 'カレンダー設定', '通知の設定方法'];
+  if (page.startsWith('/survey'))
+    return ['アンケートの作り方', '回答を集めるコツ', '結果の分析方法'];
+  if (page.startsWith('/dashboard'))
+    return ['何ができる？', 'おすすめのツールは？', '集客したい'];
+
+  return ['何ができる？', 'LPを作りたい', '集客したい'];
 }
 
 export default function ConciergeChat({
@@ -21,10 +54,12 @@ export default function ConciergeChat({
   avatarState,
   isLoading,
   remainingMessages,
+  currentPage,
   onSend,
   onClose,
   onClear,
 }: ConciergeChatProps) {
+  const quickActions = getQuickActions(currentPage);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -86,11 +121,7 @@ export default function ConciergeChat({
             </p>
             {/* クイックアクション */}
             <div className="flex flex-wrap justify-center gap-2 mt-4">
-              {[
-                '何ができる？',
-                'LPを作りたい',
-                '集客したい',
-              ].map((q) => (
+              {quickActions.map((q) => (
                 <button
                   key={q}
                   onClick={() => onSend(q)}
@@ -105,11 +136,13 @@ export default function ConciergeChat({
           </div>
         )}
 
-        {messages.map((msg) => (
+        {messages.map((msg, idx) => (
           <ConciergeBubble
             key={msg.id}
             message={msg}
+            isLast={idx === messages.length - 1 && !isLoading}
             onNavigate={onClose}
+            onSend={onSend}
           />
         ))}
 

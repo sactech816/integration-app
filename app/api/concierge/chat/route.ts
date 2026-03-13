@@ -15,7 +15,7 @@ import { getMakersSubscriptionStatus } from '@/lib/subscription';
 import type { AIMessage } from '@/lib/ai-provider';
 import { createClient } from '@supabase/supabase-js';
 
-const MAX_HISTORY = 20;
+const MAX_HISTORY = 10;
 
 // プラン別の日次メッセージ制限
 const DAILY_LIMITS: Record<string, number> = {
@@ -81,6 +81,7 @@ export async function GET(request: NextRequest) {
       messages: (messages || []).map(m => ({
         ...m,
         actions: m.metadata?.actions || [],
+        suggestions: m.metadata?.suggestions || [],
       })),
       sessionId: sessionId || latestSessionId,
     });
@@ -168,7 +169,7 @@ export async function POST(request: NextRequest) {
     });
 
     // ツールアクション抽出
-    const { text: replyText, actions } = parseToolActions(aiResponse.content);
+    const { text: replyText, actions, suggestions } = parseToolActions(aiResponse.content);
 
     // DB保存 + AI使用量ログを並列実行
     await Promise.all([
@@ -184,7 +185,7 @@ export async function POST(request: NextRequest) {
           session_id: sessionId,
           role: 'assistant',
           content: replyText,
-          metadata: { actions },
+          metadata: { actions, suggestions },
         },
       ]),
       logAIUsage({
@@ -200,6 +201,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       reply: replyText,
       actions,
+      suggestions,
       remainingMessages: dailyLimit - dailyUsage - 1,
       sessionId,
     });

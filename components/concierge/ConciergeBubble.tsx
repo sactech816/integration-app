@@ -5,7 +5,9 @@ import type { ConciergeMessage } from './types';
 
 interface ConciergeBubbleProps {
   message: ConciergeMessage;
+  isLast?: boolean;
   onNavigate?: () => void;
+  onSend?: (text: string) => void;
 }
 
 /** マークダウン記号をプレーンテキストに変換 */
@@ -23,7 +25,7 @@ function stripMarkdown(text: string): string {
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'); // [link](url)
 }
 
-export default function ConciergeBubble({ message, onNavigate }: ConciergeBubbleProps) {
+export default function ConciergeBubble({ message, isLast, onNavigate, onSend }: ConciergeBubbleProps) {
   const isUser = message.role === 'user';
   const displayText = isUser ? message.content : stripMarkdown(message.content);
 
@@ -48,6 +50,23 @@ export default function ConciergeBubble({ message, onNavigate }: ConciergeBubble
                 action={action}
                 onNavigate={onNavigate}
               />
+            ))}
+          </div>
+        )}
+
+        {/* フォローアップ候補（最後のメッセージのみ表示） */}
+        {!isUser && isLast && message.suggestions && message.suggestions.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-3 pt-2 border-t border-gray-100">
+            {message.suggestions.map((suggestion, i) => (
+              <button
+                key={i}
+                onClick={() => onSend?.(suggestion)}
+                className="px-2.5 py-1 text-xs rounded-full bg-gray-50 border border-gray-200
+                  text-gray-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600
+                  transition-all duration-200"
+              >
+                {suggestion}
+              </button>
             ))}
           </div>
         )}

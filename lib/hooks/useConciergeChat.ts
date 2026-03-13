@@ -108,6 +108,7 @@ export function useConciergeChat(): UseConciergeChat {
         role: 'assistant',
         content: data.reply,
         actions: data.actions,
+        suggestions: data.suggestions,
         created_at: new Date().toISOString(),
       };
 
