@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import {
-  User, MessageSquare, Palette, Settings, BookOpen, Plus, Trash2, Sparkles,
+  User, MessageSquare, Palette, Settings, BookOpen, Plus, Trash2, Sparkles, ShieldCheck,
 } from 'lucide-react';
 import ConciergeEmbedCodeGenerator from './ConciergeEmbedCodeGenerator';
 
@@ -19,7 +19,13 @@ interface ConciergeConfig {
   faq_items: FAQItem[];
   avatar_style: { type: string; primaryColor: string };
   design: { position: string; bubbleSize: number; headerColor: string; fontFamily: string };
-  settings: { dailyLimit: number; maxTokens: number; model: string; allowedTopics: string; blockedTopics: string };
+  settings: {
+    dailyLimit: number; maxTokens: number; model: string;
+    allowedTopics: string; blockedTopics: string;
+    outOfScopeResponse: string; uncertainResponse: string;
+    requireAccuracyTopics: string; prohibitedBehaviors: string;
+    escalationMessage: string;
+  };
   is_published: boolean;
   [key: string]: any;
 }
@@ -30,11 +36,12 @@ interface Props {
   onOpenAISetup?: () => void;
 }
 
-type EditorTab = 'basic' | 'knowledge' | 'design' | 'settings';
+type EditorTab = 'basic' | 'knowledge' | 'guardrails' | 'design' | 'settings';
 
 const TABS: { id: EditorTab; label: string; icon: any }[] = [
   { id: 'basic', label: '基本設定', icon: User },
   { id: 'knowledge', label: 'ナレッジ', icon: BookOpen },
+  { id: 'guardrails', label: '回答制御', icon: ShieldCheck },
   { id: 'design', label: 'デザイン', icon: Palette },
   { id: 'settings', label: '設定', icon: Settings },
 ];
@@ -318,6 +325,172 @@ export default function ConciergeEditorPanel({ config, onUpdate, onOpenAISetup }
         </div>
       )}
 
+      {/* 回答制御 */}
+      {activeTab === 'guardrails' && (
+        <div className="space-y-5">
+          {/* 説明 */}
+          <div className="bg-teal-50 border border-teal-200 rounded-xl p-4">
+            <p className="text-sm text-teal-800">
+              AIの回答品質を管理する設定です。あらかじめ適切な初期値が入っています。必要に応じて修正してください。
+            </p>
+          </div>
+
+          {/* 対応範囲 */}
+          <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+            <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold">1</span>
+              対応範囲
+            </h4>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  対応するトピック
+                </label>
+                <textarea
+                  value={config.settings.allowedTopics}
+                  onChange={e => onUpdate({
+                    settings: { ...config.settings, allowedTopics: e.target.value },
+                  })}
+                  placeholder="例: 商品・サービスについて、料金プラン、営業時間、お問い合わせ方法"
+                  rows={3}
+                  className={inputClass}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  AIが回答してよいトピック。空欄の場合はナレッジに基づくすべての質問に対応します
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  対応しないトピック（NGキーワード）
+                </label>
+                <textarea
+                  value={config.settings.blockedTopics}
+                  onChange={e => onUpdate({
+                    settings: { ...config.settings, blockedTopics: e.target.value },
+                  })}
+                  placeholder="例: 競合他社の情報、政治・宗教の話題、個人情報"
+                  rows={3}
+                  className={inputClass}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  これらのトピックに関する質問にはAIが回答を拒否します
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  対応範囲外の質問への回答テンプレート
+                </label>
+                <textarea
+                  value={config.settings.outOfScopeResponse}
+                  onChange={e => onUpdate({
+                    settings: { ...config.settings, outOfScopeResponse: e.target.value },
+                  })}
+                  placeholder="例: 申し訳ございませんが、そちらのご質問には対応しておりません。"
+                  rows={3}
+                  className={inputClass}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  NGトピックや無関係な質問を受けた時にAIが使う定型文
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 回答の正確性 */}
+          <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+            <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">2</span>
+              回答の正確性
+            </h4>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  正確性が必要なトピック
+                </label>
+                <textarea
+                  value={config.settings.requireAccuracyTopics}
+                  onChange={e => onUpdate({
+                    settings: { ...config.settings, requireAccuracyTopics: e.target.value },
+                  })}
+                  placeholder="例: 料金・価格、契約条件、返品ポリシー"
+                  rows={3}
+                  className={inputClass}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  これらのトピックではAIがナレッジに明記された内容のみ回答し、不明な場合は確認を促します
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  確信が持てない場合の注意書き
+                </label>
+                <textarea
+                  value={config.settings.uncertainResponse}
+                  onChange={e => onUpdate({
+                    settings: { ...config.settings, uncertainResponse: e.target.value },
+                  })}
+                  placeholder="例: ※こちらは参考情報です。正確な内容はお問い合わせください。"
+                  rows={2}
+                  className={inputClass}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  ナレッジに明確な情報がない場合、AIがこの注意書きを回答に付けます
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  人間への引き継ぎメッセージ
+                </label>
+                <textarea
+                  value={config.settings.escalationMessage}
+                  onChange={e => onUpdate({
+                    settings: { ...config.settings, escalationMessage: e.target.value },
+                  })}
+                  placeholder="例: こちらの件は直接お問い合わせください。"
+                  rows={2}
+                  className={inputClass}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  AIが回答できない複雑な質問を受けた時に、人間対応を案内する定型文
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 禁止行動 */}
+          <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+            <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-red-100 text-red-700 flex items-center justify-center text-xs font-bold">3</span>
+              AIの禁止行動
+            </h4>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                AIが絶対にしてはいけないこと
+              </label>
+              <textarea
+                value={config.settings.prohibitedBehaviors}
+                onChange={e => onUpdate({
+                  settings: { ...config.settings, prohibitedBehaviors: e.target.value },
+                })}
+                placeholder="例: 虚偽の情報を断定的に伝えること、個人情報を聞き出すこと"
+                rows={4}
+                className={inputClass}
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                カンマ区切りで記述。AIはこれらの行動を絶対に行いません
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 設定 */}
       {activeTab === 'settings' && (
         <div className="space-y-5">
@@ -338,36 +511,6 @@ export default function ConciergeEditorPanel({ config, onUpdate, onOpenAISetup }
             <p className="text-xs text-gray-400 mt-1">
               訪問者1人あたりの1日の質問回数制限
             </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              対応するトピック
-            </label>
-            <textarea
-              value={config.settings.allowedTopics}
-              onChange={e => onUpdate({
-                settings: { ...config.settings, allowedTopics: e.target.value },
-              })}
-              placeholder="例: 商品・サービスについて、料金プラン、営業時間、お問い合わせ方法"
-              rows={3}
-              className={inputClass}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              対応しないトピック
-            </label>
-            <textarea
-              value={config.settings.blockedTopics}
-              onChange={e => onUpdate({
-                settings: { ...config.settings, blockedTopics: e.target.value },
-              })}
-              placeholder="例: 競合他社の情報、政治・宗教の話題、個人情報"
-              rows={3}
-              className={inputClass}
-            />
           </div>
 
           <div>

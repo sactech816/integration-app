@@ -36,6 +36,12 @@ interface ConciergeConfig {
     model: string;
     allowedTopics: string;
     blockedTopics: string;
+    // 回答制御
+    outOfScopeResponse: string;       // 対応範囲外の質問への定型回答
+    uncertainResponse: string;         // 確信が持てない回答時の注意書き
+    requireAccuracyTopics: string;     // 正確性が必要なトピック（料金・法律等）
+    prohibitedBehaviors: string;       // AIが絶対にしてはいけない行動
+    escalationMessage: string;         // 人間対応への誘導メッセージ
   };
   is_published: boolean;
   slug?: string;
@@ -44,12 +50,23 @@ interface ConciergeConfig {
 const DEFAULT_CONFIG: ConciergeConfig = {
   name: 'アシスタント',
   greeting: 'こんにちは！何かお手伝いできることはありますか？',
-  personality: '親切で丁寧、ですます調で話す',
+  personality: '親切で丁寧、ですます調で話す。専門用語は避けてわかりやすく説明する。',
   knowledge_text: '',
   faq_items: [],
-  avatar_style: { type: 'default', primaryColor: '#3B82F6' },
-  design: { position: 'bottom-right', bubbleSize: 56, headerColor: '#3B82F6', fontFamily: 'system' },
-  settings: { dailyLimit: 50, maxTokens: 512, model: 'claude-haiku-4-5-20251001', allowedTopics: '', blockedTopics: '' },
+  avatar_style: { type: 'default', primaryColor: '#0D9488' },
+  design: { position: 'bottom-right', bubbleSize: 56, headerColor: '#0D9488', fontFamily: 'system' },
+  settings: {
+    dailyLimit: 50,
+    maxTokens: 512,
+    model: 'claude-haiku-4-5-20251001',
+    allowedTopics: '当サービスに関する質問、サービス内容、料金プラン、ご利用方法、よくある質問',
+    blockedTopics: '競合他社の情報、政治・宗教の話題、個人情報の取得、違法行為に関する相談、誹謗中傷、投資・医療・法律の専門的アドバイス',
+    outOfScopeResponse: '申し訳ございませんが、そちらのご質問には対応しておりません。当サービスに関するご質問でしたら、お気軽にお聞きください。',
+    uncertainResponse: '※こちらは参考情報です。正確な内容については公式情報をご確認いただくか、お問い合わせください。',
+    requireAccuracyTopics: '料金・価格、契約条件、返品・返金ポリシー、法的事項、個人情報の取り扱い',
+    prohibitedBehaviors: '虚偽の情報を断定的に伝えること、個人情報を聞き出すこと、購入を強引に勧めること、他社を批判すること、ナレッジにない情報を勝手に作り上げること',
+    escalationMessage: 'こちらの件については、直接お問い合わせいただけますと、より正確にご案内できます。',
+  },
   is_published: false,
 };
 

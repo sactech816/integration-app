@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { createAIProvider } from '@/lib/ai-provider';
 import { logAIUsage } from '@/lib/ai-usage';
-import { buildConciergeSystemPrompt } from '@/lib/concierge/system-prompt';
+import { buildConciergeSystemPrompt, buildCustomConciergePrompt } from '@/lib/concierge/system-prompt';
 import { parseToolActions } from '@/lib/concierge/tool-actions';
 import { getMakersSubscriptionStatus } from '@/lib/subscription';
 import type { AIMessage } from '@/lib/ai-provider';
@@ -158,6 +158,7 @@ export async function POST(request: NextRequest) {
       currentPage,
       timezone,
       language,
+      configId,
     } = await request.json();
 
     if (!message?.trim()) {
@@ -219,11 +220,34 @@ export async function POST(request: NextRequest) {
 
     const previousMessages = (history || []).reverse();
 
-    // システムプロンプト構築
-    const systemPrompt = buildConciergeSystemPrompt({
-      currentPage,
-      planTier,
-    });
+    // システムプロンプト構築（カスタムconfig or プラットフォーム内蔵）
+    let systemPrompt: string;
+
+    if (configId) {
+      // カスタムコンシェルジュ: configを取得してカスタムプロンプト構築
+      const { data: configData } = await serviceClient
+        .from('concierge_configs')
+        .select('name, personality, knowledge_text, faq_items, settings')
+        .eq('id', configId)
+        .eq('is_published', true)
+        .single();
+
+      if (configData) {
+        systemPrompt = buildCustomConciergePrompt({
+          name: configData.name,
+          personality: configData.personality,
+          knowledge_text: configData.knowledge_text,
+          faq_items: configData.faq_items || [],
+          settings: configData.settings || {},
+        });
+      } else {
+        // configが見つからない場合はデフォルト
+        systemPrompt = buildConciergeSystemPrompt({ currentPage, planTier });
+      }
+    } else {
+      // プラットフォーム内蔵コンシェルジュ（メイカーくん）
+      systemPrompt = buildConciergeSystemPrompt({ currentPage, planTier });
+    }
 
     // メッセージ構築
     const messages: AIMessage[] = [

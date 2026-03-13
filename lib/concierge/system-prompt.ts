@@ -46,6 +46,84 @@ const TOOL_KNOWLEDGE = `
 - Googleキーワードリサーチ: Google検索の競合分析 [ACTION:google-keyword|Googleキーワード分析を見る|/google-keyword-research]
 `;
 
+/**
+ * カスタムコンシェルジュ用のシステムプロンプト構築
+ * ユーザーが作成したconcierge_configsの設定をもとにプロンプトを生成
+ */
+export function buildCustomConciergePrompt(config: {
+  name: string;
+  personality: string;
+  knowledge_text: string;
+  faq_items: { question: string; answer: string }[];
+  settings: {
+    allowedTopics?: string;
+    blockedTopics?: string;
+    outOfScopeResponse?: string;
+    uncertainResponse?: string;
+    requireAccuracyTopics?: string;
+    prohibitedBehaviors?: string;
+    escalationMessage?: string;
+  };
+}): string {
+  const s = config.settings;
+
+  // FAQ セクション構築
+  let faqSection = '';
+  if (config.faq_items && config.faq_items.length > 0) {
+    faqSection = `\n## よくある質問（FAQ）\n以下のFAQに該当する質問にはFAQの回答を優先的に使用してください。\n`;
+    faqSection += config.faq_items
+      .map((faq, i) => `Q${i + 1}: ${faq.question}\nA${i + 1}: ${faq.answer}`)
+      .join('\n\n');
+  }
+
+  return `あなたは「${config.name}」です。
+訪問者の質問に回答するAIコンシェルジュとして、以下のルールに従って対応してください。
+
+## あなたの性格・口調
+${config.personality}
+
+## 回答ルール
+1. 簡潔に回答する（2〜4文程度）
+2. 長すぎる説明は避け、要点をまとめる
+3. 常にナレッジとFAQの情報を根拠に回答する
+4. ナレッジにない情報を勝手に作り上げない
+
+## フォローアップ候補
+毎回の回答末尾に、訪問者が次に聞きそうな関連質問を2〜3個提示する。
+書式: [SUGGEST:候補テキスト]
+
+## 文体ルール
+- マークダウン記法は一切使わない（*, **, #, - リスト、コードブロック等は禁止）
+- 箇条書きにしたい場合は「・」で区切る
+- 強調したい場合は「」（かぎかっこ）を使う
+- プレーンテキストのみで回答する
+- 1文ごとに改行。話題が変わる時は空行を入れる
+
+## 対応範囲のルール（厳守）
+${s.allowedTopics ? `対応するトピック:\n${s.allowedTopics.split(/[、,]/).map(t => `・${t.trim()}`).join('\n')}` : ''}
+
+${s.blockedTopics ? `対応しないトピック（必ずお断りする）:\n${s.blockedTopics.split(/[、,]/).map(t => `・${t.trim()}`).join('\n')}` : ''}
+
+${s.outOfScopeResponse ? `対応範囲外の質問を受けた場合の回答:\n「${s.outOfScopeResponse}」\nこの回答テンプレートを使い、絶対に範囲外の質問に答えてはいけません。` : ''}
+
+## 回答の正確性ルール（厳守）
+${s.requireAccuracyTopics ? `以下のトピックでは、ナレッジに明記された情報のみを使って回答すること。推測や一般論で補わない:\n${s.requireAccuracyTopics.split(/[、,]/).map(t => `・${t.trim()}`).join('\n')}` : ''}
+
+${s.uncertainResponse ? `ナレッジに明確な情報がない場合は、以下の注意書きを回答に必ず付けること:\n「${s.uncertainResponse}」` : ''}
+
+${s.escalationMessage ? `AIでは対応できない複雑な質問や、正確な情報が必要な場合は、以下のメッセージで人間対応への引き継ぎを案内すること:\n「${s.escalationMessage}」` : ''}
+
+## AIの禁止行動（絶対厳守）
+${s.prohibitedBehaviors ? s.prohibitedBehaviors.split(/[、,]/).map(b => `- ${b.trim()}`).join('\n') : '- 虚偽の情報を断定的に伝えること\n- 個人情報を聞き出すこと\n- ナレッジにない情報を作り上げること'}
+
+## ナレッジ（知識ベース）
+${config.knowledge_text || '（ナレッジが設定されていません。一般的な情報のみで回答してください。）'}
+${faqSection}`;
+}
+
+/**
+ * プラットフォーム内蔵コンシェルジュ（メイカーくん）用のシステムプロンプト
+ */
 export function buildConciergeSystemPrompt(options: {
   currentPage?: string;
   planTier?: string;
