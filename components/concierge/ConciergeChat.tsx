@@ -64,11 +64,32 @@ export default function ConciergeChat({
   const quickActions = getQuickActions(currentPage);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastAssistantRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const prevMessagesLenRef = useRef(0);
 
   // 新しいメッセージでスクロール
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const prevLen = prevMessagesLenRef.current;
+    prevMessagesLenRef.current = messages.length;
+
+    if (messages.length === 0) return;
+
+    const lastMsg = messages[messages.length - 1];
+
+    // ユーザーメッセージ追加時 or ローディング開始時は末尾へスクロール
+    if (lastMsg.role === 'user' || isLoading) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    // アシスタントメッセージが新たに追加されたとき → 回答の先頭へスクロール
+    if (lastMsg.role === 'assistant' && messages.length > prevLen) {
+      // 少し遅延させてDOMが更新されてからスクロール
+      requestAnimationFrame(() => {
+        lastAssistantRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
   }, [messages, isLoading]);
 
   // 開いたらフォーカス
@@ -145,16 +166,20 @@ export default function ConciergeChat({
           </div>
         )}
 
-        {messages.map((msg, idx) => (
-          <ConciergeBubble
-            key={msg.id}
-            message={msg}
-            isLast={idx === messages.length - 1 && !isLoading}
-            onNavigate={onClose}
-            onSend={onSend}
-            onFeedback={onFeedback}
-          />
-        ))}
+        {messages.map((msg, idx) => {
+          const isLastAssistant = msg.role === 'assistant' && idx === messages.length - 1;
+          return (
+            <div key={msg.id} ref={isLastAssistant ? lastAssistantRef : undefined}>
+              <ConciergeBubble
+                message={msg}
+                isLast={idx === messages.length - 1 && !isLoading}
+                onNavigate={onClose}
+                onSend={onSend}
+                onFeedback={onFeedback}
+              />
+            </div>
+          );
+        })}
 
         {/* タイピングインジケーター */}
         {isLoading && (
