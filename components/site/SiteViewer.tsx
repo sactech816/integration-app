@@ -73,7 +73,7 @@ export default function SiteViewer({ site, currentPage, hideFooter, onNavigate }
                   />
                 );
                 return onNavigate ? (
-                  <button key={page.id} onClick={() => onNavigate(page)} className={navClass}>
+                  <button key={page.id} onClick={() => { onNavigate(page); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={navClass}>
                     {page.title}
                     {indicator}
                   </button>
@@ -124,7 +124,7 @@ export default function SiteViewer({ site, currentPage, hideFooter, onNavigate }
               return onNavigate ? (
                 <button
                   key={page.id}
-                  onClick={() => { onNavigate(page); setMobileMenuOpen(false); }}
+                  onClick={() => { onNavigate(page); setMobileMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                   className={mobileClass}
                 >
                   {page.title}

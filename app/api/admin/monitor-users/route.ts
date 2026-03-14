@@ -100,18 +100,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'ユーザーのEmailまたはIDが必要です' }, { status: 400 });
     }
 
-    // 許可されたプラン種別（継続プラン + 初回プラン）
-    const validPlanTypes = [
-      'lite', 'standard', 'pro', 'business', 'enterprise',
-      'initial_trial', 'initial_standard', 'initial_business'
-    ];
-    if (!monitorPlanType || !validPlanTypes.includes(monitorPlanType)) {
-      return NextResponse.json({ error: '有効なプラン種別を指定してください' }, { status: 400 });
-    }
-
     // サービス種別のバリデーション
     if (!['kdl', 'makers'].includes(service)) {
       return NextResponse.json({ error: '有効なサービス種別を指定してください' }, { status: 400 });
+    }
+
+    // 許可されたプラン種別（サービスごとに異なる）
+    const kdlPlanTypes = [
+      'lite', 'standard', 'pro', 'business', 'enterprise',
+      'initial_trial', 'initial_standard', 'initial_business'
+    ];
+    const makersPlanTypes = ['free', 'standard', 'business', 'premium'];
+    const validPlanTypes = service === 'makers' ? makersPlanTypes : kdlPlanTypes;
+    if (!monitorPlanType || !validPlanTypes.includes(monitorPlanType)) {
+      return NextResponse.json({ error: '有効なプラン種別を指定してください' }, { status: 400 });
     }
 
     if (!durationDays || durationDays < 1) {
@@ -247,10 +249,13 @@ export async function PATCH(request: Request) {
 
     // プラン変更
     if (monitorPlanType) {
-      const validPlanTypes = [
+      const kdlPlanTypes = [
         'lite', 'standard', 'pro', 'business', 'enterprise',
         'initial_trial', 'initial_standard', 'initial_business'
       ];
+      const makersPlanTypes = ['free', 'standard', 'business', 'premium'];
+      const service = existing.service || 'kdl';
+      const validPlanTypes = service === 'makers' ? makersPlanTypes : kdlPlanTypes;
       if (!validPlanTypes.includes(monitorPlanType)) {
         return NextResponse.json({ error: '有効なプラン種別を指定してください' }, { status: 400 });
       }

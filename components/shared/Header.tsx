@@ -287,10 +287,7 @@ const Header: React.FC<HeaderProps> = ({
                             </Link>
                             <Link href="/order-form/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors">
                               <div className="p-1 rounded-md bg-indigo-50 shrink-0"><ClipboardCheck size={14} className="text-indigo-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
-                                フォーム
-                                <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">B</span>
-                              </span>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">フォーム</span>
                             </Link>
                           </div>
                         </div>
@@ -322,7 +319,10 @@ const Header: React.FC<HeaderProps> = ({
                           <div className="space-y-0.5">
                             <Link href="/gamification/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-purple-50 transition-colors">
                               <div className="p-1 rounded-md bg-purple-50 shrink-0"><Gamepad2 size={14} className="text-purple-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ゲーミフィケーション</span>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
+                                ゲーミフィケーション
+                                <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">B</span>
+                              </span>
                             </Link>
                             <Link href="/marketplace" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-purple-50 transition-colors">
                               <div className="p-1 rounded-md bg-purple-50 shrink-0"><Store size={14} className="text-purple-600" /></div>
@@ -409,11 +409,17 @@ const Header: React.FC<HeaderProps> = ({
                             </Link>
                             <Link href="/step-email/sequences/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-cyan-50 transition-colors">
                               <div className="p-1 rounded-md bg-cyan-50 shrink-0"><ListOrdered size={14} className="text-cyan-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ステップメール</span>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
+                                ステップメール
+                                <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">B</span>
+                              </span>
                             </Link>
                             <Link href="/funnel/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-cyan-50 transition-colors">
                               <div className="p-1 rounded-md bg-cyan-50 shrink-0"><GitBranch size={14} className="text-cyan-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ファネル</span>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">
+                                ファネル
+                                <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full ml-1">B</span>
+                              </span>
                             </Link>
                             <Link href="/dashboard?view=line" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-green-50 transition-colors">
                               <div className="p-1 rounded-md bg-green-50 shrink-0"><MessageCircle size={14} className="text-green-600" /></div>
@@ -519,6 +525,17 @@ const Header: React.FC<HeaderProps> = ({
                           className="flex items-center gap-1.5 text-xs font-medium text-rose-400 hover:text-rose-600 transition-colors">
                           <Heart size={13} />
                           <span>開発支援</span>
+                        </Link>
+                        <span className="text-gray-200">|</span>
+                        <Link href="/support" onClick={closeMenus}
+                          className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                          <HelpCircle size={13} />
+                          <span>サポートパック</span>
+                        </Link>
+                        <Link href="/for/hp-activate" onClick={closeMenus}
+                          className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                          <TrendingUp size={13} />
+                          <span>リバイバルプラン</span>
                         </Link>
                       </div>
 

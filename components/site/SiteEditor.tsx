@@ -108,12 +108,14 @@ const siteTemplates = [
         { id: generateBlockId(), type: 'features', data: { title: 'ドリンクメニュー', items: [{ icon: '☕', title: 'ハンドドリップ', description: '¥600〜 ── 8種類のシングルオリジンから選択' }, { icon: '🥛', title: 'カフェラテ / カプチーノ', description: '¥650〜 ── 北海道産ミルク使用。オーツミルク変更可' }, { icon: '🍵', title: '抹茶ラテ / ほうじ茶ラテ', description: '¥700 ── 京都・宇治の石臼挽き茶葉を使用' }] } },
       ] as unknown as Block[] },
       { slug: 'access', title: 'アクセス', is_home: false, content: [
-        { id: generateBlockId(), type: 'text_card', data: { title: 'Access', text: '〒106-6108 東京都港区六本木6丁目10-1 六本木ヒルズ ウェストウォーク 1F\n\n営業時間：7:00〜20:00（L.O. 19:30）\n定休日：不定休\nTEL：03-6434-7890\n\n東京メトロ 日比谷線「六本木」駅 1C出口 徒歩3分\n都営大江戸線「六本木」駅 3番出口 徒歩6分\n都営大江戸線「麻布十番」駅 7番出口 徒歩8分', align: 'left' } },
+        { id: generateBlockId(), type: 'hero', data: { headline: 'Access', subheadline: '六本木ヒルズすぐ、緑に囲まれた隠れ家カフェ', backgroundImage: 'https://images.unsplash.com/photo-1453614512568-c4024d13c247?auto=format&fit=crop&w=1920&q=80', backgroundOpacity: 35 } },
+        { id: generateBlockId(), type: 'text_card', data: { title: '店舗情報', text: '〒106-6108 東京都港区六本木6丁目10-1 六本木ヒルズ ウェストウォーク 1F\n\n営業時間：7:00〜20:00（L.O. 19:30）\n定休日：不定休\nTEL：03-6434-7890\n\n東京メトロ 日比谷線「六本木」駅 1C出口 徒歩3分\n都営大江戸線「六本木」駅 3番出口 徒歩6分\n都営大江戸線「麻布十番」駅 7番出口 徒歩8分', align: 'left' } },
         { id: generateBlockId(), type: 'google_map', data: { title: '六本木ヒルズ ウェストウォーク', address: '東京都港区六本木6丁目10-1 六本木ヒルズ', embedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3241.748!2d139.72679!3d35.66047!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188b771049dc33%3A0x4e27aa62cbe24495!2z5YWt5pys5pyo44OS44Or44K6!5e0!3m2!1sja!2sjp!4v1' } },
         { id: generateBlockId(), type: 'gallery', data: { items: [{ id: generateBlockId(), url: 'https://images.unsplash.com/photo-1453614512568-c4024d13c247?auto=format&fit=crop&w=800&q=80', caption: '外観' }, { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1559305616-3f99cd43e353?auto=format&fit=crop&w=800&q=80', caption: 'テラス席' }, { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80', caption: '店内' }] } },
       ] as unknown as Block[] },
       { slug: 'contact', title: 'お問い合わせ', is_home: false, content: [
-        { id: generateBlockId(), type: 'text_card', data: { title: 'Contact', text: 'ご予約・貸切・ケータリングなど、お気軽にお問い合わせください。\n法人様のミーティング利用やイベント開催もご相談いただけます。', align: 'center' } },
+        { id: generateBlockId(), type: 'hero', data: { headline: 'Contact', subheadline: 'ご予約・貸切・ケータリングのご相談はこちらから', backgroundImage: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1920&q=80', backgroundOpacity: 35 } },
+        { id: generateBlockId(), type: 'text_card', data: { title: 'お気軽にご連絡ください', text: 'ご予約・貸切・ケータリングなど、お気軽にお問い合わせください。\n法人様のミーティング利用やイベント開催もご相談いただけます。\n\nお電話でのご予約：03-6434-7890（営業時間内）', align: 'center' } },
         { id: generateBlockId(), type: 'lead_form', data: { title: 'お問い合わせフォーム', buttonText: '送信する' } },
       ] as unknown as Block[] },
     ],
@@ -142,12 +144,13 @@ const siteTemplates = [
         { id: generateBlockId(), type: 'pricing', data: { title: '料金プラン', plans: [{ name: 'Seminar', price: '¥15,000', features: ['3時間の集中セミナー', 'テキスト資料 & ワークシート', '質疑応答 & 個別アドバイス', '受講後1週間のメール相談'], recommended: false }, { name: 'Advisory', price: '¥80,000/月', features: ['月2回の戦略ミーティング（各90分）', 'Slack / メールでの随時相談', '月次経営レポート作成', '取締役会・経営会議への参加', 'KPIダッシュボード設計支援'], recommended: true }, { name: 'Project', price: '¥300,000〜', features: ['3〜6ヶ月のプロジェクト型支援', '週1回の進捗レビュー', '現場ヒアリング & 課題分析', '実行計画策定 & 伴走', '最終レポート & 引き継ぎ'], recommended: false }] } },
       ] as unknown as Block[] },
       { slug: 'works', title: '実績', is_home: false, content: [
-        { id: generateBlockId(), type: 'text_card', data: { title: 'Track Record', text: '業種・規模を問わず、200社以上の経営支援を行ってきました。\n以下は代表的な支援実績の一部です。', align: 'center' } },
+        { id: generateBlockId(), type: 'hero', data: { headline: 'Track Record', subheadline: '200社以上の経営支援実績 — 数字で証明する戦略の価値', backgroundImage: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1920&q=80', backgroundOpacity: 30 } },
         { id: generateBlockId(), type: 'features', data: { title: '支援実績ハイライト', items: [{ icon: '🏭', title: '製造業 A社（従業員300名）', description: '3ヵ年中期経営計画の策定支援。新規事業として海外展開を推進し、初年度から黒字化を達成' }, { icon: '💻', title: 'SaaS B社（シリーズB）', description: '組織拡大に伴うマネジメント課題を解決。評価制度再構築でeNPSを+35ポイント改善' }, { icon: '🏪', title: '小売チェーン C社（32店舗）', description: '全店舗のDX推進プロジェクトを主導。在庫管理の自動化で年間コスト22%削減を実現' }, { icon: '🏥', title: '医療法人 D社（5拠点）', description: '経営効率化コンサルティング。予約システム導入と業務フロー改善で患者満足度15%向上' }] } },
         { id: generateBlockId(), type: 'text_card', data: { title: 'メディア掲載・講演', text: '・日経ビジネス「次世代の経営コンサルタント50選」選出\n・Harvard Business Review 寄稿（DX推進における組織変革）\n・TEDxTokyo 登壇「データドリブン経営の民主化」\n・年間講演実績：30回以上', align: 'left' } },
       ] as unknown as Block[] },
       { slug: 'contact', title: 'お問い合わせ', is_home: false, content: [
-        { id: generateBlockId(), type: 'text_card', data: { title: 'Free Consultation', text: '初回30分の無料相談を実施しています。\n経営課題の整理からお手伝いしますので、まずはお気軽にご連絡ください。\n\nオンライン（Zoom）・対面（六本木オフィス）いずれも対応可能です。\n\n所在地：東京都港区六本木1-6-1 泉ガーデンタワー 38F', align: 'center' } },
+        { id: generateBlockId(), type: 'hero', data: { headline: 'Free Consultation', subheadline: '初回30分の無料相談で、御社の課題を整理します', backgroundImage: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1920&q=80', backgroundOpacity: 30 } },
+        { id: generateBlockId(), type: 'text_card', data: { title: 'ご相談方法', text: 'オンライン（Zoom）・対面（六本木オフィス）いずれも対応可能です。\n経営課題の整理からお手伝いしますので、まずはお気軽にご連絡ください。\n\n所在地：東京都港区六本木1-6-1 泉ガーデンタワー 38F', align: 'center' } },
         { id: generateBlockId(), type: 'google_map', data: { title: '泉ガーデンタワー', address: '東京都港区六本木1-6-1 泉ガーデンタワー', embedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3241.5!2d139.7383!3d35.6647!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188b9b13e6b535%3A0x2e8e7d43c839e460!2z5rOJ44Ks44O844OH44Oz44K_44Ov44O8!5e0!3m2!1sja!2sjp!4v1' } },
         { id: generateBlockId(), type: 'lead_form', data: { title: 'お問い合わせ', buttonText: '無料相談を申し込む' } },
       ] as unknown as Block[] },
@@ -177,12 +180,13 @@ const siteTemplates = [
         { id: generateBlockId(), type: 'gallery', data: { items: [{ id: generateBlockId(), url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80', caption: 'ダッシュボードUI' }, { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1517292987719-0369a794ec0f?auto=format&fit=crop&w=800&q=80', caption: 'モバイルアプリ' }, { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1559028012-481c04fa702d?auto=format&fit=crop&w=800&q=80', caption: 'ブランドデザイン' }, { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?auto=format&fit=crop&w=800&q=80', caption: 'Webデザイン' }, { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&w=800&q=80', caption: 'プロトタイプ' }, { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1586717799252-bd134571d0f5?auto=format&fit=crop&w=800&q=80', caption: 'デザインシステム' }] } },
       ] as unknown as Block[] },
       { slug: 'pricing', title: '料金', is_home: false, content: [
-        { id: generateBlockId(), type: 'text_card', data: { title: 'Pricing', text: 'プロジェクトの規模・要件に応じてお見積りいたします。\n以下は目安の料金です。まずはお気軽にご相談ください。', align: 'center' } },
+        { id: generateBlockId(), type: 'hero', data: { headline: 'Pricing', subheadline: 'プロジェクトの規模に応じた、透明性のある料金体系', backgroundImage: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1920&q=80', backgroundOpacity: 25 } },
         { id: generateBlockId(), type: 'pricing', data: { title: '料金プラン', plans: [{ name: 'Light', price: '¥150,000〜', features: ['LP / シングルページ制作', 'レスポンシブ対応', 'デザイン2案提示', '修正2回まで', '納期：約2週間'], recommended: false }, { name: 'Standard', price: '¥400,000〜', features: ['複数ページサイト（〜8P）', 'デザインシステム構築', 'プロトタイプ制作', 'ユーザビリティレビュー', '公開後1ヶ月の修正サポート', '納期：約1〜1.5ヶ月'], recommended: true }, { name: 'Premium', price: '¥800,000〜', features: ['大規模サイト / アプリUI', 'ユーザーリサーチ & 分析', 'ブランドガイドライン策定', 'デザインシステム & コンポーネント', 'アニメーション / インタラクション設計', '保守サポート3ヶ月'], recommended: false }] } },
         { id: generateBlockId(), type: 'faq', data: { items: [{ id: generateBlockId(), question: '納期はどのくらいですか？', answer: 'プランにより異なります。Lightプランで約2週間、Standardで約1〜1.5ヶ月、Premiumで2〜3ヶ月が目安です。お急ぎの場合はご相談ください。' }, { id: generateBlockId(), question: '修正回数に制限はありますか？', answer: 'Lightプランは2回まで、Standard以上は公開まで無制限で対応します。公開後の修正はプランごとのサポート期間内で対応いたします。' }, { id: generateBlockId(), question: '実装（コーディング）もお願いできますか？', answer: 'はい。Next.js / React でのフロントエンド実装まで一貫してお受けしています。デザインのみのご依頼も歓迎です。' }, { id: generateBlockId(), question: 'リモートでの打ち合わせは可能ですか？', answer: 'もちろん可能です。Zoom / Google Meet でのオンラインミーティングを基本としています。対面をご希望の場合は東京都内で対応可能です。' }] } },
       ] as unknown as Block[] },
       { slug: 'contact', title: 'お問い合わせ', is_home: false, content: [
-        { id: generateBlockId(), type: 'text_card', data: { title: 'Get in Touch', text: 'プロジェクトのご相談、お見積り依頼、その他お問い合わせはこちらから。\n通常1営業日以内にご返信いたします。\n\n所在地：東京都渋谷区神宮前6-35-3 コープオリンピア 6F\nE-mail：hello@satodesign.jp', align: 'center' } },
+        { id: generateBlockId(), type: 'hero', data: { headline: 'Get in Touch', subheadline: 'プロジェクトのご相談はお気軽に。通常1営業日以内にご返信します', backgroundImage: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1920&q=80', backgroundOpacity: 25 } },
+        { id: generateBlockId(), type: 'text_card', data: { title: 'Contact Information', text: '所在地：東京都渋谷区神宮前6-35-3 コープオリンピア 6F\nE-mail：hello@satodesign.jp\n\nオンラインミーティング（Zoom / Google Meet）も対応可能です。', align: 'center' } },
         { id: generateBlockId(), type: 'google_map', data: { title: 'Studio Location', address: '東京都渋谷区神宮前6-35-3', embedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3241.2!2d139.7050!3d35.6650!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188ca44c45e9b3%3A0x8a837e1c4c23a3e0!2z6KGo5Y-C6YGT44OS44Or44K6!5e0!3m2!1sja!2sjp!4v1' } },
         { id: generateBlockId(), type: 'lead_form', data: { title: 'お問い合わせフォーム', buttonText: '相談する' } },
       ] as unknown as Block[] },
@@ -356,6 +360,15 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
     const template = siteTemplates.find(t => t.id === templateId);
     if (!template) return;
 
+    // 既存のブロックがある場合は確認メッセージ
+    if (pages.length > 0 && pages.some(p => (p.content || []).length > 0)) {
+      const confirmed = confirm(`「${template.name}」テンプレートを適用しますか？\n現在の内容は上書きされます。`);
+      if (!confirmed) return;
+    } else {
+      const confirmed = confirm(`「${template.name}」テンプレートを適用しますか？`);
+      if (!confirmed) return;
+    }
+
     const templatePages = template.pages.map((p, i) => ({
       slug: p.slug,
       title: p.title,
@@ -371,6 +384,8 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
     }
     setOpenSections(s => ({ ...s, template: false, siteSettings: true, pages: true, blocks: true }));
     setActivePageIndex(0);
+
+    alert(`✨「${template.name}」テンプレートを適用しました！`);
   };
 
   // 現在のページ

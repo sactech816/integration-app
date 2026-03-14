@@ -77,7 +77,7 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
   // サービス変更時にプランをリセット
   useEffect(() => {
     if (formService === 'makers') {
-      setFormPlan('pro');
+      setFormPlan('business');
     } else {
       setFormPlan('pro');
     }
@@ -435,13 +435,11 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-900"
                 >
-                  <option value="business">Business - {MAKERS_PLAN_DEFINITIONS.business.nameJa}（¥4,980相当）</option>
+                  <option value="free">Free - {MAKERS_PLAN_DEFINITIONS.free.nameJa}（¥0）</option>
+                  <option value="standard">Standard - {MAKERS_PLAN_DEFINITIONS.standard.nameJa}（¥{MAKERS_PLAN_DEFINITIONS.standard.price.toLocaleString()}/月相当）</option>
+                  <option value="business">Business - {MAKERS_PLAN_DEFINITIONS.business.nameJa}（¥{MAKERS_PLAN_DEFINITIONS.business.price.toLocaleString()}/月相当）</option>
+                  <option value="premium">Premium - {MAKERS_PLAN_DEFINITIONS.premium.nameJa}（¥{MAKERS_PLAN_DEFINITIONS.premium.price.toLocaleString()}/月相当）</option>
                 </select>
-              )}
-              {formService === 'makers' && (
-                <p className="text-xs text-gray-500 mt-1">
-                  集客メーカーのモニターは有料プラン（¥4,980/月）相当の機能が利用可能になります
-                </p>
               )}
             </div>
 
@@ -675,7 +673,10 @@ export default function MonitorUsersManager({ adminUserId, adminEmail, defaultSe
                             onChange={(e) => setEditPlan(e.target.value as MakersPlanTier)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-gray-900"
                           >
+                            <option value="free">Free - {MAKERS_PLAN_DEFINITIONS.free.nameJa}</option>
+                            <option value="standard">Standard - {MAKERS_PLAN_DEFINITIONS.standard.nameJa}</option>
                             <option value="business">Business - {MAKERS_PLAN_DEFINITIONS.business.nameJa}</option>
+                            <option value="premium">Premium - {MAKERS_PLAN_DEFINITIONS.premium.nameJa}</option>
                           </select>
                         )}
                       </div>

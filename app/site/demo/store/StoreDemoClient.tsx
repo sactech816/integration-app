@@ -268,7 +268,7 @@ export default function StoreDemoClient() {
         {demoPages.map(p => (
           <button
             key={p.id}
-            onClick={() => setCurrentPage(p)}
+            onClick={() => { setCurrentPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
               currentPage.id === p.id
                 ? 'bg-stone-900 text-white shadow-md'
