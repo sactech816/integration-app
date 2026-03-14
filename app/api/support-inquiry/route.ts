@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
     // 管理者宛メール送信
     const data = await resend.emails.send({
-      from: 'onboarding@resend.dev',
+      from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
       to: 'support@makers.tokyo',
       subject: `【サポートパック相談】${escapedPackName}（${escapedName}様）`,
       html: `

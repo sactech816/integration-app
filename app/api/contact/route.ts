@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     const escapedMessage = escapeHtml(safeMessage);
 
     const data = await resend.emails.send({
-      from: 'onboarding@resend.dev', // 独自ドメイン設定済なら変更
+      from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
       to: 'YOUR_EMAIL@gmail.com', // ★ご自身のメールアドレスへ
       subject: `【お問い合わせ】${escapedSubject} (${escapedName}様)`,
       html: `

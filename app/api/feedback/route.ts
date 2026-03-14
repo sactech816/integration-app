@@ -73,7 +73,7 @@ export async function POST(request: Request) {
 
     try {
       await resend.emails.send({
-        from: 'onboarding@resend.dev',
+        from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
         to: 'info@sac-office.net',
         subject: `【ご意見箱】${starDisplay}（${userEmail}）`,
         html: `

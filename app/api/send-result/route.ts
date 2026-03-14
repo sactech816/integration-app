@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     const safeScore = escapeHtml(truncate(String(score ?? ''), 50));
 
     const data = await resend.emails.send({
-      from: 'onboarding@resend.dev',
+      from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
       to: 'YOUR_EMAIL@gmail.com',
       subject: '【診断結果】あなたの診断結果が届きました',
       html: `
