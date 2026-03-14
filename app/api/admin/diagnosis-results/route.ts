@@ -129,16 +129,19 @@ export async function GET(request: NextRequest) {
 async function getUserEmails(client: any, userIds: string[]): Promise<Record<string, string>> {
   if (userIds.length === 0) return {};
 
-  const { data } = await client
-    .from('profiles')
-    .select('id, email')
-    .in('id', userIds);
-
   const map: Record<string, string> = {};
-  if (data) {
-    for (const u of data as { id: string; email: string | null }[]) {
-      map[u.id] = u.email || '不明';
+
+  // auth.admin API でメール取得（Service Role Key 必須）
+  for (const uid of userIds) {
+    try {
+      const { data } = await client.auth.admin.getUserById(uid);
+      if (data?.user?.email) {
+        map[uid] = data.user.email;
+      }
+    } catch {
+      // 取得失敗は無視
     }
   }
+
   return map;
 }
