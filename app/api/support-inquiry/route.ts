@@ -77,6 +77,48 @@ export async function POST(request: Request) {
       `,
     });
 
+    // ユーザーへの自動返信メール
+    try {
+      await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+        to: email,
+        subject: '【集客メーカー】お問い合わせを受け付けました',
+        html: `
+          <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+            <div style="background: linear-gradient(135deg, #f97316, #fb923c); padding: 32px; border-radius: 16px 16px 0 0; text-align: center;">
+              <h1 style="color: #fff; font-size: 20px; margin: 0;">お問い合わせありがとうございます</h1>
+            </div>
+            <div style="background: #fff; padding: 32px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 16px 16px;">
+              <p style="font-size: 15px; line-height: 1.8;">${escapedName} 様</p>
+              <p style="font-size: 15px; line-height: 1.8;">
+                この度は集客メーカーのサポートパックにお問い合わせいただき、誠にありがとうございます。
+              </p>
+              <p style="font-size: 15px; line-height: 1.8;">
+                以下の内容でお問い合わせを受け付けました。<br />
+                <strong>2営業日以内</strong>に担当者よりご連絡いたしますので、しばらくお待ちください。
+              </p>
+              <div style="background: #f9fafb; border-radius: 12px; padding: 20px; margin: 24px 0;">
+                <p style="margin: 0 0 8px; font-size: 13px; color: #6b7280;"><strong>関心のあるパック:</strong></p>
+                <p style="margin: 0 0 16px; font-size: 15px;">${escapedPackName}</p>
+                <p style="margin: 0 0 8px; font-size: 13px; color: #6b7280;"><strong>現在の状況:</strong></p>
+                <p style="margin: 0 0 16px; font-size: 15px; white-space: pre-wrap;">${escapedSituation}</p>
+                <p style="margin: 0 0 8px; font-size: 13px; color: #6b7280;"><strong>メッセージ:</strong></p>
+                <p style="margin: 0; font-size: 15px; white-space: pre-wrap;">${escapedMessage}</p>
+              </div>
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+              <p style="font-size: 12px; color: #9ca3af; line-height: 1.6;">
+                このメールは集客メーカー（makers.tokyo）のサポートパックお問い合わせフォームから自動送信されています。<br />
+                お心当たりのない場合は、このメールを無視していただいて問題ありません。
+              </p>
+            </div>
+          </div>
+        `,
+      });
+    } catch (autoReplyError) {
+      // 自動返信失敗は管理者通知の成功を妨げない
+      console.warn('[Support Inquiry API] Auto-reply failed:', autoReplyError);
+    }
+
     // メルマガリストに購読者として追加
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
