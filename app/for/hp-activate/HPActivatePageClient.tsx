@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   MessageCircle,
   BookOpen,
@@ -16,6 +17,7 @@ import {
   Eye,
   Users,
   HelpCircle,
+  X,
 } from 'lucide-react';
 import HomeAuthProvider from '@/components/home/HomeAuthProvider';
 
@@ -58,7 +60,188 @@ const faqs = [
   { q: '費用はどれくらいかかりますか？', a: '御社のHP構成や要件に合わせた個別カスタマイズで導入いたします。まずはお気軽にお問い合わせください。ヒアリングのうえ、最適なプランをご提案します。' },
 ];
 
+// オンボーディング風ガイドモーダルのデータ
+const conciergeGuidePages = [
+  {
+    subtitle: '既存HPの課題',
+    items: [
+      { icon: '🕐', title: '営業時間外の訪問者を逃している', description: '夜間・休日にアクセスがあっても、質問できる窓口がなく離脱しています。' },
+      { icon: '📞', title: '小さな疑問が解消されない', description: '「電話するほどではないけど知りたい」という訪問者の声を拾えていません。' },
+      { icon: '💰', title: 'よくある質問への人的コスト', description: '同じ質問への対応にスタッフの時間が取られ、本業に集中できていません。' },
+    ],
+  },
+  {
+    subtitle: 'AIコンシェルジュの解決策',
+    items: [
+      { icon: '🤖', title: '24時間365日、AIが自動接客', description: '御社のサービス情報・FAQを学習したAIが、訪問者の質問に即座に回答します。' },
+      { icon: '🎨', title: '御社ブランドに合わせたカスタマイズ', description: 'デザイン・アバター・応答トーンを自由に設定。サイトに自然に溶け込みます。' },
+      { icon: '🔒', title: '既存サイトへの影響ゼロ', description: 'Shadow DOM技術で完全に独立。デザインやCSSに一切影響を与えません。' },
+    ],
+  },
+  {
+    subtitle: '導入メリット',
+    items: [
+      { icon: '📈', title: '営業時間外の問い合わせを獲得', description: '今まで逃していた見込み客との接点が生まれ、問い合わせ数が増加します。' },
+      { icon: '⏱️', title: 'スタッフの対応工数を大幅削減', description: 'よくある質問はAIが自動応答。スタッフは重要な案件に集中できます。' },
+      { icon: '📊', title: 'データで継続的に改善', description: '会話ログから「何を知りたがっているか」を分析し、応答を改善し続けられます。' },
+    ],
+  },
+  {
+    subtitle: '導入効果',
+    items: [
+      { icon: '🏢', title: 'サイトリニューアル不要', description: '高額なリニューアル費用をかけずに、HPが「24時間働く営業担当」に変わります。' },
+      { icon: '🚀', title: 'コード1行で即日稼働', description: '埋め込みコードを貼るだけ。最短10分で導入完了、すぐに効果を実感できます。' },
+      { icon: '🔄', title: '段階的に改善可能', description: 'ナレッジの追加・修正はいつでも可能。HPの成果が持続的に向上します。' },
+    ],
+  },
+];
+
+const onboardingGuidePages = [
+  {
+    subtitle: '既存HPの課題',
+    items: [
+      { icon: '🤷', title: '訪問者が「次に何をすればいいか」分からない', description: '情報は載っているが、次のアクションが不明確で離脱しています。' },
+      { icon: '🚪', title: '初訪問ユーザーが迷子になる', description: '情報量が多いサイトほど「何から始めればいいか」が分かりにくくなっています。' },
+      { icon: '📄', title: 'せっかくのページが読まれない', description: 'サービスページへの導線がなく、トップページだけ見て帰ってしまいます。' },
+    ],
+  },
+  {
+    subtitle: 'ガイドメーカーの解決策',
+    items: [
+      { icon: '📋', title: 'ステップ形式で分かりやすく案内', description: '「STEP 1 → 2 → 3」の形式で、訪問者に次のアクションを明確に伝えます。' },
+      { icon: '⚡', title: '最適なタイミングで自動表示', description: 'ページ読み込み・スクロール・クリックに連動して、最適な瞬間にガイドが表示されます。' },
+      { icon: '👤', title: 'リピーターには非表示', description: '「もう表示しない」機能で既存ユーザーには邪魔にならず、新規訪問者だけに案内します。' },
+    ],
+  },
+  {
+    subtitle: '導入メリット',
+    items: [
+      { icon: '📈', title: '問い合わせフォームへの到達率向上', description: '「何をすればいいか」が分かれば、訪問者は次のステップに進みます。' },
+      { icon: '🎯', title: '訪問者の行動を「見る」から「動く」に', description: 'ただ閲覧するだけだった訪問者が、ガイドに沿って能動的に行動するようになります。' },
+      { icon: '🔧', title: 'LPのコンバージョン率をリニューアルなしで改善', description: '既存のLPにガイドを追加するだけで、成約率を改善できます。' },
+    ],
+  },
+  {
+    subtitle: '導入効果',
+    items: [
+      { icon: '✨', title: '放置HPが「成果を出すHP」に変わる', description: '作ったきりのHPに自動案内の仕組みが加わり、訪問者をゴールへ導きます。' },
+      { icon: '🎨', title: 'アイコン・カラー・ステップ数を自由にカスタマイズ', description: '御社のブランドやサービスに合わせたガイドを簡単に作成できます。' },
+      { icon: '📊', title: '表示回数・クリック率でガイド効果を測定', description: 'データを見ながらガイド内容を継続的に改善し、成果を最大化します。' },
+    ],
+  },
+];
+
+// オンボーディング風ガイドモーダル
+function GuideModal({
+  open,
+  onClose,
+  title,
+  pages,
+  gradientFrom,
+  gradientTo,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  pages: { subtitle: string; items: { icon: string; title: string; description: string }[] }[];
+  gradientFrom: string;
+  gradientTo: string;
+}) {
+  const [currentPage, setCurrentPage] = useState(0);
+
+  if (!open) return null;
+
+  const page = pages[currentPage];
+  const totalPages = pages.length;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-fade-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* ヘッダー */}
+        <div className={`bg-gradient-to-r ${gradientFrom} ${gradientTo} text-white px-6 py-5`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold">{title}</h3>
+              <p className="text-white/80 text-sm mt-1">{page.subtitle}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-white/70 text-sm font-medium">
+                {currentPage + 1} / {totalPages}
+              </span>
+              <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/20 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+          <div className="flex gap-1.5 mt-3">
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-1 rounded-full flex-1 transition-colors ${
+                  i <= currentPage ? 'bg-white' : 'bg-white/30'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* コンテンツ */}
+        <div className="px-6 py-5 space-y-4">
+          {page.items.map((item, index) => (
+            <div key={index} className="flex items-start gap-3">
+              <span className="text-2xl flex-shrink-0 mt-0.5">{item.icon}</span>
+              <div>
+                <p className="font-semibold text-gray-900">{item.title}</p>
+                <p className="text-sm text-gray-600">{item.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* フッター */}
+        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+          <div />
+          <div className="flex items-center gap-2">
+            {currentPage > 0 && (
+              <button
+                onClick={() => setCurrentPage((p) => p - 1)}
+                className="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all min-h-[44px]"
+              >
+                戻る
+              </button>
+            )}
+            {currentPage < totalPages - 1 ? (
+              <button
+                onClick={() => setCurrentPage((p) => p + 1)}
+                className={`px-6 py-2.5 bg-gradient-to-r ${gradientFrom} ${gradientTo} text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-md min-h-[44px]`}
+              >
+                次へ
+              </button>
+            ) : (
+              <button
+                onClick={() => { onClose(); setCurrentPage(0); }}
+                className={`px-6 py-2.5 bg-gradient-to-r ${gradientFrom} ${gradientTo} text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-md min-h-[44px]`}
+              >
+                閉じる
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HPActivatePageClient() {
+  const [showConciergeGuide, setShowConciergeGuide] = useState(false);
+  const [showOnboardingGuide, setShowOnboardingGuide] = useState(false);
+
   return (
     <HomeAuthProvider>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
@@ -182,9 +365,12 @@ export default function HPActivatePageClient() {
                   <a href="/concierge" className="inline-flex items-center gap-2 text-emerald-600 font-bold text-sm hover:underline">
                     コンシェルジュの詳細を見る <ArrowRight size={14} />
                   </a>
-                  <a href="/for/hp-activate/guide/concierge" className="inline-flex items-center gap-2 text-emerald-600 font-bold text-sm hover:underline bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+                  <button
+                    onClick={() => setShowConciergeGuide(true)}
+                    className="inline-flex items-center gap-2 text-emerald-600 font-bold text-sm hover:bg-emerald-100 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 transition-colors cursor-pointer"
+                  >
                     <BookOpen size={14} />ガイドを見る
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
@@ -221,9 +407,12 @@ export default function HPActivatePageClient() {
                   <a href="/onboarding" className="inline-flex items-center gap-2 text-blue-600 font-bold text-sm hover:underline">
                     ガイドメーカーの詳細を見る <ArrowRight size={14} />
                   </a>
-                  <a href="/for/hp-activate/guide/onboarding" className="inline-flex items-center gap-2 text-blue-600 font-bold text-sm hover:underline bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200">
+                  <button
+                    onClick={() => setShowOnboardingGuide(true)}
+                    className="inline-flex items-center gap-2 text-blue-600 font-bold text-sm hover:bg-blue-100 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200 transition-colors cursor-pointer"
+                  >
                     <BookOpen size={14} />ガイドを見る
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
@@ -482,6 +671,23 @@ export default function HPActivatePageClient() {
           </div>
         </div>
       </section>
+      {/* ガイドモーダル */}
+      <GuideModal
+        open={showConciergeGuide}
+        onClose={() => setShowConciergeGuide(false)}
+        title="AIコンシェルジュ導入ガイド"
+        pages={conciergeGuidePages}
+        gradientFrom="from-emerald-500"
+        gradientTo="to-emerald-700"
+      />
+      <GuideModal
+        open={showOnboardingGuide}
+        onClose={() => setShowOnboardingGuide(false)}
+        title="ガイドメーカー導入ガイド"
+        pages={onboardingGuidePages}
+        gradientFrom="from-blue-500"
+        gradientTo="to-blue-700"
+      />
     </HomeAuthProvider>
   );
 }

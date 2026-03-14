@@ -3,6 +3,7 @@ import Link from 'next/link';
 import {
   ListChecks, Sparkles, BookOpen, Users, CheckCircle2,
   ArrowRight, ChevronRight, Globe, FileText, Smartphone,
+  MousePointerClick, TrendingUp, BarChart3, Zap,
 } from 'lucide-react';
 import LandingHeader from '@/components/shared/LandingHeader';
 
@@ -189,6 +190,38 @@ export default function OnboardingLandingPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* 既存HPの活性化 */}
+        <section className="bg-orange-50 py-16">
+          <div className="max-w-4xl mx-auto px-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-4">既存HPにガイドを導入するメリット</h2>
+            <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">サイトをリニューアルしなくても、ステップガイドを埋め込むだけでHPの成果が変わります。</p>
+            <div className="grid sm:grid-cols-2 gap-6">
+              {[
+                { icon: MousePointerClick, title: '離脱をコンバージョンに変える', desc: '訪問者に「次に何をすればいいか」を明確に案内。迷って帰っていた人が行動するようになります。', color: 'text-orange-600', bg: 'bg-orange-100' },
+                { icon: TrendingUp, title: '問い合わせフォームへの到達率向上', desc: 'ステップガイドで導線を最適化。LPのコンバージョン率をリニューアルなしで改善します。', color: 'text-emerald-600', bg: 'bg-emerald-100' },
+                { icon: BarChart3, title: '表示回数・クリック率で効果測定', desc: 'データを見ながらガイド内容を改善。どのステップで離脱が多いかも可視化できます。', color: 'text-purple-600', bg: 'bg-purple-100' },
+                { icon: Zap, title: 'リニューアル不要で即日導入', desc: 'コード1行で導入完了。作ったきりのHPに自動案内の仕組みが加わり、成果を出すサイトに変わります。', color: 'text-amber-600', bg: 'bg-amber-100' },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.title} className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow duration-200">
+                    <div className={`w-12 h-12 mb-4 ${item.bg} rounded-xl flex items-center justify-center`}>
+                      <Icon className={`w-6 h-6 ${item.color}`} />
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-2 text-lg">{item.title}</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="text-center mt-10">
+              <Link href="/for/hp-activate" className="inline-flex items-center gap-2 text-orange-600 font-semibold hover:underline">
+                既存HP活性化の詳細を見る <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
         </section>
 

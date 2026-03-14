@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import {
   Bot, MessageSquare, Palette, Code2,
-  CheckCircle2, ChevronRight, Settings, Sparkles,
+  CheckCircle2, ChevronRight, Settings, Sparkles, TrendingUp, Clock, BarChart3, Zap,
 } from 'lucide-react';
 import LandingHeader from '@/components/shared/LandingHeader';
 
@@ -202,6 +202,38 @@ export default function ConciergeLandingPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* 既存HPの活性化 */}
+        <section className="bg-blue-50 py-16">
+          <div className="max-w-4xl mx-auto px-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-4">既存HPにAIコンシェルジュを導入するメリット</h2>
+            <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">サイトをリニューアルしなくても、コード1行でHPが「24時間働く営業担当」に変わります。</p>
+            <div className="grid sm:grid-cols-2 gap-6">
+              {[
+                { icon: Clock, title: '営業時間外の問い合わせを獲得', desc: '深夜・休日でもAIが即座に回答。「聞けないから帰る」訪問者を問い合わせにつなげます。', color: 'text-blue-600', bg: 'bg-blue-100' },
+                { icon: TrendingUp, title: 'スタッフの対応工数を大幅削減', desc: 'よくある質問はAIが自動応答。スタッフは重要な案件に集中でき、業務効率が向上します。', color: 'text-emerald-600', bg: 'bg-emerald-100' },
+                { icon: BarChart3, title: 'データで継続的に改善', desc: '会話ログから「何を知りたがっているか」を分析。応答を改善し続けることでHPの成果が向上します。', color: 'text-purple-600', bg: 'bg-purple-100' },
+                { icon: Zap, title: 'リニューアル不要で即日導入', desc: '埋め込みコード1行で導入完了。高額なサイトリニューアルなしでHPが「動くサイト」に変わります。', color: 'text-amber-600', bg: 'bg-amber-100' },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.title} className="bg-white border border-gray-200 rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow duration-200">
+                    <div className={`w-12 h-12 mb-4 ${item.bg} rounded-xl flex items-center justify-center`}>
+                      <Icon className={`w-6 h-6 ${item.color}`} />
+                    </div>
+                    <h3 className="font-bold text-gray-900 mb-2 text-lg">{item.title}</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="text-center mt-10">
+              <Link href="/for/hp-activate" className="inline-flex items-center gap-2 text-blue-600 font-semibold hover:underline">
+                既存HP活性化の詳細を見る <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
         </section>
 
