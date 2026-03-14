@@ -35,11 +35,11 @@ type GuidePage = {
 
 const GUIDE_PAGES: GuidePage[] = [
   {
-    subtitle: 'ゲスト・無料・Proプランの違い',
+    subtitle: 'ゲスト・無料・有料プランの違い',
     items: [
       { iconName: 'Users', iconColor: 'blue', title: 'ゲスト', description: '登録不要ですぐお試し。作品の保存はできません' },
       { iconName: 'Heart', iconColor: 'green', title: '無料プラン', description: 'メールで簡単登録。作品の保存・管理・共有が可能' },
-      { iconName: 'Award', iconColor: 'amber', title: 'Proプラン', description: '埋め込み・HTML出力・アナリティクスなどフル機能を開放' },
+      { iconName: 'Award', iconColor: 'amber', title: '有料プラン', description: 'スタンダード以上で埋め込み・HTML出力・アナリティクスなどフル機能を開放' },
     ],
   },
   {

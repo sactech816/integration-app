@@ -1324,7 +1324,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
                 </p>
                 {!userPlan?.canHideCopyright && (
                   <p className="text-xs text-amber-600 mt-2 font-medium">
-                    ※ Proプランにアップグレードすると利用可能になります
+                    ※ ビジネスプラン以上で利用可能になります
                   </p>
                 )}
               </div>
@@ -1615,7 +1615,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
               subtitle: 'ページ管理と公開',
               items: [
                 { icon: Globe, iconColor: 'cyan', title: 'ページ管理', description: 'STEP 3でページの追加・削除・並べ替えができます。各ページにナビゲーション表示の切替も可能です。' },
-                { icon: Lock, iconColor: 'red', title: 'Pro機能', description: 'Proプランではフッター非表示など高度なカスタマイズが可能です。' },
+                { icon: Lock, iconColor: 'red', title: 'Pro機能', description: 'ビジネスプラン以上でフッター非表示など高度なカスタマイズが可能です。' },
                 { icon: ExternalLink, iconColor: 'green', title: '公開と共有', description: '保存後URLをコピーして共有。ポータルにも掲載でき、SEO対策にもなります。' },
               ],
             },

@@ -93,7 +93,7 @@ export default function AIEditChat({ imageUrl, aspectRatio, userId, onImageEdite
           </a>
         </div>
         <div className="px-4 py-3 text-center text-sm text-gray-500">
-          AI編集はProプラン限定機能です
+          AI編集はビジネスプラン以上の機能です
         </div>
       </div>
     );

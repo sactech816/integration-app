@@ -73,7 +73,7 @@ const FAQS = [
   },
   {
     q: '手数料の合計はいくらですか？',
-    a: 'Stripe手数料 3.6% + プラットフォーム手数料 5% = 合計 8.6% です。例えば1,000円の商品なら、914円があなたの売上になります。Proプランの方はプラットフォーム手数料が0%になり、Stripe手数料の3.6%のみです。',
+    a: 'Stripe手数料 3.6% + プラットフォーム手数料 5% = 合計 8.6% です。例えば1,000円の商品なら、914円があなたの売上になります。ビジネスプランの方はプラットフォーム手数料が0%になり、Stripe手数料の3.6%のみです。',
   },
   {
     q: 'テスト決済はできますか？',
@@ -193,7 +193,7 @@ export default function StripeConnectGuidePage() {
           </div>
           <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 mt-3">
             <p className="text-sm text-amber-800">
-              <strong>Proプランなら手数料がお得！</strong><br />
+              <strong>ビジネスプランなら手数料がお得！</strong><br />
               プラットフォーム手数料が<strong>0%</strong>になり、Stripe手数料の<strong>3.6%のみ</strong>で利用できます。
             </p>
           </div>

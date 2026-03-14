@@ -2,9 +2,28 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+/** 作成制限に達した場合の情報 */
+export interface CreationLimitResult {
+  allowed: boolean;
+  message?: string;
+  current?: number;
+  limit?: number;
+}
+
+/** 制限超過時に表示するモーダルの情報 */
+export interface PlanLimitDisplay {
+  title: string;
+  message: string;
+  currentUsage?: number;
+  limit?: number;
+  recommendedPlan?: 'standard' | 'business' | 'premium';
+}
+
 export interface UsePointsOptions {
   userId: string | undefined;
   isPro: boolean;
+  /** 作成制限超過時のコールバック（モーダル表示等に使う） */
+  onCreationLimitReached?: (info: PlanLimitDisplay) => void;
 }
 
 export interface UsePointsReturn {
@@ -26,7 +45,7 @@ export interface UsePointsReturn {
  * ポイントシステム用フック
  * 各エディタコンポーネントで使用する
  */
-export function usePoints({ userId, isPro }: UsePointsOptions): UsePointsReturn {
+export function usePoints({ userId, isPro, onCreationLimitReached }: UsePointsOptions): UsePointsReturn {
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -55,9 +74,20 @@ export function usePoints({ userId, isPro }: UsePointsOptions): UsePointsReturn 
       try {
         const res = await fetch(`/api/check-creation-limit?userId=${encodeURIComponent(userId)}&toolType=${encodeURIComponent(serviceType)}`);
         if (res.ok) {
-          const data = await res.json();
+          const data = await res.json() as CreationLimitResult;
           if (!data.allowed) {
-            alert(data.message || `作成上限（${data.limit}個）に達しています。上位プランにアップグレードしてください。`);
+            if (onCreationLimitReached) {
+              onCreationLimitReached({
+                title: 'ツール作成上限に達しました',
+                message: data.message || `作成上限（${data.limit}個）に達しています。上位プランにアップグレードすると、より多くのコンテンツを作成できます。`,
+                currentUsage: data.current,
+                limit: data.limit,
+                recommendedPlan: (data.limit === 0) ? 'standard' : 'business',
+              });
+            } else {
+              // フォールバック: コールバック未設定の場合はalert
+              alert(data.message || `作成上限（${data.limit}個）に達しています。上位プランにアップグレードしてください。`);
+            }
             return false;
           }
         }
@@ -67,7 +97,7 @@ export function usePoints({ userId, isPro }: UsePointsOptions): UsePointsReturn 
     }
     await onSuccess();
     return true;
-  }, [userId]);
+  }, [userId, onCreationLimitReached]);
 
   return { balance, loading, refreshBalance, canAfford, consumeAndExecute };
 }

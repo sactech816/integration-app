@@ -156,7 +156,7 @@ export default function OnboardingEmbedCodeGenerator({
           ) : (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
               <Lock className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-              <p className="font-bold text-gray-700 mb-1">Proプラン限定機能</p>
+              <p className="font-bold text-gray-700 mb-1">ビジネスプラン以上の機能</p>
               <p className="text-sm text-gray-500 mb-4">
                 JSスニペットを使うと、外部サイトにオーバーレイモーダルとして設置できます。
               </p>
@@ -164,7 +164,7 @@ export default function OnboardingEmbedCodeGenerator({
                 href="/pricing"
                 className="inline-flex items-center gap-2 bg-purple-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-purple-700 transition-colors text-sm"
               >
-                <Crown className="w-4 h-4" /> Proプランを見る
+                <Crown className="w-4 h-4" /> プランを見る
               </Link>
             </div>
           )}

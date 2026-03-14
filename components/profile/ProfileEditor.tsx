@@ -2614,7 +2614,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 </p>
                 {!userPlan.canHideCopyright && (
                   <p className="text-xs text-emerald-600 mt-2 font-medium">
-                    ※ Proプランにアップグレードすると利用可能になります
+                    ※ ビジネスプラン以上で利用可能になります
                   </p>
                 )}
               </div>
@@ -2671,7 +2671,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 </p>
                 {!userPlan.canHideCopyright && (
                   <p className="text-xs text-emerald-600 mt-2 font-medium">
-                    ※ Proプランにアップグレードすると利用可能になります
+                    ※ ビジネスプラン以上で利用可能になります
                   </p>
                 )}
               </div>

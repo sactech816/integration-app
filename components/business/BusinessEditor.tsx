@@ -2510,7 +2510,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                 </p>
                 {!userPlan.canHideCopyright && (
                   <p className="text-xs text-amber-600 mt-2 font-medium">
-                    ※ Proプランにアップグレードすると利用可能になります
+                    ※ ビジネスプラン以上で利用可能になります
                   </p>
                 )}
               </div>
@@ -2567,7 +2567,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                 </p>
                 {!userPlan.canHideCopyright && (
                   <p className="text-xs text-amber-600 mt-2 font-medium">
-                    ※ Proプランにアップグレードすると利用可能になります
+                    ※ ビジネスプラン以上で利用可能になります
                   </p>
                 )}
               </div>

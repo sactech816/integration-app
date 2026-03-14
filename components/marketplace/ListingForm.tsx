@@ -372,7 +372,7 @@ export default function ListingForm({ listing, accessToken, onSaved, onCancel }:
               { icon: FileText, iconColor: 'blue', title: 'カテゴリとタイトル', description: 'まずカテゴリを選択し、わかりやすいサービスタイトルを入力してください。タイトルは80文字以内です。' },
               { icon: DollarSign, iconColor: 'amber', title: '価格設定', description: '「固定価格」「価格帯」「応相談」の3種類から選べます。納期目安も設定すると依頼者に親切です。' },
               { icon: Star, iconColor: 'purple', title: '魅力的な説明文', description: 'サービスの内容・含まれるもの・対応範囲を具体的に記載すると、依頼率が上がります。' },
-              { icon: Crown, iconColor: 'teal', title: 'プロプラン限定機能', description: 'スキルマーケットプレイスはプロプラン限定です。出品後はマーケットプレイス上で公開されます。' },
+              { icon: Crown, iconColor: 'teal', title: 'ビジネスプラン以上の機能', description: 'スキルマーケットプレイスはビジネスプラン以上の機能です。出品後はマーケットプレイス上で公開されます。' },
             ],
           }]}
           gradientFrom="from-amber-500"

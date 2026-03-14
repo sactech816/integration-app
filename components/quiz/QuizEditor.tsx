@@ -1142,7 +1142,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                     </p>
                                     {!userPlan.canHideCopyright && (
                                         <p className="text-xs text-indigo-600 mt-2 font-medium">
-                                            ※ Proプランにアップグレードすると利用可能になります
+                                            ※ ビジネスプラン以上で利用可能になります
                                         </p>
                                     )}
                                 </div>
@@ -1195,7 +1195,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                         </p>
                                         {!userPlan.canHideCopyright && (
                                             <p className="text-xs text-indigo-600 mt-2 font-medium">
-                                                ※ Proプランにアップグレードすると利用可能になります
+                                                ※ ビジネスプラン以上で利用可能になります
                                             </p>
                                         )}
                                     </div>

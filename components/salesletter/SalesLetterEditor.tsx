@@ -2139,7 +2139,7 @@ function ContentSettingsPanel({
             </p>
             {!userPlan.canHideCopyright && (
               <p className="text-[10px] text-rose-600 mt-1 font-medium">
-                ※ Proプランで利用可能
+                ※ ビジネスプラン以上で利用可能
               </p>
             )}
           </div>
@@ -2193,7 +2193,7 @@ function ContentSettingsPanel({
             </p>
             {!userPlan.canHideCopyright && (
               <p className="text-[10px] text-rose-600 mt-1 font-medium">
-                ※ Proプランで利用可能
+                ※ ビジネスプラン以上で利用可能
               </p>
             )}
           </div>

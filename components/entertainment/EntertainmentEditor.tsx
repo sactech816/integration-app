@@ -556,7 +556,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
                   .eq('user_id', user.id)
                   .eq('quiz_type', 'entertainment');
                 if ((count || 0) >= 1) {
-                  setError('フリープランではエンタメ診断は1つまで作成できます。プロプランにアップグレードすると無制限に作成できます。');
+                  setError('フリープランではエンタメ診断は1つまで作成できます。ビジネスプラン以上で無制限に作成できます。');
                   setIsSaving(false);
                   return;
                 }

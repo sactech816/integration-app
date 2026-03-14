@@ -1142,7 +1142,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
                   </p>
                   {!userPlan.canHideCopyright && (
                     <p className="text-xs text-teal-600 mt-2 font-medium">
-                      ※ Proプランにアップグレードすると利用可能になります
+                      ※ ビジネスプラン以上で利用可能になります
                     </p>
                   )}
                 </div>
@@ -1198,7 +1198,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
                     </p>
                     {!userPlan.canHideCopyright && (
                       <p className="text-xs text-teal-600 mt-2 font-medium">
-                        ※ Proプランにアップグレードすると利用可能になります
+                        ※ ビジネスプラン以上で利用可能になります
                       </p>
                     )}
                   </div>

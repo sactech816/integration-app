@@ -1544,7 +1544,7 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
                 <p className={`text-xs ${userPlan.canHideCopyright ? 'text-violet-700' : 'text-gray-500'}`}>
                   コンテンツ下部のフッターを非表示にします。
                 </p>
-                {!userPlan.canHideCopyright && <p className="text-xs text-violet-600 mt-2 font-medium">※ Proプランにアップグレードすると利用可能になります</p>}
+                {!userPlan.canHideCopyright && <p className="text-xs text-violet-600 mt-2 font-medium">※ ビジネスプラン以上で利用可能になります</p>}
               </div>
               <label className={`relative inline-flex items-center ml-4 flex-shrink-0 ${userPlan.canHideCopyright ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
                 <input type="checkbox" className="sr-only peer" checked={userPlan.canHideCopyright && (lp.settings?.hideFooter || false)} onChange={e => { if (userPlan.canHideCopyright) setLp(prev => ({ ...prev, settings: { ...prev.settings, hideFooter: e.target.checked } })); }} disabled={!userPlan.canHideCopyright} />
@@ -1565,7 +1565,7 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
                 <p className={`text-xs ${userPlan.canHideCopyright ? 'text-violet-700' : 'text-gray-500'}`}>
                   ページ下部の関連コンテンツセクションを非表示にします。
                 </p>
-                {!userPlan.canHideCopyright && <p className="text-xs text-violet-600 mt-2 font-medium">※ Proプランにアップグレードすると利用可能になります</p>}
+                {!userPlan.canHideCopyright && <p className="text-xs text-violet-600 mt-2 font-medium">※ ビジネスプラン以上で利用可能になります</p>}
               </div>
               <label className={`relative inline-flex items-center ml-4 flex-shrink-0 ${userPlan.canHideCopyright ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
                 <input type="checkbox" className="sr-only peer" checked={userPlan.canHideCopyright && (lp.settings?.hideRelatedContent || false)} onChange={e => { if (userPlan.canHideCopyright) setLp(prev => ({ ...prev, settings: { ...prev.settings, hideRelatedContent: e.target.checked } })); }} disabled={!userPlan.canHideCopyright} />

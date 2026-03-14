@@ -25,6 +25,7 @@ import DiagnosisManager from './components/Admin/DiagnosisManager';
 import AccountSettings from './components/Settings/AccountSettings';
 import { Loader2 } from 'lucide-react';
 import PointPurchaseModal from '@/components/points/PointPurchaseModal';
+import PlanLimitModal, { PlanLimitInfo } from '@/components/shared/PlanLimitModal';
 
 // 新しいコンポーネント
 import DashboardLayout from './components/DashboardLayout';
@@ -124,6 +125,14 @@ function DashboardContent() {
   // ポイント残高
   const [pointBalance, setPointBalance] = useState<number>(0);
   const [showPointPurchase, setShowPointPurchase] = useState(false);
+
+  // プラン制限モーダル
+  const [showPlanLimit, setShowPlanLimit] = useState(false);
+  const [planLimitInfo, setPlanLimitInfo] = useState<PlanLimitInfo>({ title: '', message: '' });
+  const openPlanLimitModal = useCallback((info: PlanLimitInfo) => {
+    setPlanLimitInfo(info);
+    setShowPlanLimit(true);
+  }, []);
 
   // 決済完了後の検証
   useEffect(() => {
@@ -299,43 +308,24 @@ function DashboardContent() {
       return;
     }
 
-    // KindleキーワードリサーチはPro限定
-    if (itemId === 'kindle-keywords') {
+    // キーワードリサーチ系はビジネスプラン以上限定
+    const keywordResearchRoutes: Record<string, { name: string; path: string }> = {
+      'kindle-keywords': { name: 'Kindleキーワードリサーチ', path: '/kindle-keywords/editor' },
+      'youtube-keyword-research': { name: 'YouTubeキーワードリサーチ', path: '/youtube-keyword-research/editor' },
+      'google-keyword-research': { name: 'Googleキーワードリサーチ', path: '/google-keyword-research/editor' },
+      'rakuten-research': { name: '楽天市場リサーチ', path: '/rakuten-research/editor' },
+    };
+    if (keywordResearchRoutes[itemId]) {
+      const { name, path } = keywordResearchRoutes[itemId];
       if (!isAdmin && !hasMakersProAccess) {
-        alert('KindleキーワードリサーチはProプラン限定の機能です。\nProプランにアップグレードしてご利用ください。');
+        openPlanLimitModal({
+          title: `${name}はビジネスプラン以上の機能です`,
+          message: `${name}をご利用いただくには、ビジネスプラン以上へのアップグレードが必要です。キーワード分析でコンテンツ戦略を強化しましょう。`,
+          recommendedPlan: 'business',
+        });
         return;
       }
-      router.push('/kindle-keywords/editor');
-      return;
-    }
-
-    // YouTubeキーワードリサーチはPro限定
-    if (itemId === 'youtube-keyword-research') {
-      if (!isAdmin && !hasMakersProAccess) {
-        alert('YouTubeキーワードリサーチはProプラン限定の機能です。\nProプランにアップグレードしてご利用ください。');
-        return;
-      }
-      router.push('/youtube-keyword-research/editor');
-      return;
-    }
-
-    // GoogleキーワードリサーチはPro限定
-    if (itemId === 'google-keyword-research') {
-      if (!isAdmin && !hasMakersProAccess) {
-        alert('GoogleキーワードリサーチはProプラン限定の機能です。\nProプランにアップグレードしてご利用ください。');
-        return;
-      }
-      router.push('/google-keyword-research/editor');
-      return;
-    }
-
-    // 楽天市場リサーチはPro限定
-    if (itemId === 'rakuten-research') {
-      if (!isAdmin && !hasMakersProAccess) {
-        alert('楽天市場リサーチはProプラン限定の機能です。\nProプランにアップグレードしてご利用ください。');
-        return;
-      }
-      router.push('/rakuten-research/editor');
+      router.push(path);
       return;
     }
 
@@ -585,6 +575,14 @@ function DashboardContent() {
       
       {/* KDLアクセス案内モーダル */}
       <KdlAccessModal isOpen={showKdlModal} onClose={() => setShowKdlModal(false)} />
+
+      {/* プラン制限モーダル */}
+      <PlanLimitModal
+        isOpen={showPlanLimit}
+        onClose={() => setShowPlanLimit(false)}
+        user={user}
+        limitInfo={planLimitInfo}
+      />
 
       {/* ポイント購入モーダル */}
       {user && (

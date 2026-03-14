@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Gamepad2, 
   Plus, 
@@ -28,6 +28,7 @@ import {
   MakersPlanTier,
   MAKERS_GAMIFICATION_LIMITS,
 } from '@/lib/subscription';
+import PlanLimitModal, { PlanLimitInfo } from '@/components/shared/PlanLimitModal';
 
 // 集客メーカー用のゲーム作成数制限を使用（フォールバック用）
 const getGamificationLimitForMakers = (planTier: MakersPlanTier): number => {
@@ -56,6 +57,14 @@ export default function MyGamification({ userId, planTier, isUnlocked = false, i
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  // プラン制限モーダル
+  const [showPlanLimit, setShowPlanLimit] = useState(false);
+  const [planLimitInfo, setPlanLimitInfo] = useState<PlanLimitInfo>({ title: '', message: '' });
+  const openPlanLimitModal = useCallback((info: PlanLimitInfo) => {
+    setPlanLimitInfo(info);
+    setShowPlanLimit(true);
+  }, []);
 
   // DB値が提供されていればそれを使用、なければフォールバック
   // -1は無制限を意味する
@@ -206,11 +215,21 @@ export default function MyGamification({ userId, planTier, isUnlocked = false, i
 
   const handleCreateNew = () => {
     if (!canCreate) {
-      alert('ゲーム作成機能を利用するには、有料プランへのアップグレードが必要です。');
+      openPlanLimitModal({
+        title: 'ゲーム作成はビジネスプラン以上の機能です',
+        message: 'ゲーム作成機能（ガチャ・スタンプラリー・ログインボーナスなど）をご利用いただくには、ビジネスプラン以上へのアップグレードが必要です。',
+        recommendedPlan: 'business',
+      });
       return;
     }
     if (isLimitReached) {
-      alert(`現在のプランでは${limit}件までしか作成できません。\nアップグレードをご検討ください。`);
+      openPlanLimitModal({
+        title: 'ゲーム作成上限に達しました',
+        message: `現在のプランではゲームは${limit}件まで作成できます。上位プランにアップグレードすると、より多くのゲームを作成できます。`,
+        currentUsage: campaigns.length,
+        limit,
+        recommendedPlan: 'business',
+      });
       return;
     }
     window.location.href = '/gamification/new';
@@ -343,12 +362,16 @@ export default function MyGamification({ userId, planTier, isUnlocked = false, i
           <div className="flex items-start gap-3">
             <Crown className="text-purple-500 flex-shrink-0 mt-0.5" size={20} />
             <div className="flex-1">
-              <h3 className="font-bold text-purple-800">有料プランで利用可能</h3>
+              <h3 className="font-bold text-purple-800">ビジネスプラン以上で利用可能</h3>
               <p className="text-sm text-purple-700 mt-1">
-                ゲーム作成機能は有料プラン（プロプラン）でご利用いただけます。
+                ゲーム作成機能はビジネスプラン以上でご利用いただけます。
               </p>
               <button
-                onClick={() => window.location.href = '/dashboard?view=settings'}
+                onClick={() => openPlanLimitModal({
+                  title: 'ゲーム作成はビジネスプラン以上の機能です',
+                  message: 'ゲーム作成機能（ガチャ・スタンプラリー・ログインボーナスなど）をご利用いただくには、ビジネスプラン以上へのアップグレードが必要です。',
+                  recommendedPlan: 'business',
+                })}
                 className="mt-3 text-sm font-bold text-purple-700 hover:text-purple-800 flex items-center gap-1"
               >
                 プランを確認する
@@ -592,6 +615,14 @@ export default function MyGamification({ userId, planTier, isUnlocked = false, i
           </div>
         </div>
       </div>
+
+      {/* プラン制限モーダル */}
+      <PlanLimitModal
+        isOpen={showPlanLimit}
+        onClose={() => setShowPlanLimit(false)}
+        user={{ id: userId }}
+        limitInfo={planLimitInfo}
+      />
     </div>
   );
 }

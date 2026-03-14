@@ -271,9 +271,12 @@ export default function NewsletterDashboard({ userId, isProUser, planTier, isAdm
                 新しいリスト
               </Link>
             ) : (
-              <div className="text-sm text-gray-500 bg-gray-100 px-4 py-2.5 rounded-xl">
-                リスト上限（{listLimit}個）に達しています
-              </div>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-400 text-white font-semibold rounded-xl shadow-md transition-all min-h-[44px]"
+              >
+                <Plus className="w-4 h-4" />リスト上限（{listLimit}個）に達しています
+              </Link>
             )}
           </div>
         </div>

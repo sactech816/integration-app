@@ -595,15 +595,15 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
                 <Lock size={24} className="text-pink-400 mx-auto" />
                 <h3 className="font-bold text-gray-900">無料トライアルを使い切りました</h3>
                 <p className="text-sm text-gray-600">
-                  サムネイルメーカーはPro機能です。<br />
-                  Proプランにアップグレードすると無制限にご利用いただけます。
+                  サムネイルメーカーはビジネスプラン以上の機能です。<br />
+                  ビジネスプラン以上で無制限にご利用いただけます。
                 </p>
                 <a
                   href="/pricing"
                   className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all"
                 >
                   <Crown size={16} />
-                  Proプランを見る
+                  プランを見る
                 </a>
               </div>
             )}

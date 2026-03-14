@@ -96,7 +96,7 @@ export default function FunnelList({
             href="/pricing"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-400 text-white font-semibold rounded-xl shadow-md transition-all min-h-[44px]"
           >
-            <Plus className="w-4 h-4" />上限に達しました（Pro で無制限）
+            <Plus className="w-4 h-4" />上限に達しました（ビジネスプランで無制限）
           </Link>
         ) : (
           <Link

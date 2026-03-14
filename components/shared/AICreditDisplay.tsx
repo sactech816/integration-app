@@ -174,7 +174,7 @@ export default function AICreditDisplay({ userId, compact = false }: AICreditDis
                   高品質AIを使ってみませんか？
                 </p>
                 <p className="text-sm text-gray-600 mb-2">
-                  Proプラン以上で、Claude 3.5 SonnetやO3-miniなどの最高品質AIモデルをご利用いただけます。
+                  ビジネスプラン以上で、Claude 3.5 SonnetやO3-miniなどの最高品質AIモデルをご利用いただけます。
                 </p>
                 <button
                   onClick={() => window.location.href = '/subscription'}

@@ -287,7 +287,7 @@ const CreationCompleteModal: React.FC<CreationCompleteModalProps> = ({
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3 rounded-xl font-bold hover:from-amber-600 hover:to-orange-600 transition-all shadow-md text-sm"
                 >
-                  <Crown size={16} /> プロプランに申込
+                  <Crown size={16} /> 有料プランに申込
                 </a>
               </div>
 
