@@ -125,11 +125,12 @@ const demoPages: SitePage[] = [
     sort_order: 2,
     content: [
       {
-        id: generateBlockId(), type: 'text_card',
+        id: generateBlockId(), type: 'hero',
         data: {
-          title: 'Pricing',
-          text: 'プロジェクトの規模・要件に応じてお見積りいたします。\n以下は目安の料金です。まずはお気軽にご相談ください。',
-          align: 'center',
+          headline: 'Pricing',
+          subheadline: 'プロジェクトの規模に応じた、透明性のある料金体系',
+          backgroundImage: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1920&q=80',
+          backgroundOpacity: 25,
         },
       },
       {
@@ -203,10 +204,19 @@ const demoPages: SitePage[] = [
     sort_order: 3,
     content: [
       {
+        id: generateBlockId(), type: 'hero',
+        data: {
+          headline: 'Get in Touch',
+          subheadline: 'プロジェクトのご相談はお気軽に。通常1営業日以内にご返信します',
+          backgroundImage: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1920&q=80',
+          backgroundOpacity: 25,
+        },
+      },
+      {
         id: generateBlockId(), type: 'text_card',
         data: {
-          title: 'Get in Touch',
-          text: 'プロジェクトのご相談、お見積り依頼、その他お問い合わせはこちらから。\n通常1営業日以内にご返信いたします。\n\n所在地：東京都渋谷区神宮前6-35-3 コープオリンピア 6F\nE-mail：hello@satodesign.jp',
+          title: 'Contact Information',
+          text: '所在地：東京都渋谷区神宮前6-35-3 コープオリンピア 6F\nE-mail：hello@satodesign.jp\n\nオンラインミーティング（Zoom / Google Meet）も対応可能です。',
           align: 'center',
         },
       },
@@ -252,7 +262,7 @@ export default function FreelanceDemoClient() {
       <div className="bg-slate-900 text-white text-center py-2.5 text-sm font-medium tracking-wide">
         DEMO — ページメニューをクリックして各ページをご覧ください
       </div>
-      <SiteViewer site={{ ...demoSite, pages: demoPages }} currentPage={currentPage} />
+      <SiteViewer site={{ ...demoSite, pages: demoPages }} currentPage={currentPage} onNavigate={setCurrentPage} />
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl border border-gray-200/60 px-4 py-2 flex gap-2 z-50">
         {demoPages.map(p => (
           <button

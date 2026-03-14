@@ -137,11 +137,12 @@ const demoPages: SitePage[] = [
     sort_order: 2,
     content: [
       {
-        id: generateBlockId(), type: 'text_card',
+        id: generateBlockId(), type: 'hero',
         data: {
-          title: 'Track Record',
-          text: '業種・規模を問わず、200社以上の経営支援を行ってきました。\n以下は代表的な支援実績の一部です。',
-          align: 'center',
+          headline: 'Track Record',
+          subheadline: '200社以上の経営支援実績 — 数字で証明する戦略の価値',
+          backgroundImage: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1920&q=80',
+          backgroundOpacity: 30,
         },
       },
       {
@@ -178,10 +179,19 @@ const demoPages: SitePage[] = [
     sort_order: 3,
     content: [
       {
+        id: generateBlockId(), type: 'hero',
+        data: {
+          headline: 'Free Consultation',
+          subheadline: '初回30分の無料相談で、御社の課題を整理します',
+          backgroundImage: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1920&q=80',
+          backgroundOpacity: 30,
+        },
+      },
+      {
         id: generateBlockId(), type: 'text_card',
         data: {
-          title: 'Free Consultation',
-          text: '初回30分の無料相談を実施しています。\n経営課題の整理からお手伝いしますので、まずはお気軽にご連絡ください。\n\nオンライン（Zoom）・対面（六本木オフィス）いずれも対応可能です。\n\n所在地：東京都港区六本木1-6-1 泉ガーデンタワー 38F',
+          title: 'ご相談方法',
+          text: 'オンライン（Zoom）・対面（六本木オフィス）いずれも対応可能です。\n経営課題の整理からお手伝いしますので、まずはお気軽にご連絡ください。\n\n所在地：東京都港区六本木1-6-1 泉ガーデンタワー 38F',
           align: 'center',
         },
       },
@@ -227,7 +237,7 @@ export default function InstructorDemoClient() {
       <div className="bg-slate-900 text-white text-center py-2.5 text-sm font-medium tracking-wide">
         DEMO — ページメニューをクリックして各ページをご覧ください
       </div>
-      <SiteViewer site={{ ...demoSite, pages: demoPages }} currentPage={currentPage} />
+      <SiteViewer site={{ ...demoSite, pages: demoPages }} currentPage={currentPage} onNavigate={setCurrentPage} />
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl border border-gray-200/60 px-4 py-2 flex gap-2 z-50">
         {demoPages.map(p => (
           <button

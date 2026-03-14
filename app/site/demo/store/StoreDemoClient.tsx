@@ -50,10 +50,10 @@ const demoPages: SitePage[] = [
           items: [
             { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80', caption: 'ハンドドリップコーヒー' },
             { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=80', caption: 'ラテアート' },
-            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1555507036-ab1f4038024a?auto=format&fit=crop&w=800&q=80', caption: '焙煎豆' },
-            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=800&q=80', caption: '店内の雰囲気' },
-            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?auto=format&fit=crop&w=800&q=80', caption: 'クロワッサン' },
-            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=800&q=80', caption: 'カフェの朝' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1447933601403-56dc2f6421d0?auto=format&fit=crop&w=800&q=80', caption: '焙煎豆' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80', caption: '店内の雰囲気' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1530610476181-d83430b64dcd?auto=format&fit=crop&w=800&q=80', caption: 'クロワッサン' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80', caption: 'カフェの朝' },
           ],
         },
       },
@@ -165,9 +165,18 @@ const demoPages: SitePage[] = [
     sort_order: 2,
     content: [
       {
+        id: generateBlockId(), type: 'hero',
+        data: {
+          headline: 'Access',
+          subheadline: '六本木ヒルズすぐ、緑に囲まれた隠れ家カフェ',
+          backgroundImage: 'https://images.unsplash.com/photo-1453614512568-c4024d13c247?auto=format&fit=crop&w=1920&q=80',
+          backgroundOpacity: 35,
+        },
+      },
+      {
         id: generateBlockId(), type: 'text_card',
         data: {
-          title: 'Access',
+          title: '店舗情報',
           text: '〒106-6108 東京都港区六本木6丁目10-1 六本木ヒルズ ウェストウォーク 1F\n\n営業時間：7:00〜20:00（L.O. 19:30）\n定休日：不定休\nTEL：03-6434-7890\n\n東京メトロ 日比谷線「六本木」駅 1C出口 徒歩3分\n都営大江戸線「六本木」駅 3番出口 徒歩6分\n都営大江戸線「麻布十番」駅 7番出口 徒歩8分',
           align: 'left',
         },
@@ -204,10 +213,19 @@ const demoPages: SitePage[] = [
     sort_order: 3,
     content: [
       {
+        id: generateBlockId(), type: 'hero',
+        data: {
+          headline: 'Contact',
+          subheadline: 'ご予約・貸切・ケータリングのご相談はこちらから',
+          backgroundImage: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1920&q=80',
+          backgroundOpacity: 35,
+        },
+      },
+      {
         id: generateBlockId(), type: 'text_card',
         data: {
-          title: 'Contact',
-          text: 'ご予約・貸切・ケータリングなど、お気軽にお問い合わせください。\n法人様のミーティング利用やイベント開催もご相談いただけます。',
+          title: 'お気軽にご連絡ください',
+          text: 'ご予約・貸切・ケータリングなど、お気軽にお問い合わせください。\n法人様のミーティング利用やイベント開催もご相談いただけます。\n\nお電話でのご予約：03-6434-7890（営業時間内）',
           align: 'center',
         },
       },
@@ -245,7 +263,7 @@ export default function StoreDemoClient() {
       <div className="bg-stone-900 text-white text-center py-2.5 text-sm font-medium tracking-wide">
         DEMO — ページメニューをクリックして各ページをご覧ください
       </div>
-      <SiteViewer site={{ ...demoSite, pages: demoPages }} currentPage={currentPage} />
+      <SiteViewer site={{ ...demoSite, pages: demoPages }} currentPage={currentPage} onNavigate={setCurrentPage} />
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl border border-gray-200/60 px-4 py-2 flex gap-2 z-50">
         {demoPages.map(p => (
           <button
