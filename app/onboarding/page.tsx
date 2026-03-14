@@ -2,10 +2,11 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import {
   ListChecks, Sparkles, BookOpen, Users, CheckCircle2,
-  ArrowRight, ChevronRight, Globe, FileText, Smartphone,
+  ChevronRight, Globe, FileText, Smartphone,
   MousePointerClick, TrendingUp, BarChart3, Zap,
 } from 'lucide-react';
 import LandingHeader from '@/components/shared/LandingHeader';
+import OnboardingGuideButton from './OnboardingGuideButton';
 
 export const metadata: Metadata = {
   title: 'ガイドメーカー（オンボーディングガイド作成）【無料】| 集客メーカー',
@@ -109,11 +110,9 @@ export default function OnboardingLandingPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/onboarding/editor" className="inline-flex items-center gap-2 px-8 py-4 bg-orange-600 hover:bg-orange-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
                 <ListChecks className="w-5 h-5" />
-                無料でガイドを作る
+                ガイドを作成する
               </Link>
-              <Link href="/demos" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-orange-600 font-semibold text-lg rounded-xl border border-orange-200 shadow hover:shadow-md transition-all duration-200 min-h-[44px]">
-                デモを見る <ArrowRight className="w-5 h-5" />
-              </Link>
+              <OnboardingGuideButton />
             </div>
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8 text-sm text-gray-500">
               <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-green-500" />無料で作成・公開</span>
