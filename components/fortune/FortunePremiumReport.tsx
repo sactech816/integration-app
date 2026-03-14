@@ -8,6 +8,7 @@ interface FortunePremiumReportProps {
   isPurchased: boolean;
   existingReportHtml?: string | null;
   onPurchaseStart?: () => void;
+  isAdmin?: boolean;
 }
 
 const FEATURES = [
@@ -46,6 +47,7 @@ export default function FortunePremiumReport({
   isPurchased,
   existingReportHtml,
   onPurchaseStart,
+  isAdmin = false,
 }: FortunePremiumReportProps) {
   const [reportHtml, setReportHtml] = useState<string | null>(existingReportHtml || null);
   const [generating, setGenerating] = useState(false);
@@ -171,8 +173,8 @@ export default function FortunePremiumReport({
     }
   }, [resultId]);
 
-  // === 未購入: 購入CTA ===
-  if (!isPurchased) {
+  // === 未購入: 管理者は直接生成、一般ユーザーは購入CTA ===
+  if (!isPurchased && !isAdmin) {
     return (
       <div className="mt-8">
         <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border border-indigo-200 rounded-2xl shadow-md overflow-hidden">

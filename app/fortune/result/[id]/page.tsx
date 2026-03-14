@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import { supabase } from '@/lib/supabase';
+import { getAdminEmails } from '@/lib/constants';
 import { getSexagenaryName, STAR_INFO } from '@/lib/fortune';
 import type { FortuneResult } from '@/lib/fortune';
 import type { NineStar } from '@/lib/fortune/nine-star';
@@ -25,9 +26,16 @@ export default function FortuneResultPage() {
   const [user, setUser] = useState<any>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user: u } }) => setUser(u));
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      setUser(u);
+      if (u) {
+        const adminEmails = getAdminEmails();
+        setIsAdmin(adminEmails.some(e => u.email?.toLowerCase() === e.toLowerCase()));
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -281,6 +289,7 @@ export default function FortuneResultPage() {
             resultId={id}
             isPurchased={!!result.report_purchased}
             existingReportHtml={result.report_content || null}
+            isAdmin={isAdmin}
           />
         )}
 

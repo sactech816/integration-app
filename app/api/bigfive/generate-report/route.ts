@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { createAIProvider } from '@/lib/ai-provider';
+import { getAdminEmails } from '@/lib/constants';
 import { logAIUsage } from '@/lib/ai-usage';
 import { buildReportSystemPrompt, buildReportUserPrompt } from '@/lib/bigfive/report-prompt';
 import { FACET_LABELS } from '@/lib/bigfive/calculate';
@@ -94,7 +95,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '診断結果が見つかりません' }, { status: 404 });
     }
 
-    if (!row.pdf_purchased) {
+    const adminEmails = getAdminEmails();
+    const isAdmin = adminEmails.some(e => user.email?.toLowerCase() === e.toLowerCase());
+
+    if (!row.pdf_purchased && !isAdmin) {
       return NextResponse.json({ error: 'プレミアムレポートの購入が必要です' }, { status: 403 });
     }
 

@@ -1,6 +1,5 @@
 'use client';
 
-import { ReactNode } from 'react';
 import {
   MessageCircle,
   BookOpen,
@@ -9,7 +8,6 @@ import {
   Clock,
   TrendingUp,
   ArrowRight,
-  Sparkles,
   Check,
   ChevronRight,
   Shield,
@@ -20,7 +18,6 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import HomeAuthProvider from '@/components/home/HomeAuthProvider';
-import { AuthCTAButton } from '@/components/home/HomeClientButtons';
 
 const siteUrl = 'https://makers.tokyo';
 
@@ -58,7 +55,7 @@ const faqs = [
   { q: 'WordPressやWixにも導入できますか？', a: 'はい、JavaScriptが動作する環境であれば、WordPress、Wix、Squarespace、Shopifyなど、あらゆるサイトビルダーに導入可能です。HTMLにscriptタグを1行追加するだけです。' },
   { q: 'AIチャットボットの回答精度は大丈夫ですか？', a: 'あなたが登録したFAQ・サービス情報・ナレッジをもとにAIが回答するため、ビジネスに特化した正確な回答が可能です。回答内容はいつでも修正・改善できます。' },
   { q: '導入にどれくらい時間がかかりますか？', a: 'コンシェルジュは最短10分、ガイドメーカーは最短5分で作成完了。生成された埋め込みコードを既存サイトに貼り付ければ即日稼働します。' },
-  { q: '月額費用はかかりますか？', a: 'コンシェルジュはフリープランで1日10メッセージまで無料。ガイドメーカーは基本機能を無料でご利用いただけます。本格運用にはStandard以上のプラン（月額1,980円〜）がおすすめです。' },
+  { q: '費用はどれくらいかかりますか？', a: '御社のHP構成や要件に合わせた個別カスタマイズで導入いたします。まずはお気軽にお問い合わせください。ヒアリングのうえ、最適なプランをご提案します。' },
 ];
 
 export default function HPActivatePageClient() {
@@ -95,19 +92,20 @@ export default function HPActivatePageClient() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
-            <AuthCTAButton
+            <a
+              href="/contact"
               className="text-white text-lg font-bold py-4 px-10 rounded-full shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl inline-flex items-center gap-2 bg-emerald-600"
             >
-              <Sparkles size={20} />
-              無料で導入してみる
-            </AuthCTAButton>
+              <MessageCircle size={20} />
+              導入のご相談・お問い合わせ
+            </a>
             <a href="#how-it-works" className="text-emerald-600 text-lg font-bold py-4 px-10 rounded-full border-2 border-emerald-200 bg-white hover:-translate-y-1 transition-all inline-flex items-center gap-2">
               導入方法を見る
               <ArrowRight size={18} />
             </a>
           </div>
 
-          <p className="text-xs text-gray-500">※ クレジットカード不要・既存サイトへの影響ゼロ</p>
+          <p className="text-xs text-gray-500">※ 御社のHPに合わせた個別カスタマイズで導入いたします</p>
         </div>
       </section>
 
@@ -180,9 +178,14 @@ export default function HPActivatePageClient() {
                     </li>
                   ))}
                 </ul>
-                <a href="/concierge" className="inline-flex items-center gap-2 text-emerald-600 font-bold text-sm hover:underline">
-                  コンシェルジュの詳細を見る <ArrowRight size={14} />
-                </a>
+                <div className="flex flex-wrap items-center gap-4">
+                  <a href="/concierge" className="inline-flex items-center gap-2 text-emerald-600 font-bold text-sm hover:underline">
+                    コンシェルジュの詳細を見る <ArrowRight size={14} />
+                  </a>
+                  <a href="/for/hp-activate/guide/concierge" className="inline-flex items-center gap-2 text-emerald-600 font-bold text-sm hover:underline bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+                    <BookOpen size={14} />ガイドを見る
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -214,9 +217,14 @@ export default function HPActivatePageClient() {
                     </li>
                   ))}
                 </ul>
-                <a href="/onboarding" className="inline-flex items-center gap-2 text-blue-600 font-bold text-sm hover:underline">
-                  ガイドメーカーの詳細を見る <ArrowRight size={14} />
-                </a>
+                <div className="flex flex-wrap items-center gap-4">
+                  <a href="/onboarding" className="inline-flex items-center gap-2 text-blue-600 font-bold text-sm hover:underline">
+                    ガイドメーカーの詳細を見る <ArrowRight size={14} />
+                  </a>
+                  <a href="/for/hp-activate/guide/onboarding" className="inline-flex items-center gap-2 text-blue-600 font-bold text-sm hover:underline bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200">
+                    <BookOpen size={14} />ガイドを見る
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -388,7 +396,7 @@ export default function HPActivatePageClient() {
               <div className="p-8 bg-emerald-50/30">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold mb-4">AFTER</div>
                 <p className="text-gray-700 leading-relaxed text-sm font-medium" data-speakable>
-                  AIコンシェルジュを導入したら、営業時間外の問い合わせが月15件に。ガイドメーカーでサービス紹介を自動表示したら、問い合わせフォームへの到達率が2.5倍に。導入費用はゼロ、月額1,980円で運用中。
+                  AIコンシェルジュを導入したら、営業時間外の問い合わせが月15件に。ガイドメーカーでサービス紹介を自動表示したら、問い合わせフォームへの到達率が2.5倍に。
                 </p>
               </div>
             </div>
@@ -430,15 +438,15 @@ export default function HPActivatePageClient() {
             サイトを作り直さなくても、<br />成果は変えられる。
           </h2>
           <p className="text-lg mb-10 max-w-xl mx-auto leading-relaxed text-emerald-100">
-            コード1行で、あなたのHPが24時間働く営業マンに。<br />
-            まずは無料で、効果を実感してください。
+            コード1行で、御社のHPが24時間働く営業マンに。<br />
+            まずはお気軽にご相談ください。
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
-            <AuthCTAButton className="bg-white text-lg font-bold py-4 px-12 rounded-full shadow-2xl transition transform hover:-translate-y-1 inline-flex items-center gap-2 text-emerald-600">
-              <Sparkles size={20} />無料で導入する
-            </AuthCTAButton>
+            <a href="/contact" className="bg-white text-lg font-bold py-4 px-12 rounded-full shadow-2xl transition transform hover:-translate-y-1 inline-flex items-center gap-2 text-emerald-600">
+              <MessageCircle size={20} />導入のご相談・お問い合わせ
+            </a>
           </div>
-          <p className="text-sm text-emerald-200">※ クレジットカード不要 / 既存サイトへの影響ゼロ / いつでも解除可能</p>
+          <p className="text-sm text-emerald-200">※ 御社のHPに合わせた個別カスタマイズ / 既存サイトへの影響ゼロ</p>
         </div>
       </section>
 

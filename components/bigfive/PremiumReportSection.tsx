@@ -10,6 +10,7 @@ interface PremiumReportSectionProps {
   existingReportHtml?: string | null;
   onPurchaseStart?: () => void;
   testType?: 'simple' | 'full' | 'detailed';
+  isAdmin?: boolean;
 }
 
 const PRICE_MAP: Record<string, { price: number; label: string }> = {
@@ -55,6 +56,7 @@ export default function PremiumReportSection({
   existingReportHtml,
   onPurchaseStart,
   testType = 'simple',
+  isAdmin = false,
 }: PremiumReportSectionProps) {
   const priceInfo = PRICE_MAP[testType] || PRICE_MAP.simple;
   const [reportHtml, setReportHtml] = useState<string | null>(existingReportHtml || null);
@@ -184,8 +186,8 @@ export default function PremiumReportSection({
     }
   }, [resultId]);
 
-  // === 未購入: 購入CTA ===
-  if (!isPurchased) {
+  // === 未購入: 管理者は直接生成、一般ユーザーは購入CTA ===
+  if (!isPurchased && !isAdmin) {
     return (
       <div className="mt-8">
         <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 rounded-2xl shadow-md overflow-hidden">

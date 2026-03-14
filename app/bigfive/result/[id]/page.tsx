@@ -7,6 +7,7 @@ import BigFiveResultView from '@/components/bigfive/BigFiveResultView';
 import PremiumReportSection from '@/components/bigfive/PremiumReportSection';
 import type { BigFiveResult, TraitResult } from '@/lib/bigfive';
 import { supabase } from '@/lib/supabase';
+import { getAdminEmails } from '@/lib/constants';
 import Footer from '@/components/shared/Footer';
 import MakersPromoBanner from '@/components/shared/MakersPromoBanner';
 import { Loader2, AlertCircle } from 'lucide-react';
@@ -20,11 +21,16 @@ export default function BigFiveResultPage() {
   const [showAuth, setShowAuth] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [isPurchased, setIsPurchased] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [reportHtml, setReportHtml] = useState<string | null>(null);
 
   useEffect(() => {
     supabase?.auth.getUser().then(({ data }) => {
-      if (data?.user) setUser(data.user);
+      if (data?.user) {
+        setUser(data.user);
+        const adminEmails = getAdminEmails();
+        setIsAdmin(adminEmails.some(e => data.user.email?.toLowerCase() === e.toLowerCase()));
+      }
     });
   }, []);
 
@@ -142,6 +148,7 @@ export default function BigFiveResultPage() {
                   isPurchased={isPurchased}
                   existingReportHtml={reportHtml}
                   testType={result.testType}
+                  isAdmin={isAdmin}
                 />
               )}
 

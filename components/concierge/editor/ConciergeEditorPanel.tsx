@@ -59,7 +59,8 @@ export default function ConciergeEditorPanel({ config, onUpdate, onOpenAISetup }
   return (
     <div>
       {/* タブ */}
-      <div className="flex gap-1 mb-6 bg-gray-100 rounded-xl p-1">
+      <div className="sticky top-[121px] z-30 -mx-4 lg:-mx-6 px-4 lg:px-6 pt-2 pb-4 bg-gray-50 mb-4">
+        <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -74,6 +75,7 @@ export default function ConciergeEditorPanel({ config, onUpdate, onOpenAISetup }
             <span className="hidden sm:inline">{label}</span>
           </button>
         ))}
+        </div>
       </div>
 
       {/* 基本設定 */}

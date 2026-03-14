@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { generateAndStorePdf, getSignedPdfUrl } from '@/lib/bigfive/generate-pdf';
+import { getAdminEmails } from '@/lib/constants';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -40,7 +41,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '結果が見つかりません' }, { status: 404 });
     }
 
-    if (!result.pdf_purchased) {
+    const adminEmails = getAdminEmails();
+    const isAdmin = adminEmails.some(e => user.email?.toLowerCase() === e.toLowerCase());
+
+    if (!result.pdf_purchased && !isAdmin) {
       return NextResponse.json({ error: 'プレミアムレポートの購入が必要です' }, { status: 403 });
     }
 
@@ -102,7 +106,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '結果が見つかりません' }, { status: 404 });
     }
 
-    if (!result.pdf_purchased) {
+    const adminEmailsPost = getAdminEmails();
+    const isAdminPost = adminEmailsPost.some(e => user.email?.toLowerCase() === e.toLowerCase());
+
+    if (!result.pdf_purchased && !isAdminPost) {
       return NextResponse.json({ error: 'プレミアムレポートの購入が必要です' }, { status: 403 });
     }
 
