@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import {
   Bot, MessageSquare, Palette, Code2,
-  CheckCircle2, ArrowRight, ChevronRight, Globe, Settings, Zap,
+  CheckCircle2, ChevronRight, Settings, Sparkles,
 } from 'lucide-react';
 import LandingHeader from '@/components/shared/LandingHeader';
 
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: 'コンシェルジュメーカー（AIチャットボット作成）| 集客メーカー',
   description:
     'AIコンシェルジュを簡単作成。あなたのサイトにAIチャットボットを設置して、訪問者の質問に24時間自動応答。カスタマイズ自在で、ブランドに合わせたデザイン・応答内容を設定できます。',
-  keywords: ['AIチャットボット', 'コンシェルジュ', 'チャットボット作成', 'AI接客', '自動応答', 'カスタマーサポート', '無料'],
+  keywords: ['AIチャットボット', 'コンシェルジュ', 'チャットボット作成', 'AI接客', '自動応答', 'カスタマーサポート'],
   openGraph: {
     title: 'コンシェルジュメーカー | 集客メーカー',
     description: 'AIコンシェルジュを簡単作成。サイト訪問者の質問に24時間自動応答。',
@@ -32,7 +32,7 @@ const jsonLd = {
       operatingSystem: 'Web',
       description: 'AIコンシェルジュ作成ツール。サイトにAIチャットボットを設置して訪問者の質問に24時間自動応答。',
       url: 'https://makers.tokyo/concierge',
-      offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY' },
+      offers: { '@type': 'Offer', priceCurrency: 'JPY', availability: 'https://schema.org/InStock' },
       provider: { '@type': 'Organization', name: '集客メーカー', url: 'https://makers.tokyo' },
     },
     {
@@ -41,7 +41,7 @@ const jsonLd = {
         { '@type': 'Question', name: 'コンシェルジュメーカーとは？', acceptedAnswer: { '@type': 'Answer', text: 'AIを活用したチャットボットを作成し、あなたのWebサイトに設置できるツールです。訪問者の質問に24時間自動で応答し、顧客対応の効率化や離脱防止に貢献します。' } },
         { '@type': 'Question', name: 'プログラミング知識は必要ですか？', acceptedAnswer: { '@type': 'Answer', text: 'いいえ。管理画面から名前・挨拶文・応答ルール・デザインを設定するだけで、AIチャットボットが完成します。埋め込みコードをコピーするだけでサイトに設置できます。' } },
         { '@type': 'Question', name: 'どんな質問に答えられますか？', acceptedAnswer: { '@type': 'Answer', text: 'あなたが設定したナレッジ（FAQ・サービス情報など）をもとにAIが自動で回答します。回答内容はいつでも追加・編集可能です。' } },
-        { '@type': 'Question', name: '料金はかかりますか？', acceptedAnswer: { '@type': 'Answer', text: '基本的なコンシェルジュ作成は無料でご利用いただけます。高度なカスタマイズや大量利用にはProプランをご検討ください。' } },
+        { '@type': 'Question', name: '料金はかかりますか？', acceptedAnswer: { '@type': 'Answer', text: 'コンシェルジュメーカーはプレミアムプランでご利用いただける機能です。まずは右下のメイカーくん（AIコンシェルジュ）でAI応答を体験してみてください。' } },
       ],
     },
     {
@@ -78,7 +78,7 @@ const faqs = [
   { q: 'コンシェルジュメーカーとは？', a: 'AIを活用したチャットボットを作成し、あなたのWebサイトに設置できるツールです。訪問者の質問に24時間自動で応答し、顧客対応の効率化や離脱防止に貢献します。' },
   { q: 'プログラミング知識は必要ですか？', a: 'いいえ。管理画面から名前・挨拶文・応答ルール・デザインを設定するだけで、AIチャットボットが完成します。埋め込みコードをコピーするだけでサイトに設置できます。' },
   { q: 'どんな質問に答えられますか？', a: 'あなたが設定したナレッジ（FAQ・サービス情報など）をもとにAIが自動で回答します。回答内容はいつでも追加・編集可能です。' },
-  { q: '料金はかかりますか？', a: '基本的なコンシェルジュ作成は無料でご利用いただけます。高度なカスタマイズや大量利用にはProプランをご検討ください。' },
+  { q: '料金はかかりますか？', a: 'コンシェルジュメーカーはプレミアムプランでご利用いただける機能です。まずはこのページ右下のメイカーくん（AIコンシェルジュ）で、AI自動応答を体験してみてください。' },
   { q: 'どんなサイトに設置できますか？', a: 'HTML・WordPress・Shopify・Wixなど、JavaScriptの埋め込みに対応したあらゆるWebサイトに設置できます。' },
 ];
 
@@ -108,16 +108,29 @@ export default function ConciergeLandingPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/concierge/editor?new" className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
                 <Bot className="w-5 h-5" />
-                無料でコンシェルジュを作る
-              </Link>
-              <Link href="/demos" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-blue-600 font-semibold text-lg rounded-xl border border-blue-200 shadow hover:shadow-md transition-all duration-200 min-h-[44px]">
-                デモを見る <ArrowRight className="w-5 h-5" />
+                コンシェルジュを作成する
               </Link>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8 text-sm text-gray-500">
-              <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-green-500" />無料で作成・設置</span>
               <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-green-500" />プログラミング不要</span>
               <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-green-500" />24時間自動応答</span>
+              <span className="flex items-center gap-1.5"><Sparkles className="w-4 h-4 text-amber-500" />プレミアムプラン機能</span>
+            </div>
+
+            {/* メイカーくん体験案内 */}
+            <div className="mt-10 max-w-md mx-auto bg-white border border-blue-200 rounded-2xl shadow-md p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full flex-shrink-0 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow">
+                  <Bot className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 text-sm">まずはメイカーくんを体験！</p>
+                  <p className="text-xs text-gray-500">右下のチャットアイコンをクリック →</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                このページの右下にある<span className="font-semibold text-blue-600">メイカーくん（AIコンシェルジュ）</span>で、AI自動応答を体験できます。実際にメッセージを送って、コンシェルジュの応答をお試しください。
+              </p>
             </div>
           </div>
         </section>
@@ -163,7 +176,7 @@ export default function ConciergeLandingPage() {
             </div>
             <div className="text-center mt-12">
               <Link href="/concierge/editor?new" className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
-                <Bot className="w-5 h-5" />今すぐ試してみる（無料）
+                <Bot className="w-5 h-5" />今すぐ作成する
               </Link>
             </div>
           </div>
@@ -213,12 +226,12 @@ export default function ConciergeLandingPage() {
         {/* CTA */}
         <section className="max-w-4xl mx-auto px-4 py-20">
           <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-10 sm:p-14 text-center shadow-2xl">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">今すぐAIコンシェルジュを作ろう</h2>
-            <p className="text-blue-100 mb-8 text-lg">無料で作成・設置できます。数分でAI応答が開始されます。</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">AIコンシェルジュを体験してみよう</h2>
+            <p className="text-blue-100 mb-8 text-lg">まずは右下のメイカーくんでAI応答を体験。<br className="hidden sm:block" />プレミアムプランであなた専用のコンシェルジュを作成できます。</p>
             <Link href="/concierge/editor?new" className="inline-flex items-center gap-2 px-10 py-4 bg-white text-blue-700 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 min-h-[44px]">
-              <Bot className="w-5 h-5" />無料でコンシェルジュを作る
+              <Bot className="w-5 h-5" />コンシェルジュを作成する
             </Link>
-            <p className="text-blue-200 text-sm mt-4">クレジットカード不要・すぐに利用開始</p>
+            <p className="text-blue-200 text-sm mt-4">プレミアムプラン限定機能</p>
           </div>
         </section>
       </div>
