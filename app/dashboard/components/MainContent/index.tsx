@@ -70,7 +70,8 @@ export type ActiveView =
   | 'admin-transfer'
   | 'admin-cleanup'
   | 'admin-feedbacks'
-  | 'admin-points';
+  | 'admin-points'
+  | 'admin-diagnosis';
 
 type KdlSubscription = {
   hasActiveSubscription: boolean;
@@ -152,6 +153,7 @@ type MainContentProps = {
     CleanupManager?: () => React.ReactNode;
     FeedbackManager?: () => React.ReactNode;
     PointsManager?: () => React.ReactNode;
+    DiagnosisManager?: () => React.ReactNode;
   };
 };
 
@@ -391,6 +393,10 @@ export default function MainContent({
         <>{adminComponents.PointsManager()}</>
       )}
 
+      {activeView === 'admin-diagnosis' && adminComponents?.DiagnosisManager && (
+        <>{adminComponents.DiagnosisManager()}</>
+      )}
+
       {activeView === 'bigfive' && (
         <BigFiveHistory />
       )}
@@ -400,7 +406,7 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'announcements', 'quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'step-email', 'line', 'youtube-analysis', 'youtube-keyword-research', 'kindle-keywords', 'google-keyword-research', 'rakuten-research', 'niconico-keyword-research', 'reddit-keyword-research', 'order-form', 'funnel', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks', 'admin-points', 'bigfive', 'fortune', 'site'].includes(activeView) && (
+      {!['dashboard', 'announcements', 'quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'step-email', 'line', 'youtube-analysis', 'youtube-keyword-research', 'kindle-keywords', 'google-keyword-research', 'rakuten-research', 'niconico-keyword-research', 'reddit-keyword-research', 'order-form', 'funnel', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks', 'admin-points', 'admin-diagnosis', 'bigfive', 'fortune', 'site'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>

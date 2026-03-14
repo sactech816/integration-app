@@ -30,19 +30,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'IDが必要です' }, { status: 400 });
     }
 
-    const { data: result } = await supabase
+    const adminEmails = getAdminEmails();
+    const isAdmin = adminEmails.some(e => user.email?.toLowerCase() === e.toLowerCase());
+
+    let queryGet = supabase
       .from('fortune_results')
-      .select('id, report_purchased, pdf_storage_path, report_content')
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .single();
+      .select('id, user_id, report_purchased, pdf_storage_path, report_content')
+      .eq('id', id);
+    if (!isAdmin) {
+      queryGet = queryGet.eq('user_id', user.id);
+    }
+    const { data: result } = await queryGet.single();
 
     if (!result) {
       return NextResponse.json({ error: '結果が見つかりません' }, { status: 404 });
     }
-
-    const adminEmails = getAdminEmails();
-    const isAdmin = adminEmails.some(e => user.email?.toLowerCase() === e.toLowerCase());
 
     if (!result.report_purchased && !isAdmin) {
       return NextResponse.json({ error: 'プレミアムレポートの購入が必要です' }, { status: 403 });
@@ -52,7 +54,8 @@ export async function GET(request: NextRequest) {
       if (!result.report_content) {
         return NextResponse.json({ error: 'レポートがまだ生成されていません。先にレポートを生成してください。' }, { status: 400 });
       }
-      const { storagePath, error: genError } = await generateAndStorePdf(user.id, id, result.report_content);
+      const getTargetUserId = (result as any).user_id || user.id;
+      const { storagePath, error: genError } = await generateAndStorePdf(getTargetUserId, id, result.report_content);
       if (genError) {
         return NextResponse.json({ error: genError }, { status: 500 });
       }
@@ -92,19 +95,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '鑑定結果IDが必要です' }, { status: 400 });
     }
 
-    const { data: result } = await supabase
+    const adminEmailsPost = getAdminEmails();
+    const isAdminPost = adminEmailsPost.some(e => user.email?.toLowerCase() === e.toLowerCase());
+
+    let queryPost = supabase
       .from('fortune_results')
-      .select('id, report_purchased, pdf_storage_path, report_content, birth_year, birth_month, birth_day')
-      .eq('id', resultId)
-      .eq('user_id', user.id)
-      .single();
+      .select('id, user_id, report_purchased, pdf_storage_path, report_content, birth_year, birth_month, birth_day')
+      .eq('id', resultId);
+    if (!isAdminPost) {
+      queryPost = queryPost.eq('user_id', user.id);
+    }
+    const { data: result } = await queryPost.single();
 
     if (!result) {
       return NextResponse.json({ error: '結果が見つかりません' }, { status: 404 });
     }
-
-    const adminEmailsPost = getAdminEmails();
-    const isAdminPost = adminEmailsPost.some(e => user.email?.toLowerCase() === e.toLowerCase());
 
     if (!result.report_purchased && !isAdminPost) {
       return NextResponse.json({ error: 'プレミアムレポートの購入が必要です' }, { status: 403 });
@@ -122,8 +127,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ url, cached: true });
     }
 
+    const postTargetUserId = (result as any).user_id || user.id;
     const { storagePath, error: genError } = await generateAndStorePdf(
-      user.id,
+      postTargetUserId,
       resultId,
       result.report_content
     );

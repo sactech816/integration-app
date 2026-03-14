@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { createClient } from '@supabase/supabase-js';
 import { createAIProvider } from '@/lib/ai-provider';
 import { getAdminEmails } from '@/lib/constants';
 import { logAIUsage } from '@/lib/ai-usage';
@@ -83,20 +84,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '診断結果IDが必要です' }, { status: 400 });
     }
 
-    // 結果取得 + 購入チェック
-    const { data: row, error } = await supabase
+    const adminEmails = getAdminEmails();
+    const isAdmin = adminEmails.some(e => user.email?.toLowerCase() === e.toLowerCase());
+
+    // 結果取得（管理者はuser_idフィルタなし）
+    let query = supabase
       .from('bigfive_results')
       .select('*')
-      .eq('id', resultId)
-      .eq('user_id', user.id)
-      .single();
+      .eq('id', resultId);
+
+    if (!isAdmin) {
+      query = query.eq('user_id', user.id);
+    }
+
+    const { data: row, error } = await query.single();
 
     if (error || !row) {
       return NextResponse.json({ error: '診断結果が見つかりません' }, { status: 404 });
     }
-
-    const adminEmails = getAdminEmails();
-    const isAdmin = adminEmails.some(e => user.email?.toLowerCase() === e.toLowerCase());
 
     if (!row.pdf_purchased && !isAdmin) {
       return NextResponse.json({ error: 'プレミアムレポートの購入が必要です' }, { status: 403 });
@@ -131,8 +136,12 @@ export async function POST(request: NextRequest) {
 
     const reportHtml = aiResponse.content;
 
-    // DB保存
-    await supabase
+    // DB保存（管理者は他ユーザーの結果を更新する場合があるため、対象user_idで保存）
+    const targetUserId = row.user_id;
+    const dbClient = isAdmin && targetUserId !== user.id
+      ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+      : supabase;
+    await dbClient
       .from('bigfive_results')
       .update({
         report_content: reportHtml,
@@ -140,7 +149,7 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .eq('id', resultId)
-      .eq('user_id', user.id);
+      .eq('user_id', targetUserId);
 
     // AI使用量ログ
     await logAIUsage({

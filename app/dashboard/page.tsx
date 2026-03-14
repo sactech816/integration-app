@@ -21,6 +21,7 @@ import FeaturedManager from './components/Admin/FeaturedManager';
 import GamificationManager from './components/Admin/GamificationManager';
 import FeedbackManager from './components/Admin/FeedbackManager';
 import PointsManager from './components/Admin/PointsManager';
+import DiagnosisManager from './components/Admin/DiagnosisManager';
 import AccountSettings from './components/Settings/AccountSettings';
 import { Loader2 } from 'lucide-react';
 import PointPurchaseModal from '@/components/points/PointPurchaseModal';
@@ -513,6 +514,7 @@ function DashboardContent() {
         CleanupManager: () => <CleanupManager userId={user?.id} />,
         FeedbackManager: () => <FeedbackManager />,
         PointsManager: () => <PointsManager />,
+        DiagnosisManager: () => <DiagnosisManager />,
       }
     : undefined;
 

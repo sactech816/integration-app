@@ -25,6 +25,7 @@ import {
   Coins,
   Bot,
   BarChart3,
+  Brain,
 } from 'lucide-react';
 import { TOOL_ITEMS, TOOL_CATEGORIES } from './menuItems';
 
@@ -225,6 +226,7 @@ export default function SidebarNav({
         { id: 'admin-announcements', label: 'お知らせ管理', icon: Bell, section: 'admin', adminOnly: true },
         { id: 'admin-featured', label: 'ピックアップ管理', icon: Star, section: 'admin', adminOnly: true },
         { id: 'admin-gamification', label: 'ゲーミフィケーション', icon: Gamepad2, section: 'admin', adminOnly: true },
+        { id: 'admin-diagnosis', label: '診断結果管理', icon: Brain, section: 'admin', adminOnly: true },
       ],
     },
     {
