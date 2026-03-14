@@ -93,7 +93,7 @@ export default function FeedbackModal({ isOpen, onClose, user, onLoginRequest }:
           >
             <MessageSquareHeart size={32} className="text-white" />
           </div>
-          <h3 className="text-xl font-bold" style={{ color: '#1f2937' }}>ご意見箱</h3>
+          <h3 className="text-xl font-bold" style={{ color: '#1f2937' }}>リクエスト</h3>
           <p className="text-sm text-gray-500 mt-1">あなたの声が、次のアップデートにつながります</p>
         </div>
 

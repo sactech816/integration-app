@@ -96,7 +96,7 @@ export default function FeedbackManager() {
       {/* ヘッダー */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-black border-l-4 border-red-600 pl-4 flex items-center gap-2">
-          <MessageSquareHeart size={20} className="text-red-600" /> ご意見箱
+          <MessageSquareHeart size={20} className="text-red-600" /> リクエスト
           <span className="text-xs bg-red-500 text-white px-2 py-1 rounded-full">ADMIN</span>
         </h2>
         <button

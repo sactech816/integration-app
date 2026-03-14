@@ -245,7 +245,7 @@ export default function SidebarNav({
       icon: DollarSign,
       items: [
         { id: 'admin-affiliate', label: 'アフィリエイト管理', icon: Share2, section: 'admin', adminOnly: true },
-        { id: 'admin-feedbacks', label: 'ご意見箱', icon: MessageSquareHeart, section: 'admin', adminOnly: true },
+        { id: 'admin-feedbacks', label: 'リクエスト', icon: MessageSquareHeart, section: 'admin', adminOnly: true },
       ],
     },
     {

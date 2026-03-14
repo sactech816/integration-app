@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
         avatar_style: body.avatar_style || { type: 'default', primaryColor: '#3B82F6' },
         design: body.design || { position: 'bottom-right', bubbleSize: 56, headerColor: '#3B82F6', fontFamily: 'system' },
         settings: body.settings || { dailyLimit: 50, maxTokens: 512, model: 'claude-haiku-4-5-20251001' },
+        is_published: true,
         slug,
       })
       .select()

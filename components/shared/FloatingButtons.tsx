@@ -61,15 +61,15 @@ export default function FloatingButtons({ conciergeOpen = false }: FloatingButto
       {/* フローティングボタン群（モバイルでは非表示） */}
       {showScrollTop && (
         <div className="fixed bottom-6 right-6 z-50 hidden lg:flex items-center gap-3">
-          {/* ご意見箱ボタン（アイコン＋テキスト） */}
+          {/* リクエストボタン（アイコン＋テキスト） */}
           <button
             onClick={() => user ? setShowFeedback(true) : setShowAuth(true)}
             className="h-12 px-4 text-white rounded-full shadow-lg flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105"
             style={{ background: 'linear-gradient(135deg, #818cf8, #6366f1)' }}
-            aria-label="ご意見箱"
+            aria-label="リクエスト"
           >
             <MessageSquareHeart size={20} />
-            <span className="text-sm font-bold whitespace-nowrap">ご意見箱</span>
+            <span className="text-sm font-bold whitespace-nowrap">リクエスト</span>
           </button>
 
           {/* トップに戻るボタン */}
@@ -84,7 +84,7 @@ export default function FloatingButtons({ conciergeOpen = false }: FloatingButto
         </div>
       )}
 
-      {/* ご意見箱モーダル */}
+      {/* リクエストモーダル */}
       <FeedbackModal
         isOpen={showFeedback}
         onClose={() => setShowFeedback(false)}
@@ -92,7 +92,7 @@ export default function FloatingButtons({ conciergeOpen = false }: FloatingButto
         onLoginRequest={() => { setShowFeedback(false); setShowAuth(true); }}
       />
 
-      {/* ログインモーダル（未ログイン時のご意見箱用） */}
+      {/* ログインモーダル（未ログイン時のリクエスト用） */}
       <AuthModal
         isOpen={showAuth}
         onClose={() => setShowAuth(false)}

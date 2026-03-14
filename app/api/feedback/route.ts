@@ -75,16 +75,16 @@ export async function POST(request: Request) {
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
         to: 'info@sac-office.net',
-        subject: `【ご意見箱】${starDisplay}（${userEmail}）`,
+        subject: `【リクエスト】${starDisplay}（${userEmail}）`,
         html: `
-          <h2>ご意見箱に投稿がありました</h2>
+          <h2>リクエストが届きました</h2>
           <hr />
           <p><strong>評価:</strong> ${starDisplay} (${rating}/5)</p>
           <p><strong>送信者:</strong> ${escapedEmail}</p>
           ${escapedMessage ? `<p><strong>内容:</strong></p><p style="white-space: pre-wrap; background: #f5f5f5; padding: 12px; border-radius: 8px;">${escapedMessage}</p>` : '<p><em>コメントなし</em></p>'}
           ${escapedToolUrls ? `<p><strong>関連ツールURL:</strong></p><p style="white-space: pre-wrap;">${escapedToolUrls}</p>` : ''}
           <hr />
-          <p style="color: #999; font-size: 12px;">集客メーカー ご意見箱</p>
+          <p style="color: #999; font-size: 12px;">集客メーカー リクエスト</p>
         `,
       });
     } catch (emailError) {

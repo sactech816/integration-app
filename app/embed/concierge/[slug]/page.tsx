@@ -14,7 +14,6 @@ export default async function EmbedConciergePage({ params }: { params: Promise<{
     .from('concierge_configs')
     .select('*')
     .eq('slug', slug)
-    .eq('is_published', true)
     .single();
 
   if (error || !data) {

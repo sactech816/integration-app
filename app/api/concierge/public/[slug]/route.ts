@@ -21,7 +21,6 @@ export async function GET(
       .from('concierge_configs')
       .select('name, greeting, avatar_style, design, slug')
       .eq('slug', slug)
-      .eq('is_published', true)
       .single();
 
     if (error || !data) {
