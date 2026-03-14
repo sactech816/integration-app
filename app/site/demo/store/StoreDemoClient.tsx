@@ -21,6 +21,8 @@ const demoPages: SitePage[] = [
           subheadline: 'Specialty Coffee & Artisan Bakery — 毎朝届く、焙煎したての一杯',
           buttonText: '席を予約する',
           buttonUrl: '#contact',
+          backgroundImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1920&q=80',
+          backgroundOpacity: 35,
         },
       },
       {
@@ -43,9 +45,16 @@ const demoPages: SitePage[] = [
         },
       },
       {
-        id: generateBlockId(), type: 'youtube',
+        id: generateBlockId(), type: 'gallery',
         data: {
-          url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk',
+          items: [
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80', caption: 'ハンドドリップコーヒー' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=80', caption: 'ラテアート' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1555507036-ab1f4038024a?auto=format&fit=crop&w=800&q=80', caption: '焙煎豆' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=800&q=80', caption: '店内の雰囲気' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?auto=format&fit=crop&w=800&q=80', caption: 'クロワッサン' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=800&q=80', caption: 'カフェの朝' },
+          ],
         },
       },
       {
@@ -55,7 +64,17 @@ const demoPages: SitePage[] = [
           items: [
             { name: 'M.S. 様', role: 'IT企業勤務', comment: '毎朝出勤前に立ち寄っています。エチオピアのナチュラルが絶品で、クロワッサンとのペアリングが最高です。六本木で一番好きなカフェ。', image: '' },
             { name: 'K.T. 様', role: 'デザイナー', comment: '焙煎したての豆の香りに包まれる空間が素晴らしい。リモートワークにも最適な落ち着いた雰囲気で、週3回は通っています。', image: '' },
+            { name: 'Y.N. 様', role: 'フリーランスライター', comment: 'コーヒーの味はもちろん、焼きたてのカンパーニュが絶品。仕事の合間に訪れるのが日課になりました。バリスタの丁寧な接客にも癒されます。', image: '' },
           ],
+        },
+      },
+      {
+        id: generateBlockId(), type: 'cta_section',
+        data: {
+          title: '特別な一杯を、あなたに',
+          description: '焙煎したてのコーヒーとアルチザンベーカリーを、六本木でお楽しみください。ご予約・お取り置きもオンラインで承っています。',
+          buttonText: '予約する',
+          buttonUrl: '#contact',
         },
       },
     ] as unknown as any[],
@@ -72,11 +91,12 @@ const demoPages: SitePage[] = [
     sort_order: 1,
     content: [
       {
-        id: generateBlockId(), type: 'text_card',
+        id: generateBlockId(), type: 'hero',
         data: {
-          title: 'Menu',
-          text: '厳選素材で仕上げるドリンクとフードのラインナップ。\n季節ごとに変わるスペシャルティも、ぜひお楽しみください。',
-          align: 'center',
+          headline: 'Menu',
+          subheadline: '厳選素材で仕上げるドリンクとフードのラインナップ',
+          backgroundImage: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=1920&q=80',
+          backgroundOpacity: 30,
         },
       },
       {
@@ -148,7 +168,7 @@ const demoPages: SitePage[] = [
         id: generateBlockId(), type: 'text_card',
         data: {
           title: 'Access',
-          text: '〒106-6108 東京都港区六本木6丁目10-1 六本木ヒルズ ウェストウォーク 1F\n\n営業時間：7:00〜20:00（L.O. 19:30）\n定休日：不定休\nTEL：03-6434-XXXX\n\n東京メトロ 日比谷線「六本木」駅 1C出口 徒歩3分\n都営大江戸線「六本木」駅 3番出口 徒歩6分\n都営大江戸線「麻布十番」駅 7番出口 徒歩8分',
+          text: '〒106-6108 東京都港区六本木6丁目10-1 六本木ヒルズ ウェストウォーク 1F\n\n営業時間：7:00〜20:00（L.O. 19:30）\n定休日：不定休\nTEL：03-6434-7890\n\n東京メトロ 日比谷線「六本木」駅 1C出口 徒歩3分\n都営大江戸線「六本木」駅 3番出口 徒歩6分\n都営大江戸線「麻布十番」駅 7番出口 徒歩8分',
           align: 'left',
         },
       },
@@ -158,6 +178,16 @@ const demoPages: SitePage[] = [
           title: '六本木ヒルズ ウェストウォーク',
           address: '東京都港区六本木6丁目10-1 六本木ヒルズ',
           embedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3241.748!2d139.72679!3d35.66047!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188b771049dc33%3A0x4e27aa62cbe24495!2z5YWt5pys5pyo44OS44Or44K6!5e0!3m2!1sja!2sjp!4v1',
+        },
+      },
+      {
+        id: generateBlockId(), type: 'gallery',
+        data: {
+          items: [
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1453614512568-c4024d13c247?auto=format&fit=crop&w=800&q=80', caption: '外観' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1559305616-3f99cd43e353?auto=format&fit=crop&w=800&q=80', caption: 'テラス席' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80', caption: '店内' },
+          ],
         },
       },
     ] as unknown as any[],
@@ -199,7 +229,7 @@ const demoSite: Site = {
   description: 'Specialty Coffee & Artisan Bakery',
   logo_url: '',
   settings: {
-    theme: { primaryColor: '#1a1a1a' },
+    theme: { primaryColor: '#292524' },
   },
   status: 'published',
   pages: demoPages,
@@ -212,7 +242,7 @@ export default function StoreDemoClient() {
 
   return (
     <div>
-      <div className="bg-neutral-900 text-white text-center py-2.5 text-sm font-medium tracking-wide">
+      <div className="bg-stone-900 text-white text-center py-2.5 text-sm font-medium tracking-wide">
         DEMO — ページメニューをクリックして各ページをご覧ください
       </div>
       <SiteViewer site={{ ...demoSite, pages: demoPages }} currentPage={currentPage} />
@@ -223,7 +253,7 @@ export default function StoreDemoClient() {
             onClick={() => setCurrentPage(p)}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
               currentPage.id === p.id
-                ? 'bg-neutral-900 text-white shadow-md'
+                ? 'bg-stone-900 text-white shadow-md'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
           >

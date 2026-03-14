@@ -21,6 +21,8 @@ const demoPages: SitePage[] = [
           subheadline: 'Digital Product Design — ビジネスを加速させるデザインを',
           buttonText: 'プロジェクトを相談する',
           buttonUrl: '#contact',
+          backgroundImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1920&q=80',
+          backgroundOpacity: 28,
         },
       },
       {
@@ -43,19 +45,23 @@ const demoPages: SitePage[] = [
         },
       },
       {
-        id: generateBlockId(), type: 'youtube',
-        data: {
-          url: 'https://www.youtube.com/watch?v=60ItHLz5WEA',
-        },
-      },
-      {
         id: generateBlockId(), type: 'testimonial',
         data: {
           title: 'Client Voice',
           items: [
             { name: '株式会社 Alpha', role: 'SaaS スタートアップ / シリーズA', comment: 'プロダクトのUI全面リニューアルを依頼。ユーザビリティテストに基づいた改善で、オンボーディング完了率が40%から78%に大幅改善しました。', image: '' },
             { name: '株式会社 Bridge', role: 'D2Cブランド / EC月商3,000万', comment: 'ブランドサイトとECのリデザインを依頼。世界観の統一とUX改善により、CVRが1.8%から3.2%に向上。デザインの力を実感しました。', image: '' },
+            { name: '株式会社 Canvas', role: '教育テック / 月間10万ユーザー', comment: '学習プラットフォームのUX改善をお願いしました。継続率が2.3倍に向上し、App Store評価も3.8から4.7に改善。ユーザー目線の設計力が本当に素晴らしいです。', image: '' },
           ],
+        },
+      },
+      {
+        id: generateBlockId(), type: 'cta_section',
+        data: {
+          title: 'デザインの力で、ビジネスを次のステージへ',
+          description: 'プロジェクトのご相談から、お気軽にお問い合わせください。通常1営業日以内にご返信いたします。',
+          buttonText: 'プロジェクトを相談する',
+          buttonUrl: '#contact',
         },
       },
     ] as unknown as any[],
@@ -72,11 +78,12 @@ const demoPages: SitePage[] = [
     sort_order: 1,
     content: [
       {
-        id: generateBlockId(), type: 'text_card',
+        id: generateBlockId(), type: 'hero',
         data: {
-          title: 'Selected Works',
-          text: 'これまでに手がけたプロジェクトの一部をご紹介します。\n守秘義務のため、一部の情報は非公開とさせていただいています。',
-          align: 'center',
+          headline: 'Selected Works',
+          subheadline: 'これまでに手がけたプロジェクトの一部をご紹介します',
+          backgroundImage: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=1920&q=80',
+          backgroundOpacity: 25,
         },
       },
       {
@@ -93,7 +100,16 @@ const demoPages: SitePage[] = [
       },
       {
         id: generateBlockId(), type: 'gallery',
-        data: { items: [] },
+        data: {
+          items: [
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80', caption: 'ダッシュボードUI' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1517292987719-0369a794ec0f?auto=format&fit=crop&w=800&q=80', caption: 'モバイルアプリ' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1559028012-481c04fa702d?auto=format&fit=crop&w=800&q=80', caption: 'ブランドデザイン' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?auto=format&fit=crop&w=800&q=80', caption: 'Webデザイン' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&w=800&q=80', caption: 'プロトタイプ' },
+            { id: generateBlockId(), url: 'https://images.unsplash.com/photo-1586717799252-bd134571d0f5?auto=format&fit=crop&w=800&q=80', caption: 'デザインシステム' },
+          ],
+        },
       },
     ] as unknown as any[],
     created_at: new Date().toISOString(),
@@ -190,8 +206,16 @@ const demoPages: SitePage[] = [
         id: generateBlockId(), type: 'text_card',
         data: {
           title: 'Get in Touch',
-          text: 'プロジェクトのご相談、お見積り依頼、その他お問い合わせはこちらから。\n通常1営業日以内にご返信いたします。',
+          text: 'プロジェクトのご相談、お見積り依頼、その他お問い合わせはこちらから。\n通常1営業日以内にご返信いたします。\n\n所在地：東京都渋谷区神宮前6-35-3 コープオリンピア 6F\nE-mail：hello@satodesign.jp',
           align: 'center',
+        },
+      },
+      {
+        id: generateBlockId(), type: 'google_map',
+        data: {
+          title: 'Studio Location',
+          address: '東京都渋谷区神宮前6-35-3',
+          embedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3241.2!2d139.7050!3d35.6650!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188ca44c45e9b3%3A0x8a837e1c4c23a3e0!2z6KGo5Y-C6YGT44OS44Or44K6!5e0!3m2!1sja!2sjp!4v1',
         },
       },
       {

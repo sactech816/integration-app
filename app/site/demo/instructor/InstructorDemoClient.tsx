@@ -21,6 +21,8 @@ const demoPages: SitePage[] = [
           subheadline: 'Business Strategist & Executive Advisor — 経営の「次の一手」を共に描く',
           buttonText: '無料相談を予約する',
           buttonUrl: '#contact',
+          backgroundImage: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80',
+          backgroundOpacity: 30,
         },
       },
       {
@@ -29,12 +31,6 @@ const demoPages: SitePage[] = [
           title: 'About',
           text: 'マッキンゼー・アンド・カンパニーで15年間、国内外の経営戦略プロジェクトに従事。Fortune 500企業から中小企業まで、累計200社以上の経営課題を解決してきました。2020年に独立し、「分析だけで終わらない、実行まで伴走するアドバイザリー」をモットーに活動しています。\n\n専門領域は事業戦略・組織変革・DX推進。経営者の意思決定を加速させるパートナーとして、データに基づいた実践的な提案をお届けします。',
           align: 'left',
-        },
-      },
-      {
-        id: generateBlockId(), type: 'youtube',
-        data: {
-          url: 'https://www.youtube.com/watch?v=RgKAFK5djSk',
         },
       },
       {
@@ -59,6 +55,15 @@ const demoPages: SitePage[] = [
           ],
         },
       },
+      {
+        id: generateBlockId(), type: 'cta_section',
+        data: {
+          title: '経営の「次の一手」を、一緒に見つけませんか？',
+          description: '初回30分の無料相談で、御社の課題を整理します。戦略コンサルタントならではの視点で、実行可能な打ち手をご提案します。',
+          buttonText: '無料相談を予約する',
+          buttonUrl: '#contact',
+        },
+      },
     ] as unknown as any[],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -73,11 +78,12 @@ const demoPages: SitePage[] = [
     sort_order: 1,
     content: [
       {
-        id: generateBlockId(), type: 'text_card',
+        id: generateBlockId(), type: 'hero',
         data: {
-          title: 'Service',
-          text: '経営課題のフェーズや規模に応じた3つのプランをご用意しています。\nすべてのプランで初回30分の無料ヒアリングを実施します。',
-          align: 'center',
+          headline: 'Service',
+          subheadline: '経営課題のフェーズや規模に応じた3つのプランをご用意',
+          backgroundImage: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1920&q=80',
+          backgroundOpacity: 25,
         },
       },
       {
@@ -175,8 +181,16 @@ const demoPages: SitePage[] = [
         id: generateBlockId(), type: 'text_card',
         data: {
           title: 'Free Consultation',
-          text: '初回30分の無料相談を実施しています。\n経営課題の整理からお手伝いしますので、まずはお気軽にご連絡ください。\n\nオンライン（Zoom）・対面（六本木オフィス）いずれも対応可能です。',
+          text: '初回30分の無料相談を実施しています。\n経営課題の整理からお手伝いしますので、まずはお気軽にご連絡ください。\n\nオンライン（Zoom）・対面（六本木オフィス）いずれも対応可能です。\n\n所在地：東京都港区六本木1-6-1 泉ガーデンタワー 38F',
           align: 'center',
+        },
+      },
+      {
+        id: generateBlockId(), type: 'google_map',
+        data: {
+          title: '泉ガーデンタワー',
+          address: '東京都港区六本木1-6-1 泉ガーデンタワー',
+          embedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3241.5!2d139.7383!3d35.6647!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188b9b13e6b535%3A0x2e8e7d43c839e460!2z5rOJ44Ks44O844OH44Oz44K_44Ov44O8!5e0!3m2!1sja!2sjp!4v1',
         },
       },
       {
@@ -197,7 +211,7 @@ const demoSite: Site = {
   description: 'Business Strategist & Executive Advisor',
   logo_url: '',
   settings: {
-    theme: { primaryColor: '#18181b' },
+    theme: { primaryColor: '#1e293b' },
   },
   status: 'published',
   pages: demoPages,
@@ -210,7 +224,7 @@ export default function InstructorDemoClient() {
 
   return (
     <div>
-      <div className="bg-zinc-900 text-white text-center py-2.5 text-sm font-medium tracking-wide">
+      <div className="bg-slate-900 text-white text-center py-2.5 text-sm font-medium tracking-wide">
         DEMO — ページメニューをクリックして各ページをご覧ください
       </div>
       <SiteViewer site={{ ...demoSite, pages: demoPages }} currentPage={currentPage} />
@@ -221,7 +235,7 @@ export default function InstructorDemoClient() {
             onClick={() => setCurrentPage(p)}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
               currentPage.id === p.id
-                ? 'bg-zinc-900 text-white shadow-md'
+                ? 'bg-slate-900 text-white shadow-md'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
