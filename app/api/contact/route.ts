@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { createClient } from '@supabase/supabase-js';
 import { escapeHtml, isValidEmail, truncate, containsSuspiciousPattern } from '@/lib/security/sanitize';
 import { rateLimit, createRateLimitResponse } from '@/lib/security/rate-limit';
 
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
       return createRateLimitResponse(rateLimitResult.resetIn);
     }
 
-    const { name, email, subject, message } = await request.json();
+    const { name, email, subject, message, sourcePage } = await request.json();
 
     // バリデーション
     if (!name || !email || !subject || !message) {
@@ -54,6 +55,25 @@ export async function POST(request: Request) {
         <p style="white-space: pre-wrap;">${escapedMessage}</p>
       `,
     });
+
+    // DBに保存
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (supabaseUrl && serviceKey) {
+        const supabase = createClient(supabaseUrl, serviceKey);
+        await supabase.from('contact_inquiries').insert({
+          source: 'contact',
+          source_page: sourcePage || '/contact',
+          name: safeName,
+          email,
+          subject: safeSubject,
+          message: safeMessage,
+        });
+      }
+    } catch (dbError) {
+      console.warn('[Contact API] DB save failed:', dbError);
+    }
 
     return NextResponse.json(data);
   } catch (error) {

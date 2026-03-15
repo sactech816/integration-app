@@ -22,6 +22,7 @@ import GamificationManager from './components/Admin/GamificationManager';
 import FeedbackManager from './components/Admin/FeedbackManager';
 import PointsManager from './components/Admin/PointsManager';
 import DiagnosisManager from './components/Admin/DiagnosisManager';
+import InquiryManager from './components/Admin/InquiryManager';
 import AccountSettings from './components/Settings/AccountSettings';
 import { Loader2 } from 'lucide-react';
 import PointPurchaseModal from '@/components/points/PointPurchaseModal';
@@ -505,6 +506,7 @@ function DashboardContent() {
         FeedbackManager: () => <FeedbackManager />,
         PointsManager: () => <PointsManager />,
         DiagnosisManager: () => <DiagnosisManager />,
+        InquiryManager: () => <InquiryManager />,
       }
     : undefined;
 

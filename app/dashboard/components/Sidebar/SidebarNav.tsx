@@ -26,6 +26,7 @@ import {
   Bot,
   BarChart3,
   Brain,
+  Mail,
 } from 'lucide-react';
 import { TOOL_ITEMS, TOOL_CATEGORIES } from './menuItems';
 
@@ -246,6 +247,7 @@ export default function SidebarNav({
       items: [
         { id: 'admin-affiliate', label: 'アフィリエイト管理', icon: Share2, section: 'admin', adminOnly: true },
         { id: 'admin-feedbacks', label: 'リクエスト', icon: MessageSquareHeart, section: 'admin', adminOnly: true },
+        { id: 'admin-inquiries', label: 'お問い合わせ', icon: Mail, section: 'admin', adminOnly: true },
       ],
     },
     {

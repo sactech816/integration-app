@@ -28,6 +28,7 @@ import {
   BookOpen,
   PartyPopper,
   Video,
+  Globe,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -76,6 +77,7 @@ const TABS: { type: ServiceType | 'all'; label: string; icon: React.ComponentTyp
   { type: 'onboarding', label: 'ガイドメーカー', icon: BookOpen },
   { type: 'entertainment_quiz', label: 'エンタメ診断', icon: PartyPopper },
   { type: 'webinar', label: 'ウェビナーLP', icon: Video },
+  { type: 'site', label: 'ホームページ', icon: Globe },
 ];
 
 // サービスカラー取得
@@ -144,6 +146,13 @@ const getServiceColor = (type: string) => {
       gradient: 'from-sky-500 via-blue-500 to-indigo-500',
       hoverText: 'group-hover:text-sky-600'
     },
+    site: {
+      bg: 'bg-cyan-50',
+      text: 'text-cyan-600',
+      border: 'border-cyan-200',
+      gradient: 'from-cyan-500 via-teal-500 to-emerald-500',
+      hoverText: 'group-hover:text-cyan-600'
+    },
   };
   return colors[type] || colors.quiz;
 };
@@ -160,6 +169,7 @@ const getServiceIcon = (type: string) => {
     onboarding: BookOpen,
     entertainment_quiz: PartyPopper,
     webinar: Video,
+    site: Globe,
   };
   return icons[type] || Sparkles;
 };
@@ -540,6 +550,30 @@ function PortalPageContent() {
             imageUrl: undefined,
             created_at: w.created_at,
             type: 'webinar' as ServiceType,
+            views_count: 0
+          })));
+        }
+      }
+
+      // ホームページメーカー取得（publishedかつsettings.showInPortalがtrueのもの）
+      if (selectedTab === 'all' || selectedTab === 'site') {
+        const { data: sites } = await supabase
+          .from(TABLES.SITES)
+          .select('id, slug, title, description, logo_url, settings, created_at')
+          .eq('status', 'published')
+          .order('created_at', { ascending: false })
+          .range(offset, offset + ITEMS_PER_PAGE - 1);
+
+        if (sites) {
+          const filteredSites = sites.filter(s => s.settings?.showInPortal === true);
+          allItems.push(...filteredSites.map((s) => ({
+            id: s.id,
+            slug: s.slug,
+            title: s.title || 'ホームページ',
+            description: s.description || '',
+            imageUrl: s.logo_url || undefined,
+            created_at: s.created_at,
+            type: 'site' as ServiceType,
             views_count: 0
           })));
         }

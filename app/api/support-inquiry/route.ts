@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       return createRateLimitResponse(rateLimitResult.resetIn);
     }
 
-    const { name, email, pack, situation, message } = await request.json();
+    const { name, email, pack, situation, message, sourcePage } = await request.json();
 
     // バリデーション
     if (!name || !email) {
@@ -117,6 +117,27 @@ export async function POST(request: Request) {
     } catch (autoReplyError) {
       // 自動返信失敗は管理者通知の成功を妨げない
       console.warn('[Support Inquiry API] Auto-reply failed:', autoReplyError);
+    }
+
+    // DBに保存
+    try {
+      const supabaseUrl2 = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const serviceKey2 = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (supabaseUrl2 && serviceKey2) {
+        const supabaseDb = createClient(supabaseUrl2, serviceKey2);
+        await supabaseDb.from('contact_inquiries').insert({
+          source: 'support',
+          source_page: sourcePage || '/support',
+          name: safeName,
+          email,
+          pack: safePack || null,
+          pack_name: packName,
+          situation: safeSituation || null,
+          message: safeMessage || null,
+        });
+      }
+    } catch (dbError) {
+      console.warn('[Support Inquiry API] DB save failed:', dbError);
     }
 
     // メルマガリストに購読者として追加
