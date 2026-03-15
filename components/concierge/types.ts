@@ -1,5 +1,41 @@
 export type AvatarState = 'idle' | 'thinking' | 'talking';
 
+// アバタータイプ
+export type AvatarType = 'maker' | 'business' | 'yasashii' | 'anime' | 'robot' | 'neko' | 'custom';
+export type AvatarShape = 'circle' | 'rounded' | 'egg';
+export type CustomImageShape = 'circle' | 'rounded' | 'square';
+
+export interface AvatarStyle {
+  type: AvatarType;
+  primaryColor: string;
+  shape: AvatarShape;
+  aspectRatio: number;
+  customImageUrl?: string;
+  customImageShape?: CustomImageShape;
+}
+
+/** 既存データとの後方互換を保ちながら安全にパースする */
+export function normalizeAvatarStyle(raw: any): AvatarStyle {
+  return {
+    type: raw?.type === 'default' ? 'maker' : (raw?.type || 'maker'),
+    primaryColor: raw?.primaryColor || '#3B82F6',
+    shape: raw?.shape || 'circle',
+    aspectRatio: raw?.aspectRatio ?? 1.0,
+    customImageUrl: raw?.customImageUrl,
+    customImageShape: raw?.customImageShape || 'circle',
+  };
+}
+
+/** プリセットアバターの定義 */
+export const AVATAR_PRESETS: { type: AvatarType; label: string; emoji: string }[] = [
+  { type: 'maker', label: 'メイカーくん', emoji: '😊' },
+  { type: 'business', label: 'ビジネス', emoji: '💼' },
+  { type: 'yasashii', label: 'やさしい', emoji: '🌸' },
+  { type: 'anime', label: 'アニメ風', emoji: '✨' },
+  { type: 'robot', label: 'ロボット', emoji: '🤖' },
+  { type: 'neko', label: 'ねこ', emoji: '🐱' },
+];
+
 export interface ConciergeMessage {
   id: string;
   role: 'user' | 'assistant';

@@ -23,6 +23,10 @@ interface ConciergeConfig {
   avatar_style: {
     type: string;
     primaryColor: string;
+    shape?: string;
+    aspectRatio?: number;
+    customImageUrl?: string;
+    customImageShape?: string;
   };
   design: {
     position: string;
@@ -53,7 +57,7 @@ const DEFAULT_CONFIG: ConciergeConfig = {
   personality: '親切で丁寧、ですます調で話す。専門用語は避けてわかりやすく説明する。',
   knowledge_text: '',
   faq_items: [],
-  avatar_style: { type: 'default', primaryColor: '#0D9488' },
+  avatar_style: { type: 'maker', primaryColor: '#0D9488', shape: 'circle', aspectRatio: 1.0 },
   design: { position: 'bottom-right', bubbleSize: 56, headerColor: '#0D9488', fontFamily: 'system' },
   settings: {
     dailyLimit: 50,

@@ -2,37 +2,19 @@
 
 import { useState } from 'react';
 import { Send, X, Trash2 } from 'lucide-react';
+import ConciergeAvatar from '../ConciergeAvatar';
 
 interface ConciergeConfig {
   name: string;
   greeting: string;
   personality: string;
-  avatar_style: { type: string; primaryColor: string };
+  avatar_style: { type: string; primaryColor: string; shape?: string; aspectRatio?: number; customImageUrl?: string; customImageShape?: string };
   design: { position: string; bubbleSize: number; headerColor: string; fontFamily: string };
   [key: string]: any;
 }
 
 interface Props {
   config: ConciergeConfig;
-}
-
-/** プレビュー用のシンプルなアバター */
-function PreviewAvatar({ color, size }: { color: string; size: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" className="drop-shadow-sm">
-      <circle cx="50" cy="50" r="48" fill={color} />
-      {/* 目 */}
-      <ellipse cx="35" cy="42" rx="5" ry="6" fill="white" />
-      <ellipse cx="65" cy="42" rx="5" ry="6" fill="white" />
-      <circle cx="35" cy="43" r="2.5" fill="#1a1a2e" />
-      <circle cx="65" cy="43" r="2.5" fill="#1a1a2e" />
-      {/* 口 */}
-      <path d="M 35 60 Q 50 72 65 60" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-      {/* ほっぺ */}
-      <circle cx="25" cy="55" r="6" fill="rgba(255,255,255,0.2)" />
-      <circle cx="75" cy="55" r="6" fill="rgba(255,255,255,0.2)" />
-    </svg>
-  );
 }
 
 export default function ConciergePreview({ config }: Props) {
@@ -100,7 +82,7 @@ export default function ConciergePreview({ config }: Props) {
             className={`absolute bottom-4 ${isRight ? 'right-4' : 'left-4'} rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-all`}
             style={{ width: bubbleSize, height: bubbleSize, background: `linear-gradient(135deg, ${color}, ${color}dd)` }}
           >
-            <PreviewAvatar color="transparent" size={bubbleSize * 0.65} />
+            <ConciergeAvatar state="idle" size={Math.round(bubbleSize * 0.65)} avatarStyle={config.avatar_style} />
           </button>
         )}
 
@@ -110,7 +92,7 @@ export default function ConciergePreview({ config }: Props) {
             <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col" style={{ height: 380 }}>
               {/* ヘッダー */}
               <div className="flex items-center gap-2 px-3 py-2.5 text-white" style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)` }}>
-                <PreviewAvatar color="transparent" size={28} />
+                <ConciergeAvatar state="idle" size={28} avatarStyle={config.avatar_style} />
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-xs">{config.name || 'アシスタント'}</div>
                   <div className="text-[10px] opacity-70">AIコンシェルジュ</div>
@@ -127,7 +109,9 @@ export default function ConciergePreview({ config }: Props) {
               <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50">
                 {messages.length === 0 && (
                   <div className="text-center py-6">
-                    <PreviewAvatar color={color} size={48} />
+                    <div className="flex justify-center">
+                      <ConciergeAvatar state="idle" size={48} avatarStyle={config.avatar_style} />
+                    </div>
                     <p className="mt-2 text-xs text-gray-600 font-medium">
                       {config.greeting || 'こんにちは！'}
                     </p>

@@ -1,10 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
-  User, MessageSquare, Palette, Settings, BookOpen, Plus, Trash2, Sparkles, ShieldCheck,
+  User, MessageSquare, Palette, Settings, BookOpen, Plus, Trash2, Sparkles, ShieldCheck, Upload, ImageIcon,
 } from 'lucide-react';
 import ConciergeEmbedCodeGenerator from './ConciergeEmbedCodeGenerator';
+import ConciergeAvatar from '../ConciergeAvatar';
+import { AVATAR_PRESETS, normalizeAvatarStyle } from '../types';
+import type { AvatarType, AvatarShape, CustomImageShape } from '../types';
+import { supabase } from '@/lib/supabase';
 
 interface FAQItem {
   question: string;
@@ -17,7 +21,7 @@ interface ConciergeConfig {
   personality: string;
   knowledge_text: string;
   faq_items: FAQItem[];
-  avatar_style: { type: string; primaryColor: string };
+  avatar_style: { type: string; primaryColor: string; shape?: string; aspectRatio?: number; customImageUrl?: string; customImageShape?: string };
   design: { position: string; bubbleSize: number; headerColor: string; fontFamily: string };
   settings: {
     dailyLimit: number; maxTokens: number; model: string;
@@ -53,6 +57,8 @@ const COLOR_PRESETS = [
 
 export default function ConciergeEditorPanel({ config, onUpdate, onOpenAISetup }: Props) {
   const [activeTab, setActiveTab] = useState<EditorTab>('basic');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarFileRef = useRef<HTMLInputElement>(null);
 
   const inputClass = "w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all";
 
@@ -243,6 +249,199 @@ export default function ConciergeEditorPanel({ config, onUpdate, onOpenAISetup }
       {/* デザイン */}
       {activeTab === 'design' && (
         <div className="space-y-5">
+          {/* アバタータイプ選択 */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              アバタータイプ
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {AVATAR_PRESETS.map(preset => {
+                const isSelected = normalizeAvatarStyle(config.avatar_style).type === preset.type;
+                return (
+                  <button
+                    key={preset.type}
+                    onClick={() => onUpdate({
+                      avatar_style: { ...config.avatar_style, type: preset.type },
+                    })}
+                    className={`flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all ${
+                      isSelected ? 'border-teal-500 bg-teal-50 shadow-md scale-105' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <ConciergeAvatar
+                      state="idle"
+                      size={40}
+                      avatarStyle={{ ...config.avatar_style, type: preset.type }}
+                    />
+                    <span className="text-[10px] font-medium text-gray-700">{preset.label}</span>
+                  </button>
+                );
+              })}
+              {/* カスタム画像 */}
+              <button
+                onClick={() => {
+                  onUpdate({ avatar_style: { ...config.avatar_style, type: 'custom' } });
+                }}
+                className={`flex flex-col items-center gap-1 p-2 rounded-xl border-2 transition-all ${
+                  normalizeAvatarStyle(config.avatar_style).type === 'custom' ? 'border-teal-500 bg-teal-50 shadow-md scale-105' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {config.avatar_style.customImageUrl ? (
+                  <ConciergeAvatar
+                    state="idle"
+                    size={40}
+                    avatarStyle={{ ...config.avatar_style, type: 'custom' }}
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    <ImageIcon className="w-5 h-5 text-gray-400" />
+                  </div>
+                )}
+                <span className="text-[10px] font-medium text-gray-700">カスタム</span>
+              </button>
+            </div>
+          </div>
+
+          {/* カスタム画像アップロード（type=custom時のみ） */}
+          {normalizeAvatarStyle(config.avatar_style).type === 'custom' && (
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-3">
+              <label className="block text-sm font-semibold text-gray-700">
+                アバター画像
+              </label>
+              {config.avatar_style.customImageUrl && (
+                <div className="flex justify-center">
+                  <ConciergeAvatar
+                    state="idle"
+                    size={80}
+                    avatarStyle={config.avatar_style}
+                  />
+                </div>
+              )}
+              <input
+                ref={avatarFileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file || !supabase) return;
+                  if (file.size > 2 * 1024 * 1024) {
+                    alert('ファイルサイズは2MB以下にしてください');
+                    return;
+                  }
+                  setUploadingAvatar(true);
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    const ext = file.name.split('.').pop();
+                    const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${ext}`;
+                    const filePath = `concierge/${user?.id || 'anonymous'}/${fileName}`;
+                    const { error: uploadError } = await supabase.storage
+                      .from('profile-uploads')
+                      .upload(filePath, file);
+                    if (uploadError) throw uploadError;
+                    const { data } = supabase.storage
+                      .from('profile-uploads')
+                      .getPublicUrl(filePath);
+                    onUpdate({
+                      avatar_style: { ...config.avatar_style, type: 'custom', customImageUrl: data.publicUrl },
+                    });
+                  } catch (err) {
+                    console.error('アバター画像アップロードエラー:', err);
+                    alert('画像のアップロードに失敗しました');
+                  } finally {
+                    setUploadingAvatar(false);
+                  }
+                }}
+              />
+              <button
+                onClick={() => avatarFileRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="w-full py-2.5 border-2 border-dashed border-gray-300 rounded-xl text-sm text-gray-600 hover:border-teal-400 hover:text-teal-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Upload className="w-4 h-4" />
+                {uploadingAvatar ? 'アップロード中...' : '画像を選択（2MB以下）'}
+              </button>
+
+              {/* 切り抜き形 */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">切り抜き形</label>
+                <div className="flex gap-2">
+                  {([
+                    { value: 'circle', label: '丸' },
+                    { value: 'rounded', label: '角丸' },
+                    { value: 'square', label: '四角' },
+                  ] as { value: CustomImageShape; label: string }[]).map(s => (
+                    <button
+                      key={s.value}
+                      onClick={() => onUpdate({
+                        avatar_style: { ...config.avatar_style, customImageShape: s.value },
+                      })}
+                      className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
+                        (config.avatar_style.customImageShape || 'circle') === s.value
+                          ? 'bg-teal-500 text-white shadow-sm'
+                          : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 形状セレクタ（プリセットアバター時のみ） */}
+          {normalizeAvatarStyle(config.avatar_style).type !== 'custom' && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                顔の形
+              </label>
+              <div className="flex gap-2">
+                {([
+                  { value: 'circle', label: '丸' },
+                  { value: 'rounded', label: '角丸四角' },
+                  { value: 'egg', label: 'たまご型' },
+                ] as { value: AvatarShape; label: string }[]).map(s => (
+                  <button
+                    key={s.value}
+                    onClick={() => onUpdate({
+                      avatar_style: { ...config.avatar_style, shape: s.value },
+                    })}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      (config.avatar_style.shape || 'circle') === s.value
+                        ? 'bg-teal-500 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 縦横比スライダー */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              縦横比
+            </label>
+            <div className="flex items-center gap-4">
+              <span className="text-xs text-gray-500">横長</span>
+              <input
+                type="range"
+                min="0.85"
+                max="1.15"
+                step="0.01"
+                value={config.avatar_style.aspectRatio ?? 1.0}
+                onChange={e => onUpdate({
+                  avatar_style: { ...config.avatar_style, aspectRatio: parseFloat(e.target.value) },
+                })}
+                className="flex-1"
+              />
+              <span className="text-xs text-gray-500">縦長</span>
+              <span className="text-xs text-gray-600 w-8 text-right">{(config.avatar_style.aspectRatio ?? 1.0).toFixed(2)}</span>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               テーマカラー

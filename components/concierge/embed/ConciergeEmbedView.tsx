@@ -113,7 +113,7 @@ export default function ConciergeEmbedView({ config }: { config: ConciergeConfig
         className="flex items-center gap-3 px-4 py-3 text-white shrink-0"
         style={{ backgroundColor: headerColor }}
       >
-        <ConciergeAvatar state={avatarState} size={36} />
+        <ConciergeAvatar state={avatarState} size={36} avatarStyle={config.avatar_style} />
         <div>
           <p className="font-bold text-sm">{config.name}</p>
           <p className="text-xs opacity-80">AIコンシェルジュ</p>
