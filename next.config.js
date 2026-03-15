@@ -20,7 +20,22 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/:path*',
+        // 埋め込み用ページは外部サイトの iframe から読み込み可能にする
+        source: '/embed/:path*',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: 'frame-ancestors *'
+          },
+        ],
+      },
+      {
+        // それ以外は SAMEORIGIN（iframe 埋め込み不可）
+        source: '/((?!embed).*)',
         headers: [
           {
             key: 'X-DNS-Prefetch-Control',
