@@ -87,8 +87,12 @@ export async function POST(request: NextRequest) {
     const adminEmails = getAdminEmails();
     const isAdmin = adminEmails.some(e => user.email?.toLowerCase() === e.toLowerCase());
 
-    // 結果取得（管理者はuser_idフィルタなし）
-    let query = supabase
+    // 結果取得（管理者はService Role ClientでRLSバイパス）
+    const readClient = isAdmin
+      ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+      : supabase;
+
+    let query = readClient
       .from('bigfive_results')
       .select('*')
       .eq('id', resultId);

@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { createClient } from '@supabase/supabase-js';
 import { generateAndStorePdf, getSignedPdfUrl } from '@/lib/fortune/generate-pdf';
 import { getAdminEmails } from '@/lib/constants';
 import { Resend } from 'resend';
@@ -33,7 +34,12 @@ export async function GET(request: NextRequest) {
     const adminEmails = getAdminEmails();
     const isAdmin = adminEmails.some(e => user.email?.toLowerCase() === e.toLowerCase());
 
-    let queryGet = supabase
+    // 管理者はService Role ClientでRLSバイパス
+    const readClient = isAdmin
+      ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+      : supabase;
+
+    let queryGet = readClient
       .from('fortune_results')
       .select('id, user_id, report_purchased, pdf_storage_path, report_content')
       .eq('id', id);
@@ -98,7 +104,12 @@ export async function POST(request: NextRequest) {
     const adminEmailsPost = getAdminEmails();
     const isAdminPost = adminEmailsPost.some(e => user.email?.toLowerCase() === e.toLowerCase());
 
-    let queryPost = supabase
+    // 管理者はService Role ClientでRLSバイパス
+    const readClientPost = isAdminPost
+      ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+      : supabase;
+
+    let queryPost = readClientPost
       .from('fortune_results')
       .select('id, user_id, report_purchased, pdf_storage_path, report_content, birth_year, birth_month, birth_day')
       .eq('id', resultId);

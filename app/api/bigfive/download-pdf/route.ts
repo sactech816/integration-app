@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { createClient } from '@supabase/supabase-js';
 import { generateAndStorePdf, getSignedPdfUrl } from '@/lib/bigfive/generate-pdf';
 import { getAdminEmails } from '@/lib/constants';
 import { Resend } from 'resend';
@@ -33,7 +34,12 @@ export async function GET(request: NextRequest) {
     const adminEmails = getAdminEmails();
     const isAdmin = adminEmails.some(e => user.email?.toLowerCase() === e.toLowerCase());
 
-    let query = supabase
+    // 管理者はService Role ClientでRLSバイパス
+    const readClient = isAdmin
+      ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+      : supabase;
+
+    let query = readClient
       .from('bigfive_results')
       .select('id, user_id, pdf_purchased, pdf_storage_path, report_content')
       .eq('id', id);
@@ -101,7 +107,12 @@ export async function POST(request: NextRequest) {
     const adminEmailsPost = getAdminEmails();
     const isAdminPost = adminEmailsPost.some(e => user.email?.toLowerCase() === e.toLowerCase());
 
-    let queryPost = supabase
+    // 管理者はService Role ClientでRLSバイパス
+    const readClientPost = isAdminPost
+      ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+      : supabase;
+
+    let queryPost = readClientPost
       .from('bigfive_results')
       .select('id, user_id, pdf_purchased, pdf_storage_path, report_content, mbti_code')
       .eq('id', resultId);

@@ -263,10 +263,8 @@ export class AnthropicProvider implements AIProvider {
       params.temperature = request.temperature;
     }
 
-    // JSON モードの設定
-    if (request.responseFormat === 'json') {
-      params.response_format = { type: 'json_object' };
-    }
+    // JSON モードの設定（Anthropic はプロンプトでJSON指示する方式）
+    // response_format は Anthropic API では未サポートのため使用しない
 
     const response = await this.client.messages.create(params);
 
