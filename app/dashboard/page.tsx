@@ -540,14 +540,7 @@ function DashboardContent() {
         PointsManager: () => <PointsManager />,
         DiagnosisManager: () => <DiagnosisManager />,
         InquiryManager: () => <InquiryManager />,
-        TrialSettingsManager: () => (
-          <TrialSettingsManager
-            getAuthHeader={() => {
-              const token = supabase ? (supabase as any).auth?.session?.()?.access_token : null;
-              return token ? { Authorization: `Bearer ${token}` } : {};
-            }}
-          />
-        ),
+        TrialSettingsManager: () => <TrialSettingsManager />,
       }
     : undefined;
 

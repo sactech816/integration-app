@@ -30,4 +30,3 @@ alter table concierge_messages add column if not exists context jsonb default '{
 create index if not exists idx_concierge_messages_visitor on concierge_messages(visitor_id) where visitor_id is not null;
 create index if not exists idx_concierge_messages_user_type on concierge_messages(user_type);
 create index if not exists idx_concierge_messages_feedback on concierge_messages(feedback) where feedback is not null;
-create index if not exists idx_concierge_messages_created_hour on concierge_messages(extract(hour from created_at));

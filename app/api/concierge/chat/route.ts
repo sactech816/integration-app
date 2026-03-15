@@ -294,40 +294,38 @@ export async function POST(request: NextRequest) {
       context: contextData,
     };
 
-    // DB保存 + AI使用量ログを並列実行
-    const savePromises: Promise<any>[] = [
-      Promise.resolve(serviceClient.from('concierge_messages').insert([
-        {
-          ...commonFields,
-          role: 'user',
-          content: message.trim(),
-        },
-        {
-          ...commonFields,
-          role: 'assistant',
-          content: replyText,
-          metadata: { actions, suggestions },
-          input_tokens: inputTokens,
-          output_tokens: outputTokens,
-        },
-      ])),
-    ];
+    // DB保存
+    const { error: insertError } = await serviceClient.from('concierge_messages').insert([
+      {
+        ...commonFields,
+        role: 'user',
+        content: message.trim(),
+      },
+      {
+        ...commonFields,
+        role: 'assistant',
+        content: replyText,
+        metadata: { actions, suggestions },
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+      },
+    ]);
+
+    if (insertError) {
+      console.error('Concierge message save error:', insertError);
+    }
 
     // ログインユーザーのみAI使用量ログ
     if (userId) {
-      savePromises.push(
-        logAIUsage({
-          userId,
-          actionType: 'concierge_chat',
-          service: 'makers',
-          modelUsed: aiResponse.model,
-          inputTokens,
-          outputTokens,
-        })
-      );
+      await logAIUsage({
+        userId,
+        actionType: 'concierge_chat',
+        service: 'makers',
+        modelUsed: aiResponse.model,
+        inputTokens,
+        outputTokens,
+      });
     }
-
-    await Promise.all(savePromises);
 
     return NextResponse.json({
       reply: replyText,

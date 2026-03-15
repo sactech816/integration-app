@@ -264,12 +264,16 @@ export async function GET(request: NextRequest) {
       const page = parseInt(searchParams.get('page') || '0');
       const limit = 20;
 
-      const { data: sessions } = await serviceClient
+      const { data: sessions, error: logsError } = await serviceClient
         .from('concierge_messages')
         .select('user_id, visitor_id, session_id, created_at, content, role, user_type')
         .eq('role', 'user')
         .order('created_at', { ascending: false })
         .range(page * limit, (page + 1) * limit - 1);
+
+      if (logsError) {
+        console.error('Concierge logs query error:', logsError);
+      }
 
       const sessionMap: Record<string, any> = {};
       (sessions || []).forEach((m: any) => {

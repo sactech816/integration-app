@@ -13,6 +13,7 @@ import {
   Settings,
   RefreshCw,
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface TrialSettings {
   id: string;
@@ -33,30 +34,33 @@ interface TrialStats {
   conversionRate: number;
 }
 
-interface TrialSettingsManagerProps {
-  getAuthHeader: () => Record<string, string>;
-}
-
 const PLAN_OPTIONS = [
   { key: 'standard', name: 'スタンダード', price: 1980 },
   { key: 'business', name: 'ビジネス', price: 4980 },
   { key: 'premium', name: 'プレミアム', price: 9800 },
 ];
 
-export default function TrialSettingsManager({ getAuthHeader }: TrialSettingsManagerProps) {
+export default function TrialSettingsManager() {
   const [settings, setSettings] = useState<TrialSettings | null>(null);
   const [stats, setStats] = useState<TrialStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // 認証ヘッダー取得
+  const getAuthHeader = async () => {
+    if (!supabase) return {};
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   // 設定を取得
   const fetchSettings = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/admin/trial-settings', {
-        headers: getAuthHeader(),
-      });
+      const headers = await getAuthHeader();
+      const res = await fetch('/api/admin/trial-settings', { headers });
       if (!res.ok) throw new Error('設定の取得に失敗しました');
       const data = await res.json();
       setSettings(data.settings);
@@ -66,7 +70,7 @@ export default function TrialSettingsManager({ getAuthHeader }: TrialSettingsMan
     } finally {
       setIsLoading(false);
     }
-  }, [getAuthHeader]);
+  }, []);
 
   useEffect(() => {
     fetchSettings();
@@ -77,9 +81,10 @@ export default function TrialSettingsManager({ getAuthHeader }: TrialSettingsMan
     if (!settings) return;
     try {
       setIsSaving(true);
+      const headers = await getAuthHeader();
       const res = await fetch('/api/admin/trial-settings', {
         method: 'PUT',
-        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+        headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           trial_enabled: settings.trial_enabled,
           trial_delay_days: settings.trial_delay_days,
@@ -110,9 +115,10 @@ export default function TrialSettingsManager({ getAuthHeader }: TrialSettingsMan
     setSettings({ ...settings, trial_enabled: newEnabled });
 
     try {
+      const headers = await getAuthHeader();
       const res = await fetch('/api/admin/trial-settings', {
         method: 'PUT',
-        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+        headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ trial_enabled: newEnabled }),
       });
       if (!res.ok) throw new Error('切り替えに失敗しました');
