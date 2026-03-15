@@ -44,7 +44,8 @@ import {
 } from 'lucide-react';
 import { BlockRenderer } from '@/components/shared/BlockRenderer';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
-import { usePoints } from '@/lib/hooks/usePoints';
+import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
+import CreationLimitModal from '@/components/shared/CreationLimitModal';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 
 interface WebinarEditorProps {
@@ -351,7 +352,7 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
   setShowAuth,
 }) => {
   const { userPlan } = useUserPlan(user?.id);
-  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: userPlan.isProUser });
+  const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: user?.id, isPro: userPlan.isProUser });
 
   // 初期ブロック
   const initialBlocks: Block[] = [
@@ -1751,6 +1752,7 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
         accentColor="emerald"
         userId={user?.id}
       />
+      <CreationLimitModal {...limitModalProps} />
     </div>
   );
 };

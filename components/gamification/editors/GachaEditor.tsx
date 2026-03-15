@@ -30,7 +30,8 @@ import {
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
-import { usePoints } from '@/lib/hooks/usePoints';
+import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
+import CreationLimitModal from '@/components/shared/CreationLimitModal';
 
 // ゲームタイプ設定
 type GameType = 'gacha' | 'scratch' | 'fukubiki' | 'slot';
@@ -193,7 +194,7 @@ const getDefaultPrizes = (gameType: GameType): GachaPrizeForm[] => {
 export default function GachaEditor({ user, initialData, onBack, setShowAuth, gameType = 'gacha' }: GachaEditorProps) {
   const router = useRouter();
   const { showOnboarding, setShowOnboarding } = useOnboarding('gamification_gacha_onboarding_dismissed', { skip: !!initialData });
-  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
+  const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: user?.id, isPro: false });
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(initialData?.id || null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -713,6 +714,7 @@ export default function GachaEditor({ user, initialData, onBack, setShowAuth, ga
           onDismiss={() => setShowOnboarding(false)}
         />
       )}
+      <CreationLimitModal {...limitModalProps} />
     </>
   );
 }

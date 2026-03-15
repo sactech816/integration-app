@@ -12,7 +12,8 @@ import {
 } from 'lucide-react';
 import { FUNNEL_TEMPLATES } from '@/constants/templates/funnel';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
-import { usePoints } from '@/lib/hooks/usePoints';
+import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
+import CreationLimitModal from '@/components/shared/CreationLimitModal';
 
 interface Step {
   name: string;
@@ -289,7 +290,7 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [urlCopied, setUrlCopied] = useState(false);
 
-  const { consumeAndExecute } = usePoints({ userId: userId ?? undefined, isPro: false });
+  const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: userId ?? undefined, isPro: false });
 
   useEffect(() => {
     const init = async () => {
@@ -925,6 +926,7 @@ export default function FunnelEditor({ funnelId, initialSteps, initialName }: { 
 
         <div className="hidden lg:block lg:w-1/2 lg:flex-shrink-0 bg-gray-50" />
       </div>
+      <CreationLimitModal {...limitModalProps} />
     </div>
   );
 }

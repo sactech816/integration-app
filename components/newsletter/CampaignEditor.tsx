@@ -12,7 +12,8 @@ import {
 import { isValidEmail } from '@/lib/security/sanitize';
 import { supabase } from '@/lib/supabase';
 import { NEWSLETTER_TEMPLATES, type NewsletterTemplate } from '@/constants/templates/newsletter';
-import { usePoints } from '@/lib/hooks/usePoints';
+import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
+import CreationLimitModal from '@/components/shared/CreationLimitModal';
 
 interface CampaignEditorProps {
   campaignId?: string;
@@ -660,7 +661,7 @@ function htmlToPlainText(html: string): string {
 export default function CampaignEditor({ campaignId, defaultListId }: CampaignEditorProps) {
   const router = useRouter();
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
-  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
+  const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: user?.id, isPro: false });
   const [lists, setLists] = useState<ListOption[]>([]);
   const [listId, setListId] = useState(defaultListId || '');
   const [subject, setSubject] = useState('');
@@ -1696,6 +1697,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
           </div>
         </div>
       )}
+      <CreationLimitModal {...limitModalProps} />
     </div>
   );
 }

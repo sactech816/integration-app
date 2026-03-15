@@ -40,7 +40,8 @@ import { supabase } from "@/lib/supabase";
 import { generateSlug } from "@/lib/utils";
 import SurveyPlayer from "./SurveyPlayer";
 import { useUserPlan } from "@/lib/hooks/useUserPlan";
-import { usePoints } from "@/lib/hooks/usePoints";
+import { usePointsWithLimitModal } from "@/lib/hooks/usePointsWithLimitModal";
+import CreationLimitModal from "@/components/shared/CreationLimitModal";
 import CreationCompleteModal from "@/components/shared/CreationCompleteModal";
 import OnboardingModal from "@/components/shared/OnboardingModal";
 import { useOnboarding } from "@/lib/hooks/useOnboarding";
@@ -263,7 +264,7 @@ interface SurveyEditorProps {
 export default function SurveyEditor({ onBack, initialData, user, templateId, setShowAuth }: SurveyEditorProps) {
   // ユーザープラン権限を取得
   const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
-  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: userPlan.isProUser });
+  const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: user?.id, isPro: userPlan.isProUser });
   // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('survey_editor_onboarding_dismissed', { skip: !!initialData?.id });
 
@@ -1315,6 +1316,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
           onDismiss={() => setShowOnboarding(false)}
         />
       )}
+      <CreationLimitModal {...limitModalProps} />
     </div>
   );
 }

@@ -51,7 +51,8 @@ import {
   Link2,
 } from 'lucide-react';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
-import { usePoints } from '@/lib/hooks/usePoints';
+import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
+import CreationLimitModal from '@/components/shared/CreationLimitModal';
 import { useUserContents } from '@/lib/hooks/useUserContents';
 import ContentLinker from '@/components/shared/ContentLinker';
 import LinkedContentCard from '@/components/shared/LinkedContentCard';
@@ -783,7 +784,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
 }) => {
   // ユーザープラン権限を取得
   const { userPlan, isLoading: isPlanLoading } = useUserPlan(user?.id);
-  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: userPlan.isProUser });
+  const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: user?.id, isPro: userPlan.isProUser });
   // ツール間連携: ユーザーのコンテンツ一覧を取得
   const { contents: userContents, loading: contentsLoading } = useUserContents({ userId: user?.id || null, exclude: ['profile'] });
   // はじめかたガイド
@@ -2962,6 +2963,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
           onDismiss={() => setShowOnboarding(false)}
         />
       )}
+      <CreationLimitModal {...limitModalProps} />
     </div>
   );
 };

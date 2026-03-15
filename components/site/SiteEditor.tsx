@@ -604,7 +604,8 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
 
         if (siteError) throw new Error(siteError.message || 'データベースエラー');
 
-        await supabase.from('site_pages').delete().eq('site_id', site.id);
+        const { error: deleteError } = await supabase.from('site_pages').delete().eq('site_id', site.id);
+        if (deleteError) throw new Error(deleteError.message || 'ページ削除エラー');
 
         const pageInserts = pages.map((p, i) => ({
           site_id: site.id,

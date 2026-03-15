@@ -23,7 +23,8 @@ import {
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
-import { usePoints } from '@/lib/hooks/usePoints';
+import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
+import CreationLimitModal from '@/components/shared/CreationLimitModal';
 
 interface LoginBonusEditorProps {
   user: User | null;
@@ -79,7 +80,7 @@ const Section = ({
 export default function LoginBonusEditor({ user, initialData, onBack, setShowAuth }: LoginBonusEditorProps) {
   const router = useRouter();
   const { showOnboarding, setShowOnboarding } = useOnboarding('gamification_loginbonus_onboarding_dismissed', { skip: !!initialData });
-  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
+  const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: user?.id, isPro: false });
   const [isSaving, setIsSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(initialData?.id || null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -332,6 +333,7 @@ export default function LoginBonusEditor({ user, initialData, onBack, setShowAut
           onDismiss={() => setShowOnboarding(false)}
         />
       )}
+      <CreationLimitModal {...limitModalProps} />
     </>
   );
 }

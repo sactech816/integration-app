@@ -10,7 +10,8 @@ import {
   Eye, Code, BarChart3, ListOrdered, Zap
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { usePoints } from '@/lib/hooks/usePoints';
+import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
+import CreationLimitModal from '@/components/shared/CreationLimitModal';
 
 // --- Types ---
 
@@ -147,7 +148,7 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
   // Auth
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
+  const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: user?.id, isPro: false });
 
   // Basic info
   const [name, setName] = useState('');
@@ -974,6 +975,7 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
           {isEditing ? '更新して保存' : '保存して公開'}
         </button>
       </div>
+      <CreationLimitModal {...limitModalProps} />
     </div>
   );
 }

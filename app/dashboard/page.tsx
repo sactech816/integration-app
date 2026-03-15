@@ -27,6 +27,8 @@ import AccountSettings from './components/Settings/AccountSettings';
 import { Loader2 } from 'lucide-react';
 import PointPurchaseModal from '@/components/points/PointPurchaseModal';
 import PlanLimitModal, { PlanLimitInfo } from '@/components/shared/PlanLimitModal';
+import TrialOfferModal from '@/components/shared/TrialOfferModal';
+import TrialSettingsManager from './components/Admin/TrialSettingsManager';
 
 // 新しいコンポーネント
 import DashboardLayout from './components/DashboardLayout';
@@ -135,6 +137,11 @@ function DashboardContent() {
     setShowPlanLimit(true);
   }, []);
 
+  // トライアルオファーモーダル
+  const [showTrialOffer, setShowTrialOffer] = useState(false);
+  const [trialSettings, setTrialSettings] = useState<any>(null);
+  const [trialSource, setTrialSource] = useState<'auto' | 'admin' | 'email'>('auto');
+
   // 決済完了後の検証
   useEffect(() => {
     const verifyPayment = async () => {
@@ -186,6 +193,22 @@ function DashboardContent() {
     }
   };
 
+  // トライアルオファーチェック
+  const checkTrialOffer = useCallback(async (source: 'auto' | 'admin' | 'email' = 'auto') => {
+    if (!user) return;
+    try {
+      const res = await fetch(`/api/trial/check?userId=${user.id}`);
+      const data = await res.json();
+      if (data.shouldShow && data.settings) {
+        setTrialSettings(data.settings);
+        setTrialSource(source);
+        setShowTrialOffer(true);
+      }
+    } catch (err) {
+      console.error('Trial check error:', err);
+    }
+  }, [user]);
+
   // 初期データ取得（ユーザーログイン時のみ）
   useEffect(() => {
     if (user) {
@@ -196,6 +219,16 @@ function DashboardContent() {
         fetchUserSubscription(),
         fetchPointBalance(),
       ]);
+
+      // URLパラメータ ?trial=1 でメールからの誘導を検知
+      const trialParam = searchParams?.get('trial');
+      if (trialParam === '1') {
+        checkTrialOffer('email');
+      } else {
+        // 自動表示チェック（少し遅延させてUX向上）
+        const timer = setTimeout(() => checkTrialOffer('auto'), 3000);
+        return () => clearTimeout(timer);
+      }
     }
   }, [user]);
 
@@ -507,6 +540,14 @@ function DashboardContent() {
         PointsManager: () => <PointsManager />,
         DiagnosisManager: () => <DiagnosisManager />,
         InquiryManager: () => <InquiryManager />,
+        TrialSettingsManager: () => (
+          <TrialSettingsManager
+            getAuthHeader={() => {
+              const token = supabase ? (supabase as any).auth?.session?.()?.access_token : null;
+              return token ? { Authorization: `Bearer ${token}` } : {};
+            }}
+          />
+        ),
       }
     : undefined;
 
@@ -597,6 +638,17 @@ function DashboardContent() {
         />
       )}
       
+      {/* トライアルオファーモーダル */}
+      {user && trialSettings && (
+        <TrialOfferModal
+          isOpen={showTrialOffer}
+          onClose={() => setShowTrialOffer(false)}
+          user={user}
+          settings={trialSettings}
+          source={trialSource}
+        />
+      )}
+
       {/* ゲーミフィケーション */}
       {user && <WelcomeBonus userId={user.id} />}
       {user && <LoginBonusToast userId={user.id} />}

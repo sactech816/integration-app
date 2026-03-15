@@ -22,7 +22,8 @@ import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import SalesTextEditor from '@/components/salesletter/SalesTextEditor';
 import OnboardingModal, { type OnboardingPage } from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
-import { usePoints } from '@/lib/hooks/usePoints';
+import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
+import CreationLimitModal from '@/components/shared/CreationLimitModal';
 import { supabase } from '@/lib/supabase';
 import { createAttendanceEvent, getAttendanceEvent, updateAttendanceEvent } from '@/app/actions/attendance';
 import { AttendanceSlot, AttendanceEvent } from '@/types/attendance';
@@ -36,7 +37,7 @@ function AttendanceEditorContent() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
-  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
+  const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: user?.id, isPro: false });
 
   // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('attendance_editor_onboarding_dismissed', { skip: !!editId });
@@ -811,6 +812,7 @@ function AttendanceEditorContent() {
           onDismiss={() => setShowOnboarding(false)}
         />
       )}
+      <CreationLimitModal {...limitModalProps} />
     </div>
   );
 }

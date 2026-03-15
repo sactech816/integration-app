@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { usePoints } from '@/lib/hooks/usePoints';
+import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
+import CreationLimitModal from '@/components/shared/CreationLimitModal';
 import { CreateBookingMenuInput, CreateBookingSlotInput } from '@/types/booking';
 import { createBookingMenu, createBookingSlots } from '@/app/actions/booking';
 import { LocalSlot } from '@/components/booking/WeeklyCalendar';
@@ -19,7 +20,7 @@ export default function NewBookingMenuPage() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAuth, setShowAuth] = useState(false);
-  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
+  const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: user?.id, isPro: false });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -188,12 +189,13 @@ export default function NewBookingMenuPage() {
         />
       </main>
 
-      <Footer 
+      <Footer
         setPage={navigateTo}
         onCreate={(service) => service && navigateTo(`${service}/editor`)}
         user={user}
         setShowAuth={setShowAuth}
       />
+      <CreationLimitModal {...limitModalProps} />
     </div>
   );
 }

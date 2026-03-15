@@ -107,6 +107,13 @@ CREATE TRIGGER tr_increment_game_count
   FOR EACH ROW
   EXECUTE FUNCTION increment_content_count('game');
 
+-- 14. sites テーブル（ホームページメーカー）
+DROP TRIGGER IF EXISTS tr_increment_site_count ON sites;
+CREATE TRIGGER tr_increment_site_count
+  AFTER INSERT ON sites
+  FOR EACH ROW
+  EXECUTE FUNCTION increment_content_count('site');
+
 -- =============================================
 -- 初期データの設定（現在のレコード数を初期値として設定）
 -- =============================================
@@ -120,8 +127,9 @@ INSERT INTO content_creation_counts (content_type, total_count) VALUES
   ('booking', (SELECT COUNT(*) FROM booking_menus)),
   ('attendance', (SELECT COUNT(*) FROM attendance_events)),
   ('salesletter', (SELECT COUNT(*) FROM sales_letters)),
-  ('game', (SELECT COUNT(*) FROM gamification_campaigns))
-ON CONFLICT (content_type) DO UPDATE SET 
+  ('game', (SELECT COUNT(*) FROM gamification_campaigns)),
+  ('site', (SELECT COUNT(*) FROM sites))
+ON CONFLICT (content_type) DO UPDATE SET
   total_count = EXCLUDED.total_count,
   updated_at = NOW();
 

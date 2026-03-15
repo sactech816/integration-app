@@ -8,6 +8,8 @@ export interface CreationLimitResult {
   message?: string;
   current?: number;
   limit?: number;
+  canUsePoints?: boolean;
+  pointUnlocks?: number;
 }
 
 /** 制限超過時に表示するモーダルの情報 */
@@ -17,6 +19,12 @@ export interface PlanLimitDisplay {
   currentUsage?: number;
   limit?: number;
   recommendedPlan?: 'standard' | 'business' | 'premium';
+  /** ポイントで枠追加が可能か */
+  canUsePoints?: boolean;
+  /** 既にポイントで解除済みの枠数 */
+  pointUnlocks?: number;
+  /** ポイント解除を実行する関数 */
+  onPointUnlock?: () => Promise<boolean>;
 }
 
 export interface UsePointsOptions {
@@ -77,12 +85,30 @@ export function usePoints({ userId, isPro, onCreationLimitReached }: UsePointsOp
           const data = await res.json() as CreationLimitResult;
           if (!data.allowed) {
             if (onCreationLimitReached) {
+              // ポイント解除関数を作成
+              const handlePointUnlock = async (): Promise<boolean> => {
+                try {
+                  const unlockRes = await fetch('/api/points/unlock-tool', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, toolType: serviceType }),
+                  });
+                  const unlockData = await unlockRes.json();
+                  return unlockData.success === true;
+                } catch {
+                  return false;
+                }
+              };
+
               onCreationLimitReached({
                 title: 'ツール作成上限に達しました',
                 message: data.message || `作成上限（${data.limit}個）に達しています。上位プランにアップグレードすると、より多くのコンテンツを作成できます。`,
                 currentUsage: data.current,
                 limit: data.limit,
                 recommendedPlan: (data.limit === 0) ? 'standard' : 'business',
+                canUsePoints: data.canUsePoints ?? (data.limit !== undefined && data.limit > 0),
+                pointUnlocks: data.pointUnlocks,
+                onPointUnlock: handlePointUnlock,
               });
             } else {
               // フォールバック: コールバック未設定の場合はalert

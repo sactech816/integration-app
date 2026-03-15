@@ -23,7 +23,8 @@ import SVGTextOverlay, { SVGTextOverlayRef } from './SVGTextOverlay';
 import TextEditPanel from './TextEditPanel';
 import { downloadSVG, downloadPNG, exportAsPNG } from '@/lib/thumbnail/exportSvg';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
-import { usePoints } from '@/lib/hooks/usePoints';
+import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
+import CreationLimitModal from '@/components/shared/CreationLimitModal';
 
 interface ThumbnailEditorProps {
   user: { id: string; email?: string } | null;
@@ -89,7 +90,7 @@ const Section = ({
 );
 
 export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, isPro = false }: ThumbnailEditorProps) {
-  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro });
+  const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: user?.id, isPro });
 
   // セクション開閉状態
   const [openSections, setOpenSections] = useState({
@@ -963,6 +964,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
         theme="rose"
         showQrCode={false}
       />
+      <CreationLimitModal {...limitModalProps} />
     </div>
   );
 }

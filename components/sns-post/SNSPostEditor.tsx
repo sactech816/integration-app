@@ -24,7 +24,8 @@ import ToneSelector from './ToneSelector';
 import HashtagEditor from './HashtagEditor';
 import PostPreview from './PostPreview';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
-import { usePoints } from '@/lib/hooks/usePoints';
+import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
+import CreationLimitModal from '@/components/shared/CreationLimitModal';
 
 type SNSPostEditorProps = {
   user: { id: string; email?: string } | null;
@@ -34,7 +35,7 @@ type SNSPostEditorProps = {
 
 export default function SNSPostEditor({ user, editingPost, setShowAuth }: SNSPostEditorProps) {
   const router = useRouter();
-  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
+  const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: user?.id, isPro: false });
 
   // State
   const [platform, setPlatform] = useState<SNSPlatform>('twitter');
@@ -580,6 +581,7 @@ export default function SNSPostEditor({ user, editingPost, setShowAuth }: SNSPos
         contentTitle={title || 'SNS投稿'}
         theme="blue"
       />
+      <CreationLimitModal {...limitModalProps} />
     </>
   );
 }

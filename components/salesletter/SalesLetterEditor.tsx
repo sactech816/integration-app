@@ -10,7 +10,8 @@ import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import BlockRenderer from '@/components/shared/BlockRenderer';
 import SalesTextEditor from './SalesTextEditor';
 import { useUserPlan } from '@/lib/hooks/useUserPlan';
-import { usePoints } from '@/lib/hooks/usePoints';
+import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
+import CreationLimitModal from '@/components/shared/CreationLimitModal';
 import {
   Save,
   Eye,
@@ -130,7 +131,7 @@ export default function SalesLetterEditor({
   
   // ユーザープラン権限
   const { userPlan } = useUserPlan(user?.id);
-  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: userPlan.isProUser });
+  const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: user?.id, isPro: userPlan.isProUser });
   
   // セクション開閉状態
   const [isBasicSettingsOpen, setIsBasicSettingsOpen] = useState(true);
@@ -936,6 +937,7 @@ export default function SalesLetterEditor({
           onDismiss={() => setShowOnboarding(false)}
         />
       )}
+      <CreationLimitModal {...limitModalProps} />
     </div>
   );
 }

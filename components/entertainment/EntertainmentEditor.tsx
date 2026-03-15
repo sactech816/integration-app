@@ -14,7 +14,8 @@ import EntertainmentResultView from './EntertainmentResultView';
 import WizardProgress, { type ProgressStep } from './WizardProgress';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import { triggerGamificationEvent } from '@/lib/gamification/events';
-import { usePoints } from '@/lib/hooks/usePoints';
+import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
+import CreationLimitModal from '@/components/shared/CreationLimitModal';
 import {
   type EntertainmentForm,
   STYLE_OPTIONS,
@@ -136,7 +137,7 @@ interface EntertainmentEditorProps {
 }
 
 export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBack, user }: EntertainmentEditorProps) {
-  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
+  const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: user?.id, isPro: false });
 
   // 左パネルタブ: wizard（AI一括生成） or editor（手動編集）
   const [leftTab, setLeftTab] = useState<'wizard' | 'editor'>('editor');
@@ -1661,6 +1662,7 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
         </div>
         <div className="hidden lg:block lg:w-1/2 lg:flex-shrink-0 bg-gray-50"></div>
       </div>
+      <CreationLimitModal {...limitModalProps} />
     </div>
   );
 }

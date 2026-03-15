@@ -40,4 +40,6 @@ export const TABLES = {
   CONCIERGE_MESSAGES: 'concierge_messages',
   CONCIERGE_CONFIGS: 'concierge_configs',
   CONCIERGE_VISITOR_MESSAGES: 'concierge_visitor_messages',
+  TRIAL_SETTINGS: 'trial_settings',
+  TRIAL_OFFERS: 'trial_offers',
 } as const;

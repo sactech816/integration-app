@@ -13,7 +13,8 @@ import { supabase } from '@/lib/supabase';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
-import { usePoints } from '@/lib/hooks/usePoints';
+import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
+import CreationLimitModal from '@/components/shared/CreationLimitModal';
 import OnboardingModalPreview from './OnboardingModalPreview';
 import OnboardingEmbedCodeGenerator from './OnboardingEmbedCodeGenerator';
 import IconSelector from './IconSelector';
@@ -240,7 +241,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
   const [justSavedSlug, setJustSavedSlug] = useState('');
 
   // ポイント消費
-  const { consumeAndExecute } = usePoints({ userId: user?.id, isPro: false });
+  const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: user?.id, isPro: false });
 
   // はじめかたガイド
   const { showOnboarding, setShowOnboarding } = useOnboarding('onboarding_editor_onboarding_dismissed', { skip: !!initialData });
@@ -1000,6 +1001,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
           onDismiss={() => setShowOnboarding(false)}
         />
       )}
+      <CreationLimitModal {...limitModalProps} />
     </div>
   );
 }

@@ -253,6 +253,15 @@ export async function POST(request: NextRequest) {
             });
             
             console.log(`✅ Subscription recorded for user ${userId}: ${subscriptionId}`);
+
+            // トライアルオファーの成約を記録
+            if (session.metadata?.isTrial === 'true') {
+              await supabase
+                .from('trial_offers')
+                .update({ accepted_at: new Date().toISOString() })
+                .eq('user_id', userId);
+              console.log(`🎁 Trial offer accepted for user ${userId}`);
+            }
             
             // アフィリエイト成約を記録（メールアドレスからpendingレコードを検索）
             const email = session.customer_email;
