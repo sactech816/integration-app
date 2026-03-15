@@ -292,6 +292,7 @@ export async function POST(request: NextRequest) {
       session_id: sessionId,
       user_type: userType,
       context: contextData,
+      config_id: configId || null,
     };
 
     // DB保存

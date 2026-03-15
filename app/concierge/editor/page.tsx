@@ -9,7 +9,7 @@ import ConciergeEditorPanel from '@/components/concierge/editor/ConciergeEditorP
 import ConciergePreview from '@/components/concierge/editor/ConciergePreview';
 import ConciergeTemplateSelector from '@/components/concierge/editor/ConciergeTemplateSelector';
 import ConciergeAISetupPanel from '@/components/concierge/editor/ConciergeAISetupPanel';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, BarChart3 } from 'lucide-react';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import type { ConciergeTemplate } from '@/lib/concierge/templates';
 
@@ -261,6 +261,15 @@ function ConciergeEditorContent() {
           </div>
 
           <div className="flex items-center gap-3">
+            {config.id && (
+              <button
+                onClick={() => router.push(`/concierge/config-analytics?id=${config.id}`)}
+                className="px-3 py-2 text-sm bg-blue-50 border border-blue-200 text-blue-700 rounded-xl hover:bg-blue-100 transition-all font-medium flex items-center gap-1.5"
+              >
+                <BarChart3 className="w-4 h-4" />
+                アクセス解析
+              </button>
+            )}
             {config.id && config.slug && (
               <button
                 onClick={() => {
