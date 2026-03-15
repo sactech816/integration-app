@@ -9,6 +9,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { getAdminEmails } from '@/lib/constants';
+import { fetchMakersSubscriptionStatus, isMakersProOrHigher } from '@/lib/subscription';
 
 function generateSlug(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -63,6 +65,21 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 });
+    }
+
+    // プランチェック: ビジネスプラン以上または管理者のみ作成可能
+    const adminEmails = getAdminEmails();
+    const isAdmin = user.email && adminEmails.some(
+      (e: string) => user.email?.toLowerCase() === e.toLowerCase()
+    );
+    if (!isAdmin) {
+      const subStatus = await fetchMakersSubscriptionStatus(user.id);
+      if (!isMakersProOrHigher(subStatus.planTier)) {
+        return NextResponse.json(
+          { error: 'コンシェルジュメーカーはビジネスプラン以上の機能です' },
+          { status: 403 }
+        );
+      }
     }
 
     const body = await request.json();

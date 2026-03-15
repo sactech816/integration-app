@@ -34,6 +34,7 @@ import {
   Brain,
   Star,
   Bot,
+  MessageSquare,
   LucideIcon,
 } from 'lucide-react';
 
@@ -320,6 +321,17 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: 'Reddit投稿キーワード分析',
     color: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200' },
     href: '/reddit-keyword-research/editor',
+    category: 'marketing',
+  },
+
+  // コンシェルジュ（集客・イベントカテゴリ）
+  {
+    id: 'concierge',
+    label: 'コンシェルジュメーカー',
+    icon: MessageSquare,
+    description: 'AIコンシェルジュ作成',
+    color: { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
+    href: '/concierge/editor',
     category: 'marketing',
   },
 

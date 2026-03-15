@@ -40,6 +40,7 @@ type SidebarProps = {
     site: number;
     bigfive: number;
     fortune: number;
+    concierge: number;
   };
   totalViews: number;
   onLogout: () => void;

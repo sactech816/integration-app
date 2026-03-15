@@ -86,6 +86,7 @@ type SidebarNavProps = {
     site: number;
     bigfive: number;
     fortune: number;
+    concierge: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態
@@ -137,6 +138,7 @@ export default function SidebarNav({
     'site': contentCounts.site,
     'bigfive': contentCounts.bigfive,
     'fortune': contentCounts.fortune,
+    'concierge': contentCounts.concierge,
   };
 
   // ツールアイテムをMenuItemに変換
@@ -182,6 +184,13 @@ export default function SidebarNav({
 
     // 楽天市場リサーチはBusiness限定
     if (tool.id === 'rakuten-research') {
+      const proDisabled = !hasMakersProAccess && !isAdmin;
+      item.isDisabled = proDisabled;
+      item.disabledBadge = proDisabled ? 'B' : undefined;
+    }
+
+    // コンシェルジュメーカーはBusiness限定
+    if (tool.id === 'concierge') {
       const proDisabled = !hasMakersProAccess && !isAdmin;
       item.isDisabled = proDisabled;
       item.disabledBadge = proDisabled ? 'B' : undefined;
