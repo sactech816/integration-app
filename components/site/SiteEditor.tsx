@@ -556,7 +556,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
             title: site.title,
             description: site.description || '',
             logo_url: site.logo_url || '',
-            settings: site.settings || {},
+            settings: { showInPortal: true, ...(site.settings || {}) },
             status: 'published',
             slug,
             user_id: user?.id,

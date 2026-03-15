@@ -565,7 +565,7 @@ function PortalPageContent() {
           .range(offset, offset + ITEMS_PER_PAGE - 1);
 
         if (sites) {
-          const filteredSites = sites.filter(s => s.settings?.showInPortal === true);
+          const filteredSites = sites.filter(s => s.settings?.showInPortal !== false);
           allItems.push(...filteredSites.map((s) => ({
             id: s.id,
             slug: s.slug,

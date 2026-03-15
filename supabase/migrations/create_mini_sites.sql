@@ -67,7 +67,11 @@ CREATE POLICY "Published sites are public"
 
 ALTER TABLE site_pages ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can manage pages of own sites"
-  ON site_pages FOR ALL USING (
+  ON site_pages FOR ALL
+  USING (
+    EXISTS (SELECT 1 FROM sites WHERE sites.id = site_pages.site_id AND sites.user_id = auth.uid())
+  )
+  WITH CHECK (
     EXISTS (SELECT 1 FROM sites WHERE sites.id = site_pages.site_id AND sites.user_id = auth.uid())
   );
 CREATE POLICY "Pages of published sites are public"
