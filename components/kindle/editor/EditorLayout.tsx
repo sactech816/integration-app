@@ -1487,12 +1487,13 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             editorActions={!readOnly ? [
               {
                 id: 'kdp-info',
-                label: 'KDP情報（構成AI×1）',
+                label: 'KDP情報',
                 icon: <Sparkles size={20} />,
                 onClick: handleShowKdpInfo,
                 disabled: isGeneratingKdp || isLoadingKdp,
                 loadingLabel: isGeneratingKdp ? 'KDP情報 生成中...' : 'KDP情報 読込中...',
                 locked: isFreePlan,
+                aiConsuming: true,
               },
               {
                 id: 'download-word',
@@ -1514,28 +1515,31 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
               },
               {
                 id: 'lp-generate',
-                label: 'LP生成（構成AI×1）',
+                label: 'LP生成',
                 icon: <Rocket size={20} />,
                 onClick: handleShowLP,
                 disabled: isGeneratingLP,
                 loadingLabel: 'LP 生成中...',
                 locked: isFreePlan,
+                aiConsuming: true,
               },
               {
                 id: 'generate-cover',
-                label: '表紙作成（AI画像生成）',
+                label: '表紙作成',
                 icon: <ImageIcon size={20} className="!text-orange-500" />,
                 onClick: () => setIsCoverModalOpen(true),
                 locked: isFreePlan,
+                aiConsuming: true,
               },
               {
                 id: 'style-transform',
-                label: '文体変換（執筆AI×節数）',
+                label: '文体変換',
                 icon: <PenLine size={20} />,
                 onClick: () => setIsStyleTransformOpen(true),
                 disabled: rewriteProgress.isRunning,
                 loadingLabel: '文体変換中...',
                 locked: isFreePlan,
+                aiConsuming: true,
               },
             ] : undefined}
           />

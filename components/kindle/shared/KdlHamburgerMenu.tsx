@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  Menu, X, BookOpen, Home, Plus, FileText, Rocket, CreditCard, LogOut, Lightbulb, Wrench, Lock, Crown
+  Menu, X, BookOpen, Home, HelpCircle, LogOut, Wrench, Lock, Crown, Sparkles
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -17,6 +17,7 @@ export interface EditorActionItem {
   disabled?: boolean;
   loadingLabel?: string;
   locked?: boolean; // 有料プラン限定（フリープランではロック表示）
+  aiConsuming?: boolean; // AI消費する機能（AIマーク表示）
 }
 
 interface KdlHamburgerMenuProps {
@@ -45,15 +46,6 @@ export default function KdlHamburgerMenu({
     await supabase.auth.signOut();
     router.push('/');
   };
-
-  const menuItems = [
-    { id: 'dashboard', label: 'ダッシュボード（マイブック）', href: `/kindle${adminKeyParam}`, icon: Home },
-    { id: 'new', label: '新規作成', href: `/kindle/new${adminKeyParam}`, icon: Plus },
-    { id: 'discovery', label: 'ネタ発掘診断', href: `/kindle/discovery${adminKeyParam}`, icon: Lightbulb },
-    { id: 'guide', label: 'まずお読みください', href: '/kindle/guide', icon: FileText, target: '_blank' as const },
-    { id: 'publish-guide', label: '出版準備ガイド', href: '/kindle/publish-guide', icon: Rocket, target: '_blank' as const },
-    { id: 'plan', label: 'プラン情報', href: `/kindle${adminKeyParam}#plan-info`, icon: CreditCard },
-  ];
 
   const menuContent = (
     <>
@@ -100,6 +92,9 @@ export default function KdlHamburgerMenu({
                   >
                     <span className="flex-shrink-0">{action.icon}</span>
                     <span className="flex-1">{action.label}</span>
+                    {action.aiConsuming && (
+                      <Sparkles size={14} className="text-gray-300 flex-shrink-0" />
+                    )}
                     <Lock size={14} className="text-gray-400 flex-shrink-0" />
                   </div>
                 ) : (
@@ -117,7 +112,10 @@ export default function KdlHamburgerMenu({
                   }`}
                 >
                   <span className="text-gray-400 flex-shrink-0">{action.icon}</span>
-                  <span>{action.disabled && action.loadingLabel ? action.loadingLabel : action.label}</span>
+                  <span className="flex-1">{action.disabled && action.loadingLabel ? action.loadingLabel : action.label}</span>
+                  {action.aiConsuming && (
+                    <Sparkles size={14} className="text-purple-400 flex-shrink-0" />
+                  )}
                 </button>
                 )
               ))}
@@ -134,22 +132,25 @@ export default function KdlHamburgerMenu({
             </>
           )}
 
-          {/* ナビゲーション */}
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                target={item.target}
-                onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 transition-all"
-              >
-                <Icon size={20} className="text-gray-400" />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+          {/* ナビゲーション（最小限） */}
+          <Link
+            href={`/kindle${adminKeyParam}`}
+            onClick={() => setIsMenuOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 transition-all"
+          >
+            <Home size={20} className="text-gray-400" />
+            <span>ダッシュボードに戻る</span>
+          </Link>
+
+          <Link
+            href="/kindle/guide"
+            target="_blank"
+            onClick={() => setIsMenuOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 transition-all"
+          >
+            <HelpCircle size={20} className="text-gray-400" />
+            <span>ヘルプ</span>
+          </Link>
 
           <div className="border-t border-gray-200 my-3" />
 

@@ -498,9 +498,9 @@ function KindleListPageContent() {
       case 'book-covers':
         // 表紙作成一覧画面を表示（setActiveMenuItemで切り替え済み）
         break;
-      case 'my-books':
-        // 現在のページで書籍一覧にスクロール
-        document.getElementById('books-section')?.scrollIntoView({ behavior: 'smooth' });
+      case 'plan-info':
+        // プラン情報セクションにスクロール
+        document.getElementById('plan-info')?.scrollIntoView({ behavior: 'smooth' });
         break;
       case 'guidebook':
         // ガイドブック（旧：教育コンテンツ）画面を表示

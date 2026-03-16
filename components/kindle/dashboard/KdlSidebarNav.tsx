@@ -28,10 +28,11 @@ import {
   Globe,
   Image as ImageIcon,
   Lock,
+  CreditCard,
 } from 'lucide-react';
 
 export type KdlUserRole = 'user' | 'agency' | 'admin';
-export type KdlMenuSection = 'main' | 'agency' | 'admin' | 'settings';
+export type KdlMenuSection = 'main' | 'tools' | 'learning' | 'agency' | 'admin' | 'settings';
 
 export type KdlMenuItem = {
   id: string;
@@ -72,12 +73,13 @@ export default function KdlSidebarNav({
 }: KdlSidebarNavProps) {
   const isFreePlan = !planTier || planTier === 'none';
   const menuItems: KdlMenuItem[] = [
-    // ユーザー向けメニュー（全員表示）
-    { 
-      id: 'dashboard', 
-      label: 'ダッシュボード', 
-      icon: Home, 
+    // ━━ メイン ━━
+    {
+      id: 'dashboard',
+      label: 'ダッシュボード',
+      icon: Home,
       section: 'main',
+      badge: bookCount,
       roles: ['user', 'agency', 'admin'],
     },
     {
@@ -87,18 +89,20 @@ export default function KdlSidebarNav({
       section: 'main',
       roles: ['user', 'agency', 'admin'],
     },
+
+    // ━━ 執筆ツール ━━
     {
       id: 'discovery',
       label: 'ネタ発掘診断',
       icon: Lightbulb,
-      section: 'main',
+      section: 'tools',
       roles: ['user', 'agency', 'admin'],
     },
     {
       id: 'book-lps',
       label: '書籍LP',
       icon: Globe,
-      section: 'main',
+      section: 'tools',
       roles: ['user', 'agency', 'admin'],
       paidOnly: true,
     },
@@ -106,83 +110,84 @@ export default function KdlSidebarNav({
       id: 'book-covers',
       label: '表紙作成',
       icon: ImageIcon,
-      section: 'main',
+      section: 'tools',
       roles: ['user', 'agency', 'admin'],
       paidOnly: true,
     },
+
+    // ━━ 学習・ガイド ━━
     {
-      id: 'my-books',
-      label: 'マイブック',
-      icon: BookOpen,
-      section: 'main',
-      badge: bookCount,
+      id: 'publish-guide',
+      label: '出版準備ガイド',
+      icon: Rocket,
+      section: 'learning',
       roles: ['user', 'agency', 'admin'],
     },
-    { 
-      id: 'publish-guide', 
-      label: '出版準備ガイド', 
-      icon: Rocket, 
-      section: 'main',
+    {
+      id: 'guidebook',
+      label: 'ガイドブック',
+      icon: GraduationCap,
+      section: 'learning',
       roles: ['user', 'agency', 'admin'],
     },
-    { 
-      id: 'guidebook', 
-      label: 'ガイドブック', 
-      icon: GraduationCap, 
-      section: 'main',
-      roles: ['user', 'agency', 'admin'],
-    },
-    { 
-      id: 'announcements', 
-      label: 'お知らせ', 
-      icon: Bell, 
-      section: 'main',
+    {
+      id: 'announcements',
+      label: 'お知らせ',
+      icon: Bell,
+      section: 'learning',
       roles: ['user', 'agency', 'admin'],
     },
 
-    // 代理店向けメニュー
-    { 
-      id: 'agency-users', 
-      label: '担当ユーザー一覧', 
-      icon: Users, 
+    // ━━ 代理店 ━━
+    {
+      id: 'agency-users',
+      label: '担当ユーザー一覧',
+      icon: Users,
       section: 'agency',
       badge: assignedUserCount,
       roles: ['agency', 'admin'],
     },
-    { 
-      id: 'agency-progress', 
-      label: '進捗管理', 
-      icon: BarChart3, 
+    {
+      id: 'agency-progress',
+      label: '進捗管理',
+      icon: BarChart3,
       section: 'agency',
       roles: ['agency', 'admin'],
     },
-    { 
-      id: 'agency-feedback', 
-      label: '添削・フィードバック', 
-      icon: Edit3, 
+    {
+      id: 'agency-feedback',
+      label: '添削・フィードバック',
+      icon: Edit3,
       section: 'agency',
       roles: ['agency', 'admin'],
     },
-    { 
-      id: 'agency-messages', 
-      label: 'メッセージ', 
-      icon: MessageSquare, 
+    {
+      id: 'agency-messages',
+      label: 'メッセージ',
+      icon: MessageSquare,
       section: 'agency',
       roles: ['agency', 'admin'],
     },
 
-    // 設定メニュー（全員表示）
-    { 
-      id: 'settings', 
-      label: 'アカウント設定', 
-      icon: Settings, 
+    // ━━ 設定 ━━
+    {
+      id: 'settings',
+      label: 'アカウント設定',
+      icon: Settings,
       section: 'settings',
       roles: ['user', 'agency', 'admin'],
     },
-    { 
-      id: 'logout', 
-      label: 'ログアウト', 
-      icon: LogOut, 
+    {
+      id: 'plan-info',
+      label: 'プラン情報',
+      icon: CreditCard,
+      section: 'settings',
+      roles: ['user', 'agency', 'admin'],
+    },
+    {
+      id: 'logout',
+      label: 'ログアウト',
+      icon: LogOut,
       section: 'settings',
       roles: ['user', 'agency', 'admin'],
       onClick: onLogout,
@@ -288,6 +293,8 @@ export default function KdlSidebarNav({
   };
 
   const mainItems = filterByRole(menuItems.filter(item => item.section === 'main'));
+  const toolsItems = filterByRole(menuItems.filter(item => item.section === 'tools'));
+  const learningItems = filterByRole(menuItems.filter(item => item.section === 'learning'));
   const agencyItems = filterByRole(menuItems.filter(item => item.section === 'agency'));
   const settingsItems = filterByRole(menuItems.filter(item => item.section === 'settings'));
   const showAdminGroups = userRole === 'admin';
@@ -358,13 +365,33 @@ export default function KdlSidebarNav({
 
   return (
     <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto">
-      {/* メインメニュー */}
+      {/* メイン */}
       <div>
         <h3 className="px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
           メイン
         </h3>
         <div className="space-y-1">
           {mainItems.map(renderMenuItem)}
+        </div>
+      </div>
+
+      {/* 執筆ツール */}
+      <div>
+        <h3 className="px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+          執筆ツール
+        </h3>
+        <div className="space-y-1">
+          {toolsItems.map(renderMenuItem)}
+        </div>
+      </div>
+
+      {/* 学習・ガイド */}
+      <div>
+        <h3 className="px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+          学習・ガイド
+        </h3>
+        <div className="space-y-1">
+          {learningItems.map(renderMenuItem)}
         </div>
       </div>
 
@@ -395,7 +422,7 @@ export default function KdlSidebarNav({
         </div>
       )}
 
-      {/* 設定メニュー */}
+      {/* 設定 */}
       <div>
         <h3 className="px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
           設定
