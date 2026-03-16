@@ -103,4 +103,100 @@ CRITICAL TEXT RULES:
     ],
     tags: ['ライトノベル', 'ファンタジー', 'イラスト', '物語'],
   },
+  {
+    id: 'kindle-novel-mystery',
+    name: 'ミステリー・サスペンス',
+    description: '緊張感のあるダークなデザイン。推理小説・ホラー・サスペンスに',
+    genre: 'novel',
+    promptTemplate: `Design a mystery/thriller Kindle book cover (portrait, 9:16 aspect ratio, 1600x2560px).
+
+LAYOUT:
+- Dark, atmospheric background with tension-building elements
+- Title "{{title}}" in sharp, dramatic Japanese typography
+- {{subtitle}}
+- {{author}}
+- Mysterious visual elements: shadows, silhouettes, fog, broken glass, or abstract danger motifs
+- Strong contrast between light and dark areas
+
+DESIGN DIRECTION:
+- Japanese mystery/thriller book aesthetic (ミステリー・サスペンス)
+- Tension, suspense, unease — "what's hiding in the shadows?"
+- Dark and moody but professionally designed
+- Think award-winning Japanese mystery novel covers
+{{colorModifier}}
+
+CRITICAL TEXT RULES:
+- Japanese text (日本語) must be 100% accurate and perfectly legible
+- Title: dramatic, sharp, creates intrigue
+- NO placeholder text, NO lorem ipsum`,
+    colorThemes: [
+      {
+        id: 'mystery-noir',
+        name: 'ノワール',
+        colors: ['#0f172a', '#475569', '#dc2626'],
+        promptModifier: 'COLOR: Film noir — dark blacks with a single red accent. Danger, crime, suspense.',
+      },
+      {
+        id: 'mystery-midnight',
+        name: 'ミッドナイト',
+        colors: ['#0c0a1d', '#312e81', '#818cf8'],
+        promptModifier: 'COLOR: Deep midnight blue. Psychological thriller, eerie, cold.',
+      },
+      {
+        id: 'mystery-blood',
+        name: 'ブラッドレッド',
+        colors: ['#1a0000', '#991b1b', '#fca5a5'],
+        promptModifier: 'COLOR: Deep blood red and black. Horror, visceral, intense.',
+      },
+    ],
+    tags: ['ミステリー', 'サスペンス', 'ホラー', '推理'],
+  },
+  {
+    id: 'kindle-novel-romance',
+    name: 'ロマンス・恋愛',
+    description: '華やかで心ときめくデザイン。恋愛小説・ラブストーリーに',
+    genre: 'novel',
+    promptTemplate: `Design a romance novel Kindle book cover (portrait, 9:16 aspect ratio, 1600x2560px).
+
+LAYOUT:
+- Beautiful, dreamy background with romantic atmosphere
+- Title "{{title}}" in elegant, flowing Japanese typography
+- {{subtitle}}
+- {{author}}
+- Romantic visual elements: flowers, soft light, silhouettes, or abstract heart motifs
+- Ethereal, dreamy composition
+
+DESIGN DIRECTION:
+- Japanese romance novel aesthetic (恋愛小説)
+- Romantic, beautiful, heart-fluttering
+- Elegant and tasteful — not cheesy
+- Think bestselling Japanese romance novel covers
+{{colorModifier}}
+
+CRITICAL TEXT RULES:
+- Japanese text (日本語) must be 100% accurate and perfectly legible
+- Title: elegant, romantic, emotionally evocative
+- NO placeholder text, NO lorem ipsum`,
+    colorThemes: [
+      {
+        id: 'romance-rose',
+        name: 'ローズ',
+        colors: ['#fdf2f8', '#e11d48', '#881337'],
+        promptModifier: 'COLOR: Deep rose pink tones. Passionate, romantic, beautiful.',
+      },
+      {
+        id: 'romance-spring',
+        name: 'スプリング',
+        colors: ['#fefce8', '#fbbf24', '#fce7f3'],
+        promptModifier: 'COLOR: Soft spring pastels — yellow, pink, warm light. First love, fresh romance.',
+      },
+      {
+        id: 'romance-twilight',
+        name: 'トワイライト',
+        colors: ['#1e1b4b', '#a855f7', '#fce7f3'],
+        promptModifier: 'COLOR: Purple twilight gradient to soft pink. Bittersweet, mature romance.',
+      },
+    ],
+    tags: ['恋愛', 'ロマンス', 'ラブストーリー', '純文学'],
+  },
 ];

@@ -454,7 +454,7 @@ export default function PricingPageClient() {
           <h2 className="text-2xl md:text-3xl font-bold mb-3" style={{ color: '#5d4037' }}>
             まずは無料で、すべてのツールを体験
           </h2>
-          <p className="text-gray-500 mb-8 text-sm">有料プランは月額¥1,980〜 ・ いつでも解約OK</p>
+          <p className="text-gray-500 mb-8 text-sm">有料プランは月額¥1,980〜 ・ 自動継続課金 ・ いつでも解約OK</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <button
               onClick={() => setShowAuth(true)}

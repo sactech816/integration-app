@@ -27,6 +27,9 @@ import {
   ToggleRight,
   RotateCcw,
   HelpCircle,
+  CreditCard,
+  ExternalLink,
+  Info,
 } from 'lucide-react';
 import { fetchMakersSubscriptionStatus, MakersSubscriptionStatus } from '@/lib/subscription';
 import { 
@@ -67,6 +70,9 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
   // サブスクリプション状態（集客メーカー用）
   const [subscriptionStatus, setSubscriptionStatus] = useState<MakersSubscriptionStatus | null>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
+
+  // Stripe Portal
+  const [openingPortal, setOpeningPortal] = useState(false);
 
   // 状態管理
   const [savingEmail, setSavingEmail] = useState(false);
@@ -251,6 +257,29 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
     }
   };
 
+  // Stripe Customer Portal を開く
+  const handleOpenPortal = async () => {
+    if (!user?.id) return;
+    setOpeningPortal(true);
+    try {
+      const response = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        showError(data.error || 'プラン管理画面を開けませんでした');
+      }
+    } catch (error) {
+      showError('プラン管理画面を開けませんでした。しばらく経ってから再度お試しください。');
+    } finally {
+      setOpeningPortal(false);
+    }
+  };
+
   // アカウント削除
   const handleDeleteAccount = async () => {
     if (deleteConfirmText !== '削除する') {
@@ -379,6 +408,39 @@ export default function AccountSettings({ user, onLogout }: AccountSettingsProps
                         （{new Date(subscriptionStatus.monitorExpiresAt).toLocaleDateString('ja-JP')}まで）
                       </span>
                     )}
+                  </div>
+                )}
+
+                {/* 自動継続課金の説明 */}
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="flex items-start gap-2">
+                    <Info size={16} className="text-blue-600 mt-0.5 shrink-0" />
+                    <div className="text-sm text-blue-800">
+                      <p className="font-bold mb-1">自動継続課金について</p>
+                      <p>本プランは<strong>毎月自動で更新・課金</strong>されます。解約しない限り、毎月同額が自動的にクレジットカードに請求されます。解約はいつでも下のボタンから行えます。</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* プラン管理・解約ボタン */}
+                {!subscriptionStatus.isMonitor && (
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={handleOpenPortal}
+                      disabled={openingPortal}
+                      className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 text-white font-bold rounded-xl shadow-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      {openingPortal ? (
+                        <Loader2 size={18} className="animate-spin" />
+                      ) : (
+                        <CreditCard size={18} />
+                      )}
+                      プラン管理・解約
+                      <ExternalLink size={14} />
+                    </button>
+                    <p className="text-xs text-gray-500 self-center">
+                      Stripeの安全な管理画面で、プラン変更・解約・支払い方法の更新ができます
+                    </p>
                   </div>
                 )}
               </div>

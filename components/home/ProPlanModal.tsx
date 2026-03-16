@@ -255,9 +255,17 @@ export default function ProPlanModal({ isOpen, onClose, user, onShowAuth }: ProP
           </div>
 
           {/* 注意書き */}
-          <p className="text-xs text-gray-500 text-center mt-5">
-            税込 / いつでも解約可能 / Stripeによる安全な決済処理
-          </p>
+          <div className="mt-5 space-y-2">
+            <p className="text-xs text-gray-500 text-center">
+              税込 / いつでも解約可能 / Stripeによる安全な決済処理
+            </p>
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
+              <p className="text-xs text-gray-600 text-center leading-relaxed">
+                全プラン<strong>月額自動継続課金</strong>です。解約しない限り毎月自動で更新・請求されます。<br />
+                解約はダッシュボードの「アカウント設定」からいつでも行えます。解約後も期間終了まで利用可能です。
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

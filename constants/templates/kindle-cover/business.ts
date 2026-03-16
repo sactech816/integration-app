@@ -153,4 +153,100 @@ CRITICAL TEXT RULES:
     ],
     tags: ['タイポグラフィ', '思考法', '理論', 'ミニマル'],
   },
+  {
+    id: 'kindle-business-consulting',
+    name: 'コンサルティング',
+    description: 'プロフェッショナルで信頼感のあるデザイン。コンサル・戦略系に',
+    genre: 'business',
+    promptTemplate: `Design a consulting/strategy Kindle book cover (portrait, 9:16 aspect ratio, 1600x2560px).
+
+LAYOUT:
+- Premium, corporate layout with sophisticated geometric patterns
+- Title "{{title}}" in authoritative, sans-serif Japanese typography
+- {{subtitle}}
+- {{author}}
+- Subtle data visualization elements (abstract charts, graphs, network nodes) as decorative accents
+- Professional corporate border or frame element
+
+DESIGN DIRECTION:
+- McKinsey/BCG-level consulting book aesthetic
+- Data-driven, strategic, executive-level
+- Premium and authoritative — "C-suite reads this" quality
+- Clean lines, precise spacing, geometric precision
+{{colorModifier}}
+
+CRITICAL TEXT RULES:
+- Japanese text (日本語) must be 100% accurate and perfectly legible
+- Title: authoritative, strategic, professional
+- NO placeholder text, NO lorem ipsum`,
+    colorThemes: [
+      {
+        id: 'consulting-navy-gold',
+        name: 'ネイビー&ゴールド',
+        colors: ['#0f172a', '#c9a84c', '#ffffff'],
+        promptModifier: 'COLOR: Dark navy with gold accents. Executive, premium, corporate authority.',
+      },
+      {
+        id: 'consulting-gray',
+        name: 'エグゼクティブグレー',
+        colors: ['#374151', '#9ca3af', '#ffffff'],
+        promptModifier: 'COLOR: Sophisticated gray tones. Modern consulting, analytical, refined.',
+      },
+      {
+        id: 'consulting-blue',
+        name: 'コーポレートブルー',
+        colors: ['#1e3a5f', '#3b82f6', '#ffffff'],
+        promptModifier: 'COLOR: Corporate blue. Trustworthy, data-driven, strategic.',
+      },
+    ],
+    tags: ['コンサル', '戦略', '経営', 'MBA'],
+  },
+  {
+    id: 'kindle-business-startup',
+    name: 'スタートアップ',
+    description: 'モダンでテック感のあるデザイン。起業・IT・スタートアップ系に',
+    genre: 'business',
+    promptTemplate: `Design a startup/tech business Kindle book cover (portrait, 9:16 aspect ratio, 1600x2560px).
+
+LAYOUT:
+- Modern, tech-forward design with gradient backgrounds
+- Title "{{title}}" in modern, clean Japanese typography
+- {{subtitle}}
+- {{author}}
+- Optional: abstract tech elements (circuit patterns, dots, connecting lines)
+- Silicon Valley meets Japanese design sensibility
+
+DESIGN DIRECTION:
+- Tech startup book aesthetic
+- Modern, innovative, future-forward
+- Clean gradients, bold colors, geometric shapes
+- "Disruption" and "innovation" energy
+{{colorModifier}}
+
+CRITICAL TEXT RULES:
+- Japanese text (日本語) must be 100% accurate and perfectly legible
+- Title: modern, bold, forward-looking
+- NO placeholder text, NO lorem ipsum`,
+    colorThemes: [
+      {
+        id: 'startup-purple',
+        name: 'テックパープル',
+        colors: ['#2e1065', '#8b5cf6', '#c4b5fd'],
+        promptModifier: 'COLOR: Tech purple gradient. AI, innovation, future technology.',
+      },
+      {
+        id: 'startup-dark',
+        name: 'ダークモード',
+        colors: ['#0f172a', '#06b6d4', '#22d3ee'],
+        promptModifier: 'COLOR: Dark mode with cyan accents. Developer, coding, tech-savvy.',
+      },
+      {
+        id: 'startup-gradient',
+        name: 'グラデーション',
+        colors: ['#4f46e5', '#ec4899', '#f97316'],
+        promptModifier: 'COLOR: Vibrant multi-color gradient. Startup energy, creativity, disruption.',
+      },
+    ],
+    tags: ['スタートアップ', '起業', 'IT', 'テック'],
+  },
 ];

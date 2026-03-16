@@ -96,4 +96,52 @@ CRITICAL TEXT RULES:
     ],
     tags: ['ガイド', '大全', '完全版', '網羅'],
   },
+  {
+    id: 'kindle-howto-stepbystep',
+    name: 'ステップ図解',
+    description: '手順を視覚的に伝えるデザイン。マニュアル・手順書に',
+    genre: 'how_to',
+    promptTemplate: `Design a step-by-step guide Kindle book cover (portrait, 9:16 aspect ratio, 1600x2560px).
+
+LAYOUT:
+- Structured layout with visual "step" progression (1-2-3 flow or arrows)
+- Title "{{title}}" in clear, modern Japanese typography
+- {{subtitle}}
+- {{author}}
+- Visual elements suggesting progression: numbered circles, flowchart-style arrows, milestone markers
+- Clean grid-based layout conveying organization
+
+DESIGN DIRECTION:
+- Japanese step-by-step guide aesthetic (図解・手順書)
+- Organized, logical, "follow this path to success"
+- Infographic-inspired design elements
+- Clear visual hierarchy — information architecture as design
+{{colorModifier}}
+
+CRITICAL TEXT RULES:
+- Japanese text (日本語) must be 100% accurate and perfectly legible
+- Title: clear, action-oriented, conveys "easy to follow"
+- NO placeholder text, NO lorem ipsum`,
+    colorThemes: [
+      {
+        id: 'step-blue',
+        name: 'ステップブルー',
+        colors: ['#eff6ff', '#2563eb', '#1e3a5f'],
+        promptModifier: 'COLOR: Clear blue with white. Systematic, logical, step-by-step clarity.',
+      },
+      {
+        id: 'step-purple',
+        name: 'プロセスパープル',
+        colors: ['#faf5ff', '#7c3aed', '#3b0764'],
+        promptModifier: 'COLOR: Purple gradient. Creative process, transformation journey.',
+      },
+      {
+        id: 'step-orange',
+        name: 'アクションオレンジ',
+        colors: ['#fff7ed', '#ea580c', '#431407'],
+        promptModifier: 'COLOR: Energetic orange. Action-oriented, practical, hands-on.',
+      },
+    ],
+    tags: ['図解', 'ステップ', '手順', 'マニュアル'],
+  },
 ];

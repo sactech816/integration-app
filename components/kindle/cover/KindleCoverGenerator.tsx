@@ -12,10 +12,13 @@ import {
   BookOpen,
   Feather,
   GraduationCap,
+  UtensilsCrossed,
+  Camera,
   Palette,
   Sparkles,
   AlertCircle,
   Crown,
+  ExternalLink,
 } from 'lucide-react';
 import {
   kindleCoverTemplates,
@@ -31,6 +34,9 @@ const GENRE_ICONS: Record<KindleCoverGenre, React.ReactNode> = {
   how_to: <BookOpen size={16} />,
   novel: <Feather size={16} />,
   education: <GraduationCap size={16} />,
+  cooking_health: <UtensilsCrossed size={16} />,
+  photo_travel: <Camera size={16} />,
+  manga_illustration: <Palette size={16} />,
 };
 
 interface KindleCoverGeneratorProps {
@@ -168,12 +174,23 @@ export default function KindleCoverGenerator({
               Gemini 3 Pro Image
             </span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 transition"
-          >
-            <X size={20} className="text-gray-500" />
-          </button>
+          <div className="flex items-center gap-2">
+            <a
+              href={`/kindle/cover/editor?bookId=${bookId}&title=${encodeURIComponent(bookTitle)}&subtitle=${encodeURIComponent(bookSubtitle || '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-orange-600 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition"
+            >
+              <ExternalLink size={14} />
+              フルエディタで開く
+            </a>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-gray-100 transition"
+            >
+              <X size={20} className="text-gray-500" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}

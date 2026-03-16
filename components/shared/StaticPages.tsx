@@ -751,15 +751,27 @@ export const LegalPage = ({
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4">
                         <div className="font-bold text-gray-500">代金の支払時期および方法</div>
-                        <div className="md:col-span-2 text-gray-900">クレジットカード決済（Stripe）。購入時即時に決済されます。</div>
+                        <div className="md:col-span-2 text-gray-900">クレジットカード決済（Stripe）。購入時即時に決済されます。月額プランは初回決済日を起算日として、毎月同日に自動的にクレジットカードへ請求されます。</div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4">
                         <div className="font-bold text-gray-500">商品の引渡時期</div>
                         <div className="md:col-span-2 text-gray-900">決済完了後、即時にダウンロードまたは機能が有効化されます。</div>
                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4">
+                        <div className="font-bold text-gray-500">契約期間・自動更新について</div>
+                        <div className="md:col-span-2 text-gray-900">
+                            月額プラン（スタンダード・ビジネス・プレミアム）は、1ヶ月ごとの自動更新契約です。お客様が解約手続きを行わない限り、毎月自動的に契約が更新され、登録されたクレジットカードに課金されます。
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4">
+                        <div className="font-bold text-gray-500">解約方法</div>
+                        <div className="md:col-span-2 text-gray-900">
+                            ダッシュボード内「アカウント設定」の「プラン管理・解約」ボタンから、いつでも解約手続きが可能です。解約後も、現在の請求期間の終了日までは引き続きサービスをご利用いただけます。次回更新日より前に解約手続きを完了した場合、次回以降の課金は発生しません。
+                        </div>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="font-bold text-gray-500">返品・キャンセルについて</div>
-                        <div className="md:col-span-2 text-gray-900">デジタルコンテンツの性質上、決済完了後の返品・キャンセルはお受けできません。</div>
+                        <div className="md:col-span-2 text-gray-900">デジタルコンテンツの性質上、決済完了後の返品・キャンセルはお受けできません。月額プランの日割り返金は行っておりません。</div>
                     </div>
                 </div>
             </div>

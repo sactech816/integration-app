@@ -3,7 +3,10 @@ export type KindleCoverGenre =
   | 'self_help'      // 自己啓発
   | 'how_to'         // ハウツー・実用書
   | 'novel'          // 小説・エッセイ
-  | 'education';     // 教育・学習
+  | 'education'      // 教育・学習
+  | 'cooking_health' // 料理・健康
+  | 'photo_travel'   // 写真集・旅行
+  | 'manga_illustration'; // マンガ・イラスト
 
 export interface KindleCoverColorTheme {
   id: string;
