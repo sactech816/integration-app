@@ -11,7 +11,9 @@ export type ThumbnailPlatformCategory =
   | 'instagram_story'
   | 'twitter'
   | 'threads'
-  | 'banner';
+  | 'banner'
+  | 'tiktok'
+  | 'note_blog';
 
 export interface ThumbnailColorTheme {
   id: string;

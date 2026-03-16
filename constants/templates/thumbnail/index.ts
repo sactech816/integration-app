@@ -3,23 +3,33 @@ import { youtubeImpactTemplates } from './youtube-impact';
 import { youtubeMinimalTemplates } from './youtube-minimal';
 import { youtubePopTemplates } from './youtube-pop';
 import { youtubeProfessionalTemplates } from './youtube-professional';
+import { youtubeEmotionalTemplates } from './youtube-emotional';
 import { instagramPostTemplates } from './instagram-post';
+import { instagramPostExtraTemplates } from './instagram-post-extra';
 import { instagramStoryTemplates } from './instagram-story';
+import { instagramStoryExtraTemplates } from './instagram-story-extra';
 import { twitterTemplates } from './twitter';
 import { threadsTemplates } from './threads';
 import { bannerTemplates } from './banner';
+import { tiktokTemplates } from './tiktok';
+import { noteBlogTemplates } from './note-blog';
 
-// 全テンプレート（14種）
+// 全テンプレート（28種）
 export const thumbnailTemplates: ThumbnailTemplate[] = [
   ...youtubeImpactTemplates,
   ...youtubeMinimalTemplates,
   ...youtubePopTemplates,
   ...youtubeProfessionalTemplates,
+  ...youtubeEmotionalTemplates,
   ...instagramPostTemplates,
+  ...instagramPostExtraTemplates,
   ...instagramStoryTemplates,
+  ...instagramStoryExtraTemplates,
   ...twitterTemplates,
   ...threadsTemplates,
   ...bannerTemplates,
+  ...tiktokTemplates,
+  ...noteBlogTemplates,
 ];
 
 export const getTemplatesByPlatform = (platform: ThumbnailPlatformCategory): ThumbnailTemplate[] => {
@@ -41,6 +51,8 @@ export const PLATFORM_CATEGORIES = [
   { id: 'instagram_story' as const, label: 'Instagram ストーリー', aspectRatio: '9:16', icon: 'Instagram' },
   { id: 'twitter' as const, label: 'X / Twitter', aspectRatio: '16:9', icon: 'Twitter' },
   { id: 'threads' as const, label: 'Threads', aspectRatio: '1:1', icon: 'MessageCircle' },
+  { id: 'tiktok' as const, label: 'TikTok', aspectRatio: '9:16', icon: 'Youtube' },
+  { id: 'note_blog' as const, label: 'note / ブログ', aspectRatio: '16:9', icon: 'Image' },
   { id: 'banner' as const, label: '汎用バナー', aspectRatio: '16:9', icon: 'Image' },
 ];
 

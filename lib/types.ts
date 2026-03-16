@@ -1486,7 +1486,7 @@ export interface MarketplaceReview {
 // サムネイルメーカー関連の型定義
 // -------------------------------------------
 
-export type ThumbnailPlatform = 'youtube' | 'instagram_post' | 'instagram_story' | 'twitter' | 'threads' | 'banner';
+export type ThumbnailPlatform = 'youtube' | 'instagram_post' | 'instagram_story' | 'twitter' | 'threads' | 'banner' | 'tiktok' | 'note_blog';
 
 // SVGテキスト要素（編集可能テキストモード用）
 export type SVGTextElement = {

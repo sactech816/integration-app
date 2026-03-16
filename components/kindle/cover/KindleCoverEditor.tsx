@@ -27,6 +27,7 @@ import {
   FileImage,
   Layers,
   Upload,
+  Ribbon,
 } from 'lucide-react';
 import {
   kindleCoverTemplates,
@@ -157,6 +158,11 @@ export default function KindleCoverEditor({
 
   // Step 4: 詳細設定
   const [imageSize, setImageSize] = useState<'2K' | '4K'>('2K');
+
+  // 帯（おび）
+  const [obiEnabled, setObiEnabled] = useState(false);
+  const [obiText, setObiText] = useState('');
+  const [obiStyle, setObiStyle] = useState<'red' | 'gold' | 'blue' | 'green'>('red');
 
   // 生成モード
   const [generationMode, setGenerationMode] = useState<'ai_text' | 'editable_text'>('ai_text');
@@ -840,6 +846,84 @@ export default function KindleCoverEditor({
               </div>
             </div>
 
+            {/* 帯（おび） */}
+            <div className="mt-6 pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between mb-3">
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                  <Ribbon size={16} className="text-orange-500" />
+                  帯（おび）を追加
+                </label>
+                <button
+                  onClick={() => setObiEnabled(!obiEnabled)}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${obiEnabled ? 'bg-orange-500' : 'bg-gray-300'}`}
+                >
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${obiEnabled ? 'translate-x-5' : ''}`} />
+                </button>
+              </div>
+
+              {obiEnabled && (
+                <div className="space-y-3">
+                  {/* プリセット */}
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 mb-2">ワンクリック帯テキスト</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {['Amazon1位！', '10万部突破！', '話題沸騰！', '限定公開', '期間限定価格', '著者累計100万部', 'ベストセラー', '推薦図書'].map((preset) => (
+                        <button
+                          key={preset}
+                          onClick={() => setObiText(preset)}
+                          className={`px-2.5 py-1 text-xs rounded-full border transition-all ${
+                            obiText === preset
+                              ? 'bg-orange-100 border-orange-300 text-orange-700 font-bold'
+                              : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {preset}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* カスタムテキスト */}
+                  <div>
+                    <input
+                      type="text"
+                      value={obiText}
+                      onChange={(e) => setObiText(e.target.value)}
+                      placeholder="帯テキストを入力..."
+                      className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-300 focus:border-orange-400 outline-none"
+                      maxLength={30}
+                    />
+                  </div>
+
+                  {/* 帯カラー */}
+                  <div>
+                    <p className="text-xs font-medium text-gray-600 mb-2">帯カラー</p>
+                    <div className="flex gap-2">
+                      {[
+                        { id: 'red' as const, label: '赤', bg: 'bg-red-600' },
+                        { id: 'gold' as const, label: '金', bg: 'bg-amber-500' },
+                        { id: 'blue' as const, label: '青', bg: 'bg-blue-700' },
+                        { id: 'green' as const, label: '緑', bg: 'bg-emerald-600' },
+                      ].map((color) => (
+                        <button
+                          key={color.id}
+                          onClick={() => setObiStyle(color.id)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border-2 transition-all ${
+                            obiStyle === color.id
+                              ? 'border-orange-400 bg-orange-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className={`w-4 h-4 rounded-full ${color.bg}`} />
+                          <span className="text-xs font-medium text-gray-700">{color.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* 画像アップロード */}
             <div className="mt-6 pt-4 border-t border-gray-100">
               <label className="block text-sm font-bold text-gray-700 mb-2">背景画像をアップロード（任意）</label>
@@ -961,6 +1045,20 @@ export default function KindleCoverEditor({
                       selectedElementId={selectedTextElementId}
                       onSelectElement={setSelectedTextElementId}
                     />
+                    {/* 帯オーバーレイ */}
+                    {obiEnabled && obiText && (
+                      <div
+                        className="absolute left-0 right-0 bottom-[15%] flex items-center justify-center py-2 pointer-events-none"
+                        style={{
+                          backgroundColor: obiStyle === 'red' ? '#DC2626' : obiStyle === 'gold' ? '#D97706' : obiStyle === 'blue' ? '#1D4ED8' : '#059669',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                        }}
+                      >
+                        <span className="text-white font-black text-sm tracking-wider px-3 text-center" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.3)' }}>
+                          {obiText}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : generatedImageUrl ? (
@@ -979,6 +1077,20 @@ export default function KindleCoverEditor({
                       alt="生成されたKindle表紙"
                       className="w-full h-full object-cover"
                     />
+                    {/* 帯オーバーレイ */}
+                    {obiEnabled && obiText && (
+                      <div
+                        className="absolute left-0 right-0 bottom-[15%] flex items-center justify-center py-2"
+                        style={{
+                          backgroundColor: obiStyle === 'red' ? '#DC2626' : obiStyle === 'gold' ? '#D97706' : obiStyle === 'blue' ? '#1D4ED8' : '#059669',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                        }}
+                      >
+                        <span className="text-white font-black text-sm tracking-wider px-3 text-center" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.3)' }}>
+                          {obiText}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -1108,6 +1220,84 @@ export default function KindleCoverEditor({
                     <p className="text-xs text-gray-400 mt-1">Kindle版 (電子書籍)</p>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* 3Dモックアップ */}
+            {hasGeneratedContent && (
+              <div className="bg-white rounded-2xl border border-gray-200 p-4">
+                <p className="text-xs font-bold text-gray-500 mb-4">3Dモックアップ（SNS共有・LP用）</p>
+                <div className="flex justify-center" style={{ perspective: '800px' }}>
+                  <div
+                    className="relative"
+                    style={{
+                      width: '160px',
+                      height: '240px',
+                      transformStyle: 'preserve-3d',
+                      transform: 'rotateY(-25deg) rotateX(5deg)',
+                    }}
+                  >
+                    {/* 表紙（前面） */}
+                    <div
+                      className="absolute inset-0 rounded-sm overflow-hidden"
+                      style={{
+                        transformStyle: 'preserve-3d',
+                        transform: 'translateZ(8px)',
+                        boxShadow: '4px 4px 20px rgba(0,0,0,0.3), 0 0 1px rgba(0,0,0,0.1)',
+                      }}
+                    >
+                      {generatedImageUrl ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={generatedImageUrl}
+                          alt="3Dモックアップ"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-orange-200 to-amber-100 flex items-center justify-center">
+                          <ImageIcon size={32} className="text-orange-300" />
+                        </div>
+                      )}
+                      {/* 帯オーバーレイ（3D） */}
+                      {obiEnabled && obiText && (
+                        <div
+                          className="absolute left-0 right-0 bottom-[15%] flex items-center justify-center py-1"
+                          style={{
+                            backgroundColor: obiStyle === 'red' ? '#DC2626' : obiStyle === 'gold' ? '#D97706' : obiStyle === 'blue' ? '#1D4ED8' : '#059669',
+                          }}
+                        >
+                          <span className="text-white font-black text-[8px] tracking-wider px-1 text-center">
+                            {obiText}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {/* 背表紙（側面） */}
+                    <div
+                      className="absolute top-0 h-full"
+                      style={{
+                        width: '16px',
+                        left: '-8px',
+                        background: 'linear-gradient(90deg, #d4d4d8, #e4e4e7, #d4d4d8)',
+                        transform: 'rotateY(-90deg) translateZ(8px)',
+                        transformOrigin: 'right center',
+                      }}
+                    />
+                    {/* 底面の影 */}
+                    <div
+                      className="absolute -bottom-4 left-2 right-0"
+                      style={{
+                        height: '20px',
+                        background: 'radial-gradient(ellipse, rgba(0,0,0,0.15) 0%, transparent 70%)',
+                        transform: 'rotateX(90deg)',
+                        transformOrigin: 'top center',
+                      }}
+                    />
+                  </div>
+                </div>
+                <p className="text-[10px] text-gray-400 text-center mt-4">
+                  ※ イメージです。実際の書籍の見た目とは異なります
+                </p>
               </div>
             )}
           </div>
