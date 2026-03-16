@@ -181,9 +181,31 @@ export async function POST(request: NextRequest) {
     // プランチェック・レート制限・会話履歴を並列取得
     const identifier = userId ? { userId } : { visitorId };
 
-    const subscriptionPromise = userId
-      ? getMakersSubscriptionStatus(userId)
-      : Promise.resolve({ planTier: 'guest' });
+    // カスタムコンシェルジュの場合、作成者のプランで制限を判定
+    let subscriptionPromise: Promise<any>;
+    let ownerPlanTier: string | null = null;
+
+    if (configId) {
+      // configの作成者(user_id)を取得し、そのプランで制限
+      subscriptionPromise = Promise.resolve(
+        serviceClient
+          .from('concierge_configs')
+          .select('user_id')
+          .eq('id', configId)
+          .single()
+      ).then(async ({ data: configOwner }: any) => {
+          if (configOwner?.user_id) {
+            const ownerSub = await getMakersSubscriptionStatus(configOwner.user_id);
+            ownerPlanTier = (ownerSub as any).planTier || 'free';
+            return ownerSub;
+          }
+          return { planTier: 'guest' };
+        });
+    } else if (userId) {
+      subscriptionPromise = getMakersSubscriptionStatus(userId);
+    } else {
+      subscriptionPromise = Promise.resolve({ planTier: 'guest' });
+    }
 
     let historyQuery = serviceClient
       .from('concierge_messages')
@@ -204,14 +226,17 @@ export async function POST(request: NextRequest) {
       historyQuery,
     ]);
 
-    const planTier = (subscription as any).planTier || 'guest';
-    const userType = userId ? planTier : 'guest';
+    // カスタムコンシェルジュ: 作成者プランで制限、通常: 利用者プランで制限
+    const planTier = ownerPlanTier || (subscription as any).planTier || 'guest';
+    const userType = userId ? ((subscription as any).planTier || 'guest') : 'guest';
     const dailyLimit = DAILY_LIMITS[planTier] || DAILY_LIMITS.guest;
 
     if (dailyUsage >= dailyLimit) {
-      const limitMsg = userId
-        ? `本日のメッセージ上限（${dailyLimit}回）に達しました。`
-        : `ゲストの方は1日${dailyLimit}回までご利用いただけます。ログインするとより多くご利用いただけます！`;
+      const limitMsg = configId
+        ? `本日のメッセージ上限（${dailyLimit}回）に達しました。また明日お越しください。`
+        : userId
+          ? `本日のメッセージ上限（${dailyLimit}回）に達しました。`
+          : `ゲストの方は1日${dailyLimit}回までご利用いただけます。ログインするとより多くご利用いただけます！`;
       return NextResponse.json({
         error: limitMsg,
         remainingMessages: 0,

@@ -42,4 +42,5 @@ export const TABLES = {
   CONCIERGE_VISITOR_MESSAGES: 'concierge_visitor_messages',
   TRIAL_SETTINGS: 'trial_settings',
   TRIAL_OFFERS: 'trial_offers',
+  SUPPORTER_APPLICATIONS: 'supporter_applications',
 } as const;

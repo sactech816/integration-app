@@ -29,6 +29,7 @@ import PointPurchaseModal from '@/components/points/PointPurchaseModal';
 import PlanLimitModal, { PlanLimitInfo } from '@/components/shared/PlanLimitModal';
 import TrialOfferModal from '@/components/shared/TrialOfferModal';
 import TrialSettingsManager from './components/Admin/TrialSettingsManager';
+import FeatureProductManager from './components/Admin/FeatureProductManager';
 
 // 新しいコンポーネント
 import DashboardLayout from './components/DashboardLayout';
@@ -146,6 +147,20 @@ function DashboardContent() {
   useEffect(() => {
     const verifyPayment = async () => {
       const sessionId = searchParams?.get('session_id');
+      const paymentType = searchParams?.get('payment');
+      const product = searchParams?.get('product');
+
+      // 単品購入（ツール枠追加）の成功処理
+      if (paymentType === 'feature_success' && product === 'tool_unlock') {
+        alert('作成枠を追加しました！新しいコンテンツを作成できます。');
+        // URLからパラメータを削除
+        const url = new URL(window.location.href);
+        url.searchParams.delete('payment');
+        url.searchParams.delete('product');
+        window.history.replaceState({}, '', url.toString());
+        return;
+      }
+
       if (!sessionId) return;
 
       try {
@@ -555,6 +570,7 @@ function DashboardContent() {
         DiagnosisManager: () => <DiagnosisManager />,
         InquiryManager: () => <InquiryManager />,
         TrialSettingsManager: () => <TrialSettingsManager />,
+        FeatureProductManager: () => <FeatureProductManager />,
       }
     : undefined;
 

@@ -104,6 +104,7 @@ export async function POST(request: NextRequest) {
     const { data: row, error } = await query.single();
 
     if (error || !row) {
+      console.error('[BigFive generate-report] Query failed:', { resultId, isAdmin, error: error?.message, code: error?.code });
       return NextResponse.json({ error: '診断結果が見つかりません' }, { status: 404 });
     }
 

@@ -14,6 +14,7 @@ export interface LimitModalProps {
   info: PlanLimitDisplay | null;
   userId?: string;
   onUnlockSuccess?: () => void;
+  toolType?: string;
 }
 
 /**
@@ -73,6 +74,7 @@ export function usePointsWithLimitModal({ userId, isPro }: UsePointsWithLimitMod
     info: limitInfo,
     userId,
     onUnlockSuccess: handleUnlockSuccess,
+    toolType: limitInfo?.toolType,
   };
 
   return {

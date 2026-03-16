@@ -10,6 +10,12 @@ export interface CreationLimitResult {
   limit?: number;
   canUsePoints?: boolean;
   pointUnlocks?: number;
+  /** 単品購入で解除可能か */
+  canPurchase?: boolean;
+  /** 単品購入の価格（円） */
+  purchasePrice?: number;
+  /** 単品購入で解除済みの枠数 */
+  purchaseUnlocks?: number;
 }
 
 /** 制限超過時に表示するモーダルの情報 */
@@ -25,6 +31,14 @@ export interface PlanLimitDisplay {
   pointUnlocks?: number;
   /** ポイント解除を実行する関数 */
   onPointUnlock?: () => Promise<boolean>;
+  /** 対象ツールタイプ */
+  toolType?: string;
+  /** 単品購入で解除可能か */
+  canPurchase?: boolean;
+  /** 単品購入の価格（円） */
+  purchasePrice?: number;
+  /** 単品購入で解除済みの枠数 */
+  purchaseUnlocks?: number;
 }
 
 export interface UsePointsOptions {
@@ -109,6 +123,10 @@ export function usePoints({ userId, isPro, onCreationLimitReached }: UsePointsOp
                 canUsePoints: data.canUsePoints ?? (data.limit !== undefined && data.limit > 0),
                 pointUnlocks: data.pointUnlocks,
                 onPointUnlock: handlePointUnlock,
+                toolType: serviceType,
+                canPurchase: data.canPurchase,
+                purchasePrice: data.purchasePrice,
+                purchaseUnlocks: data.purchaseUnlocks,
               });
             } else {
               // フォールバック: コールバック未設定の場合はalert

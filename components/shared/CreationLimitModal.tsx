@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Crown, Gamepad2, Loader2, ArrowRight, Sparkles } from 'lucide-react';
+import { X, Crown, Gamepad2, Loader2, ArrowRight, Sparkles, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import type { PlanLimitDisplay } from '@/lib/hooks/usePoints';
 
@@ -14,6 +14,8 @@ interface CreationLimitModalProps {
   userId?: string;
   /** ポイント解除成功後に保存を続行する */
   onUnlockSuccess?: () => void;
+  /** 対象ツールタイプ（購入時に使用） */
+  toolType?: string;
 }
 
 export default function CreationLimitModal({
@@ -22,11 +24,13 @@ export default function CreationLimitModal({
   info,
   userId,
   onUnlockSuccess,
+  toolType,
 }: CreationLimitModalProps) {
   const [pointBalance, setPointBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
   const [unlockResult, setUnlockResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [purchasing, setPurchasing] = useState(false);
 
   // モーダルが開いたらポイント残高を取得
   useEffect(() => {
@@ -63,6 +67,36 @@ export default function CreationLimitModal({
       setUnlockResult({ success: false, message: 'エラーが発生しました。' });
     } finally {
       setUnlocking(false);
+    }
+  };
+
+  const effectiveToolType = toolType || info?.toolType;
+  const canPurchase = info?.canPurchase && info?.purchasePrice && effectiveToolType;
+  const purchasePrice = info?.purchasePrice;
+
+  const handlePurchase = async () => {
+    if (!userId || !effectiveToolType || !purchasePrice) return;
+    setPurchasing(true);
+    try {
+      const res = await fetch('/api/features/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          productId: 'tool_unlock',
+          contentType: effectiveToolType,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert('購入処理でエラーが発生しました。');
+      }
+    } catch {
+      alert('購入処理でエラーが発生しました。');
+    } finally {
+      setPurchasing(false);
     }
   };
 
@@ -109,7 +143,47 @@ export default function CreationLimitModal({
             <ArrowRight className="w-5 h-5 text-amber-500 group-hover:translate-x-1 transition-transform" />
           </Link>
 
-          {/* オプション2: ポイントで解除 */}
+          {/* オプション2: 単品購入で解除 */}
+          {canPurchase && (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-xs text-gray-400 font-medium">または</span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+
+              <button
+                onClick={handlePurchase}
+                disabled={purchasing}
+                className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl hover:shadow-md transition-all group text-left"
+              >
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  {purchasing ? (
+                    <Loader2 className="w-6 h-6 text-emerald-600 animate-spin" />
+                  ) : (
+                    <CreditCard className="w-6 h-6 text-emerald-600" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-gray-900">
+                    ¥{purchasePrice?.toLocaleString()}で1枠追加購入
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    クレジットカードで今すぐ作成枠を追加
+                  </p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-emerald-500 group-hover:translate-x-1 transition-transform flex-shrink-0" />
+              </button>
+
+              {info.purchaseUnlocks !== undefined && info.purchaseUnlocks > 0 && (
+                <p className="text-xs text-gray-400 text-center">
+                  ※ このツールで{info.purchaseUnlocks}枠を購入済み
+                </p>
+              )}
+            </>
+          )}
+
+          {/* オプション3: ポイントで解除 */}
           {info.canUsePoints && (
             <>
               <div className="flex items-center gap-3">
