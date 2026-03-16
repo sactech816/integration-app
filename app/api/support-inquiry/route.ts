@@ -61,6 +61,7 @@ export async function POST(request: Request) {
     const data = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
       to: 'support@makers.tokyo',
+      replyTo: email,
       subject: `【サポートパック相談】${escapedPackName}（${escapedName}様）`,
       html: `
         <h2>サポートパックのお問い合わせがありました</h2>
