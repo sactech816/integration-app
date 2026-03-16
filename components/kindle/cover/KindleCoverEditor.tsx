@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Briefcase,
   Heart,
@@ -24,6 +24,9 @@ import {
   Type,
   Settings,
   AlertCircle,
+  FileImage,
+  Layers,
+  Upload,
 } from 'lucide-react';
 import {
   kindleCoverTemplates,
@@ -34,6 +37,10 @@ import {
 } from '@/constants/templates/kindle-cover';
 import { supabase, TABLES } from '@/lib/supabase';
 import { generateSlug } from '@/lib/utils';
+import { SVGTextElement } from '@/lib/types';
+import SVGTextOverlay, { SVGTextOverlayRef } from '@/components/thumbnail/SVGTextOverlay';
+import TextEditPanel from '@/components/thumbnail/TextEditPanel';
+import { exportAsPNG } from '@/lib/thumbnail/exportSvg';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
 import CreationLimitModal from '@/components/shared/CreationLimitModal';
@@ -151,6 +158,15 @@ export default function KindleCoverEditor({
   // Step 4: 詳細設定
   const [imageSize, setImageSize] = useState<'2K' | '4K'>('2K');
 
+  // 生成モード
+  const [generationMode, setGenerationMode] = useState<'ai_text' | 'editable_text'>('ai_text');
+
+  // 編集可能テキストモード用
+  const svgOverlayRef = useRef<SVGTextOverlayRef>(null);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null);
+  const [svgTextElements, setSvgTextElements] = useState<SVGTextElement[]>([]);
+  const [selectedTextElementId, setSelectedTextElementId] = useState<string | null>(null);
+
   // 生成結果
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -211,6 +227,7 @@ export default function KindleCoverEditor({
           imageSize,
           userId: user.id,
           bookId: bookId || undefined,
+          mode: generationMode,
         }),
       });
 
@@ -229,7 +246,61 @@ export default function KindleCoverEditor({
         throw new Error(data.error || data.message || '生成に失敗しました');
       }
 
-      setGeneratedImageUrl(data.imageUrl);
+      if (generationMode === 'editable_text') {
+        // 背景のみモード: SVGオーバーレイを初期化
+        setBackgroundImageUrl(data.imageUrl);
+        setGeneratedImageUrl(null);
+        const defaultElements: SVGTextElement[] = [
+          {
+            id: `title-${Date.now()}`,
+            text: title,
+            x: 50, y: 40,
+            fontSize: 72,
+            fontFamily: 'Noto Sans JP',
+            fontWeight: 900,
+            color: '#FFFFFF',
+            strokeColor: '#000000',
+            strokeWidth: 4,
+            textAlign: 'center',
+          },
+        ];
+        if (subtitle) {
+          defaultElements.push({
+            id: `subtitle-${Date.now()}`,
+            text: subtitle,
+            x: 50, y: 55,
+            fontSize: 36,
+            fontFamily: 'Noto Sans JP',
+            fontWeight: 700,
+            color: '#FFFFFF',
+            strokeColor: '#000000',
+            strokeWidth: 3,
+            textAlign: 'center',
+          });
+        }
+        if (authorName) {
+          defaultElements.push({
+            id: `author-${Date.now()}`,
+            text: authorName,
+            x: 50, y: 88,
+            fontSize: 28,
+            fontFamily: 'Noto Sans JP',
+            fontWeight: 400,
+            color: '#FFFFFF',
+            strokeColor: '#000000',
+            strokeWidth: 2,
+            textAlign: 'center',
+          });
+        }
+        setSvgTextElements(defaultElements);
+        setSelectedTextElementId(defaultElements[0].id);
+      } else {
+        // 通常モード
+        setGeneratedImageUrl(data.imageUrl);
+        setBackgroundImageUrl(null);
+        setSvgTextElements([]);
+      }
+
       onCoverGenerated?.(data.imageUrl);
       // モバイルではプレビュータブに自動切り替え
       setMobileTab('preview');
@@ -238,10 +309,30 @@ export default function KindleCoverEditor({
     } finally {
       setIsGenerating(false);
     }
-  }, [title, subtitle, authorName, selectedTemplate, selectedColorThemeId, additionalPrompt, imageSize, user, setShowAuth, bookId, onCoverGenerated]);
+  }, [title, subtitle, authorName, selectedTemplate, selectedColorThemeId, additionalPrompt, imageSize, user, setShowAuth, bookId, onCoverGenerated, generationMode]);
 
   // ダウンロード
   const handleDownload = async () => {
+    // editable_textモード: SVGからPNGを生成
+    if (generationMode === 'editable_text' && svgOverlayRef.current?.getSVGElement()) {
+      try {
+        const svgEl = svgOverlayRef.current.getSVGElement()!;
+        const { exportAsPNG: exportPNG } = await import('@/lib/thumbnail/exportSvg');
+        const pngBlob = await exportPNG(svgEl, 1080, 1920);
+        const url = URL.createObjectURL(pngBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `kindle-cover-${title || 'image'}-${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch {
+        setError('ダウンロードに失敗しました');
+      }
+      return;
+    }
+
     if (!generatedImageUrl) return;
     try {
       const response = await fetch(generatedImageUrl);
@@ -259,6 +350,41 @@ export default function KindleCoverEditor({
     }
   };
 
+  // SVGテキスト要素の操作
+  const handleUpdateTextElement = (id: string, updates: Partial<SVGTextElement>) => {
+    setSvgTextElements(prev => prev.map(el => el.id === id ? { ...el, ...updates } : el));
+  };
+
+  const handleAddTextElement = () => {
+    const newElement: SVGTextElement = {
+      id: `text-${Date.now()}`,
+      text: '新しいテキスト',
+      x: 50, y: 50,
+      fontSize: 40,
+      fontFamily: 'Noto Sans JP',
+      fontWeight: 700,
+      color: '#FFFFFF',
+      strokeColor: '#000000',
+      strokeWidth: 3,
+      textAlign: 'center',
+    };
+    setSvgTextElements(prev => [...prev, newElement]);
+    setSelectedTextElementId(newElement.id);
+  };
+
+  const handleDeleteTextElement = (id: string) => {
+    setSvgTextElements(prev => {
+      const filtered = prev.filter(el => el.id !== id);
+      if (selectedTextElementId === id) {
+        setSelectedTextElementId(filtered[0]?.id || null);
+      }
+      return filtered;
+    });
+  };
+
+  // 表示すべきコンテンツがあるか
+  const hasGeneratedContent = generationMode === 'editable_text' ? !!backgroundImageUrl : !!generatedImageUrl;
+
   // 保存
   const handleSave = async () => {
     if (!supabase) return;
@@ -266,16 +392,33 @@ export default function KindleCoverEditor({
       setShowAuth(true);
       return;
     }
-    if (!generatedImageUrl) return;
+    const hasContent = generationMode === 'editable_text' ? backgroundImageUrl : generatedImageUrl;
+    if (!hasContent) return;
 
     await consumeAndExecute('kindle_cover', 'save', async () => {
       setIsSaving(true);
       try {
+        // editable_textモードの場合、SVGからPNGをレンダリングしてアップロード
+        let imageUrlToSave = generatedImageUrl;
+        if (generationMode === 'editable_text' && svgOverlayRef.current?.getSVGElement()) {
+          const svgEl = svgOverlayRef.current.getSVGElement()!;
+          const pngBlob = await exportAsPNG(svgEl, 1080, 1920);
+          const filePath = `kindle-covers/${user.id}/${Date.now()}_composed.png`;
+          const { error: uploadErr } = await supabase.storage
+            .from('thumbnail-images')
+            .upload(filePath, pngBlob, { contentType: 'image/png' });
+          if (uploadErr) throw uploadErr;
+          const { data: urlData } = supabase.storage
+            .from('thumbnail-images')
+            .getPublicUrl(filePath);
+          imageUrlToSave = urlData.publicUrl;
+        }
+
         const slug = savedSlug || generateSlug();
         const coverData = {
           slug,
           title: title || '新規Kindle表紙',
-          image_url: generatedImageUrl,
+          image_url: imageUrlToSave,
           genre: selectedGenre,
           template_id: selectedTemplate?.id || null,
           color_theme_id: selectedColorThemeId || null,
@@ -290,14 +433,14 @@ export default function KindleCoverEditor({
 
         if (savedSlug) {
           const { error: updateError } = await supabase
-            .from('kindle_covers')
+            .from(TABLES.KINDLE_COVERS)
             .update(coverData)
             .eq('slug', savedSlug)
             .eq('user_id', user.id);
           if (updateError) throw updateError;
         } else {
           const { error: insertError } = await supabase
-            .from('kindle_covers')
+            .from(TABLES.KINDLE_COVERS)
             .insert([coverData]);
           if (insertError) throw insertError;
         }
@@ -569,6 +712,46 @@ export default function KindleCoverEditor({
               />
             </div>
 
+            {/* 生成モード切り替え */}
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <label className="block text-sm font-bold text-gray-700 mb-2">生成モード</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setGenerationMode('ai_text')}
+                  className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 transition-all text-left ${
+                    generationMode === 'ai_text'
+                      ? 'border-orange-400 bg-orange-50'
+                      : 'border-gray-200 hover:border-orange-200'
+                  }`}
+                >
+                  <FileImage size={18} className={generationMode === 'ai_text' ? 'text-orange-500' : 'text-gray-400'} />
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">AI テキスト</p>
+                    <p className="text-xs text-gray-500">画像に直接テキスト描画</p>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setGenerationMode('editable_text')}
+                  className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 transition-all text-left ${
+                    generationMode === 'editable_text'
+                      ? 'border-orange-400 bg-orange-50'
+                      : 'border-gray-200 hover:border-orange-200'
+                  }`}
+                >
+                  <Layers size={18} className={generationMode === 'editable_text' ? 'text-orange-500' : 'text-gray-400'} />
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">編集可能テキスト</p>
+                    <p className="text-xs text-gray-500">生成後に文字を自由編集</p>
+                  </div>
+                </button>
+              </div>
+              {generationMode === 'editable_text' && (
+                <p className="text-xs text-orange-600 mt-2 bg-orange-50 px-3 py-2 rounded-lg">
+                  AIが背景画像のみを生成し、テキストは後から自由に編集（フォント・サイズ・色・位置）できます。
+                </p>
+              )}
+            </div>
+
             {error && (
               <div className="flex items-start gap-2 bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm mt-4">
                 <AlertCircle size={16} className="shrink-0 mt-0.5" />
@@ -657,6 +840,91 @@ export default function KindleCoverEditor({
               </div>
             </div>
 
+            {/* 画像アップロード */}
+            <div className="mt-6 pt-4 border-t border-gray-100">
+              <label className="block text-sm font-bold text-gray-700 mb-2">背景画像をアップロード（任意）</label>
+              <p className="text-xs text-gray-500 mb-3">
+                自分の画像を背景に使い、テキストをオーバーレイできます。推奨: 1600×2560px（9:16）
+              </p>
+              <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-orange-300 hover:bg-orange-50 transition-all">
+                <Upload size={18} className="text-gray-400" />
+                <span className="text-sm font-medium text-gray-600">画像を選択</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !user || !supabase) return;
+                    try {
+                      const filePath = `kindle-covers/${user.id}/${Date.now()}_upload.${file.name.split('.').pop()}`;
+                      const { error: uploadErr } = await supabase.storage
+                        .from('thumbnail-images')
+                        .upload(filePath, file, { contentType: file.type });
+                      if (uploadErr) throw uploadErr;
+                      const { data: urlData } = supabase.storage
+                        .from('thumbnail-images')
+                        .getPublicUrl(filePath);
+                      // アップロード画像を背景としてセット（editable_textモードに切り替え）
+                      setGenerationMode('editable_text');
+                      setBackgroundImageUrl(urlData.publicUrl);
+                      setGeneratedImageUrl(null);
+                      // テキスト要素を初期化
+                      const defaultElements: SVGTextElement[] = [
+                        {
+                          id: `title-${Date.now()}`,
+                          text: title || 'タイトル',
+                          x: 50, y: 40,
+                          fontSize: 72,
+                          fontFamily: 'Noto Sans JP',
+                          fontWeight: 900,
+                          color: '#FFFFFF',
+                          strokeColor: '#000000',
+                          strokeWidth: 4,
+                          textAlign: 'center',
+                        },
+                      ];
+                      if (subtitle) {
+                        defaultElements.push({
+                          id: `subtitle-${Date.now() + 1}`,
+                          text: subtitle,
+                          x: 50, y: 55,
+                          fontSize: 36,
+                          fontFamily: 'Noto Sans JP',
+                          fontWeight: 700,
+                          color: '#FFFFFF',
+                          strokeColor: '#000000',
+                          strokeWidth: 3,
+                          textAlign: 'center',
+                        });
+                      }
+                      if (authorName) {
+                        defaultElements.push({
+                          id: `author-${Date.now() + 2}`,
+                          text: authorName,
+                          x: 50, y: 88,
+                          fontSize: 28,
+                          fontFamily: 'Noto Sans JP',
+                          fontWeight: 400,
+                          color: '#FFFFFF',
+                          strokeColor: '#000000',
+                          strokeWidth: 2,
+                          textAlign: 'center',
+                        });
+                      }
+                      setSvgTextElements(defaultElements);
+                      setSelectedTextElementId(defaultElements[0].id);
+                      setMobileTab('preview');
+                    } catch (err) {
+                      setError('画像のアップロードに失敗しました');
+                    }
+                    // inputをリセット
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            </div>
+
             <div className="mt-4 p-3 bg-gray-50 rounded-lg">
               <p className="text-xs text-gray-500">
                 KDP推奨サイズ: 1600×2560px（9:16）<br />
@@ -677,8 +945,26 @@ export default function KindleCoverEditor({
 
             {/* プレビュー表示 */}
             <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-              {generatedImageUrl ? (
-                /* 生成済み画像 */
+              {generationMode === 'editable_text' && backgroundImageUrl ? (
+                /* 編集可能テキストモード: SVGオーバーレイ */
+                <div className="p-4">
+                  <div
+                    className="relative mx-auto"
+                    style={{ maxWidth: '320px' }}
+                  >
+                    <SVGTextOverlay
+                      ref={svgOverlayRef}
+                      backgroundImageUrl={backgroundImageUrl}
+                      aspectRatio="9:16"
+                      textElements={svgTextElements}
+                      onTextElementsChange={setSvgTextElements}
+                      selectedElementId={selectedTextElementId}
+                      onSelectElement={setSelectedTextElementId}
+                    />
+                  </div>
+                </div>
+              ) : generatedImageUrl ? (
+                /* 通常モード: 生成済み画像 */
                 <div className="p-4">
                   <div
                     className="relative mx-auto overflow-hidden rounded-xl bg-gray-100"
@@ -735,7 +1021,7 @@ export default function KindleCoverEditor({
               )}
 
               {/* アクションボタン（生成後のみ表示） */}
-              {generatedImageUrl && (
+              {hasGeneratedContent && (
                 <div className="px-4 pb-4 space-y-3">
                   <div className="flex flex-wrap gap-2">
                     <button
@@ -759,6 +1045,9 @@ export default function KindleCoverEditor({
                   <button
                     onClick={() => {
                       setGeneratedImageUrl(null);
+                      setBackgroundImageUrl(null);
+                      setSvgTextElements([]);
+                      setSelectedTextElementId(null);
                       setMobileTab('editor');
                       setOpenSections(prev => ({ ...prev, text: true }));
                     }}
@@ -771,20 +1060,38 @@ export default function KindleCoverEditor({
               )}
             </div>
 
+            {/* 編集可能テキストモード: テキスト編集パネル */}
+            {generationMode === 'editable_text' && backgroundImageUrl && (
+              <TextEditPanel
+                textElements={svgTextElements}
+                selectedElementId={selectedTextElementId}
+                onUpdateElement={handleUpdateTextElement}
+                onAddElement={handleAddTextElement}
+                onDeleteElement={handleDeleteTextElement}
+                onSelectElement={setSelectedTextElementId}
+              />
+            )}
+
             {/* Amazonプレビュー風 */}
-            {generatedImageUrl && (
+            {hasGeneratedContent && (
               <div className="bg-white rounded-2xl border border-gray-200 p-4">
                 <p className="text-xs font-bold text-gray-500 mb-3">Amazonでの表示イメージ（参考）</p>
                 <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
                   <div
                     className="w-16 h-24 rounded overflow-hidden bg-gray-200 shrink-0 shadow-sm"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={generatedImageUrl}
-                      alt="サムネイルプレビュー"
-                      className="w-full h-full object-cover"
-                    />
+                    {generatedImageUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={generatedImageUrl}
+                        alt="サムネイルプレビュー"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-orange-100 flex items-center justify-center">
+                        <Layers size={16} className="text-orange-400" />
+                      </div>
+                    )}
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-gray-900 line-clamp-2">{title || 'タイトル未入力'}</p>

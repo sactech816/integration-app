@@ -39,6 +39,7 @@ export type ActiveView =
   | 'onboarding'
   | 'thumbnail'
   | 'kindle'
+  | 'kindle-cover'
   | 'newsletter'
   | 'step-email'
   | 'order-form'

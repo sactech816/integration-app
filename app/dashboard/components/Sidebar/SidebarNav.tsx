@@ -88,6 +88,7 @@ type SidebarNavProps = {
     bigfive: number;
     fortune: number;
     concierge: number;
+    kindle_cover: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態
@@ -140,6 +141,7 @@ export default function SidebarNav({
     'bigfive': contentCounts.bigfive,
     'fortune': contentCounts.fortune,
     'concierge': contentCounts.concierge,
+    'kindle-cover': contentCounts.kindle_cover,
   };
 
   // ツールアイテムをMenuItemに変換

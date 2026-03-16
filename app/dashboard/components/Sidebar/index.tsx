@@ -41,6 +41,7 @@ type SidebarProps = {
     bigfive: number;
     fortune: number;
     concierge: number;
+    kindle_cover: number;
   };
   totalViews: number;
   onLogout: () => void;

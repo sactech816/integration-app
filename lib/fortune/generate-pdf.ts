@@ -25,7 +25,7 @@ export async function htmlToPdf(html: string): Promise<Buffer> {
     if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
       const chromium = await import('@sparticuz/chromium-min');
       executablePath = await chromium.default.executablePath(
-        'https://github.com/nichochar/chromium-brotli/releases/download/v143.0.0/chromium-v143.0.0-pack.tar'
+        'https://github.com/Sparticuz/chromium/releases/download/v143.0.4/chromium-v143.0.4-pack.x64.tar'
       );
       args = chromium.default.args;
     }

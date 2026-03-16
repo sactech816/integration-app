@@ -188,6 +188,15 @@ export const TOOL_ITEMS: ToolItem[] = [
     category: 'writing',
   },
   {
+    id: 'kindle-cover',
+    label: 'Kindle表紙メーカー',
+    icon: Image,
+    description: 'AI表紙デザイン',
+    color: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200' },
+    href: '/kindle/cover/editor',
+    category: 'writing',
+  },
+  {
     id: 'kindle-discovery',
     label: 'ネタ発掘診断',
     icon: Lightbulb,

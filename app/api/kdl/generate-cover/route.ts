@@ -80,6 +80,7 @@ export async function POST(request: Request) {
       imageSize,
       userId,
       bookId,
+      mode,
     } = body;
 
     if (!title?.trim()) {
@@ -160,14 +161,26 @@ CRITICAL TEXT RULES:
       prompt += `\nAdditional creative direction: ${additionalPrompt.trim()}`;
     }
 
-    // 日本語テキスト描画の強化指示
-    prompt += `
+    // editable_text モードの場合、テキストなし背景のみを生成
+    if (mode === 'editable_text') {
+      prompt += `
+
+CRITICAL OVERRIDE — BACKGROUND ONLY MODE:
+- DO NOT render ANY text on the image. No title, no subtitle, no author name, no text of any kind.
+- Generate ONLY the background design, colors, patterns, illustrations, and visual elements.
+- The text information above is for design inspiration ONLY — use it to understand the book's theme and mood.
+- The final image must be a clean background with NO text whatsoever.
+- Output a single cover image with no borders, no mockup frames, no device frames.`;
+    } else {
+      // 日本語テキスト描画の強化指示
+      prompt += `
 
 FINAL CRITICAL INSTRUCTIONS:
 1. This is a JAPANESE (日本語) book cover. Every Japanese character must be rendered with 100% accuracy — no missing strokes, no garbled text, no incorrect kanji.
 2. Text legibility is the #1 priority. If text and visual elements conflict, text wins.
 3. The cover must be instantly compelling at thumbnail size (120x192px) on the Amazon Kindle store.
 4. Output a single cover image with no borders, no mockup frames, no device frames.`;
+    }
 
     // Gemini 3 Pro Image で生成
     const ai = new GoogleGenAI({ apiKey });

@@ -43,4 +43,5 @@ export const TABLES = {
   TRIAL_SETTINGS: 'trial_settings',
   TRIAL_OFFERS: 'trial_offers',
   SUPPORTER_APPLICATIONS: 'supporter_applications',
+  KINDLE_COVERS: 'kindle_covers',
 } as const;

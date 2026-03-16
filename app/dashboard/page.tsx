@@ -350,6 +350,12 @@ function DashboardContent() {
       return;
     }
 
+    // Kindle表紙メーカーへの遷移
+    if (itemId === 'kindle-cover') {
+      router.push('/kindle/cover/editor');
+      return;
+    }
+
     // ネタ発掘診断への遷移
     if (itemId === 'kindle-discovery') {
       const adminKey = isAdmin ? `?admin_key=${process.env.NEXT_PUBLIC_ADMIN_KEY || ''}` : '';
