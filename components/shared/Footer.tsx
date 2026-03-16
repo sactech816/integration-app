@@ -53,7 +53,7 @@ const Footer: React.FC<FooterProps> = () => {
               <li>
                 <Link href="/profile" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <UserCircle size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  プロフィール
+                  プロフィールメーカー
                 </Link>
               </li>
               <li>
@@ -65,7 +65,7 @@ const Footer: React.FC<FooterProps> = () => {
               <li>
                 <Link href="/webinar/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Video size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  ウェビナーLP
+                  ウェビナーLPメーカー
                 </Link>
               </li>
               <li>
@@ -99,13 +99,13 @@ const Footer: React.FC<FooterProps> = () => {
               <li>
                 <Link href="/quiz" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Sparkles size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  診断クイズ
+                  診断クイズメーカー
                 </Link>
               </li>
               <li>
                 <Link href="/entertainment/create" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <PartyPopper size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  エンタメ診断
+                  エンタメ診断メーカー
                 </Link>
               </li>
               <li>
@@ -130,13 +130,13 @@ const Footer: React.FC<FooterProps> = () => {
               <li>
                 <Link href="/thumbnail" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Image size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  サムネイル
+                  サムネイルメーカー
                 </Link>
               </li>
               <li>
                 <Link href="/sns-post" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Send size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  SNS投稿
+                  SNS投稿メーカー
                 </Link>
               </li>
               <li>
@@ -170,13 +170,13 @@ const Footer: React.FC<FooterProps> = () => {
               <li>
                 <Link href="/survey" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <ClipboardList size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  アンケート
+                  アンケートメーカー
                 </Link>
               </li>
               <li>
                 <Link href="/newsletter/campaigns/new" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Mail size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  メルマガ
+                  メルマガメーカー
                 </Link>
               </li>
               <li>
@@ -188,7 +188,7 @@ const Footer: React.FC<FooterProps> = () => {
               <li>
                 <Link href="/funnel/new" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <GitBranch size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  ファネル
+                  ファネルメーカー
                 </Link>
               </li>
               <li>
@@ -210,43 +210,43 @@ const Footer: React.FC<FooterProps> = () => {
               <li>
                 <Link href="/youtube-analysis/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <BarChart3 size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  YouTube競合分析
+                  YouTubeリサーチ
                 </Link>
               </li>
               <li>
                 <Link href="/youtube-keyword-research/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Search size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  YouTubeキーワード
+                  YouTubeキーワードリサーチ
                 </Link>
               </li>
               <li>
                 <Link href="/google-keyword-research/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Search size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  Googleキーワード
+                  Googleキーワードリサーチ
                 </Link>
               </li>
               <li>
                 <Link href="/kindle-keywords/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <BookOpen size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  Kindleキーワード
+                  Kindleキーワードリサーチ
                 </Link>
               </li>
               <li>
                 <Link href="/rakuten-research/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <ShoppingBag size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  楽天リサーチ
+                  楽天キーワードリサーチ
                 </Link>
               </li>
               <li>
                 <Link href="/niconico-keyword-research/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Tv size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  ニコニコリサーチ
+                  ニコニコキーワードリサーチ
                 </Link>
               </li>
               <li>
                 <Link href="/reddit-keyword-research/editor" className="flex items-center gap-2 hover:text-white transition-colors group">
                   <Globe size={14} className="opacity-60 group-hover:opacity-100 shrink-0" />
-                  Redditリサーチ
+                  Redditキーワードリサーチ
                 </Link>
               </li>
             </ul>

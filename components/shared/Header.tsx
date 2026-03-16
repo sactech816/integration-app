@@ -447,18 +447,6 @@ const Header: React.FC<HeaderProps> = ({
                               <div className="p-1 rounded-md bg-teal-50 shrink-0"><Search size={14} className="text-teal-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">Googleキーワード</span>
                             </Link>
-                            <Link href="/rakuten-research/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-rose-50 transition-colors">
-                              <div className="p-1 rounded-md bg-rose-50 shrink-0"><ShoppingBag size={14} className="text-rose-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">楽天リサーチ</span>
-                            </Link>
-                            <Link href="/niconico-keyword-research/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-orange-50 transition-colors">
-                              <div className="p-1 rounded-md bg-orange-50 shrink-0"><Tv size={14} className="text-orange-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">ニコニコリサーチ</span>
-                            </Link>
-                            <Link href="/reddit-keyword-research/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-orange-50 transition-colors">
-                              <div className="p-1 rounded-md bg-orange-50 shrink-0"><Globe size={14} className="text-orange-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">Redditリサーチ</span>
-                            </Link>
                           </div>
                         </div>
 
@@ -486,10 +474,6 @@ const Header: React.FC<HeaderProps> = ({
                                 ネタ発掘診断
                                 <span className="text-[9px] font-bold text-green-600 bg-green-100 px-1 py-0.5 rounded-full ml-1">無料</span>
                               </span>
-                            </Link>
-                            <Link href="/kindle-keywords/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
-                              <div className="p-1 rounded-md bg-amber-50 shrink-0"><Search size={14} className="text-amber-600" /></div>
-                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">Kindleキーワードリサーチ</span>
                             </Link>
                             <Link href="/kindle/agency" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-amber-50 transition-colors">
                               <div className="p-1 rounded-md bg-amber-50 shrink-0"><Building2 size={14} className="text-amber-600" /></div>
@@ -536,6 +520,11 @@ const Header: React.FC<HeaderProps> = ({
                           className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">
                           <TrendingUp size={13} />
                           <span>リバイバルプラン</span>
+                        </Link>
+                        <Link href="/supporters" onClick={closeMenus}
+                          className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                          <Heart size={13} />
+                          <span>サポーターズ</span>
                         </Link>
                       </div>
 
@@ -911,22 +900,22 @@ const Header: React.FC<HeaderProps> = ({
                 {mobileAccordion === 'page' && (
                   <div className="ml-4 space-y-0.5 mt-1 border-l-2 border-indigo-100 pl-3">
                     <Link href="/profile/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <UserCircle size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">プロフィール</span>
+                      <UserCircle size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">プロフィールメーカー</span>
                     </Link>
                     <Link href="/business/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <Building2 size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">LPメーカー</span>
                     </Link>
                     <Link href="/webinar/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Video size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">ウェビナーLP</span>
+                      <Video size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">ウェビナーLPメーカー</span>
                     </Link>
                     <Link href="/onboarding/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <MousePointerClick size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">ガイドメーカー</span>
                     </Link>
                     <Link href="/site/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Globe size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">ホームページ</span>
+                      <Globe size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">ホームページメーカー</span>
                     </Link>
                     <Link href="/order-form/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <ClipboardCheck size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">フォーム</span>
+                      <ClipboardCheck size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">フォームメーカー</span>
                       <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full">B</span>
                     </Link>
                   </div>
@@ -948,10 +937,10 @@ const Header: React.FC<HeaderProps> = ({
                 {mobileAccordion === 'quiz' && (
                   <div className="ml-4 space-y-0.5 mt-1 border-l-2 border-emerald-100 pl-3">
                     <Link href="/quiz/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Sparkles size={16} className="text-emerald-600" /><span className="text-gray-700 text-sm">診断クイズ</span>
+                      <Sparkles size={16} className="text-emerald-600" /><span className="text-gray-700 text-sm">診断クイズメーカー</span>
                     </Link>
                     <Link href="/entertainment/create" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <PartyPopper size={16} className="text-emerald-600" /><span className="text-gray-700 text-sm">エンタメ診断</span>
+                      <PartyPopper size={16} className="text-emerald-600" /><span className="text-gray-700 text-sm">エンタメ診断メーカー</span>
                       <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full">B</span>
                     </Link>
                   </div>
@@ -976,20 +965,20 @@ const Header: React.FC<HeaderProps> = ({
                       <PenTool size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">セールスライター</span>
                     </Link>
                     <Link href="/thumbnail/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Image size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">サムネイル</span>
+                      <Image size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">サムネイルメーカー</span>
                       <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full">B</span>
                     </Link>
                     <Link href="/sns-post" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Send size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">SNS投稿</span>
+                      <Send size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">SNS投稿メーカー</span>
                     </Link>
                     <Link href="/kindle/demo" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Gift size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">Kindle執筆</span>
+                      <Gift size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">Kindle体験版</span>
                     </Link>
                     <Link href="/kindle/discovery/demo" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Lightbulb size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">ネタ発掘</span>
+                      <Lightbulb size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">ネタ発掘診断</span>
                     </Link>
                     <Link href="/kindle-keywords/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <BookOpen size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">Kindleキーワード</span>
+                      <BookOpen size={16} className="text-amber-600" /><span className="text-gray-700 text-sm">Kindleキーワードリサーチ</span>
                     </Link>
                   </div>
                 )}
@@ -1016,17 +1005,17 @@ const Header: React.FC<HeaderProps> = ({
                       <CalendarCheck size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">出欠メーカー</span>
                     </Link>
                     <Link href="/survey/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <ClipboardList size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">アンケート</span>
+                      <ClipboardList size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">アンケートメーカー</span>
                     </Link>
                     <Link href="/newsletter/campaigns/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Mail size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">メルマガ</span>
+                      <Mail size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">メルマガメーカー</span>
                       <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full">B</span>
                     </Link>
                     <Link href="/step-email/sequences/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <ListOrdered size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">ステップメール</span>
                     </Link>
                     <Link href="/funnel/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <GitBranch size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">ファネル</span>
+                      <GitBranch size={16} className="text-cyan-600" /><span className="text-gray-700 text-sm">ファネルメーカー</span>
                     </Link>
                     <Link href="/dashboard?view=line" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <MessageCircle size={16} className="text-green-600" /><span className="text-gray-700 text-sm">LINE公式連携</span>
@@ -1050,22 +1039,22 @@ const Header: React.FC<HeaderProps> = ({
                 {mobileAccordion === 'research' && (
                   <div className="ml-4 space-y-0.5 mt-1 border-l-2 border-teal-100 pl-3">
                     <Link href="/youtube-analysis/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <BarChart3 size={16} className="text-teal-600" /><span className="text-gray-700 text-sm">YouTube競合分析</span>
+                      <BarChart3 size={16} className="text-teal-600" /><span className="text-gray-700 text-sm">YouTubeリサーチ</span>
                     </Link>
                     <Link href="/youtube-keyword-research/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Search size={16} className="text-teal-600" /><span className="text-gray-700 text-sm">YouTubeキーワード</span>
+                      <Search size={16} className="text-teal-600" /><span className="text-gray-700 text-sm">YouTubeキーワードリサーチ</span>
                     </Link>
                     <Link href="/google-keyword-research/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Search size={16} className="text-teal-600" /><span className="text-gray-700 text-sm">Googleキーワード</span>
+                      <Search size={16} className="text-teal-600" /><span className="text-gray-700 text-sm">Googleキーワードリサーチ</span>
                     </Link>
                     <Link href="/rakuten-research/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <ShoppingBag size={16} className="text-rose-600" /><span className="text-gray-700 text-sm">楽天リサーチ</span>
+                      <ShoppingBag size={16} className="text-rose-600" /><span className="text-gray-700 text-sm">楽天キーワードリサーチ</span>
                     </Link>
                     <Link href="/niconico-keyword-research/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Tv size={16} className="text-orange-600" /><span className="text-gray-700 text-sm">ニコニコリサーチ</span>
+                      <Tv size={16} className="text-orange-600" /><span className="text-gray-700 text-sm">ニコニコキーワードリサーチ</span>
                     </Link>
                     <Link href="/reddit-keyword-research/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Globe size={16} className="text-orange-600" /><span className="text-gray-700 text-sm">Redditリサーチ</span>
+                      <Globe size={16} className="text-orange-600" /><span className="text-gray-700 text-sm">Redditキーワードリサーチ</span>
                     </Link>
                   </div>
                 )}
