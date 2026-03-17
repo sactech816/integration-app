@@ -529,6 +529,7 @@ export default function AffiliateManager({ user }: AffiliateManagerProps) {
                   <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">メールアドレス</th>
                   <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">紹介リンク</th>
                   <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">ステータス</th>
+                  <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">個別報酬率</th>
                   <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">サービス</th>
                   <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">クリック</th>
                   <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">成約</th>
@@ -604,6 +605,29 @@ export default function AffiliateManager({ user }: AffiliateManagerProps) {
                           >
                             {aff.status === 'active' ? 'アクティブ' : aff.status === 'suspended' ? '停止中' : '保留'}
                           </span>
+                        </td>
+                        <td rowSpan={2} className="px-4 py-3 text-center align-top border-r border-gray-100">
+                          <div className="flex items-center justify-center gap-1">
+                            <input
+                              type="number"
+                              defaultValue={aff.commission_rate}
+                              min="0"
+                              max="100"
+                              step="0.5"
+                              className="w-16 border border-gray-300 rounded px-2 py-1 text-sm text-gray-900 bg-white text-center"
+                              onBlur={(e) => {
+                                const newRate = parseFloat(e.target.value);
+                                if (!isNaN(newRate) && newRate !== aff.commission_rate) {
+                                  handleUpdateCommissionRate(aff.id, newRate);
+                                }
+                              }}
+                              disabled={updatingId === aff.id}
+                            />
+                            <span className="text-sm text-gray-500">%</span>
+                          </div>
+                          {aff.commission_rate !== 10 && (
+                            <p className="text-[10px] text-blue-600 mt-1">個別設定中</p>
+                          )}
                         </td>
                         <td className="px-4 py-2 text-center">
                           <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">

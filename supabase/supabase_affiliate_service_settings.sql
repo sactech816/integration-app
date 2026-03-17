@@ -221,9 +221,13 @@ BEGIN
     RETURN NULL;
   END IF;
   
-  -- 報酬率を決定（サービス設定 > アフィリエイター個別設定）
-  -- サービス設定がある場合はそちらを優先
-  v_final_commission_rate := COALESCE(v_service_commission_rate, v_affiliate_commission_rate, 20.00);
+  -- 報酬率を決定（個別設定 > サービス設定 > デフォルト20%）
+  -- アフィリエイター個別の報酬率が設定されている場合はそちらを優先
+  IF v_affiliate_commission_rate IS NOT NULL AND v_affiliate_commission_rate != 10.00 THEN
+    v_final_commission_rate := v_affiliate_commission_rate;
+  ELSE
+    v_final_commission_rate := COALESCE(v_service_commission_rate, v_affiliate_commission_rate, 20.00);
+  END IF;
   
   -- 報酬額を計算
   v_commission_amount := p_plan_amount * (v_final_commission_rate / 100);
