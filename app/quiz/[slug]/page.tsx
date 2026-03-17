@@ -82,8 +82,8 @@ export default async function QuizPage({ params }: Props) {
   }
 
   // 作成者のプラン権限をチェックしてフッター非表示を決定
-  const canHideFooter = await shouldHideFooter(quiz.hideFooter, quiz.user_id);
-  const canHideRelated = await shouldHideFooter(quiz.hideRelatedContent, quiz.user_id);
+  const canHideFooter = await shouldHideFooter(quiz.hideFooter, quiz.user_id, quiz.id, 'footer_hide');
+  const canHideRelated = await shouldHideFooter(quiz.hideRelatedContent, quiz.user_id, quiz.id, 'related_content_hide');
   const quizWithPermission = { ...quiz, hideFooter: canHideFooter };
 
   // 構造化データ - Quiz

@@ -566,7 +566,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
                   <p className="text-gray-500 mt-0.5">ページ内に埋め込み表示</p>
                 </div>
                 <div className="bg-white/80 rounded-lg px-3 py-2">
-                  <span className="font-bold text-purple-700">JSスニペット <span className="text-[10px] bg-purple-100 text-purple-600 px-1 rounded">Pro</span></span>
+                  <span className="font-bold text-purple-700">JSスニペット <span className="text-[10px] bg-purple-100 text-purple-600 px-1 rounded">有料</span></span>
                   <p className="text-gray-500 mt-0.5">外部サイトにオーバーレイ表示</p>
                 </div>
               </div>

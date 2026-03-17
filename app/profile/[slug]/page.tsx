@@ -104,8 +104,8 @@ export default async function ProfilePage({ params }: Props) {
   }
 
   // 作成者のプラン権限をチェックしてフッター非表示を決定
-  const canHideFooter = await shouldHideFooter(profile.settings?.hideFooter, profile.user_id);
-  const canHideRelated = await shouldHideFooter(profile.settings?.hideRelatedContent, profile.user_id);
+  const canHideFooter = await shouldHideFooter(profile.settings?.hideFooter, profile.user_id, profile.id, 'footer_hide');
+  const canHideRelated = await shouldHideFooter(profile.settings?.hideRelatedContent, profile.user_id, profile.id, 'related_content_hide');
   const profileWithPermission = {
     ...profile,
     settings: { ...profile.settings, hideFooter: canHideFooter }

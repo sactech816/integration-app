@@ -49,6 +49,7 @@ import {
 import AIGenerateModal, { AIGenerateInput } from './AIGenerateModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
+import FeaturePurchaseButton from '@/components/shared/FeaturePurchaseButton';
 
 // セールスレター用ブロックタイプ
 const blockTypes = [
@@ -675,6 +676,7 @@ export default function SalesLetterEditor({
               onUpdate={(updates) => setSettings(prev => ({ ...prev, ...updates }))}
               onOpenColorPicker={() => setShowColorPicker(true)}
               userId={user?.id}
+              contentId={savedId || initialData?.id}
               userPlan={userPlan}
               isOpen={isBasicSettingsOpen}
               onToggle={() => setIsBasicSettingsOpen(prev => !prev)}
@@ -888,6 +890,10 @@ export default function SalesLetterEditor({
         contentTitle={title}
         theme="rose"
         showSupport={true}
+        userId={user?.id}
+        contentId={savedId || initialData?.id || undefined}
+        contentType="salesletter"
+        canHideCopyright={userPlan.canHideCopyright}
       />
 
       {/* アニメーションスタイル */}
@@ -1783,6 +1789,7 @@ function ContentSettingsPanel({
   onUpdate,
   onOpenColorPicker,
   userId,
+  contentId,
   userPlan,
   isOpen,
   onToggle,
@@ -1796,6 +1803,7 @@ function ContentSettingsPanel({
   onUpdate: (updates: Partial<SalesLetterSettings>) => void;
   onOpenColorPicker: () => void;
   userId?: string;
+  contentId?: string | null;
   userPlan: { canHideCopyright: boolean };
   isOpen: boolean;
   onToggle: () => void;
@@ -2114,7 +2122,7 @@ function ContentSettingsPanel({
         </label>
       </div>
 
-      {/* フッター非表示（Proプラン特典） */}
+      {/* フッター非表示（有料プラン特典） */}
       <div className={`p-3 rounded-xl border mt-4 ${
         userPlan.canHideCopyright 
           ? 'bg-orange-50 border-orange-200' 
@@ -2134,23 +2142,33 @@ function ContentSettingsPanel({
                 userPlan.canHideCopyright 
                   ? 'bg-orange-500 text-white' 
                   : 'bg-gray-400 text-white'
-              }`}>Pro</span>
+              }`}>有料</span>
             </h4>
             <p className={`text-[10px] ${userPlan.canHideCopyright ? 'text-orange-700' : 'text-gray-500'}`}>
               「セールスライターで作成しました」のフッターを非表示にします。
             </p>
             {!userPlan.canHideCopyright && (
-              <p className="text-[10px] text-rose-600 mt-1 font-medium">
-                ※ ビジネスプラン以上で利用可能
-              </p>
+              <div className="mt-1 space-y-2">
+                <p className="text-[10px] text-rose-600 font-medium">
+                  ※ ビジネスプラン以上で利用可能 / 単品購入 ¥500
+                </p>
+                {userId && contentId && (
+                  <FeaturePurchaseButton
+                    userId={userId}
+                    productId="footer_hide"
+                    contentId={String(contentId)}
+                    contentType="salesletter"
+                  />
+                )}
+              </div>
             )}
           </div>
           <label className={`relative inline-flex items-center ml-2 flex-shrink-0 ${
             userPlan.canHideCopyright ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
           }`}>
-            <input 
-              type="checkbox" 
-              className="sr-only peer" 
+            <input
+              type="checkbox"
+              className="sr-only peer"
               checked={userPlan.canHideCopyright && (settings.hideFooter || false)} 
               onChange={e => {
                 if (userPlan.canHideCopyright) {
@@ -2168,7 +2186,7 @@ function ContentSettingsPanel({
         </div>
       </div>
 
-      {/* 関連コンテンツ非表示（Proプラン特典） */}
+      {/* 関連コンテンツ非表示（有料プラン特典） */}
       <div className={`p-3 rounded-lg border ${
         userPlan.canHideCopyright
           ? 'bg-orange-50 border-orange-200'
@@ -2188,15 +2206,25 @@ function ContentSettingsPanel({
                 userPlan.canHideCopyright
                   ? 'bg-orange-500 text-white'
                   : 'bg-gray-400 text-white'
-              }`}>Pro</span>
+              }`}>有料</span>
             </h4>
             <p className={`text-[10px] ${userPlan.canHideCopyright ? 'text-orange-700' : 'text-gray-500'}`}>
               ページ下部の「他のセールスレターもチェック」セクションを非表示にします。
             </p>
             {!userPlan.canHideCopyright && (
-              <p className="text-[10px] text-rose-600 mt-1 font-medium">
-                ※ ビジネスプラン以上で利用可能
-              </p>
+              <div className="mt-1 space-y-2">
+                <p className="text-[10px] text-rose-600 font-medium">
+                  ※ ビジネスプラン以上で利用可能 / 単品購入 ¥500
+                </p>
+                {userId && contentId && (
+                  <FeaturePurchaseButton
+                    userId={userId}
+                    productId="related_content_hide"
+                    contentId={String(contentId)}
+                    contentType="salesletter"
+                  />
+                )}
+              </div>
             )}
           </div>
           <label className={`relative inline-flex items-center ml-2 flex-shrink-0 ${

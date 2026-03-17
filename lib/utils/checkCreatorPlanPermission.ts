@@ -106,19 +106,52 @@ export async function canCreatorHideCopyright(userId: string | null | undefined)
  * コンテンツのhideFooterフラグと作成者の権限を両方チェック
  * @param hideFooterSetting コンテンツに設定されたhideFooterフラグ
  * @param creatorUserId コンテンツ作成者のユーザーID
+ * @param contentId コンテンツID（単品購入チェック用・任意）
+ * @param purchaseProductId 購入商品ID（デフォルト: 'footer_hide'）
  * @returns 実際にフッターを非表示にすべきかどうか
  */
 export async function shouldHideFooter(
   hideFooterSetting: boolean | undefined,
-  creatorUserId: string | null | undefined
+  creatorUserId: string | null | undefined,
+  contentId?: string | null,
+  purchaseProductId: string = 'footer_hide'
 ): Promise<boolean> {
-  // hideFooterがfalseまたは未設定の場合は常にフッター表示
+  // 1. 単品購入チェック（購入していれば設定に関わらず非表示）
+  if (creatorUserId && contentId) {
+    const purchased = await hasFeaturePurchase(creatorUserId, purchaseProductId, contentId);
+    if (purchased) return true;
+  }
+
+  // 2. hideFooterがfalseまたは未設定の場合は常にフッター表示
   if (!hideFooterSetting) {
     return false;
   }
 
-  // 作成者がコピーライト非表示権限を持っているかチェック
+  // 3. 作成者がコピーライト非表示権限を持っているかチェック
   const hasPermission = await canCreatorHideCopyright(creatorUserId);
 
   return hasPermission;
+}
+
+/**
+ * 単品購入（feature_purchases）の有効チェック
+ */
+async function hasFeaturePurchase(
+  userId: string,
+  productId: string,
+  contentId: string
+): Promise<boolean> {
+  const supabase = getServiceClient();
+  if (!supabase) return false;
+
+  try {
+    const { data } = await supabase.rpc('check_feature_access', {
+      p_user_id: userId,
+      p_product_id: productId,
+      p_content_id: contentId,
+    });
+    return data?.has_access === true;
+  } catch {
+    return false;
+  }
 }

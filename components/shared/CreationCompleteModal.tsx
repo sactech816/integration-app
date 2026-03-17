@@ -1,17 +1,23 @@
 'use client';
 
-import React from 'react';
-import { 
-  Trophy, 
-  X, 
-  Copy, 
-  ExternalLink, 
-  Share2, 
-  QrCode, 
+import React, { useState } from 'react';
+import {
+  Trophy,
+  X,
+  Copy,
+  ExternalLink,
+  Share2,
+  QrCode,
   Download,
   Heart,
-  Crown
+  Crown,
+  CreditCard,
+  Loader2,
+  EyeOff,
+  LayoutPanelLeft,
+  Plus
 } from 'lucide-react';
+import { purchaseFeature } from '@/lib/hooks/useFeaturePurchase';
 
 // グラデーションテーマの定義
 type GradientTheme = 'indigo' | 'emerald' | 'amber' | 'teal' | 'purple' | 'blue' | 'rose';
@@ -59,6 +65,11 @@ interface CreationCompleteModalProps {
   showSocialShare?: boolean;       // SNSシェアを表示するか（デフォルト: true）
   showQrCode?: boolean;            // QRコードを表示するか（デフォルト: true）
   showSupport?: boolean;           // 応援・開発支援エリアを表示するか（デフォルト: true）
+  // アップセル用（任意）
+  userId?: string;                 // ユーザーID
+  contentId?: string;              // コンテンツID
+  contentType?: string;            // ツールタイプ（例: 'profile', 'quiz'）
+  canHideCopyright?: boolean;      // ビジネスプラン以上でtrue（プラン特典で利用可能）
 }
 
 /**
@@ -72,7 +83,7 @@ interface CreationCompleteModalProps {
  * 5. QRコード保存ボタン
  * 6. 応援・開発支援エリア（枠で囲む）
  *    - 開発を支援するボタン → /donation
- *    - プロプランに申し込みボタン → /pricing
+ *    - 有料プランに申し込みボタン → /pricing
  *    - ※開発支援は任意です。無料でもLPの公開・シェアは可能です。
  * 7. 閉じるボタン
  */
@@ -88,8 +99,18 @@ const CreationCompleteModal: React.FC<CreationCompleteModalProps> = ({
   showSocialShare = true,
   showQrCode = true,
   showSupport = true,
+  userId,
+  contentId,
+  contentType,
+  canHideCopyright = false,
 }) => {
+  const [purchasingFooter, setPurchasingFooter] = useState(false);
+  const [purchasingRelated, setPurchasingRelated] = useState(false);
+  const [purchasingTool, setPurchasingTool] = useState(false);
+
   if (!isOpen) return null;
+
+  const showUpsell = !!userId && !!contentId && !!contentType && !canHideCopyright;
 
   const gradientTheme = GRADIENT_THEMES[theme];
   const shareText = contentTitle || `${title}を作りました！`;
@@ -257,6 +278,87 @@ const CreationCompleteModal: React.FC<CreationCompleteModalProps> = ({
             </div>
           )}
 
+          {/* 5.5 アップセル（フッター非表示・関連コンテンツ非表示・追加ツール） */}
+          {showUpsell && userId && contentId && contentType && (
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl p-5">
+              <div className="text-center mb-4">
+                <h4 className="font-bold text-base text-gray-900 flex items-center justify-center gap-2">
+                  <CreditCard size={18} className="text-emerald-600" />
+                  オプション機能
+                </h4>
+                <p className="text-xs text-gray-600 mt-1">
+                  この{title}をさらにカスタマイズできます
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                {/* フッター非表示 */}
+                <button
+                  onClick={async () => {
+                    setPurchasingFooter(true);
+                    await purchaseFeature({ userId, productId: 'footer_hide', contentId, contentType });
+                    setPurchasingFooter(false);
+                  }}
+                  disabled={purchasingFooter}
+                  className="w-full flex items-center gap-3 p-3 bg-white border border-emerald-200 rounded-xl hover:shadow-md transition-all text-left group"
+                >
+                  <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    {purchasingFooter ? <Loader2 size={18} className="text-emerald-600 animate-spin" /> : <EyeOff size={18} className="text-emerald-600" />}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm text-gray-900">フッター非表示</p>
+                    <p className="text-xs text-gray-500">「○○メーカーで作成」の表示を消す</p>
+                  </div>
+                  <span className="text-sm font-bold text-emerald-600 whitespace-nowrap">¥500</span>
+                </button>
+
+                {/* 関連コンテンツ非表示 */}
+                <button
+                  onClick={async () => {
+                    setPurchasingRelated(true);
+                    await purchaseFeature({ userId, productId: 'related_content_hide', contentId, contentType });
+                    setPurchasingRelated(false);
+                  }}
+                  disabled={purchasingRelated}
+                  className="w-full flex items-center gap-3 p-3 bg-white border border-emerald-200 rounded-xl hover:shadow-md transition-all text-left group"
+                >
+                  <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    {purchasingRelated ? <Loader2 size={18} className="text-emerald-600 animate-spin" /> : <LayoutPanelLeft size={18} className="text-emerald-600" />}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm text-gray-900">関連コンテンツ非表示</p>
+                    <p className="text-xs text-gray-500">他ユーザーの作品リンクを非表示</p>
+                  </div>
+                  <span className="text-sm font-bold text-emerald-600 whitespace-nowrap">¥500</span>
+                </button>
+
+                {/* 追加ツール作成枠 */}
+                <button
+                  onClick={async () => {
+                    setPurchasingTool(true);
+                    await purchaseFeature({ userId, productId: 'tool_unlock', contentType });
+                    setPurchasingTool(false);
+                  }}
+                  disabled={purchasingTool}
+                  className="w-full flex items-center gap-3 p-3 bg-white border border-emerald-200 rounded-xl hover:shadow-md transition-all text-left group"
+                >
+                  <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    {purchasingTool ? <Loader2 size={18} className="text-emerald-600 animate-spin" /> : <Plus size={18} className="text-emerald-600" />}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm text-gray-900">追加ツール作成枠</p>
+                    <p className="text-xs text-gray-500">{title}をもう1つ作れるようにする</p>
+                  </div>
+                  <span className="text-sm font-bold text-emerald-600 whitespace-nowrap">¥500</span>
+                </button>
+              </div>
+
+              <p className="text-xs text-center text-gray-400 mt-3">
+                ※ ビジネスプラン以上ならフッター・関連コンテンツ非表示は無料で利用可能
+              </p>
+            </div>
+          )}
+
           {/* 6. 応援・開発支援エリア（枠で囲む） */}
           {showSupport && (
             <div className="bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-xl p-5">
@@ -280,7 +382,7 @@ const CreationCompleteModal: React.FC<CreationCompleteModalProps> = ({
                 >
                   <Heart size={16} /> 開発を支援する
                 </a>
-                {/* プロプランに申し込みボタン */}
+                {/* 有料プランに申し込みボタン */}
                 <a
                   href="https://makers.tokyo/pricing"
                   target="_blank"

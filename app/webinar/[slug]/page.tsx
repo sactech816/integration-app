@@ -83,8 +83,8 @@ export default async function WebinarPage({ params }: Props) {
     );
   }
 
-  const canHideFooter = await shouldHideFooter(lp.settings?.hideFooter, lp.user_id);
-  const canHideRelated = await shouldHideFooter(lp.settings?.hideRelatedContent, lp.user_id);
+  const canHideFooter = await shouldHideFooter(lp.settings?.hideFooter, lp.user_id, lp.id, 'footer_hide');
+  const canHideRelated = await shouldHideFooter(lp.settings?.hideRelatedContent, lp.user_id, lp.id, 'related_content_hide');
 
   const theme = lp.settings?.theme;
 

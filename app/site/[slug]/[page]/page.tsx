@@ -90,8 +90,8 @@ export default async function SiteSubPage({ params }: Props) {
     );
   }
 
-  const canHideFooter = await shouldHideFooter(site.settings?.hideFooter, site.user_id);
-  const canHideRelated = await shouldHideFooter(site.settings?.hideRelatedContent, site.user_id);
+  const canHideFooter = await shouldHideFooter(site.settings?.hideFooter, site.user_id, site.id, 'footer_hide');
+  const canHideRelated = await shouldHideFooter(site.settings?.hideRelatedContent, site.user_id, site.id, 'related_content_hide');
 
   return (
     <>

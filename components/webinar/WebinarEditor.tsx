@@ -47,6 +47,7 @@ import { useUserPlan } from '@/lib/hooks/useUserPlan';
 import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
 import CreationLimitModal from '@/components/shared/CreationLimitModal';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import FeaturePurchaseButton from '@/components/shared/FeaturePurchaseButton';
 
 interface WebinarEditorProps {
   user: { id: string; email?: string } | null;
@@ -1533,19 +1534,31 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
             </div>
           </div>
 
-          {/* フッター非表示（Proプラン特典） */}
+          {/* フッター非表示（有料プラン特典） */}
           <div className={`p-4 rounded-xl border ${userPlan.canHideCopyright ? 'bg-violet-50 border-violet-200' : 'bg-gray-100 border-gray-200'}`}>
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h4 className={`font-bold flex items-center gap-2 mb-1 ${userPlan.canHideCopyright ? 'text-violet-900' : 'text-gray-500'}`}>
                   {userPlan.canHideCopyright ? <Eye size={18} className="text-violet-600" /> : <Lock size={18} className="text-gray-400" />}
                   フッターを非表示にする
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${userPlan.canHideCopyright ? 'bg-violet-500 text-white' : 'bg-gray-400 text-white'}`}>Pro</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${userPlan.canHideCopyright ? 'bg-violet-500 text-white' : 'bg-gray-400 text-white'}`}>有料</span>
                 </h4>
                 <p className={`text-xs ${userPlan.canHideCopyright ? 'text-violet-700' : 'text-gray-500'}`}>
                   コンテンツ下部のフッターを非表示にします。
                 </p>
-                {!userPlan.canHideCopyright && <p className="text-xs text-violet-600 mt-2 font-medium">※ ビジネスプラン以上で利用可能になります</p>}
+                {!userPlan.canHideCopyright && (
+                  <div className="mt-2 space-y-2">
+                    <p className="text-xs text-violet-600 font-medium">※ ビジネスプラン以上で利用可能 / 単品購入 ¥500</p>
+                    {user?.id && (savedId || initialData?.id) && (
+                      <FeaturePurchaseButton
+                        userId={user.id}
+                        productId="footer_hide"
+                        contentId={String(savedId || initialData?.id)}
+                        contentType="webinar"
+                      />
+                    )}
+                  </div>
+                )}
               </div>
               <label className={`relative inline-flex items-center ml-4 flex-shrink-0 ${userPlan.canHideCopyright ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
                 <input type="checkbox" className="sr-only peer" checked={userPlan.canHideCopyright && (lp.settings?.hideFooter || false)} onChange={e => { if (userPlan.canHideCopyright) setLp(prev => ({ ...prev, settings: { ...prev.settings, hideFooter: e.target.checked } })); }} disabled={!userPlan.canHideCopyright} />
@@ -1554,19 +1567,31 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
             </div>
           </div>
 
-          {/* 関連コンテンツ非表示（Proプラン特典） */}
+          {/* 関連コンテンツ非表示（有料プラン特典） */}
           <div className={`p-4 rounded-xl border ${userPlan.canHideCopyright ? 'bg-violet-50 border-violet-200' : 'bg-gray-100 border-gray-200'}`}>
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h4 className={`font-bold flex items-center gap-2 mb-1 ${userPlan.canHideCopyright ? 'text-violet-900' : 'text-gray-500'}`}>
                   {userPlan.canHideCopyright ? <Eye size={18} className="text-violet-600" /> : <Lock size={18} className="text-gray-400" />}
                   関連コンテンツを非表示にする
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${userPlan.canHideCopyright ? 'bg-violet-500 text-white' : 'bg-gray-400 text-white'}`}>Pro</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${userPlan.canHideCopyright ? 'bg-violet-500 text-white' : 'bg-gray-400 text-white'}`}>有料</span>
                 </h4>
                 <p className={`text-xs ${userPlan.canHideCopyright ? 'text-violet-700' : 'text-gray-500'}`}>
                   ページ下部の関連コンテンツセクションを非表示にします。
                 </p>
-                {!userPlan.canHideCopyright && <p className="text-xs text-violet-600 mt-2 font-medium">※ ビジネスプラン以上で利用可能になります</p>}
+                {!userPlan.canHideCopyright && (
+                  <div className="mt-2 space-y-2">
+                    <p className="text-xs text-violet-600 font-medium">※ ビジネスプラン以上で利用可能 / 単品購入 ¥500</p>
+                    {user?.id && (savedId || initialData?.id) && (
+                      <FeaturePurchaseButton
+                        userId={user.id}
+                        productId="related_content_hide"
+                        contentId={String(savedId || initialData?.id)}
+                        contentType="webinar"
+                      />
+                    )}
+                  </div>
+                )}
               </div>
               <label className={`relative inline-flex items-center ml-4 flex-shrink-0 ${userPlan.canHideCopyright ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
                 <input type="checkbox" className="sr-only peer" checked={userPlan.canHideCopyright && (lp.settings?.hideRelatedContent || false)} onChange={e => { if (userPlan.canHideCopyright) setLp(prev => ({ ...prev, settings: { ...prev.settings, hideRelatedContent: e.target.checked } })); }} disabled={!userPlan.canHideCopyright} />
@@ -1634,6 +1659,10 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
         publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/webinar/${savedSlug}`}
         contentTitle={lp.title || 'ウェビナーLPを作成しました！'}
         theme="purple"
+        userId={user?.id}
+        contentId={savedId || initialData?.id || undefined}
+        contentType="webinar"
+        canHideCopyright={userPlan.canHideCopyright}
       />
 
       {/* ヘッダー */}

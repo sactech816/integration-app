@@ -54,6 +54,34 @@ export async function GET(
       total: (progressData || []).length,
     };
 
+    // トラッキング統計を取得（ステップ別の開封数・クリック数）
+    const { data: trackingData } = await supabase
+      .from('step_email_tracking')
+      .select('step_id, event_type, subscriber_id')
+      .eq('sequence_id', id);
+
+    const trackingStats: Record<string, { opens: number; uniqueOpens: number; clicks: number; uniqueClicks: number }> = {};
+    if (trackingData) {
+      for (const event of trackingData) {
+        if (!trackingStats[event.step_id]) {
+          trackingStats[event.step_id] = { opens: 0, uniqueOpens: 0, clicks: 0, uniqueClicks: 0 };
+        }
+        if (event.event_type === 'open') {
+          trackingStats[event.step_id].opens++;
+        } else if (event.event_type === 'click') {
+          trackingStats[event.step_id].clicks++;
+        }
+      }
+      // ユニーク数を計算
+      for (const stepId of Object.keys(trackingStats)) {
+        const stepEvents = trackingData.filter((e: any) => e.step_id === stepId);
+        const uniqueOpenSubs = new Set(stepEvents.filter((e: any) => e.event_type === 'open').map((e: any) => e.subscriber_id));
+        const uniqueClickSubs = new Set(stepEvents.filter((e: any) => e.event_type === 'click').map((e: any) => e.subscriber_id));
+        trackingStats[stepId].uniqueOpens = uniqueOpenSubs.size;
+        trackingStats[stepId].uniqueClicks = uniqueClickSubs.size;
+      }
+    }
+
     return NextResponse.json({
       sequence: {
         ...data,
@@ -65,6 +93,7 @@ export async function GET(
       },
       steps,
       progressStats,
+      trackingStats,
     });
   } catch (error) {
     console.error('[Step Email Sequence] Error:', error);

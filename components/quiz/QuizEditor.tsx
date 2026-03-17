@@ -17,6 +17,7 @@ import CreationLimitModal from '@/components/shared/CreationLimitModal';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
+import FeaturePurchaseButton from '@/components/shared/FeaturePurchaseButton';
 import { trackGenerateComplete, trackGenerateError } from '@/lib/gtag';
 import { useUserContents } from '@/lib/hooks/useUserContents';
 import ContentLinker from '@/components/shared/ContentLinker';
@@ -680,6 +681,10 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                 publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/quiz/${customSlug || justSavedQuizId}`}
                 contentTitle={form.title + 'をやってみよう！'}
                 theme="indigo"
+                userId={user?.id}
+                contentId={savedId || form.id || undefined}
+                contentType="quiz"
+                canHideCopyright={userPlan.canHideCopyright}
             />
 
             {/* ヘッダー - 共通ヘッダー(64px)の下に配置 */}
@@ -1117,7 +1122,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                 </label>
                             </div>
 
-                            {/* フッター非表示（Proプラン特典） */}
+                            {/* フッター非表示（有料プラン特典） */}
                             <div className={`p-4 rounded-xl flex items-start justify-between mb-4 border ${
                                 userPlan.canHideCopyright 
                                     ? 'bg-orange-50 border-orange-200' 
@@ -1136,23 +1141,33 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                             userPlan.canHideCopyright 
                                                 ? 'bg-orange-500 text-white' 
                                                 : 'bg-gray-400 text-white'
-                                        }`}>Pro</span>
+                                        }`}>有料</span>
                                     </h4>
                                     <p className={`text-xs ${userPlan.canHideCopyright ? 'text-orange-700' : 'text-gray-500'}`}>
                                         コンテンツ下部に表示される「診断クイズメーカーで作成しました」のフッターを非表示にします。
                                     </p>
                                     {!userPlan.canHideCopyright && (
-                                        <p className="text-xs text-indigo-600 mt-2 font-medium">
-                                            ※ ビジネスプラン以上で利用可能になります
-                                        </p>
+                                        <div className="mt-2 space-y-2">
+                                            <p className="text-xs text-indigo-600 font-medium">
+                                                ※ ビジネスプラン以上で利用可能 / 単品購入 ¥500
+                                            </p>
+                                            {user?.id && (savedId || form.id) && (
+                                                <FeaturePurchaseButton
+                                                    userId={user.id}
+                                                    productId="footer_hide"
+                                                    contentId={savedId || form.id || undefined}
+                                                    contentType="quiz"
+                                                />
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                                 <label className={`relative inline-flex items-center ml-4 flex-shrink-0 ${
                                     userPlan.canHideCopyright ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
                                 }`}>
-                                    <input 
-                                        type="checkbox" 
-                                        className="sr-only peer" 
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
                                         checked={userPlan.canHideCopyright && (form.hideFooter || false)} 
                                         onChange={e => {
                                             if (userPlan.canHideCopyright) {
@@ -1169,7 +1184,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                 </label>
                             </div>
 
-                            {/* 関連コンテンツ非表示（Proプラン特典） */}
+                            {/* 関連コンテンツ非表示（有料プラン特典） */}
                             <div className={`p-4 rounded-xl border mb-4 ${
                                 userPlan.canHideCopyright
                                     ? 'bg-orange-50 border-orange-200'
@@ -1189,15 +1204,25 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
                                                 userPlan.canHideCopyright
                                                     ? 'bg-orange-500 text-white'
                                                     : 'bg-gray-400 text-white'
-                                            }`}>Pro</span>
+                                            }`}>有料</span>
                                         </h4>
                                         <p className={`text-xs ${userPlan.canHideCopyright ? 'text-orange-700' : 'text-gray-500'}`}>
                                             ページ下部の「他の診断クイズもチェック」セクションを非表示にします。
                                         </p>
                                         {!userPlan.canHideCopyright && (
-                                            <p className="text-xs text-indigo-600 mt-2 font-medium">
-                                                ※ ビジネスプラン以上で利用可能になります
-                                            </p>
+                                            <div className="mt-2 space-y-2">
+                                                <p className="text-xs text-indigo-600 font-medium">
+                                                    ※ ビジネスプラン以上で利用可能 / 単品購入 ¥500
+                                                </p>
+                                                {user?.id && (savedId || form.id) && (
+                                                    <FeaturePurchaseButton
+                                                        userId={user.id}
+                                                        productId="related_content_hide"
+                                                        contentId={savedId || form.id || undefined}
+                                                        contentType="quiz"
+                                                    />
+                                                )}
+                                            </div>
                                         )}
                                     </div>
                                     <label className={`relative inline-flex items-center ml-4 flex-shrink-0 ${

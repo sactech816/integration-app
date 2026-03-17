@@ -46,6 +46,7 @@ import CreationCompleteModal from "@/components/shared/CreationCompleteModal";
 import OnboardingModal from "@/components/shared/OnboardingModal";
 import { useOnboarding } from "@/lib/hooks/useOnboarding";
 import { SURVEY_THEMES, SURVEY_THEME_IDS, getSurveyTheme } from "@/constants/surveyThemes";
+import FeaturePurchaseButton from '@/components/shared/FeaturePurchaseButton';
 
 // セクションコンポーネント
 const Section = ({
@@ -610,6 +611,10 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
         publicUrl={`${typeof window !== "undefined" ? window.location.origin : ""}/survey/${savedSlug}`}
         contentTitle={form.title || "アンケートを作成しました！"}
         theme="teal"
+        userId={user?.id}
+        contentId={String(savedId || initialData?.id || '')  || undefined}
+        contentType="survey"
+        canHideCopyright={userPlan.canHideCopyright}
       />
 
       {/* ヘッダー */}
@@ -1117,7 +1122,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
                 </label>
               </div>
 
-              {/* フッター非表示（Proプラン特典） */}
+              {/* フッター非表示（有料プラン特典） */}
               <div className={`p-4 rounded-xl flex items-start justify-between border ${
                 userPlan.canHideCopyright 
                   ? 'bg-orange-50 border-orange-200' 
@@ -1136,15 +1141,25 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
                       userPlan.canHideCopyright 
                         ? 'bg-orange-500 text-white' 
                         : 'bg-gray-400 text-white'
-                    }`}>Pro</span>
+                    }`}>有料</span>
                   </h4>
                   <p className={`text-xs ${userPlan.canHideCopyright ? 'text-orange-700' : 'text-gray-500'}`}>
                     コンテンツ下部に表示される「アンケートメーカーで作成しました」のフッターを非表示にします。
                   </p>
                   {!userPlan.canHideCopyright && (
-                    <p className="text-xs text-teal-600 mt-2 font-medium">
-                      ※ ビジネスプラン以上で利用可能になります
-                    </p>
+                    <div className="mt-2 space-y-2">
+                      <p className="text-xs text-teal-600 font-medium">
+                        ※ ビジネスプラン以上で利用可能 / 単品購入 ¥500
+                      </p>
+                      {user?.id && (savedId || initialData?.id) && (
+                        <FeaturePurchaseButton
+                          userId={user.id}
+                          productId="footer_hide"
+                          contentId={String(savedId || initialData?.id)}
+                          contentType="survey"
+                        />
+                      )}
+                    </div>
                   )}
                 </div>
                 <label className={`relative inline-flex items-center ml-4 flex-shrink-0 ${
@@ -1172,7 +1187,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
                 </label>
               </div>
 
-              {/* 関連コンテンツ非表示（Proプラン特典） */}
+              {/* 関連コンテンツ非表示（有料プラン特典） */}
               <div className={`p-4 rounded-xl border ${
                 userPlan.canHideCopyright
                   ? 'bg-orange-50 border-orange-200'
@@ -1192,15 +1207,25 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
                         userPlan.canHideCopyright
                           ? 'bg-orange-500 text-white'
                           : 'bg-gray-400 text-white'
-                      }`}>Pro</span>
+                      }`}>有料</span>
                     </h4>
                     <p className={`text-xs ${userPlan.canHideCopyright ? 'text-orange-700' : 'text-gray-500'}`}>
                       ページ下部の「他のアンケートもチェック」セクションを非表示にします。
                     </p>
                     {!userPlan.canHideCopyright && (
-                      <p className="text-xs text-teal-600 mt-2 font-medium">
-                        ※ ビジネスプラン以上で利用可能になります
-                      </p>
+                      <div className="mt-2 space-y-2">
+                        <p className="text-xs text-teal-600 font-medium">
+                          ※ ビジネスプラン以上で利用可能 / 単品購入 ¥500
+                        </p>
+                        {user?.id && (savedId || initialData?.id) && (
+                          <FeaturePurchaseButton
+                            userId={user.id}
+                            productId="related_content_hide"
+                            contentId={String(savedId || initialData?.id)}
+                            contentType="survey"
+                          />
+                        )}
+                      </div>
                     )}
                   </div>
                   <label className={`relative inline-flex items-center ml-4 flex-shrink-0 ${

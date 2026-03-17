@@ -52,6 +52,7 @@ import { usePoints } from '@/lib/hooks/usePoints';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
+import FeaturePurchaseButton from '@/components/shared/FeaturePurchaseButton';
 
 interface SiteEditorProps {
   user: { id: string; email?: string } | null;
@@ -1298,7 +1299,7 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
             </div>
           </div>
 
-          {/* フッター非表示（Proプラン特典） */}
+          {/* フッター非表示（有料プラン特典） */}
           <div className={`p-4 rounded-xl border ${
             userPlan?.canHideCopyright
               ? 'bg-orange-50 border-orange-200'
@@ -1318,15 +1319,25 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
                     userPlan?.canHideCopyright
                       ? 'bg-orange-500 text-white'
                       : 'bg-gray-400 text-white'
-                  }`}>Pro</span>
+                  }`}>有料</span>
                 </h4>
                 <p className={`text-xs ${userPlan?.canHideCopyright ? 'text-orange-700' : 'text-gray-500'}`}>
                   コンテンツ下部に表示される「ホームページメーカーで作成しました」のフッターを非表示にします。
                 </p>
                 {!userPlan?.canHideCopyright && (
-                  <p className="text-xs text-amber-600 mt-2 font-medium">
-                    ※ ビジネスプラン以上で利用可能になります
-                  </p>
+                  <div className="mt-2 space-y-2">
+                    <p className="text-xs text-amber-600 font-medium">
+                      ※ ビジネスプラン以上で利用可能 / 単品購入 ¥500
+                    </p>
+                    {user?.id && site.id && (
+                      <FeaturePurchaseButton
+                        userId={user.id}
+                        productId="footer_hide"
+                        contentId={String(site.id)}
+                        contentType="site"
+                      />
+                    )}
+                  </div>
                 )}
               </div>
               <label className={`relative inline-flex items-center ml-4 flex-shrink-0 ${
@@ -1491,6 +1502,10 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
         theme="teal"
         showSocialShare
         showQrCode
+        userId={user?.id}
+        contentId={site.id || undefined}
+        contentType="site"
+        canHideCopyright={userPlan?.canHideCopyright}
       />
 
       {/* ヘッダー（BusinessEditorと同じ構造） */}

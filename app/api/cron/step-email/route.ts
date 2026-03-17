@@ -112,14 +112,30 @@ export async function GET(request: NextRequest) {
             const fromEmail = sequence.newsletter_lists?.from_email || process.env.RESEND_FROM_EMAIL || 'noreply@makers.tokyo';
             const unsubscribeUrl = `${siteUrl}/newsletter/unsubscribe?listId=${sequence.list_id}&email=${encodeURIComponent(subscriber.email)}`;
 
-            const htmlWithUnsubscribe = (nextStep.html_content || '') +
+            // トラッキング用パラメータ
+            const trackParams = `sid=${sequence.id}&stepId=${nextStep.id}&sub=${subscriber.id}`;
+
+            // リンクをクリックトラッキング経由に変換
+            let trackedHtml = (nextStep.html_content || '').replace(
+              /href="(https?:\/\/[^"]+)"/g,
+              (_match: string, url: string) => {
+                const trackUrl = `${siteUrl}/api/step-email-maker/track/click?${trackParams}&url=${encodeURIComponent(url)}`;
+                return `href="${trackUrl}"`;
+              }
+            );
+
+            // 開封トラッキングピクセルを追加
+            const trackingPixel = `<img src="${siteUrl}/api/step-email-maker/track/open?${trackParams}" width="1" height="1" style="display:none;" alt="" />`;
+
+            const htmlWithTracking = trackedHtml +
+              trackingPixel +
               `<div style="text-align:center;margin-top:32px;padding:16px;border-top:1px solid #e5e7eb;font-size:12px;color:#9ca3af;"><a href="${unsubscribeUrl}" style="color:#6b7280;text-decoration:underline;">配信停止はこちら</a></div>`;
 
             const emailPayload: { from: string; to: string[]; subject: string; html: string; text?: string } = {
               from: `${fromName} <${fromEmail}>`,
               to: [subscriber.email],
               subject: nextStep.subject,
-              html: htmlWithUnsubscribe,
+              html: htmlWithTracking,
             };
             if (nextStep.text_content) {
               emailPayload.text = nextStep.text_content;

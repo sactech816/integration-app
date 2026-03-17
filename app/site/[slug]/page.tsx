@@ -84,8 +84,8 @@ export default async function SiteTopPage({ params }: Props) {
     );
   }
 
-  const canHideFooter = await shouldHideFooter(site.settings?.hideFooter, site.user_id);
-  const canHideRelated = await shouldHideFooter(site.settings?.hideRelatedContent, site.user_id);
+  const canHideFooter = await shouldHideFooter(site.settings?.hideFooter, site.user_id, site.id, 'footer_hide');
+  const canHideRelated = await shouldHideFooter(site.settings?.hideRelatedContent, site.user_id, site.id, 'related_content_hide');
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 

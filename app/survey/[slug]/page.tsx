@@ -82,8 +82,8 @@ export default async function SurveyPage({ params }: { params: Promise<{ slug: s
   }
 
   // 作成者のプラン権限をチェックしてフッター非表示を決定
-  const canHideFooter = await shouldHideFooter(survey.settings?.hideFooter, survey.user_id);
-  const canHideRelated = await shouldHideFooter(survey.settings?.hideRelatedContent, survey.user_id);
+  const canHideFooter = await shouldHideFooter(survey.settings?.hideFooter, survey.user_id, survey.id, 'footer_hide');
+  const canHideRelated = await shouldHideFooter(survey.settings?.hideRelatedContent, survey.user_id, survey.id, 'related_content_hide');
   const surveyWithPermission = {
     ...survey,
     settings: { ...survey.settings, hideFooter: canHideFooter }

@@ -67,6 +67,7 @@ import ContentLinker from '@/components/shared/ContentLinker';
 import LinkedContentCard from '@/components/shared/LinkedContentCard';
 import type { ContentRef } from '@/lib/content-links';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import FeaturePurchaseButton from '@/components/shared/FeaturePurchaseButton';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { trackGenerateComplete, trackGenerateError } from '@/lib/gtag';
@@ -2484,7 +2485,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
           </div>
 
-          {/* フッター非表示（Proプラン特典） */}
+          {/* フッター非表示（有料プラン特典） */}
           <div className={`p-4 rounded-xl border ${
             userPlan.canHideCopyright 
               ? 'bg-orange-50 border-orange-200' 
@@ -2504,23 +2505,33 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                     userPlan.canHideCopyright 
                       ? 'bg-orange-500 text-white' 
                       : 'bg-gray-400 text-white'
-                  }`}>Pro</span>
+                  }`}>有料</span>
                 </h4>
                 <p className={`text-xs ${userPlan.canHideCopyright ? 'text-orange-700' : 'text-gray-500'}`}>
                   コンテンツ下部に表示される「ビジネスLPメーカーで作成しました」のフッターを非表示にします。
                 </p>
                 {!userPlan.canHideCopyright && (
-                  <p className="text-xs text-amber-600 mt-2 font-medium">
-                    ※ ビジネスプラン以上で利用可能になります
-                  </p>
+                  <div className="mt-2 space-y-2">
+                    <p className="text-xs text-amber-600 font-medium">
+                      ※ ビジネスプラン以上で利用可能 / 単品購入 ¥500
+                    </p>
+                    {user?.id && (savedId || initialData?.id) && (
+                      <FeaturePurchaseButton
+                        userId={user.id}
+                        productId="footer_hide"
+                        contentId={savedId || initialData?.id || undefined}
+                        contentType="business"
+                      />
+                    )}
+                  </div>
                 )}
               </div>
               <label className={`relative inline-flex items-center ml-4 flex-shrink-0 ${
                 userPlan.canHideCopyright ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
               }`}>
-                <input 
-                  type="checkbox" 
-                  className="sr-only peer" 
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
                   checked={userPlan.canHideCopyright && (lp.settings?.hideFooter || false)} 
                   onChange={e => {
                     if (userPlan.canHideCopyright) {
@@ -2541,7 +2552,7 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
             </div>
           </div>
 
-          {/* 関連コンテンツ非表示（Proプラン特典） */}
+          {/* 関連コンテンツ非表示（有料プラン特典） */}
           <div className={`p-4 rounded-xl border ${
             userPlan.canHideCopyright
               ? 'bg-orange-50 border-orange-200'
@@ -2561,15 +2572,25 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
                     userPlan.canHideCopyright
                       ? 'bg-orange-500 text-white'
                       : 'bg-gray-400 text-white'
-                  }`}>Pro</span>
+                  }`}>有料</span>
                 </h4>
                 <p className={`text-xs ${userPlan.canHideCopyright ? 'text-orange-700' : 'text-gray-500'}`}>
                   ページ下部の「他のビジネスLPもチェック」セクションを非表示にします。
                 </p>
                 {!userPlan.canHideCopyright && (
-                  <p className="text-xs text-amber-600 mt-2 font-medium">
-                    ※ ビジネスプラン以上で利用可能になります
-                  </p>
+                  <div className="mt-2 space-y-2">
+                    <p className="text-xs text-amber-600 font-medium">
+                      ※ ビジネスプラン以上で利用可能 / 単品購入 ¥500
+                    </p>
+                    {user?.id && (savedId || initialData?.id) && (
+                      <FeaturePurchaseButton
+                        userId={user.id}
+                        productId="related_content_hide"
+                        contentId={savedId || initialData?.id || undefined}
+                        contentType="business"
+                      />
+                    )}
+                  </div>
                 )}
               </div>
               <label className={`relative inline-flex items-center ml-4 flex-shrink-0 ${
@@ -2681,6 +2702,10 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
         publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/business/${savedSlug}`}
         contentTitle={lp.title || 'ビジネスLPを作成しました！'}
         theme="amber"
+        userId={user?.id}
+        contentId={savedId || initialData?.id || undefined}
+        contentType="business"
+        canHideCopyright={userPlan.canHideCopyright}
       />
 
       {/* ヘッダー - 共通ヘッダー(64px)の下に配置 */}

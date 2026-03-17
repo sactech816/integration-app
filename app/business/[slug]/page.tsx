@@ -91,8 +91,8 @@ export default async function BusinessPage({ params }: Props) {
   }
 
   // 作成者のプラン権限をチェックしてフッター非表示を決定
-  const canHideFooter = await shouldHideFooter(lp.settings?.hideFooter, lp.user_id);
-  const canHideRelated = await shouldHideFooter(lp.settings?.hideRelatedContent, lp.user_id);
+  const canHideFooter = await shouldHideFooter(lp.settings?.hideFooter, lp.user_id, lp.id, 'footer_hide');
+  const canHideRelated = await shouldHideFooter(lp.settings?.hideRelatedContent, lp.user_id, lp.id, 'related_content_hide');
 
   // business_projectsのデータをBusinessLPの形式に変換
   // 後方互換性: themeが直接カラムにある場合とsettings内にある場合の両方をサポート

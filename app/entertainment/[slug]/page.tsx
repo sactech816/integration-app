@@ -95,7 +95,7 @@ export default async function EntertainmentPage({ params }: Props) {
     );
   }
 
-  const canHideFooter = await shouldHideFooter(quiz.hideFooter, quiz.user_id);
+  const canHideFooter = await shouldHideFooter(quiz.hideFooter, quiz.user_id, quiz.id, 'footer_hide');
   const quizWithPermission = { ...quiz, hideFooter: canHideFooter };
 
   const questions = typeof quiz.questions === 'string' ? JSON.parse(quiz.questions) : quiz.questions;

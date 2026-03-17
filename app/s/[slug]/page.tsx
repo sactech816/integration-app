@@ -79,11 +79,15 @@ export default async function SalesLetterShortUrlPage({ params }: Props) {
   // 作成者のプラン権限をチェックしてフッター非表示を決定
   const canHideFooter = await shouldHideFooter(
     salesLetter.settings?.hideFooter,
-    salesLetter.user_id
+    salesLetter.user_id,
+    salesLetter.id,
+    'footer_hide'
   );
   const canHideRelated = await shouldHideFooter(
     salesLetter.settings?.hideRelatedContent,
-    salesLetter.user_id
+    salesLetter.user_id,
+    salesLetter.id,
+    'related_content_hide'
   );
 
   // 権限チェック結果を反映

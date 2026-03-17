@@ -1,17 +1,20 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Save, ArrowLeft, Loader2, Monitor, Pencil,
   ChevronDown, ChevronUp, Settings, Clock,
   Plus, Trash2, Mail, Users, X,
   Play, Pause, AlertTriangle, CheckCircle2,
-  Eye, Code, BarChart3, ListOrdered, Zap
+  Eye, Code, BarChart3, ListOrdered, Zap,
+  LayoutTemplate, Sparkles, FileText, ExternalLink,
+  MousePointerClick, MailOpen
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
 import CreationLimitModal from '@/components/shared/CreationLimitModal';
+import { STEP_EMAIL_TEMPLATES, TEMPLATE_CATEGORIES, type StepEmailTemplate } from '@/constants/templates/step-email';
 
 // --- Types ---
 
@@ -43,71 +46,67 @@ interface ProgressStats {
   total: number;
 }
 
-// --- Section Themes ---
+interface TrackingStats {
+  [stepId: string]: {
+    opens: number;
+    uniqueOpens: number;
+    clicks: number;
+    uniqueClicks: number;
+  };
+}
 
-const SECTION_THEMES = {
-  basic: {
-    iconBg: 'bg-teal-100 text-teal-600',
-    iconBgClosed: 'bg-teal-50 text-teal-400',
-    badge: 'bg-teal-100 text-teal-600',
-    border: 'border-teal-200',
-    headerHover: 'hover:bg-teal-50/50',
-    topAccent: 'bg-gradient-to-r from-teal-500 to-cyan-400',
-  },
-  steps: {
-    iconBg: 'bg-blue-100 text-blue-600',
-    iconBgClosed: 'bg-blue-50 text-blue-400',
-    badge: 'bg-blue-100 text-blue-600',
-    border: 'border-blue-200',
-    headerHover: 'hover:bg-blue-50/50',
-    topAccent: 'bg-gradient-to-r from-blue-500 to-blue-400',
-  },
-  status: {
-    iconBg: 'bg-green-100 text-green-600',
-    iconBgClosed: 'bg-green-50 text-green-400',
-    badge: 'bg-green-100 text-green-600',
-    border: 'border-green-200',
-    headerHover: 'hover:bg-green-50/50',
-    topAccent: 'bg-gradient-to-r from-green-500 to-emerald-400',
-  },
-} as const;
+// --- Section Component (Newsletter-style) ---
 
-type SectionThemeKey = keyof typeof SECTION_THEMES;
-
-// --- Collapsible Section ---
-
-function Section({
-  title, icon: Icon, isOpen, onToggle, children, badge, theme,
+const Section = ({
+  title, icon: Icon, isOpen, onToggle, children, badge,
+  step, stepLabel,
+  headerBgColor = 'bg-gray-50',
+  headerHoverColor = 'hover:bg-gray-100',
+  accentColor = 'bg-violet-100 text-violet-600',
 }: {
   title: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string; size?: number }>;
   isOpen: boolean;
   onToggle: () => void;
   children: React.ReactNode;
   badge?: string;
-  theme: SectionThemeKey;
-}) {
-  const t = SECTION_THEMES[theme];
-  return (
-    <div className={`border ${isOpen ? t.border : 'border-gray-200'} rounded-xl overflow-hidden bg-white transition-all duration-200 ${isOpen ? 'shadow-md' : 'shadow-sm'}`}>
-      {isOpen && <div className={`h-1 ${t.topAccent}`} />}
-      <button
-        onClick={onToggle}
-        className={`w-full flex items-center gap-3 px-5 py-4 ${t.headerHover} transition-colors`}
-      >
-        <span className={`p-2 rounded-lg transition-colors ${isOpen ? t.iconBg : t.iconBgClosed}`}>
-          <Icon className="w-4 h-4" />
+  step?: number;
+  stepLabel?: string;
+  headerBgColor?: string;
+  headerHoverColor?: string;
+  accentColor?: string;
+}) => (
+  <div className="border border-gray-200 rounded-xl overflow-hidden mb-4 bg-white">
+    {step && stepLabel && (
+      <div className={`px-5 py-2 ${headerBgColor} border-b border-gray-200/50`}>
+        <span className="text-xs font-bold text-gray-600 bg-white/60 px-2 py-0.5 rounded">
+          STEP {step}
         </span>
-        <span className="flex-1 text-left text-sm font-bold text-gray-900">{title}</span>
+        <span className="text-sm text-gray-700 ml-2">{stepLabel}</span>
+      </div>
+    )}
+    <button
+      onClick={onToggle}
+      className={`w-full px-5 py-4 flex items-center justify-between ${headerBgColor} ${headerHoverColor} transition-colors`}
+    >
+      <div className="flex items-center gap-3">
+        <div className={`p-2 rounded-lg ${isOpen ? accentColor : 'bg-gray-200 text-gray-500'}`}>
+          <Icon size={18} />
+        </div>
+        <span className="font-bold text-gray-900">{title}</span>
         {badge && (
-          <span className={`px-2 py-0.5 text-xs font-semibold ${t.badge} rounded-md`}>{badge}</span>
+          <span className="text-xs bg-white/80 text-gray-700 px-2 py-0.5 rounded-full border border-gray-200">{badge}</span>
         )}
-        {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-      </button>
-      {isOpen && <div className="px-5 pb-5 border-t border-gray-100 pt-4">{children}</div>}
-    </div>
-  );
-}
+      </div>
+      {isOpen ? <ChevronUp size={20} className="text-gray-500" /> : <ChevronDown size={20} className="text-gray-500" />}
+    </button>
+    {isOpen && (
+      <div className="p-5 border-t border-gray-100">
+        {children}
+      </div>
+    )}
+  </div>
+);
 
 // --- View Toggle ---
 
@@ -122,7 +121,7 @@ function ViewToggle({
       <button
         onClick={() => onChange('visual')}
         className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md transition-all font-semibold ${
-          mode === 'visual' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+          mode === 'visual' ? 'bg-white text-violet-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
         }`}
       >
         <Eye className="w-3 h-3" />ビジュアル
@@ -130,7 +129,7 @@ function ViewToggle({
       <button
         onClick={() => onChange('html')}
         className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md transition-all font-semibold ${
-          mode === 'html' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+          mode === 'html' ? 'bg-white text-violet-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
         }`}
       >
         <Code className="w-3 h-3" />HTML
@@ -168,17 +167,32 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
   const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(null);
   const [bodyViewMode, setBodyViewMode] = useState<'visual' | 'html'>('html');
 
-  // Progress stats (edit mode only)
+  // Progress & tracking stats
   const [progressStats, setProgressStats] = useState<ProgressStats>({ active: 0, completed: 0, paused: 0, total: 0 });
+  const [trackingStats, setTrackingStats] = useState<TrackingStats>({});
+
+  // AI Modal
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiPurpose, setAiPurpose] = useState('welcome');
+  const [aiKeyword, setAiKeyword] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiResult, setAiResult] = useState('');
+  const [aiSubjectSuggestions, setAiSubjectSuggestions] = useState<string[]>([]);
+  const [aiTargetStepIndex, setAiTargetStepIndex] = useState<number | null>(null);
+
+  // Preview step
+  const [previewStepIndex, setPreviewStepIndex] = useState<number | null>(null);
 
   // UI state
   const [saving, setSaving] = useState(false);
   const [activating, setActivating] = useState(false);
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Sections
   const [openSections, setOpenSections] = useState({
     basic: true,
+    template: !sequenceId,
     steps: true,
     status: !!sequenceId,
   });
@@ -186,6 +200,9 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
   const toggleSection = (key: keyof typeof openSections) => {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
+
+  // Refs for contentEditable
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   // --- Init ---
 
@@ -223,6 +240,16 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
     }
   }, [listId]);
 
+  // Sync visual editor
+  useEffect(() => {
+    if (bodyRef.current && bodyViewMode === 'visual' && selectedStepIndex !== null) {
+      const step = steps[selectedStepIndex];
+      if (step) {
+        bodyRef.current.innerHTML = step.html_content || '';
+      }
+    }
+  }, [bodyViewMode, selectedStepIndex]);
+
   const fetchLists = async (uid: string) => {
     const res = await fetch(`/api/newsletter-maker/lists?userId=${uid}`);
     if (res.ok) {
@@ -245,6 +272,7 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
       setStatus(seq.status);
       setSteps(data.steps || []);
       setProgressStats(data.progressStats || { active: 0, completed: 0, paused: 0, total: 0 });
+      setTrackingStats(data.trackingStats || {});
     } else {
       router.push('/step-email/dashboard');
     }
@@ -305,7 +333,6 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
     if (!confirm('このステップを削除しますか？')) return;
     const step = steps[index];
     if (step.id && user) {
-      // Delete from server
       fetch(`/api/step-email-maker/sequences/${sequenceId}/steps/${step.id}?userId=${user.id}`, {
         method: 'DELETE',
       }).then(() => {
@@ -320,6 +347,73 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
     }
   };
 
+  // --- Template ---
+
+  const applyTemplate = (template: StepEmailTemplate) => {
+    if (steps.length > 0 && !confirm('現在のステップをテンプレートで上書きしますか？')) return;
+    const newSteps: Step[] = template.steps.map((s, i) => ({
+      step_order: i + 1,
+      delay_days: s.delay_days,
+      subject: s.subject,
+      html_content: s.html_content,
+      text_content: null,
+      isNew: true,
+    }));
+    setSteps(newSteps);
+    setSelectedStepIndex(0);
+    setOpenSections((prev) => ({ ...prev, template: false, steps: true }));
+  };
+
+  // --- AI Generation ---
+
+  const openAiModal = (stepIndex: number) => {
+    setAiTargetStepIndex(stepIndex);
+    setAiResult('');
+    setAiSubjectSuggestions([]);
+    setShowAiModal(true);
+  };
+
+  const handleAiGenerate = async () => {
+    if (!user || !aiKeyword.trim()) return;
+    setAiGenerating(true);
+    setAiResult('');
+    setAiSubjectSuggestions([]);
+    try {
+      const targetStep = aiTargetStepIndex !== null ? steps[aiTargetStepIndex] : null;
+      const res = await fetch('/api/step-email-maker/ai-generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          purpose: aiPurpose,
+          keyword: aiKeyword,
+          stepNumber: aiTargetStepIndex !== null ? aiTargetStepIndex + 1 : undefined,
+          totalSteps: steps.length,
+          sequenceName: name,
+          currentContent: targetStep?.html_content || '',
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAiResult(data.result || '');
+        setAiSubjectSuggestions(data.subjectSuggestions || []);
+      } else {
+        const err = await res.json();
+        alert(err.error || 'AI生成に失敗しました');
+      }
+    } catch {
+      alert('通信エラーが発生しました');
+    }
+    setAiGenerating(false);
+  };
+
+  const applyAiResult = () => {
+    if (aiTargetStepIndex === null || !aiResult) return;
+    updateStepLocal(aiTargetStepIndex, { html_content: aiResult });
+    setShowAiModal(false);
+    setAiResult('');
+  };
+
   // --- Save ---
 
   const handleSave = async () => {
@@ -330,17 +424,14 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
 
       try {
         if (isEditing) {
-          // Update sequence metadata
           await fetch(`/api/step-email-maker/sequences/${sequenceId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId: user.id, name: name.trim(), description: description.trim() || null }),
           });
 
-          // Save each step
           for (const step of steps) {
             if (step.id) {
-              // Update existing step
               await fetch(`/api/step-email-maker/sequences/${sequenceId}/steps/${step.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
@@ -352,7 +443,6 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
                 }),
               });
             } else {
-              // Create new step
               await fetch(`/api/step-email-maker/sequences/${sequenceId}/steps`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -366,11 +456,10 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
             }
           }
 
-          // Refresh data
           await fetchSequence(user.id);
-          alert('保存しました');
+          setSaveSuccess(true);
+          setTimeout(() => setSaveSuccess(false), 2000);
         } else {
-          // Create new sequence
           const res = await fetch('/api/step-email-maker/sequences', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -386,7 +475,6 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
             const data = await res.json();
             const newSeqId = data.sequence.id;
 
-            // Save steps
             for (const step of steps) {
               await fetch(`/api/step-email-maker/sequences/${newSeqId}/steps`, {
                 method: 'POST',
@@ -461,14 +549,20 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
     return `${days}日後`;
   };
 
-  const selectedStep = selectedStepIndex !== null ? steps[selectedStepIndex] : null;
+  const getStepTrackingRate = (stepId: string | undefined, type: 'open' | 'click') => {
+    if (!stepId || !trackingStats[stepId] || progressStats.total === 0) return null;
+    const stat = trackingStats[stepId];
+    const count = type === 'open' ? stat.uniqueOpens : stat.uniqueClicks;
+    const rate = Math.round((count / progressStats.total) * 100);
+    return { count, rate };
+  };
 
   // --- Loading ---
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
       </div>
     );
   }
@@ -484,95 +578,171 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
   // --- Render ---
 
   const canSave = name.trim() && listId;
+  const previewStep = previewStepIndex !== null ? steps[previewStepIndex] : (selectedStepIndex !== null ? steps[selectedStepIndex] : null);
 
-  // Preview panel content
+  // Preview panel
   const renderPreview = () => (
-    <div className="p-4 sm:p-6">
-      <h3 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-        <Monitor className="w-4 h-4" />
-        ステップメールフロー
-      </h3>
-
-      {steps.length === 0 ? (
-        <div className="text-center py-12">
-          <Mail className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-sm text-gray-500">ステップを追加するとプレビューが表示されます</p>
+    <div className="flex flex-col h-full">
+      {/* ブラウザ風ヘッダー */}
+      <div className="bg-gray-900 px-4 py-3 flex items-center gap-3 border-b border-gray-700">
+        <div className="flex gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-red-500" />
+          <div className="w-3 h-3 rounded-full bg-yellow-500" />
+          <div className="w-3 h-3 rounded-full bg-green-500" />
         </div>
-      ) : (
-        <div className="space-y-0">
-          {steps.map((step, index) => (
-            <div key={index} className="relative">
-              {/* Timeline line */}
-              {index < steps.length - 1 && (
-                <div className="absolute left-[19px] top-[44px] bottom-0 w-0.5 bg-teal-200" />
-              )}
+        <span className="text-gray-400 text-xs font-medium font-mono">ステップメール プレビュー</span>
+      </div>
+
+      {/* ステップタイムライン（横スクロール） */}
+      <div className="bg-gray-800 border-b border-gray-700 px-4 py-3">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {steps.map((step, index) => {
+            const isActive = (previewStepIndex ?? selectedStepIndex) === index;
+            const openRate = getStepTrackingRate(step.id, 'open');
+            return (
               <button
-                onClick={() => setSelectedStepIndex(index)}
-                className={`w-full flex items-start gap-3 p-3 rounded-xl mb-2 text-left transition-all ${
-                  selectedStepIndex === index
-                    ? 'bg-teal-50 border border-teal-300 shadow-sm'
-                    : 'hover:bg-gray-50 border border-transparent'
+                key={step.id || `new-${index}`}
+                onClick={() => setPreviewStepIndex(index)}
+                className={`flex-shrink-0 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  isActive
+                    ? 'bg-violet-600 text-white shadow-lg'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative z-10 ${
-                  selectedStepIndex === index ? 'bg-teal-500 text-white' : 'bg-teal-100 text-teal-700'
-                }`}>
-                  <span className="text-sm font-bold">{index + 1}</span>
-                </div>
-                <div className="flex-1 min-w-0 pt-1">
-                  <p className="text-sm font-bold text-gray-900 truncate">
-                    {step.subject || '(件名未設定)'}
-                  </p>
-                  <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
-                    <Clock className="w-3 h-3" />
-                    <span>{getDelayLabel(step.delay_days)}</span>
-                  </div>
-                  {step.html_content && (
-                    <div className="mt-2 border border-gray-200 rounded-lg p-2 bg-white text-xs max-h-24 overflow-hidden">
-                      <div dangerouslySetInnerHTML={{ __html: step.html_content }} />
-                    </div>
-                  )}
-                </div>
+                <span className="block">{index + 1}通目</span>
+                <span className="block text-[10px] opacity-75 mt-0.5">{getDelayLabel(step.delay_days)}</span>
+                {openRate && (
+                  <span className="block text-[10px] opacity-75 mt-0.5">
+                    開封 {openRate.rate}%
+                  </span>
+                )}
               </button>
-            </div>
-          ))}
+            );
+          })}
+          {steps.length === 0 && (
+            <span className="text-xs text-gray-500">ステップを追加するとプレビューが表示されます</span>
+          )}
         </div>
-      )}
+      </div>
 
-      {/* Progress stats (edit mode) */}
-      {isEditing && progressStats.total > 0 && (
-        <div className="mt-6 border-t border-gray-200 pt-4">
-          <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">配信状況</h4>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="bg-blue-50 rounded-lg p-2 text-center">
-              <p className="text-lg font-bold text-blue-700">{progressStats.active}</p>
-              <p className="text-xs text-blue-600">配信中</p>
+      {/* プレビューコンテンツ */}
+      <div className="flex-1 overflow-y-auto p-4 bg-gray-800">
+        {previewStep ? (
+          <div className="max-w-lg mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
+            {/* メールヘッダ風 */}
+            <div className="px-6 pt-5 pb-3 border-b border-gray-100">
+              {previewStep.subject ? (
+                <h2 className="text-lg font-bold text-gray-900 mb-1">{previewStep.subject}</h2>
+              ) : (
+                <h2 className="text-lg font-bold text-gray-300 mb-1">件名を入力してください</h2>
+              )}
+              <p className="text-xs text-gray-400 flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {getDelayLabel(previewStep.delay_days)}に送信
+              </p>
             </div>
-            <div className="bg-green-50 rounded-lg p-2 text-center">
-              <p className="text-lg font-bold text-green-700">{progressStats.completed}</p>
-              <p className="text-xs text-green-600">完了</p>
+            {/* メール本文 */}
+            <div className="p-0">
+              {previewStep.html_content ? (
+                <div dangerouslySetInnerHTML={{ __html: previewStep.html_content }} />
+              ) : (
+                <p className="text-gray-300 text-center py-16">本文を入力するとプレビューが表示されます</p>
+              )}
             </div>
-            <div className="bg-gray-50 rounded-lg p-2 text-center">
-              <p className="text-lg font-bold text-gray-700">{progressStats.paused}</p>
-              <p className="text-xs text-gray-600">停止</p>
-            </div>
+            {/* トラッキング統計 */}
+            {previewStep.id && trackingStats[previewStep.id] && (
+              <div className="px-6 py-4 border-t border-gray-100 bg-gray-50">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2">
+                    <MailOpen className="w-4 h-4 text-blue-500" />
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">
+                        {getStepTrackingRate(previewStep.id, 'open')?.rate ?? 0}%
+                      </p>
+                      <p className="text-xs text-gray-500">開封率（{trackingStats[previewStep.id].uniqueOpens}人）</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MousePointerClick className="w-4 h-4 text-green-500" />
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">
+                        {getStepTrackingRate(previewStep.id, 'click')?.rate ?? 0}%
+                      </p>
+                      <p className="text-xs text-gray-500">クリック率（{trackingStats[previewStep.id].uniqueClicks}人）</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="text-center py-16">
+            <Mail className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+            <p className="text-sm text-gray-400">ステップを追加・選択するとプレビューが表示されます</p>
+          </div>
+        )}
+
+        {/* 全体進行率 */}
+        {isEditing && progressStats.total > 0 && (
+          <div className="max-w-lg mx-auto mt-4 bg-gray-900 rounded-xl p-4 border border-gray-700">
+            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+              <BarChart3 className="w-3.5 h-3.5" />
+              配信統計
+            </h4>
+            <div className="grid grid-cols-4 gap-2">
+              <div className="text-center">
+                <p className="text-lg font-bold text-white">{progressStats.total}</p>
+                <p className="text-[10px] text-gray-500">総登録</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-blue-400">{progressStats.active}</p>
+                <p className="text-[10px] text-gray-500">配信中</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-green-400">{progressStats.completed}</p>
+                <p className="text-[10px] text-gray-500">完了</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-gray-400">{progressStats.paused}</p>
+                <p className="text-[10px] text-gray-500">停止</p>
+              </div>
+            </div>
+            {/* 完了率バー */}
+            {progressStats.total > 0 && (
+              <div className="mt-3">
+                <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                  <span>完了率</span>
+                  <span>{Math.round((progressStats.completed / progressStats.total) * 100)}%</span>
+                </div>
+                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all"
+                    style={{ width: `${(progressStats.completed / progressStats.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 
-  // Editor panel content
+  // Editor panel
   const renderEditor = () => (
-    <div className="space-y-4 pb-32">
-      {/* Basic Section */}
+    <div className="max-w-2xl mx-auto space-y-0 pb-32">
+      {/* STEP 1: 基本設定 */}
       <Section
         title="基本設定"
         icon={Settings}
         isOpen={openSections.basic}
         onToggle={() => toggleSection('basic')}
+        step={1}
+        stepLabel="配信先・シーケンス名を設定"
+        headerBgColor="bg-blue-50"
+        headerHoverColor="hover:bg-blue-100"
+        accentColor="bg-blue-100 text-blue-600"
         badge={name ? undefined : '未設定'}
-        theme="basic"
       >
         <div className="space-y-4">
           {/* List selection */}
@@ -594,7 +764,7 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
                       <select
                         value={listId}
                         onChange={(e) => setListId(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                       >
                         {lists.map((list) => (
                           <option key={list.id} value={list.id}>{list.name}</option>
@@ -605,7 +775,7 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
                     )}
                     <button
                       onClick={() => setShowNewList(true)}
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-teal-600 hover:text-teal-800"
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       新しいリストを作成
@@ -613,31 +783,32 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
                     <p className="text-xs text-gray-500">メルマガメーカーの読者リストと共有されます</p>
                   </div>
                 ) : (
-                  <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 space-y-3">
-                    <p className="text-sm font-semibold text-teal-800">新しいリストを作成</p>
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-blue-700 flex items-center gap-1.5">
+                        <Plus className="w-4 h-4" />新しいリストを作成
+                      </p>
+                      <button
+                        onClick={() => { setShowNewList(false); setNewListName(''); }}
+                        className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
                     <input
                       type="text"
                       value={newListName}
                       onChange={(e) => setNewListName(e.target.value)}
                       placeholder="リスト名"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleCreateList}
-                        disabled={creatingList || !newListName.trim()}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 text-white font-semibold rounded-lg text-sm transition-all min-h-[44px]"
-                      >
-                        {creatingList ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                        作成
-                      </button>
-                      <button
-                        onClick={() => { setShowNewList(false); setNewListName(''); }}
-                        className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors min-h-[44px]"
-                      >
-                        キャンセル
-                      </button>
-                    </div>
+                    <button
+                      onClick={handleCreateList}
+                      disabled={creatingList || !newListName.trim()}
+                      className="w-full px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-all min-h-[44px] shadow-sm flex items-center justify-center gap-2"
+                    >
+                      {creatingList ? <><Loader2 className="w-4 h-4 animate-spin" />作成中...</> : <><Plus className="w-4 h-4" />リストを作成</>}
+                    </button>
                   </div>
                 )}
               </>
@@ -654,7 +825,7 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="例: 新規登録者向けウェルカムメール"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             />
           </div>
 
@@ -668,120 +839,234 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
               placeholder="シーケンスの目的や内容の説明"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             />
           </div>
         </div>
       </Section>
 
-      {/* Steps Section */}
+      {/* STEP 2: テンプレート */}
+      <Section
+        title="テンプレート"
+        icon={LayoutTemplate}
+        isOpen={openSections.template}
+        onToggle={() => toggleSection('template')}
+        badge={`${STEP_EMAIL_TEMPLATES.length}種類`}
+        step={2}
+        stepLabel="テンプレートを選択"
+        headerBgColor="bg-amber-50"
+        headerHoverColor="hover:bg-amber-100"
+        accentColor="bg-amber-100 text-amber-600"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">テンプレートを選択すると、ステップ全体が自動設定されます。</p>
+          {TEMPLATE_CATEGORIES.map((cat) => (
+            <div key={cat.id}>
+              <p className="text-xs font-bold text-amber-600 uppercase tracking-wide mb-2">
+                {cat.icon} {cat.label}
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {STEP_EMAIL_TEMPLATES.filter((t) => t.category === cat.id).map((template) => (
+                  <button
+                    key={template.id}
+                    onClick={() => applyTemplate(template)}
+                    className="p-3 text-left border border-gray-200 rounded-xl hover:border-amber-300 hover:bg-amber-50 transition-all group"
+                  >
+                    <span className="text-xl mb-1 block">{template.icon}</span>
+                    <span className="text-sm font-semibold text-gray-900 group-hover:text-amber-700">{template.name}</span>
+                    <span className="text-xs text-gray-500 block mt-0.5">{template.description}</span>
+                    <span className="text-xs text-amber-600 mt-1 block">{template.steps.length}通</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* STEP 3: ステップ設定 */}
       <Section
         title="ステップ設定"
         icon={ListOrdered}
         isOpen={openSections.steps}
         onToggle={() => toggleSection('steps')}
         badge={steps.length > 0 ? `${steps.length}通` : undefined}
-        theme="steps"
+        step={3}
+        stepLabel="各ステップの内容を編集"
+        headerBgColor="bg-violet-50"
+        headerHoverColor="hover:bg-violet-100"
+        accentColor="bg-violet-100 text-violet-600"
       >
         <div className="space-y-3">
-          {steps.map((step, index) => (
-            <div
-              key={step.id || `new-${index}`}
-              className={`border rounded-xl overflow-hidden transition-all ${
-                selectedStepIndex === index ? 'border-teal-300 shadow-md' : 'border-gray-200 shadow-sm'
-              }`}
-            >
-              {/* Step header */}
-              <button
-                onClick={() => setSelectedStepIndex(selectedStepIndex === index ? null : index)}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+          {steps.map((step, index) => {
+            const openRate = getStepTrackingRate(step.id, 'open');
+            const clickRate = getStepTrackingRate(step.id, 'click');
+            return (
+              <div
+                key={step.id || `new-${index}`}
+                className={`border rounded-xl overflow-hidden transition-all ${
+                  selectedStepIndex === index ? 'border-violet-300 shadow-md' : 'border-gray-200 shadow-sm'
+                }`}
               >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  selectedStepIndex === index ? 'bg-teal-500 text-white' : 'bg-teal-100 text-teal-700'
-                }`}>
-                  <span className="text-xs font-bold">{index + 1}</span>
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-bold text-gray-900 truncate">
-                    {step.subject || '(件名未設定)'}
-                  </p>
-                  <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                    <Clock className="w-3 h-3" />
-                    {getDelayLabel(step.delay_days)}
-                  </p>
-                </div>
+                {/* Step header */}
                 <button
-                  onClick={(e) => { e.stopPropagation(); removeStep(index); }}
-                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  onClick={() => setSelectedStepIndex(selectedStepIndex === index ? null : index)}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    selectedStepIndex === index ? 'bg-violet-500 text-white' : 'bg-violet-100 text-violet-700'
+                  }`}>
+                    <span className="text-xs font-bold">{index + 1}</span>
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-sm font-bold text-gray-900 truncate">
+                      {step.subject || '(件名未設定)'}
+                    </p>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      <p className="text-xs text-gray-500 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {getDelayLabel(step.delay_days)}
+                      </p>
+                      {openRate && (
+                        <p className="text-xs text-blue-500 flex items-center gap-1">
+                          <MailOpen className="w-3 h-3" />
+                          {openRate.rate}%
+                        </p>
+                      )}
+                      {clickRate && (
+                        <p className="text-xs text-green-500 flex items-center gap-1">
+                          <MousePointerClick className="w-3 h-3" />
+                          {clickRate.rate}%
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {/* Preview link */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPreviewStepIndex(index);
+                      setMobileTab('preview');
+                    }}
+                    className="p-2 text-gray-400 hover:text-violet-500 hover:bg-violet-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    title="プレビュー"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); removeStep(index); }}
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  {selectedStepIndex === index ? (
+                    <ChevronUp className="w-4 h-4 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                  )}
                 </button>
-                {selectedStepIndex === index ? (
-                  <ChevronUp className="w-4 h-4 text-gray-400" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
-                )}
-              </button>
 
-              {/* Step editor (expanded) */}
-              {selectedStepIndex === index && (
-                <div className="border-t border-gray-100 p-4 space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">件名</label>
-                    <input
-                      type="text"
-                      value={step.subject}
-                      onChange={(e) => updateStepLocal(index, { subject: e.target.value })}
-                      placeholder="例: ご登録ありがとうございます"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">配信タイミング</label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">登録から</span>
+                {/* Step editor (expanded) */}
+                {selectedStepIndex === index && (
+                  <div className="border-t border-gray-100 p-4 space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">件名</label>
                       <input
-                        type="number"
-                        min={0}
-                        value={step.delay_days}
-                        onChange={(e) => updateStepLocal(index, { delay_days: parseInt(e.target.value) || 0 })}
-                        className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-center focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                        type="text"
+                        value={step.subject}
+                        onChange={(e) => updateStepLocal(index, { subject: e.target.value })}
+                        placeholder="例: ご登録ありがとうございます"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
                       />
-                      <span className="text-sm text-gray-600">日後に送信</span>
                     </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-sm font-semibold text-gray-700">本文</label>
-                      <ViewToggle mode={bodyViewMode} onChange={setBodyViewMode} />
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">配信タイミング</label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">登録から</span>
+                        <input
+                          type="number"
+                          min={0}
+                          value={step.delay_days}
+                          onChange={(e) => updateStepLocal(index, { delay_days: parseInt(e.target.value) || 0 })}
+                          className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-center focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
+                        />
+                        <span className="text-sm text-gray-600">日後に送信</span>
+                      </div>
                     </div>
-                    {bodyViewMode === 'html' ? (
-                      <textarea
-                        value={step.html_content}
-                        onChange={(e) => updateStepLocal(index, { html_content: e.target.value })}
-                        rows={10}
-                        placeholder="<p>メール本文をHTMLで記述...</p>"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all font-mono text-sm"
-                      />
-                    ) : (
-                      <div
-                        contentEditable
-                        suppressContentEditableWarning
-                        dangerouslySetInnerHTML={{ __html: step.html_content }}
-                        onBlur={(e) => updateStepLocal(index, { html_content: e.currentTarget.innerHTML })}
-                        className="w-full min-h-[200px] px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all prose prose-sm max-w-none"
-                      />
+                    <div>
+                      <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
+                        <label className="text-sm font-semibold text-gray-700">本文</label>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => openAiModal(index)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-violet-600 bg-violet-50 rounded-lg hover:bg-violet-100 transition-colors"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />AIで下書き生成
+                          </button>
+                          <ViewToggle mode={bodyViewMode} onChange={setBodyViewMode} />
+                        </div>
+                      </div>
+                      {bodyViewMode === 'html' ? (
+                        <textarea
+                          value={step.html_content}
+                          onChange={(e) => updateStepLocal(index, { html_content: e.target.value })}
+                          rows={12}
+                          placeholder="<p>メール本文をHTMLで記述...</p>"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all font-mono text-sm"
+                        />
+                      ) : (
+                        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white min-h-[200px]">
+                          {step.html_content ? (
+                            <div
+                              ref={bodyRef}
+                              contentEditable
+                              suppressContentEditableWarning
+                              onBlur={(e) => updateStepLocal(index, { html_content: e.currentTarget.innerHTML })}
+                              className="min-h-[200px] p-4 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-inset rounded-xl text-gray-900"
+                              dangerouslySetInnerHTML={{ __html: step.html_content }}
+                            />
+                          ) : (
+                            <p className="p-4 text-sm text-gray-400">本文が未入力です。HTMLモードで直接入力するか、AIで生成してください。</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* ステップ別トラッキング */}
+                    {step.id && trackingStats[step.id] && (
+                      <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                          <BarChart3 className="w-3 h-3" />
+                          このステップの統計
+                        </p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="flex items-center gap-2">
+                            <MailOpen className="w-4 h-4 text-blue-500" />
+                            <div>
+                              <p className="text-sm font-bold text-gray-900">{getStepTrackingRate(step.id, 'open')?.rate ?? 0}%</p>
+                              <p className="text-xs text-gray-500">開封率</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MousePointerClick className="w-4 h-4 text-green-500" />
+                            <div>
+                              <p className="text-sm font-bold text-gray-900">{getStepTrackingRate(step.id, 'click')?.rate ?? 0}%</p>
+                              <p className="text-xs text-gray-500">クリック率</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            );
+          })}
 
           {/* Add step button */}
           <button
             onClick={addStep}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-sm font-semibold text-gray-500 hover:text-teal-600 hover:border-teal-300 hover:bg-teal-50 transition-all min-h-[44px]"
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-sm font-semibold text-gray-500 hover:text-violet-600 hover:border-violet-300 hover:bg-violet-50 transition-all min-h-[44px]"
           >
             <Plus className="w-4 h-4" />
             ステップを追加
@@ -789,7 +1074,7 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
         </div>
       </Section>
 
-      {/* Status / Activation Section (edit mode only) */}
+      {/* STEP 4: 配信ステータス (edit mode only) */}
       {isEditing && (
         <Section
           title="配信ステータス"
@@ -797,7 +1082,11 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
           isOpen={openSections.status}
           onToggle={() => toggleSection('status')}
           badge={status === 'active' ? '配信中' : status === 'paused' ? '一時停止' : '下書き'}
-          theme="status"
+          step={4}
+          stepLabel="シーケンスの有効化・停止"
+          headerBgColor="bg-emerald-50"
+          headerHoverColor="hover:bg-emerald-100"
+          accentColor="bg-emerald-100 text-emerald-600"
         >
           <div className="space-y-4">
             {/* Status display */}
@@ -816,7 +1105,7 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
                 <button
                   onClick={handleActivate}
                   disabled={activating || steps.length === 0}
-                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-semibold rounded-xl shadow-md transition-all min-h-[44px]"
+                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 text-white font-semibold rounded-xl shadow-md transition-all min-h-[44px]"
                 >
                   {activating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                   シーケンスを有効化して配信開始
@@ -845,7 +1134,7 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
               <button
                 onClick={() => handleStatusChange('active')}
                 disabled={saving}
-                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow-md transition-all min-h-[44px]"
+                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-md transition-all min-h-[44px]"
               >
                 <Play className="w-4 h-4" />
                 配信再開
@@ -893,75 +1182,85 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
   );
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Editor header */}
-      <div className="sticky top-16 z-40 bg-white border-b border-gray-200 shadow-sm">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <button
-              onClick={() => router.push('/step-email/dashboard')}
-              className="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="min-w-0">
-              <h1 className="text-lg font-bold text-gray-900 truncate">
-                {isEditing ? (name || 'シーケンス編集') : '新しいシーケンス'}
-              </h1>
-              <p className="text-xs text-gray-500">
-                {isEditing ? `${steps.length}ステップ` : 'ステップメール作成'}
-                {isEditing && status === 'active' && (
-                  <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs font-semibold">
-                    <Play className="w-2.5 h-2.5" />配信中
-                  </span>
-                )}
-              </p>
-            </div>
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* エディタヘッダー */}
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between sticky top-16 z-40 shadow-sm">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push('/step-email/dashboard')}
+            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold text-gray-900 truncate">
+              {isEditing ? (name || 'シーケンス編集') : '新しいシーケンス'}
+            </h1>
+            <p className="text-xs text-gray-500">
+              {isEditing ? `${steps.length}ステップ` : 'ステップメール作成'}
+              {isEditing && status === 'active' && (
+                <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs font-semibold">
+                  <Play className="w-2.5 h-2.5" />配信中
+                </span>
+              )}
+            </p>
           </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {saveSuccess && (
+            <span className="inline-flex items-center gap-1 text-sm text-violet-600 font-semibold animate-fade-in">
+              <CheckCircle2 className="w-4 h-4" />保存しました
+            </span>
+          )}
           <button
             onClick={handleSave}
             disabled={saving || !canSave}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 min-h-[44px]"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-800 text-white text-sm font-semibold rounded-lg hover:bg-gray-900 disabled:opacity-50 transition-all shadow-md min-h-[44px]"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {isEditing ? '更新して保存' : '保存して公開'}
+            {saving ? '保存中...' : isEditing ? '更新して保存' : '保存して公開'}
           </button>
         </div>
       </div>
 
-      {/* Mobile tab toggle */}
-      <div className="sticky top-[121px] z-30 lg:hidden bg-gray-50 border-b border-gray-200 px-4 py-2">
-        <div className="inline-flex items-center bg-white rounded-lg p-1 shadow-sm border border-gray-200 w-full">
-          <button
-            onClick={() => setMobileTab('editor')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all ${
-              mobileTab === 'editor' ? 'bg-teal-500 text-white shadow' : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <Pencil className="w-4 h-4" />編集
-          </button>
-          <button
-            onClick={() => setMobileTab('preview')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all ${
-              mobileTab === 'preview' ? 'bg-teal-500 text-white shadow' : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <Monitor className="w-4 h-4" />プレビュー
-          </button>
-        </div>
+      {/* モバイルタブ */}
+      <div className="lg:hidden flex border-b border-gray-200 bg-white sticky top-[121px] z-30">
+        <button
+          onClick={() => setMobileTab('editor')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors ${
+            mobileTab === 'editor'
+              ? 'text-violet-600 border-b-2 border-violet-600 bg-violet-50'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Pencil className="w-4 h-4" />編集
+        </button>
+        <button
+          onClick={() => setMobileTab('preview')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors ${
+            mobileTab === 'preview'
+              ? 'text-violet-600 border-b-2 border-violet-600 bg-violet-50'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Monitor className="w-4 h-4" />プレビュー
+        </button>
       </div>
 
-      {/* Main content */}
-      <div className="flex">
-        {/* Editor (left) */}
-        <div className={`w-full lg:w-1/2 p-4 ${mobileTab !== 'editor' ? 'hidden lg:block' : ''}`}>
+      {/* 左右パネル */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* 左パネル: 編集 */}
+        <div className={`w-full lg:w-1/2 overflow-y-auto p-4 md:p-6 bg-gray-50 ${mobileTab === 'preview' ? 'hidden lg:block' : ''}`}>
           {renderEditor()}
         </div>
 
-        {/* Preview (right) - fixed on desktop */}
-        <div className={`w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] overflow-y-auto bg-gray-50 border-l border-gray-200 ${mobileTab !== 'preview' ? 'hidden lg:block' : ''}`}>
+        {/* 右パネル: プレビュー */}
+        <div className={`w-full lg:w-1/2 lg:fixed lg:right-0 lg:top-[138px] lg:h-[calc(100vh-138px)] flex-col bg-gray-800 border-l border-gray-700 ${mobileTab === 'editor' ? 'hidden lg:flex' : 'flex'}`}>
           {renderPreview()}
         </div>
+
+        {/* 右パネル用スペーサー */}
+        <div className="hidden lg:block lg:w-1/2 lg:flex-shrink-0 bg-gray-50" />
       </div>
 
       {/* Floating save button (mobile) */}
@@ -969,12 +1268,122 @@ export default function SequenceEditor({ sequenceId, defaultListId }: SequenceEd
         <button
           onClick={handleSave}
           disabled={saving || !canSave}
-          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 text-white font-semibold rounded-xl shadow-lg transition-all min-h-[44px]"
+          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-300 text-white font-semibold rounded-xl shadow-lg transition-all min-h-[44px]"
         >
           {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
           {isEditing ? '更新して保存' : '保存して公開'}
         </button>
       </div>
+
+      {/* AI生成モーダル */}
+      {showAiModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-violet-500" />
+                AIで本文を生成
+              </h3>
+              <button
+                onClick={() => setShowAiModal(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">メールの目的</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'welcome', label: 'ウェルカム', icon: '👋' },
+                    { id: 'value', label: '価値提供', icon: '💡' },
+                    { id: 'story', label: 'ストーリー', icon: '📖' },
+                    { id: 'engagement', label: 'エンゲージメント', icon: '💬' },
+                    { id: 'offer', label: 'オファー', icon: '🎁' },
+                    { id: 'reminder', label: 'リマインダー', icon: '⏰' },
+                  ].map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setAiPurpose(p.id)}
+                      className={`px-3 py-2 text-sm font-semibold rounded-lg border transition-all ${
+                        aiPurpose === p.id
+                          ? 'border-violet-400 bg-violet-50 text-violet-700'
+                          : 'border-gray-200 bg-white text-gray-600 hover:border-violet-300'
+                      }`}
+                    >
+                      {p.icon} {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  キーワード・テーマ <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={aiKeyword}
+                  onChange={(e) => setAiKeyword(e.target.value)}
+                  rows={3}
+                  placeholder="例: ダイエットの基礎知識、SNS集客のコツ、自己紹介"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
+                />
+              </div>
+              <button
+                onClick={handleAiGenerate}
+                disabled={aiGenerating || !aiKeyword.trim()}
+                className="w-full px-4 py-3 bg-violet-600 hover:bg-violet-700 disabled:bg-gray-300 text-white font-semibold rounded-xl shadow-md transition-all min-h-[44px] flex items-center justify-center gap-2"
+              >
+                {aiGenerating ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" />生成中...</>
+                ) : (
+                  <><Sparkles className="w-4 h-4" />生成する</>
+                )}
+              </button>
+
+              {/* AI結果 */}
+              {aiResult && (
+                <div className="space-y-3">
+                  {aiSubjectSuggestions.length > 0 && (
+                    <div>
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">件名候補</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {aiSubjectSuggestions.map((s, i) => (
+                          <button
+                            key={i}
+                            onClick={() => {
+                              if (aiTargetStepIndex !== null) {
+                                updateStepLocal(aiTargetStepIndex, { subject: s });
+                              }
+                            }}
+                            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 bg-white text-gray-600 hover:border-violet-300 hover:bg-violet-50 transition-all"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">生成結果プレビュー</p>
+                    <div className="border border-gray-200 rounded-xl p-4 max-h-60 overflow-y-auto bg-white">
+                      <div dangerouslySetInnerHTML={{ __html: aiResult }} />
+                    </div>
+                  </div>
+                  <button
+                    onClick={applyAiResult}
+                    className="w-full px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-md transition-all min-h-[44px] flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    この内容を適用
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <CreationLimitModal {...limitModalProps} />
     </div>
   );

@@ -1044,7 +1044,7 @@ function TextChangeSection({
           <Type size={16} className="text-purple-500" />
           <span className="font-bold text-gray-800 text-sm">テキストだけ変更</span>
           {!isPro && (
-            <span className="text-xs bg-pink-100 text-pink-600 px-2 py-0.5 rounded-full font-medium">Pro</span>
+            <span className="text-xs bg-pink-100 text-pink-600 px-2 py-0.5 rounded-full font-medium">有料</span>
           )}
         </div>
         <ChevronDown
