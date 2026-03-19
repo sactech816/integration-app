@@ -13,6 +13,10 @@ import { logAIUsage } from '@/lib/ai-usage';
 import { buildReportSystemPrompt, buildReportUserPrompt } from '@/lib/bigfive/report-prompt';
 import { FACET_LABELS } from '@/lib/bigfive/calculate';
 import type { BigFiveResult, FacetScore, MBTIType } from '@/lib/bigfive/calculate';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
 // DBの行データからBigFiveResultオブジェクトを復元
 function reconstructResult(row: any): BigFiveResult {
@@ -165,6 +169,36 @@ export async function POST(request: NextRequest) {
       inputTokens: aiResponse.usage?.inputTokens,
       outputTokens: aiResponse.usage?.outputTokens,
     });
+
+    // レポート生成完了メール送信（非ブロッキング）
+    if (user.email) {
+      const reportUrl = `${SITE_URL}/bigfive/report/${resultId}`;
+      const mbtiCode = row.mbti_code || '';
+      resend.emails.send({
+        from: 'Big Five 性格診断 <support@makers.tokyo>',
+        to: user.email,
+        subject: '【Big Five 性格診断】プレミアムレポートが完成しました',
+        html: `
+          <div style="max-width: 600px; margin: 0 auto; font-family: 'Helvetica Neue', Arial, sans-serif; color: #1f2937;">
+            <div style="background: linear-gradient(135deg, #6366f1, #7c3aed); padding: 32px; text-align: center; border-radius: 12px 12px 0 0;">
+              <h1 style="color: white; font-size: 22px; margin: 0 0 8px;">Big Five 性格診断</h1>
+              <p style="color: rgba(255,255,255,0.85); font-size: 14px; margin: 0;">プレミアムレポート</p>
+            </div>
+            <div style="background: white; padding: 32px; border: 1px solid #e5e7eb; border-top: none;">
+              <p style="font-size: 15px; line-height: 1.8; margin: 0 0 16px;">プレミアムレポートが完成しました！</p>
+              ${mbtiCode ? `<p style="font-size: 14px; color: #6b7280; margin: 0 0 24px;">パーソナリティタイプ: <strong style="color: #4f46e5; font-size: 16px;">${mbtiCode}</strong></p>` : ''}
+              <div style="text-align: center; margin: 24px 0;">
+                <a href="${reportUrl}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #3b82f6, #6366f1); color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 15px;">レポートを見る</a>
+              </div>
+              <p style="font-size: 13px; color: #6b7280; margin: 16px 0 0; text-align: center;">レポートページから「PDF保存 / 印刷」ボタンでPDFとして保存できます。</p>
+            </div>
+            <div style="background: #f9fafb; padding: 16px; text-align: center; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+              <p style="color: #9ca3af; font-size: 10px; margin: 0;">集客メーカー <a href="${SITE_URL}/" style="color: #6366f1;">makers.tokyo</a></p>
+            </div>
+          </div>
+        `,
+      }).catch(err => console.error('[BigFive] Report email error:', err));
+    }
 
     return NextResponse.json({ html: reportHtml, cached: false });
   } catch (err: any) {

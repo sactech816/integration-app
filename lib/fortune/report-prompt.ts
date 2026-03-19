@@ -55,6 +55,15 @@ export function buildFortuneReportSystemPrompt(): string {
 - 色使い: メインカラー #4F46E5(インディゴ), サブ #7C3AED(紫), アクセント #EC4899(ピンク)
 - 全体で10〜15ページ相当の充実した内容にしてください
 
+## 印刷・PDF保存対応のHTML構造ルール（重要）
+ユーザーがブラウザの印刷機能でPDF保存する際に、内容が途中で切れないようにする。
+- 各大セクション（章）の開始divに style="page-break-before: always;" を付ける（最初のセクションは除く）
+- 各小セクション（カード、ボックス等）を囲むdivに style="break-inside: avoid;" を付ける
+- 見出し（h2, h3）にインラインで style="break-after: avoid;" を付与する
+- テーブルやリストを囲むdivにも style="break-inside: avoid;" を付ける
+- SVGチャートを囲むdivにも style="break-inside: avoid;" を付ける
+- 背景色のある要素には print-color-adjust: exact; -webkit-print-color-adjust: exact; を追加する
+
 ## レポートセクション構成
 1. **総合鑑定サマリー** — 3占術を統合した全体像（300文字程度）
 2. **九星気学 詳細鑑定** — 本命星・月命星の解説、同会星・傾斜星の影響、吉方位、ラッキーカラー

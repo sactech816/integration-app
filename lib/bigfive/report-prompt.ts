@@ -36,7 +36,16 @@ export function buildReportSystemPrompt(testType: string = 'full'): string {
 - 見出しは大きめで分かりやすく
 - 各セクションは視覚的に区切ってください
 - レーダーチャートはSVGで埋め込んでください
-- 色使い: メインカラー #3B82F6(青), サブ #6366F1(インディゴ), アクセント #8B5CF6(紫)`;
+- 色使い: メインカラー #3B82F6(青), サブ #6366F1(インディゴ), アクセント #8B5CF6(紫)
+
+## 印刷・PDF保存対応のHTML構造ルール（重要）
+ユーザーがブラウザの印刷機能でPDF保存する際に、内容が途中で切れないようにする。
+- 各大セクション（章）の開始divに style="page-break-before: always;" を付ける（最初のセクションは除く）
+- 各小セクション（カード、ボックス等）を囲むdivに style="break-inside: avoid;" を付ける
+- 見出し（h2, h3）にインラインで style="break-after: avoid;" を付与する
+- テーブルやリストを囲むdivにも style="break-inside: avoid;" を付ける
+- SVGチャート（レーダーチャート等）を囲むdivにも style="break-inside: avoid;" を付ける
+- 背景色のある要素には print-color-adjust: exact; -webkit-print-color-adjust: exact; を追加する`;
 
   const commonRules = `
 ## 重要なルール

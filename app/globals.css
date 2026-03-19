@@ -168,9 +168,83 @@ button:disabled {
 
 /* 印刷用スタイル */
 @media print {
-  body { background: white !important; }
-  nav, header, footer, .no-print { display: none !important; }
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 非表示要素 */
+  nav, header, footer, .no-print {
+    display: none !important;
+  }
+
   .animate-fade-in { break-inside: avoid; }
+
+  /* ===== レポート印刷用 ===== */
+
+  /* レポートコンテナ: 余白なしで全幅 */
+  .report-container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .report-content {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* セクション単位で分割禁止 */
+  .report-content > div {
+    break-inside: avoid;
+  }
+
+  /* 各セクション（インラインスタイルのdiv）の区切り制御 */
+  .report-content div[style*="border"] {
+    break-inside: avoid;
+  }
+
+  .report-content div[style*="padding"] {
+    break-inside: avoid;
+  }
+
+  /* 見出しの直後で改ページしない */
+  .report-content h1,
+  .report-content h2,
+  .report-content h3 {
+    break-after: avoid;
+  }
+
+  /* テーブル・リスト・カードの分割防止 */
+  .report-content table,
+  .report-content ul,
+  .report-content ol,
+  .report-content svg {
+    break-inside: avoid;
+  }
+
+  /* 印刷時のみ表示するフッター */
+  .print-only-footer {
+    display: block !important;
+    text-align: center;
+    padding: 16px 0;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 32px;
+    font-size: 10px;
+    color: #9ca3af;
+  }
+}
+
+/* 通常時は印刷専用フッターを非表示 */
+.print-only-footer {
+  display: none;
+}
+
+/* レポートページ用印刷設定 */
+@page {
+  size: A4;
+  margin: 12mm 10mm 15mm 10mm;
 }
 
 /* スクロールバー非表示 */

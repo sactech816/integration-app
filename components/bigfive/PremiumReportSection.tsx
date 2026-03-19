@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { FileText, Brain, Target, Sparkles, Loader2, Download, Crown, Mail, CheckCircle } from 'lucide-react';
+import { FileText, Brain, Target, Sparkles, Loader2, ExternalLink, Crown, Printer } from 'lucide-react';
 import ChatInterface from './ChatInterface';
 
 interface PremiumReportSectionProps {
@@ -64,8 +64,8 @@ export default function PremiumReportSection({
   const [purchasing, setPurchasing] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const [pdfEmailSent, setPdfEmailSent] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   // payment=success パラメータ検知で自動レポート生成
   useEffect(() => {
@@ -135,54 +135,30 @@ export default function PremiumReportSection({
     }
   }, [resultId]);
 
-  const handlePrint = useCallback(() => {
-    const printWindow = window.open('', '_blank');
-    if (printWindow && reportHtml) {
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Big Five パーソナリティレポート</title>
-          <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-          <style>
-            body { font-family: 'Noto Sans JP', sans-serif; margin: 0; padding: 20px; }
-            @media print { body { padding: 0; } }
-          </style>
-        </head>
-        <body>${reportHtml}</body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.onload = () => printWindow.print();
-    }
-  }, [reportHtml]);
+  const handleOpenReport = useCallback(() => {
+    window.open(`/bigfive/report/${resultId}`, '_blank');
+  }, [resultId]);
 
-  const handleDownloadPdf = useCallback(async () => {
-    setDownloadingPdf(true);
+  const handleSendEmail = useCallback(async () => {
+    setEmailSending(true);
     setError(null);
     try {
-      const res = await fetch('/api/bigfive/download-pdf', {
+      const res = await fetch('/api/bigfive/send-report-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resultId }),
       });
       const data = await res.json();
-
-      if (data.url) {
-        // ダウンロード開始
-        window.open(data.url, '_blank');
-        if (!data.cached) {
-          setPdfEmailSent(true);
-          setTimeout(() => setPdfEmailSent(false), 5000);
-        }
+      if (data.success) {
+        setEmailSent(true);
+        setTimeout(() => setEmailSent(false), 5000);
       } else {
-        setError(data.error || 'PDFダウンロードに失敗しました');
+        setError(data.error || 'メール送信に失敗しました');
       }
-    } catch (err) {
+    } catch {
       setError('通信エラーが発生しました');
     } finally {
-      setDownloadingPdf(false);
+      setEmailSending(false);
     }
   }, [resultId]);
 
@@ -304,24 +280,20 @@ export default function PremiumReportSection({
               {showReport ? '閉じる' : 'レポートを見る'}
             </button>
             <button
-              onClick={handleDownloadPdf}
-              disabled={downloadingPdf}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-700 hover:text-blue-800 bg-blue-50 border border-blue-200 rounded-lg transition-all disabled:opacity-50"
+              onClick={handleOpenReport}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-700 hover:text-blue-800 bg-blue-50 border border-blue-200 rounded-lg transition-all"
             >
-              {downloadingPdf ? (
-                <><Loader2 className="w-3.5 h-3.5 animate-spin" />生成中...</>
-              ) : (
-                <><Download className="w-3.5 h-3.5" />PDFダウンロード</>
-              )}
+              <Printer className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">PDF保存 / </span>印刷
             </button>
           </div>
         </div>
 
-        {pdfEmailSent && (
+        {emailSent && (
           <div className="mx-6 mt-3 flex items-center gap-2 px-4 py-2.5 bg-green-50 border border-green-200 rounded-lg">
-            <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+            <ExternalLink className="w-4 h-4 text-green-600 flex-shrink-0" />
             <p className="text-sm text-green-700">
-              PDFのダウンロードリンクをメールにも送信しました。マイページからいつでも再ダウンロードできます。
+              レポートページのリンクをメールに送信しました。
             </p>
           </div>
         )}

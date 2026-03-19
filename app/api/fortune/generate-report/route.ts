@@ -12,6 +12,10 @@ import { getAdminEmails } from '@/lib/constants';
 import { logAIUsage } from '@/lib/ai-usage';
 import { buildFortuneReportSystemPrompt, buildFortuneReportUserPrompt } from '@/lib/fortune/report-prompt';
 import type { FortuneResult } from '@/lib/fortune/calculation';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -131,6 +135,36 @@ export async function POST(request: NextRequest) {
       inputTokens: aiResponse.usage?.inputTokens,
       outputTokens: aiResponse.usage?.outputTokens,
     });
+
+    // レポート生成完了メール送信（非ブロッキング）
+    if (user.email) {
+      const reportUrl = `${SITE_URL}/fortune/report/${resultId}`;
+      const birthLabel = `${row.birth_year}年${row.birth_month}月${row.birth_day}日`;
+      resend.emails.send({
+        from: '生年月日占い <support@makers.tokyo>',
+        to: user.email,
+        subject: '【生年月日占い】プレミアム鑑定レポートが完成しました',
+        html: `
+          <div style="max-width: 600px; margin: 0 auto; font-family: 'Helvetica Neue', Arial, sans-serif; color: #1f2937;">
+            <div style="background: linear-gradient(135deg, #4F46E5, #7C3AED); padding: 32px; text-align: center; border-radius: 12px 12px 0 0;">
+              <h1 style="color: white; font-size: 22px; margin: 0 0 8px;">生年月日占い</h1>
+              <p style="color: rgba(255,255,255,0.85); font-size: 14px; margin: 0;">プレミアム鑑定レポート</p>
+            </div>
+            <div style="background: white; padding: 32px; border: 1px solid #e5e7eb; border-top: none;">
+              <p style="font-size: 15px; line-height: 1.8; margin: 0 0 16px;">プレミアム鑑定レポートが完成しました！</p>
+              <p style="font-size: 14px; color: #6b7280; margin: 0 0 24px;">鑑定対象: <strong style="color: #4F46E5; font-size: 16px;">${birthLabel}生まれ</strong></p>
+              <div style="text-align: center; margin: 24px 0;">
+                <a href="${reportUrl}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #4F46E5, #7C3AED); color: white; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 15px;">レポートを見る</a>
+              </div>
+              <p style="font-size: 13px; color: #6b7280; margin: 16px 0 0; text-align: center;">レポートページから「PDF保存 / 印刷」ボタンでPDFとして保存できます。</p>
+            </div>
+            <div style="background: #f9fafb; padding: 16px; text-align: center; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+              <p style="color: #9ca3af; font-size: 10px; margin: 0;">集客メーカー <a href="${SITE_URL}/" style="color: #4F46E5;">makers.tokyo</a></p>
+            </div>
+          </div>
+        `,
+      }).catch(err => console.error('[Fortune] Report email error:', err));
+    }
 
     return NextResponse.json({ html: reportHtml, cached: false });
   } catch (err: any) {
