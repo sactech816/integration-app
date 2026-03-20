@@ -707,26 +707,26 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">メインテキスト *</label>
-                <input
-                  type="text"
+                <textarea
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="例: 知らないと損する3つの秘密"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none text-lg text-gray-900 placeholder:text-gray-400"
-                  maxLength={50}
+                  placeholder={"例: 知らないと損する\n3つの秘密"}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none text-lg text-gray-900 placeholder:text-gray-400 resize-none"
+                  maxLength={80}
+                  rows={2}
                 />
-                <p className="text-xs text-gray-400 mt-1">{title.length}/50文字</p>
+                <p className="text-xs text-gray-400 mt-1">{title.length}/80文字（Enterで改行）</p>
               </div>
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">サブテキスト（任意）</label>
-                <input
-                  type="text"
+                <textarea
                   value={subtitle}
                   onChange={(e) => setSubtitle(e.target.value)}
-                  placeholder="例: 今すぐチェック！"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none text-gray-900 placeholder:text-gray-400"
-                  maxLength={30}
+                  placeholder={"例: 今すぐチェック！"}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-pink-300 focus:border-pink-400 outline-none text-gray-900 placeholder:text-gray-400 resize-none"
+                  maxLength={50}
+                  rows={2}
                 />
               </div>
 
