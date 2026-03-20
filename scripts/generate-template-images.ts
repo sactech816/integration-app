@@ -94,7 +94,7 @@ async function generateImage(
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-image-preview',
+      model: 'gemini-2.5-flash-preview-image-generation',
       contents: prompt,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
@@ -139,7 +139,7 @@ async function main() {
 
   console.log(`\n📦 テンプレート数: ${templates.length}`);
   console.log(`🎨 画像総数: ${totalImages}`);
-  console.log(`💰 推定コスト: 約 $${(totalImages * 0.07).toFixed(2)} (≈ ¥${Math.round(totalImages * 0.07 * 150)})\n`);
+  console.log(`💰 推定コスト: 約 $${(totalImages * 0.02).toFixed(2)} (≈ ¥${Math.round(totalImages * 0.02 * 150)}) [gemini-2.5-flash]\n`);
 
   // 既存画像をスキップするかチェック
   let generated = 0;
