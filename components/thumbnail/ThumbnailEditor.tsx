@@ -8,6 +8,7 @@ import {
   PLATFORM_CATEGORIES,
   STYLE_CATEGORIES,
   getTemplatesByPlatform,
+  getTemplateImagePath,
   ThumbnailTemplate,
   ThumbnailStyleCategory,
 } from '@/constants/templates/thumbnail';
@@ -117,9 +118,9 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
   const [subtitle, setSubtitle] = useState(editingThumbnail?.text_overlay?.subtitle || '');
   const [selectedColorTheme, setSelectedColorTheme] = useState('');
 
-  // 生成モード
+  // 生成モード（デフォルトはテンプレートモード＝無料で即時作成）
   const [generationMode, setGenerationMode] = useState<ThumbnailGenerationMode>(
-    editingThumbnail?.text_overlay?.mode || 'ai_text'
+    editingThumbnail?.text_overlay?.mode || 'template'
   );
 
   // 編集可能テキストモード用
@@ -160,8 +161,69 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
+  // デフォルトSVGテキスト要素を作成
+  const createDefaultTextElements = useCallback((titleText: string, subtitleText: string): SVGTextElement[] => {
+    const elements: SVGTextElement[] = [
+      {
+        id: `title-${Date.now()}`,
+        text: titleText,
+        x: 50, y: 45,
+        fontSize: 64,
+        fontFamily: 'Noto Sans JP',
+        fontWeight: 900,
+        color: '#FFFFFF',
+        strokeColor: '#000000',
+        strokeWidth: 4,
+        textAlign: 'center',
+      },
+    ];
+    if (subtitleText) {
+      elements.push({
+        id: `subtitle-${Date.now()}`,
+        text: subtitleText,
+        x: 50, y: 65,
+        fontSize: 36,
+        fontFamily: 'Noto Sans JP',
+        fontWeight: 700,
+        color: '#FFFFFF',
+        strokeColor: '#000000',
+        strokeWidth: 3,
+        textAlign: 'center',
+      });
+    }
+    return elements;
+  }, []);
+
+  // テンプレートモード: ローカル画像を即座に適用（AI不要）
+  const handleApplyTemplate = useCallback(() => {
+    if (!title.trim()) {
+      setError('タイトルを入力してください');
+      return;
+    }
+    if (!selectedTemplate || !selectedColorTheme) {
+      setError('テンプレートとカラーテーマを選択してください');
+      return;
+    }
+    setError(null);
+
+    const imgPath = getTemplateImagePath(selectedTemplate.id, selectedColorTheme);
+    setBackgroundImageUrl(imgPath);
+    setGeneratedImageUrl(null);
+
+    const elements = createDefaultTextElements(title, subtitle);
+    setSvgTextElements(elements);
+    setSelectedTextElementId(elements[0].id);
+    setMobileTab('preview');
+  }, [title, subtitle, selectedTemplate, selectedColorTheme, createDefaultTextElements]);
+
   // AI画像生成
   const handleGenerate = useCallback(async () => {
+    // テンプレートモードはAI不要
+    if (generationMode === 'template') {
+      handleApplyTemplate();
+      return;
+    }
+
     if (!user) {
       setShowAuth(true);
       return;
@@ -195,34 +257,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
           // 背景のみモード: SVGオーバーレイを初期化
           setBackgroundImageUrl(data.imageUrl);
           setGeneratedImageUrl(null);
-          const defaultElements: SVGTextElement[] = [
-            {
-              id: `title-${Date.now()}`,
-              text: title,
-              x: 50, y: 45,
-              fontSize: 64,
-              fontFamily: 'Noto Sans JP',
-              fontWeight: 900,
-              color: '#FFFFFF',
-              strokeColor: '#000000',
-              strokeWidth: 4,
-              textAlign: 'center',
-            },
-          ];
-          if (subtitle) {
-            defaultElements.push({
-              id: `subtitle-${Date.now()}`,
-              text: subtitle,
-              x: 50, y: 65,
-              fontSize: 36,
-              fontFamily: 'Noto Sans JP',
-              fontWeight: 700,
-              color: '#FFFFFF',
-              strokeColor: '#000000',
-              strokeWidth: 3,
-              textAlign: 'center',
-            });
-          }
+          const defaultElements = createDefaultTextElements(title, subtitle);
           setSvgTextElements(defaultElements);
           setSelectedTextElementId(defaultElements[0].id);
         } else {
@@ -244,7 +279,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
     } finally {
       setIsGenerating(false);
     }
-  }, [title, subtitle, selectedTemplate, selectedColorTheme, selectedPlatform, currentAspectRatio, user, setShowAuth, generationMode]);
+  }, [title, subtitle, selectedTemplate, selectedColorTheme, selectedPlatform, currentAspectRatio, user, setShowAuth, generationMode, handleApplyTemplate, createDefaultTextElements]);
 
   // 保存
   const handleSave = async () => {
@@ -254,16 +289,16 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
       return;
     }
 
-    // editable_textモードの場合は背景画像が必要、通常モードは生成画像が必要
-    const hasContent = generationMode === 'editable_text' ? backgroundImageUrl : generatedImageUrl;
+    // editable_text/templateモードは背景画像が必要、通常モードは生成画像が必要
+    const hasContent = isTextOverlayMode ? backgroundImageUrl : generatedImageUrl;
     if (!hasContent) return;
 
     await consumeAndExecute('thumbnail', 'save', async () => {
       setIsSaving(true);
       try {
-        // editable_textモードの場合、SVGからPNGをレンダリングしてアップロード
+        // editable_text/templateモードの場合、SVGからPNGをレンダリングしてアップロード
         let imageUrlToSave = generatedImageUrl;
-        if (generationMode === 'editable_text' && svgOverlayRef.current?.getSVGElement()) {
+        if (isTextOverlayMode && svgOverlayRef.current?.getSVGElement()) {
           const svgEl = svgOverlayRef.current.getSVGElement()!;
           const [w, h] = currentAspectRatio === '9:16' ? [1080, 1920] : currentAspectRatio === '1:1' ? [1080, 1080] : [1280, 720];
           const pngBlob = await exportAsPNG(svgEl, w, h);
@@ -325,8 +360,8 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
   const handleDownload = async () => {
-    if (generationMode === 'editable_text' && svgOverlayRef.current?.getSVGElement()) {
-      // editable_textモードの場合はメニュー表示
+    if (isTextOverlayMode && svgOverlayRef.current?.getSVGElement()) {
+      // editable_text/templateモードの場合はメニュー表示
       setShowDownloadMenu(!showDownloadMenu);
       return;
     }
@@ -373,7 +408,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
 
   // AI編集後の画像URL更新
   const handleImageEdited = (newImageUrl: string) => {
-    if (generationMode === 'editable_text') {
+    if (isTextOverlayMode) {
       setBackgroundImageUrl(newImageUrl);
     } else {
       setGeneratedImageUrl(newImageUrl);
@@ -413,7 +448,8 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
   };
 
   // 表示すべきコンテンツがあるか
-  const hasGeneratedContent = generationMode === 'editable_text' ? !!backgroundImageUrl : !!generatedImageUrl;
+  const isTextOverlayMode = generationMode === 'editable_text' || generationMode === 'template';
+  const hasGeneratedContent = isTextOverlayMode ? !!backgroundImageUrl : !!generatedImageUrl;
 
   // 選択中の情報サマリー
   const selectedPlatformLabel = PLATFORM_CATEGORIES.find(p => p.id === selectedPlatform)?.label || '';
@@ -425,7 +461,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
         <h1 className="text-2xl font-bold text-gray-900">
           {editingThumbnail ? 'サムネイルを編集' : 'サムネイルを作成'}
         </h1>
-        <p className="text-gray-500 text-sm mt-1">AIでSNS用のサムネイルを自動生成できます</p>
+        <p className="text-gray-500 text-sm mt-1">テンプレートまたはAIでSNS用のサムネイルを作成できます</p>
       </div>
 
       {/* モバイル用タブ切り替え */}
@@ -530,36 +566,72 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
 
             {/* テンプレートグリッド */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {filteredTemplates.map((template) => (
-                <button
-                  key={template.id}
-                  onClick={() => {
-                    setSelectedTemplate(template);
-                    setSelectedColorTheme(template.colorThemes[0]?.id || '');
-                    setOpenSections(prev => ({ ...prev, style: false, text: true }));
-                  }}
-                  className={`p-3 rounded-xl border-2 text-left transition-all hover:shadow-md ${
-                    selectedTemplate?.id === template.id
-                      ? 'border-pink-400 bg-pink-50'
-                      : 'border-gray-200 bg-white hover:border-pink-200'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white shrink-0">
-                      <Sparkles size={16} />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-gray-900 text-sm">{template.name}</h3>
-                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{template.description}</p>
-                      <div className="flex flex-wrap gap-1 mt-1.5">
-                        {template.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{tag}</span>
+              {filteredTemplates.map((template) => {
+                const previewTheme = template.colorThemes[0];
+                const previewSrc = previewTheme ? getTemplateImagePath(template.id, previewTheme.id) : null;
+                const isSelected = selectedTemplate?.id === template.id;
+
+                return (
+                  <button
+                    key={template.id}
+                    onClick={() => {
+                      setSelectedTemplate(template);
+                      setSelectedColorTheme(template.colorThemes[0]?.id || '');
+                      setOpenSections(prev => ({ ...prev, style: false, text: true }));
+                    }}
+                    className={`rounded-xl border-2 text-left transition-all hover:shadow-md overflow-hidden ${
+                      isSelected
+                        ? 'border-pink-400 bg-pink-50'
+                        : 'border-gray-200 bg-white hover:border-pink-200'
+                    }`}
+                  >
+                    {/* プレビュー画像 */}
+                    {previewSrc && (
+                      <div
+                        className="w-full bg-gray-100 overflow-hidden"
+                        style={{
+                          aspectRatio: template.aspectRatio === '9:16' ? '16/12' : template.aspectRatio === '1:1' ? '16/12' : '16/9',
+                        }}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={previewSrc}
+                          alt={template.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
+                    <div className="p-3">
+                      <div className="flex items-start gap-2">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-bold text-gray-900 text-sm">{template.name}</h3>
+                          <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{template.description}</p>
+                        </div>
+                        {isSelected && (
+                          <div className="shrink-0 w-5 h-5 rounded-full bg-pink-500 flex items-center justify-center">
+                            <Check size={12} className="text-white" />
+                          </div>
+                        )}
+                      </div>
+                      {/* カラーテーマプレビュー */}
+                      <div className="flex gap-1 mt-2">
+                        {template.colorThemes.map((theme) => (
+                          <div key={theme.id} className="flex gap-0.5">
+                            {theme.colors.map((color, i) => (
+                              <div
+                                key={i}
+                                className="w-4 h-4 rounded-full border border-gray-200"
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
+                          </div>
                         ))}
                       </div>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
 
             {filteredTemplates.length === 0 && (
@@ -670,10 +742,27 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
             {/* 生成モード切り替え */}
             <div className="mt-4 pt-4 border-t border-gray-100">
               <label className="block text-sm font-bold text-gray-700 mb-2">生成モード</label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => setGenerationMode('template')}
+                  className={`flex items-center gap-2 px-3 py-3 rounded-xl border-2 transition-all text-left ${
+                    generationMode === 'template'
+                      ? 'border-green-400 bg-green-50'
+                      : 'border-gray-200 hover:border-green-200'
+                  }`}
+                >
+                  <ImageIcon size={18} className={generationMode === 'template' ? 'text-green-500' : 'text-gray-400'} />
+                  <div>
+                    <div className="flex items-center gap-1">
+                      <p className="text-sm font-bold text-gray-900">テンプレート</p>
+                      <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold">無料</span>
+                    </div>
+                    <p className="text-xs text-gray-500">AI不要・即時作成</p>
+                  </div>
+                </button>
                 <button
                   onClick={() => setGenerationMode('ai_text')}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 transition-all text-left ${
+                  className={`flex items-center gap-2 px-3 py-3 rounded-xl border-2 transition-all text-left ${
                     generationMode === 'ai_text'
                       ? 'border-pink-400 bg-pink-50'
                       : 'border-gray-200 hover:border-pink-200'
@@ -682,12 +771,12 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
                   <FileImage size={18} className={generationMode === 'ai_text' ? 'text-pink-500' : 'text-gray-400'} />
                   <div>
                     <p className="text-sm font-bold text-gray-900">AI テキスト</p>
-                    <p className="text-xs text-gray-500">画像に直接テキスト描画</p>
+                    <p className="text-xs text-gray-500">テキスト込み生成</p>
                   </div>
                 </button>
                 <button
                   onClick={() => setGenerationMode('editable_text')}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 transition-all text-left ${
+                  className={`flex items-center gap-2 px-3 py-3 rounded-xl border-2 transition-all text-left ${
                     generationMode === 'editable_text'
                       ? 'border-pink-400 bg-pink-50'
                       : 'border-gray-200 hover:border-pink-200'
@@ -695,11 +784,16 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
                 >
                   <Layers size={18} className={generationMode === 'editable_text' ? 'text-pink-500' : 'text-gray-400'} />
                   <div>
-                    <p className="text-sm font-bold text-gray-900">編集可能テキスト</p>
-                    <p className="text-xs text-gray-500">生成後に文字を自由編集</p>
+                    <p className="text-sm font-bold text-gray-900">AI 編集可能</p>
+                    <p className="text-xs text-gray-500">AI背景+文字編集</p>
                   </div>
                 </button>
               </div>
+              {generationMode === 'template' && (
+                <p className="text-xs text-green-700 mt-2 bg-green-50 px-3 py-2 rounded-lg">
+                  事前生成済みのテンプレート背景にテキストを自由に配置できます。AIを使わないため無料・即時で作成できます。
+                </p>
+              )}
               {generationMode === 'editable_text' && (
                 <p className="text-xs text-purple-600 mt-2 bg-purple-50 px-3 py-2 rounded-lg">
                   AIが背景画像のみを生成し、テキストは後から自由に編集（フォント・サイズ・色・位置）できます。SVG形式でのダウンロードも可能です。
@@ -707,29 +801,71 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
               )}
             </div>
 
+            {/* テンプレートモード: カラーテーマ別プレビュー */}
+            {generationMode === 'template' && selectedTemplate && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <label className="block text-sm font-bold text-gray-700 mb-2">テンプレートプレビュー</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {selectedTemplate.colorThemes.map((theme) => {
+                    const imgSrc = getTemplateImagePath(selectedTemplate.id, theme.id);
+                    return (
+                      <button
+                        key={theme.id}
+                        onClick={() => setSelectedColorTheme(theme.id)}
+                        className={`rounded-xl border-2 overflow-hidden transition-all ${
+                          selectedColorTheme === theme.id
+                            ? 'border-green-400 ring-2 ring-green-200'
+                            : 'border-gray-200 hover:border-green-200'
+                        }`}
+                      >
+                        <div className="w-full aspect-video bg-gray-100 overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={imgSrc} alt={theme.name} className="w-full h-full object-cover" loading="lazy" />
+                        </div>
+                        <div className="px-2 py-1.5 text-center">
+                          <p className="text-xs font-medium text-gray-700 truncate">{theme.name}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {error && (
               <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm mt-4">{error}</div>
             )}
 
             {/* 生成ボタン */}
             <div className="mt-6 pt-4 border-t border-gray-100">
-              <button
-                onClick={handleGenerate}
-                disabled={isGenerating || !title.trim() || trialExceeded}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold shadow-lg shadow-pink-200 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    生成中...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={18} />
-                    {!isPro ? 'お試し生成する（残り1回）' : 'AIで生成する'}
-                  </>
-                )}
-              </button>
+              {generationMode === 'template' ? (
+                <button
+                  onClick={handleGenerate}
+                  disabled={!title.trim() || !selectedTemplate || !selectedColorTheme}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ImageIcon size={18} />
+                  テンプレートで作成する（無料）
+                </button>
+              ) : (
+                <button
+                  onClick={handleGenerate}
+                  disabled={isGenerating || !title.trim() || trialExceeded}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold shadow-lg shadow-pink-200 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      生成中...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={18} />
+                      {!isPro ? 'お試し生成する（残り1回）' : 'AIで生成する'}
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </Section>
 
@@ -762,8 +898,8 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
 
             {/* プレビュー表示 */}
             <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-              {generationMode === 'editable_text' && backgroundImageUrl ? (
-                /* 編集可能テキストモード: SVGオーバーレイ */
+              {isTextOverlayMode && backgroundImageUrl ? (
+                /* 編集可能テキスト / テンプレートモード: SVGオーバーレイ */
                 <div className="p-4">
                   <div
                     className="relative mx-auto"
@@ -849,8 +985,8 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
                       ダウンロード
                     </button>
 
-                    {/* SVG/PNGダウンロードメニュー（editable_textモード時） */}
-                    {showDownloadMenu && generationMode === 'editable_text' && (
+                    {/* SVG/PNGダウンロードメニュー（テキストオーバーレイモード時） */}
+                    {showDownloadMenu && isTextOverlayMode && (
                       <div className="absolute top-full left-0 mt-1 bg-white rounded-xl border border-gray-200 shadow-lg z-10 w-48">
                         <button
                           onClick={handleDownloadPNG}
@@ -898,8 +1034,8 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
               )}
             </div>
 
-            {/* 編集可能テキストモード: テキスト編集パネル */}
-            {generationMode === 'editable_text' && backgroundImageUrl && (
+            {/* 編集可能テキスト / テンプレートモード: テキスト編集パネル */}
+            {isTextOverlayMode && backgroundImageUrl && (
               <TextEditPanel
                 textElements={svgTextElements}
                 selectedElementId={selectedTextElementId}
@@ -913,7 +1049,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
             {/* AI編集セクション（生成後のみ表示） */}
             {hasGeneratedContent && (
               <>
-                {/* テキスト変更セクション（通常モードのみ） */}
+                {/* テキスト変更セクション（AI通常モードのみ） */}
                 {generationMode === 'ai_text' && generatedImageUrl && (
                   <TextChangeSection
                     imageUrl={generatedImageUrl}
@@ -924,14 +1060,16 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
                   />
                 )}
 
-                {/* AI編集チャット（背景画像の編集にも使える） */}
-                <AIEditChat
-                  imageUrl={(generationMode === 'editable_text' ? backgroundImageUrl : generatedImageUrl) || ''}
-                  aspectRatio={currentAspectRatio}
-                  userId={user?.id}
-                  onImageEdited={handleImageEdited}
-                  isPro={isPro}
-                />
+                {/* AI編集チャット（AI生成モードのみ） */}
+                {generationMode !== 'template' && (
+                  <AIEditChat
+                    imageUrl={(generationMode === 'editable_text' ? backgroundImageUrl : generatedImageUrl) || ''}
+                    aspectRatio={currentAspectRatio}
+                    userId={user?.id}
+                    onImageEdited={handleImageEdited}
+                    isPro={isPro}
+                  />
+                )}
               </>
             )}
           </div>

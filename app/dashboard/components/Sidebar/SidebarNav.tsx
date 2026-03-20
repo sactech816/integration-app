@@ -31,6 +31,8 @@ import {
   Package,
 } from 'lucide-react';
 import { TOOL_ITEMS, TOOL_CATEGORIES } from './menuItems';
+import { PersonaId, DISCOVERY_CATEGORIES, getVisibleToolIds, getPersonaById } from '@/lib/persona-config';
+import { Plus, Check as CheckIcon, ListFilter, Compass, LayoutGrid } from 'lucide-react';
 
 export type MenuSection = 'main' | 'settings' | 'admin';
 export type MenuItem = {
@@ -96,6 +98,12 @@ type SidebarNavProps = {
   isKdlMonitor?: boolean;
   // 集客メーカーProプラン
   hasMakersProAccess?: boolean;
+  // ペルソナ関連
+  userPersona?: PersonaId | null;
+  enabledToolIds?: string[];
+  showAllTools?: boolean;
+  onAddTool?: (toolId: string) => void;
+  onRemoveTool?: (toolId: string) => void;
 };
 
 export default function SidebarNav({
@@ -107,7 +115,23 @@ export default function SidebarNav({
   hasKdlSubscription = false,
   isKdlMonitor = false,
   hasMakersProAccess = false,
+  userPersona = null,
+  enabledToolIds = [],
+  showAllTools = false,
+  onAddTool,
+  onRemoveTool,
 }: SidebarNavProps) {
+  // ツール表示モード: my-tools / discover / all
+  type ToolViewMode = 'my-tools' | 'discover' | 'all';
+  const hasPersona = !!userPersona;
+  const [toolViewMode, setToolViewMode] = useState<ToolViewMode>(hasPersona && !showAllTools ? 'my-tools' : 'all');
+
+  // ペルソナベースの表示ツールID
+  const visibleToolIds = useMemo(() => {
+    if (!userPersona || toolViewMode === 'all') return null; // null = 全表示
+    return getVisibleToolIds(userPersona, enabledToolIds, false);
+  }, [userPersona, enabledToolIds, toolViewMode]);
+
   // KDLの状態判定（管理者は常にアクセス可能）
   const kdlDisabled = !hasKdlSubscription && !isAdmin;
 
@@ -210,10 +234,39 @@ export default function SidebarNav({
       icon: cat.icon,
       items: toolMenuItems.filter((item) => {
         const toolDef = TOOL_ITEMS.find((t) => t.id === item.id);
-        return toolDef?.category === cat.id;
+        if (toolDef?.category !== cat.id) return false;
+        // マイツールモード: ペルソナの表示対象のみ
+        if (visibleToolIds && toolViewMode === 'my-tools') {
+          return visibleToolIds.includes(item.id);
+        }
+        return true;
       }),
     }));
-  }, [toolMenuItems]);
+  }, [toolMenuItems, visibleToolIds, toolViewMode]);
+
+  // discoverモード用: 行動ベースカテゴリのグループ
+  const discoveryGroups = useMemo(() => {
+    if (toolViewMode !== 'discover') return [];
+    const personaName = userPersona ? getPersonaById(userPersona)?.shortLabel : null;
+    return DISCOVERY_CATEGORIES.map((cat) => {
+      const items = cat.toolIds
+        .map((toolId) => toolMenuItems.find((t) => t.id === toolId))
+        .filter((item): item is MenuItem => !!item);
+      const alreadyEnabled = visibleToolIds
+        ? items.map((item) => ({
+            ...item,
+            _isEnabled: visibleToolIds.includes(item.id),
+          }))
+        : items.map((item) => ({ ...item, _isEnabled: true }));
+      return {
+        id: cat.id,
+        label: cat.label,
+        icon: cat.icon,
+        items: alreadyEnabled,
+        personaName,
+      };
+    });
+  }, [toolViewMode, toolMenuItems, visibleToolIds, userPersona]);
 
   // 設定メニュー
   const settingsItems: MenuItem[] = [
@@ -565,14 +618,114 @@ export default function SidebarNav({
         </div>
       </div>
 
-      {/* メインメニュー（カテゴリ別グループ） */}
+      {/* メインメニュー（モード切替付き） */}
       <div>
-        <h3 className="px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
-          ツール
-        </h3>
-        <div className="space-y-1">
-          {categoryGroups.map(renderCategoryGroup)}
-        </div>
+        {/* モード切替タブ（ペルソナ設定済みの場合のみ表示） */}
+        {hasPersona ? (
+          <div className="px-3 mb-2">
+            <div className="flex bg-gray-100 rounded-lg p-0.5">
+              <button
+                onClick={() => setToolViewMode('my-tools')}
+                className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[10px] font-bold transition-all ${
+                  toolViewMode === 'my-tools'
+                    ? 'bg-white text-blue-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <ListFilter size={12} />
+                マイツール
+              </button>
+              <button
+                onClick={() => setToolViewMode('discover')}
+                className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[10px] font-bold transition-all ${
+                  toolViewMode === 'discover'
+                    ? 'bg-white text-blue-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Compass size={12} />
+                追加
+              </button>
+              <button
+                onClick={() => setToolViewMode('all')}
+                className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[10px] font-bold transition-all ${
+                  toolViewMode === 'all'
+                    ? 'bg-white text-blue-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <LayoutGrid size={12} />
+                全ツール
+              </button>
+            </div>
+          </div>
+        ) : (
+          <h3 className="px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+            ツール
+          </h3>
+        )}
+
+        {/* ツール一覧（my-tools / all モード） */}
+        {toolViewMode !== 'discover' && (
+          <div className="space-y-1">
+            {categoryGroups
+              .filter((group) => group.items.length > 0)
+              .map(renderCategoryGroup)}
+          </div>
+        )}
+
+        {/* ツール探索（discover モード） */}
+        {toolViewMode === 'discover' && (
+          <div className="space-y-2 px-1">
+            {discoveryGroups.map((group) => {
+              const GroupIcon = group.icon;
+              return (
+                <div key={group.id}>
+                  <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-bold text-gray-500">
+                    <GroupIcon size={14} className="text-gray-400" />
+                    {group.label}
+                  </div>
+                  <div className="space-y-0.5 ml-3 pl-2 border-l border-gray-200">
+                    {group.items.map((item) => {
+                      const isEnabled = (item as { _isEnabled?: boolean })._isEnabled;
+                      const Icon = item.icon;
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex items-center gap-2 px-2 py-2 rounded-lg text-xs"
+                        >
+                          <Icon size={16} className={isEnabled ? 'text-blue-500' : 'text-gray-400'} />
+                          <span className={`flex-1 ${isEnabled ? 'text-gray-700' : 'text-gray-500'}`}>
+                            {item.label}
+                          </span>
+                          {isEnabled ? (
+                            <button
+                              onClick={() => onRemoveTool?.(item.id)}
+                              className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center gap-0.5"
+                              title="マイツールから除外"
+                            >
+                              <CheckIcon size={10} />
+                              追加済み
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => onAddTool?.(item.id)}
+                              className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600 font-bold flex items-center gap-0.5 transition-colors"
+                              title="マイツールに追加"
+                            >
+                              <Plus size={10} />
+                              追加
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* 設定メニュー */}

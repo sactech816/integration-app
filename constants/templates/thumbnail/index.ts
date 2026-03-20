@@ -65,4 +65,9 @@ export const STYLE_CATEGORIES = [
   { id: 'emotional' as const, label: 'エモーショナル系', description: '感情に訴えるデザイン' },
 ];
 
+// テンプレート背景画像のパスを取得
+export const getTemplateImagePath = (templateId: string, themeId: string): string => {
+  return `/templates/thumbnail/${templateId}/${themeId}.png`;
+};
+
 export type { ThumbnailTemplate, ThumbnailStyleCategory, ThumbnailPlatformCategory };

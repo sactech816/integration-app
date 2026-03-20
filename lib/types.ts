@@ -1503,7 +1503,7 @@ export type SVGTextElement = {
   textAlign?: 'left' | 'center' | 'right';
 };
 
-export type ThumbnailGenerationMode = 'ai_text' | 'editable_text';
+export type ThumbnailGenerationMode = 'ai_text' | 'editable_text' | 'template';
 
 export type ThumbnailTextOverlay = {
   title?: string;
