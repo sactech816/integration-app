@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase, TABLES } from '@/lib/supabase';
 import { generateSlug } from '@/lib/utils';
 import { Thumbnail, ThumbnailPlatform, ThumbnailGenerationMode, SVGTextElement } from '@/lib/types';
@@ -194,7 +194,27 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
     return elements;
   }, []);
 
-  // テンプレートモード: ローカル画像を即座に適用（AI不要）
+  // テンプレートモード: テンプレートやカラーテーマ変更時に背景画像を自動更新
+  // テキスト要素は既にあれば保持、なければ初期作成
+  useEffect(() => {
+    if (generationMode !== 'template') return;
+    if (!selectedTemplate || !selectedColorTheme) return;
+
+    const imgPath = getTemplateImagePath(selectedTemplate.id, selectedColorTheme);
+    setBackgroundImageUrl(imgPath);
+    setGeneratedImageUrl(null);
+    setError(null);
+
+    // テキスト要素がまだない場合のみ初期作成（既存テキストは保持）
+    if (svgTextElements.length === 0 && title.trim()) {
+      const elements = createDefaultTextElements(title, subtitle);
+      setSvgTextElements(elements);
+      setSelectedTextElementId(elements[0].id);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generationMode, selectedTemplate?.id, selectedColorTheme]);
+
+  // テンプレートモード: ボタン押下時の処理（初回テキスト作成用）
   const handleApplyTemplate = useCallback(() => {
     if (!title.trim()) {
       setError('タイトルを入力してください');
@@ -210,11 +230,14 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
     setBackgroundImageUrl(imgPath);
     setGeneratedImageUrl(null);
 
-    const elements = createDefaultTextElements(title, subtitle);
-    setSvgTextElements(elements);
-    setSelectedTextElementId(elements[0].id);
+    // テキスト要素がなければ新規作成、あれば保持
+    if (svgTextElements.length === 0) {
+      const elements = createDefaultTextElements(title, subtitle);
+      setSvgTextElements(elements);
+      setSelectedTextElementId(elements[0].id);
+    }
     setMobileTab('preview');
-  }, [title, subtitle, selectedTemplate, selectedColorTheme, createDefaultTextElements]);
+  }, [title, subtitle, selectedTemplate, selectedColorTheme, svgTextElements.length, createDefaultTextElements]);
 
   // AI画像生成
   const handleGenerate = useCallback(async () => {
