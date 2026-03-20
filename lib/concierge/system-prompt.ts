@@ -54,7 +54,7 @@ export function buildCustomConciergePrompt(config: {
   name: string;
   personality: string;
   knowledge_text: string;
-  faq_items: { question: string; answer: string }[];
+  faq_items: { question: string; answer: string; category?: string }[];
   settings: {
     allowedTopics?: string;
     blockedTopics?: string;
@@ -63,17 +63,69 @@ export function buildCustomConciergePrompt(config: {
     requireAccuracyTopics?: string;
     prohibitedBehaviors?: string;
     escalationMessage?: string;
+    contactFormUrl?: string;
+    contactPhone?: string;
+    contactEmail?: string;
+    contactBusinessHours?: string;
   };
+  site_pages?: { url: string; title: string; description?: string }[];
 }): string {
   const s = config.settings;
 
-  // FAQ セクション構築
+  // FAQ セクション構築（カテゴリ対応）
   let faqSection = '';
   if (config.faq_items && config.faq_items.length > 0) {
-    faqSection = `\n## よくある質問（FAQ）\n以下のFAQに該当する質問にはFAQの回答を優先的に使用してください。\n`;
-    faqSection += config.faq_items
-      .map((faq, i) => `Q${i + 1}: ${faq.question}\nA${i + 1}: ${faq.answer}`)
-      .join('\n\n');
+    // カテゴリでグルーピング
+    const categorized = new Map<string, typeof config.faq_items>();
+    for (const faq of config.faq_items) {
+      const cat = faq.category || '一般';
+      if (!categorized.has(cat)) categorized.set(cat, []);
+      categorized.get(cat)!.push(faq);
+    }
+
+    faqSection = '\n## よくある質問（FAQ）\n以下のFAQに該当する質問にはFAQの回答を優先的に使用してください。\n';
+    let idx = 1;
+    for (const [category, faqs] of categorized) {
+      if (categorized.size > 1) {
+        faqSection += `\n### ${category}\n`;
+      }
+      for (const faq of faqs) {
+        faqSection += `Q${idx}: ${faq.question}\nA${idx}: ${faq.answer}\n\n`;
+        idx++;
+      }
+    }
+  }
+
+  // お問い合わせ先セクション構築
+  let contactSection = '';
+  const hasContact = s.contactFormUrl || s.contactPhone || s.contactEmail;
+  if (hasContact) {
+    contactSection = '\n## お問い合わせ先への誘導ルール（重要）\n';
+    contactSection += '以下のいずれかの場合、回答の中に [CONTACT] マーカーを含めて、お問い合わせ先を案内してください:\n';
+    contactSection += '・対応範囲外の質問を受けた場合\n';
+    contactSection += '・ナレッジやFAQに該当する情報がなく正確に回答できない場合\n';
+    contactSection += '・訪問者が人間のスタッフとの対話を希望した場合\n';
+    contactSection += '・複雑な個別相談が必要な場合\n';
+    contactSection += '・クレームや苦情を受けた場合\n\n';
+    contactSection += 'お問い合わせ先情報:\n';
+    if (s.contactFormUrl) contactSection += `・お問い合わせフォーム: ${s.contactFormUrl}\n`;
+    if (s.contactPhone) contactSection += `・電話番号: ${s.contactPhone}\n`;
+    if (s.contactEmail) contactSection += `・メールアドレス: ${s.contactEmail}\n`;
+    if (s.contactBusinessHours) contactSection += `・営業時間: ${s.contactBusinessHours}\n`;
+    contactSection += '\n[CONTACT] マーカーを回答に含めると、チャット画面にお問い合わせカードが自動表示されます。\n';
+    contactSection += 'マーカーは回答テキストの最後に1回だけ含めてください。\n';
+  }
+
+  // サイトページ情報セクション構築
+  let sitePagesSection = '';
+  if (config.site_pages && config.site_pages.length > 0) {
+    sitePagesSection = '\n## サイトページ情報\n以下はサイト内の各ページです。訪問者を適切なページに案内する際に使用してください。\n';
+    for (const page of config.site_pages) {
+      sitePagesSection += `・「${page.title}」: ${page.url}`;
+      if (page.description) sitePagesSection += ` — ${page.description}`;
+      sitePagesSection += '\n';
+    }
+    sitePagesSection += '\nページを案内する際は、URLを回答テキスト内にそのまま記載してください。\n';
   }
 
   return `あなたは「${config.name}」です。
@@ -104,21 +156,21 @@ ${s.allowedTopics ? `対応するトピック:\n${s.allowedTopics.split(/[、,]/
 
 ${s.blockedTopics ? `対応しないトピック（必ずお断りする）:\n${s.blockedTopics.split(/[、,]/).map(t => `・${t.trim()}`).join('\n')}` : ''}
 
-${s.outOfScopeResponse ? `対応範囲外の質問を受けた場合の回答:\n「${s.outOfScopeResponse}」\nこの回答テンプレートを使い、絶対に範囲外の質問に答えてはいけません。` : ''}
+${s.outOfScopeResponse ? `対応範囲外の質問を受けた場合の回答:\n「${s.outOfScopeResponse}」\nこの回答テンプレートを使い、絶対に範囲外の質問に答えてはいけません。${hasContact ? '\n必ず [CONTACT] マーカーも含めてお問い合わせ先を表示してください。' : ''}` : ''}
 
 ## 回答の正確性ルール（厳守）
 ${s.requireAccuracyTopics ? `以下のトピックでは、ナレッジに明記された情報のみを使って回答すること。推測や一般論で補わない:\n${s.requireAccuracyTopics.split(/[、,]/).map(t => `・${t.trim()}`).join('\n')}` : ''}
 
 ${s.uncertainResponse ? `ナレッジに明確な情報がない場合は、以下の注意書きを回答に必ず付けること:\n「${s.uncertainResponse}」` : ''}
 
-${s.escalationMessage ? `AIでは対応できない複雑な質問や、正確な情報が必要な場合は、以下のメッセージで人間対応への引き継ぎを案内すること:\n「${s.escalationMessage}」` : ''}
-
+${s.escalationMessage ? `AIでは対応できない複雑な質問や、正確な情報が必要な場合は、以下のメッセージで人間対応への引き継ぎを案内すること:\n「${s.escalationMessage}」${hasContact ? '\n必ず [CONTACT] マーカーも含めてお問い合わせ先を表示してください。' : ''}` : ''}
+${contactSection}
 ## AIの禁止行動（絶対厳守）
 ${s.prohibitedBehaviors ? s.prohibitedBehaviors.split(/[、,]/).map(b => `- ${b.trim()}`).join('\n') : '- 虚偽の情報を断定的に伝えること\n- 個人情報を聞き出すこと\n- ナレッジにない情報を作り上げること'}
 
 ## ナレッジ（知識ベース）
 ${config.knowledge_text || '（ナレッジが設定されていません。一般的な情報のみで回答してください。）'}
-${faqSection}`;
+${faqSection}${sitePagesSection}`;
 }
 
 /**

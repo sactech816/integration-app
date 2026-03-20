@@ -129,6 +129,7 @@ export async function GET(request: NextRequest) {
         ...m,
         actions: m.metadata?.actions || [],
         suggestions: m.metadata?.suggestions || [],
+        contactInfo: m.metadata?.contactInfo || undefined,
       })),
       sessionId: sessionId || latestSessionId,
     });
@@ -247,15 +248,17 @@ export async function POST(request: NextRequest) {
 
     // システムプロンプト構築（カスタムconfig or プラットフォーム内蔵）
     let systemPrompt: string;
+    let configData: any = null;
 
     if (configId) {
       // カスタムコンシェルジュ: configを取得してカスタムプロンプト構築
-      const { data: configData } = await serviceClient
+      const { data } = await serviceClient
         .from('concierge_configs')
-        .select('name, personality, knowledge_text, faq_items, settings')
+        .select('name, personality, knowledge_text, faq_items, settings, site_pages')
         .eq('id', configId)
         .eq('is_published', true)
         .single();
+      configData = data;
 
       if (configData) {
         systemPrompt = buildCustomConciergePrompt({
@@ -264,6 +267,7 @@ export async function POST(request: NextRequest) {
           knowledge_text: configData.knowledge_text,
           faq_items: configData.faq_items || [],
           settings: configData.settings || {},
+          site_pages: configData.site_pages || [],
         });
       } else {
         // configが見つからない場合はデフォルト
@@ -298,7 +302,22 @@ export async function POST(request: NextRequest) {
     });
 
     // ツールアクション抽出
-    const { text: replyText, actions, suggestions } = parseToolActions(aiResponse.content);
+    const { text: replyText, actions, suggestions, showContact } = parseToolActions(aiResponse.content);
+
+    // お問い合わせ先情報の構築
+    let contactInfo = undefined;
+    if (showContact && configData) {
+      const cs = configData.settings || {};
+      const hasAny = cs.contactFormUrl || cs.contactPhone || cs.contactEmail;
+      if (hasAny) {
+        contactInfo = {
+          formUrl: cs.contactFormUrl || undefined,
+          phone: cs.contactPhone || undefined,
+          email: cs.contactEmail || undefined,
+          businessHours: cs.contactBusinessHours || undefined,
+        };
+      }
+    }
 
     const inputTokens = aiResponse.usage?.inputTokens || 0;
     const outputTokens = aiResponse.usage?.outputTokens || 0;
@@ -331,7 +350,7 @@ export async function POST(request: NextRequest) {
         ...commonFields,
         role: 'assistant',
         content: replyText,
-        metadata: { actions, suggestions },
+        metadata: { actions, suggestions, contactInfo },
         input_tokens: inputTokens,
         output_tokens: outputTokens,
       },
@@ -357,6 +376,7 @@ export async function POST(request: NextRequest) {
       reply: replyText,
       actions,
       suggestions,
+      contactInfo,
       remainingMessages: dailyLimit - dailyUsage - 1,
       sessionId,
     });

@@ -36,12 +36,20 @@ export const AVATAR_PRESETS: { type: AvatarType; label: string; emoji: string }[
   { type: 'neko', label: 'ねこ', emoji: '🐱' },
 ];
 
+export interface ContactInfo {
+  formUrl?: string;
+  phone?: string;
+  email?: string;
+  businessHours?: string;
+}
+
 export interface ConciergeMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   actions?: ToolAction[];
   suggestions?: string[];
+  contactInfo?: ContactInfo;
   feedback?: 1 | -1 | null;
   created_at: string;
 }
@@ -56,6 +64,7 @@ export interface ConciergeChatResponse {
   reply: string;
   actions: ToolAction[];
   suggestions: string[];
+  contactInfo?: ContactInfo;
   remainingMessages: number;
   sessionId: string;
 }

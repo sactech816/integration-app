@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import {
   User, MessageSquare, Palette, Settings, BookOpen, Plus, Trash2, Sparkles, ShieldCheck, Upload, ImageIcon,
+  Phone, Mail, ExternalLink, Clock, Globe, Loader2, X, ChevronDown, ChevronUp, Tag,
 } from 'lucide-react';
 import ConciergeEmbedCodeGenerator from './ConciergeEmbedCodeGenerator';
 import ConciergeAvatar from '../ConciergeAvatar';
@@ -13,6 +14,13 @@ import { supabase } from '@/lib/supabase';
 interface FAQItem {
   question: string;
   answer: string;
+  category?: string;
+}
+
+interface SitePage {
+  url: string;
+  title: string;
+  description?: string;
 }
 
 interface ConciergeConfig {
@@ -21,6 +29,7 @@ interface ConciergeConfig {
   personality: string;
   knowledge_text: string;
   faq_items: FAQItem[];
+  site_pages?: SitePage[];
   avatar_style: { type: string; primaryColor: string; shape?: string; aspectRatio?: number; customImageUrl?: string; customImageShape?: string };
   design: { position: string; bubbleSize: number; headerColor: string; fontFamily: string };
   settings: {
@@ -29,6 +38,10 @@ interface ConciergeConfig {
     outOfScopeResponse: string; uncertainResponse: string;
     requireAccuracyTopics: string; prohibitedBehaviors: string;
     escalationMessage: string;
+    contactFormUrl?: string;
+    contactPhone?: string;
+    contactEmail?: string;
+    contactBusinessHours?: string;
   };
   is_published: boolean;
   [key: string]: any;
@@ -55,12 +68,96 @@ const COLOR_PRESETS = [
   '#F59E0B', '#10B981', '#06B6D4', '#6366F1',
 ];
 
+const FAQ_CATEGORIES = ['一般', 'サービス', '料金', '技術', 'サポート', 'その他'];
+
 export default function ConciergeEditorPanel({ config, onUpdate, onOpenAISetup }: Props) {
   const [activeTab, setActiveTab] = useState<EditorTab>('basic');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarFileRef = useRef<HTMLInputElement>(null);
 
+  // サイトマップインポート状態
+  const [sitemapUrl, setSitemapUrl] = useState('');
+  const [importingSitemap, setImportingSitemap] = useState(false);
+  const [sitemapError, setSitemapError] = useState('');
+
+  // FAQ AI生成状態
+  const [generatingFaq, setGeneratingFaq] = useState(false);
+
   const inputClass = "w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all";
+
+  // FAQのカテゴリ一覧を取得（設定済み + デフォルト）
+  const usedCategories = [...new Set([
+    ...FAQ_CATEGORIES,
+    ...config.faq_items.map(f => f.category).filter(Boolean) as string[],
+  ])];
+
+  /** サイトマップ読み込み */
+  const handleImportSitemap = async () => {
+    if (!sitemapUrl.trim()) return;
+    setImportingSitemap(true);
+    setSitemapError('');
+
+    try {
+      const res = await fetch('/api/concierge/import-sitemap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sitemapUrl: sitemapUrl.trim() }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      const existingPages = config.site_pages || [];
+      const existingUrls = new Set(existingPages.map(p => p.url));
+      const newPages = (data.pages as SitePage[]).filter(p => !existingUrls.has(p.url));
+
+      onUpdate({ site_pages: [...existingPages, ...newPages] });
+      setSitemapUrl('');
+      alert(`${newPages.length}ページの情報を読み込みました（合計${existingPages.length + newPages.length}ページ）`);
+    } catch (err: any) {
+      setSitemapError(err.message || '読み込みに失敗しました');
+    } finally {
+      setImportingSitemap(false);
+    }
+  };
+
+  /** AIでFAQを自動生成（ナレッジテキストから） */
+  const handleGenerateFaq = async () => {
+    if (!config.knowledge_text?.trim()) {
+      alert('先にナレッジを入力してください。ナレッジの内容からFAQを自動生成します。');
+      return;
+    }
+    setGeneratingFaq(true);
+
+    try {
+      const res = await fetch('/api/concierge/ai-generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessDescription: config.knowledge_text,
+          generateType: 'faq',
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      const newFaqs: FAQItem[] = (data.faq_items || data || []).map((f: any) => ({
+        question: f.question,
+        answer: f.answer,
+        category: f.category || '一般',
+      }));
+
+      if (newFaqs.length > 0) {
+        onUpdate({ faq_items: [...config.faq_items, ...newFaqs] });
+        alert(`${newFaqs.length}件のFAQを生成しました`);
+      }
+    } catch (err: any) {
+      alert(`FAQ生成エラー: ${err.message}`);
+    } finally {
+      setGeneratingFaq(false);
+    }
+  };
 
   return (
     <div>
@@ -180,21 +277,116 @@ export default function ConciergeEditorPanel({ config, onUpdate, onOpenAISetup }
             </p>
           </div>
 
+          {/* サイトマップ読み込み */}
+          <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-4 border border-indigo-200">
+            <h4 className="text-sm font-bold text-indigo-800 mb-3 flex items-center gap-2">
+              <Globe className="w-4 h-4" />
+              サイトマップからページ情報を読み込む
+            </h4>
+            <p className="text-xs text-indigo-600 mb-3">
+              サイトマップURL（例: https://example.com/sitemap.xml）を入力すると、各ページのタイトル・説明を自動取得してAIの知識に追加します。
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={sitemapUrl}
+                onChange={e => setSitemapUrl(e.target.value)}
+                placeholder="https://example.com/sitemap.xml"
+                className="flex-1 px-3 py-2.5 border border-indigo-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <button
+                onClick={handleImportSitemap}
+                disabled={importingSitemap || !sitemapUrl.trim()}
+                className="px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 shadow-sm"
+              >
+                {importingSitemap ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    読込中
+                  </>
+                ) : (
+                  <>
+                    <Globe className="w-4 h-4" />
+                    読み込む
+                  </>
+                )}
+              </button>
+            </div>
+            {sitemapError && (
+              <p className="text-xs text-red-600 mt-2">{sitemapError}</p>
+            )}
+
+            {/* 読み込み済みページ一覧 */}
+            {config.site_pages && config.site_pages.length > 0 && (
+              <div className="mt-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-indigo-700">
+                    読み込み済み: {config.site_pages.length}ページ
+                  </span>
+                  <button
+                    onClick={() => {
+                      if (confirm('読み込んだページ情報をすべて削除しますか？')) {
+                        onUpdate({ site_pages: [] });
+                      }
+                    }}
+                    className="text-xs text-red-500 hover:text-red-700 transition-colors"
+                  >
+                    すべて削除
+                  </button>
+                </div>
+                <div className="max-h-40 overflow-y-auto space-y-1">
+                  {config.site_pages.map((page, i) => (
+                    <div key={i} className="flex items-center justify-between bg-white rounded-lg px-3 py-1.5 text-xs border border-indigo-100">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-800 truncate">{page.title}</p>
+                        <p className="text-gray-400 truncate">{page.url}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const newPages = config.site_pages!.filter((_, idx) => idx !== i);
+                          onUpdate({ site_pages: newPages });
+                        }}
+                        className="ml-2 text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* FAQ */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="text-sm font-semibold text-gray-700">
                 よくある質問（FAQ）
               </label>
-              <button
-                onClick={() => {
-                  const newFaq = [...config.faq_items, { question: '', answer: '' }];
-                  onUpdate({ faq_items: newFaq });
-                }}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100 transition-all font-medium"
-              >
-                <Plus className="w-3 h-3" />
-                追加
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleGenerateFaq}
+                  disabled={generatingFaq}
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-all font-medium disabled:opacity-50"
+                >
+                  {generatingFaq ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3 h-3" />
+                  )}
+                  AI生成
+                </button>
+                <button
+                  onClick={() => {
+                    const newFaq = [...config.faq_items, { question: '', answer: '', category: '一般' }];
+                    onUpdate({ faq_items: newFaq });
+                  }}
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100 transition-all font-medium"
+                >
+                  <Plus className="w-3 h-3" />
+                  追加
+                </button>
+              </div>
             </div>
             {config.faq_items.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-6 bg-gray-50 rounded-xl border border-dashed border-gray-300">
@@ -205,7 +397,23 @@ export default function ConciergeEditorPanel({ config, onUpdate, onOpenAISetup }
                 {config.faq_items.map((faq, i) => (
                   <div key={i} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                     <div className="flex justify-between items-start mb-2">
-                      <span className="text-xs font-semibold text-gray-500">Q{i + 1}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-gray-500">Q{i + 1}</span>
+                        {/* カテゴリ選択 */}
+                        <select
+                          value={faq.category || '一般'}
+                          onChange={e => {
+                            const newFaq = [...config.faq_items];
+                            newFaq[i] = { ...newFaq[i], category: e.target.value };
+                            onUpdate({ faq_items: newFaq });
+                          }}
+                          className="px-2 py-0.5 text-[10px] rounded-md border border-gray-300 text-gray-600 bg-white focus:ring-1 focus:ring-teal-500"
+                        >
+                          {usedCategories.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      </div>
                       <button
                         onClick={() => {
                           const newFaq = config.faq_items.filter((_, idx) => idx !== i);
@@ -662,10 +870,87 @@ export default function ConciergeEditorPanel({ config, onUpdate, onOpenAISetup }
             </div>
           </div>
 
+          {/* お問い合わせ先設定 */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+            <h4 className="text-sm font-bold text-blue-800 mb-2 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">3</span>
+              お問い合わせ先
+            </h4>
+            <p className="text-xs text-blue-600 mb-4">
+              設定すると、AIが対応できない質問の場合に自動でお問い合わせカードを表示します。少なくとも1つ入力してください。
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-1.5">
+                  <ExternalLink className="w-3.5 h-3.5 text-blue-500" />
+                  お問い合わせフォームURL
+                </label>
+                <input
+                  type="url"
+                  value={config.settings.contactFormUrl || ''}
+                  onChange={e => onUpdate({
+                    settings: { ...config.settings, contactFormUrl: e.target.value },
+                  })}
+                  placeholder="https://example.com/contact"
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-1.5">
+                  <Phone className="w-3.5 h-3.5 text-blue-500" />
+                  電話番号
+                </label>
+                <input
+                  type="tel"
+                  value={config.settings.contactPhone || ''}
+                  onChange={e => onUpdate({
+                    settings: { ...config.settings, contactPhone: e.target.value },
+                  })}
+                  placeholder="03-1234-5678"
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-1.5">
+                  <Mail className="w-3.5 h-3.5 text-blue-500" />
+                  メールアドレス
+                </label>
+                <input
+                  type="email"
+                  value={config.settings.contactEmail || ''}
+                  onChange={e => onUpdate({
+                    settings: { ...config.settings, contactEmail: e.target.value },
+                  })}
+                  placeholder="support@example.com"
+                  className={inputClass}
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-1.5">
+                  <Clock className="w-3.5 h-3.5 text-blue-500" />
+                  営業時間
+                </label>
+                <input
+                  type="text"
+                  value={config.settings.contactBusinessHours || ''}
+                  onChange={e => onUpdate({
+                    settings: { ...config.settings, contactBusinessHours: e.target.value },
+                  })}
+                  placeholder="平日 10:00-18:00（土日祝休み）"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* 禁止行動 */}
           <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
             <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-red-100 text-red-700 flex items-center justify-center text-xs font-bold">3</span>
+              <span className="w-6 h-6 rounded-full bg-red-100 text-red-700 flex items-center justify-center text-xs font-bold">4</span>
               AIの禁止行動
             </h4>
 

@@ -133,6 +133,7 @@ export function useConciergeChat(): UseConciergeChat {
         content: data.reply,
         actions: data.actions,
         suggestions: data.suggestions,
+        contactInfo: data.contactInfo,
         created_at: new Date().toISOString(),
       };
 

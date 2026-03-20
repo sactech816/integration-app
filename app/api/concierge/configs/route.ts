@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
         personality: body.personality || '',
         knowledge_text: body.knowledge_text || '',
         faq_items: body.faq_items || [],
+        site_pages: body.site_pages || [],
         avatar_style: body.avatar_style || { type: 'default', primaryColor: '#3B82F6' },
         design: body.design || { position: 'bottom-right', bubbleSize: 56, headerColor: '#3B82F6', fontFamily: 'system' },
         settings: body.settings || { dailyLimit: 50, maxTokens: 512, model: 'claude-haiku-4-5-20251001' },
@@ -130,7 +131,7 @@ export async function PUT(request: NextRequest) {
     const updateData: any = { updated_at: new Date().toISOString() };
     const allowedFields = [
       'name', 'greeting', 'personality', 'knowledge_text',
-      'faq_items', 'avatar_style', 'design', 'settings', 'is_published',
+      'faq_items', 'avatar_style', 'design', 'settings', 'is_published', 'site_pages',
     ];
     allowedFields.forEach(field => {
       if (body[field] !== undefined) updateData[field] = body[field];

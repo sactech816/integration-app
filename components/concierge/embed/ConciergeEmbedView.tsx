@@ -83,6 +83,7 @@ export default function ConciergeEmbedView({ config }: { config: ConciergeConfig
         content: data.reply,
         actions: data.actions,
         suggestions: data.suggestions,
+        contactInfo: data.contactInfo,
         created_at: new Date().toISOString(),
       };
       setMessages(prev => [...prev, assistantMsg]);

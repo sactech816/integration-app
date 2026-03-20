@@ -1,8 +1,8 @@
 'use client';
 
-import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Phone, Mail, ExternalLink, Clock } from 'lucide-react';
 import ConciergeToolButton from './ConciergeToolButton';
-import type { ConciergeMessage } from './types';
+import type { ConciergeMessage, ContactInfo } from './types';
 
 interface ConciergeBubbleProps {
   message: ConciergeMessage;
@@ -25,6 +25,57 @@ function stripMarkdown(text: string): string {
     .replace(/`([^`]+)`/g, '$1')       // `code`
     .replace(/```[\s\S]*?```/g, '')    // ```code blocks```
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'); // [link](url)
+}
+
+/** お問い合わせカード */
+function ContactCard({ contactInfo }: { contactInfo: ContactInfo }) {
+  return (
+    <div className="mt-3 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-3.5 space-y-2.5">
+      <p className="text-xs font-bold text-blue-800 flex items-center gap-1.5">
+        <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-[10px]">📞</span>
+        お問い合わせ先
+      </p>
+
+      {contactInfo.formUrl && (
+        <a
+          href={contactInfo.formUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-2 bg-white border border-blue-200 rounded-lg text-xs text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all shadow-sm"
+        >
+          <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+          <span className="font-medium">お問い合わせフォーム</span>
+        </a>
+      )}
+
+      {contactInfo.phone && (
+        <a
+          href={`tel:${contactInfo.phone.replace(/[-\s]/g, '')}`}
+          className="flex items-center gap-2 px-3 py-2 bg-white border border-blue-200 rounded-lg text-xs text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all shadow-sm"
+        >
+          <Phone className="w-3.5 h-3.5 shrink-0" />
+          <span className="font-medium">{contactInfo.phone}</span>
+        </a>
+      )}
+
+      {contactInfo.email && (
+        <a
+          href={`mailto:${contactInfo.email}`}
+          className="flex items-center gap-2 px-3 py-2 bg-white border border-blue-200 rounded-lg text-xs text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all shadow-sm"
+        >
+          <Mail className="w-3.5 h-3.5 shrink-0" />
+          <span className="font-medium">{contactInfo.email}</span>
+        </a>
+      )}
+
+      {contactInfo.businessHours && (
+        <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-gray-600">
+          <Clock className="w-3.5 h-3.5 shrink-0 text-gray-400" />
+          <span>営業時間: {contactInfo.businessHours}</span>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function ConciergeBubble({ message, isLast, onNavigate, onSend, onFeedback }: ConciergeBubbleProps) {
@@ -54,6 +105,11 @@ export default function ConciergeBubble({ message, isLast, onNavigate, onSend, o
               />
             ))}
           </div>
+        )}
+
+        {/* お問い合わせカード */}
+        {!isUser && message.contactInfo && (
+          <ContactCard contactInfo={message.contactInfo} />
         )}
 
         {/* 👍👎 フィードバックボタン（AI応答のみ） */}
