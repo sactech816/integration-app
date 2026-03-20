@@ -5,6 +5,7 @@ import { Heart, Users } from 'lucide-react';
 import SidebarUserInfo from './SidebarUserInfo';
 import SidebarNav from './SidebarNav';
 import PointBalance from '@/components/points/PointBalance';
+import { PersonaId } from '@/lib/persona-config';
 
 type SidebarProps = {
   user: { id: string; email?: string } | null;
@@ -51,6 +52,12 @@ type SidebarProps = {
   hasMakersProAccess?: boolean;
   pointBalance?: number;
   onPointPurchaseClick?: () => void;
+  // ペルソナ関連
+  userPersona?: PersonaId | null;
+  enabledToolIds?: string[];
+  showAllTools?: boolean;
+  onAddTool?: (toolId: string) => void;
+  onRemoveTool?: (toolId: string) => void;
 };
 
 export default function Sidebar({
@@ -67,6 +74,11 @@ export default function Sidebar({
   hasMakersProAccess = false,
   pointBalance,
   onPointPurchaseClick,
+  userPersona = null,
+  enabledToolIds = [],
+  showAllTools = false,
+  onAddTool,
+  onRemoveTool,
 }: SidebarProps) {
   const totalContentCount = Object.values(contentCounts).reduce((a, b) => a + b, 0);
 
@@ -107,6 +119,11 @@ export default function Sidebar({
         hasKdlSubscription={hasKdlSubscription}
         isKdlMonitor={isKdlMonitor}
         hasMakersProAccess={hasMakersProAccess}
+        userPersona={userPersona}
+        enabledToolIds={enabledToolIds}
+        showAllTools={showAllTools}
+        onAddTool={onAddTool}
+        onRemoveTool={onRemoveTool}
       />
 
       {/* フッターリンク */}

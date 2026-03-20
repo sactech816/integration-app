@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Loader2, BookOpen, Crown, Sparkles, LayoutGrid, Lock, Users, Play, Heart } from 'lucide-react';
+import { Loader2, BookOpen, Crown, Sparkles, LayoutGrid, Lock, Users, Play, Heart, RefreshCw } from 'lucide-react';
 import { TOOL_ITEMS, TOOL_CATEGORIES, ToolCategory } from '../Sidebar/menuItems';
 
 import { MakersPlanTier } from '@/lib/subscription';
+import { PersonaId, getPersonaById } from '@/lib/persona-config';
 
 type KdlSubscription = {
   hasActiveSubscription: boolean;
@@ -32,6 +33,9 @@ type DashboardHomeProps = {
   userSubscription?: UserSubscription | null;
   onNavigate: (path: string, addAdminKey?: boolean) => void;
   onMenuItemClick?: (itemId: string) => void;
+  // ペルソナ関連
+  userPersona?: PersonaId | null;
+  onChangePersona?: () => void;
 };
 
 // カテゴリ別のタブスタイル
@@ -52,9 +56,12 @@ export default function DashboardHome({
   userSubscription,
   onNavigate,
   onMenuItemClick,
+  userPersona = null,
+  onChangePersona,
 }: DashboardHomeProps) {
   const hasMakersProAccess = userSubscription?.planTier === 'business' || userSubscription?.planTier === 'premium';
   const [activeTab, setActiveTab] = useState<'all' | ToolCategory>('all');
+  const personaDef = userPersona ? getPersonaById(userPersona) : null;
 
   const renderToolCard = (tool: typeof TOOL_ITEMS[0]) => {
     const Icon = tool.icon;
@@ -126,6 +133,32 @@ export default function DashboardHome({
 
   return (
     <div className="space-y-6">
+      {/* ペルソナバナー */}
+      {personaDef && (
+        <div className={`flex items-center justify-between px-4 py-3 rounded-xl border bg-gradient-to-r from-${personaDef.color}-50 to-white border-${personaDef.color}-200`}>
+          <div className="flex items-center gap-3">
+            <personaDef.icon size={18} className={`text-${personaDef.color}-600`} />
+            <div>
+              <p className="text-sm font-bold text-gray-900">
+                あなたのタイプ: {personaDef.shortLabel}
+              </p>
+              <p className="text-[10px] text-gray-500">
+                サイドバーの「追加」タブから他のツールも追加できます
+              </p>
+            </div>
+          </div>
+          {onChangePersona && (
+            <button
+              onClick={onChangePersona}
+              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <RefreshCw size={12} />
+              変更
+            </button>
+          )}
+        </div>
+      )}
+
       {/* KDLサブスクリプション状態（コンパクト版） */}
       <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-3 sm:p-4 rounded-2xl shadow-sm border border-amber-200">
         <div className="flex items-center justify-between gap-2">

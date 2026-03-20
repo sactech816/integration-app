@@ -1,11 +1,14 @@
 'use client';
 
+import SubBrandLPLayout from '@/components/home/SubBrandLPLayout';
 import PersonaLPLayout from '@/components/home/PersonaLPLayout';
 import { PenTool, GitBranch, Mail, Zap, TrendingUp, RefreshCw, FileText, Sparkles, Repeat } from 'lucide-react';
 
 export default function CreatorPageClient() {
   return (
+    <SubBrandLPLayout personaId="creator">
     <PersonaLPLayout
+      skipAuthProvider
       badge="コンテンツ販売者・Kindle著者の方へ"
       headline={
         <>
@@ -126,12 +129,12 @@ export default function CreatorPageClient() {
       ]}
 
       otherTypes={[
-        { label: 'これから起業する方', href: '/for/starter', color: '#f59e0b' },
-        { label: 'フリーランス・SNS発信者', href: '/for/freelance', color: '#3b82f6' },
+        { label: 'これから起業する方', href: '/for/startup', color: '#f59e0b' },
         { label: 'コーチ・コンサル・講師', href: '/for/coach', color: '#6366f1' },
-        { label: '店舗・教室・サロン', href: '/for/shop', color: '#10b981' },
-        { label: '法人・チーム', href: '/for/business', color: '#8b5cf6' },
+        { label: 'Kindle出版者', href: '/for/kindle', color: '#f97316' },
+        { label: '教室・サロン運営', href: '/for/school', color: '#10b981' },
       ]}
     />
+    </SubBrandLPLayout>
   );
 }

@@ -1,11 +1,14 @@
 'use client';
 
 import PersonaLPLayout from '@/components/home/PersonaLPLayout';
+import SubBrandLPLayout from '@/components/home/SubBrandLPLayout';
 import { Video, Mail, Calendar, Shield, BookOpen, Users, FileText, Repeat, MousePointerClick } from 'lucide-react';
 
 export default function CoachPageClient() {
   return (
+    <SubBrandLPLayout personaId="coach">
     <PersonaLPLayout
+      skipAuthProvider
       badge="コーチ・コンサル・講師の方へ"
       headline={
         <>
@@ -126,12 +129,12 @@ export default function CoachPageClient() {
       ]}
 
       otherTypes={[
-        { label: 'これから起業する方', href: '/for/starter', color: '#f59e0b' },
-        { label: 'フリーランス・SNS発信者', href: '/for/freelance', color: '#3b82f6' },
-        { label: 'コンテンツ販売者', href: '/for/creator', color: '#ec4899' },
-        { label: '店舗・教室・サロン', href: '/for/shop', color: '#10b981' },
-        { label: '法人・チーム', href: '/for/business', color: '#8b5cf6' },
+        { label: 'これから起業する方', href: '/for/startup', color: '#f59e0b' },
+        { label: 'Kindle出版で集客したい方', href: '/for/kindle', color: '#3b82f6' },
+        { label: '教室・スクール運営者', href: '/for/school', color: '#ec4899' },
+        { label: 'コンテンツ販売者', href: '/for/creator', color: '#10b981' },
       ]}
     />
+    </SubBrandLPLayout>
   );
 }

@@ -81,6 +81,9 @@ export interface PersonaLPProps {
   faqItems?: { question: string; answer: string }[];
   breadcrumbLabel: string;
   breadcrumbSlug: string;
+
+  // SubBrandLPLayout使用時はHomeAuthProviderをスキップ
+  skipAuthProvider?: boolean;
 }
 
 export default function PersonaLPLayout({
@@ -106,6 +109,7 @@ export default function PersonaLPLayout({
   faqItems,
   breadcrumbLabel,
   breadcrumbSlug,
+  skipAuthProvider = false,
 }: PersonaLPProps) {
   const siteUrl = 'https://makers.tokyo';
 
@@ -148,8 +152,10 @@ export default function PersonaLPLayout({
     })),
   };
 
+  const Wrapper = skipAuthProvider ? ({ children }: { children: ReactNode }) => <>{children}</> : HomeAuthProvider;
+
   return (
-    <HomeAuthProvider>
+    <Wrapper>
       {/* 構造化データ */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       {faqSchema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
@@ -547,6 +553,6 @@ export default function PersonaLPLayout({
           </div>
         </div>
       </section>
-    </HomeAuthProvider>
+    </Wrapper>
   );
 }

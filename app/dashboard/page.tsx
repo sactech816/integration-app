@@ -42,8 +42,11 @@ import AdminOverview from './components/Admin/AdminOverview';
 // カスタムフック
 import { useDashboardData } from './hooks/useDashboardData';
 import { useAdminData } from './hooks/useAdminData';
+import { useUserPersona } from './hooks/useUserPersona';
+import PersonaSelector from './components/PersonaSelector';
 
 import { MakersPlanTier } from '@/lib/subscription';
+import { PersonaId, resolvePersonaSlug } from '@/lib/persona-config';
 
 // KDLサブスクリプション状態の型
 type KdlSubscription = {
@@ -96,6 +99,34 @@ function DashboardContent() {
 
   // 管理者用データ
   const adminData = useAdminData(isAdmin);
+
+  // ペルソナデータ
+  const userPersonaHook = useUserPersona(user?.id);
+  const [showPersonaSelector, setShowPersonaSelector] = useState(false);
+
+  // URLパラメータからペルソナ自動設定
+  useEffect(() => {
+    const personaParam = searchParams?.get('persona');
+    const welcome = searchParams?.get('welcome');
+    if (personaParam && user && !userPersonaHook.isLoading && !userPersonaHook.isPersonaSelected) {
+      const personaId = resolvePersonaSlug(personaParam);
+      if (personaId) {
+        userPersonaHook.setPersona(personaId);
+        // URLからパラメータを削除
+        const url = new URL(window.location.href);
+        url.searchParams.delete('persona');
+        url.searchParams.delete('welcome');
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
+  }, [searchParams, user, userPersonaHook.isLoading, userPersonaHook.isPersonaSelected]);
+
+  // ペルソナ未選択時は選択画面を表示
+  useEffect(() => {
+    if (!userPersonaHook.isLoading && user && !userPersonaHook.isPersonaSelected) {
+      setShowPersonaSelector(true);
+    }
+  }, [userPersonaHook.isLoading, user, userPersonaHook.isPersonaSelected]);
 
   // UI状態
   const [showAuth, setShowAuth] = useState(false);
@@ -601,6 +632,11 @@ function DashboardContent() {
               hasMakersProAccess={hasMakersProAccess}
               pointBalance={pointBalance}
               onPointPurchaseClick={() => setShowPointPurchase(true)}
+              userPersona={userPersonaHook.persona}
+              enabledToolIds={userPersonaHook.enabledToolIds}
+              showAllTools={userPersonaHook.showAllTools}
+              onAddTool={userPersonaHook.addTool}
+              onRemoveTool={userPersonaHook.removeTool}
             />
           }
           activeView={activeView}
@@ -635,12 +671,28 @@ function DashboardContent() {
             onNavigate={handleNavigate}
             onLogout={handleLogout}
             onMenuItemClick={handleMenuItemClick}
+            userPersona={userPersonaHook.persona}
+            onChangePersona={() => setShowPersonaSelector(true)}
             adminComponents={adminComponents}
           />
         </DashboardLayout>
       </div>
 
       <Footer />
+
+      {/* ペルソナ選択モーダル */}
+      {showPersonaSelector && (
+        <PersonaSelector
+          onSelect={async (personaId) => {
+            await userPersonaHook.setPersona(personaId);
+            setShowPersonaSelector(false);
+          }}
+          onSkip={async () => {
+            await userPersonaHook.skipSelection();
+            setShowPersonaSelector(false);
+          }}
+        />
+      )}
 
       {/* モーダル */}
       <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />

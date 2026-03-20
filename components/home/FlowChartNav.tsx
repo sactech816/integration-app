@@ -87,61 +87,56 @@ const goals = [
 // Q1×Q2 → ペルソナ振り分けマップ
 const routeMap: Record<string, Record<string, string>> = {
   starting: {
-    awareness: '/for/starter',
-    leads: '/for/starter',
+    awareness: '/for/startup',
+    leads: '/for/startup',
     sales: '/for/creator',
     automate: '/for/creator',
   },
   solo: {
-    awareness: '/for/freelance',
+    awareness: '/for/startup',
     leads: '/for/coach',
     sales: '/for/creator',
     automate: '/for/coach',
   },
   team: {
-    awareness: '/for/business',
-    leads: '/for/business',
-    sales: '/for/business',
-    automate: '/for/business',
+    awareness: '/for/creator',
+    leads: '/for/coach',
+    sales: '/for/creator',
+    automate: '/for/coach',
   },
   shop: {
-    awareness: '/for/shop',
-    leads: '/for/shop',
-    sales: '/for/shop',
-    automate: '/for/shop',
+    awareness: '/for/school',
+    leads: '/for/school',
+    sales: '/for/school',
+    automate: '/for/school',
   },
 };
 
 // 結果表示用メッセージ
 const resultMessages: Record<string, { title: string; description: string; color: string }> = {
-  '/for/starter': {
+  '/for/startup': {
     title: 'まずは「自分を知ってもらう仕組み」から',
     description: '起業の第一歩は、あなたの想いを伝えるページと、見込み客との接点づくり。テンプレートを選ぶだけで、今日から始められます。',
     color: '#f59e0b',
-  },
-  '/for/freelance': {
-    title: 'フォロワーを「お客様」に変える仕組み',
-    description: 'SNSで発信しているだけでは、売上にはつながりません。あなたの魅力を伝え、自然に予約が入る流れをつくりましょう。',
-    color: '#3b82f6',
   },
   '/for/coach': {
     title: '「実力」を正しく伝え、予約が自然に入る',
     description: 'コーチ・コンサルの集客は「信頼」がすべて。あなたの専門性を可視化し、見込み客を育て、予約につなげる仕組みを。',
     color: '#6366f1',
   },
-  '/for/creator': {
-    title: '見込み客を育て、商品が売れ続ける仕組み',
-    description: '良い商品をつくるだけでは売れません。見込み客との関係を育て、「欲しい」と思ったタイミングで届ける流れが必要です。',
+  '/for/kindle': {
+    title: '書く・出す・売るを、ぜんぶここで',
+    description: 'AI執筆から表紙デザイン、販促ページまで。Kindle出版に必要なすべてが揃っています。',
     color: '#ec4899',
   },
-  '/for/shop': {
+  '/for/school': {
     title: 'リピーターが増え、口コミが自然に広がる',
     description: '来店してくれたお客様が「また来たい」「友達にも教えたい」と思う体験をつくることが、最強の集客です。',
     color: '#10b981',
   },
-  '/for/business': {
-    title: 'マーケティング基盤を一元化する',
-    description: '複数のツールを行き来するのはもう終わり。集客から成約まで、チームで使える統合プラットフォームを。',
+  '/for/creator': {
+    title: '見込み客を育て、商品が売れ続ける仕組み',
+    description: '良い商品をつくるだけでは売れません。見込み客との関係を育て、「欲しい」と思ったタイミングで届ける流れが必要です。',
     color: '#8b5cf6',
   },
 };

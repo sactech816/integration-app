@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { ServiceType } from '@/lib/types';
+import { PersonaId } from '@/lib/persona-config';
 import DashboardHome from './DashboardHome';
 import ContentList from './ContentList';
 import { ContentItem } from './ContentCard';
@@ -144,6 +145,9 @@ type MainContentProps = {
   onNavigate: (path: string, addAdminKey?: boolean) => void;
   onLogout: () => void;
   onMenuItemClick?: (itemId: string) => void;
+  // ペルソナ関連
+  userPersona?: PersonaId | null;
+  onChangePersona?: () => void;
   // 管理者コンポーネント（遅延レンダリング関数）
   adminComponents?: {
     Overview?: () => React.ReactNode;
@@ -195,6 +199,8 @@ export default function MainContent({
   onNavigate,
   onLogout,
   onMenuItemClick,
+  userPersona,
+  onChangePersona,
   adminComponents,
 }: MainContentProps) {
   const contentRef = useRef<HTMLDivElement>(null);
@@ -225,6 +231,8 @@ export default function MainContent({
         userSubscription={userSubscription}
         onNavigate={onNavigate}
         onMenuItemClick={onMenuItemClick}
+        userPersona={userPersona}
+        onChangePersona={onChangePersona}
       />
       )}
 

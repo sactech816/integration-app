@@ -13,6 +13,16 @@ const nextConfig = {
   // トレイリングスラッシュを追加しない（SEO最適化）
   trailingSlash: false,
 
+  // ペルソナLP統合リダイレクト（旧スラグ→新スラグ）
+  async redirects() {
+    return [
+      { source: '/for/starter', destination: '/for/startup', permanent: true },
+      { source: '/for/freelance', destination: '/for/startup', permanent: true },
+      { source: '/for/shop', destination: '/for/school', permanent: true },
+      { source: '/for/business', destination: '/for/creator', permanent: true },
+    ];
+  },
+
   // ヘッダー設定（セキュリティとSEO）
   async headers() {
     return [
