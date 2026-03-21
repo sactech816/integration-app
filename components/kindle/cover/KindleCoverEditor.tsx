@@ -826,7 +826,7 @@ export default function KindleCoverEditor({
                   <ImageIcon size={18} className={imageSize === '2K' ? 'text-orange-500' : 'text-gray-400'} />
                   <div className="text-left">
                     <p className="text-sm font-bold text-gray-900">2K（標準）</p>
-                    <p className="text-xs text-gray-500">1600×2560px</p>
+                    <p className="text-xs text-gray-500">1600×2560px（KDP推奨）</p>
                   </div>
                 </button>
                 <button
@@ -840,7 +840,7 @@ export default function KindleCoverEditor({
                   <Crown size={18} className={imageSize === '4K' ? 'text-orange-500' : 'text-gray-400'} />
                   <div className="text-left">
                     <p className="text-sm font-bold text-gray-900">4K（高画質）</p>
-                    <p className="text-xs text-gray-500">高解像度出力</p>
+                    <p className="text-xs text-gray-500">3200×5120px</p>
                   </div>
                 </button>
               </div>

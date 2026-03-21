@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { logAIUsage } from '@/lib/ai-usage';
 import { getKindleCoverTemplateById } from '@/constants/templates/kindle-cover';
+import sharp from 'sharp';
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -210,15 +211,27 @@ FINAL CRITICAL INSTRUCTIONS:
       return NextResponse.json({ error: '画像データの取得に失敗しました' }, { status: 500 });
     }
 
-    // Base64 → Buffer → Supabase Storage にアップロード
-    const imageBuffer = Buffer.from(imagePart.inlineData.data as string, 'base64');
-    const mimeType = (imagePart.inlineData.mimeType as string) || 'image/png';
-    const ext = mimeType.includes('jpeg') ? 'jpg' : 'png';
-    const filePath = `kindle-covers/${userId}/${bookId || 'general'}/${Date.now()}.${ext}`;
+    // Base64 → Buffer → KDP推奨サイズにリサイズ → Supabase Storage にアップロード
+    const rawBuffer = Buffer.from(imagePart.inlineData.data as string, 'base64');
+
+    // KDP推奨サイズ: 2K=1600×2560, 4K=3200×5120（比率 5:8）
+    const targetWidth = imageSize === '4K' ? 3200 : 1600;
+    const targetHeight = imageSize === '4K' ? 5120 : 2560;
+
+    // Gemini APIは9:16で生成するため、KDP推奨の5:8にリサイズ・クロップ
+    const imageBuffer = await sharp(rawBuffer)
+      .resize(targetWidth, targetHeight, {
+        fit: 'cover',
+        position: 'centre',
+      })
+      .png()
+      .toBuffer();
+
+    const filePath = `kindle-covers/${userId}/${bookId || 'general'}/${Date.now()}.png`;
 
     const { error: uploadError } = await supabase.storage
       .from('thumbnail-images')
-      .upload(filePath, imageBuffer, { contentType: mimeType });
+      .upload(filePath, imageBuffer, { contentType: 'image/png' });
 
     if (uploadError) {
       console.error('Storage upload error:', uploadError);

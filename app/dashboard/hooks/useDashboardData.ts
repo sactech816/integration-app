@@ -735,7 +735,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, entertainmentQuizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult, lineResult, siteResult, bigfiveResult, fortuneResult, conciergeResult] = await Promise.all([
+      const [quizResult, entertainmentQuizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult, lineResult, siteResult, bigfiveResult, fortuneResult, conciergeResult, kindleCoverResult] = await Promise.all([
         // 診断クイズ数（ビジネス診断のみ）
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).or('quiz_type.is.null,quiz_type.eq.business')
@@ -810,6 +810,10 @@ export function useDashboardData(): UseDashboardDataReturn {
         isAdmin
           ? supabase.from(TABLES.CONCIERGE_CONFIGS).select('id', { count: 'exact', head: true })
           : supabase.from(TABLES.CONCIERGE_CONFIGS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // Kindle表紙数
+        isAdmin
+          ? supabase.from(TABLES.KINDLE_COVERS).select('id', { count: 'exact', head: true })
+          : supabase.from(TABLES.KINDLE_COVERS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
       ]);
 
       setContentCounts({
@@ -842,7 +846,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         bigfive: bigfiveResult?.count || 0,
         fortune: fortuneResult?.count || 0,
         concierge: conciergeResult?.count || 0,
-        kindle_cover: 0,
+        kindle_cover: kindleCoverResult.count || 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);
