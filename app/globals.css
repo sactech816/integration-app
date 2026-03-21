@@ -311,3 +311,41 @@ button:disabled {
 .concierge-pulse-ring {
   animation: concierge-pulse-ring 2s ease-out infinite;
 }
+
+/* ===== Kindle書籍LP専用アニメーション ===== */
+@keyframes lp-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(10px, -15px) scale(1.05); }
+  66% { transform: translate(-8px, 10px) scale(0.97); }
+}
+.animate-lp-float { animation: lp-float 20s ease-in-out infinite; }
+.animate-lp-float-reverse { animation: lp-float 25s ease-in-out infinite reverse; }
+
+@keyframes lp-book-hover {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-8px) rotate(0.5deg); }
+}
+.animate-lp-book { animation: lp-book-hover 4s ease-in-out infinite; }
+
+@keyframes lp-cta-ring {
+  0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
+  70% { box-shadow: 0 0 0 12px rgba(255,255,255,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+}
+.animate-lp-cta-ring { animation: lp-cta-ring 2.5s ease-out infinite; }
+
+@keyframes lp-card-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-lp-card-in { animation: lp-card-in 0.5s ease-out forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-lp-float,
+  .animate-lp-float-reverse,
+  .animate-lp-book,
+  .animate-lp-cta-ring,
+  .animate-lp-card-in {
+    animation: none;
+  }
+}
