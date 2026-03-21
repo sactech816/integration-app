@@ -369,7 +369,11 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
         setSavedSlug(slug);
         const publicUrl = `${window.location.origin}/thumbnail/${slug}`;
         setCompletedUrl(publicUrl);
-        setShowCompleteModal(true);
+        if (editingThumbnail) {
+          alert('サムネイルを更新しました！');
+        } else {
+          setShowCompleteModal(true);
+        }
       } catch (e) {
         const msg = e instanceof Error ? e.message : '不明なエラー';
         alert('保存に失敗しました: ' + msg);
