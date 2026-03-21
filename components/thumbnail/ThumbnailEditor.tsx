@@ -706,7 +706,7 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">メインテキスト *</label>
+                <label className="block text-sm font-bold text-gray-700 mb-1">メインテキスト <span className="text-red-500 text-xs ml-1 font-normal bg-red-50 px-1.5 py-0.5 rounded">必須</span></label>
                 <textarea
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
