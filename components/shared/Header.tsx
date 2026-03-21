@@ -500,6 +500,11 @@ const Header: React.FC<HeaderProps> = ({
                           <LayoutGrid size={13} />
                           <span>ツール一覧</span>
                         </Link>
+                        <Link href="/sitemap-html" onClick={closeMenus}
+                          className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                          <LayoutGrid size={13} />
+                          <span>サイトマップ</span>
+                        </Link>
                         <Link href="/pricing" onClick={closeMenus}
                           className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">
                           <Sparkles size={13} />
