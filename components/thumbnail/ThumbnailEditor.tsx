@@ -537,7 +537,6 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
                       setSelectedPlatform(platform.id);
                       setSelectedTemplate(null);
                       setSelectedStyle(null);
-                      setOpenSections(prev => ({ ...prev, platform: false, style: true }));
                     }}
                     className={`p-4 rounded-xl border-2 transition-all text-center hover:shadow-md ${
                       selectedPlatform === platform.id
@@ -600,7 +599,6 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
                     onClick={() => {
                       setSelectedTemplate(template);
                       setSelectedColorTheme(template.colorThemes[0]?.id || '');
-                      setOpenSections(prev => ({ ...prev, style: false, text: true }));
                     }}
                     className={`rounded-xl border-2 text-left transition-all hover:shadow-md overflow-hidden ${
                       isSelected
