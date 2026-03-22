@@ -83,6 +83,23 @@ type UserDetail = {
   }>;
 };
 
+const PRODUCT_LABELS: Record<string, string> = {
+  ai_pack_10: 'AI生成 10回パック',
+  ai_pack_30: 'AI生成 30回パック',
+  html_export: 'HTMLダウンロード',
+  embed_code: '埋め込みコード発行',
+  pdf_export: 'PDFダウンロード',
+  copyright_hide: 'コピーライト非表示',
+  csv_export: '回答データCSVエクスポート',
+  analytics_month: 'アクセス解析（1ヶ月）',
+  funnel_advanced: 'ファネル高機能',
+  newsletter_extra_1000: 'メルマガ追加1,000通',
+  bigfive_pdf: 'Big Five 診断PDF',
+  fortune_report: '生年月日診断レポート',
+  footer_hide: 'フッター非表示',
+  tool_unlock: 'ツール作成枠追加',
+};
+
 type TabId = 'overview' | 'plans' | 'purchases' | 'ai-usage' | 'content';
 
 interface UserDetailPanelProps {
@@ -400,7 +417,7 @@ export default function UserDetailPanel({ userId, onClose }: UserDetailPanelProp
                         <tr key={fp.id} className="border-b border-gray-50 hover:bg-gray-50">
                           <td className="px-3 py-2">
                             <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold">
-                              {fp.productId}
+                              {PRODUCT_LABELS[fp.productId] || fp.productId}
                             </span>
                           </td>
                           <td className="px-3 py-2 text-right font-bold text-gray-900">

@@ -30,6 +30,7 @@ import PlanLimitModal, { PlanLimitInfo } from '@/components/shared/PlanLimitModa
 import TrialOfferModal from '@/components/shared/TrialOfferModal';
 import TrialSettingsManager from './components/Admin/TrialSettingsManager';
 import FeatureProductManager from './components/Admin/FeatureProductManager';
+import PurchaseHistoryManager from './components/Admin/PurchaseHistoryManager';
 
 // 新しいコンポーネント
 import DashboardLayout from './components/DashboardLayout';
@@ -608,6 +609,7 @@ function DashboardContent() {
         InquiryManager: () => <InquiryManager />,
         TrialSettingsManager: () => <TrialSettingsManager />,
         FeatureProductManager: () => <FeatureProductManager />,
+        PurchaseHistoryManager: () => <PurchaseHistoryManager />,
       }
     : undefined;
 

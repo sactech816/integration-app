@@ -83,6 +83,8 @@ export async function GET(request: NextRequest) {
       contentCountsResult,
       kdlBooksResult,
       featurePurchasesResult,
+      bigfivePurchasesResult,
+      fortunePurchasesResult,
     ] = await Promise.all([
       // 基本ユーザー情報
       supabase.auth.admin.getUserById(userId),
@@ -114,6 +116,10 @@ export async function GET(request: NextRequest) {
       supabase.from('kdl_books').select('id, title, status, progress, created_at, updated_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(10),
       // 単品購入（feature_purchases）
       supabase.from('feature_purchases').select('id, product_id, price_paid, status, purchased_at, expires_at, remaining_uses, content_id, content_type, stripe_session_id').eq('user_id', userId).order('purchased_at', { ascending: false }).limit(50),
+      // Big Five PDF購入
+      supabase.from('bigfive_results').select('id, pdf_purchased_at, created_at').eq('user_id', userId).eq('pdf_purchased', true),
+      // 生年月日診断プレミアムレポート購入
+      supabase.from('fortune_results').select('id, report_purchased_at, created_at').eq('user_id', userId).eq('report_purchased', true),
     ]);
 
     // ユーザー基本情報
@@ -212,19 +218,45 @@ export async function GET(request: NextRequest) {
       isActive: new Date(mon.monitor_expires_at) > new Date(),
     }));
 
-    // 単品購入履歴
-    const featurePurchases = (featurePurchasesResult.data || []).map(fp => ({
-      id: fp.id,
-      productId: fp.product_id,
-      pricePaid: fp.price_paid,
-      status: fp.status,
-      purchasedAt: fp.purchased_at,
-      expiresAt: fp.expires_at,
-      remainingUses: fp.remaining_uses,
-      contentId: fp.content_id,
-      contentType: fp.content_type,
-      stripeSessionId: fp.stripe_session_id,
-    }));
+    // 単品購入履歴（feature_purchases + bigfive + fortune を統合）
+    const featurePurchases = [
+      ...(featurePurchasesResult.data || []).map(fp => ({
+        id: fp.id,
+        productId: fp.product_id,
+        pricePaid: fp.price_paid,
+        status: fp.status,
+        purchasedAt: fp.purchased_at,
+        expiresAt: fp.expires_at,
+        remainingUses: fp.remaining_uses,
+        contentId: fp.content_id,
+        contentType: fp.content_type,
+        stripeSessionId: fp.stripe_session_id,
+      })),
+      ...(bigfivePurchasesResult.data || []).map(bf => ({
+        id: bf.id,
+        productId: 'bigfive_pdf',
+        pricePaid: 500,
+        status: 'active' as const,
+        purchasedAt: bf.pdf_purchased_at || bf.created_at,
+        expiresAt: null,
+        remainingUses: null,
+        contentId: bf.id,
+        contentType: 'bigfive',
+        stripeSessionId: null,
+      })),
+      ...(fortunePurchasesResult.data || []).map(fr => ({
+        id: fr.id,
+        productId: 'fortune_report',
+        pricePaid: 500,
+        status: 'active' as const,
+        purchasedAt: fr.report_purchased_at || fr.created_at,
+        expiresAt: null,
+        remainingUses: null,
+        contentId: fr.id,
+        contentType: 'fortune',
+        stripeSessionId: null,
+      })),
+    ].sort((a, b) => new Date(b.purchasedAt).getTime() - new Date(a.purchasedAt).getTime());
 
     return NextResponse.json({
       user: {

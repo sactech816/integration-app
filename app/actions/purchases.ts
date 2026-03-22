@@ -408,7 +408,7 @@ export async function getAllUsersWithRolesPaginated(
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [subsResult, kdlSubsResult, monitorResult, aiLogsResult, featurePurchasesResult] = await Promise.all([
+    const [subsResult, kdlSubsResult, monitorResult, aiLogsResult, featurePurchasesResult, bigfivePurchasesResult, fortunePurchasesResult] = await Promise.all([
       // Makers サブスクリプション
       supabase
         .from('subscriptions')
@@ -439,6 +439,18 @@ export async function getAllUsersWithRolesPaginated(
         .select('user_id, product_id, price_paid, status, purchased_at')
         .in('user_id', userIds)
         .order('purchased_at', { ascending: false }),
+      // Big Five PDF購入
+      supabase
+        .from('bigfive_results')
+        .select('user_id, pdf_purchased_at')
+        .in('user_id', userIds)
+        .eq('pdf_purchased', true),
+      // 生年月日診断プレミアムレポート購入
+      supabase
+        .from('fortune_results')
+        .select('user_id, report_purchased_at')
+        .in('user_id', userIds)
+        .eq('report_purchased', true),
     ]);
 
     // プランマップ作成
@@ -477,7 +489,7 @@ export async function getAllUsersWithRolesPaginated(
       aiCountMap[log.user_id] = (aiCountMap[log.user_id] || 0) + 1;
     }
 
-    // 単品購入マップ作成
+    // 単品購入マップ作成（feature_purchases + bigfive + fortune を統合）
     const featurePurchaseMap: Record<string, Array<{ product_id: string; price_paid: number; status: string; purchased_at: string }>> = {};
     for (const fp of featurePurchasesResult.data || []) {
       if (!featurePurchaseMap[fp.user_id]) featurePurchaseMap[fp.user_id] = [];
@@ -486,6 +498,28 @@ export async function getAllUsersWithRolesPaginated(
         price_paid: fp.price_paid,
         status: fp.status,
         purchased_at: fp.purchased_at,
+      });
+    }
+    // Big Five PDF購入を統合
+    for (const bf of bigfivePurchasesResult.data || []) {
+      if (!bf.user_id) continue;
+      if (!featurePurchaseMap[bf.user_id]) featurePurchaseMap[bf.user_id] = [];
+      featurePurchaseMap[bf.user_id].push({
+        product_id: 'bigfive_pdf',
+        price_paid: 500,
+        status: 'active',
+        purchased_at: bf.pdf_purchased_at,
+      });
+    }
+    // 生年月日診断レポート購入を統合
+    for (const fr of fortunePurchasesResult.data || []) {
+      if (!fr.user_id) continue;
+      if (!featurePurchaseMap[fr.user_id]) featurePurchaseMap[fr.user_id] = [];
+      featurePurchaseMap[fr.user_id].push({
+        product_id: 'fortune_report',
+        price_paid: 500,
+        status: 'active',
+        purchased_at: fr.report_purchased_at,
       });
     }
 

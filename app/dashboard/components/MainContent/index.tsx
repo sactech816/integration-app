@@ -78,7 +78,8 @@ export type ActiveView =
   | 'admin-diagnosis'
   | 'admin-inquiries'
   | 'admin-trial'
-  | 'admin-products';
+  | 'admin-products'
+  | 'admin-purchases';
 
 type KdlSubscription = {
   hasActiveSubscription: boolean;
@@ -167,6 +168,7 @@ type MainContentProps = {
     InquiryManager?: () => React.ReactNode;
     TrialSettingsManager?: () => React.ReactNode;
     FeatureProductManager?: () => React.ReactNode;
+    PurchaseHistoryManager?: () => React.ReactNode;
   };
 };
 
@@ -426,6 +428,10 @@ export default function MainContent({
         <>{adminComponents.FeatureProductManager()}</>
       )}
 
+      {activeView === 'admin-purchases' && adminComponents?.PurchaseHistoryManager && (
+        <>{adminComponents.PurchaseHistoryManager()}</>
+      )}
+
       {/* コンシェルジュメーカー */}
       {activeView === 'concierge' && user && (
         <ConciergeList userId={user.id} isAdmin={isAdmin} />
@@ -440,7 +446,7 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'announcements', 'quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'step-email', 'line', 'youtube-analysis', 'youtube-keyword-research', 'kindle-keywords', 'google-keyword-research', 'rakuten-research', 'niconico-keyword-research', 'reddit-keyword-research', 'order-form', 'funnel', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks', 'admin-points', 'admin-diagnosis', 'admin-inquiries', 'admin-trial', 'admin-products', 'bigfive', 'fortune', 'site', 'concierge'].includes(activeView) && (
+      {!['dashboard', 'announcements', 'quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'step-email', 'line', 'youtube-analysis', 'youtube-keyword-research', 'kindle-keywords', 'google-keyword-research', 'rakuten-research', 'niconico-keyword-research', 'reddit-keyword-research', 'order-form', 'funnel', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks', 'admin-points', 'admin-diagnosis', 'admin-inquiries', 'admin-trial', 'admin-products', 'admin-purchases', 'bigfive', 'fortune', 'site', 'concierge'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>

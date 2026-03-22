@@ -50,6 +50,23 @@ type UserManagerProps = {
   onUsersPerPageChange: (perPage: number) => void;
 };
 
+const PRODUCT_LABELS: Record<string, string> = {
+  ai_pack_10: 'AI 10回',
+  ai_pack_30: 'AI 30回',
+  html_export: 'HTML出力',
+  embed_code: '埋込コード',
+  pdf_export: 'PDF出力',
+  copyright_hide: '©非表示',
+  csv_export: 'CSV出力',
+  analytics_month: '解析1ヶ月',
+  funnel_advanced: 'ファネル高機能',
+  newsletter_extra_1000: 'メルマガ+1000',
+  bigfive_pdf: 'BigFive PDF',
+  fortune_report: '生年月日診断',
+  footer_hide: 'フッター非表示',
+  tool_unlock: 'ツール枠追加',
+};
+
 const PLAN_COLORS: Record<string, string> = {
   lite: 'bg-blue-100 text-blue-700',
   standard: 'bg-green-100 text-green-700',
@@ -250,7 +267,7 @@ export default function UserManager({
                           <div className="flex flex-wrap gap-1 mt-1">
                             {usr.feature_purchases!.slice(0, 3).map((fp, idx) => (
                               <span key={idx} className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[10px] font-medium">
-                                {fp.product_id}
+                                {PRODUCT_LABELS[fp.product_id] || fp.product_id}
                               </span>
                             ))}
                             {usr.feature_purchases!.length > 3 && (

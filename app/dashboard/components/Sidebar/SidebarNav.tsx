@@ -29,6 +29,7 @@ import {
   Mail,
   Gift,
   Package,
+  Receipt,
 } from 'lucide-react';
 import { TOOL_ITEMS, TOOL_CATEGORIES } from './menuItems';
 import { PersonaId, DISCOVERY_CATEGORIES, getVisibleToolIds, getPersonaById } from '@/lib/persona-config';
@@ -316,6 +317,7 @@ export default function SidebarNav({
       icon: DollarSign,
       items: [
         { id: 'admin-affiliate', label: 'アフィリエイト管理', icon: Share2, section: 'admin', adminOnly: true },
+        { id: 'admin-purchases', label: '購入履歴', icon: Receipt, section: 'admin', adminOnly: true },
         { id: 'admin-feedbacks', label: 'リクエスト', icon: MessageSquareHeart, section: 'admin', adminOnly: true },
         { id: 'admin-inquiries', label: 'お問い合わせ', icon: Mail, section: 'admin', adminOnly: true },
       ],
