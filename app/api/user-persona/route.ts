@@ -105,6 +105,11 @@ export async function PATCH(request: NextRequest) {
       updates.show_all_tools = !!body.show_all_tools;
     }
 
+    // スキップ時にもpersona_selected_atを設定（毎回モーダル表示を防ぐ）
+    if (body.mark_selected) {
+      updates.persona_selected_at = new Date().toISOString();
+    }
+
     const { data, error } = await supabase
       .from(TABLES.USER_PERSONA)
       .update(updates)

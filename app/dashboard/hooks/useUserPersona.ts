@@ -132,7 +132,7 @@ export function useUserPersona(userId?: string): UseUserPersonaReturn {
     try {
       const method = data ? 'PATCH' : 'POST';
       const body = data
-        ? { show_all_tools: true }
+        ? { show_all_tools: true, mark_selected: true }
         : { persona_id: 'startup', show_all_tools: true };
 
       const res = await fetch('/api/user-persona', {

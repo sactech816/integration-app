@@ -637,6 +637,7 @@ function DashboardContent() {
               showAllTools={userPersonaHook.showAllTools}
               onAddTool={userPersonaHook.addTool}
               onRemoveTool={userPersonaHook.removeTool}
+              onChangePersona={() => setShowPersonaSelector(true)}
             />
           }
           activeView={activeView}

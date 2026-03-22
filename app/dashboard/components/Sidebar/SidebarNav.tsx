@@ -104,6 +104,7 @@ type SidebarNavProps = {
   showAllTools?: boolean;
   onAddTool?: (toolId: string) => void;
   onRemoveTool?: (toolId: string) => void;
+  onChangePersona?: () => void;
 };
 
 export default function SidebarNav({
@@ -120,6 +121,7 @@ export default function SidebarNav({
   showAllTools = false,
   onAddTool,
   onRemoveTool,
+  onChangePersona,
 }: SidebarNavProps) {
   // ツール表示モード: my-tools / discover / all
   type ToolViewMode = 'my-tools' | 'discover' | 'all';
@@ -734,6 +736,15 @@ export default function SidebarNav({
           設定
         </h3>
         <div className="space-y-1">
+          {onChangePersona && (
+            <button
+              onClick={onChangePersona}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all text-gray-700 hover:bg-gray-100"
+            >
+              <LayoutGrid size={18} className="text-gray-500" />
+              <span className="flex-1 text-xs leading-tight">ツールセット変更</span>
+            </button>
+          )}
           {settingsItems.map(item => renderMenuItem(item))}
         </div>
       </div>

@@ -58,6 +58,7 @@ type SidebarProps = {
   showAllTools?: boolean;
   onAddTool?: (toolId: string) => void;
   onRemoveTool?: (toolId: string) => void;
+  onChangePersona?: () => void;
 };
 
 export default function Sidebar({
@@ -79,6 +80,7 @@ export default function Sidebar({
   showAllTools = false,
   onAddTool,
   onRemoveTool,
+  onChangePersona,
 }: SidebarProps) {
   const totalContentCount = Object.values(contentCounts).reduce((a, b) => a + b, 0);
 
@@ -124,6 +126,7 @@ export default function Sidebar({
         showAllTools={showAllTools}
         onAddTool={onAddTool}
         onRemoveTool={onRemoveTool}
+        onChangePersona={onChangePersona}
       />
 
       {/* フッターリンク */}

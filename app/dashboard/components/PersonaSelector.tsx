@@ -40,22 +40,22 @@ export default function PersonaSelector({ onSelect, onSkip }: PersonaSelectorPro
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full my-4 sm:my-8 flex flex-col max-h-[calc(100vh-2rem)] sm:max-h-[85vh]">
         {/* ヘッダー */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-5 rounded-t-2xl z-10">
-          <div className="flex items-center justify-between">
+        <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4 sm:py-5 rounded-t-2xl shrink-0">
+          <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">
                 あなたに合ったツールセットを選びましょう
               </h2>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 選んだタイプに合わせて、おすすめのツールを表示します。あとから変更できます。
               </p>
             </div>
             <button
               onClick={onSkip}
-              className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-all"
+              className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-all shrink-0"
               title="スキップ"
             >
               <X className="w-5 h-5" />
@@ -64,7 +64,7 @@ export default function PersonaSelector({ onSelect, onSkip }: PersonaSelectorPro
         </div>
 
         {/* ペルソナカード一覧 */}
-        <div className="p-6 space-y-3">
+        <div className="p-4 sm:p-6 space-y-3 overflow-y-auto flex-1 min-h-0">
           {PERSONAS.map((persona) => {
             const colors = colorClasses[persona.color] || colorClasses.indigo;
             const isSelected = selected === persona.id;
@@ -83,17 +83,17 @@ export default function PersonaSelector({ onSelect, onSkip }: PersonaSelectorPro
                   }
                 `}
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-3 sm:gap-4">
                   <div className={`
-                    w-12 h-12 rounded-xl flex items-center justify-center shrink-0
+                    w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0
                     ${isSelected ? colors.bg : 'bg-gray-50'}
                   `}>
-                    <Icon className={`w-6 h-6 ${isSelected ? colors.text : 'text-gray-500'}`} />
+                    <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${isSelected ? colors.text : 'text-gray-500'}`} />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className={`font-bold ${isSelected ? colors.text : 'text-gray-900'}`}>
+                      <h3 className={`text-sm sm:text-base font-bold ${isSelected ? colors.text : 'text-gray-900'}`}>
                         {persona.label}
                       </h3>
                       {isSelected && (
@@ -124,7 +124,7 @@ export default function PersonaSelector({ onSelect, onSkip }: PersonaSelectorPro
         </div>
 
         {/* フッター */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 rounded-b-2xl">
+        <div className="bg-white border-t border-gray-100 px-4 sm:px-6 py-3 sm:py-4 rounded-b-2xl shrink-0">
           <div className="flex items-center justify-between gap-3">
             <button
               onClick={onSkip}
