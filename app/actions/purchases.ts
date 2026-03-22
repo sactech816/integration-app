@@ -376,6 +376,7 @@ export async function getAllUsersWithRolesPaginated(
     is_monitor: boolean;
     monitor_services: string[];
     ai_monthly_usage: number;
+    feature_purchases: Array<{ product_id: string; price_paid: number; status: string; purchased_at: string }>;
   }>;
   totalCount: number;
   error?: string;
@@ -407,7 +408,7 @@ export async function getAllUsersWithRolesPaginated(
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [subsResult, kdlSubsResult, monitorResult, aiLogsResult] = await Promise.all([
+    const [subsResult, kdlSubsResult, monitorResult, aiLogsResult, featurePurchasesResult] = await Promise.all([
       // Makers サブスクリプション
       supabase
         .from('subscriptions')
@@ -432,6 +433,12 @@ export async function getAllUsersWithRolesPaginated(
         .select('user_id')
         .in('user_id', userIds)
         .gte('created_at', firstDayOfMonth.toISOString()),
+      // 単品購入（feature_purchases）
+      supabase
+        .from('feature_purchases')
+        .select('user_id, product_id, price_paid, status, purchased_at')
+        .in('user_id', userIds)
+        .order('purchased_at', { ascending: false }),
     ]);
 
     // プランマップ作成
@@ -470,6 +477,18 @@ export async function getAllUsersWithRolesPaginated(
       aiCountMap[log.user_id] = (aiCountMap[log.user_id] || 0) + 1;
     }
 
+    // 単品購入マップ作成
+    const featurePurchaseMap: Record<string, Array<{ product_id: string; price_paid: number; status: string; purchased_at: string }>> = {};
+    for (const fp of featurePurchasesResult.data || []) {
+      if (!featurePurchaseMap[fp.user_id]) featurePurchaseMap[fp.user_id] = [];
+      featurePurchaseMap[fp.user_id].push({
+        product_id: fp.product_id,
+        price_paid: fp.price_paid,
+        status: fp.status,
+        purchased_at: fp.purchased_at,
+      });
+    }
+
     const users = (data || []).map((row: Record<string, unknown>) => ({
       user_id: row.user_id as string,
       email: row.email as string,
@@ -486,6 +505,7 @@ export async function getAllUsersWithRolesPaginated(
       is_monitor: !!(monitorMap[row.user_id as string]?.length),
       monitor_services: monitorMap[row.user_id as string] || [],
       ai_monthly_usage: aiCountMap[row.user_id as string] || 0,
+      feature_purchases: featurePurchaseMap[row.user_id as string] || [],
     }));
 
     return { users, totalCount };

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Users, Loader2, X, Search, ChevronDown, ChevronRight, BarChart3, Crown } from 'lucide-react';
+import { Users, Loader2, X, Search, ChevronDown, ChevronRight, BarChart3, Crown, ShoppingCart } from 'lucide-react';
 import UserDetailPanel from './UserDetailPanel';
 
 type UserWithRoles = {
@@ -20,6 +20,7 @@ type UserWithRoles = {
   monitor_services?: string[];
   ai_monthly_usage?: number;
   email_confirmed_at?: string | null;
+  feature_purchases?: Array<{ product_id: string; price_paid: number; status: string; purchased_at: string }>;
 };
 
 type UserManagerProps = {
@@ -165,6 +166,7 @@ export default function UserManager({
                 <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">メールアドレス</th>
                 <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">プラン</th>
                 <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">AI使用(月)</th>
+                <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">単品購入</th>
                 <th className="px-4 py-3 text-right bg-gray-50 font-bold text-gray-900">ポイント</th>
                 <th className="px-4 py-3 text-left bg-gray-50 font-bold text-gray-900">登録日</th>
                 <th className="px-4 py-3 text-center bg-gray-50 font-bold text-gray-900">詳細</th>
@@ -232,6 +234,34 @@ export default function UserManager({
                       </span>
                       <span className="text-gray-400 text-xs ml-0.5">回</span>
                     </td>
+                    {/* 単品購入 */}
+                    <td className="px-4 py-3">
+                      {(usr.feature_purchases || []).length > 0 ? (
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <ShoppingCart size={12} className="text-emerald-500 shrink-0" />
+                            <span className="font-bold text-emerald-600 text-xs">
+                              {usr.feature_purchases!.length}件
+                            </span>
+                            <span className="text-gray-400 text-[10px]">
+                              ¥{usr.feature_purchases!.reduce((sum, fp) => sum + fp.price_paid, 0).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {usr.feature_purchases!.slice(0, 3).map((fp, idx) => (
+                              <span key={idx} className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[10px] font-medium">
+                                {fp.product_id}
+                              </span>
+                            ))}
+                            {usr.feature_purchases!.length > 3 && (
+                              <span className="text-gray-400 text-[10px]">+{usr.feature_purchases!.length - 3}</span>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-xs">-</span>
+                      )}
+                    </td>
                     {/* ポイント */}
                     <td className="px-4 py-3 text-right">
                       <span className="font-bold text-purple-600">
@@ -255,7 +285,7 @@ export default function UserManager({
                   {/* 展開行: 詳細 + 操作 */}
                   {expandedUserId === usr.user_id && (
                     <tr>
-                      <td colSpan={6} className="px-4 py-2 bg-gray-50">
+                      <td colSpan={7} className="px-4 py-2 bg-gray-50">
                         {/* 操作ボタン */}
                         <div className="flex items-center gap-2 mb-2 px-1">
                           {isEditing ? (

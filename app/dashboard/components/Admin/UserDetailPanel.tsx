@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Loader2, User, CreditCard, BarChart3, FileText, Shield, BookOpen, X, MailCheck, MailX } from 'lucide-react';
+import { Loader2, User, CreditCard, BarChart3, FileText, Shield, BookOpen, X, MailCheck, MailX, ShoppingCart } from 'lucide-react';
 
 type UserDetail = {
   user: {
@@ -69,9 +69,21 @@ type UserDetail = {
       updatedAt: string;
     }>;
   };
+  featurePurchases: Array<{
+    id: string;
+    productId: string;
+    pricePaid: number;
+    status: string;
+    purchasedAt: string;
+    expiresAt: string | null;
+    remainingUses: number | null;
+    contentId: string | null;
+    contentType: string | null;
+    stripeSessionId: string | null;
+  }>;
 };
 
-type TabId = 'overview' | 'plans' | 'ai-usage' | 'content';
+type TabId = 'overview' | 'plans' | 'purchases' | 'ai-usage' | 'content';
 
 interface UserDetailPanelProps {
   userId: string;
@@ -154,6 +166,7 @@ export default function UserDetailPanel({ userId, onClose }: UserDetailPanelProp
   const tabs: { id: TabId; label: string; icon: React.ReactNode }[] = [
     { id: 'overview', label: '概要', icon: <User size={14} /> },
     { id: 'plans', label: 'プラン', icon: <CreditCard size={14} /> },
+    { id: 'purchases', label: '購入履歴', icon: <ShoppingCart size={14} /> },
     { id: 'ai-usage', label: 'AI使用量', icon: <BarChart3 size={14} /> },
     { id: 'content', label: 'コンテンツ', icon: <FileText size={14} /> },
   ];
@@ -345,6 +358,93 @@ export default function UserDetailPanel({ userId, onClose }: UserDetailPanelProp
                 <p className="text-xs text-gray-400">モニター設定なし</p>
               )}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'purchases' && (
+          <div className="space-y-4">
+            {/* サマリー */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <StatCard label="購入件数" value={`${(data.featurePurchases || []).length}件`} />
+              <StatCard
+                label="合計金額"
+                value={`¥${(data.featurePurchases || []).reduce((sum, fp) => sum + fp.pricePaid, 0).toLocaleString()}`}
+                highlight
+              />
+              <StatCard
+                label="有効な購入"
+                value={`${(data.featurePurchases || []).filter(fp => fp.status === 'active').length}件`}
+              />
+            </div>
+
+            {/* 購入履歴テーブル */}
+            {(data.featurePurchases || []).length > 0 ? (
+              <div>
+                <h4 className="text-xs font-bold text-gray-500 mb-2 uppercase flex items-center gap-1">
+                  <ShoppingCart size={12} /> 単品購入履歴
+                </h4>
+                <div className="bg-white rounded-lg border overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b bg-gray-50">
+                        <th className="px-3 py-2 text-left font-bold">商品ID</th>
+                        <th className="px-3 py-2 text-right font-bold">金額</th>
+                        <th className="px-3 py-2 text-center font-bold">ステータス</th>
+                        <th className="px-3 py-2 text-left font-bold">対象コンテンツ</th>
+                        <th className="px-3 py-2 text-left font-bold">購入日</th>
+                        <th className="px-3 py-2 text-left font-bold">有効期限</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(data.featurePurchases || []).map(fp => (
+                        <tr key={fp.id} className="border-b border-gray-50 hover:bg-gray-50">
+                          <td className="px-3 py-2">
+                            <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold">
+                              {fp.productId}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-right font-bold text-gray-900">
+                            ¥{fp.pricePaid.toLocaleString()}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <span className={`px-2 py-0.5 rounded font-bold ${
+                              fp.status === 'active' ? 'bg-green-100 text-green-700'
+                                : fp.status === 'expired' ? 'bg-gray-100 text-gray-500'
+                                : fp.status === 'consumed' ? 'bg-blue-100 text-blue-700'
+                                : fp.status === 'refunded' ? 'bg-red-100 text-red-700'
+                                : 'bg-gray-100 text-gray-500'
+                            }`}>
+                              {fp.status === 'active' ? '有効' : fp.status === 'expired' ? '期限切れ' : fp.status === 'consumed' ? '使用済み' : fp.status === 'refunded' ? '返金済み' : fp.status}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-gray-600">
+                            {fp.contentType && fp.contentId ? (
+                              <span>{fp.contentType}: {fp.contentId.slice(0, 8)}...</span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-gray-500">
+                            {formatDate(fp.purchasedAt)}
+                          </td>
+                          <td className="px-3 py-2 text-gray-500">
+                            {fp.expiresAt ? formatDate(fp.expiresAt) : (
+                              fp.remainingUses !== null ? (
+                                <span className="text-indigo-600 font-bold">残{fp.remainingUses}回</span>
+                              ) : (
+                                <span className="text-gray-400">永久</span>
+                              )
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400">単品購入履歴なし</p>
+            )}
           </div>
         )}
 

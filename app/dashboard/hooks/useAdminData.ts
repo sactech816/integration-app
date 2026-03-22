@@ -19,6 +19,7 @@ type UserWithRoles = {
   is_monitor?: boolean;
   monitor_services?: string[];
   ai_monthly_usage?: number;
+  feature_purchases?: Array<{ product_id: string; price_paid: number; status: string; purchased_at: string }>;
 };
 
 type Announcement = {

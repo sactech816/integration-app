@@ -82,6 +82,7 @@ export async function GET(request: NextRequest) {
       aiUsageResult,
       contentCountsResult,
       kdlBooksResult,
+      featurePurchasesResult,
     ] = await Promise.all([
       // 基本ユーザー情報
       supabase.auth.admin.getUserById(userId),
@@ -111,6 +112,8 @@ export async function GET(request: NextRequest) {
       ]),
       // KDL書籍
       supabase.from('kdl_books').select('id, title, status, progress, created_at, updated_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(10),
+      // 単品購入（feature_purchases）
+      supabase.from('feature_purchases').select('id, product_id, price_paid, status, purchased_at, expires_at, remaining_uses, content_id, content_type, stripe_session_id').eq('user_id', userId).order('purchased_at', { ascending: false }).limit(50),
     ]);
 
     // ユーザー基本情報
@@ -209,6 +212,20 @@ export async function GET(request: NextRequest) {
       isActive: new Date(mon.monitor_expires_at) > new Date(),
     }));
 
+    // 単品購入履歴
+    const featurePurchases = (featurePurchasesResult.data || []).map(fp => ({
+      id: fp.id,
+      productId: fp.product_id,
+      pricePaid: fp.price_paid,
+      status: fp.status,
+      purchasedAt: fp.purchased_at,
+      expiresAt: fp.expires_at,
+      remainingUses: fp.remaining_uses,
+      contentId: fp.content_id,
+      contentType: fp.content_type,
+      stripeSessionId: fp.stripe_session_id,
+    }));
+
     return NextResponse.json({
       user: {
         id: user.id,
@@ -225,6 +242,7 @@ export async function GET(request: NextRequest) {
       aiUsage,
       points,
       content,
+      featurePurchases,
     });
   } catch (error) {
     console.error('GET user detail error:', error);
