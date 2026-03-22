@@ -268,6 +268,12 @@ export type CTASectionBlockData = {
   backgroundColor?: string;
   backgroundGradient?: string;
   isFullWidth?: boolean;
+  buttonColor?: string;
+  buttonTextColor?: string;
+  borderRadius?: 'sm' | 'md' | 'lg' | 'full';
+  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  animation?: 'none' | 'pulse' | 'shimmer' | 'bounce';
+  size?: 'md' | 'lg';
 };
 
 export type TwoColumnBlockData = {

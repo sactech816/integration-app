@@ -81,6 +81,31 @@ interface BusinessEditorProps {
   setShowAuth: (show: boolean) => void;
 }
 
+// CTA カスタマイズ定数
+const CTA_PRESET_COLORS = [
+  '#2563eb', '#7c3aed', '#dc2626', '#ea580c', '#16a34a',
+  '#0891b2', '#db2777', '#4f46e5', '#ca8a04', '#0d9488',
+];
+const CTA_BORDER_RADIUS_OPTIONS = [
+  { value: 'sm', label: '角丸 小', preview: 'rounded-lg' },
+  { value: 'md', label: '角丸 中', preview: 'rounded-xl' },
+  { value: 'lg', label: '角丸 大', preview: 'rounded-2xl' },
+  { value: 'full', label: 'ピル型', preview: 'rounded-full' },
+];
+const CTA_SHADOW_OPTIONS = [
+  { value: 'none', label: 'なし' },
+  { value: 'sm', label: '小' },
+  { value: 'md', label: '中' },
+  { value: 'lg', label: '大' },
+  { value: 'xl', label: '特大' },
+];
+const CTA_ANIMATION_OPTIONS = [
+  { value: 'none', label: 'なし' },
+  { value: 'pulse', label: 'パルス' },
+  { value: 'shimmer', label: 'シマー' },
+  { value: 'bounce', label: 'バウンス' },
+];
+
 // ブロックタイプの定義 - プロフィールLP + ビジネスLP固有ブロック
 const blockTypes = [
   // 基本ブロック
@@ -1436,6 +1461,107 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
               <Input label="ボタンテキスト" val={block.data.buttonText || ''} onChange={(v) => updateBlock(block.id, { buttonText: v })} ph="お問い合わせ" />
               <Input label="ボタンURL" val={block.data.buttonUrl || ''} onChange={(v) => updateBlock(block.id, { buttonUrl: v })} ph="#contact" />
             </div>
+
+            {/* ボタンプレビュー */}
+            <div className="bg-gray-100 rounded-xl p-4">
+              <p className="text-xs font-semibold text-gray-500 mb-3 text-center">ボタンプレビュー</p>
+              <div className="flex justify-center">
+                <div
+                  className={`inline-block font-bold text-center transition-all ${
+                    { sm: 'rounded-lg', md: 'rounded-xl', lg: 'rounded-2xl', full: 'rounded-full' }[block.data.borderRadius || 'full']
+                  } ${
+                    { none: '', sm: 'shadow-sm', md: 'shadow-md', lg: 'shadow-lg', xl: 'shadow-xl' }[block.data.shadow || 'xl']
+                  } ${
+                    block.data.size === 'lg' ? 'px-12 py-5 text-lg' : 'px-8 py-4 text-base'
+                  } ${
+                    { none: '', pulse: 'cta-pulse', shimmer: 'cta-shimmer', bounce: 'cta-bounce' }[block.data.animation || 'none']
+                  }`}
+                  style={{ backgroundColor: block.data.buttonColor || '#ffffff', color: block.data.buttonTextColor || '#1f2937' }}
+                >
+                  {block.data.buttonText || 'お問い合わせ'}
+                </div>
+              </div>
+            </div>
+
+            {/* 色設定 */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">ボタン背景色</label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {['#ffffff', '#1f2937', ...CTA_PRESET_COLORS].map(c => (
+                    <button key={c} type="button" onClick={() => updateBlock(block.id, { buttonColor: c })}
+                      className={`w-7 h-7 rounded-full border-2 transition-all ${(block.data.buttonColor || '#ffffff') === c ? 'border-gray-900 scale-110' : 'border-gray-200 hover:scale-105'}`}
+                      style={{ backgroundColor: c }} />
+                  ))}
+                </div>
+                <input type="color" value={block.data.buttonColor || '#ffffff'} onChange={e => updateBlock(block.id, { buttonColor: e.target.value })} className="w-full h-10 rounded-lg cursor-pointer border border-gray-200" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">ボタンテキスト色</label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {['#ffffff', '#000000', '#1f2937', '#f9fafb'].map(c => (
+                    <button key={c} type="button" onClick={() => updateBlock(block.id, { buttonTextColor: c })}
+                      className={`w-7 h-7 rounded-full border-2 transition-all ${(block.data.buttonTextColor || '#1f2937') === c ? 'border-gray-900 scale-110' : 'border-gray-300 hover:scale-105'}`}
+                      style={{ backgroundColor: c }} />
+                  ))}
+                </div>
+                <input type="color" value={block.data.buttonTextColor || '#1f2937'} onChange={e => updateBlock(block.id, { buttonTextColor: e.target.value })} className="w-full h-10 rounded-lg cursor-pointer border border-gray-200" />
+              </div>
+            </div>
+
+            {/* 角丸 */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">角丸</label>
+              <div className="grid grid-cols-4 gap-2">
+                {CTA_BORDER_RADIUS_OPTIONS.map(opt => (
+                  <button key={opt.value} type="button" onClick={() => updateBlock(block.id, { borderRadius: opt.value })}
+                    className={`p-2 text-center border-2 transition-all ${opt.preview} ${(block.data.borderRadius || 'full') === opt.value ? 'border-amber-500 bg-amber-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                    <div className={`w-full h-6 bg-gray-300 mx-auto mb-1 ${opt.preview}`} />
+                    <p className="text-xs font-semibold text-gray-700">{opt.label}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 影 */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">影</label>
+              <div className="grid grid-cols-5 gap-2">
+                {CTA_SHADOW_OPTIONS.map(opt => (
+                  <button key={opt.value} type="button" onClick={() => updateBlock(block.id, { shadow: opt.value })}
+                    className={`p-2 rounded-xl text-center border-2 transition-all ${(block.data.shadow || 'xl') === opt.value ? 'border-amber-500 bg-amber-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                    <p className="text-xs font-semibold text-gray-700">{opt.label}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* アニメーション */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">アニメーション</label>
+              <div className="grid grid-cols-4 gap-2">
+                {CTA_ANIMATION_OPTIONS.map(opt => (
+                  <button key={opt.value} type="button" onClick={() => updateBlock(block.id, { animation: opt.value })}
+                    className={`p-2 rounded-xl text-center border-2 transition-all ${(block.data.animation || 'none') === opt.value ? 'border-amber-500 bg-amber-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                    <p className="text-xs font-semibold text-gray-700">{opt.label}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* サイズ */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">サイズ</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[{ value: 'md', label: '標準' }, { value: 'lg', label: '大きい' }].map(opt => (
+                  <button key={opt.value} type="button" onClick={() => updateBlock(block.id, { size: opt.value })}
+                    className={`p-3 rounded-xl text-center border-2 transition-all ${(block.data.size || 'md') === opt.value ? 'border-amber-500 bg-amber-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                    <p className="text-sm font-semibold text-gray-700">{opt.label}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
               <input type="checkbox" id={`fullwidth-${block.id}`} checked={block.data.isFullWidth || false} onChange={(e) => updateBlock(block.id, { isFullWidth: e.target.checked })} className="w-4 h-4 text-amber-600" />
               <label htmlFor={`fullwidth-${block.id}`} className="text-sm font-medium text-amber-800">🖥️ 全幅表示（PC向け）</label>

@@ -96,7 +96,7 @@ export default function BusinessPreviewPage() {
             key={block.id}
             className={fullWidth ? 'w-full' : 'max-w-4xl mx-auto px-4 py-2'}
           >
-            <BlockRenderer block={block} variant="business" />
+            <BlockRenderer block={block} variant="business" isPreview />
           </div>
         );
       })}

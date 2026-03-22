@@ -35,13 +35,14 @@ interface BlockRendererProps {
   block: Block;
   variant?: 'profile' | 'business' | 'salesletter';
   onLinkClick?: (url: string) => void;
+  isPreview?: boolean;
 }
 
 /**
  * 共通ブロックレンダラーコンポーネント
  * プロフィールLP・ビジネスLPの両方で使用可能
  */
-export function BlockRenderer({ block, variant = 'business', onLinkClick }: BlockRendererProps) {
+export function BlockRenderer({ block, variant = 'business', onLinkClick, isPreview }: BlockRendererProps) {
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   
   const handleLinkClick = (url: string) => {
@@ -407,7 +408,7 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
                     <p className="text-xs text-gray-500">{item.role}</p>
                   </div>
                 </div>
-                <p className="text-gray-700 text-sm">{item.comment}</p>
+                <p className="text-gray-700 text-sm whitespace-pre-wrap">{item.comment}</p>
               </div>
             ))}
           </div>
@@ -433,7 +434,7 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
                       <p className="text-sm text-gray-500">{item.role}</p>
                     </div>
                   </div>
-                  <p className="text-gray-700">&ldquo;{item.comment}&rdquo;</p>
+                  <p className="text-gray-700 whitespace-pre-wrap">&ldquo;{item.comment}&rdquo;</p>
                 </div>
               ))}
             </div>
@@ -623,9 +624,15 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
         </section>
       );
 
-    case 'cta_section':
+    case 'cta_section': {
+      const ctaBtnColor = block.data.buttonColor || '#ffffff';
+      const ctaBtnTextColor = block.data.buttonTextColor || '#1f2937';
+      const ctaBorderRadius = { sm: 'rounded-lg', md: 'rounded-xl', lg: 'rounded-2xl', full: 'rounded-full' }[block.data.borderRadius || 'full'];
+      const ctaShadow = { none: '', sm: 'shadow-sm', md: 'shadow-md', lg: 'shadow-lg', xl: 'shadow-xl' }[block.data.shadow || 'xl'];
+      const ctaSize = block.data.size === 'lg' ? 'px-12 py-5 text-xl' : 'px-8 py-4 text-lg';
+      const ctaAnimation = { none: '', pulse: 'cta-pulse', shimmer: 'cta-shimmer', bounce: 'cta-bounce' }[block.data.animation || 'none'];
       return (
-        <section 
+        <section
           className={`py-20 px-6 text-white ${block.data.isFullWidth ? 'w-full' : ''}`}
           style={{ background: block.data.backgroundGradient || block.data.backgroundColor || '#f59e0b' }}
         >
@@ -635,7 +642,8 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
             <a
               href={block.data.buttonUrl || '#'}
               onClick={() => block.data.buttonUrl && handleLinkClick(block.data.buttonUrl)}
-              className="inline-flex items-center gap-2 bg-white text-gray-900 font-bold px-8 py-4 rounded-full text-lg hover:bg-gray-100 transition-all shadow-xl"
+              className={`inline-flex items-center gap-2 font-bold hover:opacity-90 transition-all duration-200 hover:scale-105 ${ctaBorderRadius} ${ctaShadow} ${ctaSize} ${ctaAnimation}`}
+              style={{ backgroundColor: ctaBtnColor, color: ctaBtnTextColor }}
             >
               {block.data.buttonText}
               <ArrowRight size={20} />
@@ -643,6 +651,7 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
           </div>
         </section>
       );
+    }
 
     case 'google_map':
       return (
@@ -1345,7 +1354,7 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
       );
 
     case 'delayed_cta':
-      return <DelayedCtaRenderer block={block} onLinkClick={handleLinkClick} />;
+      return <DelayedCtaRenderer block={block} onLinkClick={handleLinkClick} isPreview={isPreview} />;
 
     case 'linked_content':
       return <LinkedContentBlockRenderer block={block} onLinkClick={handleLinkClick} />;
@@ -1356,15 +1365,15 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick }: Bloc
 }
 
 // Delayed CTA Renderer Component
-function DelayedCtaRenderer({ block, onLinkClick }: { block: Extract<Block, { type: 'delayed_cta' }>; onLinkClick?: (url: string) => void }) {
-  const [isVisible, setIsVisible] = useState(block.data.delaySeconds === 0);
+function DelayedCtaRenderer({ block, onLinkClick, isPreview }: { block: Extract<Block, { type: 'delayed_cta' }>; onLinkClick?: (url: string) => void; isPreview?: boolean }) {
+  const [isVisible, setIsVisible] = useState(isPreview || block.data.delaySeconds === 0);
 
   useEffect(() => {
-    if (block.data.delaySeconds > 0) {
+    if (!isPreview && block.data.delaySeconds > 0) {
       const timer = setTimeout(() => setIsVisible(true), block.data.delaySeconds * 1000);
       return () => clearTimeout(timer);
     }
-  }, [block.data.delaySeconds]);
+  }, [block.data.delaySeconds, isPreview]);
 
   if (!isVisible) return null;
 
