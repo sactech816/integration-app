@@ -6,7 +6,7 @@ import { Receipt, Loader2, RefreshCw, User, UserX, ChevronLeft, ChevronRight } f
 
 type PurchaseRecord = {
   id: string;
-  type: 'feature_purchase' | 'bigfive_pdf' | 'fortune_report' | 'point_purchase' | 'order_form' | 'subscription';
+  type: 'feature_purchase' | 'bigfive_pdf' | 'fortune_report' | 'point_purchase' | 'order_form' | 'subscription' | 'donation';
   purchasedAt: string;
   amount: number;
   productName: string;
@@ -22,7 +22,7 @@ type Summary = {
   anonymousCount: number;
 };
 
-type FilterType = 'all' | 'feature_purchase' | 'bigfive_pdf' | 'fortune_report' | 'point_purchase' | 'order_form' | 'subscription';
+type FilterType = 'all' | 'feature_purchase' | 'bigfive_pdf' | 'fortune_report' | 'point_purchase' | 'order_form' | 'subscription' | 'donation';
 
 const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   feature_purchase: { label: '単品購入', color: 'bg-purple-100 text-purple-700' },
@@ -31,6 +31,7 @@ const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   point_purchase: { label: 'ポイント購入', color: 'bg-amber-100 text-amber-700' },
   order_form: { label: '申込フォーム', color: 'bg-emerald-100 text-emerald-700' },
   subscription: { label: 'サブスク', color: 'bg-blue-100 text-blue-700' },
+  donation: { label: '応援/寄付', color: 'bg-orange-100 text-orange-700' },
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
@@ -51,6 +52,7 @@ const FILTER_OPTIONS: { value: FilterType; label: string }[] = [
   { value: 'point_purchase', label: 'ポイント購入' },
   { value: 'order_form', label: '申込フォーム' },
   { value: 'subscription', label: 'サブスク' },
+  { value: 'donation', label: '応援/寄付' },
 ];
 
 const ITEMS_PER_PAGE = 20;

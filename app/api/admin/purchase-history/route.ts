@@ -54,7 +54,7 @@ const BIGFIVE_PDF_PRICES: Record<string, number> = {
 
 type PurchaseRecord = {
   id: string;
-  type: 'feature_purchase' | 'bigfive_pdf' | 'fortune_report' | 'point_purchase' | 'order_form' | 'subscription';
+  type: 'feature_purchase' | 'bigfive_pdf' | 'fortune_report' | 'point_purchase' | 'order_form' | 'subscription' | 'donation';
   purchasedAt: string;
   amount: number;
   productName: string;
@@ -87,6 +87,7 @@ export async function GET(request: NextRequest) {
       pointResult,
       orderFormResult,
       subscriptionResult,
+      donationResult,
     ] = await Promise.all([
       shouldFetch('feature_purchase')
         ? supabase.from('feature_purchases').select('id, user_id, product_id, price_paid, status, purchased_at, stripe_session_id').order('purchased_at', { ascending: false }).limit(500)
@@ -105,6 +106,9 @@ export async function GET(request: NextRequest) {
         : Promise.resolve({ data: [], error: null }),
       shouldFetch('subscription')
         ? supabase.from('subscriptions').select('id, user_id, amount, plan_tier, plan_name, service, status, created_at').order('created_at', { ascending: false }).limit(500)
+        : Promise.resolve({ data: [], error: null }),
+      shouldFetch('donation')
+        ? supabase.from('purchases').select('id, user_id, content_id, content_type, stripe_session_id, amount, created_at').order('created_at', { ascending: false }).limit(500)
         : Promise.resolve({ data: [], error: null }),
     ]);
 
@@ -198,6 +202,28 @@ export async function GET(request: NextRequest) {
         userId: sub.user_id,
         userEmail: null,
         status: sub.status || 'active',
+      });
+    }
+
+    // purchases（応援/寄付購入）
+    const CONTENT_TYPE_NAMES: Record<string, string> = {
+      quiz: '診断クイズ',
+      profile: 'プロフィールLP',
+      business: 'ビジネスLP',
+    };
+    for (const dn of donationResult.data || []) {
+      allRecords.push({
+        id: String(dn.id),
+        type: 'donation',
+        purchasedAt: dn.created_at,
+        amount: dn.amount || 0,
+        productName: dn.content_type
+          ? `${CONTENT_TYPE_NAMES[dn.content_type] || dn.content_type}への応援`
+          : '応援/寄付',
+        userId: dn.user_id,
+        userEmail: null,
+        status: 'paid',
+        metadata: { content_id: dn.content_id, content_type: dn.content_type, stripe_session_id: dn.stripe_session_id },
       });
     }
 
