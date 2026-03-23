@@ -86,15 +86,22 @@ export const MonetizeResultTabs: React.FC<MonetizeResultTabsProps> = ({ result, 
 
   const handlePurchaseField = async (field: MonetizeField) => {
     try {
-      const params = new URLSearchParams({
-        userId,
-        productId: PRODUCT_IDS[field],
-        contentId: result.id,
-        contentType: 'monetize_diagnosis',
+      const res = await fetch('/api/features/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          productId: PRODUCT_IDS[field],
+          contentId: result.id,
+          contentType: 'monetize_diagnosis',
+        }),
       });
-      const res = await fetch(`/api/features/purchase?${params}`, { method: 'POST' });
       const data = await res.json();
-      if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else if (data.error) {
+        alert(data.error);
+      }
     } catch {
       alert('購入処理でエラーが発生しました');
     }
@@ -102,15 +109,22 @@ export const MonetizeResultTabs: React.FC<MonetizeResultTabsProps> = ({ result, 
 
   const handlePurchaseComplete = async () => {
     try {
-      const params = new URLSearchParams({
-        userId,
-        productId: PRODUCT_IDS.complete,
-        contentId: result.id,
-        contentType: 'monetize_diagnosis',
+      const res = await fetch('/api/features/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          productId: PRODUCT_IDS.complete,
+          contentId: result.id,
+          contentType: 'monetize_diagnosis',
+        }),
       });
-      const res = await fetch(`/api/features/purchase?${params}`, { method: 'POST' });
       const data = await res.json();
-      if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else if (data.error) {
+        alert(data.error);
+      }
     } catch {
       alert('購入処理でエラーが発生しました');
     }
