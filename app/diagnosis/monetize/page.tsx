@@ -2,14 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import Header from '@/components/shared/Header';
 import { MonetizeDiagnosis } from '@/components/diagnosis/monetize/MonetizeDiagnosis';
-import { Sparkles, LogIn, ArrowLeft } from 'lucide-react';
+import { Sparkles, LogIn } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MonetizeDiagnosisPage() {
-  const [userId, setUserId] = useState<string | null>(null);
-  const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -18,8 +19,9 @@ export default function MonetizeDiagnosisPage() {
         return;
       }
       const { data: { user: authUser } } = await supabase.auth.getUser();
-      setUserId(authUser?.id || null);
-      setUser(authUser ? { email: authUser.email || undefined } : null);
+      if (authUser) {
+        setUser({ id: authUser.id, email: authUser.email || undefined });
+      }
       setIsLoading(false);
     };
     checkAuth();
@@ -28,31 +30,13 @@ export default function MonetizeDiagnosisPage() {
   const handleLogout = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
-    window.location.href = '/';
+    setUser(null);
   };
-
-  const SimpleHeader = () => (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-all">
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">ダッシュボード</span>
-          </Link>
-        </div>
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-violet-600" />
-          <span className="font-bold text-gray-900">才能マネタイズ診断</span>
-        </div>
-        <div className="w-24" />
-      </div>
-    </header>
-  );
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-indigo-50">
-        <SimpleHeader />
+        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
         <div className="flex items-center justify-center pt-32">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600" />
         </div>
@@ -60,10 +44,10 @@ export default function MonetizeDiagnosisPage() {
     );
   }
 
-  if (!userId) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-indigo-50">
-        <SimpleHeader />
+        <Header user={null} onLogout={handleLogout} setShowAuth={setShowAuth} />
         <div className="max-w-lg mx-auto px-4 pt-32 text-center">
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
             <Sparkles className="w-12 h-12 text-violet-500 mx-auto mb-4" />
@@ -86,8 +70,8 @@ export default function MonetizeDiagnosisPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-indigo-50">
-      <SimpleHeader />
-      <MonetizeDiagnosis userId={userId} />
+      <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
+      <MonetizeDiagnosis userId={user.id} />
     </div>
   );
 }

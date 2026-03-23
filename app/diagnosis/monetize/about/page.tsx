@@ -1,48 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   Sparkles, BookOpen, GraduationCap, Briefcase, Share2, Package,
-  ArrowRight, CheckCircle2, Clock, Brain, Target, TrendingUp, Star
+  ArrowRight, CheckCircle2, Clock, Brain, Target, TrendingUp, Star, Crown, FileText
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import Header from '@/components/shared/Header';
 
 const FEATURES = [
-  {
-    icon: BookOpen,
-    label: 'Kindle出版',
-    description: 'あなたの経験を電子書籍にして不労所得を構築',
-    color: 'text-violet-600',
-    bg: 'bg-violet-100',
-  },
-  {
-    icon: GraduationCap,
-    label: 'オンライン講座',
-    description: '知識を体系化して教える仕組みを設計',
-    color: 'text-indigo-600',
-    bg: 'bg-indigo-100',
-  },
-  {
-    icon: Briefcase,
-    label: 'コンサル・コーチング',
-    description: '個別支援で高単価サービスを構築',
-    color: 'text-emerald-600',
-    bg: 'bg-emerald-100',
-  },
-  {
-    icon: Share2,
-    label: 'SNS発信',
-    description: 'フォロワーを資産に変える発信戦略',
-    color: 'text-pink-600',
-    bg: 'bg-pink-100',
-  },
-  {
-    icon: Package,
-    label: 'デジタル商品',
-    description: 'テンプレート・ツールを量産販売',
-    color: 'text-amber-600',
-    bg: 'bg-amber-100',
-  },
+  { icon: BookOpen, label: 'Kindle出版', description: 'あなたの経験を電子書籍にして不労所得を構築', color: 'text-violet-600', bg: 'bg-violet-100' },
+  { icon: GraduationCap, label: 'オンライン講座', description: '知識を体系化して教える仕組みを設計', color: 'text-indigo-600', bg: 'bg-indigo-100' },
+  { icon: Briefcase, label: 'コンサル・コーチング', description: '個別支援で高単価サービスを構築', color: 'text-emerald-600', bg: 'bg-emerald-100' },
+  { icon: Share2, label: 'SNS発信', description: 'フォロワーを資産に変える発信戦略', color: 'text-pink-600', bg: 'bg-pink-100' },
+  { icon: Package, label: 'デジタル商品', description: 'テンプレート・ツールを量産販売', color: 'text-amber-600', bg: 'bg-amber-100' },
 ];
 
 const STEPS = [
@@ -52,21 +24,25 @@ const STEPS = [
 ];
 
 export default function MonetizeDiagnosisAboutPage() {
+  const [user, setUser] = useState<{ email?: string } | null>(null);
+  const [showAuth, setShowAuth] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (!supabase) return;
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) setUser({ email: authUser.email || undefined });
+    };
+    checkAuth();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-indigo-50">
-      {/* ヘッダー */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="font-bold text-gray-900">集客メーカー</Link>
-          <Link
-            href="/diagnosis/monetize"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 text-white font-semibold rounded-xl shadow-md hover:bg-violet-700 transition-all duration-200 text-sm"
-          >
-            <Sparkles className="w-4 h-4" />
-            無料で診断する
-          </Link>
-        </div>
-      </header>
+      <Header
+        user={user}
+        onLogout={async () => { await supabase?.auth.signOut(); setUser(null); }}
+        setShowAuth={setShowAuth}
+      />
 
       {/* ヒーロー */}
       <section className="max-w-4xl mx-auto px-4 pt-16 pb-12 text-center">
@@ -95,7 +71,7 @@ export default function MonetizeDiagnosisAboutPage() {
             <ArrowRight className="w-5 h-5" />
           </Link>
           <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
-            <span className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4 text-green-500" /> 無料で1件ずつ結果表示</span>
+            <span className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4 text-green-500" /> 無料で各分野1件表示</span>
             <span className="flex items-center gap-1"><Clock className="w-4 h-4 text-gray-400" /> 約5分</span>
           </div>
         </div>
@@ -103,9 +79,7 @@ export default function MonetizeDiagnosisAboutPage() {
 
       {/* 5分野 */}
       <section className="max-w-4xl mx-auto px-4 py-12">
-        <h2 className="text-xl font-bold text-gray-900 text-center mb-8">
-          5つの収益化分野を診断
-        </h2>
+        <h2 className="text-xl font-bold text-gray-900 text-center mb-8">5つの収益化分野を診断</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {FEATURES.map((f) => {
             const Icon = f.icon;
@@ -124,33 +98,27 @@ export default function MonetizeDiagnosisAboutPage() {
 
       {/* ステップ */}
       <section className="max-w-3xl mx-auto px-4 py-12">
-        <h2 className="text-xl font-bold text-gray-900 text-center mb-8">
-          かんたん3ステップ
-        </h2>
+        <h2 className="text-xl font-bold text-gray-900 text-center mb-8">かんたん3ステップ</h2>
         <div className="space-y-6">
-          {STEPS.map((s) => {
-            const Icon = s.icon;
-            return (
-              <div key={s.step} className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0 text-white font-bold text-lg shadow-md">
-                  {s.step}
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-1">{s.title}</h3>
-                  <p className="text-sm text-gray-600">{s.description}</p>
-                </div>
+          {STEPS.map((s) => (
+            <div key={s.step} className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0 text-white font-bold text-lg shadow-md">
+                {s.step}
               </div>
-            );
-          })}
+              <div>
+                <h3 className="font-bold text-gray-900 mb-1">{s.title}</h3>
+                <p className="text-sm text-gray-600">{s.description}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* 無料/有料 */}
-      <section className="max-w-3xl mx-auto px-4 py-12">
-        <h2 className="text-xl font-bold text-gray-900 text-center mb-8">
-          料金プラン
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      {/* 料金プラン */}
+      <section className="max-w-4xl mx-auto px-4 py-12">
+        <h2 className="text-xl font-bold text-gray-900 text-center mb-8">料金プラン</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {/* 無料 */}
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
             <div className="text-sm font-medium text-gray-500 mb-2">無料プラン</div>
             <div className="text-3xl font-bold text-gray-900 mb-4">¥0</div>
@@ -162,30 +130,54 @@ export default function MonetizeDiagnosisAboutPage() {
               <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" /> SNSシェア機能</li>
             </ul>
           </div>
-          <div className="bg-gradient-to-br from-violet-50 to-indigo-50 rounded-2xl border-2 border-violet-300 shadow-md p-6 relative">
-            <div className="absolute -top-3 left-6 px-3 py-1 bg-violet-600 text-white text-xs font-bold rounded-full">おすすめ</div>
-            <div className="text-sm font-medium text-violet-600 mb-2">全分野アンロック</div>
+
+          {/* 分野別 */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <div className="text-sm font-medium text-gray-500 mb-2">分野別レポート</div>
             <div className="text-3xl font-bold text-gray-900 mb-1">¥980</div>
-            <div className="text-xs text-gray-500 mb-4">買い切り・永久閲覧</div>
+            <div className="text-xs text-gray-500 mb-4">1分野あたり・買い切り</div>
             <ul className="space-y-2 text-sm text-gray-700">
               <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-violet-500 flex-shrink-0" /> 無料プランの全機能</li>
-              <li className="flex items-center gap-2"><Star className="w-4 h-4 text-violet-500 flex-shrink-0" /> 全5分野×5件=25提案</li>
+              <li className="flex items-center gap-2"><Star className="w-4 h-4 text-violet-500 flex-shrink-0" /> 選んだ分野の5件の提案</li>
               <li className="flex items-center gap-2"><Star className="w-4 h-4 text-violet-500 flex-shrink-0" /> 章構成案・カリキュラム詳細</li>
-              <li className="flex items-center gap-2"><Star className="w-4 h-4 text-violet-500 flex-shrink-0" /> 差別化ポイント・想定価格</li>
+              <li className="flex items-center gap-2"><Star className="w-4 h-4 text-violet-500 flex-shrink-0" /> 差別化ポイント</li>
               <li className="flex items-center gap-2"><Star className="w-4 h-4 text-violet-500 flex-shrink-0" /> 最初の一歩アクションプラン</li>
             </ul>
           </div>
+
+          {/* 完全診断 */}
+          <div className="bg-gradient-to-br from-violet-50 to-indigo-50 rounded-2xl border-2 border-violet-300 shadow-md p-6 relative">
+            <div className="absolute -top-3 left-6 px-3 py-1 bg-violet-600 text-white text-xs font-bold rounded-full">おすすめ</div>
+            <div className="text-sm font-medium text-violet-600 mb-2">完全診断レポート</div>
+            <div className="text-3xl font-bold text-gray-900 mb-1">¥3,980</div>
+            <div className="text-xs text-gray-500 mb-4">買い切り・永久閲覧 <span className="text-violet-600 font-medium">（¥920お得）</span></div>
+            <ul className="space-y-2 text-sm text-gray-700">
+              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-violet-500 flex-shrink-0" /> 全5分野×5件=25提案</li>
+              <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-violet-500 flex-shrink-0" /> 総括レポート（限定）</li>
+              <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-violet-500 flex-shrink-0" /> 収益化ロードマップ</li>
+              <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-violet-500 flex-shrink-0" /> 分野間の連携戦略</li>
+              <li className="flex items-center gap-2"><Crown className="w-4 h-4 text-violet-500 flex-shrink-0" /> 30日アクションプラン</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* サンプルレポートリンク */}
+        <div className="text-center mt-6">
+          <Link
+            href="/diagnosis/monetize/sample"
+            className="inline-flex items-center gap-2 text-violet-600 hover:text-violet-700 font-medium text-sm transition-all"
+          >
+            <FileText className="w-4 h-4" />
+            サンプルレポートを見る
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </section>
 
       {/* CTA */}
       <section className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
-          あなたの才能を、収益に変えよう
-        </h2>
-        <p className="text-gray-600 mb-8">
-          まずは無料で診断。あなただけの収益化マップが見つかります。
-        </p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">あなたの才能を、収益に変えよう</h2>
+        <p className="text-gray-600 mb-8">まずは無料で診断。あなただけの収益化マップが見つかります。</p>
         <Link
           href="/diagnosis/monetize"
           className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:from-violet-700 hover:to-indigo-700 transition-all duration-200 text-lg"
@@ -196,7 +188,6 @@ export default function MonetizeDiagnosisAboutPage() {
         </Link>
       </section>
 
-      {/* フッター */}
       <footer className="border-t border-gray-200 py-8 text-center text-sm text-gray-500">
         <p>&copy; 集客メーカー All rights reserved.</p>
       </footer>

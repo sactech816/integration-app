@@ -117,6 +117,29 @@ export interface MonetizeAnalysis {
   birthdayInsight?: string;
 }
 
+// 総括レポート（完全診断レポート¥3,980のみ）
+export interface MasterReport {
+  executiveSummary: string;       // エグゼクティブサマリー（200-300文字）
+  recommendedOrder: string[];     // 推奨実行順序（分野名のリスト）
+  orderReason: string;            // 順序の理由（200文字）
+  synergyMap: SynergyItem[];      // 分野間の連携戦略
+  thirtyDayPlan: ActionStep[];    // 30日アクションプラン
+  ninetyDayMilestones: string[];  // 90日のマイルストーン
+  yearlyVision: string;           // 1年後のビジョン（100文字）
+}
+
+export interface SynergyItem {
+  from: string;       // 起点分野
+  to: string;         // 連携先分野
+  strategy: string;   // 連携戦略
+}
+
+export interface ActionStep {
+  week: string;       // 期間（例: Week 1-2）
+  action: string;     // アクション内容
+  field: string;      // 対応分野
+}
+
 // 診断結果全体
 export interface MonetizeDiagnosisResult {
   id: string;
@@ -126,7 +149,18 @@ export interface MonetizeDiagnosisResult {
   consulting: ConsultingSuggestion[];
   sns: SnsSuggestion[];
   digital: DigitalProductSuggestion[];
+  masterReport?: MasterReport;
 }
+
+// 商品ID定義
+export const PRODUCT_IDS: Record<MonetizeField | 'complete', string> = {
+  kindle: 'monetize_diag_kindle',
+  course: 'monetize_diag_course',
+  consulting: 'monetize_diag_consulting',
+  sns: 'monetize_diag_sns',
+  digital: 'monetize_diag_digital',
+  complete: 'monetize_diag_complete',
+};
 
 // ウィザードのステップ状態
 export type DiagnosisStep = 0 | 1 | 2 | 3 | 4;
