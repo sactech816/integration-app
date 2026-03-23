@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
         { role: 'user', content: userPrompt },
       ],
       temperature: 0.7,
-      maxTokens: 8192,
+      maxTokens: 65536,
       responseFormat: 'text',
     });
 
