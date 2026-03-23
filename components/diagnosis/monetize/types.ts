@@ -21,20 +21,30 @@ export {
 // 才能マネタイズ診断固有の型
 // =============================================
 
-// 分野タブの種類
-export type MonetizeField = 'kindle' | 'course' | 'consulting';
+// 分野タブの種類（5タブ）
+export type MonetizeField = 'kindle' | 'course' | 'consulting' | 'sns' | 'digital';
+
+export const MONETIZE_FIELDS: MonetizeField[] = ['kindle', 'course', 'consulting', 'sns', 'digital'];
 
 export const MONETIZE_FIELD_LABELS: Record<MonetizeField, string> = {
   kindle: 'Kindle出版',
   course: 'オンライン講座',
   consulting: 'コンサル・コーチング',
+  sns: 'SNS発信',
+  digital: 'デジタル商品',
 };
 
-export const MONETIZE_FIELD_ICONS: Record<MonetizeField, string> = {
-  kindle: '📚',
-  course: '🎓',
-  consulting: '💼',
+export const MONETIZE_FIELD_DESCRIPTIONS: Record<MonetizeField, string> = {
+  kindle: '電子書籍で不労所得を築く',
+  course: '知識を体系化して教える',
+  consulting: '個別支援で高単価を実現',
+  sns: 'フォロワーを資産にする',
+  digital: 'テンプレ・ツールを量産販売',
 };
+
+// =============================================
+// 各分野の提案型（詳細版）
+// =============================================
 
 // Kindle向けテーマ提案
 export interface KindleThemeSuggestion {
@@ -42,6 +52,9 @@ export interface KindleThemeSuggestion {
   targetReader: string;
   reason: string;
   potentialRevenue: string;
+  chapterOutline: string[];    // 章構成案（5章）
+  differentiator: string;      // 差別化ポイント
+  firstStep: string;           // 最初の一歩
 }
 
 // オンライン講座テーマ提案
@@ -51,6 +64,9 @@ export interface CourseSuggestion {
   curriculum: string[];
   reason: string;
   pricingHint: string;
+  format: string;              // 形式（動画/ライブ/テキスト等）
+  differentiator: string;
+  firstStep: string;
 }
 
 // コンサル・コーチングメニュー提案
@@ -60,6 +76,34 @@ export interface ConsultingSuggestion {
   deliverables: string[];
   reason: string;
   pricingHint: string;
+  sessionFormat: string;       // セッション形式（単発/継続/パッケージ等）
+  differentiator: string;
+  firstStep: string;
+}
+
+// SNS発信テーマ提案
+export interface SnsSuggestion {
+  themeName: string;
+  platform: string;            // Instagram/X/YouTube等
+  targetFollower: string;
+  contentIdeas: string[];      // 具体的な投稿ネタ5つ
+  reason: string;
+  monetizeRoute: string;       // 収益化ルート（アフィリ/PR案件/集客等）
+  differentiator: string;
+  firstStep: string;
+}
+
+// デジタル商品提案
+export interface DigitalProductSuggestion {
+  productName: string;
+  productType: string;         // テンプレート/チェックリスト/ツール/素材等
+  targetBuyer: string;
+  features: string[];          // 商品の特徴・含まれるもの
+  reason: string;
+  pricingHint: string;
+  salesChannel: string;        // 販売先（Gumroad/STORES/自社サイト等）
+  differentiator: string;
+  firstStep: string;
 }
 
 // 共通分析結果
@@ -80,6 +124,8 @@ export interface MonetizeDiagnosisResult {
   kindle: KindleThemeSuggestion[];
   course: CourseSuggestion[];
   consulting: ConsultingSuggestion[];
+  sns: SnsSuggestion[];
+  digital: DigitalProductSuggestion[];
 }
 
 // ウィザードのステップ状態
@@ -176,7 +222,10 @@ export const STEP_QUESTIONS: Record<0 | 1 | 2, StepQuestion[]> = {
   ],
 };
 
+// =============================================
 // モックデータ
+// =============================================
+
 export const MOCK_ANALYSIS: MonetizeAnalysis = {
   summary: 'あなたは「実践型エキスパート」タイプです。豊富な実務経験と、それを分かりやすく伝える力を持っています。Kindle出版だけでなく、講座やコンサルティングでも大きな成果が期待できます。',
   authorTraits: {
@@ -202,18 +251,9 @@ export const MOCK_KINDLE_RESULTS: KindleThemeSuggestion[] = [
     targetReader: '本業が忙しいが副収入を得たい30代〜40代の会社員',
     reason: '実務経験と時間管理への関心を活かせるテーマです',
     potentialRevenue: '月1〜3万円（印税）',
-  },
-  {
-    theme: '人見知りでもできるオンラインコミュニケーション術',
-    targetReader: 'リモートワークでのコミュニケーションに悩む内向型の社会人',
-    reason: '分かりやすく伝える力と内向的な視点が強みになります',
-    potentialRevenue: '月5,000〜2万円（印税）',
-  },
-  {
-    theme: '40歳からの学び直し完全ガイド',
-    targetReader: 'キャリアの転換期にある中年世代',
-    reason: '「これから挑戦したい」という姿勢が読者の共感を呼びます',
-    potentialRevenue: '月1〜5万円（印税）',
+    chapterOutline: ['副業マインドセット', '時間の作り方', 'スキルの棚卸し', '最初の1万円を稼ぐ方法', '継続と成長の仕組み'],
+    differentiator: '「忙しい人」に特化した実践的アプローチ',
+    firstStep: 'まずは自分の1週間のタイムログを取り、副業に充てられる時間を可視化する',
   },
 ];
 
@@ -224,13 +264,9 @@ export const MOCK_COURSE_RESULTS: CourseSuggestion[] = [
     curriculum: ['マインドセット', 'スキルの棚卸し', '商品設計', '集客の基本', '収益化ステップ'],
     reason: '実務経験をステップバイステップで教えられます',
     pricingHint: '¥9,800〜¥29,800',
-  },
-  {
-    courseName: 'オンラインコミュニケーション・マスタークラス',
-    targetAudience: 'リモートワーカー、オンラインビジネス初心者',
-    curriculum: ['オンライン会議術', '文章コミュニケーション', 'SNS発信の基本', '信頼構築テクニック'],
-    reason: 'コミュニケーション力を体系的に教える講座として需要があります',
-    pricingHint: '¥4,980〜¥14,800',
+    format: '動画講座（全5モジュール・各30分）+ ワークシート付き',
+    differentiator: '理論だけでなく毎回の実践ワーク付き',
+    firstStep: 'モジュール1の台本を書いてスマホで試し撮りする',
   },
 ];
 
@@ -241,12 +277,35 @@ export const MOCK_CONSULTING_RESULTS: ConsultingSuggestion[] = [
     deliverables: ['強み分析レポート', 'マネタイズロードマップ', '90日アクションプラン'],
     reason: '個別の状況に合わせた戦略提案ができます',
     pricingHint: '1回 ¥15,000〜¥30,000',
+    sessionFormat: '単発90分セッション（Zoom）+ フォローアップメール1回',
+    differentiator: '実務経験に基づく実践的なアドバイス',
+    firstStep: '知り合い3人にモニター価格で提供し、実績と推薦文を集める',
   },
+];
+
+export const MOCK_SNS_RESULTS: SnsSuggestion[] = [
   {
-    menuName: 'Kindle出版プロデュースパッケージ',
-    targetClient: 'Kindle出版に興味はあるが一人では不安な方',
-    deliverables: ['テーマ選定', '構成アドバイス', '出版までの伴走サポート（3ヶ月）'],
-    reason: '出版経験を活かした伴走型サービスとして差別化できます',
-    pricingHint: '¥50,000〜¥100,000（3ヶ月）',
+    themeName: '忙しい社会人の副業リアル',
+    platform: 'X（Twitter）+ Instagram',
+    targetFollower: '副業に興味がある20〜40代の会社員',
+    contentIdeas: ['今日の副業タイムログ', 'やってよかった副業ランキング', '副業の失敗談', '月収推移グラフ', '副業に使えるツール紹介'],
+    reason: '副業のリアルな過程を発信することでフォロワーの信頼を獲得できます',
+    monetizeRoute: 'フォロワー→メルマガ→Kindle/講座への導線',
+    differentiator: '「結果」ではなく「過程」を見せるリアルさ',
+    firstStep: 'X で「#副業日記」タグを付けて30日間毎日投稿する',
+  },
+];
+
+export const MOCK_DIGITAL_RESULTS: DigitalProductSuggestion[] = [
+  {
+    productName: '副業スタートダッシュ・テンプレートパック',
+    productType: 'Notionテンプレート',
+    targetBuyer: '副業を始めたいが何から手を付けていいかわからない人',
+    features: ['スキル棚卸しワークシート', '副業アイデア100リスト', 'タイムマネジメントテンプレート', '収支管理ダッシュボード', '90日アクションプランナー'],
+    reason: 'あなたの実務経験を「型」にして繰り返し売れる商品にできます',
+    pricingHint: '¥1,980〜¥4,980',
+    salesChannel: 'STORES / Gumroad / 自社LP',
+    differentiator: '実践者の経験から作られた、すぐに使える具体的なテンプレート',
+    firstStep: 'まずはNotionで自分が使っている管理テンプレートを整理・デザインする',
   },
 ];

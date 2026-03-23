@@ -631,14 +631,21 @@ export function BlockRenderer({ block, variant = 'business', onLinkClick, isPrev
       const ctaShadow = { none: '', sm: 'shadow-sm', md: 'shadow-md', lg: 'shadow-lg', xl: 'shadow-xl' }[block.data.shadow || 'xl'];
       const ctaSize = block.data.size === 'lg' ? 'px-12 py-5 text-xl' : 'px-8 py-4 text-lg';
       const ctaAnimation = { none: '', pulse: 'cta-pulse', shimmer: 'cta-shimmer', bounce: 'cta-bounce' }[block.data.animation || 'none'];
+      const ctaShowTitle = block.data.showTitle !== false;
+      const ctaShowDesc = block.data.showDescription !== false;
+      const ctaShowBg = block.data.showBackground !== false;
       return (
         <section
-          className={`py-20 px-6 text-white ${block.data.isFullWidth ? 'w-full' : ''}`}
-          style={{ background: block.data.backgroundGradient || block.data.backgroundColor || '#f59e0b' }}
+          className={`${ctaShowBg ? 'py-20' : 'py-10'} px-6 ${ctaShowBg ? 'text-white' : ''} ${block.data.isFullWidth ? 'w-full' : ''}`}
+          style={ctaShowBg ? { background: block.data.backgroundGradient || block.data.backgroundColor || '#f59e0b' } : undefined}
         >
           <div className={`${block.data.isFullWidth ? 'max-w-5xl' : 'max-w-3xl'} mx-auto text-center`}>
-            <h2 className="text-3xl sm:text-4xl font-black mb-6">{block.data.title}</h2>
-            <p className="text-xl opacity-90 mb-10">{block.data.description}</p>
+            {ctaShowTitle && block.data.title && (
+              <h2 className={`text-3xl sm:text-4xl font-black ${ctaShowDesc && block.data.description ? 'mb-6' : 'mb-10'}`}>{block.data.title}</h2>
+            )}
+            {ctaShowDesc && block.data.description && (
+              <p className={`text-xl ${ctaShowBg ? 'opacity-90' : 'text-gray-600'} mb-10`}>{block.data.description}</p>
+            )}
             <a
               href={block.data.buttonUrl || '#'}
               onClick={() => block.data.buttonUrl && handleLinkClick(block.data.buttonUrl)}

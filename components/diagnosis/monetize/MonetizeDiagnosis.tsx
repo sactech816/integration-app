@@ -9,9 +9,11 @@ import {
   STEP_QUESTIONS, DIAGNOSIS_STEPS, DiagnosisStep,
   MonetizeDiagnosisResult, MonetizeAnalysis,
   MOCK_ANALYSIS, MOCK_KINDLE_RESULTS, MOCK_COURSE_RESULTS, MOCK_CONSULTING_RESULTS,
+  MOCK_SNS_RESULTS, MOCK_DIGITAL_RESULTS,
 } from './types';
 import { CommonAnalysisSection } from './results/CommonAnalysisSection';
 import { MonetizeResultTabs } from './results/MonetizeResultTabs';
+import { ShareButtons } from './results/ShareButtons';
 
 interface MonetizeDiagnosisProps {
   userId: string;
@@ -140,6 +142,8 @@ export const MonetizeDiagnosis: React.FC<MonetizeDiagnosisProps> = ({ userId }) 
         kindle: MOCK_KINDLE_RESULTS,
         course: MOCK_COURSE_RESULTS,
         consulting: MOCK_CONSULTING_RESULTS,
+        sns: MOCK_SNS_RESULTS,
+        digital: MOCK_DIGITAL_RESULTS,
       });
     } finally {
       timers.forEach(clearTimeout);
@@ -185,6 +189,8 @@ export const MonetizeDiagnosis: React.FC<MonetizeDiagnosisProps> = ({ userId }) 
         )}
 
         <CommonAnalysisSection analysis={result.analysis} />
+
+        <ShareButtons analysis={result.analysis} />
 
         <MonetizeResultTabs
           result={result}

@@ -1455,8 +1455,31 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       case 'cta_section':
         return (
           <div className="space-y-4">
-            <Input label="タイトル" val={block.data.title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="今すぐ始めましょう" />
-            <Textarea label="説明文" val={block.data.description || ''} onChange={(v) => updateBlock(block.id, { description: v })} rows={2} />
+            {/* 表示トグル */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { key: 'showBackground', label: '背景', icon: '🎨' },
+                { key: 'showTitle', label: 'タイトル', icon: '📝' },
+                { key: 'showDescription', label: '説明文', icon: '💬' },
+              ].map(opt => {
+                const isOn = block.data[opt.key] !== false;
+                return (
+                  <button key={opt.key} type="button" onClick={() => updateBlock(block.id, { [opt.key]: !isOn })}
+                    className={`p-2 rounded-xl text-center border-2 transition-all ${isOn ? 'border-amber-500 bg-amber-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                    <p className="text-lg">{opt.icon}</p>
+                    <p className="text-xs font-semibold text-gray-700">{opt.label}</p>
+                    <p className={`text-[10px] font-bold ${isOn ? 'text-amber-600' : 'text-gray-400'}`}>{isOn ? 'ON' : 'OFF'}</p>
+                  </button>
+                );
+              })}
+            </div>
+
+            {block.data.showTitle !== false && (
+              <Input label="タイトル" val={block.data.title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="今すぐ始めましょう" />
+            )}
+            {block.data.showDescription !== false && (
+              <Textarea label="説明文" val={block.data.description || ''} onChange={(v) => updateBlock(block.id, { description: v })} rows={2} />
+            )}
             <div className="grid grid-cols-2 gap-3">
               <Input label="ボタンテキスト" val={block.data.buttonText || ''} onChange={(v) => updateBlock(block.id, { buttonText: v })} ph="お問い合わせ" />
               <Input label="ボタンURL" val={block.data.buttonUrl || ''} onChange={(v) => updateBlock(block.id, { buttonUrl: v })} ph="#contact" />

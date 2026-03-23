@@ -608,6 +608,20 @@ const Header: React.FC<HeaderProps> = ({
                           <div className="text-xs text-gray-500">九星気学・数秘術・四柱推命</div>
                         </div>
                       </Link>
+                      <div className="border-t border-gray-100 my-1" />
+                      <Link
+                        href="/diagnosis/monetize/about"
+                        onClick={closeMenus}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-violet-50 transition-colors"
+                      >
+                        <div className="p-2 rounded-lg bg-violet-50">
+                          <TrendingUp size={18} className="text-violet-600" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900 text-sm">才能マネタイズ診断</div>
+                          <div className="text-xs text-gray-500">あなたの才能で稼ぐ方法を発見</div>
+                        </div>
+                      </Link>
                     </div>
                   </div>
                 </>

@@ -5,6 +5,7 @@ import { getProviderFromAdminSettings, generateWithFallback } from '@/lib/ai-pro
 import { logAIUsage } from '@/lib/ai-usage';
 import {
   MOCK_ANALYSIS, MOCK_KINDLE_RESULTS, MOCK_COURSE_RESULTS, MOCK_CONSULTING_RESULTS,
+  MOCK_SNS_RESULTS, MOCK_DIGITAL_RESULTS,
 } from '@/components/diagnosis/monetize/types';
 import type { Big5Scores } from '@/components/kindle/wizard/types';
 
@@ -46,6 +47,8 @@ export async function POST(request: Request) {
         kindle: MOCK_KINDLE_RESULTS,
         course: MOCK_COURSE_RESULTS,
         consulting: MOCK_CONSULTING_RESULTS,
+        sns: MOCK_SNS_RESULTS,
+        digital: MOCK_DIGITAL_RESULTS,
       };
       return NextResponse.json(mockResult);
     }
@@ -78,37 +81,24 @@ export async function POST(request: Request) {
     }
 
     const systemPrompt = `＃目的：
-ユーザーの自己分析結果・性格特性をもとに、才能を分析し、3つの収益化分野（Kindle出版・オンライン講座・コンサル/コーチング）で最適なテーマを提案してください。
+ユーザーの自己分析結果・性格特性をもとに才能を分析し、5つの収益化分野で最適なテーマを各5つずつ提案してください。
 
 ＃あなたの役割：
 才能マネタイズのコンサルタント兼プロデューサー。ユーザーの強みや経験を引き出し、最適な収益化ルートを見つけるプロフェッショナル。占い師のように相手の可能性を見抜き、ポジティブに導く存在。
 
 ＃Big5性格特性の活用：
-- 外向性が高い → コミュニケーション系・ライブ配信向き
+- 外向性が高い → コミュニケーション系・ライブ配信・コンサル向き
 - 協調性が高い → サポート型コンサル・コミュニティ運営向き
-- 誠実性が高い → ノウハウ系・体系的な講座向き
+- 誠実性が高い → ノウハウ系・体系的な講座・テンプレート向き
 - 情緒安定性が低い → メンタルヘルス・共感型コンテンツ向き
-- 開放性が高い → クリエイティブ系・新しい切り口向き
+- 開放性が高い → クリエイティブ系・新しい切り口・SNS向き
 
-＃出力形式：
-以下のJSON形式で出力してください。
-
+＃出力形式（JSON）：
 {
   "analysis": {
-    "summary": "総合分析テキスト。占い・診断風のポジティブな語り口。強みと収益化の可能性を伝える。150-200文字。",
-    "authorTraits": {
-      "expertise": 1-5の整数,
-      "passion": 1-5の整数,
-      "communication": 1-5の整数,
-      "uniqueness": 1-5の整数,
-      "marketability": 1-5の整数
-    },
-    "swot": {
-      "strengths": ["強み1", "強み2"],
-      "weaknesses": ["課題1", "課題2"],
-      "opportunities": ["機会1", "機会2"],
-      "threats": ["リスク1", "リスク2"]
-    },
+    "summary": "総合分析。占い・診断風のポジティブな語り口。150-200文字。",
+    "authorTraits": { "expertise": 1-5, "passion": 1-5, "communication": 1-5, "uniqueness": 1-5, "marketability": 1-5 },
+    "swot": { "strengths": ["強み1", "強み2"], "weaknesses": ["課題1", "課題2"], "opportunities": ["機会1", "機会2"], "threats": ["リスク1", "リスク2"] },
     "authorType": "才能タイプ名（4-8文字）",
     "authorTypeDescription": "タイプの説明（50-80文字）"${birthday ? ',\n    "birthdayInsight": "生年月日から読み取れる才能と運勢の一言（50-100文字）"' : ''}
   },
@@ -116,37 +106,74 @@ export async function POST(request: Request) {
     {
       "theme": "Kindle本のテーマ（キャッチーで具体的）",
       "targetReader": "想定読者の具体的なペルソナ",
-      "reason": "このテーマをおすすめする理由（100文字以内）",
-      "potentialRevenue": "想定月収レンジ（例: 月1〜3万円）"
+      "reason": "おすすめ理由（100文字以内）",
+      "potentialRevenue": "想定月収（例: 月1〜3万円）",
+      "chapterOutline": ["第1章タイトル", "第2章", "第3章", "第4章", "第5章"],
+      "differentiator": "競合との差別化ポイント（50文字以内）",
+      "firstStep": "最初にやるべき具体的な一歩（80文字以内）"
     }
   ],
   "course": [
     {
-      "courseName": "講座名（魅力的な名前）",
+      "courseName": "講座名",
       "targetAudience": "受講対象者",
-      "curriculum": ["モジュール1", "モジュール2", "モジュール3", "モジュール4"],
-      "reason": "この講座をおすすめする理由（100文字以内）",
-      "pricingHint": "想定価格帯（例: ¥9,800〜¥29,800）"
+      "curriculum": ["モジュール1", "モジュール2", "モジュール3", "モジュール4", "モジュール5"],
+      "reason": "おすすめ理由（100文字以内）",
+      "pricingHint": "想定価格帯",
+      "format": "形式（動画/ライブ/テキスト+ワークシート等）",
+      "differentiator": "競合との差別化ポイント",
+      "firstStep": "最初の一歩"
     }
   ],
   "consulting": [
     {
-      "menuName": "コンサルメニュー名",
+      "menuName": "メニュー名",
       "targetClient": "対象クライアント",
       "deliverables": ["成果物1", "成果物2", "成果物3"],
-      "reason": "このメニューをおすすめする理由（100文字以内）",
-      "pricingHint": "想定価格（例: 1回 ¥15,000〜¥30,000）"
+      "reason": "おすすめ理由",
+      "pricingHint": "想定価格",
+      "sessionFormat": "セッション形式（単発/継続/パッケージ等）",
+      "differentiator": "差別化ポイント",
+      "firstStep": "最初の一歩"
+    }
+  ],
+  "sns": [
+    {
+      "themeName": "SNS発信テーマ名",
+      "platform": "最適なプラットフォーム（X/Instagram/YouTube等）",
+      "targetFollower": "獲得したいフォロワー層",
+      "contentIdeas": ["投稿ネタ1", "投稿ネタ2", "投稿ネタ3", "投稿ネタ4", "投稿ネタ5"],
+      "reason": "おすすめ理由",
+      "monetizeRoute": "SNSからの収益化導線（例: フォロワー→メルマガ→講座販売）",
+      "differentiator": "差別化ポイント",
+      "firstStep": "最初の一歩"
+    }
+  ],
+  "digital": [
+    {
+      "productName": "商品名",
+      "productType": "種類（Notionテンプレ/チェックリスト/Canvaテンプレ/スプレッドシート等）",
+      "targetBuyer": "購入者ペルソナ",
+      "features": ["特徴1", "特徴2", "特徴3", "特徴4", "特徴5"],
+      "reason": "おすすめ理由",
+      "pricingHint": "想定価格",
+      "salesChannel": "販売チャネル（STORES/Gumroad/自社LP等）",
+      "differentiator": "差別化ポイント",
+      "firstStep": "最初の一歩"
     }
   ]
 }
 
 ＃条件：
-- 各分野3つずつ提案（合計9つ）
+- 各分野5つずつ提案（合計25個）
 - 日本語のみ
-- Kindle: 過去の経験ベース、専門知識ベース、未来挑戦ベースの3パターン
-- 講座: 体系的に教えられるテーマを、難易度別に3パターン
-- コンサル: 1対1の個別支援を、サービス形態を変えて3パターン
-- 各提案のpricingHintは現実的な市場相場を参考に
+- 5つの提案はそれぞれ異なるアプローチ・切り口で
+- Kindle: 経験ベース、専門知識ベース、挑戦ベース、ニッチ特化、トレンド活用
+- 講座: 初級→上級、ライブ→動画、短期→長期など形式も変える
+- コンサル: 単発→継続、個人→グループ、低単価→高単価など
+- SNS: 各提案で異なるプラットフォームや発信スタイル
+- デジタル商品: テンプレ、ツール、素材、ガイドなど種類を変える
+- pricingHintは現実的な市場相場
 - JSON以外のテキストは一切出力しないこと`;
 
     const userMessage = `＃ユーザーの自己分析：
@@ -207,6 +234,8 @@ ${answersText}${big5Text}${birthdayText}`;
         kindle_results: parsed.kindle,
         course_results: parsed.course,
         consulting_results: parsed.consulting,
+        sns_results: parsed.sns,
+        digital_results: parsed.digital,
       })
       .select('id')
       .single();
@@ -233,6 +262,8 @@ ${answersText}${big5Text}${birthdayText}`;
       kindle: parsed.kindle,
       course: parsed.course,
       consulting: parsed.consulting,
+      sns: parsed.sns,
+      digital: parsed.digital,
     });
 
   } catch (error: any) {

@@ -274,6 +274,9 @@ export type CTASectionBlockData = {
   shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   animation?: 'none' | 'pulse' | 'shimmer' | 'bounce';
   size?: 'md' | 'lg';
+  showTitle?: boolean;
+  showDescription?: boolean;
+  showBackground?: boolean;
 };
 
 export type TwoColumnBlockData = {

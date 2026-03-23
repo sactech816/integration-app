@@ -404,14 +404,21 @@ function SiteYouTube({ d }: { d: D }) {
 
 /* ─── CTA Section ────────────────────────────────────── */
 function SiteCTA({ d, primaryColor }: { d: D; primaryColor: string }) {
+  const showBg = d.showBackground !== false;
+  const showTitle = d.showTitle !== false;
+  const showDesc = d.showDescription !== false;
   return (
     <section
-      className="py-24 sm:py-32 px-6 text-white"
-      style={{ background: d.backgroundGradient || d.backgroundColor || primaryColor }}
+      className={`${showBg ? 'py-24 sm:py-32' : 'py-12 sm:py-16'} px-6 ${showBg ? 'text-white' : ''}`}
+      style={showBg ? { background: d.backgroundGradient || d.backgroundColor || primaryColor } : undefined}
     >
       <div className="max-w-3xl mx-auto text-center">
-        <h2 className="text-3xl sm:text-4xl font-bold mb-6 leading-tight">{d.title}</h2>
-        <p className="text-lg opacity-80 mb-12 leading-relaxed">{d.description}</p>
+        {showTitle && d.title && (
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6 leading-tight">{d.title}</h2>
+        )}
+        {showDesc && d.description && (
+          <p className={`text-lg ${showBg ? 'opacity-80' : 'text-gray-600'} mb-12 leading-relaxed`}>{d.description}</p>
+        )}
         {d.buttonText && (
           <a
             href={d.buttonUrl || '#'}

@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS monetize_diagnoses (
   kindle_results JSONB,
   course_results JSONB,
   consulting_results JSONB,
+  sns_results JSONB,
+  digital_results JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -29,7 +31,7 @@ INSERT INTO feature_products (id, name, description, category, price, duration_t
 VALUES (
   'monetize_diagnosis_unlock',
   '才能マネタイズ診断 全分野アンロック',
-  '全ての分野（Kindle・オンライン講座・コンサル）の詳細結果を永久にアンロック',
+  '全ての分野（Kindle・オンライン講座・コンサル・SNS・デジタル商品）の詳細結果を永久にアンロック',
   'diagnosis',
   980,
   'permanent',
