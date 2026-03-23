@@ -45,4 +45,5 @@ export const TABLES = {
   SUPPORTER_APPLICATIONS: 'supporter_applications',
   KINDLE_COVERS: 'kindle_covers',
   USER_PERSONA: 'user_persona',
+  MONETIZE_DIAGNOSES: 'monetize_diagnoses',
 } as const;

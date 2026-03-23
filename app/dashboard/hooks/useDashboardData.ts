@@ -65,6 +65,7 @@ type UseDashboardDataReturn = {
     fortune: number;
     concierge: number;
     kindle_cover: number;
+    monetize_diagnosis: number;
   };
   totalViews: number;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -159,6 +160,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     fortune: 0,
     concierge: 0,
     kindle_cover: 0,
+    monetize_diagnosis: 0,
   });
   const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
   const [purchases, setPurchases] = useState<string[]>([]);
@@ -847,6 +849,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         fortune: fortuneResult?.count || 0,
         concierge: conciergeResult?.count || 0,
         kindle_cover: kindleCoverResult.count || 0,
+        monetize_diagnosis: 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);

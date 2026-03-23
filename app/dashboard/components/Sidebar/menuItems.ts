@@ -35,6 +35,7 @@ import {
   Star,
   Bot,
   MessageSquare,
+  TrendingUp,
   LucideIcon,
 } from 'lucide-react';
 
@@ -379,6 +380,15 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: '紹介プログラム',
     color: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200' },
     href: '/affiliate',
+    category: 'monetization',
+  },
+  {
+    id: 'monetize-diagnosis',
+    label: '才能マネタイズ診断',
+    icon: TrendingUp,
+    description: '才能を活かした収益化診断',
+    color: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200' },
+    href: '/diagnosis/monetize',
     category: 'monetization',
   },
 ];

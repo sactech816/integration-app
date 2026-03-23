@@ -43,6 +43,7 @@ type SidebarProps = {
     fortune: number;
     concierge: number;
     kindle_cover: number;
+    monetize_diagnosis: number;
   };
   totalViews: number;
   onLogout: () => void;

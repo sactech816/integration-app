@@ -79,7 +79,8 @@ export type ActiveView =
   | 'admin-inquiries'
   | 'admin-trial'
   | 'admin-products'
-  | 'admin-purchases';
+  | 'admin-purchases'
+  | 'monetize-diagnosis';
 
 type KdlSubscription = {
   hasActiveSubscription: boolean;
