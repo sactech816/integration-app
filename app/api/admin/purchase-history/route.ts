@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import Stripe from 'stripe';
 import { getAdminEmails } from '@/lib/constants';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2025-12-15.clover' as any,
+});
 
 const getServiceClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -76,8 +81,14 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1', 10);
     const perPage = parseInt(searchParams.get('perPage') || '20', 10);
     const typeFilter = searchParams.get('type') || 'all';
+    const source = searchParams.get('source') || 'db'; // 'db' | 'stripe'
 
-    // 6テーブルを並列クエリ（typeFilterで必要なもののみ）
+    // ── Stripe直接取得モード ──
+    if (source === 'stripe') {
+      return await getStripeCharges(page, perPage);
+    }
+
+    // 7テーブルを並列クエリ（typeFilterで必要なもののみ）
     const shouldFetch = (type: string) => typeFilter === 'all' || typeFilter === type;
 
     const [
@@ -276,5 +287,108 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('[Admin Purchase History API] Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// Stripe metadata.type → 日本語表示名
+const STRIPE_TYPE_NAMES: Record<string, string> = {
+  subscription: 'サブスクリプション',
+  feature_purchase: '単品購入',
+  point_purchase: 'ポイント購入',
+  bigfive_pdf: 'Big Five 診断PDF',
+  fortune_report: '生年月日診断レポート',
+  donation: '応援/寄付',
+  order_form: '申込フォーム決済',
+};
+
+/**
+ * Stripe APIから直接チャージ一覧を取得
+ * DBに記録がなくても全ての決済が確認できる
+ */
+async function getStripeCharges(page: number, perPage: number) {
+  try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 });
+    }
+
+    // Stripe charges.list で直近の決済を取得（成功したもののみ）
+    // starting_after でページネーション
+    const charges = await stripe.charges.list({
+      limit: 100,
+    });
+
+    // checkout sessions も取得してmetadata付きの情報を得る
+    const sessions = await stripe.checkout.sessions.list({
+      limit: 100,
+    });
+
+    // session.payment_intent → session のマッピング
+    const sessionByPaymentIntent: Record<string, Stripe.Checkout.Session> = {};
+    for (const sess of sessions.data) {
+      if (sess.payment_intent && typeof sess.payment_intent === 'string') {
+        sessionByPaymentIntent[sess.payment_intent] = sess;
+      }
+    }
+
+    const allRecords = charges.data
+      .filter(ch => ch.status === 'succeeded')
+      .map(ch => {
+        const sess = ch.payment_intent
+          ? sessionByPaymentIntent[typeof ch.payment_intent === 'string' ? ch.payment_intent : ch.payment_intent.id]
+          : null;
+        const meta = sess?.metadata || {};
+        const typeName = meta.type ? (STRIPE_TYPE_NAMES[meta.type] || meta.type) : '不明';
+
+        // 商品名を推定
+        let productName = typeName;
+        if (meta.type === 'bigfive_pdf') {
+          productName = `Big Five 診断PDF（${meta.testType || 'simple'}）`;
+        } else if (meta.type === 'fortune_report') {
+          productName = '生年月日診断プレミアムレポート';
+        } else if (meta.type === 'point_purchase') {
+          productName = `ポイント購入（${meta.points || '?'}pt）`;
+        } else if (meta.type === 'subscription') {
+          productName = `サブスク: ${meta.planName || meta.planTier || '?'}`;
+        } else if (meta.type === 'feature_purchase') {
+          productName = PRODUCT_NAMES[meta.productId as string] || meta.productId || '単品購入';
+        } else if (meta.type === 'donation') {
+          productName = '応援/寄付';
+        } else if (meta.type === 'order_form') {
+          productName = '申込フォーム決済';
+        } else if (ch.description) {
+          productName = ch.description;
+        }
+
+        return {
+          id: ch.id,
+          type: (meta.type as string) || 'unknown',
+          purchasedAt: new Date(ch.created * 1000).toISOString(),
+          amount: ch.amount,
+          productName,
+          userId: (meta.userId as string) || null,
+          userEmail: ch.billing_details?.email || ch.receipt_email || (sess?.customer_email as string) || null,
+          status: ch.refunded ? 'refunded' : 'paid',
+          metadata: {
+            ...meta,
+            stripe_charge_id: ch.id,
+            stripe_payment_intent: typeof ch.payment_intent === 'string' ? ch.payment_intent : null,
+          },
+        };
+      });
+
+    const summary = {
+      totalAmount: allRecords.reduce((sum, r) => sum + r.amount, 0),
+      totalCount: allRecords.length,
+      anonymousCount: allRecords.filter(r => !r.userId && !r.userEmail).length,
+    };
+
+    const totalCount = allRecords.length;
+    const startIndex = (page - 1) * perPage;
+    const purchases = allRecords.slice(startIndex, startIndex + perPage);
+
+    return NextResponse.json({ purchases, totalCount, summary, source: 'stripe' });
+  } catch (error) {
+    console.error('[Admin Purchase History API] Stripe error:', error);
+    return NextResponse.json({ error: 'Failed to fetch Stripe charges' }, { status: 500 });
   }
 }

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Receipt, Loader2, RefreshCw, User, UserX, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Receipt, Loader2, RefreshCw, User, UserX, ChevronLeft, ChevronRight, Database, CreditCard } from 'lucide-react';
 
 type PurchaseRecord = {
   id: string;
@@ -32,6 +32,7 @@ const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   order_form: { label: '申込フォーム', color: 'bg-emerald-100 text-emerald-700' },
   subscription: { label: 'サブスク', color: 'bg-blue-100 text-blue-700' },
   donation: { label: '応援/寄付', color: 'bg-orange-100 text-orange-700' },
+  unknown: { label: '不明', color: 'bg-gray-100 text-gray-500' },
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
@@ -55,6 +56,8 @@ const FILTER_OPTIONS: { value: FilterType; label: string }[] = [
   { value: 'donation', label: '応援/寄付' },
 ];
 
+type DataSource = 'db' | 'stripe';
+
 const ITEMS_PER_PAGE = 20;
 
 export default function PurchaseHistoryManager() {
@@ -64,10 +67,11 @@ export default function PurchaseHistoryManager() {
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [filterType, setFilterType] = useState<FilterType>('all');
+  const [dataSource, setDataSource] = useState<DataSource>('stripe');
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
-  const fetchPurchases = useCallback(async (p: number, type: FilterType) => {
+  const fetchPurchases = useCallback(async (p: number, type: FilterType, source: DataSource) => {
     setLoading(true);
     try {
       const session = await supabase?.auth.getSession();
@@ -78,6 +82,7 @@ export default function PurchaseHistoryManager() {
         page: p.toString(),
         perPage: ITEMS_PER_PAGE.toString(),
         type,
+        source,
       });
 
       const response = await fetch(`/api/admin/purchase-history?${params}`, {
@@ -98,12 +103,18 @@ export default function PurchaseHistoryManager() {
   }, []);
 
   useEffect(() => {
-    fetchPurchases(page, filterType);
-  }, [page, filterType, fetchPurchases]);
+    fetchPurchases(page, filterType, dataSource);
+  }, [page, filterType, dataSource, fetchPurchases]);
 
   const handleFilterChange = (type: FilterType) => {
     setFilterType(type);
     setPage(1);
+  };
+
+  const handleSourceChange = (source: DataSource) => {
+    setDataSource(source);
+    setPage(1);
+    setFilterType('all');
   };
 
   const formatDate = (dateStr: string | null) => {
@@ -127,14 +138,41 @@ export default function PurchaseHistoryManager() {
             購入履歴
             <span className="text-xs bg-emerald-500 text-white px-2 py-1 rounded-full">ADMIN</span>
           </h2>
-          <button
-            onClick={() => fetchPurchases(page, filterType)}
-            disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-gray-600 hover:text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 shadow-sm"
-          >
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-            更新
-          </button>
+          <div className="flex items-center gap-2">
+            {/* データソース切替 */}
+            <div className="flex items-center bg-white border border-gray-300 rounded-lg overflow-hidden shadow-sm">
+              <button
+                onClick={() => handleSourceChange('stripe')}
+                className={`flex items-center gap-1 px-3 py-1.5 text-xs font-bold transition-colors ${
+                  dataSource === 'stripe'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <CreditCard size={12} />
+                Stripe
+              </button>
+              <button
+                onClick={() => handleSourceChange('db')}
+                className={`flex items-center gap-1 px-3 py-1.5 text-xs font-bold transition-colors ${
+                  dataSource === 'db'
+                    ? 'bg-emerald-600 text-white'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <Database size={12} />
+                DB
+              </button>
+            </div>
+            <button
+              onClick={() => fetchPurchases(page, filterType, dataSource)}
+              disabled={loading}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold text-gray-600 hover:text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 shadow-sm"
+            >
+              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+              更新
+            </button>
+          </div>
         </div>
       </div>
 
@@ -160,21 +198,31 @@ export default function PurchaseHistoryManager() {
         </div>
       </div>
 
-      {/* タイプフィルター */}
-      <div className="px-6 py-3 border-b border-gray-200 flex flex-wrap gap-2">
-        {FILTER_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => handleFilterChange(opt.value)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm ${
-              filterType === opt.value
-                ? 'bg-emerald-600 text-white'
-                : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
+      {/* タイプフィルター / Stripe説明 */}
+      <div className="px-6 py-3 border-b border-gray-200">
+        {dataSource === 'stripe' ? (
+          <div className="flex items-center gap-2 text-xs text-indigo-600">
+            <CreditCard size={14} />
+            <span className="font-bold">Stripe直接取得</span>
+            <span className="text-gray-500">— DB記録がなくても全決済が表示されます（直近100件）</span>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {FILTER_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => handleFilterChange(opt.value)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm ${
+                  filterType === opt.value
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* テーブル */}
