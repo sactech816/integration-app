@@ -162,6 +162,7 @@ export default function FeaturedManager() {
       line: 'LINE公式連携',
       'site': 'ホームページメーカー',
       fortune: '生年月日占い',
+      subsidy: '補助金診断',
     };
     return labels[type] || type;
   };

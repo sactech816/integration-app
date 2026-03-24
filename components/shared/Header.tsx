@@ -52,6 +52,7 @@ import {
   Brain,
   Star,
   Bot,
+  FileCheck,
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 import { getAdminEmails } from '@/lib/constants';
@@ -622,6 +623,19 @@ const Header: React.FC<HeaderProps> = ({
                           <div className="text-xs text-gray-500">あなたの才能で稼ぐ方法を発見</div>
                         </div>
                       </Link>
+                      <Link
+                        href="/subsidy"
+                        onClick={closeMenus}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-teal-50 transition-colors"
+                      >
+                        <div className="p-2 rounded-lg bg-teal-50">
+                          <FileCheck size={18} className="text-teal-600" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900 text-sm">補助金適正診断</div>
+                          <div className="text-xs text-gray-500">あなたの事業に最適な補助金を診断</div>
+                        </div>
+                      </Link>
                     </div>
                   </div>
                 </>
@@ -899,6 +913,11 @@ const Header: React.FC<HeaderProps> = ({
                       className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-indigo-50 transition-colors">
                       <Star size={16} className="text-indigo-500" />
                       <span className="text-gray-700 text-sm">生年月日占い</span>
+                    </Link>
+                    <Link href="/subsidy" onClick={closeMenus}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-teal-50 transition-colors">
+                      <FileCheck size={16} className="text-teal-500" />
+                      <span className="text-gray-700 text-sm">補助金適正診断</span>
                     </Link>
                   </div>
                 )}

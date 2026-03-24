@@ -23,7 +23,7 @@ function getSupabaseServer() {
 }
 
 // コンテンツタイプの型定義
-export type ContentType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail' | 'newsletter' | 'step-email' | 'order-form' | 'funnel' | 'webinar' | 'sns-post' | 'line' | 'site' | 'bigfive_sample' | 'fortune';
+export type ContentType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail' | 'newsletter' | 'step-email' | 'order-form' | 'funnel' | 'webinar' | 'sns-post' | 'line' | 'site' | 'bigfive_sample' | 'fortune' | 'subsidy';
 
 // イベントタイプの型定義
 export type EventType = 'view' | 'click' | 'scroll' | 'time' | 'read' | 'completion';

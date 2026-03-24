@@ -45,6 +45,7 @@ const SHORT_LABELS: Record<ServiceType, string> = {
   line: 'LINE',
   'site': 'サイト',
   fortune: '占い',
+  subsidy: '補助金',
 };
 
 const getServiceColor = (type: ServiceType) => {

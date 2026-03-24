@@ -224,7 +224,7 @@ export async function getPurchaseStats(
     return {
       totalAmount: 0,
       totalPurchases: 0,
-      byContentType: { quiz: 0, entertainment_quiz: 0, profile: 0, business: 0, salesletter: 0, survey: 0, gamification: 0, attendance: 0, booking: 0, onboarding: 0, thumbnail: 0, newsletter: 0, 'step-email': 0, 'order-form': 0, funnel: 0, webinar: 0, 'sns-post': 0, line: 0, site: 0, bigfive_sample: 0, fortune: 0 }
+      byContentType: { quiz: 0, entertainment_quiz: 0, profile: 0, business: 0, salesletter: 0, survey: 0, gamification: 0, attendance: 0, booking: 0, onboarding: 0, thumbnail: 0, newsletter: 0, 'step-email': 0, 'order-form': 0, funnel: 0, webinar: 0, 'sns-post': 0, line: 0, site: 0, bigfive_sample: 0, fortune: 0, subsidy: 0 }
     };
   }
 }

@@ -41,6 +41,7 @@ type SidebarProps = {
     site: number;
     bigfive: number;
     fortune: number;
+    subsidy: number;
     concierge: number;
     kindle_cover: number;
     monetize_diagnosis: number;

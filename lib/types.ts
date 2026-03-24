@@ -5,7 +5,7 @@
 // -------------------------------------------
 // サービスタイプ
 // -------------------------------------------
-export type ServiceType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail' | 'newsletter' | 'step-email' | 'order-form' | 'funnel' | 'webinar' | 'sns-post' | 'line' | 'site' | 'fortune';
+export type ServiceType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail' | 'newsletter' | 'step-email' | 'order-form' | 'funnel' | 'webinar' | 'sns-post' | 'line' | 'site' | 'fortune' | 'subsidy';
 
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   quiz: '診断クイズ',
@@ -28,6 +28,7 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
   line: 'LINE公式連携',
   'site': 'ホームページメーカー',
   fortune: '生年月日占い',
+  subsidy: '補助金診断',
 };
 
 export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; text: string }> = {
@@ -51,6 +52,7 @@ export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; 
   line: { primary: 'green', bg: 'bg-green-50', text: 'text-green-600' },
   'site': { primary: 'cyan', bg: 'bg-cyan-50', text: 'text-cyan-600' },
   fortune: { primary: 'indigo', bg: 'bg-indigo-50', text: 'text-indigo-600' },
+  subsidy: { primary: 'teal', bg: 'bg-teal-50', text: 'text-teal-600' },
 };
 
 // -------------------------------------------

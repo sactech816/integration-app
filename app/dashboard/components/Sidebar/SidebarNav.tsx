@@ -90,6 +90,7 @@ type SidebarNavProps = {
     site: number;
     bigfive: number;
     fortune: number;
+    subsidy: number;
     concierge: number;
     kindle_cover: number;
     monetize_diagnosis: number;
@@ -168,6 +169,7 @@ export default function SidebarNav({
     'site': contentCounts.site,
     'bigfive': contentCounts.bigfive,
     'fortune': contentCounts.fortune,
+    'subsidy': contentCounts.subsidy,
     'concierge': contentCounts.concierge,
     'kindle-cover': contentCounts.kindle_cover,
     'monetize-diagnosis': contentCounts.monetize_diagnosis,

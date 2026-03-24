@@ -37,6 +37,7 @@ import {
   MessageSquare,
   TrendingUp,
   LucideIcon,
+  FileCheck,
 } from 'lucide-react';
 
 export type ToolCategory = 'page' | 'quiz' | 'writing' | 'marketing' | 'monetization';
@@ -149,6 +150,16 @@ export const TOOL_ITEMS: ToolItem[] = [
     color: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200' },
     href: '/fortune',
     category: 'quiz',
+  },
+
+  {
+    id: 'subsidy',
+    label: '補助金診断',
+    icon: FileCheck,
+    description: '補助金適正診断・申請書AI作成',
+    color: { bg: 'bg-teal-50', text: 'text-teal-600', border: 'border-teal-200' },
+    href: '/subsidy',
+    category: 'marketing',
   },
 
   // ライティング・制作

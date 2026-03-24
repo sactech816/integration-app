@@ -63,6 +63,7 @@ type UseDashboardDataReturn = {
     site: number;
     bigfive: number;
     fortune: number;
+    subsidy: number;
     concierge: number;
     kindle_cover: number;
     monetize_diagnosis: number;
@@ -158,6 +159,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     site: 0,
     bigfive: 0,
     fortune: 0,
+    subsidy: 0,
     concierge: 0,
     kindle_cover: 0,
     monetize_diagnosis: 0,
@@ -737,7 +739,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, entertainmentQuizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult, lineResult, siteResult, bigfiveResult, fortuneResult, conciergeResult, kindleCoverResult] = await Promise.all([
+      const [quizResult, entertainmentQuizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult, lineResult, siteResult, bigfiveResult, fortuneResult, subsidyResult, conciergeResult, kindleCoverResult] = await Promise.all([
         // 診断クイズ数（ビジネス診断のみ）
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).or('quiz_type.is.null,quiz_type.eq.business')
@@ -808,6 +810,8 @@ export function useDashboardData(): UseDashboardDataReturn {
         supabase.from(TABLES.BIGFIVE_RESULTS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         // 生年月日占い診断数
         supabase.from(TABLES.FORTUNE_RESULTS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // 補助金診断数
+        supabase.from(TABLES.SUBSIDY_RESULTS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
         // コンシェルジュ数
         isAdmin
           ? supabase.from(TABLES.CONCIERGE_CONFIGS).select('id', { count: 'exact', head: true })
@@ -847,6 +851,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         site: siteResult.count || 0,
         bigfive: bigfiveResult?.count || 0,
         fortune: fortuneResult?.count || 0,
+        subsidy: subsidyResult?.count || 0,
         concierge: conciergeResult?.count || 0,
         kindle_cover: kindleCoverResult.count || 0,
         monetize_diagnosis: 0,

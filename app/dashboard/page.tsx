@@ -137,7 +137,7 @@ function DashboardContent() {
   // URLパラメータからビューを設定
   useEffect(() => {
     const view = searchParams?.get('view');
-    if (view && ['announcements', 'booking', 'attendance', 'survey', 'quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'newsletter', 'step-email', 'line', 'youtube-analysis', 'youtube-keyword-research', 'kindle-keywords', 'google-keyword-research', 'rakuten-research', 'niconico-keyword-research', 'reddit-keyword-research', 'order-form', 'funnel', 'webinar', 'sns-post', 'site', 'bigfive', 'fortune', 'affiliate', 'concierge', 'monetize-diagnosis', 'settings'].includes(view)) {
+    if (view && ['announcements', 'booking', 'attendance', 'survey', 'quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'newsletter', 'step-email', 'line', 'youtube-analysis', 'youtube-keyword-research', 'kindle-keywords', 'google-keyword-research', 'rakuten-research', 'niconico-keyword-research', 'reddit-keyword-research', 'order-form', 'funnel', 'webinar', 'sns-post', 'site', 'bigfive', 'fortune', 'subsidy', 'affiliate', 'concierge', 'monetize-diagnosis', 'settings'].includes(view)) {
       setActiveView(view as ActiveView);
     }
   }, [searchParams]);

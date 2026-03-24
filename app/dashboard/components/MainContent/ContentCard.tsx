@@ -97,6 +97,7 @@ const getServiceIcon = (type: ServiceType) => {
     line: MessageCircle,
     'site': Globe,
     fortune: Star,
+    subsidy: Star,
   };
   return icons[type] || Sparkles; // フォールバック
 };
@@ -123,6 +124,7 @@ const getServiceColor = (type: ServiceType) => {
     line: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200', gradient: 'from-green-500 to-emerald-600' },
     'site': { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200', gradient: 'from-cyan-400 to-teal-500' },
     fortune: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200', gradient: 'from-indigo-500 to-purple-600' },
+    subsidy: { bg: 'bg-teal-50', text: 'text-teal-600', border: 'border-teal-200', gradient: 'from-teal-500 to-cyan-600' },
   };
   return colors[type] || colors.quiz; // フォールバック
 };

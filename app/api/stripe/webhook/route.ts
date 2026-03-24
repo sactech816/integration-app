@@ -199,6 +199,29 @@ export async function POST(request: NextRequest) {
           break;
         }
 
+        // ── 補助金申請書AI作成の購入処理 ──
+        if (session.mode === 'payment' && session.metadata?.type === 'subsidy_report') {
+          const userId = session.metadata?.userId;
+          const resultId = session.metadata?.resultId;
+          const subsidyKey = session.metadata?.subsidyKey;
+
+          if (userId && resultId) {
+            await supabase
+              .from('subsidy_results')
+              .update({
+                report_purchased: true,
+                report_purchased_at: new Date().toISOString(),
+                selected_subsidy: subsidyKey || null,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', resultId)
+              .eq('user_id', userId);
+
+            console.log(`✅ Subsidy report purchased: user=${userId}, result=${resultId}, subsidy=${subsidyKey}`);
+          }
+          break;
+        }
+
         // ── サブスクリプションモードの処理 ──
         if (session.mode === 'subscription') {
           const userId = session.metadata?.userId;
