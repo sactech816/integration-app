@@ -201,6 +201,7 @@ export type UseCaseSet = {
   tools: string[];
   color: string;
   bgColor: string;
+  href: string;
 };
 
 export const USE_CASE_SETS: UseCaseSet[] = [
@@ -210,6 +211,7 @@ export const USE_CASE_SETS: UseCaseSet[] = [
     tools: ['プロフィールLP', '診断クイズ', 'メルマガ', '予約フォーム'],
     color: '#4f46e5',
     bgColor: '#e0e7ff',
+    href: '/for/consultant',
   },
   {
     persona: 'サロン・美容',
@@ -217,6 +219,7 @@ export const USE_CASE_SETS: UseCaseSet[] = [
     tools: ['予約フォーム', '診断クイズ', 'SNS投稿', 'スタンプラリー'],
     color: '#db2777',
     bgColor: '#fce7f3',
+    href: '/for/salon',
   },
   {
     persona: 'EC・物販',
@@ -224,6 +227,7 @@ export const USE_CASE_SETS: UseCaseSet[] = [
     tools: ['セールスライター', 'ビジネスLP', 'サムネイル', 'メルマガ'],
     color: '#c026d3',
     bgColor: '#fae8ff',
+    href: '/for/ec',
   },
   {
     persona: 'セミナー講師',
@@ -231,5 +235,6 @@ export const USE_CASE_SETS: UseCaseSet[] = [
     tools: ['ウェビナーLP', '申し込みフォーム', 'ステップメール', 'アンケート'],
     color: '#0891b2',
     bgColor: '#cffafe',
+    href: '/for/school-biz',
   },
 ];

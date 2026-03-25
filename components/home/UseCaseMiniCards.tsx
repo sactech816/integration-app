@@ -19,9 +19,10 @@ export default function UseCaseMiniCards() {
         {/* モバイル: 横スクロール、デスクトップ: グリッド */}
         <div className="flex md:grid md:grid-cols-4 gap-4 overflow-x-auto pb-4 md:pb-0 snap-x snap-mandatory md:snap-none -mx-4 px-4 md:mx-0 md:px-0">
           {USE_CASE_SETS.map((useCase) => (
-            <div
+            <a
               key={useCase.persona}
-              className="flex-shrink-0 w-[280px] md:w-auto snap-start rounded-2xl border-2 bg-white overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1"
+              href={useCase.href}
+              className="flex-shrink-0 w-[280px] md:w-auto snap-start rounded-2xl border-2 bg-white overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 block"
               style={{ borderColor: `${useCase.color}30` }}
             >
               {/* ヘッダー */}
@@ -54,7 +55,7 @@ export default function UseCaseMiniCards() {
                   この組み合わせで始める <ArrowRight size={12} />
                 </div>
               </div>
-            </div>
+            </a>
           ))}
         </div>
       </div>

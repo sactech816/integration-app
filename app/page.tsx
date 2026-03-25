@@ -4,7 +4,6 @@ import {
   Check,
   Gift,
   ArrowRight,
-  Building,
 } from 'lucide-react';
 
 // Client Components
@@ -263,41 +262,6 @@ export default function HomePage() {
 
         {/* ========== 7. Pricing ========== */}
         <PricingSection />
-
-        {/* ========== 8. 法人向けカスタマイズ ========== */}
-        <section className="py-16 bg-white border-t" style={{ borderColor: '#e5e7eb' }}>
-          <div className="max-w-4xl mx-auto px-4">
-            <div className="relative overflow-hidden rounded-3xl border-2 border-blue-200 p-8 md:p-12" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%)' }}>
-              <div className="absolute top-6 right-6 w-24 h-24 rounded-full bg-blue-500 opacity-10" />
-              <div className="absolute bottom-6 left-6 w-16 h-16 rounded-full bg-blue-400 opacity-10" />
-              <div className="relative z-10">
-                <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur px-4 py-1.5 rounded-full mb-4 shadow-sm text-blue-600 text-xs font-bold border border-blue-200">
-                  <Building size={14} />
-                  法人・チームでご利用の方へ
-                </div>
-                <h3 className="text-xl md:text-2xl font-black mb-3" style={{ color: '#5d4037' }}>
-                  ツールカスタマイズのご相談
-                </h3>
-                <p className="text-sm text-gray-600 mb-6 max-w-2xl leading-relaxed">
-                  「自社の業務フローに合わせてカスタマイズしたい」「複数店舗・拠点で統一して使いたい」<br className="hidden md:block" />
-                  そんなご要望にも、個別でご対応いたします。まずはお気軽にお問い合わせください。
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <a
-                    href="/contact?type=enterprise"
-                    className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-200 hover:-translate-y-0.5"
-                  >
-                    お問い合わせ <ArrowRight size={16} />
-                  </a>
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span>✓ オンライン相談無料</span>
-                    <span>✓ 導入事例あり</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* ========== 9. FAQ ========== */}
         <section className="py-24" style={{ backgroundColor: '#fffbf0' }}>
