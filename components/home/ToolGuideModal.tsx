@@ -5,116 +5,8 @@ import {
   X,
   ArrowRight,
   ArrowLeft,
-  UserCircle,
-  Building2,
-  Video,
-  Globe,
-  Sparkles,
-  PartyPopper,
-  Gift,
-  Gamepad2,
-  Star,
-  Ticket,
-  Stamp,
-  Mail,
-  PenTool,
-  FileText,
-  ShoppingBag,
-  Calendar,
-  GitBranch,
-  ClipboardCheck,
-  ClipboardList,
-  BookOpen,
-  Search,
-  Tv,
-  Compass,
-  type LucideIcon,
 } from 'lucide-react';
-
-type ToolItem = {
-  icon: LucideIcon;
-  iconColor: string;
-  iconBg: string;
-  name: string;
-  desc: string;
-  href: string;
-};
-
-type GuidePage = {
-  emoji: string;
-  subtitle: string;
-  description: string;
-  gradient: string;
-  tools: ToolItem[];
-};
-
-const guidePages: GuidePage[] = [
-  {
-    emoji: '👋',
-    subtitle: '知ってもらう',
-    description: 'まずは「あなたは何者？」を伝えるページを作りましょう',
-    gradient: 'from-blue-500 to-indigo-600',
-    tools: [
-      { icon: UserCircle, iconColor: 'text-indigo-600', iconBg: 'bg-indigo-100', name: 'プロフィールメーカー', desc: 'SNSリンクまとめ＆自己紹介ページ。lit.link代替に', href: '/profile' },
-      { icon: Building2, iconColor: 'text-blue-600', iconBg: 'bg-blue-100', name: 'LPメーカー', desc: '商品・サービスのランディングページを簡単作成', href: '/business' },
-      { icon: Video, iconColor: 'text-purple-600', iconBg: 'bg-purple-100', name: 'ウェビナーLPメーカー', desc: 'セミナー・イベントの告知ページを作成', href: '/webinar' },
-      { icon: Globe, iconColor: 'text-teal-600', iconBg: 'bg-teal-100', name: 'HPメーカー', desc: 'ビジネス用のホームページを手軽に作成', href: '/site' },
-    ],
-  },
-  {
-    emoji: '🧲',
-    subtitle: '集める',
-    description: '興味を引くコンテンツで、見込み客を集めましょう',
-    gradient: 'from-emerald-500 to-teal-600',
-    tools: [
-      { icon: Sparkles, iconColor: 'text-emerald-600', iconBg: 'bg-emerald-100', name: '診断クイズメーカー', desc: '性格診断・適職診断・検定クイズをAIで自動生成', href: '/quiz' },
-      { icon: PartyPopper, iconColor: 'text-pink-600', iconBg: 'bg-pink-100', name: 'エンタメ診断メーカー', desc: 'バズる診断コンテンツでSNS拡散', href: '/entertainment' },
-      { icon: Gift, iconColor: 'text-rose-600', iconBg: 'bg-rose-100', name: '福引きメーカー', desc: 'オンライン福引きでキャンペーン集客', href: '/gamification' },
-      { icon: Gamepad2, iconColor: 'text-purple-600', iconBg: 'bg-purple-100', name: 'ガチャメーカー', desc: 'ガチャ演出で楽しくエンゲージメント向上', href: '/gamification' },
-      { icon: Star, iconColor: 'text-yellow-600', iconBg: 'bg-yellow-100', name: 'スロット・スクラッチ', desc: 'スロットやスクラッチカードで来店促進', href: '/gamification' },
-      { icon: Stamp, iconColor: 'text-green-600', iconBg: 'bg-green-100', name: 'スタンプラリー', desc: 'デジタルスタンプラリーでリピーター獲得', href: '/gamification' },
-    ],
-  },
-  {
-    emoji: '💌',
-    subtitle: '育てる',
-    description: '見込み客との関係を深め、信頼を築きましょう',
-    gradient: 'from-amber-500 to-orange-600',
-    tools: [
-      { icon: Mail, iconColor: 'text-cyan-600', iconBg: 'bg-cyan-100', name: 'メルマガメーカー', desc: 'メールマガジンで定期的に情報発信', href: '/newsletter' },
-      { icon: Mail, iconColor: 'text-blue-600', iconBg: 'bg-blue-100', name: 'ステップメール', desc: '自動配信メールで見込み客を育成', href: '/step-email' },
-      { icon: PenTool, iconColor: 'text-amber-600', iconBg: 'bg-amber-100', name: 'セールスライター', desc: 'AIが売れる文章を自動生成', href: '/salesletter' },
-      { icon: FileText, iconColor: 'text-orange-600', iconBg: 'bg-orange-100', name: 'SNS投稿メーカー', desc: 'SNS投稿文・キャプションをAIで作成', href: '/sns-post' },
-    ],
-  },
-  {
-    emoji: '💰',
-    subtitle: '売る・つなげる',
-    description: '予約・申込み・決済をスムーズに。チャンスを逃さない仕組みを',
-    gradient: 'from-rose-500 to-pink-600',
-    tools: [
-      { icon: Calendar, iconColor: 'text-cyan-600', iconBg: 'bg-cyan-100', name: '予約メーカー', desc: '日程調整不要の予約受付システム', href: '/booking' },
-      { icon: ClipboardCheck, iconColor: 'text-purple-600', iconBg: 'bg-purple-100', name: '申し込みフォーム', desc: '決済付きの申し込みフォームを作成', href: '/order-form' },
-      { icon: GitBranch, iconColor: 'text-indigo-600', iconBg: 'bg-indigo-100', name: 'ファネルメーカー', desc: '集客→教育→販売の自動化フロー構築', href: '/funnel' },
-      { icon: ClipboardList, iconColor: 'text-teal-600', iconBg: 'bg-teal-100', name: '出欠メーカー', desc: 'イベント参加の出欠管理を簡単に', href: '/attendance' },
-      { icon: ShoppingBag, iconColor: 'text-green-600', iconBg: 'bg-green-100', name: 'アンケートメーカー', desc: '顧客の声を集めてサービス改善', href: '/survey' },
-    ],
-  },
-  {
-    emoji: '🔍',
-    subtitle: '調べる',
-    description: '市場のニーズを調べて、売れる商品・コンテンツを見つけましょう',
-    gradient: 'from-violet-500 to-purple-600',
-    tools: [
-      { icon: BookOpen, iconColor: 'text-orange-600', iconBg: 'bg-orange-100', name: 'Kindleリサーチ', desc: 'Kindle市場の売れ筋・キーワードを分析', href: '/kindle' },
-      { icon: ShoppingBag, iconColor: 'text-rose-600', iconBg: 'bg-rose-100', name: '楽天リサーチ', desc: '楽天市場の商品トレンドを調査', href: '/rakuten-research' },
-      { icon: Globe, iconColor: 'text-teal-600', iconBg: 'bg-teal-100', name: 'Googleリサーチ', desc: '検索トレンド・ニーズをリサーチ', href: '/google-research' },
-      { icon: Search, iconColor: 'text-red-600', iconBg: 'bg-red-100', name: 'YouTubeリサーチ', desc: 'YouTube市場の人気動画・キーワードを分析', href: '/youtube-research' },
-      { icon: Tv, iconColor: 'text-orange-600', iconBg: 'bg-orange-100', name: 'ニコニコリサーチ', desc: 'ニコニコ動画の人気コンテンツを調査', href: '/niconico-research' },
-      { icon: Globe, iconColor: 'text-orange-700', iconBg: 'bg-orange-100', name: 'Redditリサーチ', desc: '海外市場のトレンド・ニーズを調査', href: '/reddit-research' },
-    ],
-  },
-];
+import { FUNNEL_STAGES } from '@/lib/tools-data';
 
 export default function ToolGuideModal({
   isOpen,
@@ -127,8 +19,8 @@ export default function ToolGuideModal({
 
   if (!isOpen) return null;
 
-  const page = guidePages[currentPage];
-  const totalPages = guidePages.length;
+  const page = FUNNEL_STAGES[currentPage];
+  const totalPages = FUNNEL_STAGES.length;
   const isFirst = currentPage === 0;
   const isLast = currentPage === totalPages - 1;
 
@@ -176,7 +68,7 @@ export default function ToolGuideModal({
           <p className="text-sm opacity-90 mt-1">{page.description}</p>
           {/* Progress dots */}
           <div className="flex gap-1.5 mt-3">
-            {guidePages.map((_, idx) => (
+            {FUNNEL_STAGES.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setCurrentPage(idx)}

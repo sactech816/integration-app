@@ -13,6 +13,9 @@ import { AuthCTAButton, WelcomeGuideButton } from '@/components/home/HomeClientB
 import FlowChartNav from '@/components/home/FlowChartNav';
 import PricingSection from '@/components/home/PricingSection';
 import IndustryNavSection from '@/components/home/IndustryNavSection';
+import PopularToolsGrid from '@/components/home/PopularToolsGrid';
+import FunnelStageShowcase from '@/components/home/FunnelStageShowcase';
+import UseCaseMiniCards from '@/components/home/UseCaseMiniCards';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
@@ -165,7 +168,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ========== 2. 共感セクション — 課題の言語化 ========== */}
+        {/* ========== 2. 人気ツール クイックスタート ========== */}
+        <PopularToolsGrid />
+
+        {/* ========== 3. 共感セクション — 課題の言語化 ========== */}
         <section className="py-16 bg-white border-b" style={{ borderColor: '#ffedd5' }}>
           <div className="max-w-4xl mx-auto px-4 text-center">
             <h2 className="text-2xl md:text-3xl font-black mb-8" style={{ color: '#5d4037' }}>
@@ -217,7 +223,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ========== 4. 業種別ナビ ========== */}
+        {/* ========== 5. 活用事例ミニカード ========== */}
+        <UseCaseMiniCards />
+
+        {/* ========== 6. 業種別ナビ ========== */}
         <IndustryNavSection />
 
         {/* ========== 5. ホームページリバイバルプラン ========== */}
@@ -249,40 +258,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ========== 6. 使い方 3ステップ ========== */}
-        <section className="py-24" style={{ backgroundColor: '#fffbf0' }}>
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-black mb-4" style={{ color: '#5d4037' }}>使い方はシンプル</h2>
-              <p className="text-gray-600">パソコンが苦手でも大丈夫。3ステップで完成します。</p>
-            </div>
-            <div className="max-w-4xl mx-auto">
-              <div className="grid md:grid-cols-3 gap-8">
-                <div className="text-center">
-                  <div className="w-20 h-20 text-white rounded-full flex items-center justify-center text-3xl font-black mx-auto mb-6 shadow-lg" style={{ backgroundColor: '#f97316' }}>1</div>
-                  <h3 className="font-bold text-lg mb-3" style={{ color: '#5d4037' }}>テンプレートを選ぶ</h3>
-                  <p className="text-sm text-gray-600">業種や目的に合わせて、豊富なテンプレートから選択。デザインの知識は不要です。</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-20 h-20 text-white rounded-full flex items-center justify-center text-3xl font-black mx-auto mb-6 shadow-lg" style={{ backgroundColor: '#ec4899' }}>2</div>
-                  <h3 className="font-bold text-lg mb-3" style={{ color: '#5d4037' }}>文字と画像を変える</h3>
-                  <p className="text-sm text-gray-600">あなたのビジネス内容に合わせて、テキストや画像を差し替えるだけ。直感的に編集できます。</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-20 h-20 text-white rounded-full flex items-center justify-center text-3xl font-black mx-auto mb-6 shadow-lg" style={{ backgroundColor: '#84cc16' }}>3</div>
-                  <h3 className="font-bold text-lg mb-3" style={{ color: '#5d4037' }}>公開してシェア</h3>
-                  <p className="text-sm text-gray-600">あなた専用のURLが発行されます。SNSや名刺に載せて、すぐに集客スタート！</p>
-                </div>
-              </div>
-              <div className="mt-12 text-center">
-                <AuthCTAButton className="text-white text-lg font-bold py-4 px-12 rounded-full shadow-xl transition transform hover:-translate-y-1 inline-flex items-center gap-2" style={{ backgroundColor: '#f97316' }}>
-                  <Sparkles size={20} />無料で始める（30秒で登録完了）
-                </AuthCTAButton>
-                <p className="text-xs text-gray-500 mt-3">※ クレジットカード登録不要</p>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* ========== 8. ファネル別ツール紹介 ========== */}
+        <FunnelStageShowcase />
 
         {/* ========== 7. Pricing ========== */}
         <PricingSection />

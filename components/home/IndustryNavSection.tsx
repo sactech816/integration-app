@@ -41,6 +41,12 @@ export default function IndustryNavSection() {
                   <p className="text-xs text-gray-500 mt-1 hidden sm:block leading-tight">
                     {industry.description}
                   </p>
+                  <p
+                    className="text-[10px] font-bold mt-1.5 px-2 py-0.5 rounded-full inline-block"
+                    style={{ backgroundColor: `${industry.color}15`, color: industry.color }}
+                  >
+                    おすすめ {industry.matchTools.length} ツール
+                  </p>
                 </div>
                 <div className="flex items-center gap-1 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: industry.color }}>
                   詳しく見る <ArrowRight size={12} />
