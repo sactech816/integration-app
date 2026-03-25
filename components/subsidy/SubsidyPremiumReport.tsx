@@ -1,8 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, Sparkles, CheckCircle, Loader2, Crown, ClipboardCopy, Download, ChevronDown, ChevronUp, Eye, BookOpen } from 'lucide-react';
-import type { ReportContent } from '@/lib/subsidy/types';
+import {
+  FileText, Sparkles, CheckCircle, Loader2, Crown, ClipboardCopy,
+  Download, ChevronDown, ChevronUp, Eye, BookOpen, Building2, User,
+  Wrench, AlertTriangle, Target, Wallet, Calendar, MessageSquare,
+} from 'lucide-react';
+import type { ReportContent, ReportDetail } from '@/lib/subsidy/types';
 
 interface Props {
   resultId: string;
@@ -26,6 +30,23 @@ export default function SubsidyPremiumReport({
   const [report, setReport] = useState<ReportContent | null>(reportContent);
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
   const [showSample, setShowSample] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  // 追加質問フォーム
+  const [detail, setDetail] = useState<ReportDetail>({
+    companyName: '',
+    representativeName: '',
+    toolOrEquipment: '',
+    currentChallenges: '',
+    expectedEffects: '',
+    estimatedBudget: '',
+    desiredTimeline: '',
+    additionalNotes: '',
+  });
+
+  const updateDetail = <K extends keyof ReportDetail>(key: K, value: ReportDetail[K]) => {
+    setDetail((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handlePurchase = async (subsidyKey: string) => {
     if (!user) {
@@ -59,7 +80,7 @@ export default function SubsidyPremiumReport({
       const res = await fetch('/api/subsidy/generate-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resultId }),
+        body: JSON.stringify({ resultId, reportDetail: detail }),
       });
       const data = await res.json();
       if (data.report) {
@@ -81,13 +102,56 @@ export default function SubsidyPremiumReport({
     setTimeout(() => setCopiedSection(null), 2000);
   };
 
-  // 購入済み＋レポート生成済み → レポート表示
+  const handleDownloadWord = async () => {
+    if (!report) return;
+    setDownloading(true);
+    try {
+      const res = await fetch('/api/subsidy/download-docx', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resultId }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || 'ダウンロードに失敗しました');
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `補助金申請書_${report.subsidyName}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('ダウンロードに失敗しました');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  // ========================================
+  // 購入済み＋レポート生成済み → レポート表示 + Word DL
+  // ========================================
   if (reportPurchased && report) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Crown className="text-amber-500" size={20} />
-          <h2 className="text-lg font-bold text-gray-900">AI申請書ドラフト — {report.subsidyName}</h2>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-2">
+            <Crown className="text-amber-500" size={20} />
+            <h2 className="text-lg font-bold text-gray-900">AI申請書ドラフト — {report.subsidyName}</h2>
+          </div>
+          <button
+            onClick={handleDownloadWord}
+            disabled={downloading}
+            className="h-10 px-5 font-semibold text-white bg-blue-600 rounded-xl shadow-md hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center gap-2 text-sm"
+          >
+            {downloading ? (
+              <><Loader2 size={14} className="animate-spin" /> DL中...</>
+            ) : (
+              <><Download size={14} /> Word (.docx) ダウンロード</>
+            )}
+          </button>
         </div>
 
         {report.sections.map((section) => (
@@ -113,35 +177,95 @@ export default function SubsidyPremiumReport({
         ))}
 
         <p className="text-xs text-gray-400 text-center">
-          ※ AIが生成したドラフトです。実際の申請書には事業者ご自身の情報で加筆・修正してください。
+          ※ AIが生成したドラフトです。Wordファイルをダウンロードして加筆・修正してください。
         </p>
       </div>
     );
   }
 
-  // 購入済み＋レポート未生成 → 生成ボタン
+  // ========================================
+  // 購入済み＋レポート未生成 → 追加質問フォーム + 生成ボタン
+  // ========================================
   if (reportPurchased && !report) {
+    const DETAIL_FIELDS: { key: keyof ReportDetail; label: string; icon: typeof Building2; placeholder: string; type: 'input' | 'textarea' }[] = [
+      { key: 'companyName', label: '会社名・屋号', icon: Building2, placeholder: '例: 株式会社〇〇', type: 'input' },
+      { key: 'representativeName', label: '代表者名', icon: User, placeholder: '例: 山田太郎', type: 'input' },
+      { key: 'toolOrEquipment', label: '導入予定のツール・設備', icon: Wrench, placeholder: '例: クラウド会計ソフト freee、POSレジシステム（スマレジ）', type: 'input' },
+      { key: 'currentChallenges', label: '現在の課題（具体的に）', icon: AlertTriangle, placeholder: '例: 受発注管理がExcelで属人化、月末の経理処理に3日かかる', type: 'textarea' },
+      { key: 'expectedEffects', label: '期待する効果・目標', icon: Target, placeholder: '例: 経理工数50%削減、売上10%アップ、顧客管理の一元化', type: 'textarea' },
+      { key: 'estimatedBudget', label: '想定予算（総額）', icon: Wallet, placeholder: '例: 200万円', type: 'input' },
+      { key: 'desiredTimeline', label: '導入希望時期', icon: Calendar, placeholder: '例: 2026年7月〜運用開始', type: 'input' },
+      { key: 'additionalNotes', label: 'その他補足情報', icon: MessageSquare, placeholder: '例: 過去にIT導入補助金の採択実績あり。従業員のITリテラシーは低め。', type: 'textarea' },
+    ];
+
     return (
-      <div className="bg-white border border-teal-200 rounded-2xl shadow-md p-8 text-center space-y-4">
-        <Crown className="text-amber-500 mx-auto" size={32} />
-        <h3 className="text-lg font-bold text-gray-900">申請書AIドラフトを生成</h3>
-        <p className="text-sm text-gray-600">ご購入ありがとうございます。下のボタンでAIが申請書ドラフトを生成します。</p>
-        <button
-          onClick={handleGenerateReport}
-          disabled={generating}
-          className="h-14 px-8 text-lg font-semibold text-white bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl shadow-lg hover:shadow-xl hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2 mx-auto"
-        >
-          {generating ? (
-            <><Loader2 size={20} className="animate-spin" /> 生成中（1〜2分）...</>
-          ) : (
-            <><Sparkles size={20} /> 申請書を生成する</>
-          )}
-        </button>
+      <div className="bg-white border border-teal-200 rounded-2xl shadow-md overflow-hidden">
+        <div className="bg-gradient-to-r from-teal-50 to-cyan-50 px-6 py-5 border-b border-teal-200 text-center">
+          <Crown className="text-amber-500 mx-auto mb-2" size={28} />
+          <h3 className="text-lg font-bold text-gray-900">申請書AIドラフトを生成</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            より精度の高い申請書を生成するため、追加情報を入力できます
+          </p>
+          <p className="text-xs text-teal-600 font-medium mt-2">
+            ※ すべて任意項目です。空欄のまま生成することもできます
+          </p>
+        </div>
+
+        <div className="p-6 space-y-4">
+          {DETAIL_FIELDS.map((field) => (
+            <div key={field.key} className="space-y-1.5">
+              <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+                <field.icon size={14} className="text-teal-500" />
+                {field.label}
+                <span className="text-xs text-gray-400 font-normal">（任意）</span>
+              </label>
+              {field.type === 'input' ? (
+                <input
+                  type="text"
+                  value={detail[field.key] || ''}
+                  onChange={(e) => updateDetail(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                />
+              ) : (
+                <textarea
+                  value={detail[field.key] || ''}
+                  onChange={(e) => updateDetail(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                  rows={2}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none"
+                />
+              )}
+            </div>
+          ))}
+
+          <div className="pt-4 space-y-3">
+            <button
+              onClick={handleGenerateReport}
+              disabled={generating}
+              className="w-full h-14 text-lg font-semibold text-white bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl shadow-lg hover:shadow-xl hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {generating ? (
+                <><Loader2 size={20} className="animate-spin" /> AIが申請書を生成中（1〜2分）...</>
+              ) : (
+                <><Sparkles size={20} /> 申請書を生成する</>
+              )}
+            </button>
+            <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl p-3">
+              <Download size={14} className="text-blue-500 shrink-0 mt-0.5" />
+              <p className="text-xs text-blue-700">
+                生成後、Word（.docx）形式でダウンロードできます。お手元で自由に加筆・修正が可能です。
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
+  // ========================================
   // 未購入 → 購入CTA（料金・概要・サンプル付き）
+  // ========================================
   return (
     <div id="premium-report" className="bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 border border-teal-200 rounded-2xl shadow-md overflow-hidden">
       {/* ヘッダー */}
@@ -160,13 +284,30 @@ export default function SubsidyPremiumReport({
         </div>
 
         {/* 料金表示 */}
-        <div className="bg-white/90 border border-teal-200 rounded-2xl p-5 mb-6 text-center">
-          <p className="text-xs text-gray-500 mb-1">1補助金あたり</p>
-          <div className="flex items-baseline justify-center gap-1">
-            <span className="text-4xl font-extrabold text-teal-700">¥1,500</span>
-            <span className="text-sm text-gray-500">（税込）</span>
+        <div className="bg-white/90 border border-teal-200 rounded-2xl p-5 mb-6">
+          <div className="text-center mb-4">
+            <p className="text-xs text-gray-500 mb-1">1補助金あたり</p>
+            <div className="flex items-baseline justify-center gap-1">
+              <span className="text-4xl font-extrabold text-teal-700">¥1,500</span>
+              <span className="text-sm text-gray-500">（税込）</span>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">Stripe決済 / クレジットカード対応</p>
           </div>
-          <p className="text-xs text-gray-500 mt-2">Stripe決済 / クレジットカード対応</p>
+          {/* 含まれるもの */}
+          <div className="border-t border-gray-100 pt-3 space-y-1.5">
+            <p className="text-xs font-bold text-gray-700 mb-2">含まれるもの：</p>
+            {[
+              'AIによる申請書ドラフト全5章（約8〜12ページ相当）',
+              '購入後に追加の事業情報を入力可能（任意・より精度の高い申請書を生成）',
+              'Word（.docx）形式でダウンロード可能 — お手元で自由に編集',
+              '何度でも閲覧・ダウンロードOK',
+            ].map((item) => (
+              <div key={item} className="flex items-start gap-2">
+                <CheckCircle size={13} className="text-teal-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-gray-700">{item}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -210,12 +351,10 @@ export default function SubsidyPremiumReport({
 
           {showSample && (
             <div className="mt-3 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-              {/* サンプルヘッダー */}
               <div className="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
                 <p className="text-xs font-bold text-gray-500">サンプル：IT導入補助金 — 事業計画概要（抜粋）</p>
                 <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">SAMPLE</span>
               </div>
-              {/* サンプル本文 */}
               <div className="p-5 text-sm text-gray-700 leading-relaxed space-y-3 relative">
                 <h4 className="font-bold text-gray-900">1. 企業概要</h4>
                 <p>
@@ -237,7 +376,6 @@ export default function SubsidyPremiumReport({
                   上記課題を解決するため、クラウド型の業務管理システム（○○ツール）を導入し、
                   受発注〜請求〜顧客管理を一元化します。これにより...
                 </p>
-                {/* ぼかしオーバーレイ */}
                 <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent" />
               </div>
               <div className="px-5 py-3 border-t border-gray-100 text-center">

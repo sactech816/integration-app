@@ -68,11 +68,24 @@ export interface SubsidyResult {
   report_purchased: boolean;
   report_purchased_at: string | null;
   report_content: ReportContent | null;
+  report_detail: ReportDetail | null;
   report_generated_at: string | null;
   selected_subsidy: string | null;
   is_public: boolean;
   created_at: string;
   updated_at: string;
+}
+
+// 申請書AI作成用の追加情報（全項目任意）
+export interface ReportDetail {
+  companyName?: string;          // 会社名・屋号
+  representativeName?: string;   // 代表者名
+  toolOrEquipment?: string;      // 導入予定ツール/設備の名称
+  currentChallenges?: string;    // 現状の課題（具体的に）
+  expectedEffects?: string;      // 期待する効果・目標数値
+  estimatedBudget?: string;      // 想定予算
+  desiredTimeline?: string;      // 導入希望時期
+  additionalNotes?: string;      // その他補足情報
 }
 
 export interface ReportSection {

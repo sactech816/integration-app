@@ -26,6 +26,7 @@ function SubsidyResultContent() {
   const [selectedSubsidy, setSelectedSubsidy] = useState<string | null>(subsidyParam);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     supabase.auth.getUser().then(({ data: { user: u } }) => setUser(u));
     fetchResult();
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -131,6 +131,7 @@ function SubsidyContent() {
                 <span className="text-3xl font-extrabold text-teal-700">¥1,500</span>
                 <span className="text-xs text-gray-500">（税込）/ 1補助金あたり</span>
               </div>
+              <p className="text-xs text-gray-500 mt-2">Word（.docx）でダウンロード → お手元で自由に編集可能</p>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">

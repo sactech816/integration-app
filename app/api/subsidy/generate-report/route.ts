@@ -11,7 +11,7 @@ import { createAIProvider } from '@/lib/ai-provider';
 import { getAdminEmails } from '@/lib/constants';
 import { logAIUsage } from '@/lib/ai-usage';
 import { getSystemPrompt, buildFullReportPrompt } from '@/lib/subsidy/prompts';
-import type { BusinessInfo, SubsidyMaster, ReportContent, ReportSection } from '@/lib/subsidy/types';
+import type { BusinessInfo, SubsidyMaster, ReportContent, ReportSection, ReportDetail } from '@/lib/subsidy/types';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -33,10 +33,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 });
     }
 
-    const { resultId } = await request.json();
+    const { resultId, reportDetail } = await request.json();
     if (!resultId) {
       return NextResponse.json({ error: '診断結果IDが必要です' }, { status: 400 });
     }
+
+    const detail: ReportDetail | null = reportDetail || null;
 
     const adminEmails = getAdminEmails();
     const isAdmin = adminEmails.some(e => user.email?.toLowerCase() === e.toLowerCase());
@@ -84,6 +86,17 @@ export async function POST(request: NextRequest) {
     const subsidyMaster = subsidyData as SubsidyMaster;
     const businessInfo = row.business_info as BusinessInfo;
 
+    // 追加情報をDBに保存（入力があれば）
+    if (detail) {
+      const detailClient = isAdmin && row.user_id !== user.id
+        ? getServiceClient() || supabase
+        : supabase;
+      await detailClient
+        .from('subsidy_results')
+        .update({ report_detail: detail, updated_at: new Date().toISOString() })
+        .eq('id', resultId);
+    }
+
     // AI生成
     const provider = createAIProvider({
       preferProvider: 'gemini',
@@ -94,7 +107,8 @@ export async function POST(request: NextRequest) {
     const userPrompt = buildFullReportPrompt(
       businessInfo,
       subsidyMaster.name,
-      subsidyMaster.application_sections
+      subsidyMaster.application_sections,
+      detail
     );
 
     const aiResponse = await provider.generate({

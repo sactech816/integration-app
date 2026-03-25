@@ -2,7 +2,7 @@
 // 補助金申請書AI生成用プロンプト
 // =============================================
 
-import type { BusinessInfo, ApplicationSectionDef } from './types';
+import type { BusinessInfo, ApplicationSectionDef, ReportDetail } from './types';
 
 /**
  * 申請書セクション生成用のシステムプロンプト
@@ -77,7 +77,8 @@ ${sectionList}
 export function buildFullReportPrompt(
   businessInfo: BusinessInfo,
   subsidyName: string,
-  sections: ApplicationSectionDef[]
+  sections: ApplicationSectionDef[],
+  reportDetail?: ReportDetail | null
 ): string {
   const businessContext = `
 【事業者情報】
@@ -92,6 +93,23 @@ export function buildFullReportPrompt(
 - 設備投資予定: ${businessInfo.hasEquipmentPlan ? 'あり' : 'なし'}
 - 小規模事業者: ${businessInfo.isSmallBusiness ? 'はい' : 'いいえ'}`;
 
+  // 追加情報（入力がある項目のみ含める）
+  let detailContext = '';
+  if (reportDetail) {
+    const lines: string[] = [];
+    if (reportDetail.companyName) lines.push(`- 会社名・屋号: ${reportDetail.companyName}`);
+    if (reportDetail.representativeName) lines.push(`- 代表者名: ${reportDetail.representativeName}`);
+    if (reportDetail.toolOrEquipment) lines.push(`- 導入予定ツール・設備: ${reportDetail.toolOrEquipment}`);
+    if (reportDetail.currentChallenges) lines.push(`- 現在の課題: ${reportDetail.currentChallenges}`);
+    if (reportDetail.expectedEffects) lines.push(`- 期待する効果・目標: ${reportDetail.expectedEffects}`);
+    if (reportDetail.estimatedBudget) lines.push(`- 想定予算: ${reportDetail.estimatedBudget}`);
+    if (reportDetail.desiredTimeline) lines.push(`- 導入希望時期: ${reportDetail.desiredTimeline}`);
+    if (reportDetail.additionalNotes) lines.push(`- 補足情報: ${reportDetail.additionalNotes}`);
+    if (lines.length > 0) {
+      detailContext = `\n\n【追加の事業者情報】\n${lines.join('\n')}`;
+    }
+  }
+
   const sectionDefs = sections
     .map((s, i) => `${i + 1}. ${s.title}: ${s.description}`)
     .join('\n');
@@ -100,7 +118,7 @@ export function buildFullReportPrompt(
 
 【対象補助金】${subsidyName}
 
-${businessContext}
+${businessContext}${detailContext}
 
 【生成するセクション】
 ${sectionDefs}
@@ -116,5 +134,9 @@ ${sectionDefs}
 ]
 \`\`\`
 
-全セクションを一貫した内容で生成し、セクション間で矛盾がないようにしてください。`;
+全セクションを一貫した内容で生成し、セクション間で矛盾がないようにしてください。
+${reportDetail?.companyName ? `会社名「${reportDetail.companyName}」を申請書内で使用してください。` : ''}
+${reportDetail?.toolOrEquipment ? `導入するツール・設備「${reportDetail.toolOrEquipment}」を具体的に記載してください。` : ''}
+${reportDetail?.currentChallenges ? '現在の課題を事業計画の中核として位置づけ、導入効果との対比を明確にしてください。' : ''}
+${reportDetail?.estimatedBudget ? `想定予算「${reportDetail.estimatedBudget}」を経費明細に反映してください。` : ''}`;
 }
