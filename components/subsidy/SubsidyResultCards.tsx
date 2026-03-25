@@ -85,7 +85,13 @@ export default function SubsidyResultCards({ matches, resultId, onPurchase }: Pr
               <div className="flex flex-col sm:flex-row gap-2 pt-2">
                 {onPurchase && resultId && (
                   <button
-                    onClick={() => onPurchase(match.subsidyKey)}
+                    onClick={() => {
+                      onPurchase(match.subsidyKey);
+                      // プレミアムレポートセクションへスクロール
+                      setTimeout(() => {
+                        document.getElementById('premium-report')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 100);
+                    }}
                     className="flex-1 h-12 px-4 font-semibold text-white bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl shadow-md hover:shadow-lg hover:brightness-110 transition-all flex items-center justify-center gap-2"
                   >
                     <FileText size={16} />

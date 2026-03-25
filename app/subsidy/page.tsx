@@ -37,7 +37,6 @@ function SubsidyContent() {
     try {
       // 1. スコアリング計算
       const scored = calculateSubsidyMatches(businessInfo, subsidyMaster);
-      setMatches(scored);
 
       // 2. API経由で保存
       const res = await fetch('/api/subsidy/save', {
@@ -50,9 +49,12 @@ function SubsidyContent() {
         }),
       });
       const saveData = await res.json();
+
+      // 3. resultIdとmatchesを同時にセット（ボタンが正しく表示されるように）
       if (saveData.id) {
         setResultId(saveData.id);
       }
+      setMatches(scored);
     } catch (e) {
       console.error('診断エラー:', e);
       alert('診断中にエラーが発生しました');
@@ -119,14 +121,23 @@ function SubsidyContent() {
                 診断後、AIが補助金申請書のドラフトを自動生成
               </h2>
               <p className="text-sm text-gray-600">
-                事業情報をもとに、申請書の主要セクション（事業計画・経費明細・スケジュール等）をAIが作成します
+                事業情報をもとに、申請書の主要セクション（全5章・約8〜12ページ相当）をAIが作成します
               </p>
             </div>
+
+            {/* 料金 */}
+            <div className="bg-white/90 border border-teal-200 rounded-xl p-4 mb-5 text-center">
+              <div className="flex items-baseline justify-center gap-1">
+                <span className="text-3xl font-extrabold text-teal-700">¥1,500</span>
+                <span className="text-xs text-gray-500">（税込）/ 1補助金あたり</span>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
               {[
                 { icon: FileText, title: '事業計画', desc: '現状分析と成長戦略', color: 'text-teal-600', bg: 'bg-teal-100' },
                 { icon: Sparkles, title: '事業内容', desc: '補助事業の具体的計画', color: 'text-cyan-600', bg: 'bg-cyan-100' },
-                { icon: TrendingUp, title: '事業効果', desc: '期待される定量的効果', color: 'text-blue-600', bg: 'bg-blue-100' },
+                { icon: TrendingUp, title: '事業効果', desc: '定量的KPI・効果見込', color: 'text-blue-600', bg: 'bg-blue-100' },
                 { icon: Award, title: '経費・計画', desc: '経費明細・スケジュール', color: 'text-indigo-600', bg: 'bg-indigo-100' },
               ].map((f) => (
                 <div key={f.title} className="bg-white/80 border border-white rounded-xl p-3 text-center">
@@ -138,6 +149,9 @@ function SubsidyContent() {
                 </div>
               ))}
             </div>
+            <p className="text-center text-xs text-gray-400">
+              ※ まずは無料診断を行い、結果から申請書AI作成をご利用いただけます
+            </p>
           </div>
         )}
 
