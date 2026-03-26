@@ -849,13 +849,19 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
       setListId(c.list_id);
       setSubject(c.subject);
       setPreviewText(c.preview_text || '');
-      // ヘッダ/フッタ/本文が個別保存されていれば復元、なければ結合HTMLのみ
-      if (c.header_html !== undefined && c.header_html !== null) setHeaderHtml(c.header_html);
-      if (c.footer_html !== undefined && c.footer_html !== null) setFooterHtml(c.footer_html);
+      // ヘッダ/フッタ/本文が個別保存されていれば復元
       if (c.body_html) {
+        // v3形式: 個別保存あり
         setHtmlContent(c.body_html);
+        setHeaderHtml(c.header_html || '');
+        setFooterHtml(c.footer_html || '');
       } else {
+        // 旧形式: html_contentに結合済み → 本文として扱い、ヘッダ/フッタは空にする
+        // （リストのデフォルトヘッダ/フッタはuseEffectで適用されるが、
+        //   既存キャンペーンでは重複防止のため適用しない）
         setHtmlContent(c.html_content || '');
+        setHeaderHtml('');
+        setFooterHtml('');
       }
       if (c.text_content) setPlainTextContent(c.text_content);
       setStatus(c.status);
@@ -1465,17 +1471,14 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                   />
                 ) : (
                   <div className="border border-gray-200 rounded-xl overflow-hidden bg-white min-h-[80px]">
-                    {headerHtml ? (
-                      <div
-                        ref={headerRef}
-                        contentEditable={!isSent}
-                        suppressContentEditableWarning
-                        onInput={handleHeaderInput}
-                        className="min-h-[80px] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-inset rounded-xl"
-                      />
-                    ) : (
-                      <p className="p-4 text-sm text-gray-400">ヘッダーが未設定です。テンプレートを選択すると自動設定されます。</p>
-                    )}
+                    <div
+                      ref={headerRef}
+                      contentEditable={!isSent}
+                      suppressContentEditableWarning
+                      onInput={handleHeaderInput}
+                      data-placeholder="ヘッダーを入力（任意）。テンプレート選択で自動設定もできます。"
+                      className={`min-h-[80px] p-4 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-inset rounded-xl ${!headerHtml ? 'empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:text-sm' : ''}`}
+                    />
                   </div>
                 )}
               </div>
@@ -1528,17 +1531,14 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                   />
                 ) : (
                   <div className="border border-gray-200 rounded-xl overflow-hidden bg-white min-h-[200px]">
-                    {htmlContent ? (
-                      <div
-                        ref={bodyRef}
-                        contentEditable={!isSent}
-                        suppressContentEditableWarning
-                        onInput={handleBodyInput}
-                        className="min-h-[200px] p-4 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-inset rounded-xl"
-                      />
-                    ) : (
-                      <p className="p-4 text-sm text-gray-400">本文が未入力です。テンプレートを選択するか、HTMLモードで直接入力してください。</p>
-                    )}
+                    <div
+                      ref={bodyRef}
+                      contentEditable={!isSent}
+                      suppressContentEditableWarning
+                      onInput={handleBodyInput}
+                      data-placeholder="本文を入力してください。テンプレート選択やHTMLモードでも編集できます。"
+                      className={`min-h-[200px] p-4 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-inset rounded-xl ${!htmlContent ? 'empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:text-sm' : ''}`}
+                    />
                   </div>
                 )}
 
@@ -1638,17 +1638,14 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                   />
                 ) : (
                   <div className="border border-gray-200 rounded-xl overflow-hidden bg-white min-h-[80px]">
-                    {footerHtml ? (
-                      <div
-                        ref={footerRef}
-                        contentEditable={!isSent}
-                        suppressContentEditableWarning
-                        onInput={handleFooterInput}
-                        className="min-h-[80px] focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-inset rounded-xl"
-                      />
-                    ) : (
-                      <p className="p-4 text-sm text-gray-400">フッターが未設定です。テンプレートを選択すると自動設定されます。</p>
-                    )}
+                    <div
+                      ref={footerRef}
+                      contentEditable={!isSent}
+                      suppressContentEditableWarning
+                      onInput={handleFooterInput}
+                      data-placeholder="フッターを入力（任意）。テンプレート選択で自動設定もできます。"
+                      className={`min-h-[80px] p-4 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-inset rounded-xl ${!footerHtml ? 'empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:text-sm' : ''}`}
+                    />
                   </div>
                 )}
               </div>
