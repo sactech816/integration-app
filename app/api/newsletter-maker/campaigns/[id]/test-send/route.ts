@@ -60,16 +60,28 @@ export async function POST(
       return NextResponse.json({ error: '件名と本文は必須です' }, { status: 400 });
     }
 
-    const fromName = campaign.newsletter_lists?.from_name || '集客メーカー';
+    const rawFromName = campaign.newsletter_lists?.from_name || '集客メーカー';
     const rawFromEmail = campaign.newsletter_lists?.from_email || process.env.RESEND_FROM_EMAIL || 'noreply@makers.tokyo';
     // メールアドレスから非ASCII文字を除去（全角文字の混入対策）
     const fromEmail = rawFromEmail.replace(/[^\x00-\x7F]/g, '').trim();
+    // 差出人名から < > を除去（fromフォーマット破壊防止）
+    const fromName = rawFromName.replace(/[<>]/g, '').trim();
+
+    if (!fromEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fromEmail)) {
+      console.error('[Newsletter Test Send] Invalid fromEmail:', { rawFromEmail, fromEmail });
+      return NextResponse.json({
+        error: `差出人メールアドレスが不正です: "${rawFromEmail}" → "${fromEmail}"。リスト設定を確認してください。`,
+      }, { status: 400 });
+    }
+
+    // Resendのfromフィールド: 差出人名がある場合は "Name <email>" 形式、なければメールのみ
+    const fromField = fromName ? `${fromName} <${fromEmail}>` : fromEmail;
 
     // テスト送信であることを件名に明示
     const testSubject = `【テスト送信】${campaign.subject}`;
 
     const emailPayload: { from: string; to: string[]; subject: string; html: string; text?: string } = {
-      from: `${fromName} <${fromEmail}>`,
+      from: fromField,
       to: [testEmail],
       subject: testSubject,
       html: campaign.html_content,

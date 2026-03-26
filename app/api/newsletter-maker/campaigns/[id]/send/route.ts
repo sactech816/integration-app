@@ -73,10 +73,18 @@ export async function POST(
     }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
-    const fromName = campaign.newsletter_lists?.from_name || '集客メーカー';
+    const rawFromName = campaign.newsletter_lists?.from_name || '集客メーカー';
     const rawFromEmail = campaign.newsletter_lists?.from_email || process.env.RESEND_FROM_EMAIL || 'noreply@makers.tokyo';
-    // メールアドレスから非ASCII文字を除去（全角文字の混入対策）
     const fromEmail = rawFromEmail.replace(/[^\x00-\x7F]/g, '').trim();
+    const fromName = rawFromName.replace(/[<>]/g, '').trim();
+
+    if (!fromEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fromEmail)) {
+      return NextResponse.json({
+        error: `差出人メールアドレスが不正です。リスト設定を確認してください。`,
+      }, { status: 400 });
+    }
+
+    const fromField = fromName ? `${fromName} <${fromEmail}>` : fromEmail;
 
     // 配信停止リンクを含むHTML
     const addUnsubscribeLink = (html: string, email: string) => {
@@ -92,7 +100,7 @@ export async function POST(
       const batch = subscribers.slice(i, i + batchSize);
       const emails = batch.map((sub) => {
         const emailPayload: { from: string; to: string[]; subject: string; html: string; text?: string } = {
-          from: `${fromName} <${fromEmail}>`,
+          from: fromField,
           to: [sub.email],
           subject: campaign.subject,
           html: addUnsubscribeLink(campaign.html_content, sub.email),
