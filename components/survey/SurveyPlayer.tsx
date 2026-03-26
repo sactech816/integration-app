@@ -155,7 +155,7 @@ export default function SurveyPlayer({ survey, isPreview = false }: SurveyPlayer
               {nameMode !== 'hidden' && (
                 <div>
                   <label className="block text-sm font-bold text-gray-600 mb-1">
-                    お名前 {nameMode === 'required' && <span className="text-red-500">*</span>}
+                    お名前 {nameMode === 'required' ? <span className="text-red-500 text-xs font-bold">（必須）</span> : <span className="text-gray-400 text-xs font-normal">（任意）</span>}
                   </label>
                   <input
                     type="text"
@@ -172,7 +172,7 @@ export default function SurveyPlayer({ survey, isPreview = false }: SurveyPlayer
               {emailMode !== 'hidden' && (
                 <div>
                   <label className="block text-sm font-bold text-gray-600 mb-1">
-                    メールアドレス {emailMode === 'required' && <span className="text-red-500">*</span>}
+                    メールアドレス {emailMode === 'required' ? <span className="text-red-500 text-xs font-bold">（必須）</span> : <span className="text-gray-400 text-xs font-normal">（任意）</span>}
                   </label>
                   <input
                     type="email"
@@ -273,7 +273,7 @@ function QuestionBlock({
           {index + 1}
         </span>
         {question.text}
-        {isRequired && <span className="text-red-500 ml-1">*</span>}
+        {isRequired ? <span className="text-red-500 text-xs font-bold ml-1">（必須）</span> : <span className="text-gray-400 text-xs font-normal ml-1">（任意）</span>}
       </h3>
 
       {/* テキスト入力 */}
