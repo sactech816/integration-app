@@ -3,6 +3,7 @@ import { personalityTemplates } from './personality';
 import { careerTemplates } from './career';
 import { loveTemplates } from './love';
 import { businessTemplates } from './business';
+import { giftMarketingTemplates } from './gift-marketing';
 
 /**
  * 診断クイズ用テンプレート（全カテゴリ統合）
@@ -12,6 +13,7 @@ export const quizTemplates: QuizTemplate[] = [
   ...careerTemplates,
   ...loveTemplates,
   ...businessTemplates,
+  ...giftMarketingTemplates,
 ];
 
 // 個別エクスポート
@@ -20,6 +22,7 @@ export {
   careerTemplates,
   loveTemplates,
   businessTemplates,
+  giftMarketingTemplates,
 };
 
 // カテゴリ別取得関数

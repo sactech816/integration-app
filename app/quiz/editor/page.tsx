@@ -13,6 +13,7 @@ function QuizEditorContent() {
   const searchParams = useSearchParams();
   const editId = searchParams.get('id');
   const newParam = searchParams.get('new'); // 新規作成パラメータ
+  const templateParam = searchParams.get('template'); // テンプレートID
 
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [showAuth, setShowAuth] = useState(false);
@@ -41,8 +42,10 @@ function QuizEditorContent() {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user || null);
 
-      // newパラメータがある場合は新規作成モード（編集データをリセット）
-      if (newParam) {
+      // テンプレートパラメータがある場合はテンプレート適用モード
+      if (templateParam) {
+        setEditingQuiz({ templateId: templateParam } as any);
+      } else if (newParam) {
         setEditingQuiz(null);
       } else if (editId) {
         const { data } = await supabase
@@ -63,7 +66,7 @@ function QuizEditorContent() {
     return () => {
       subscription?.unsubscribe();
     };
-  }, [editId, newParam]);
+  }, [editId, newParam, templateParam]);
 
   const handleLogout = async () => {
     if (supabase) {

@@ -22,6 +22,7 @@ import { trackGenerateComplete, trackGenerateError } from '@/lib/gtag';
 import { useUserContents } from '@/lib/hooks/useUserContents';
 import ContentLinker from '@/components/shared/ContentLinker';
 import { getContentUrl, type ContentRef, type LinkableContentType } from '@/lib/content-links';
+import { quizTemplates } from '@/constants/templates/quiz';
 
 // --- 用途別テンプレート（プリセットデータ）---
 const USE_CASE_PRESETS = {
@@ -210,9 +211,38 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
         window.scrollTo(0, 0);
         
         // 用途別テンプレートIDが渡された場合、テンプレートを適用
-        if (initialData?.templateId && USE_CASE_PRESETS[initialData.templateId as keyof typeof USE_CASE_PRESETS]) {
-            const preset = USE_CASE_PRESETS[initialData.templateId as keyof typeof USE_CASE_PRESETS];
-            setForm({ ...defaultForm, ...preset });
+        if (initialData?.templateId) {
+            const presetKey = initialData.templateId as keyof typeof USE_CASE_PRESETS;
+            if (USE_CASE_PRESETS[presetKey]) {
+                const preset = USE_CASE_PRESETS[presetKey];
+                setForm({ ...defaultForm, ...preset });
+            } else {
+                // quizTemplates（gift-marketing等）から検索
+                const tmpl = quizTemplates.find(t => t.id === initialData.templateId);
+                if (tmpl) {
+                    const templateResult = { link_url: "", link_text: "", line_url: "", line_text: "", qr_url: "", qr_text: "" };
+                    setForm({
+                        ...defaultForm,
+                        title: tmpl.name,
+                        description: tmpl.description,
+                        mode: tmpl.mode,
+                        category: tmpl.category,
+                        color: tmpl.color,
+                        questions: tmpl.questions.map(q => ({
+                            ...q,
+                            options: q.options.map(o => ({ text: o.text, score: o.score })),
+                        })),
+                        results: tmpl.results.map(r => ({
+                            type: r.type,
+                            title: r.title,
+                            description: r.description,
+                            ...templateResult,
+                            ...(r.ctaUrl ? { link_url: r.ctaUrl } : {}),
+                            ...(r.ctaText ? { link_text: r.ctaText } : {}),
+                        })),
+                    });
+                }
+            }
         }
     }, []);
 
