@@ -101,12 +101,13 @@ export async function PATCH(
       .select()
       .single();
 
-    // 新カラム関連でエラーの場合、新カラムを除いてリトライ
-    if (error) {
-      console.warn('[Newsletter Campaign Update] First attempt failed:', error.message, '- retrying without new columns');
+    // カラム未存在エラーの場合、拡張カラムを除いてリトライ
+    if (error && error.message?.includes('schema cache')) {
+      console.warn('[Newsletter Campaign Update] First attempt failed:', error.message, '- retrying without extended columns');
       delete updateData.header_html;
       delete updateData.footer_html;
       delete updateData.body_html;
+      delete updateData.text_content;
       ({ data, error } = await supabase
         .from('newsletter_campaigns')
         .update(updateData)
