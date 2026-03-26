@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const { userId, listId, subject, previewText, htmlContent } = await request.json();
+    const { userId, listId, subject, previewText, htmlContent, textContent, headerHtml, footerHtml, bodyHtml } = await request.json();
 
     if (!userId || !listId || !subject) {
       return NextResponse.json({ error: 'userId, listId, subject は必須です' }, { status: 400 });
@@ -91,6 +91,10 @@ export async function POST(request: NextRequest) {
         subject,
         preview_text: previewText || null,
         html_content: htmlContent || '',
+        text_content: textContent || null,
+        header_html: headerHtml || null,
+        footer_html: footerHtml || null,
+        body_html: bodyHtml || null,
         status: 'draft',
       })
       .select()

@@ -837,7 +837,14 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
       setListId(c.list_id);
       setSubject(c.subject);
       setPreviewText(c.preview_text || '');
-      setHtmlContent(c.html_content || '');
+      // ヘッダ/フッタ/本文が個別保存されていれば復元、なければ結合HTMLのみ
+      if (c.header_html !== undefined && c.header_html !== null) setHeaderHtml(c.header_html);
+      if (c.footer_html !== undefined && c.footer_html !== null) setFooterHtml(c.footer_html);
+      if (c.body_html) {
+        setHtmlContent(c.body_html);
+      } else {
+        setHtmlContent(c.html_content || '');
+      }
       if (c.text_content) setPlainTextContent(c.text_content);
       setStatus(c.status);
       setSentCount(c.sent_count || 0);
@@ -876,12 +883,18 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
           [headerHtml, currentHtml.startsWith('<') ? currentHtml : textToHtml(currentHtml), footerHtml].filter(Boolean).join('\n')
         );
         const textContent = bodyViewMode === 'text' && plainTextContent ? plainTextContent : htmlToPlainText(finalHtml);
-        const body = { userId: user.id, listId, subject, previewText, htmlContent: finalHtml, textContent };
+        const bodyPayload = {
+          userId: user.id, listId, subject, previewText,
+          htmlContent: finalHtml, textContent,
+          headerHtml: headerHtml || null,
+          footerHtml: footerHtml || null,
+          bodyHtml: currentHtml,
+        };
         if (savedCampaignId) {
           await fetch(`/api/newsletter-maker/campaigns/${savedCampaignId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
+            body: JSON.stringify(bodyPayload),
           });
           setSaveSuccess(true);
           setTimeout(() => setSaveSuccess(false), 2000);
@@ -889,7 +902,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
           const res = await fetch('/api/newsletter-maker/campaigns', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
+            body: JSON.stringify(bodyPayload),
           });
           if (res.ok) {
             const data = await res.json();
@@ -917,7 +930,13 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
     await fetch(`/api/newsletter-maker/campaigns/${savedCampaignId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.id, listId, subject, previewText, htmlContent: finalHtml, textContent }),
+      body: JSON.stringify({
+        userId: user.id, listId, subject, previewText,
+        htmlContent: finalHtml, textContent,
+        headerHtml: headerHtml || null,
+        footerHtml: footerHtml || null,
+        bodyHtml: currentHtml,
+      }),
     });
 
     const res = await fetch(`/api/newsletter-maker/campaigns/${savedCampaignId}/send`, {

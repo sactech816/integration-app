@@ -56,7 +56,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { userId, subject, previewText, htmlContent, textContent, listId } = body;
+    const { userId, subject, previewText, htmlContent, textContent, listId, headerHtml, footerHtml, bodyHtml } = body;
 
     if (!userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 });
@@ -89,6 +89,9 @@ export async function PATCH(
     if (htmlContent !== undefined) updateData.html_content = htmlContent;
     if (textContent !== undefined) updateData.text_content = textContent;
     if (listId !== undefined) updateData.list_id = listId;
+    if (headerHtml !== undefined) updateData.header_html = headerHtml;
+    if (footerHtml !== undefined) updateData.footer_html = footerHtml;
+    if (bodyHtml !== undefined) updateData.body_html = bodyHtml;
 
     const { data, error } = await supabase
       .from('newsletter_campaigns')

@@ -61,19 +61,15 @@ export async function POST(
     }
 
     const fromName = campaign.newsletter_lists?.from_name || '集客メーカー';
-    const fromEmail = campaign.newsletter_lists?.from_email || process.env.RESEND_FROM_EMAIL || 'noreply@makers.tokyo';
-
-    // 非ASCII文字を含む差出人名はMIMEエンコード（RFC 2047）
-    const hasNonAscii = /[^\x00-\x7F]/.test(fromName);
-    const encodedFromName = hasNonAscii
-      ? `=?UTF-8?B?${Buffer.from(fromName).toString('base64')}?=`
-      : fromName;
+    const rawFromEmail = campaign.newsletter_lists?.from_email || process.env.RESEND_FROM_EMAIL || 'noreply@makers.tokyo';
+    // メールアドレスから非ASCII文字を除去（全角文字の混入対策）
+    const fromEmail = rawFromEmail.replace(/[^\x00-\x7F]/g, '').trim();
 
     // テスト送信であることを件名に明示
     const testSubject = `【テスト送信】${campaign.subject}`;
 
     const emailPayload: { from: string; to: string[]; subject: string; html: string; text?: string } = {
-      from: `${encodedFromName} <${fromEmail}>`,
+      from: `${fromName} <${fromEmail}>`,
       to: [testEmail],
       subject: testSubject,
       html: campaign.html_content,

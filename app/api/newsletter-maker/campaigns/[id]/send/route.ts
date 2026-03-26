@@ -74,13 +74,9 @@ export async function POST(
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
     const fromName = campaign.newsletter_lists?.from_name || '集客メーカー';
-    const fromEmail = campaign.newsletter_lists?.from_email || process.env.RESEND_FROM_EMAIL || 'noreply@makers.tokyo';
-
-    // 非ASCII文字を含む差出人名はMIMEエンコード（RFC 2047）
-    const hasNonAscii = /[^\x00-\x7F]/.test(fromName);
-    const encodedFromName = hasNonAscii
-      ? `=?UTF-8?B?${Buffer.from(fromName).toString('base64')}?=`
-      : fromName;
+    const rawFromEmail = campaign.newsletter_lists?.from_email || process.env.RESEND_FROM_EMAIL || 'noreply@makers.tokyo';
+    // メールアドレスから非ASCII文字を除去（全角文字の混入対策）
+    const fromEmail = rawFromEmail.replace(/[^\x00-\x7F]/g, '').trim();
 
     // 配信停止リンクを含むHTML
     const addUnsubscribeLink = (html: string, email: string) => {
@@ -96,7 +92,7 @@ export async function POST(
       const batch = subscribers.slice(i, i + batchSize);
       const emails = batch.map((sub) => {
         const emailPayload: { from: string; to: string[]; subject: string; html: string; text?: string } = {
-          from: `${encodedFromName} <${fromEmail}>`,
+          from: `${fromName} <${fromEmail}>`,
           to: [sub.email],
           subject: campaign.subject,
           html: addUnsubscribeLink(campaign.html_content, sub.email),
