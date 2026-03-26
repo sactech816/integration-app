@@ -90,13 +90,24 @@ export async function GET(request: Request) {
         responses?.forEach((response) => {
           const answer = response.answers?.[question.id];
           if (answer !== undefined && answer !== null && answer !== '') {
-            const key = String(answer);
-            counts[key] = (counts[key] || 0) + 1;
-            total++;
+            // 複数選択の場合（配列）
+            if (Array.isArray(answer)) {
+              if (answer.length > 0) {
+                total++;
+                answer.forEach((a: string) => {
+                  const key = String(a);
+                  counts[key] = (counts[key] || 0) + 1;
+                });
+              }
+            } else {
+              const key = String(answer);
+              counts[key] = (counts[key] || 0) + 1;
+              total++;
 
-            // 評価式の場合は合計も計算
-            if (question.type === 'rating' && typeof answer === 'number') {
-              sum += answer;
+              // 評価式の場合は合計も計算
+              if (question.type === 'rating' && typeof answer === 'number') {
+                sum += answer;
+              }
             }
           }
         });

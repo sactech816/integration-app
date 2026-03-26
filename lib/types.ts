@@ -902,6 +902,7 @@ export interface SurveyQuestion {
   type: SurveyQuestionType;
   required?: boolean;
   options?: string[]; // choice タイプの場合のみ
+  allowMultiple?: boolean; // choice タイプの場合のみ: 複数選択を許可
   maxRating?: number; // rating タイプの場合のみ（デフォルト: 5）
   placeholder?: string; // text タイプの場合のみ
 }
@@ -914,6 +915,8 @@ export interface SurveySettings {
   theme?: string; // テーマID（teal, blue, purple, rose, orange, green）
   primaryColor?: string;
   headerImage?: string; // ヘッダー画像URL
+  respondentNameMode?: 'required' | 'optional' | 'hidden';  // デフォルト: 'required'
+  respondentEmailMode?: 'required' | 'optional' | 'hidden'; // デフォルト: 'required'
 }
 
 // アンケートデータ

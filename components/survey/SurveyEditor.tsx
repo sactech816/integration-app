@@ -423,6 +423,15 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
     setForm({ ...form, questions: newQuestions });
   };
 
+  const moveQuestion = (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= form.questions.length) return;
+    const newQuestions = [...form.questions];
+    [newQuestions[index], newQuestions[newIndex]] = [newQuestions[newIndex], newQuestions[index]];
+    setForm({ ...form, questions: newQuestions });
+    resetPreview();
+  };
+
   const updateQuestion = (index: number, updates: Partial<SurveyQuestion>) => {
     const newQuestions = [...form.questions];
     newQuestions[index] = { ...newQuestions[index], ...updates };
@@ -935,12 +944,31 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
                           <option value="text">自由記述</option>
                         </select>
                       </div>
-                      <button
-                        onClick={() => removeQuestion(i)}
-                        className="text-gray-300 hover:text-red-500 p-1"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => moveQuestion(i, 'up')}
+                          disabled={i === 0}
+                          className={`p-1 rounded ${i === 0 ? 'text-gray-200 cursor-not-allowed' : 'text-gray-400 hover:text-teal-600 hover:bg-teal-50'}`}
+                          title="上に移動"
+                        >
+                          <ChevronUp size={16} />
+                        </button>
+                        <button
+                          onClick={() => moveQuestion(i, 'down')}
+                          disabled={i === form.questions.length - 1}
+                          className={`p-1 rounded ${i === form.questions.length - 1 ? 'text-gray-200 cursor-not-allowed' : 'text-gray-400 hover:text-teal-600 hover:bg-teal-50'}`}
+                          title="下に移動"
+                        >
+                          <ChevronDown size={16} />
+                        </button>
+                        <button
+                          onClick={() => removeQuestion(i)}
+                          className="text-red-300 hover:text-red-600 hover:bg-red-50 p-1 rounded"
+                          title="質問を削除"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
 
                     <input
@@ -953,6 +981,20 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
                     {/* 選択式オプション */}
                     {q.type === "choice" && (
                       <div className="space-y-2">
+                        {/* 複数選択トグル */}
+                        <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer select-none mb-1">
+                          <input
+                            type="checkbox"
+                            checked={q.allowMultiple || false}
+                            onChange={(e) => {
+                              updateQuestion(i, { allowMultiple: e.target.checked });
+                              resetPreview();
+                            }}
+                            className="w-4 h-4 rounded"
+                            style={{ accentColor: '#0d9488' }}
+                          />
+                          <span className="font-medium">複数選択を許可する</span>
+                        </label>
                         {q.options?.map((opt, j) => (
                           <div
                             key={j}
@@ -1071,6 +1113,56 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
                 }}
                 placeholder="回答完了後に表示されるメッセージ"
               />
+
+              {/* 回答者情報の収集設定 */}
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl mb-4">
+                <h4 className="font-bold text-blue-900 flex items-center gap-2 mb-3">
+                  <Users size={18} className="text-blue-600" /> 回答者情報の収集設定
+                </h4>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-blue-800 mb-1">お名前</label>
+                    <select
+                      value={form.settings?.respondentNameMode || 'required'}
+                      onChange={(e) => {
+                        setForm({
+                          ...form,
+                          settings: { ...form.settings, respondentNameMode: e.target.value as 'required' | 'optional' | 'hidden' }
+                        });
+                        resetPreview();
+                      }}
+                      className="w-full border border-gray-300 rounded-lg p-2 text-sm text-gray-900 bg-white"
+                    >
+                      <option value="required">必須</option>
+                      <option value="optional">任意（入力しなくてもOK）</option>
+                      <option value="hidden">収集しない</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-blue-800 mb-1">メールアドレス</label>
+                    <select
+                      value={form.settings?.respondentEmailMode || 'required'}
+                      onChange={(e) => {
+                        setForm({
+                          ...form,
+                          settings: { ...form.settings, respondentEmailMode: e.target.value as 'required' | 'optional' | 'hidden' }
+                        });
+                        resetPreview();
+                      }}
+                      className="w-full border border-gray-300 rounded-lg p-2 text-sm text-gray-900 bg-white"
+                    >
+                      <option value="required">必須</option>
+                      <option value="optional">任意（入力しなくてもOK）</option>
+                      <option value="hidden">収集しない</option>
+                    </select>
+                  </div>
+                </div>
+                {(form.settings?.respondentEmailMode === 'hidden') && (
+                  <p className="text-xs text-amber-700 mt-2 flex items-center gap-1 bg-amber-50 p-2 rounded-lg border border-amber-200">
+                    ⚠️ メールを「収集しない」にすると、回答者への確認メールは送信されません。
+                  </p>
+                )}
+              </div>
 
               {/* 投票モード設定 */}
               <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl flex items-start justify-between mb-4">

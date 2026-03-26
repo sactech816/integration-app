@@ -13,25 +13,33 @@ interface SurveyPlayerProps {
 }
 
 export default function SurveyPlayer({ survey, isPreview = false }: SurveyPlayerProps) {
-  const [answers, setAnswers] = useState<Record<string, string | number>>({});
+  const [answers, setAnswers] = useState<Record<string, string | number | string[]>>({});
   const [respondentName, setRespondentName] = useState("");
   const [respondentEmail, setRespondentEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
   const theme = getSurveyTheme(survey.settings?.theme);
+  const nameMode = survey.settings?.respondentNameMode || 'required';
+  const emailMode = survey.settings?.respondentEmailMode || 'required';
 
-  const handleChange = (questionId: string, value: string | number) => {
+  const handleChange = (questionId: string, value: string | number | string[]) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
   const isFormValid = () => {
-    if (!respondentName.trim() || !respondentEmail.trim()) return false;
+    if (nameMode === 'required' && !respondentName.trim()) return false;
+    if (emailMode === 'required' && !respondentEmail.trim()) return false;
 
     // 必須質問のチェック
     for (const q of survey.questions) {
-      if (q.required !== false && !answers[q.id]) {
-        return false;
+      if (q.required !== false) {
+        const ans = answers[q.id];
+        if (Array.isArray(ans)) {
+          if (ans.length === 0) return false;
+        } else if (!ans) {
+          return false;
+        }
       }
     }
     return true;
@@ -140,41 +148,47 @@ export default function SurveyPlayer({ survey, isPreview = false }: SurveyPlayer
 
       <div className="bg-white shadow-lg rounded-b-xl p-6">
         {/* 回答者情報 */}
-        <div className="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <h3 className="font-bold text-gray-700 mb-4">ご回答者情報</h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-gray-600 mb-1">
-                お名前 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={respondentName}
-                onChange={(e) => setRespondentName(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 outline-none transition placeholder:text-gray-400 text-gray-900 bg-white"
-                style={{ boxShadow: respondentName ? `0 0 0 2px ${theme.focusRing}` : undefined }}
-                onFocus={(e) => e.currentTarget.style.boxShadow = `0 0 0 2px ${theme.focusRing}`}
-                onBlur={(e) => { if (!respondentName) e.currentTarget.style.boxShadow = "none"; }}
-                placeholder="山田 太郎"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-600 mb-1">
-                メールアドレス <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                value={respondentEmail}
-                onChange={(e) => setRespondentEmail(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 outline-none transition placeholder:text-gray-400 text-gray-900 bg-white"
-                style={{ boxShadow: respondentEmail ? `0 0 0 2px ${theme.focusRing}` : undefined }}
-                onFocus={(e) => e.currentTarget.style.boxShadow = `0 0 0 2px ${theme.focusRing}`}
-                onBlur={(e) => { if (!respondentEmail) e.currentTarget.style.boxShadow = "none"; }}
-                placeholder="example@email.com"
-              />
+        {(nameMode !== 'hidden' || emailMode !== 'hidden') && (
+          <div className="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h3 className="font-bold text-gray-700 mb-4">ご回答者情報</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              {nameMode !== 'hidden' && (
+                <div>
+                  <label className="block text-sm font-bold text-gray-600 mb-1">
+                    お名前 {nameMode === 'required' && <span className="text-red-500">*</span>}
+                  </label>
+                  <input
+                    type="text"
+                    value={respondentName}
+                    onChange={(e) => setRespondentName(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg p-3 outline-none transition placeholder:text-gray-400 text-gray-900 bg-white"
+                    style={{ boxShadow: respondentName ? `0 0 0 2px ${theme.focusRing}` : undefined }}
+                    onFocus={(e) => e.currentTarget.style.boxShadow = `0 0 0 2px ${theme.focusRing}`}
+                    onBlur={(e) => { if (!respondentName) e.currentTarget.style.boxShadow = "none"; }}
+                    placeholder="山田 太郎"
+                  />
+                </div>
+              )}
+              {emailMode !== 'hidden' && (
+                <div>
+                  <label className="block text-sm font-bold text-gray-600 mb-1">
+                    メールアドレス {emailMode === 'required' && <span className="text-red-500">*</span>}
+                  </label>
+                  <input
+                    type="email"
+                    value={respondentEmail}
+                    onChange={(e) => setRespondentEmail(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg p-3 outline-none transition placeholder:text-gray-400 text-gray-900 bg-white"
+                    style={{ boxShadow: respondentEmail ? `0 0 0 2px ${theme.focusRing}` : undefined }}
+                    onFocus={(e) => e.currentTarget.style.boxShadow = `0 0 0 2px ${theme.focusRing}`}
+                    onBlur={(e) => { if (!respondentEmail) e.currentTarget.style.boxShadow = "none"; }}
+                    placeholder="example@email.com"
+                  />
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        )}
 
         {/* 質問一覧 */}
         <div className="space-y-8">
@@ -243,8 +257,8 @@ function QuestionBlock({
 }: {
   question: SurveyQuestion;
   index: number;
-  value: string | number | undefined;
-  onChange: (value: string | number) => void;
+  value: string | number | string[] | undefined;
+  onChange: (value: string | number | string[]) => void;
   theme: SurveyTheme;
 }) {
   const isRequired = question.required !== false;
@@ -278,8 +292,15 @@ function QuestionBlock({
       {/* 選択式 */}
       {question.type === "choice" && question.options && (
         <div className="space-y-2">
+          {question.allowMultiple && (
+            <p className="text-xs text-gray-500 mb-1">複数選択可</p>
+          )}
           {question.options.map((option) => {
-            const isSelected = value === option;
+            const isMultiple = question.allowMultiple;
+            const selectedArray = Array.isArray(value) ? value : [];
+            const isSelected = isMultiple
+              ? selectedArray.includes(option)
+              : value === option;
             return (
               <label
                 key={option}
@@ -294,15 +315,31 @@ function QuestionBlock({
                     : { borderColor: "#e5e7eb" }
                 }
               >
-                <input
-                  type="radio"
-                  name={question.id}
-                  value={option}
-                  checked={isSelected}
-                  onChange={(e) => onChange(e.target.value)}
-                  className="w-5 h-5"
-                  style={{ accentColor: theme.radioColor }}
-                />
+                {isMultiple ? (
+                  <input
+                    type="checkbox"
+                    value={option}
+                    checked={isSelected}
+                    onChange={() => {
+                      const newValue = isSelected
+                        ? selectedArray.filter((v) => v !== option)
+                        : [...selectedArray, option];
+                      onChange(newValue);
+                    }}
+                    className="w-5 h-5 rounded"
+                    style={{ accentColor: theme.radioColor }}
+                  />
+                ) : (
+                  <input
+                    type="radio"
+                    name={question.id}
+                    value={option}
+                    checked={isSelected}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="w-5 h-5"
+                    style={{ accentColor: theme.radioColor }}
+                  />
+                )}
                 <span className="text-gray-700">{option}</span>
               </label>
             );
