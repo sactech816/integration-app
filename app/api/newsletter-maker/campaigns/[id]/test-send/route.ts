@@ -89,11 +89,15 @@ export async function POST(
     // テスト送信であることを件名に明示
     const testSubject = `【テスト送信】${campaign.subject}`;
 
+    // テスト送信にも配信停止リンクを含める（実際の送信と同じ見た目にする）
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
+    const unsubscribePreview = `<div style="text-align:center;margin-top:32px;padding:16px;border-top:1px solid #e5e7eb;font-size:12px;color:#9ca3af;"><a href="${siteUrl}/newsletter/unsubscribe?listId=${campaign.list_id}&email=${encodeURIComponent(testEmail)}" style="color:#6b7280;text-decoration:underline;">配信停止はこちら</a></div>`;
+
     const emailPayload: { from: string; to: string[]; subject: string; html: string; text?: string } = {
       from: fromField,
       to: [testEmail],
       subject: testSubject,
-      html: campaign.html_content,
+      html: campaign.html_content + unsubscribePreview,
     };
     if (campaign.text_content) {
       emailPayload.text = campaign.text_content;

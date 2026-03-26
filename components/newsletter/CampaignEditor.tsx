@@ -23,6 +23,8 @@ interface CampaignEditorProps {
 interface ListOption {
   id: string;
   name: string;
+  from_name?: string;
+  from_email?: string;
   header_html?: string;
   footer_html?: string;
 }
@@ -997,11 +999,13 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
 
   // プレースホルダー変数をプレビュー用に置換
   const replacePlaceholders = useCallback((html: string) => {
-    const listName = lists.find((l) => l.id === listId)?.name || 'ニュースレター';
+    const selectedList = lists.find((l) => l.id === listId);
+    const listName = selectedList?.name || 'ニュースレター';
+    const senderName = selectedList?.from_name || listName;
     const today = new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
     const result = html
       .replace(/\{\{ニュースレター名\}\}/g, listName)
-      .replace(/\{\{送信者名\}\}/g, listName)
+      .replace(/\{\{送信者名\}\}/g, senderName)
       .replace(/\{\{日付\}\}/g, today);
     return applyCtaLinks(result);
   }, [lists, listId, applyCtaLinks]);
@@ -1688,6 +1692,12 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                   <p className="text-gray-300 text-center py-16">テンプレートを選択すると、ここにプレビューが表示されます</p>
                 )}
               </div>
+              {/* 配信停止リンク（送信時に自動追加される表示） */}
+              {(headerHtml || htmlContent || footerHtml) && (
+                <div style={{ textAlign: 'center', marginTop: 32, padding: 16, borderTop: '1px solid #e5e7eb', fontSize: 12, color: '#9ca3af' }}>
+                  <a href="#" onClick={(e) => e.preventDefault()} style={{ color: '#6b7280', textDecoration: 'underline' }}>配信停止はこちら</a>
+                </div>
+              )}
             </div>
           </div>
         </div>
