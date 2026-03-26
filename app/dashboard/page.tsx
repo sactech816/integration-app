@@ -267,14 +267,17 @@ function DashboardContent() {
         fetchPointBalance(),
       ]);
 
-      // URLパラメータ ?trial=1 でメールからの誘導を検知
-      const trialParam = searchParams?.get('trial');
-      if (trialParam === '1') {
-        checkTrialOffer('email');
-      } else {
-        // 自動表示チェック（少し遅延させてUX向上）
-        const timer = setTimeout(() => checkTrialOffer('auto'), 3000);
-        return () => clearTimeout(timer);
+      // 管理者はトライアルモーダルの自動表示をスキップ（左メニューから管理可能）
+      if (!isAdmin) {
+        // URLパラメータ ?trial=1 でメールからの誘導を検知
+        const trialParam = searchParams?.get('trial');
+        if (trialParam === '1') {
+          checkTrialOffer('email');
+        } else {
+          // 自動表示チェック（少し遅延させてUX向上）
+          const timer = setTimeout(() => checkTrialOffer('auto'), 3000);
+          return () => clearTimeout(timer);
+        }
       }
     }
   }, [user]);

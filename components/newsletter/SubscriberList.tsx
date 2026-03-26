@@ -25,22 +25,30 @@ interface ListDetail {
 }
 
 interface ImportSources {
-  leads: { quiz: number; profile: number; business: number; bigfive_sample?: number; total: number };
+  leads: { quiz: number; entertainment_quiz: number; profile: number; business: number; webinar: number; bigfive_sample?: number; total: number };
   orderForms: number;
   bookings: number;
+  surveys: number;
+  attendance: number;
   registeredUsers: number;
+  contactInquiries: number;
 }
 
 const SOURCE_LABELS: Record<string, string> = {
   manual: '手動',
   csv: 'CSV',
   quiz: '診断クイズ',
+  entertainment_quiz: 'エンタメ診断',
   profile: 'プロフィール',
   business: 'ビジネスLP',
+  webinar: 'ウェビナーLP',
   booking: '予約メーカー',
   order_form: '申込フォーム',
+  survey: 'アンケート',
+  attendance: '出欠表',
   subscribe_form: '登録フォーム',
   bigfive_sample: '性格診断サンプル',
+  contact_inquiries: 'お問い合わせ',
   registered_users: '登録ユーザー',
 };
 
@@ -229,9 +237,16 @@ export default function SubscriberList({ listId }: { listId: string }) {
         body = { ...body, source: 'order_forms' };
       } else if (source === 'booking') {
         body = { ...body, source: 'booking' };
+      } else if (source === 'survey') {
+        body = { ...body, source: 'survey' };
+      } else if (source === 'attendance') {
+        body = { ...body, source: 'attendance' };
       } else if (source === 'registered_users') {
         body = { ...body, source: 'registered_users' };
+      } else if (source === 'contact_inquiries') {
+        body = { ...body, source: 'contact_inquiries' };
       } else {
+        // quiz, entertainment_quiz, profile, business, webinar, bigfive_sample → leads
         body = { ...body, source: 'leads', contentType: source };
       }
 
@@ -683,6 +698,24 @@ export default function SubscriberList({ listId }: { listId: string }) {
                         </div>
                       </label>
 
+                      {/* エンタメ診断 */}
+                      <label className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
+                        (importSources.leads.entertainment_quiz || 0) === 0 ? 'opacity-50 cursor-not-allowed border-gray-100 bg-gray-50' :
+                        selectedSources.has('entertainment_quiz') ? 'border-violet-300 bg-violet-50' : 'border-gray-200 hover:border-violet-200 bg-white'
+                      }`}>
+                        <input
+                          type="checkbox"
+                          checked={selectedSources.has('entertainment_quiz')}
+                          onChange={() => toggleSource('entertainment_quiz')}
+                          disabled={(importSources.leads.entertainment_quiz || 0) === 0}
+                          className="w-5 h-5 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                        />
+                        <div className="flex-1">
+                          <span className="text-sm font-semibold text-gray-900">エンタメ診断のリード</span>
+                          <span className="ml-2 text-sm text-gray-500">({importSources.leads.entertainment_quiz || 0}件)</span>
+                        </div>
+                      </label>
+
                       {/* プロフィールLP */}
                       <label className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
                         importSources.leads.profile === 0 ? 'opacity-50 cursor-not-allowed border-gray-100 bg-gray-50' :
@@ -716,6 +749,24 @@ export default function SubscriberList({ listId }: { listId: string }) {
                         <div className="flex-1">
                           <span className="text-sm font-semibold text-gray-900">ビジネスLPのリード</span>
                           <span className="ml-2 text-sm text-gray-500">({importSources.leads.business}件)</span>
+                        </div>
+                      </label>
+
+                      {/* ウェビナーLP */}
+                      <label className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
+                        (importSources.leads.webinar || 0) === 0 ? 'opacity-50 cursor-not-allowed border-gray-100 bg-gray-50' :
+                        selectedSources.has('webinar') ? 'border-violet-300 bg-violet-50' : 'border-gray-200 hover:border-violet-200 bg-white'
+                      }`}>
+                        <input
+                          type="checkbox"
+                          checked={selectedSources.has('webinar')}
+                          onChange={() => toggleSource('webinar')}
+                          disabled={(importSources.leads.webinar || 0) === 0}
+                          className="w-5 h-5 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                        />
+                        <div className="flex-1">
+                          <span className="text-sm font-semibold text-gray-900">ウェビナーLPのリード</span>
+                          <span className="ml-2 text-sm text-gray-500">({importSources.leads.webinar || 0}件)</span>
                         </div>
                       </label>
 
@@ -755,6 +806,42 @@ export default function SubscriberList({ listId }: { listId: string }) {
                         </div>
                       </label>
 
+                      {/* アンケート */}
+                      <label className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
+                        importSources.surveys === 0 ? 'opacity-50 cursor-not-allowed border-gray-100 bg-gray-50' :
+                        selectedSources.has('survey') ? 'border-violet-300 bg-violet-50' : 'border-gray-200 hover:border-violet-200 bg-white'
+                      }`}>
+                        <input
+                          type="checkbox"
+                          checked={selectedSources.has('survey')}
+                          onChange={() => toggleSource('survey')}
+                          disabled={importSources.surveys === 0}
+                          className="w-5 h-5 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                        />
+                        <div className="flex-1">
+                          <span className="text-sm font-semibold text-gray-900">アンケートの回答者</span>
+                          <span className="ml-2 text-sm text-gray-500">({importSources.surveys}件)</span>
+                        </div>
+                      </label>
+
+                      {/* 出欠表 */}
+                      <label className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
+                        importSources.attendance === 0 ? 'opacity-50 cursor-not-allowed border-gray-100 bg-gray-50' :
+                        selectedSources.has('attendance') ? 'border-violet-300 bg-violet-50' : 'border-gray-200 hover:border-violet-200 bg-white'
+                      }`}>
+                        <input
+                          type="checkbox"
+                          checked={selectedSources.has('attendance')}
+                          onChange={() => toggleSource('attendance')}
+                          disabled={importSources.attendance === 0}
+                          className="w-5 h-5 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                        />
+                        <div className="flex-1">
+                          <span className="text-sm font-semibold text-gray-900">出欠表の回答者</span>
+                          <span className="ml-2 text-sm text-gray-500">({importSources.attendance}件)</span>
+                        </div>
+                      </label>
+
                       {/* 性格診断サンプルDLリード */}
                       {(importSources.leads.bigfive_sample ?? 0) > 0 && (
                         <label className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
@@ -788,6 +875,25 @@ export default function SubscriberList({ listId }: { listId: string }) {
                             <span className="text-sm font-semibold text-gray-900">集客メーカー登録ユーザー</span>
                             <span className="ml-2 text-sm text-amber-600 font-semibold">管理者専用</span>
                             <p className="text-xs text-gray-500 mt-0.5">メール確認済みの全登録ユーザー ({importSources.registeredUsers}件)</p>
+                          </div>
+                        </label>
+                      )}
+
+                      {/* お問い合わせ（管理者のみ） */}
+                      {importSources.contactInquiries > 0 && (
+                        <label className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
+                          selectedSources.has('contact_inquiries') ? 'border-amber-300 bg-amber-50' : 'border-gray-200 hover:border-amber-200 bg-white'
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={selectedSources.has('contact_inquiries')}
+                            onChange={() => toggleSource('contact_inquiries')}
+                            className="w-5 h-5 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                          />
+                          <div className="flex-1">
+                            <span className="text-sm font-semibold text-gray-900">お問い合わせメール</span>
+                            <span className="ml-2 text-sm text-amber-600 font-semibold">管理者専用</span>
+                            <p className="text-xs text-gray-500 mt-0.5">お問い合わせフォームからのメール ({importSources.contactInquiries}件)</p>
                           </div>
                         </label>
                       )}

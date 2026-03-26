@@ -55,7 +55,25 @@ export async function POST(
       subscriberSource = 'bigfive_sample';
     } else if (source === 'leads') {
       contacts = await collectFromLeads(supabase, userId, contentType);
-      subscriberSource = contentType || 'quiz'; // 'quiz', 'profile', 'business'
+      subscriberSource = contentType || 'quiz'; // 'quiz', 'entertainment_quiz', 'profile', 'business', 'webinar'
+    } else if (source === 'survey') {
+      contacts = await collectFromSurveys(supabase, userId);
+      subscriberSource = 'survey';
+    } else if (source === 'attendance') {
+      contacts = await collectFromAttendance(supabase, userId);
+      subscriberSource = 'attendance';
+    } else if (source === 'contact_inquiries') {
+      // 管理者のみ: お問い合わせメールをインポート
+      const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
+      const adminEmails = getAdminEmails();
+      const isAdmin = authUser?.email && adminEmails.some(
+        (e: string) => e.toLowerCase() === authUser.email!.toLowerCase()
+      );
+      if (!isAdmin) {
+        return NextResponse.json({ error: '管理者のみ利用可能です' }, { status: 403 });
+      }
+      contacts = await collectFromContactInquiries(supabase);
+      subscriberSource = 'contact_inquiries';
     } else if (source === 'order_forms') {
       contacts = await collectFromOrderForms(supabase, userId, formIds);
       subscriberSource = 'order_form';
@@ -210,8 +228,18 @@ async function collectFromLeads(
     const { data: quizzes } = await supabase
       .from('quizzes')
       .select('slug')
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .eq('quiz_type', 'business');
     contentIds = [...contentIds, ...(quizzes?.map((q: { slug: string }) => q.slug) || [])];
+  }
+
+  if (!contentType || contentType === 'entertainment_quiz') {
+    const { data: entQuizzes } = await supabase
+      .from('quizzes')
+      .select('slug')
+      .eq('user_id', userId)
+      .eq('quiz_type', 'entertainment');
+    contentIds = [...contentIds, ...(entQuizzes?.map((q: { slug: string }) => q.slug) || [])];
   }
 
   if (!contentType || contentType === 'profile') {
@@ -228,6 +256,14 @@ async function collectFromLeads(
       .select('slug')
       .eq('user_id', userId);
     contentIds = [...contentIds, ...(businessLps?.map((b: { slug: string }) => b.slug) || [])];
+  }
+
+  if (!contentType || contentType === 'webinar') {
+    const { data: webinars } = await supabase
+      .from('webinar_lps')
+      .select('slug')
+      .eq('user_id', userId);
+    contentIds = [...contentIds, ...(webinars?.map((w: { slug: string }) => w.slug) || [])];
   }
 
   if (contentIds.length === 0) return [];
@@ -350,4 +386,83 @@ async function collectRegisteredUsers(
       email: u.email,
       name: u.user_metadata?.name || u.user_metadata?.full_name || undefined,
     }));
+}
+
+/**
+ * survey_responses テーブルからメールを収集
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function collectFromSurveys(
+  supabase: any,
+  userId: string
+): Promise<{ email: string; name?: string }[]> {
+  // ユーザーのアンケートIDを取得
+  const { data: surveys } = await supabase
+    .from('surveys')
+    .select('id')
+    .eq('user_id', userId);
+
+  const surveyIds = surveys?.map((s: { id: string }) => s.id) || [];
+  if (surveyIds.length === 0) return [];
+
+  const { data } = await supabase
+    .from('survey_responses')
+    .select('respondent_email, respondent_name')
+    .in('survey_id', surveyIds)
+    .not('respondent_email', 'is', null)
+    .neq('respondent_email', '');
+
+  return (data || []).map((r: { respondent_email: string; respondent_name?: string }) => ({
+    email: r.respondent_email,
+    name: r.respondent_name,
+  }));
+}
+
+/**
+ * attendance_responses テーブルからメールを収集
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function collectFromAttendance(
+  supabase: any,
+  userId: string
+): Promise<{ email: string; name?: string }[]> {
+  // ユーザーの出欠イベントIDを取得
+  const { data: events } = await supabase
+    .from('attendance_events')
+    .select('id')
+    .eq('user_id', userId);
+
+  const eventIds = events?.map((e: { id: string }) => e.id) || [];
+  if (eventIds.length === 0) return [];
+
+  const { data } = await supabase
+    .from('attendance_responses')
+    .select('participant_email, participant_name')
+    .in('event_id', eventIds)
+    .not('participant_email', 'is', null)
+    .neq('participant_email', '');
+
+  return (data || []).map((r: { participant_email: string; participant_name?: string }) => ({
+    email: r.participant_email,
+    name: r.participant_name,
+  }));
+}
+
+/**
+ * contact_inquiries テーブルからメールを収集（管理者専用）
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function collectFromContactInquiries(
+  supabase: any,
+): Promise<{ email: string; name?: string }[]> {
+  const { data } = await supabase
+    .from('contact_inquiries')
+    .select('email, name')
+    .not('email', 'is', null)
+    .neq('email', '');
+
+  return (data || []).map((c: { email: string; name?: string }) => ({
+    email: c.email,
+    name: c.name,
+  }));
 }

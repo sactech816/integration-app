@@ -26,20 +26,26 @@ export async function GET(request: NextRequest) {
     }
 
     // ユーザーのコンテンツIDを取得
-    const [quizzesRes, profilesRes, businessRes] = await Promise.all([
-      supabase.from('quizzes').select('slug').eq('user_id', userId),
+    const [quizzesRes, entQuizzesRes, profilesRes, businessRes, webinarsRes] = await Promise.all([
+      supabase.from('quizzes').select('slug').eq('user_id', userId).eq('quiz_type', 'business'),
+      supabase.from('quizzes').select('slug').eq('user_id', userId).eq('quiz_type', 'entertainment'),
       supabase.from('profiles').select('slug').eq('user_id', userId),
       supabase.from('business_projects').select('slug').eq('user_id', userId),
+      supabase.from('webinar_lps').select('slug').eq('user_id', userId),
     ]);
 
     const quizSlugs = quizzesRes.data?.map((q: { slug: string }) => q.slug) || [];
+    const entQuizSlugs = entQuizzesRes.data?.map((q: { slug: string }) => q.slug) || [];
     const profileSlugs = profilesRes.data?.map((p: { slug: string }) => p.slug) || [];
     const businessSlugs = businessRes.data?.map((b: { slug: string }) => b.slug) || [];
+    const webinarSlugs = webinarsRes.data?.map((w: { slug: string }) => w.slug) || [];
 
     // 各ソースのリード数をカウント
     let quizCount = 0;
+    let entQuizCount = 0;
     let profileCount = 0;
     let businessCount = 0;
+    let webinarCount = 0;
 
     if (quizSlugs.length > 0) {
       const { count } = await supabase
@@ -48,6 +54,15 @@ export async function GET(request: NextRequest) {
         .in('content_id', quizSlugs)
         .eq('content_type', 'quiz');
       quizCount = count || 0;
+    }
+
+    if (entQuizSlugs.length > 0) {
+      const { count } = await supabase
+        .from('leads')
+        .select('*', { count: 'exact', head: true })
+        .in('content_id', entQuizSlugs)
+        .eq('content_type', 'entertainment_quiz');
+      entQuizCount = count || 0;
     }
 
     if (profileSlugs.length > 0) {
@@ -66,6 +81,15 @@ export async function GET(request: NextRequest) {
         .in('content_id', businessSlugs)
         .eq('content_type', 'business');
       businessCount = count || 0;
+    }
+
+    if (webinarSlugs.length > 0) {
+      const { count } = await supabase
+        .from('leads')
+        .select('*', { count: 'exact', head: true })
+        .in('content_id', webinarSlugs)
+        .eq('content_type', 'webinar');
+      webinarCount = count || 0;
     }
 
     // 申し込みフォームの送信者数
@@ -102,6 +126,42 @@ export async function GET(request: NextRequest) {
       bookingCount = count || 0;
     }
 
+    // アンケート回答者数
+    const { data: surveys } = await supabase
+      .from('surveys')
+      .select('id')
+      .eq('user_id', userId);
+
+    let surveyCount = 0;
+    const surveyIds = surveys?.map((s: { id: string }) => s.id) || [];
+    if (surveyIds.length > 0) {
+      const { count } = await supabase
+        .from('survey_responses')
+        .select('*', { count: 'exact', head: true })
+        .in('survey_id', surveyIds)
+        .not('respondent_email', 'is', null)
+        .neq('respondent_email', '');
+      surveyCount = count || 0;
+    }
+
+    // 出欠表回答者数
+    const { data: events } = await supabase
+      .from('attendance_events')
+      .select('id')
+      .eq('user_id', userId);
+
+    let attendanceCount = 0;
+    const eventIds = events?.map((e: { id: string }) => e.id) || [];
+    if (eventIds.length > 0) {
+      const { count } = await supabase
+        .from('attendance_responses')
+        .select('*', { count: 'exact', head: true })
+        .in('event_id', eventIds)
+        .not('participant_email', 'is', null)
+        .neq('participant_email', '');
+      attendanceCount = count || 0;
+    }
+
     // Big Five サンプルDLリード数（管理者のみ）
     let bigfiveSampleCount = 0;
     {
@@ -112,8 +172,9 @@ export async function GET(request: NextRequest) {
       bigfiveSampleCount = count || 0;
     }
 
-    // 管理者チェック: 登録ユーザーのインポートは管理者のみ
+    // 管理者チェック: 登録ユーザー・お問い合わせのインポートは管理者のみ
     let registeredUsersCount = 0;
+    let contactInquiriesCount = 0;
     const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
     if (authUser?.email) {
       const adminEmails = getAdminEmails();
@@ -126,20 +187,33 @@ export async function GET(request: NextRequest) {
         registeredUsersCount = (users || []).filter(
           (u) => u.email && u.email_confirmed_at
         ).length;
+
+        // お問い合わせ数
+        const { count: contactCount } = await supabase
+          .from('contact_inquiries')
+          .select('*', { count: 'exact', head: true })
+          .not('email', 'is', null)
+          .neq('email', '');
+        contactInquiriesCount = contactCount || 0;
       }
     }
 
     return NextResponse.json({
       leads: {
         quiz: quizCount,
+        entertainment_quiz: entQuizCount,
         profile: profileCount,
         business: businessCount,
+        webinar: webinarCount,
         bigfive_sample: bigfiveSampleCount,
-        total: quizCount + profileCount + businessCount + bigfiveSampleCount,
+        total: quizCount + entQuizCount + profileCount + businessCount + webinarCount + bigfiveSampleCount,
       },
       orderForms: orderFormCount,
       bookings: bookingCount,
+      surveys: surveyCount,
+      attendance: attendanceCount,
       registeredUsers: registeredUsersCount,
+      contactInquiries: contactInquiriesCount,
     });
   } catch (error) {
     console.error('[Newsletter Import Sources] Error:', error);
