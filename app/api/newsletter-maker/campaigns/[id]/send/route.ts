@@ -76,6 +76,12 @@ export async function POST(
     const fromName = campaign.newsletter_lists?.from_name || '集客メーカー';
     const fromEmail = campaign.newsletter_lists?.from_email || process.env.RESEND_FROM_EMAIL || 'noreply@makers.tokyo';
 
+    // 非ASCII文字を含む差出人名はMIMEエンコード（RFC 2047）
+    const hasNonAscii = /[^\x00-\x7F]/.test(fromName);
+    const encodedFromName = hasNonAscii
+      ? `=?UTF-8?B?${Buffer.from(fromName).toString('base64')}?=`
+      : fromName;
+
     // 配信停止リンクを含むHTML
     const addUnsubscribeLink = (html: string, email: string) => {
       const unsubscribeUrl = `${siteUrl}/newsletter/unsubscribe?listId=${campaign.list_id}&email=${encodeURIComponent(email)}`;
@@ -90,7 +96,7 @@ export async function POST(
       const batch = subscribers.slice(i, i + batchSize);
       const emails = batch.map((sub) => {
         const emailPayload: { from: string; to: string[]; subject: string; html: string; text?: string } = {
-          from: `${fromName} <${fromEmail}>`,
+          from: `${encodedFromName} <${fromEmail}>`,
           to: [sub.email],
           subject: campaign.subject,
           html: addUnsubscribeLink(campaign.html_content, sub.email),
