@@ -87,10 +87,11 @@ const Section = ({
 
 // HTML⇔ビジュアル切替トグル
 function ViewToggle({
-  mode, onChange,
+  mode, onChange, showText,
 }: {
-  mode: 'visual' | 'html';
-  onChange: (mode: 'visual' | 'html') => void;
+  mode: 'visual' | 'html' | 'text';
+  onChange: (mode: 'visual' | 'html' | 'text') => void;
+  showText?: boolean;
 }) {
   return (
     <div className="inline-flex items-center bg-gray-100 rounded-lg p-0.5 text-xs">
@@ -110,6 +111,16 @@ function ViewToggle({
       >
         <Code className="w-3 h-3" />HTML
       </button>
+      {showText && (
+        <button
+          onClick={() => onChange('text')}
+          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md transition-all font-semibold ${
+            mode === 'text' ? 'bg-white text-violet-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Type className="w-3 h-3" />テキスト
+        </button>
+      )}
     </div>
   );
 }
@@ -700,9 +711,10 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
   const [showTestSend, setShowTestSend] = useState(false);
 
   // 表示モード（HTML / ビジュアル）
-  const [headerViewMode, setHeaderViewMode] = useState<'visual' | 'html'>('visual');
-  const [bodyViewMode, setBodyViewMode] = useState<'visual' | 'html'>('visual');
-  const [footerViewMode, setFooterViewMode] = useState<'visual' | 'html'>('visual');
+  const [headerViewMode, setHeaderViewMode] = useState<'visual' | 'html' | 'text'>('visual');
+  const [bodyViewMode, setBodyViewMode] = useState<'visual' | 'html' | 'text'>('visual');
+  const [plainTextContent, setPlainTextContent] = useState('');
+  const [footerViewMode, setFooterViewMode] = useState<'visual' | 'html' | 'text'>('visual');
 
   // AI 関連
   const [aiGenerating, setAiGenerating] = useState(false);
@@ -826,6 +838,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
       setSubject(c.subject);
       setPreviewText(c.preview_text || '');
       setHtmlContent(c.html_content || '');
+      if (c.text_content) setPlainTextContent(c.text_content);
       setStatus(c.status);
       setSentCount(c.sent_count || 0);
     }
@@ -854,8 +867,15 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
     await consumeAndExecute('newsletter', 'save', async () => {
       setSaving(true);
       try {
-        const finalHtml = applyCtaLinks(getFullHtml());
-        const textContent = htmlToPlainText(finalHtml);
+        // テキストモードの場合、保存前にplainTextContentからHTMLを生成して同期
+        if (bodyViewMode === 'text' && plainTextContent) {
+          setHtmlContent(textToHtml(plainTextContent));
+        }
+        const currentHtml = bodyViewMode === 'text' && plainTextContent ? textToHtml(plainTextContent) : htmlContent;
+        const finalHtml = applyCtaLinks(
+          [headerHtml, currentHtml.startsWith('<') ? currentHtml : textToHtml(currentHtml), footerHtml].filter(Boolean).join('\n')
+        );
+        const textContent = bodyViewMode === 'text' && plainTextContent ? plainTextContent : htmlToPlainText(finalHtml);
         const body = { userId: user.id, listId, subject, previewText, htmlContent: finalHtml, textContent };
         if (savedCampaignId) {
           await fetch(`/api/newsletter-maker/campaigns/${savedCampaignId}`, {
@@ -889,8 +909,11 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
     if (!user || !savedCampaignId) return;
     setSending(true);
     // 保存してから送信
-    const finalHtml = applyCtaLinks(getFullHtml());
-    const textContent = htmlToPlainText(finalHtml);
+    const currentHtml = bodyViewMode === 'text' && plainTextContent ? textToHtml(plainTextContent) : htmlContent;
+    const finalHtml = applyCtaLinks(
+      [headerHtml, currentHtml.startsWith('<') ? currentHtml : textToHtml(currentHtml), footerHtml].filter(Boolean).join('\n')
+    );
+    const textContent = bodyViewMode === 'text' && plainTextContent ? plainTextContent : htmlToPlainText(finalHtml);
     await fetch(`/api/newsletter-maker/campaigns/${savedCampaignId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -997,6 +1020,24 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
       lastSetFooterHtml.current = footerHtml;
     }
   }, [footerViewMode, footerHtml]);
+
+  // 本文モード切替ハンドラ（テキスト↔HTML/ビジュアル間の変換）
+  const handleBodyViewModeChange = useCallback((newMode: 'visual' | 'html' | 'text') => {
+    if (bodyViewMode === 'text' && newMode !== 'text') {
+      // テキスト→HTML/ビジュアル: プレーンテキストをHTMLに変換
+      if (plainTextContent) {
+        const html = textToHtml(plainTextContent);
+        setHtmlContent(html);
+      }
+    } else if (bodyViewMode !== 'text' && newMode === 'text') {
+      // HTML/ビジュアル→テキスト: HTMLをプレーンテキストに変換
+      const currentHtml = bodyViewMode === 'visual' && bodyRef.current
+        ? bodyRef.current.innerHTML
+        : htmlContent;
+      setPlainTextContent(htmlToPlainText(currentHtml));
+    }
+    setBodyViewMode(newMode);
+  }, [bodyViewMode, plainTextContent, htmlContent, textToHtml]);
 
   // テンプレート適用（件名候補も設定）
   const applyTemplate = (template: NewsletterTemplate) => {
@@ -1294,7 +1335,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">プレビューテキスト（任意）</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">プレビューテキスト（受信トレイでの表示）</label>
                   <input
                     type="text"
                     value={previewText}
@@ -1428,7 +1469,7 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                         <Sparkles className="w-3.5 h-3.5" />AIで下書き生成
                       </button>
                     )}
-                    <ViewToggle mode={bodyViewMode} onChange={setBodyViewMode} />
+                    <ViewToggle mode={bodyViewMode} onChange={handleBodyViewModeChange} showText />
                   </div>
                 </div>
                 {bodyViewMode === 'html' ? (
@@ -1439,6 +1480,15 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                     placeholder={'メール本文のHTMLを入力してください。\nテンプレートを選択すると自動設定されます。'}
                     rows={20}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all font-mono text-sm disabled:bg-gray-100"
+                  />
+                ) : bodyViewMode === 'text' ? (
+                  <textarea
+                    value={plainTextContent}
+                    onChange={(e) => setPlainTextContent(e.target.value)}
+                    disabled={isSent}
+                    placeholder={'メール本文をプレーンテキストで入力してください。\n装飾なしのシンプルなテキストメールを作成できます。'}
+                    rows={20}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all text-sm disabled:bg-gray-100"
                   />
                 ) : (
                   <div className="border border-gray-200 rounded-xl overflow-hidden bg-white min-h-[200px]">

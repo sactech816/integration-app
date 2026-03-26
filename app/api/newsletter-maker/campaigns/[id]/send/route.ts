@@ -102,8 +102,13 @@ export async function POST(
       });
 
       try {
-        await resend.batch.send(emails);
-        sentCount += batch.length;
+        const { data, error: batchError } = await resend.batch.send(emails);
+        if (batchError) {
+          console.error(`[Newsletter Send] Batch ${i} error:`, batchError);
+        } else {
+          sentCount += batch.length;
+          console.log(`[Newsletter Send] Batch ${i} sent:`, data?.data?.length, 'emails');
+        }
       } catch (err) {
         console.error(`[Newsletter Send] Batch ${i} failed:`, err);
       }
