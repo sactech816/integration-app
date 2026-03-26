@@ -101,9 +101,9 @@ export async function PATCH(
       .select()
       .single();
 
-    // 新カラム未追加の場合、新カラムを除いてリトライ
-    if (error && (error.message?.includes('header_html') || error.message?.includes('footer_html') || error.message?.includes('body_html'))) {
-      console.warn('[Newsletter Campaign Update] New columns not found, retrying without them');
+    // 新カラム関連でエラーの場合、新カラムを除いてリトライ
+    if (error) {
+      console.warn('[Newsletter Campaign Update] First attempt failed:', error.message, '- retrying without new columns');
       delete updateData.header_html;
       delete updateData.footer_html;
       delete updateData.body_html;
@@ -118,7 +118,7 @@ export async function PATCH(
 
     if (error) {
       console.error('[Newsletter Campaign Update] Error:', error);
-      return NextResponse.json({ error: '更新に失敗しました' }, { status: 500 });
+      return NextResponse.json({ error: `更新に失敗しました: ${error.message}` }, { status: 500 });
     }
 
     return NextResponse.json({ campaign: data });

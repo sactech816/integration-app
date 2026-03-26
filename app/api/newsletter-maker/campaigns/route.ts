@@ -102,9 +102,9 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    // 新カラム未追加の場合、新カラムを除いてリトライ
-    if (error && (error.message?.includes('header_html') || error.message?.includes('footer_html') || error.message?.includes('body_html'))) {
-      console.warn('[Newsletter Campaigns] New columns not found, retrying without them');
+    // エラーの場合、新カラムを除いてリトライ
+    if (error) {
+      console.warn('[Newsletter Campaigns] First attempt failed:', error.message, '- retrying without new columns');
       delete insertData.header_html;
       delete insertData.footer_html;
       delete insertData.body_html;
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('[Newsletter Campaigns] Insert error:', error);
-      return NextResponse.json({ error: 'キャンペーン作成に失敗しました' }, { status: 500 });
+      return NextResponse.json({ error: `キャンペーン作成に失敗しました: ${error.message}` }, { status: 500 });
     }
 
     return NextResponse.json({ campaign: data });
