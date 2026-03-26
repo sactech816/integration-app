@@ -52,6 +52,17 @@ export interface ConciergeMessage {
   contactInfo?: ContactInfo;
   feedback?: 1 | -1 | null;
   created_at: string;
+  /** メッセージの送信者種別（Phase 2: 人間チャット対応） */
+  sender_type?: 'user' | 'assistant' | 'operator';
+  /** メタデータ */
+  metadata?: {
+    source?: 'ai' | 'faq' | 'operator';
+    faqId?: string;
+    mediaUrl?: string;
+    actions?: ToolAction[];
+    suggestions?: string[];
+    contactInfo?: ContactInfo;
+  };
 }
 
 export interface ToolAction {

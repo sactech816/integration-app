@@ -16,6 +16,7 @@ import { createAIProvider } from '@/lib/ai-provider';
 import { logAIUsage } from '@/lib/ai-usage';
 import { buildConciergeSystemPrompt, buildCustomConciergePrompt } from '@/lib/concierge/system-prompt';
 import { parseToolActions } from '@/lib/concierge/tool-actions';
+import { matchFAQ } from '@/lib/concierge/faq-matcher';
 import { getMakersSubscriptionStatus } from '@/lib/subscription';
 import type { AIMessage } from '@/lib/ai-provider';
 import { createClient } from '@supabase/supabase-js';
@@ -245,6 +246,90 @@ export async function POST(request: NextRequest) {
     }
 
     const previousMessages = (history || []).reverse();
+
+    // ハンドオフモードチェック: human modeの場合はAIを呼ばずメッセージ保存のみ
+    if (!configId) {
+      const { data: sessionData } = await serviceClient
+        .from('concierge_sessions')
+        .select('mode, status')
+        .eq('session_id', sessionId)
+        .single();
+
+      if (sessionData?.mode === 'human' && sessionData?.status === 'assigned') {
+        // 人間チャットモード: メッセージを保存してRealtimeで配信
+        await serviceClient.from('concierge_messages').insert({
+          user_id: userId || null,
+          visitor_id: visitorId || null,
+          session_id: sessionId,
+          role: 'user',
+          sender_type: 'user',
+          content: message.trim(),
+          user_type: userType,
+          context: { page: currentPage || null, timezone: timezone || null, language: language || null },
+          config_id: null,
+        });
+
+        // セッションのupdated_atを更新
+        await serviceClient
+          .from('concierge_sessions')
+          .update({ updated_at: new Date().toISOString(), current_page: currentPage || null })
+          .eq('session_id', sessionId);
+
+        return jsonResponse({
+          reply: '',
+          actions: [],
+          suggestions: [],
+          remainingMessages: dailyLimit - dailyUsage - 1,
+          sessionId,
+          humanMode: true,
+        });
+      }
+    }
+
+    // FAQマッチング（プラットフォームコンシェルジュのみ、カスタムは対象外）
+    if (!configId) {
+      const faqMatch = matchFAQ(message.trim(), currentPage);
+      if (faqMatch) {
+        // FAQ即答: AIを呼ばずに回答
+        const faqCommonFields = {
+          user_id: userId || null,
+          visitor_id: visitorId || null,
+          session_id: sessionId,
+          user_type: userType,
+          context: { page: currentPage || null, timezone: timezone || null, language: language || null },
+          config_id: null,
+        };
+
+        await serviceClient.from('concierge_messages').insert([
+          {
+            ...faqCommonFields,
+            role: 'user',
+            content: message.trim(),
+          },
+          {
+            ...faqCommonFields,
+            role: 'assistant',
+            content: faqMatch.answer,
+            metadata: {
+              actions: faqMatch.actions || [],
+              suggestions: faqMatch.suggestions || [],
+              source: 'faq',
+              faqId: faqMatch.id,
+            },
+            input_tokens: 0,
+            output_tokens: 0,
+          },
+        ]);
+
+        return jsonResponse({
+          reply: faqMatch.answer,
+          actions: faqMatch.actions || [],
+          suggestions: faqMatch.suggestions || [],
+          remainingMessages: dailyLimit - dailyUsage - 1,
+          sessionId,
+        });
+      }
+    }
 
     // システムプロンプト構築（カスタムconfig or プラットフォーム内蔵）
     let systemPrompt: string;

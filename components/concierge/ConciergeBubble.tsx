@@ -94,6 +94,23 @@ export default function ConciergeBubble({ message, isLast, onNavigate, onSend, o
         {/* メッセージテキスト */}
         <div className="whitespace-pre-wrap">{displayText}</div>
 
+        {/* メディア画像（FAQ回答にスクリーンショット等を含む場合） */}
+        {!isUser && message.metadata?.mediaUrl && (
+          <a
+            href={message.metadata.mediaUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block mt-2"
+          >
+            <img
+              src={message.metadata.mediaUrl}
+              alt="参考画像"
+              className="rounded-lg border border-gray-200 max-w-full max-h-48 object-contain cursor-pointer hover:opacity-90 transition-opacity"
+              loading="lazy"
+            />
+          </a>
+        )}
+
         {/* ツールアクションボタン */}
         {!isUser && message.actions && message.actions.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">

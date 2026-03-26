@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, X, Trash2 } from 'lucide-react';
+import { Send, X, Trash2, User, Headphones } from 'lucide-react';
 import ConciergeAvatar from './ConciergeAvatar';
 import ConciergeBubble from './ConciergeBubble';
 import type { AvatarState, ConciergeMessage } from './types';
+import type { SessionStatus } from '@/lib/hooks/useConciergeChat';
 
 interface ConciergeChatProps {
   messages: ConciergeMessage[];
@@ -13,10 +14,18 @@ interface ConciergeChatProps {
   remainingMessages: number | null;
   currentPage?: string;
   avatarStyle?: any;
+  /** オペレーターがオンラインか */
+  operatorOnline?: boolean;
+  /** 人間チャットモードか */
+  isHumanMode?: boolean;
+  /** セッション状態 */
+  sessionStatus?: SessionStatus;
   onSend: (text: string) => void;
   onFeedback?: (messageId: string, feedback: 1 | -1) => void;
   onClose: () => void;
   onClear: () => void;
+  /** 人間サポートリクエスト */
+  onRequestHumanSupport?: () => void;
 }
 
 /** ページ別クイックアクション */
@@ -58,10 +67,14 @@ export default function ConciergeChat({
   remainingMessages,
   currentPage,
   avatarStyle,
+  operatorOnline = false,
+  isHumanMode = false,
+  sessionStatus = 'active',
   onSend,
   onFeedback,
   onClose,
   onClear,
+  onRequestHumanSupport,
 }: ConciergeChatProps) {
   const quickActions = getQuickActions(currentPage);
   const [input, setInput] = useState('');
@@ -69,6 +82,8 @@ export default function ConciergeChat({
   const lastAssistantRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevMessagesLenRef = useRef(0);
+
+  const isWaiting = sessionStatus === 'waiting';
 
   // 新しいメッセージでスクロール
   useEffect(() => {
@@ -115,11 +130,29 @@ export default function ConciergeChat({
     >
 
       {/* ヘッダー */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-        <ConciergeAvatar state={avatarState} size={36} avatarStyle={avatarStyle} />
+      <div className={`flex items-center gap-3 px-4 py-3 text-white ${
+        isHumanMode
+          ? 'bg-gradient-to-r from-green-500 to-green-600'
+          : 'bg-gradient-to-r from-blue-500 to-blue-600'
+      }`}>
+        {isHumanMode ? (
+          <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+            <Headphones className="w-5 h-5" />
+          </div>
+        ) : (
+          <ConciergeAvatar state={avatarState} size={36} avatarStyle={avatarStyle} />
+        )}
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm">メイカーくん</div>
-          <div className="text-xs text-blue-100">AIコンシェルジュ</div>
+          <div className="font-semibold text-sm">
+            {isHumanMode ? '担当者と会話中' : 'メイカーくん'}
+          </div>
+          <div className="text-xs opacity-80">
+            {isHumanMode
+              ? 'サポート担当者が対応しています'
+              : isWaiting
+                ? '担当者に接続中...'
+                : 'AIコンシェルジュ'}
+          </div>
         </div>
         <button
           onClick={onClear}
@@ -215,13 +248,35 @@ export default function ConciergeChat({
             本日の残り: {remainingMessages}回
           </div>
         )}
+
+        {/* 人間サポートリクエストボタン（waiting/assigned以外で表示） */}
+        {!isHumanMode && !isWaiting && onRequestHumanSupport && messages.length > 0 && (
+          <button
+            onClick={onRequestHumanSupport}
+            disabled={isLoading}
+            className="w-full mb-2 px-3 py-1.5 text-xs rounded-lg border transition-all flex items-center justify-center gap-1.5
+              border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 hover:border-gray-300
+              disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <User className="w-3.5 h-3.5" />
+            {operatorOnline ? (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                担当者に相談する
+              </>
+            ) : (
+              '担当者に問い合わせを送信'
+            )}
+          </button>
+        )}
+
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <input
             ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="メッセージを入力..."
+            placeholder={isHumanMode ? '担当者にメッセージ...' : 'メッセージを入力...'}
             disabled={isLoading}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-xl text-sm
               text-gray-900 placeholder:text-gray-400
@@ -231,10 +286,14 @@ export default function ConciergeChat({
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="p-2 rounded-xl bg-blue-500 text-white shadow-md
-              hover:bg-blue-600 transition-all duration-200
+            className={`p-2 rounded-xl text-white shadow-md
+              transition-all duration-200
               disabled:opacity-40 disabled:cursor-not-allowed
-              min-w-[44px] min-h-[44px] flex items-center justify-center"
+              min-w-[44px] min-h-[44px] flex items-center justify-center ${
+                isHumanMode
+                  ? 'bg-green-500 hover:bg-green-600'
+                  : 'bg-blue-500 hover:bg-blue-600'
+              }`}
           >
             <Send className="w-4 h-4" />
           </button>

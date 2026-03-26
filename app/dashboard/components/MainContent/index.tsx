@@ -24,6 +24,7 @@ import BigFiveHistory from '@/components/bigfive/BigFiveHistory';
 import FortuneHistory from '@/components/fortune/FortuneHistory';
 import SubsidyDashboard from '@/components/subsidy/SubsidyDashboard';
 import ConciergeList from './ConciergeList';
+import ConciergeOperatorView from '@/app/dashboard/components/Admin/ConciergeOperator';
 import { MakersPlanTier } from '@/lib/subscription';
 
 export type ActiveView =
@@ -82,6 +83,7 @@ export type ActiveView =
   | 'admin-trial'
   | 'admin-products'
   | 'admin-purchases'
+  | 'admin-concierge-operator'
   | 'monetize-diagnosis';
 
 type KdlSubscription = {
@@ -435,6 +437,9 @@ export default function MainContent({
         <>{adminComponents.PurchaseHistoryManager()}</>
       )}
 
+      {/* コンシェルジュ チャット対応（オペレーターコンソール） */}
+      {activeView === 'admin-concierge-operator' && <ConciergeOperatorView />}
+
       {/* コンシェルジュメーカー */}
       {activeView === 'concierge' && user && (
         <ConciergeList userId={user.id} isAdmin={isAdmin} />
@@ -453,7 +458,7 @@ export default function MainContent({
       )}
 
       {/* デフォルト */}
-      {!['dashboard', 'announcements', 'quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'step-email', 'line', 'youtube-analysis', 'youtube-keyword-research', 'kindle-keywords', 'google-keyword-research', 'rakuten-research', 'niconico-keyword-research', 'reddit-keyword-research', 'order-form', 'funnel', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks', 'admin-points', 'admin-diagnosis', 'admin-inquiries', 'admin-trial', 'admin-products', 'admin-purchases', 'bigfive', 'fortune', 'subsidy', 'site', 'concierge'].includes(activeView) && (
+      {!['dashboard', 'announcements', 'quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'booking', 'attendance', 'survey', 'my-games', 'newsletter', 'step-email', 'line', 'youtube-analysis', 'youtube-keyword-research', 'kindle-keywords', 'google-keyword-research', 'rakuten-research', 'niconico-keyword-research', 'reddit-keyword-research', 'order-form', 'funnel', 'marketplace-seller', 'affiliate', 'settings', 'admin-overview', 'admin-users', 'admin-announcements', 'admin-monitor', 'admin-service', 'admin-ai-model', 'admin-affiliate', 'admin-featured', 'admin-gamification', 'admin-transfer', 'admin-cleanup', 'admin-feedbacks', 'admin-points', 'admin-diagnosis', 'admin-inquiries', 'admin-trial', 'admin-products', 'admin-purchases', 'admin-concierge-operator', 'bigfive', 'fortune', 'subsidy', 'site', 'concierge'].includes(activeView) && (
     <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
       <h2 className="text-xl font-bold text-gray-900 mb-4">準備中</h2>
       <p className="text-gray-500">この機能は現在準備中です</p>

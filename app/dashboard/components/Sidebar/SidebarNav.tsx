@@ -30,6 +30,7 @@ import {
   Gift,
   Package,
   Receipt,
+  Headphones,
 } from 'lucide-react';
 import { TOOL_ITEMS, TOOL_CATEGORIES } from './menuItems';
 import { PersonaId, DISCOVERY_CATEGORIES, getVisibleToolIds, getPersonaById } from '@/lib/persona-config';
@@ -331,6 +332,7 @@ export default function SidebarNav({
       label: 'コンシェルジュ',
       icon: Bot,
       items: [
+        { id: 'admin-concierge-operator', label: 'チャット対応', icon: Headphones, section: 'admin', adminOnly: true },
         { id: 'admin-concierge-maker', label: 'コンシェルジュメーカー', icon: Bot, section: 'admin', adminOnly: true },
         { id: 'admin-concierge-analytics', label: 'コンシェルジュ分析', icon: BarChart3, section: 'admin', adminOnly: true },
       ],
