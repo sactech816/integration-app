@@ -76,7 +76,17 @@ export async function POST(
       emailPayload.text = campaign.text_content;
     }
 
-    await resend.emails.send(emailPayload);
+    const { data, error: sendError } = await resend.emails.send(emailPayload);
+
+    if (sendError) {
+      console.error('[Newsletter Test Send] Resend error:', sendError);
+      return NextResponse.json(
+        { error: `送信エラー: ${sendError.message || 'メール送信に失敗しました'}` },
+        { status: 422 }
+      );
+    }
+
+    console.log('[Newsletter Test Send] Success:', data?.id, '→', testEmail);
 
     return NextResponse.json({
       success: true,
@@ -84,6 +94,7 @@ export async function POST(
     });
   } catch (error) {
     console.error('[Newsletter Test Send] Error:', error);
-    return NextResponse.json({ error: 'テスト送信に失敗しました' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'テスト送信に失敗しました';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

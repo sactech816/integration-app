@@ -941,37 +941,62 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
     return applyCtaLinks(result);
   }, [lists, listId, applyCtaLinks]);
 
+  // contentEditable → state 同期用の追跡ref
+  // useEffectがユーザー入力中のDOMを上書きしないようにする
+  const lastSetHeaderHtml = useRef('');
+  const lastSetBodyHtml = useRef('');
+  const lastSetFooterHtml = useRef('');
+
   // contentEditable → state 同期（onInput でリアルタイム更新）
   const handleHeaderInput = useCallback(() => {
-    if (headerRef.current) setHeaderHtml(headerRef.current.innerHTML);
+    if (headerRef.current) {
+      const html = headerRef.current.innerHTML;
+      lastSetHeaderHtml.current = html;
+      setHeaderHtml(html);
+    }
   }, []);
   const handleBodyInput = useCallback(() => {
-    if (bodyRef.current) setHtmlContent(bodyRef.current.innerHTML);
+    if (bodyRef.current) {
+      const html = bodyRef.current.innerHTML;
+      lastSetBodyHtml.current = html;
+      setHtmlContent(html);
+    }
   }, []);
   const handleFooterInput = useCallback(() => {
-    if (footerRef.current) setFooterHtml(footerRef.current.innerHTML);
+    if (footerRef.current) {
+      const html = footerRef.current.innerHTML;
+      lastSetFooterHtml.current = html;
+      setFooterHtml(html);
+    }
   }, []);
 
-  // ビジュアルモード切替時にrefのinnerHTMLをセット
   useEffect(() => {
     if (headerRef.current && headerViewMode === 'visual' && headerHtml) {
-      headerRef.current.innerHTML = headerHtml;
+      if (headerRef.current.innerHTML !== headerHtml && lastSetHeaderHtml.current !== headerHtml) {
+        headerRef.current.innerHTML = headerHtml;
+      }
+      lastSetHeaderHtml.current = headerHtml;
     }
-  }, [headerViewMode]);
+  }, [headerViewMode, headerHtml]);
 
   useEffect(() => {
     if (bodyRef.current && bodyViewMode === 'visual') {
-      bodyRef.current.innerHTML = htmlContent.startsWith('<')
-        ? htmlContent
-        : textToHtml(htmlContent);
+      const targetHtml = htmlContent.startsWith('<') ? htmlContent : textToHtml(htmlContent);
+      if (bodyRef.current.innerHTML !== targetHtml && lastSetBodyHtml.current !== htmlContent) {
+        bodyRef.current.innerHTML = targetHtml;
+      }
+      lastSetBodyHtml.current = htmlContent;
     }
-  }, [bodyViewMode]);
+  }, [bodyViewMode, htmlContent]);
 
   useEffect(() => {
     if (footerRef.current && footerViewMode === 'visual' && footerHtml) {
-      footerRef.current.innerHTML = footerHtml;
+      if (footerRef.current.innerHTML !== footerHtml && lastSetFooterHtml.current !== footerHtml) {
+        footerRef.current.innerHTML = footerHtml;
+      }
+      lastSetFooterHtml.current = footerHtml;
     }
-  }, [footerViewMode]);
+  }, [footerViewMode, footerHtml]);
 
   // テンプレート適用（件名候補も設定）
   const applyTemplate = (template: NewsletterTemplate) => {
@@ -1370,7 +1395,6 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                         suppressContentEditableWarning
                         onInput={handleHeaderInput}
                         className="min-h-[80px] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-inset rounded-xl"
-                        dangerouslySetInnerHTML={{ __html: headerHtml }}
                       />
                     ) : (
                       <p className="p-4 text-sm text-gray-400">ヘッダーが未設定です。テンプレートを選択すると自動設定されます。</p>
@@ -1425,7 +1449,6 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                         suppressContentEditableWarning
                         onInput={handleBodyInput}
                         className="min-h-[200px] p-4 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-inset rounded-xl"
-                        dangerouslySetInnerHTML={{ __html: htmlContent.startsWith('<') ? htmlContent : textToHtml(htmlContent) }}
                       />
                     ) : (
                       <p className="p-4 text-sm text-gray-400">本文が未入力です。テンプレートを選択するか、HTMLモードで直接入力してください。</p>
@@ -1536,7 +1559,6 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
                         suppressContentEditableWarning
                         onInput={handleFooterInput}
                         className="min-h-[80px] focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-inset rounded-xl"
-                        dangerouslySetInnerHTML={{ __html: footerHtml }}
                       />
                     ) : (
                       <p className="p-4 text-sm text-gray-400">フッターが未設定です。テンプレートを選択すると自動設定されます。</p>
