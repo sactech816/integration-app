@@ -1010,6 +1010,12 @@ export const UNLIMITED_TOOLS = new Set([
   'order-form',
 ]);
 
+/** Freeプランで作成可能なツール（各1個まで）。これ以外はStarterプラン以上が必要 */
+export const FREE_PLAN_ALLOWED_TOOLS = new Set([
+  'quiz',
+  'profile',
+]);
+
 /** 専用の制限を持つツール（toolCreationLimitではなく個別関数で制御） */
 export const SPECIAL_LIMIT_TOOLS = new Set([
   'funnel',

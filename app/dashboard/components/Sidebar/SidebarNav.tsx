@@ -130,7 +130,11 @@ export default function SidebarNav({
   // ツール表示モード: my-tools / discover / all
   type ToolViewMode = 'my-tools' | 'discover' | 'all';
   const hasPersona = !!userPersona;
-  const [toolViewMode, setToolViewMode] = useState<ToolViewMode>(hasPersona && !showAllTools ? 'my-tools' : 'all');
+  // ペルソナ未選択でも「使用中+おすすめ」で絞り込み表示（smart モード）
+  const [toolViewMode, setToolViewMode] = useState<ToolViewMode>(
+    showAllTools ? 'all' : hasPersona ? 'my-tools' : 'my-tools'
+  );
+
 
   // ペルソナベースの表示ツールID
   const visibleToolIds = useMemo(() => {
@@ -175,6 +179,15 @@ export default function SidebarNav({
     'kindle-cover': contentCounts.kindle_cover,
     'monetize-diagnosis': contentCounts.monetize_diagnosis,
   };
+
+  /** ペルソナ未選択時: コンテンツ作成済み or おすすめツールだけを表示 */
+  const smartVisibleToolIds = useMemo(() => {
+    const usedToolIds = Object.entries(countMap)
+      .filter(([, count]) => count && count > 0)
+      .map(([id]) => id);
+    const recommendedIds = ['quiz', 'profile', 'attendance', 'marketplace-seller'];
+    return [...new Set([...usedToolIds, ...recommendedIds])];
+  }, [countMap]);
 
   // ツールアイテムをMenuItemに変換
   const toolMenuItems: MenuItem[] = TOOL_ITEMS.map((tool) => {
@@ -243,14 +256,16 @@ export default function SidebarNav({
       items: toolMenuItems.filter((item) => {
         const toolDef = TOOL_ITEMS.find((t) => t.id === item.id);
         if (toolDef?.category !== cat.id) return false;
-        // マイツールモード: ペルソナの表示対象のみ
-        if (visibleToolIds && toolViewMode === 'my-tools') {
-          return visibleToolIds.includes(item.id);
+        if (toolViewMode === 'my-tools') {
+          // ペルソナ設定済み → ペルソナベースのフィルタ
+          if (visibleToolIds) return visibleToolIds.includes(item.id);
+          // ペルソナ未設定 → 使用中+おすすめのスマートフィルタ
+          return smartVisibleToolIds.includes(item.id);
         }
         return true;
       }),
     }));
-  }, [toolMenuItems, visibleToolIds, toolViewMode]);
+  }, [toolMenuItems, visibleToolIds, smartVisibleToolIds, toolViewMode]);
 
   // discoverモード用: 行動ベースカテゴリのグループ
   const discoveryGroups = useMemo(() => {
@@ -631,20 +646,20 @@ export default function SidebarNav({
       {/* メインメニュー（モード切替付き） */}
       <div>
         {/* モード切替タブ（ペルソナ設定済みの場合のみ表示） */}
-        {hasPersona ? (
-          <div className="px-3 mb-2">
-            <div className="flex bg-gray-100 rounded-lg p-0.5">
-              <button
-                onClick={() => setToolViewMode('my-tools')}
-                className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[10px] font-bold transition-all ${
-                  toolViewMode === 'my-tools'
-                    ? 'bg-white text-blue-700 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <ListFilter size={12} />
-                マイツール
-              </button>
+        <div className="px-3 mb-2">
+          <div className="flex bg-gray-100 rounded-lg p-0.5">
+            <button
+              onClick={() => setToolViewMode('my-tools')}
+              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[10px] font-bold transition-all ${
+                toolViewMode === 'my-tools'
+                  ? 'bg-white text-blue-700 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <ListFilter size={12} />
+              {hasPersona ? 'マイツール' : '使用中'}
+            </button>
+            {hasPersona && (
               <button
                 onClick={() => setToolViewMode('discover')}
                 className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[10px] font-bold transition-all ${
@@ -656,24 +671,20 @@ export default function SidebarNav({
                 <Compass size={12} />
                 追加
               </button>
-              <button
-                onClick={() => setToolViewMode('all')}
-                className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[10px] font-bold transition-all ${
-                  toolViewMode === 'all'
-                    ? 'bg-white text-blue-700 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <LayoutGrid size={12} />
-                全ツール
-              </button>
-            </div>
+            )}
+            <button
+              onClick={() => setToolViewMode('all')}
+              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[10px] font-bold transition-all ${
+                toolViewMode === 'all'
+                  ? 'bg-white text-blue-700 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <LayoutGrid size={12} />
+              全ツール
+            </button>
           </div>
-        ) : (
-          <h3 className="px-3 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
-            ツール
-          </h3>
-        )}
+        </div>
 
         {/* ツール一覧（my-tools / all モード） */}
         {toolViewMode !== 'discover' && (

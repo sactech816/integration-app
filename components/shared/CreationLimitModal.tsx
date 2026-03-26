@@ -135,9 +135,11 @@ export default function CreationLimitModal({
             <div className="flex-1">
               <p className="font-bold text-gray-900">プランをアップグレード</p>
               <p className="text-sm text-gray-600">
-                {info.recommendedPlan === 'standard'
-                  ? 'Standard（¥1,980/月）で10個まで作成可能'
-                  : 'Business（¥4,980/月）で無制限に作成可能'}
+                {info.limit === 0
+                  ? 'Starter（¥4,980/月）で全ツール利用可能'
+                  : info.recommendedPlan === 'standard'
+                    ? 'Standard（¥1,980/月）で10個まで作成可能'
+                    : 'Business（¥4,980/月）で無制限に作成可能'}
               </p>
             </div>
             <ArrowRight className="w-5 h-5 text-amber-500 group-hover:translate-x-1 transition-transform" />
