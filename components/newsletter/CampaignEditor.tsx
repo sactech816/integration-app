@@ -891,11 +891,16 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
           bodyHtml: currentHtml,
         };
         if (savedCampaignId) {
-          await fetch(`/api/newsletter-maker/campaigns/${savedCampaignId}`, {
+          const patchRes = await fetch(`/api/newsletter-maker/campaigns/${savedCampaignId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(bodyPayload),
           });
+          if (!patchRes.ok) {
+            const err = await patchRes.json().catch(() => ({}));
+            alert(err.error || '保存に失敗しました');
+            return;
+          }
           setSaveSuccess(true);
           setTimeout(() => setSaveSuccess(false), 2000);
         } else {
