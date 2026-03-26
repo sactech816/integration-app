@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Users, Plus, UserMinus, Loader2, Copy, ExternalLink, Upload, X, FileUp, CheckCircle2 } from 'lucide-react';
+import { Users, Plus, UserMinus, Loader2, Copy, ExternalLink, Upload, X, FileUp, CheckCircle2, Settings, Mail, Save, ChevronDown, ChevronUp, Pencil } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { isValidEmail } from '@/lib/security/sanitize';
 
@@ -56,6 +56,14 @@ export default function SubscriberList({ listId }: { listId: string }) {
   const [filter, setFilter] = useState<'all' | 'subscribed' | 'unsubscribed'>('subscribed');
   const [copied, setCopied] = useState(false);
 
+  // 差出人設定
+  const [showSenderSettings, setShowSenderSettings] = useState(false);
+  const [editFromName, setEditFromName] = useState('');
+  const [editFromEmail, setEditFromEmail] = useState('');
+  const [savingSender, setSavingSender] = useState(false);
+  const [senderSaveSuccess, setSenderSaveSuccess] = useState(false);
+  const [senderError, setSenderError] = useState('');
+
   // インポート関連
   const [showImportModal, setShowImportModal] = useState(false);
   const [importTab, setImportTab] = useState<'tools' | 'csv'>('tools');
@@ -91,7 +99,49 @@ export default function SubscriberList({ listId }: { listId: string }) {
     if (res.ok) {
       const data = await res.json();
       setList(data.list);
+      setEditFromName(data.list.from_name || '');
+      setEditFromEmail(data.list.from_email || '');
     }
+  };
+
+  const handleSaveSender = async () => {
+    if (!userId) return;
+    setSenderError('');
+
+    // バリデーション
+    if (editFromEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editFromEmail)) {
+      setSenderError('有効なメールアドレスを入力してください（例: info@example.com）');
+      return;
+    }
+    if (editFromEmail && /[^\x00-\x7F]/.test(editFromEmail)) {
+      setSenderError('メールアドレスに全角文字は使用できません');
+      return;
+    }
+
+    setSavingSender(true);
+    try {
+      const res = await fetch(`/api/newsletter-maker/lists/${listId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          fromName: editFromName.trim() || null,
+          fromEmail: editFromEmail.trim() || null,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setList(data.list);
+        setSenderSaveSuccess(true);
+        setTimeout(() => setSenderSaveSuccess(false), 2000);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setSenderError(err.error || '保存に失敗しました');
+      }
+    } catch {
+      setSenderError('通信エラーが発生しました');
+    }
+    setSavingSender(false);
   };
 
   const fetchSubscribers = async (uid: string, statusFilter: string) => {
@@ -310,6 +360,72 @@ export default function SubscriberList({ listId }: { listId: string }) {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">{list.name}</h1>
         {list.description && <p className="text-gray-600 mt-1">{list.description}</p>}
+      </div>
+
+      {/* 差出人設定 */}
+      <div className="bg-white border border-gray-200 rounded-xl mb-6 overflow-hidden shadow-sm">
+        <button
+          onClick={() => setShowSenderSettings(!showSenderSettings)}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Mail className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="text-left">
+              <span className="text-sm font-semibold text-gray-900">差出人設定</span>
+              <p className="text-xs text-gray-500">
+                {list.from_name || list.from_email
+                  ? `${list.from_name || '未設定'} / ${list.from_email || '未設定'}`
+                  : '未設定（デフォルト差出人が使用されます）'}
+              </p>
+            </div>
+          </div>
+          {showSenderSettings ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+        </button>
+        {showSenderSettings && (
+          <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">差出人名</label>
+              <input
+                type="text"
+                value={editFromName}
+                onChange={(e) => setEditFromName(e.target.value)}
+                placeholder="例: 集客メーカー"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-gray-900 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">差出人メールアドレス</label>
+              <input
+                type="email"
+                value={editFromEmail}
+                onChange={(e) => { setEditFromEmail(e.target.value); setSenderError(''); }}
+                placeholder="例: info@makers.tokyo"
+                className={`w-full px-3 py-2.5 border rounded-lg text-gray-900 text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                  senderError ? 'border-red-400' : 'border-gray-300'
+                }`}
+              />
+              {senderError && <p className="text-xs text-red-600 mt-1">{senderError}</p>}
+              <p className="text-xs text-gray-400 mt-1">Resendで認証済みのドメインのメールアドレスを入力してください</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSaveSender}
+                disabled={savingSender}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors min-h-[44px] shadow-sm"
+              >
+                <Save className="w-4 h-4" />
+                {savingSender ? '保存中...' : '保存'}
+              </button>
+              {senderSaveSuccess && (
+                <span className="inline-flex items-center gap-1 text-sm text-green-600 font-semibold">
+                  <CheckCircle2 className="w-4 h-4" />保存しました
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 公開購読URL */}

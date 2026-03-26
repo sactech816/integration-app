@@ -797,6 +797,18 @@ export default function CampaignEditor({ campaignId, defaultListId }: CampaignEd
 
   const handleCreateList = async () => {
     if (!user || !newListName.trim()) return;
+    // メールアドレスのバリデーション
+    const email = newListFromEmail.trim();
+    if (email) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alert('差出人メールアドレスが不正です。正しい形式で入力してください（例: info@example.com）');
+        return;
+      }
+      if (/[^\x00-\x7F]/.test(email)) {
+        alert('差出人メールアドレスに全角文字は使用できません');
+        return;
+      }
+    }
     setCreatingList(true);
     try {
       const res = await fetch('/api/newsletter-maker/lists', {

@@ -70,6 +70,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'userId と name は必須です' }, { status: 400 });
     }
 
+    // メールアドレスのバリデーション
+    if (fromEmail) {
+      const emailStr = String(fromEmail).trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr)) {
+        return NextResponse.json({ error: '差出人メールアドレスの形式が不正です' }, { status: 400 });
+      }
+      if (/[^\x00-\x7F]/.test(emailStr)) {
+        return NextResponse.json({ error: 'メールアドレスに全角文字は使用できません' }, { status: 400 });
+      }
+    }
+
     const supabase = getServiceClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
