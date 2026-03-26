@@ -83,22 +83,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'リストが見つかりません' }, { status: 404 });
     }
 
-    const { data, error } = await supabase
+    const insertData: Record<string, any> = {
+      user_id: userId,
+      list_id: listId,
+      subject,
+      preview_text: previewText || null,
+      html_content: htmlContent || '',
+      text_content: textContent || null,
+      header_html: headerHtml || null,
+      footer_html: footerHtml || null,
+      body_html: bodyHtml || null,
+      status: 'draft',
+    };
+
+    let { data, error } = await supabase
       .from('newsletter_campaigns')
-      .insert({
-        user_id: userId,
-        list_id: listId,
-        subject,
-        preview_text: previewText || null,
-        html_content: htmlContent || '',
-        text_content: textContent || null,
-        header_html: headerHtml || null,
-        footer_html: footerHtml || null,
-        body_html: bodyHtml || null,
-        status: 'draft',
-      })
+      .insert(insertData)
       .select()
       .single();
+
+    // 新カラム未追加の場合、新カラムを除いてリトライ
+    if (error && (error.message?.includes('header_html') || error.message?.includes('footer_html') || error.message?.includes('body_html'))) {
+      console.warn('[Newsletter Campaigns] New columns not found, retrying without them');
+      delete insertData.header_html;
+      delete insertData.footer_html;
+      delete insertData.body_html;
+      ({ data, error } = await supabase
+        .from('newsletter_campaigns')
+        .insert(insertData)
+        .select()
+        .single());
+    }
 
     if (error) {
       console.error('[Newsletter Campaigns] Insert error:', error);

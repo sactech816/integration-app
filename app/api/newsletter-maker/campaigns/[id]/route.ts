@@ -93,13 +93,28 @@ export async function PATCH(
     if (footerHtml !== undefined) updateData.footer_html = footerHtml;
     if (bodyHtml !== undefined) updateData.body_html = bodyHtml;
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('newsletter_campaigns')
       .update(updateData)
       .eq('id', id)
       .eq('user_id', userId)
       .select()
       .single();
+
+    // 新カラム未追加の場合、新カラムを除いてリトライ
+    if (error && (error.message?.includes('header_html') || error.message?.includes('footer_html') || error.message?.includes('body_html'))) {
+      console.warn('[Newsletter Campaign Update] New columns not found, retrying without them');
+      delete updateData.header_html;
+      delete updateData.footer_html;
+      delete updateData.body_html;
+      ({ data, error } = await supabase
+        .from('newsletter_campaigns')
+        .update(updateData)
+        .eq('id', id)
+        .eq('user_id', userId)
+        .select()
+        .single());
+    }
 
     if (error) {
       console.error('[Newsletter Campaign Update] Error:', error);

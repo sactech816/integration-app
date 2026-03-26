@@ -60,19 +60,28 @@ export async function POST(
       return NextResponse.json({ error: '件名と本文は必須です' }, { status: 400 });
     }
 
-    const rawFromName = campaign.newsletter_lists?.from_name || '集客メーカー';
-    const rawFromEmail = campaign.newsletter_lists?.from_email || process.env.RESEND_FROM_EMAIL || 'noreply@makers.tokyo';
-    // メールアドレスから非ASCII文字を除去（全角文字の混入対策）
-    const fromEmail = rawFromEmail.replace(/[^\x00-\x7F]/g, '').trim();
-    // 差出人名から < > を除去（fromフォーマット破壊防止）
-    const fromName = rawFromName.replace(/[<>]/g, '').trim();
+    const emailRegexSimple = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const defaultEmail = process.env.RESEND_FROM_EMAIL || 'noreply@makers.tokyo';
 
-    if (!fromEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fromEmail)) {
-      console.error('[Newsletter Test Send] Invalid fromEmail:', { rawFromEmail, fromEmail });
-      return NextResponse.json({
-        error: `差出人メールアドレスが不正です: "${rawFromEmail}" → "${fromEmail}"。リスト設定を確認してください。`,
-      }, { status: 400 });
+    // from_name / from_email が入れ違いの場合を自動検出・修正
+    let fromName = (campaign.newsletter_lists?.from_name || '').replace(/[<>]/g, '').trim();
+    let fromEmail = (campaign.newsletter_lists?.from_email || '').replace(/[^\x00-\x7F]/g, '').trim();
+
+    // from_emailが空orメール形式でない場合、from_nameにメールが入っていないか確認
+    if (!emailRegexSimple.test(fromEmail)) {
+      if (emailRegexSimple.test(fromName)) {
+        // 入れ違い: from_nameにメールが入っている
+        fromEmail = fromName;
+        fromName = (campaign.newsletter_lists?.from_email || '').replace(/[<>]/g, '').trim();
+      } else {
+        // どちらにもメールがない → デフォルト使用
+        if (!fromName && campaign.newsletter_lists?.from_email) {
+          fromName = campaign.newsletter_lists.from_email; // 名前として使う
+        }
+        fromEmail = defaultEmail;
+      }
     }
+    if (!fromName) fromName = '集客メーカー';
 
     // Resendのfromフィールド: 差出人名がある場合は "Name <email>" 形式、なければメールのみ
     const fromField = fromName ? `${fromName} <${fromEmail}>` : fromEmail;

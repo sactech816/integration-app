@@ -73,18 +73,26 @@ export async function POST(
     }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
-    const rawFromName = campaign.newsletter_lists?.from_name || '集客メーカー';
-    const rawFromEmail = campaign.newsletter_lists?.from_email || process.env.RESEND_FROM_EMAIL || 'noreply@makers.tokyo';
-    const fromEmail = rawFromEmail.replace(/[^\x00-\x7F]/g, '').trim();
-    const fromName = rawFromName.replace(/[<>]/g, '').trim();
+    const emailRegexSimple = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const defaultEmail = process.env.RESEND_FROM_EMAIL || 'noreply@makers.tokyo';
 
-    if (!fromEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fromEmail)) {
-      return NextResponse.json({
-        error: `差出人メールアドレスが不正です。リスト設定を確認してください。`,
-      }, { status: 400 });
+    let fromName = (campaign.newsletter_lists?.from_name || '').replace(/[<>]/g, '').trim();
+    let fromEmail = (campaign.newsletter_lists?.from_email || '').replace(/[^\x00-\x7F]/g, '').trim();
+
+    if (!emailRegexSimple.test(fromEmail)) {
+      if (emailRegexSimple.test(fromName)) {
+        fromEmail = fromName;
+        fromName = (campaign.newsletter_lists?.from_email || '').replace(/[<>]/g, '').trim();
+      } else {
+        if (!fromName && campaign.newsletter_lists?.from_email) {
+          fromName = campaign.newsletter_lists.from_email;
+        }
+        fromEmail = defaultEmail;
+      }
     }
+    if (!fromName) fromName = '集客メーカー';
 
-    const fromField = fromName ? `${fromName} <${fromEmail}>` : fromEmail;
+    const fromField = `${fromName} <${fromEmail}>`;
 
     // 配信停止リンクを含むHTML
     const addUnsubscribeLink = (html: string, email: string) => {
