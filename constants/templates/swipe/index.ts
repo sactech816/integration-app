@@ -1,4 +1,5 @@
-import { SwipeTemplate } from '../types';
+import type { SwipeTemplate } from '../types';
+import type { Block } from '@/lib/types';
 
 // ブロックID生成
 const bid = () => `block_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -23,10 +24,10 @@ const productTemplate: SwipeTemplate = {
     { type: 'template', textOverlay: { title: '今だけ特別価格', subtitle: '詳しくは下へ ↓' } },
   ],
   blocks: [
-    { id: bid(), type: 'text_card', data: { title: '商品の特徴', text: 'ここに商品の詳細を記載してください。', align: 'left' } },
-    { id: bid(), type: 'pricing', data: { title: '料金プラン', plans: [{ name: '通常価格', price: '¥9,800', features: ['特徴1', '特徴2', '特徴3'], recommended: true }] } },
-    { id: bid(), type: 'faq', data: { title: 'よくある質問', items: [{ question: 'Q. 送料はかかりますか？', answer: 'A. 全国送料無料です。' }] } },
-    { id: bid(), type: 'cta_section', data: { title: '今すぐ購入', subtitle: '数量限定', buttonText: '購入する', buttonUrl: '#' } },
+    { id: bid(), type: 'text_card', data: { title: '商品の特徴', text: 'ここに商品の詳細を記載してください。', align: 'left' } } as Block,
+    { id: bid(), type: 'pricing', data: { plans: [{ id: bid(), title: '通常価格', price: '¥9,800', features: ['特徴1', '特徴2', '特徴3'], isRecommended: true }] } } as Block,
+    { id: bid(), type: 'faq', data: { items: [{ id: bid(), question: 'Q. 送料はかかりますか？', answer: 'A. 全国送料無料です。' }] } } as Block,
+    { id: bid(), type: 'cta_section', data: { title: '今すぐ購入', description: '数量限定', buttonText: '購入する', buttonUrl: '#' } } as Block,
   ],
   carouselSettings: { autoPlay: true, intervalSeconds: 5, mobileDisplay: 'swipe' },
 };
@@ -52,10 +53,10 @@ const seminarTemplate: SwipeTemplate = {
     { type: 'template', textOverlay: { title: '参加申し込み', subtitle: '残りわずか ↓' } },
   ],
   blocks: [
-    { id: bid(), type: 'text_card', data: { title: 'セミナー概要', text: 'セミナーの詳細をここに記載。', align: 'left' } },
-    { id: bid(), type: 'testimonial', data: { title: '参加者の声', items: [{ name: '参加者A', role: '会社員', text: 'とても参考になりました！', rating: 5 }] } },
-    { id: bid(), type: 'countdown', data: { title: '申込締切まで', targetDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), expiredText: '受付終了', backgroundColor: '#f5576c' } },
-    { id: bid(), type: 'lead_form', data: { title: '参加申し込み', description: '下記フォームからお申し込みください', buttonText: '申し込む', fields: ['name', 'email'] } },
+    { id: bid(), type: 'text_card', data: { title: 'セミナー概要', text: 'セミナーの詳細をここに記載。', align: 'left' } } as Block,
+    { id: bid(), type: 'testimonial', data: { items: [{ id: bid(), name: '参加者A', role: '会社員', comment: 'とても参考になりました！' }] } } as Block,
+    { id: bid(), type: 'countdown', data: { title: '申込締切まで', targetDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), expiredText: '受付終了', backgroundColor: '#f5576c' } } as Block,
+    { id: bid(), type: 'lead_form', data: { title: '参加申し込み', buttonText: '申し込む' } } as Block,
   ],
   carouselSettings: { autoPlay: true, intervalSeconds: 7, mobileDisplay: 'swipe' },
 };
@@ -82,8 +83,8 @@ const portfolioTemplate: SwipeTemplate = {
     { type: 'template', textOverlay: { title: 'お問い合わせ', subtitle: '↓ 詳細はこちら' } },
   ],
   blocks: [
-    { id: bid(), type: 'text_card', data: { title: '自己紹介', text: 'あなたのプロフィールをここに記載。', align: 'center' } },
-    { id: bid(), type: 'links', data: { title: 'SNS・連絡先', links: [{ label: 'Instagram', url: '#', icon: 'instagram' }, { label: 'X (Twitter)', url: '#', icon: 'twitter' }] } },
+    { id: bid(), type: 'text_card', data: { title: '自己紹介', text: 'あなたのプロフィールをここに記載。', align: 'center' } } as Block,
+    { id: bid(), type: 'links', data: { links: [{ label: 'Instagram', url: '#', style: '' }, { label: 'X (Twitter)', url: '#', style: '' }] } } as Block,
   ],
   carouselSettings: { autoPlay: false, intervalSeconds: 5, mobileDisplay: 'swipe' },
 };
@@ -109,11 +110,11 @@ const serviceTemplate: SwipeTemplate = {
     { type: 'template', textOverlay: { title: 'まずは無料相談', subtitle: '↓ 詳細はこちら' } },
   ],
   blocks: [
-    { id: bid(), type: 'text_card', data: { title: 'サービス詳細', text: 'サービスの詳しい説明をここに。', align: 'left' } },
-    { id: bid(), type: 'pricing', data: { title: '料金プラン', plans: [{ name: 'ライト', price: '¥9,800/月', features: ['特徴1', '特徴2'] }, { name: 'スタンダード', price: '¥19,800/月', features: ['特徴1', '特徴2', '特徴3'], recommended: true }] } },
-    { id: bid(), type: 'testimonial', data: { title: 'お客様の声', items: [{ name: 'Aさん', role: '経営者', text: '素晴らしいサービスでした。', rating: 5 }] } },
-    { id: bid(), type: 'faq', data: { title: 'よくある質問', items: [{ question: 'Q. 無料相談はありますか？', answer: 'A. はい、初回30分無料でご相談いただけます。' }] } },
-    { id: bid(), type: 'cta_section', data: { title: '無料相談はこちら', subtitle: 'まずはお気軽にご連絡ください', buttonText: '申し込む', buttonUrl: '#' } },
+    { id: bid(), type: 'text_card', data: { title: 'サービス詳細', text: 'サービスの詳しい説明をここに。', align: 'left' } } as Block,
+    { id: bid(), type: 'pricing', data: { plans: [{ id: bid(), title: 'ライト', price: '¥9,800/月', features: ['特徴1', '特徴2'], isRecommended: false }, { id: bid(), title: 'スタンダード', price: '¥19,800/月', features: ['特徴1', '特徴2', '特徴3'], isRecommended: true }] } } as Block,
+    { id: bid(), type: 'testimonial', data: { items: [{ id: bid(), name: 'Aさん', role: '経営者', comment: '素晴らしいサービスでした。' }] } } as Block,
+    { id: bid(), type: 'faq', data: { items: [{ id: bid(), question: 'Q. 無料相談はありますか？', answer: 'A. はい、初回30分無料でご相談いただけます。' }] } } as Block,
+    { id: bid(), type: 'cta_section', data: { title: '無料相談はこちら', description: 'まずはお気軽にご連絡ください', buttonText: '申し込む', buttonUrl: '#' } } as Block,
   ],
   carouselSettings: { autoPlay: true, intervalSeconds: 5, mobileDisplay: 'swipe' },
 };
@@ -138,9 +139,9 @@ const restaurantTemplate: SwipeTemplate = {
     { type: 'template', textOverlay: { title: 'アクセス・予約', subtitle: '↓ 詳細はこちら' } },
   ],
   blocks: [
-    { id: bid(), type: 'text_card', data: { title: '当店について', text: '店舗の紹介文をここに。', align: 'center' } },
-    { id: bid(), type: 'google_map', data: { title: 'アクセス', address: '東京都渋谷区...', embedUrl: '' } },
-    { id: bid(), type: 'line_card', data: { title: 'LINE予約', description: 'LINEでかんたん予約！', lineUrl: '', buttonText: '友だち追加' } },
+    { id: bid(), type: 'text_card', data: { title: '当店について', text: '店舗の紹介文をここに。', align: 'center' } } as Block,
+    { id: bid(), type: 'google_map', data: { address: '東京都渋谷区...' } } as Block,
+    { id: bid(), type: 'line_card', data: { title: 'LINE予約', description: 'LINEでかんたん予約！', url: '', buttonText: '友だち追加' } } as Block,
   ],
   carouselSettings: { autoPlay: true, intervalSeconds: 5, mobileDisplay: 'swipe' },
 };

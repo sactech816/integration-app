@@ -222,7 +222,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
     setSwipePage(prev => ({
       ...prev,
       content: prev.content?.map(b =>
-        b.id === id ? { ...b, data: { ...b.data, ...data } } : b
+        b.id === id ? { ...b, data: { ...b.data, ...data } } as Block : b
       ),
     }));
   }, []);
@@ -526,7 +526,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-700">
                         {AVAILABLE_BLOCKS.find(b => b.type === block.type)?.label || block.type}
-                        {block.data?.title && `: ${block.data.title}`}
+                        {(block.data as Record<string, unknown>)?.title && `: ${(block.data as Record<string, unknown>).title}`}
                       </span>
                       <div className="flex items-center gap-1">
                         <button
@@ -871,8 +871,8 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
                     <p className="text-sm font-medium text-gray-700">
                       {AVAILABLE_BLOCKS.find(b => b.type === block.type)?.label || block.type}
                     </p>
-                    {block.data?.title && (
-                      <p className="text-xs text-gray-500 mt-1">{block.data.title}</p>
+                    {(block.data as Record<string, unknown>)?.title && (
+                      <p className="text-xs text-gray-500 mt-1">{String((block.data as Record<string, unknown>).title)}</p>
                     )}
                   </div>
                 ))}
