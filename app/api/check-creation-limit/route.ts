@@ -4,7 +4,6 @@ import {
   getMakersSubscriptionStatus,
   checkToolCreationLimit,
   UNLIMITED_TOOLS,
-  FREE_PLAN_ALLOWED_TOOLS,
   TOOL_NAME_JA,
 } from '@/lib/subscription';
 
@@ -86,23 +85,7 @@ export async function GET(request: NextRequest) {
   try {
     const subStatus = await getMakersSubscriptionStatus(userId);
 
-    // Freeプラン: 許可ツール以外は作成不可（UNLIMITED_TOOLSは除外済み）
-    if (
-      (subStatus.planTier === 'free' || subStatus.planTier === 'guest') &&
-      !FREE_PLAN_ALLOWED_TOOLS.has(toolType)
-    ) {
-      const toolName = TOOL_NAME_JA[toolType] || toolType;
-      return NextResponse.json({
-        allowed: false,
-        current: 0,
-        limit: 0,
-        message: `${toolName}はStarterプラン以上でご利用いただけます`,
-        recommendedPlan: 'standard',
-        canUsePoints: false,
-        canPurchase: false,
-      });
-    }
-
+    // Freeプラン: 全ツール各1個まで作成可能（toolCreationLimit=1 で制御）
     const result = await checkToolCreationLimit(userId, subStatus.planTier, toolType);
 
     // プラン上限に達している場合、ポイント解除枠 + 購入解除枠を確認
