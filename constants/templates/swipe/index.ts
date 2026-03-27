@@ -1,5 +1,6 @@
 import type { SwipeTemplate } from '../types';
 import type { Block } from '@/lib/types';
+import { getTemplateImagePath } from '../thumbnail';
 
 // ブロックID生成
 const bid = () => `block_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -17,11 +18,11 @@ const productTemplate: SwipeTemplate = {
   aspectRatio: '9:16',
   theme: { gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
   cards: [
-    { type: 'template', textOverlay: { title: '商品名をここに', subtitle: 'キャッチコピー' } },
-    { type: 'template', textOverlay: { title: '特徴①', subtitle: '詳細説明' } },
-    { type: 'template', textOverlay: { title: '特徴②', subtitle: '詳細説明' } },
-    { type: 'template', textOverlay: { title: 'お客様の声', subtitle: '★★★★★' } },
-    { type: 'template', textOverlay: { title: '今だけ特別価格', subtitle: '詳しくは下へ ↓' } },
+    { type: 'template', textOverlay: { title: '商品名をここに', subtitle: 'キャッチコピー', backgroundImageUrl: getTemplateImagePath('ig-story-gradient', 'sunset') } },
+    { type: 'template', textOverlay: { title: '特徴①', subtitle: '詳細説明', backgroundImageUrl: getTemplateImagePath('ig-story-gradient', 'ocean') } },
+    { type: 'template', textOverlay: { title: '特徴②', subtitle: '詳細説明', backgroundImageUrl: getTemplateImagePath('ig-story-gradient', 'aurora') } },
+    { type: 'template', textOverlay: { title: 'お客様の声', subtitle: '★★★★★', backgroundImageUrl: getTemplateImagePath('ig-story-quote', 'dark-gold') } },
+    { type: 'template', textOverlay: { title: '今だけ特別価格', subtitle: '詳しくは下へ ↓', backgroundImageUrl: getTemplateImagePath('ig-story-countdown', 'countdown-neon') } },
   ],
   blocks: [
     { id: bid(), type: 'text_card', data: { title: '商品の特徴', text: 'ここに商品の詳細を記載してください。', align: 'left' } } as Block,
@@ -45,12 +46,12 @@ const seminarTemplate: SwipeTemplate = {
   aspectRatio: '9:16',
   theme: { gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
   cards: [
-    { type: 'template', textOverlay: { title: 'セミナータイトル', subtitle: '開催日時' } },
-    { type: 'template', textOverlay: { title: 'こんなお悩みありませんか？', subtitle: '' } },
-    { type: 'template', textOverlay: { title: '解決方法を伝授', subtitle: '3つのポイント' } },
-    { type: 'template', textOverlay: { title: '講師プロフィール', subtitle: '' } },
-    { type: 'template', textOverlay: { title: '参加者の声', subtitle: '' } },
-    { type: 'template', textOverlay: { title: '参加申し込み', subtitle: '残りわずか ↓' } },
+    { type: 'template', textOverlay: { title: 'セミナータイトル', subtitle: '開催日時', backgroundImageUrl: getTemplateImagePath('ig-story-reels-cover', 'reels-gradient') } },
+    { type: 'template', textOverlay: { title: 'こんなお悩みありませんか？', subtitle: '', backgroundImageUrl: getTemplateImagePath('ig-story-quote', 'soft-white') } },
+    { type: 'template', textOverlay: { title: '解決方法を伝授', subtitle: '3つのポイント', backgroundImageUrl: getTemplateImagePath('ig-story-qa', 'qa-pastel') } },
+    { type: 'template', textOverlay: { title: '講師プロフィール', subtitle: '', backgroundImageUrl: getTemplateImagePath('ig-story-quote', 'forest') } },
+    { type: 'template', textOverlay: { title: '参加者の声', subtitle: '', backgroundImageUrl: getTemplateImagePath('ig-story-gradient', 'ocean') } },
+    { type: 'template', textOverlay: { title: '参加申し込み', subtitle: '残りわずか ↓', backgroundImageUrl: getTemplateImagePath('ig-story-countdown', 'countdown-gold') } },
   ],
   blocks: [
     { id: bid(), type: 'text_card', data: { title: 'セミナー概要', text: 'セミナーの詳細をここに記載。', align: 'left' } } as Block,
@@ -73,14 +74,14 @@ const portfolioTemplate: SwipeTemplate = {
   aspectRatio: '1:1',
   theme: { gradient: 'linear-gradient(135deg, #0c3483 0%, #a2b6df 100%)' },
   cards: [
-    { type: 'template', textOverlay: { title: 'ポートフォリオ', subtitle: '名前・肩書き' } },
-    { type: 'template', textOverlay: { title: '作品 1', subtitle: '' } },
-    { type: 'template', textOverlay: { title: '作品 2', subtitle: '' } },
-    { type: 'template', textOverlay: { title: '作品 3', subtitle: '' } },
-    { type: 'template', textOverlay: { title: '作品 4', subtitle: '' } },
-    { type: 'template', textOverlay: { title: '作品 5', subtitle: '' } },
-    { type: 'template', textOverlay: { title: '作品 6', subtitle: '' } },
-    { type: 'template', textOverlay: { title: 'お問い合わせ', subtitle: '↓ 詳細はこちら' } },
+    { type: 'template', textOverlay: { title: 'ポートフォリオ', subtitle: '名前・肩書き', backgroundImageUrl: getTemplateImagePath('ig-post-lifestyle', 'cream-brown') } },
+    { type: 'template', textOverlay: { title: '作品 1', subtitle: '', backgroundImageUrl: getTemplateImagePath('ig-post-carousel', 'carousel-blue') } },
+    { type: 'template', textOverlay: { title: '作品 2', subtitle: '', backgroundImageUrl: getTemplateImagePath('ig-post-carousel', 'carousel-pink') } },
+    { type: 'template', textOverlay: { title: '作品 3', subtitle: '', backgroundImageUrl: getTemplateImagePath('ig-post-carousel', 'carousel-green') } },
+    { type: 'template', textOverlay: { title: '作品 4', subtitle: '', backgroundImageUrl: getTemplateImagePath('ig-post-lifestyle', 'minimal-gray') } },
+    { type: 'template', textOverlay: { title: '作品 5', subtitle: '', backgroundImageUrl: getTemplateImagePath('ig-post-announcement', 'announce-blue') } },
+    { type: 'template', textOverlay: { title: '作品 6', subtitle: '', backgroundImageUrl: getTemplateImagePath('ig-post-announcement', 'announce-pink') } },
+    { type: 'template', textOverlay: { title: 'お問い合わせ', subtitle: '↓ 詳細はこちら', backgroundImageUrl: getTemplateImagePath('ig-post-lifestyle', 'pastel-pink') } },
   ],
   blocks: [
     { id: bid(), type: 'text_card', data: { title: '自己紹介', text: 'あなたのプロフィールをここに記載。', align: 'center' } } as Block,
@@ -102,12 +103,12 @@ const serviceTemplate: SwipeTemplate = {
   aspectRatio: '9:16',
   theme: { gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' },
   cards: [
-    { type: 'template', textOverlay: { title: 'サービス名', subtitle: 'あなたの理想を実現' } },
-    { type: 'template', textOverlay: { title: 'こんな方におすすめ', subtitle: '' } },
-    { type: 'template', textOverlay: { title: '3つの特徴', subtitle: '' } },
-    { type: 'template', textOverlay: { title: '料金プラン', subtitle: '' } },
-    { type: 'template', textOverlay: { title: 'お客様の声', subtitle: '' } },
-    { type: 'template', textOverlay: { title: 'まずは無料相談', subtitle: '↓ 詳細はこちら' } },
+    { type: 'template', textOverlay: { title: 'サービス名', subtitle: 'あなたの理想を実現', backgroundImageUrl: getTemplateImagePath('tiktok-trend', 'tiktok-neon') } },
+    { type: 'template', textOverlay: { title: 'こんな方におすすめ', subtitle: '', backgroundImageUrl: getTemplateImagePath('tiktok-trend', 'tiktok-dark') } },
+    { type: 'template', textOverlay: { title: '3つの特徴', subtitle: '', backgroundImageUrl: getTemplateImagePath('tiktok-howto', 'howto-blue') } },
+    { type: 'template', textOverlay: { title: '料金プラン', subtitle: '', backgroundImageUrl: getTemplateImagePath('tiktok-howto', 'howto-green') } },
+    { type: 'template', textOverlay: { title: 'お客様の声', subtitle: '', backgroundImageUrl: getTemplateImagePath('ig-story-quote', 'dark-gold') } },
+    { type: 'template', textOverlay: { title: 'まずは無料相談', subtitle: '↓ 詳細はこちら', backgroundImageUrl: getTemplateImagePath('tiktok-trend', 'tiktok-rainbow') } },
   ],
   blocks: [
     { id: bid(), type: 'text_card', data: { title: 'サービス詳細', text: 'サービスの詳しい説明をここに。', align: 'left' } } as Block,
@@ -131,12 +132,12 @@ const restaurantTemplate: SwipeTemplate = {
   aspectRatio: '9:16',
   theme: { gradient: 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)' },
   cards: [
-    { type: 'template', textOverlay: { title: '店舗名', subtitle: 'キャッチコピー' } },
-    { type: 'template', textOverlay: { title: 'おすすめメニュー①', subtitle: '' } },
-    { type: 'template', textOverlay: { title: 'おすすめメニュー②', subtitle: '' } },
-    { type: 'template', textOverlay: { title: 'おすすめメニュー③', subtitle: '' } },
-    { type: 'template', textOverlay: { title: '店内の雰囲気', subtitle: '' } },
-    { type: 'template', textOverlay: { title: 'アクセス・予約', subtitle: '↓ 詳細はこちら' } },
+    { type: 'template', textOverlay: { title: '店舗名', subtitle: 'キャッチコピー', backgroundImageUrl: getTemplateImagePath('ig-story-gradient', 'sunset') } },
+    { type: 'template', textOverlay: { title: 'おすすめメニュー①', subtitle: '', backgroundImageUrl: getTemplateImagePath('ig-story-qa', 'qa-orange') } },
+    { type: 'template', textOverlay: { title: 'おすすめメニュー②', subtitle: '', backgroundImageUrl: getTemplateImagePath('ig-story-qa', 'qa-mint') } },
+    { type: 'template', textOverlay: { title: 'おすすめメニュー③', subtitle: '', backgroundImageUrl: getTemplateImagePath('ig-story-qa', 'qa-pastel') } },
+    { type: 'template', textOverlay: { title: '店内の雰囲気', subtitle: '', backgroundImageUrl: getTemplateImagePath('ig-story-gradient', 'aurora') } },
+    { type: 'template', textOverlay: { title: 'アクセス・予約', subtitle: '↓ 詳細はこちら', backgroundImageUrl: getTemplateImagePath('ig-story-countdown', 'countdown-dark') } },
   ],
   blocks: [
     { id: bid(), type: 'text_card', data: { title: '当店について', text: '店舗の紹介文をここに。', align: 'center' } } as Block,

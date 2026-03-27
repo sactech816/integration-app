@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Save, ExternalLink, Plus, Settings, ChevronDown, ChevronUp,
   Layers, Type, CreditCard, Eye, Pencil, LayoutTemplate,
-  Image as ImageIcon, Smartphone, Monitor,
+  Image as ImageIcon, Smartphone, Monitor, Trophy,
 } from 'lucide-react';
 import { supabase, TABLES } from '@/lib/supabase';
 import type { SwipePage, SwipeCard, SwipeAspectRatio, SwipeSettings, SwipeCarouselSettings, Block } from '@/lib/types';
@@ -13,6 +13,7 @@ import SwipeCardEditor from './SwipeCardEditor';
 import SwipeCarousel, { ASPECT_SIZES } from './SwipeCarousel';
 import { swipeTemplates } from '@/constants/templates/swipe';
 import { SWIPE_CATEGORIES } from '@/constants/templates/types';
+import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 
 // ブロック型のインポート（BlockRendererで使うブロックの作成用）
 const AVAILABLE_BLOCKS = [
@@ -120,6 +121,9 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
   const [saving, setSaving] = useState(false);
   const [existingId, setExistingId] = useState<string | null>(null);
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [savedSlug, setSavedSlug] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
 
   // セクション開閉
   const [openSections, setOpenSections] = useState({
@@ -247,6 +251,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
         type: c.type,
         templateId: c.templateId,
         themeId: c.themeId,
+        imageUrl: c.textOverlay?.backgroundImageUrl,
         textOverlay: c.textOverlay,
         sortOrder: i,
       })),
@@ -299,7 +304,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
           .update(saveData)
           .eq('id', existingId);
         if (error) throw error;
-        alert('更新しました');
+        alert('保存しました！');
       } else {
         let slug = generateSlug();
         for (let retry = 0; retry < 5; retry++) {
@@ -314,8 +319,10 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
           }
           if (error) throw error;
           setExistingId(data.id);
+          setSavedId(data.id);
+          setSavedSlug(data.slug);
           setSwipePage(prev => ({ ...prev, id: data.id, slug: data.slug }));
-          alert('保存しました！');
+          setShowSuccessModal(true);
           router.replace(`/swipe/editor?id=${data.id}`);
           break;
         }
@@ -335,21 +342,26 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const SectionHeader = ({ sectionKey, icon: Icon, title, badge }: {
+  const SectionHeader = ({ sectionKey, icon: Icon, title, badge, step, bgColor = 'bg-gray-50', hoverColor = 'hover:bg-gray-100', accentColor = 'bg-gray-200 text-gray-600' }: {
     sectionKey: keyof typeof openSections;
     icon: React.ElementType;
     title: string;
     badge?: string | number;
+    step?: string;
+    bgColor?: string;
+    hoverColor?: string;
+    accentColor?: string;
   }) => (
     <button
       onClick={() => toggleSection(sectionKey)}
-      className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+      className={`w-full flex items-center justify-between px-4 py-3 ${bgColor} ${hoverColor} rounded-xl transition-colors`}
     >
       <div className="flex items-center gap-2">
+        {step && <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${accentColor}`}>{step}</span>}
         <Icon className="w-4 h-4 text-gray-500" />
         <span className="text-sm font-semibold text-gray-700">{title}</span>
         {badge !== undefined && (
-          <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">{badge}</span>
+          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${accentColor}`}>{badge}</span>
         )}
       </div>
       {openSections[sectionKey] ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
@@ -384,14 +396,25 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
               </a>
             )}
           </div>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 text-sm"
-          >
-            <Save className="w-4 h-4" />
-            {saving ? '保存中...' : existingId ? '更新して保存' : '保存して公開'}
-          </button>
+          <div className="flex items-center gap-2">
+            {savedSlug && (
+              <button
+                onClick={() => setShowSuccessModal(true)}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+              >
+                <Trophy className="w-4 h-4" />
+                <span className="hidden md:inline">作成完了画面</span>
+              </button>
+            )}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 text-sm"
+            >
+              <Save className="w-4 h-4" />
+              {saving ? '保存中...' : existingId ? '更新して保存' : '保存して公開'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -432,7 +455,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
 
           {/* テンプレート選択 */}
           <div>
-            <SectionHeader sectionKey="template" icon={LayoutTemplate} title="テンプレート選択" />
+            <SectionHeader sectionKey="template" icon={LayoutTemplate} title="テンプレート選択" step="STEP 1" bgColor="bg-purple-50" hoverColor="hover:bg-purple-100" accentColor="bg-purple-100 text-purple-600" />
             {openSections.template && (
               <div className="mt-3 grid grid-cols-2 gap-3 max-h-72 overflow-y-auto p-1">
                 {swipeTemplates.map(template => (
@@ -484,7 +507,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
 
           {/* カード編集 */}
           <div>
-            <SectionHeader sectionKey="cards" icon={Layers} title="スワイプカード" badge={swipePage.cards.length} />
+            <SectionHeader sectionKey="cards" icon={Layers} title="スワイプカード" badge={swipePage.cards.length} step="STEP 2" bgColor="bg-blue-50" hoverColor="hover:bg-blue-100" accentColor="bg-blue-100 text-blue-600" />
             {openSections.cards && (
               <div className="mt-3 space-y-2">
                 {swipePage.cards.map((card, i) => (
@@ -517,7 +540,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
 
           {/* LP部分ブロック */}
           <div>
-            <SectionHeader sectionKey="blocks" icon={Type} title="LP部分（カード下）" badge={swipePage.content?.length || 0} />
+            <SectionHeader sectionKey="blocks" icon={Type} title="LP部分（カード下）" badge={swipePage.content?.length || 0} step="STEP 3" bgColor="bg-green-50" hoverColor="hover:bg-green-100" accentColor="bg-green-100 text-green-600" />
             {openSections.blocks && (
               <div className="mt-3 space-y-3">
                 {/* 既存ブロック一覧 */}
@@ -570,7 +593,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
 
           {/* カルーセル設定 */}
           <div>
-            <SectionHeader sectionKey="carousel" icon={Settings} title="カルーセル設定" />
+            <SectionHeader sectionKey="carousel" icon={Settings} title="カルーセル設定" bgColor="bg-gray-100" hoverColor="hover:bg-gray-200" accentColor="bg-gray-200 text-gray-600" />
             {openSections.carousel && (
               <div className="mt-3 space-y-4 bg-white border border-gray-200 rounded-xl p-4">
                 {/* 自動再生 */}
@@ -693,7 +716,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
 
           {/* 決済設定 */}
           <div>
-            <SectionHeader sectionKey="payment" icon={CreditCard} title="決済設定" />
+            <SectionHeader sectionKey="payment" icon={CreditCard} title="決済設定" bgColor="bg-gray-100" hoverColor="hover:bg-gray-200" accentColor="bg-gray-200 text-gray-600" />
             {openSections.payment && (
               <div className="mt-3 space-y-4 bg-white border border-gray-200 rounded-xl p-4">
                 <div>
@@ -835,7 +858,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full flex items-center justify-center gap-2 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-lg transition-all disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-lg transition-all disabled:opacity-50"
               >
                 <Save className="w-5 h-5" />
                 {saving ? '保存中...' : existingId ? '更新して保存' : '保存して公開'}
@@ -891,6 +914,19 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
           </div>
         </div>
       </div>
+
+      {/* 完成モーダル */}
+      <CreationCompleteModal
+        isOpen={showSuccessModal && !!savedSlug}
+        onClose={() => setShowSuccessModal(false)}
+        title="スワイプページ"
+        publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/swipe/${savedSlug}`}
+        contentTitle={`${swipePage.title}を作りました！`}
+        theme="purple"
+        userId={userId}
+        contentId={savedId || undefined}
+        contentType="swipe"
+      />
     </div>
   );
 }

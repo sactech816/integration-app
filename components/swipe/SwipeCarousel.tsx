@@ -19,6 +19,51 @@ const ASPECT_SIZES: Record<SwipeAspectRatio, { width: number; height: number; la
 
 export { ASPECT_SIZES };
 
+// カード1枚分のレンダリング
+function CardContent({ card, index }: { card: SwipeCard; index: number }) {
+  const hasTextOverlay = card.textOverlay && (card.textOverlay.title || card.textOverlay.subtitle);
+  const bgImage = card.imageUrl || card.textOverlay?.backgroundImageUrl;
+
+  if (bgImage && !hasTextOverlay) {
+    return <img src={bgImage} alt={`カード ${index + 1}`} className="w-full h-full object-cover" />;
+  }
+
+  if (bgImage && hasTextOverlay) {
+    return (
+      <div className="w-full h-full relative">
+        <img src={bgImage} alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center p-6 text-center">
+          {card.textOverlay?.title && (
+            <p className="text-white font-bold text-xl leading-tight drop-shadow-lg">{card.textOverlay.title}</p>
+          )}
+          {card.textOverlay?.subtitle && (
+            <p className="text-white/90 text-sm mt-2 drop-shadow-md">{card.textOverlay.subtitle}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (hasTextOverlay) {
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex flex-col items-center justify-center p-6 text-center">
+        {card.textOverlay?.title && (
+          <p className="text-white font-bold text-xl leading-tight">{card.textOverlay.title}</p>
+        )}
+        {card.textOverlay?.subtitle && (
+          <p className="text-white/80 text-sm mt-2">{card.textOverlay.subtitle}</p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-500 text-lg">
+      カード {index + 1}
+    </div>
+  );
+}
+
 export default function SwipeCarousel({ cards, settings, aspectRatio, isPreview }: SwipeCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
@@ -97,13 +142,7 @@ export default function SwipeCarousel({ cards, settings, aspectRatio, isPreview 
         {cards.map((card, i) => (
           <div key={card.id} className="relative w-full rounded-xl overflow-hidden shadow-md" style={{ paddingTop }}>
             <div className="absolute inset-0">
-              {card.imageUrl ? (
-                <img src={card.imageUrl} alt={`カード ${i + 1}`} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-500">
-                  カード {i + 1}
-                </div>
-              )}
+              <CardContent card={card} index={i} />
             </div>
           </div>
         ))}
@@ -137,13 +176,7 @@ export default function SwipeCarousel({ cards, settings, aspectRatio, isPreview 
                 pointerEvents: i === currentIndex ? 'auto' : 'none',
               }}
             >
-              {card.imageUrl ? (
-                <img src={card.imageUrl} alt={`カード ${i + 1}`} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-500 text-lg">
-                  カード {i + 1}
-                </div>
-              )}
+              <CardContent card={card} index={i} />
             </div>
           ))}
         </div>

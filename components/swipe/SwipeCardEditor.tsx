@@ -1,10 +1,16 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
-import { Upload, Trash2, GripVertical, Image as ImageIcon, Type, X } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { Upload, Trash2, GripVertical, Image as ImageIcon, Type, X, ImagePlus, ChevronDown } from 'lucide-react';
 import type { SwipeCard, SwipeAspectRatio } from '@/lib/types';
-import { supabase } from '@/lib/supabase';
+import { supabase, TABLES } from '@/lib/supabase';
 import { ASPECT_SIZES } from './SwipeCarousel';
+
+interface ThumbnailOption {
+  id: string;
+  title: string;
+  image_url: string;
+}
 
 interface SwipeCardEditorProps {
   card: SwipeCard;
@@ -34,9 +40,32 @@ export default function SwipeCardEditor({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [thumbnails, setThumbnails] = useState<ThumbnailOption[]>([]);
+  const [showThumbnailPicker, setShowThumbnailPicker] = useState(false);
+  const [loadingThumbnails, setLoadingThumbnails] = useState(false);
 
   const aspect = ASPECT_SIZES[aspectRatio];
   const previewPadding = `${(aspect.height / aspect.width) * 100}%`;
+
+  // サムネイル画像一覧を取得
+  const loadThumbnails = async () => {
+    if (!supabase || !userId || thumbnails.length > 0) return;
+    setLoadingThumbnails(true);
+    try {
+      const { data } = await supabase
+        .from(TABLES.THUMBNAILS)
+        .select('id, title, image_url')
+        .eq('user_id', userId)
+        .not('image_url', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (data) setThumbnails(data as ThumbnailOption[]);
+    } catch {
+      // ignore
+    } finally {
+      setLoadingThumbnails(false);
+    }
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -67,6 +96,14 @@ export default function SwipeCardEditor({
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleSelectThumbnail = (thumb: ThumbnailOption) => {
+    onUpdate(card.id, {
+      type: 'image',
+      imageUrl: thumb.image_url,
+    });
+    setShowThumbnailPicker(false);
   };
 
   return (
@@ -146,7 +183,7 @@ export default function SwipeCardEditor({
 
           {/* 画像アップロードモード */}
           {card.type === 'image' && (
-            <div>
+            <div className="space-y-3">
               {card.imageUrl ? (
                 <div className="relative rounded-xl overflow-hidden" style={{ paddingTop: previewPadding }}>
                   <img
@@ -183,6 +220,42 @@ export default function SwipeCardEditor({
                 onChange={handleImageUpload}
                 className="hidden"
               />
+
+              {/* サムネイルメーカーから選択 */}
+              {userId && (
+                <div>
+                  <button
+                    onClick={() => { setShowThumbnailPicker(!showThumbnailPicker); loadThumbnails(); }}
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 border border-pink-300 rounded-xl text-pink-600 hover:bg-pink-50 transition-all text-sm font-medium"
+                  >
+                    <ImagePlus className="w-4 h-4" />
+                    サムネイルメーカーから選択
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showThumbnailPicker ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showThumbnailPicker && (
+                    <div className="mt-2 max-h-48 overflow-y-auto border border-gray-200 rounded-xl p-2">
+                      {loadingThumbnails ? (
+                        <p className="text-xs text-gray-400 text-center py-4">読み込み中...</p>
+                      ) : thumbnails.length === 0 ? (
+                        <p className="text-xs text-gray-400 text-center py-4">サムネイルがありません</p>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-2">
+                          {thumbnails.map(thumb => (
+                            <button
+                              key={thumb.id}
+                              onClick={() => handleSelectThumbnail(thumb)}
+                              className="relative rounded-lg overflow-hidden border-2 border-transparent hover:border-pink-400 transition-all aspect-video"
+                            >
+                              <img src={thumb.image_url} alt={thumb.title} className="w-full h-full object-cover" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -216,18 +289,19 @@ export default function SwipeCardEditor({
                 />
               </div>
 
-              {/* 背景画像アップロード（テンプレートモードでもカスタム背景） */}
+              {/* 背景画像 */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">背景画像（任意）</label>
-                {card.textOverlay?.backgroundImageUrl ? (
+                <label className="block text-xs font-medium text-gray-600 mb-1">背景画像</label>
+                {card.textOverlay?.backgroundImageUrl || card.imageUrl ? (
                   <div className="relative rounded-lg overflow-hidden" style={{ paddingTop: '30%' }}>
                     <img
-                      src={card.textOverlay.backgroundImageUrl}
+                      src={card.textOverlay?.backgroundImageUrl || card.imageUrl}
                       alt="背景"
                       className="absolute inset-0 w-full h-full object-cover"
                     />
                     <button
                       onClick={() => onUpdate(card.id, {
+                        imageUrl: undefined,
                         textOverlay: { ...card.textOverlay, backgroundImageUrl: undefined },
                       })}
                       className="absolute top-1 right-1 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
@@ -236,48 +310,88 @@ export default function SwipeCardEditor({
                     </button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => {
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = 'image/*';
-                      input.onchange = async (ev) => {
-                        const file = (ev.target as HTMLInputElement).files?.[0];
-                        if (!file || !supabase) return;
-                        setUploading(true);
-                        try {
-                          const ext = file.name.split('.').pop() || 'png';
-                          const filePath = `${userId || 'guest'}/${Date.now()}_bg_${index}.${ext}`;
-                          const { error } = await supabase.storage
-                            .from('swipe-images')
-                            .upload(filePath, file, { contentType: file.type });
-                          if (error) throw error;
-                          const { data } = supabase.storage.from('swipe-images').getPublicUrl(filePath);
-                          onUpdate(card.id, {
-                            textOverlay: { ...card.textOverlay, backgroundImageUrl: data.publicUrl },
-                          });
-                        } catch {
-                          alert('背景画像のアップロードに失敗しました');
-                        } finally {
-                          setUploading(false);
-                        }
-                      };
-                      input.click();
-                    }}
-                    disabled={uploading}
-                    className="w-full border border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-blue-400 transition-all text-xs text-gray-500"
-                  >
-                    {uploading ? 'アップロード中...' : '背景画像を追加'}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'image/*';
+                        input.onchange = async (ev) => {
+                          const file = (ev.target as HTMLInputElement).files?.[0];
+                          if (!file || !supabase) return;
+                          setUploading(true);
+                          try {
+                            const ext = file.name.split('.').pop() || 'png';
+                            const filePath = `${userId || 'guest'}/${Date.now()}_bg_${index}.${ext}`;
+                            const { error } = await supabase.storage
+                              .from('swipe-images')
+                              .upload(filePath, file, { contentType: file.type });
+                            if (error) throw error;
+                            const { data } = supabase.storage.from('swipe-images').getPublicUrl(filePath);
+                            onUpdate(card.id, {
+                              imageUrl: data.publicUrl,
+                              textOverlay: { ...card.textOverlay, backgroundImageUrl: data.publicUrl },
+                            });
+                          } catch {
+                            alert('背景画像のアップロードに失敗しました');
+                          } finally {
+                            setUploading(false);
+                          }
+                        };
+                        input.click();
+                      }}
+                      disabled={uploading}
+                      className="flex-1 border border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-blue-400 transition-all text-xs text-gray-500"
+                    >
+                      {uploading ? 'アップロード中...' : 'アップロード'}
+                    </button>
+                    {userId && (
+                      <button
+                        onClick={() => { setShowThumbnailPicker(!showThumbnailPicker); loadThumbnails(); }}
+                        className="flex-1 border border-pink-300 rounded-lg p-3 text-center hover:bg-pink-50 transition-all text-xs text-pink-600 font-medium"
+                      >
+                        サムネイルから選択
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* テンプレートモード用サムネイルピッカー */}
+                {showThumbnailPicker && card.type === 'template' && (
+                  <div className="mt-2 max-h-48 overflow-y-auto border border-gray-200 rounded-xl p-2">
+                    {loadingThumbnails ? (
+                      <p className="text-xs text-gray-400 text-center py-4">読み込み中...</p>
+                    ) : thumbnails.length === 0 ? (
+                      <p className="text-xs text-gray-400 text-center py-4">サムネイルがありません</p>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2">
+                        {thumbnails.map(thumb => (
+                          <button
+                            key={thumb.id}
+                            onClick={() => {
+                              onUpdate(card.id, {
+                                imageUrl: thumb.image_url,
+                                textOverlay: { ...card.textOverlay, backgroundImageUrl: thumb.image_url },
+                              });
+                              setShowThumbnailPicker(false);
+                            }}
+                            className="relative rounded-lg overflow-hidden border-2 border-transparent hover:border-pink-400 transition-all aspect-video"
+                          >
+                            <img src={thumb.image_url} alt={thumb.title} className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
               {/* プレビュー */}
               <div className="relative rounded-xl overflow-hidden shadow-inner" style={{ paddingTop: previewPadding }}>
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-900 flex flex-col items-center justify-center p-6 text-center">
-                  {card.textOverlay?.backgroundImageUrl && (
+                  {(card.textOverlay?.backgroundImageUrl || card.imageUrl) && (
                     <img
-                      src={card.textOverlay.backgroundImageUrl}
+                      src={card.textOverlay?.backgroundImageUrl || card.imageUrl}
                       alt="背景"
                       className="absolute inset-0 w-full h-full object-cover opacity-60"
                     />
