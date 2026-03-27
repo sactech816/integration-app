@@ -53,6 +53,7 @@ import {
   Star,
   Bot,
   FileCheck,
+  Layers,
 } from 'lucide-react';
 import { ServiceType } from '@/lib/types';
 import { getAdminEmails } from '@/lib/constants';
@@ -289,6 +290,10 @@ const Header: React.FC<HeaderProps> = ({
                             <Link href="/order-form/new" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors">
                               <div className="p-1 rounded-md bg-indigo-50 shrink-0"><ClipboardCheck size={14} className="text-indigo-600" /></div>
                               <span className="font-medium text-gray-900 text-xs whitespace-nowrap">フォーム</span>
+                            </Link>
+                            <Link href="/swipe/editor" onClick={closeMenus} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors">
+                              <div className="p-1 rounded-md bg-indigo-50 shrink-0"><Layers size={14} className="text-indigo-600" /></div>
+                              <span className="font-medium text-gray-900 text-xs whitespace-nowrap">スワイプ</span>
                             </Link>
                           </div>
                         </div>
@@ -955,6 +960,9 @@ const Header: React.FC<HeaderProps> = ({
                     <Link href="/order-form/new" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                       <ClipboardCheck size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">フォームメーカー</span>
                       <span className="text-[9px] font-bold text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded-full">B</span>
+                    </Link>
+                    <Link href="/swipe/editor" onClick={closeMenus} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <Layers size={16} className="text-indigo-600" /><span className="text-gray-700 text-sm">スワイプメーカー</span>
                     </Link>
                   </div>
                 )}
