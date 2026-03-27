@@ -452,11 +452,11 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
       case 'text_card':
         return (
           <div className="space-y-4">
-            <Input label="タイトル（任意）" val={(block.data as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="見出しテキスト" />
+            <Input label="タイトル（任意）" val={(block.data as unknown as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="見出しテキスト" />
             <div>
               <label className="text-sm font-bold text-gray-900 block mb-2">テキスト</label>
               <textarea
-                value={(block.data as Record<string, string>).text || ''}
+                value={(block.data as unknown as Record<string, string>).text || ''}
                 onChange={(e) => updateBlock(block.id, { text: e.target.value })}
                 placeholder="テキストを入力してください..."
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all min-h-[120px] resize-y"
@@ -467,13 +467,13 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
               <div className="flex gap-2">
                 <button
                   onClick={() => updateBlock(block.id, { align: 'center' })}
-                  className={`px-4 py-2 rounded-lg font-medium ${(block.data as Record<string, string>).align === 'center' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                  className={`px-4 py-2 rounded-lg font-medium ${(block.data as unknown as Record<string, string>).align === 'center' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700'}`}
                 >
                   中央
                 </button>
                 <button
                   onClick={() => updateBlock(block.id, { align: 'left' })}
-                  className={`px-4 py-2 rounded-lg font-medium ${(block.data as Record<string, string>).align === 'left' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                  className={`px-4 py-2 rounded-lg font-medium ${(block.data as unknown as Record<string, string>).align === 'left' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700'}`}
                 >
                   左寄せ
                 </button>
@@ -490,7 +490,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  value={(block.data as Record<string, string>).url || ''}
+                  value={(block.data as unknown as Record<string, string>).url || ''}
                   onChange={(e) => updateBlock(block.id, { url: e.target.value })}
                   placeholder="画像URL"
                   className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400"
@@ -501,21 +501,21 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
                   <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, block.id, 'url')} disabled={isUploading} />
                 </label>
               </div>
-              {(block.data as Record<string, string>).url && (
-                <img src={(block.data as Record<string, string>).url} alt="Preview" className="w-full h-32 object-cover rounded-lg mt-2" />
+              {(block.data as unknown as Record<string, string>).url && (
+                <img src={(block.data as unknown as Record<string, string>).url} alt="Preview" className="w-full h-32 object-cover rounded-lg mt-2" />
               )}
             </div>
-            <Input label="キャプション（任意）" val={(block.data as Record<string, string>).caption || ''} onChange={(v) => updateBlock(block.id, { caption: v })} ph="写真の説明" />
+            <Input label="キャプション（任意）" val={(block.data as unknown as Record<string, string>).caption || ''} onChange={(v) => updateBlock(block.id, { caption: v })} ph="写真の説明" />
           </div>
         );
 
       case 'cta_section':
         return (
           <div className="space-y-4">
-            <Input label="タイトル" val={(block.data as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="今すぐ申し込む" />
-            <Input label="説明文" val={(block.data as Record<string, string>).description || ''} onChange={(v) => updateBlock(block.id, { description: v })} ph="限定特典付き" />
-            <Input label="ボタンテキスト" val={(block.data as Record<string, string>).buttonText || ''} onChange={(v) => updateBlock(block.id, { buttonText: v })} ph="申し込む" />
-            <Input label="ボタンURL" val={(block.data as Record<string, string>).buttonUrl || ''} onChange={(v) => updateBlock(block.id, { buttonUrl: v })} ph="https://..." />
+            <Input label="タイトル" val={(block.data as unknown as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="今すぐ申し込む" />
+            <Input label="説明文" val={(block.data as unknown as Record<string, string>).description || ''} onChange={(v) => updateBlock(block.id, { description: v })} ph="限定特典付き" />
+            <Input label="ボタンテキスト" val={(block.data as unknown as Record<string, string>).buttonText || ''} onChange={(v) => updateBlock(block.id, { buttonText: v })} ph="申し込む" />
+            <Input label="ボタンURL" val={(block.data as unknown as Record<string, string>).buttonUrl || ''} onChange={(v) => updateBlock(block.id, { buttonUrl: v })} ph="https://..." />
           </div>
         );
 
@@ -699,30 +699,30 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
       case 'lead_form':
         return (
           <div className="space-y-4">
-            <Input label="タイトル" val={(block.data as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="お問い合わせ" />
-            <Input label="ボタンテキスト" val={(block.data as Record<string, string>).buttonText || ''} onChange={(v) => updateBlock(block.id, { buttonText: v })} ph="送信" />
+            <Input label="タイトル" val={(block.data as unknown as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="お問い合わせ" />
+            <Input label="ボタンテキスト" val={(block.data as unknown as Record<string, string>).buttonText || ''} onChange={(v) => updateBlock(block.id, { buttonText: v })} ph="送信" />
           </div>
         );
 
       case 'line_card':
         return (
           <div className="space-y-4">
-            <Input label="タイトル" val={(block.data as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="LINE登録" />
-            <Input label="説明" val={(block.data as Record<string, string>).description || ''} onChange={(v) => updateBlock(block.id, { description: v })} ph="お気軽にご連絡ください" />
-            <Input label="LINE URL" val={(block.data as Record<string, string>).url || ''} onChange={(v) => updateBlock(block.id, { url: v })} ph="https://lin.ee/..." />
-            <Input label="ボタンテキスト" val={(block.data as Record<string, string>).buttonText || ''} onChange={(v) => updateBlock(block.id, { buttonText: v })} ph="友だち追加" />
+            <Input label="タイトル" val={(block.data as unknown as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="LINE登録" />
+            <Input label="説明" val={(block.data as unknown as Record<string, string>).description || ''} onChange={(v) => updateBlock(block.id, { description: v })} ph="お気軽にご連絡ください" />
+            <Input label="LINE URL" val={(block.data as unknown as Record<string, string>).url || ''} onChange={(v) => updateBlock(block.id, { url: v })} ph="https://lin.ee/..." />
+            <Input label="ボタンテキスト" val={(block.data as unknown as Record<string, string>).buttonText || ''} onChange={(v) => updateBlock(block.id, { buttonText: v })} ph="友だち追加" />
           </div>
         );
 
       case 'countdown':
         return (
           <div className="space-y-4">
-            <Input label="タイトル" val={(block.data as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="残り時間" />
+            <Input label="タイトル" val={(block.data as unknown as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="残り時間" />
             <div>
               <label className="text-sm font-bold text-gray-900 block mb-2">終了日時</label>
               <input
                 type="datetime-local"
-                value={(block.data as Record<string, string>).targetDate?.slice(0, 16) || ''}
+                value={(block.data as unknown as Record<string, string>).targetDate?.slice(0, 16) || ''}
                 onChange={(e) => updateBlock(block.id, { targetDate: new Date(e.target.value).toISOString() })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
               />
@@ -733,14 +733,14 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
       case 'google_map':
         return (
           <div className="space-y-4">
-            <Input label="住所" val={(block.data as Record<string, string>).address || ''} onChange={(v) => updateBlock(block.id, { address: v })} ph="東京都渋谷区..." />
-            <Input label="埋め込みURL（任意）" val={(block.data as Record<string, string>).embedUrl || ''} onChange={(v) => updateBlock(block.id, { embedUrl: v })} ph="https://www.google.com/maps/embed?..." />
+            <Input label="住所" val={(block.data as unknown as Record<string, string>).address || ''} onChange={(v) => updateBlock(block.id, { address: v })} ph="東京都渋谷区..." />
+            <Input label="埋め込みURL（任意）" val={(block.data as unknown as Record<string, string>).embedUrl || ''} onChange={(v) => updateBlock(block.id, { embedUrl: v })} ph="https://www.google.com/maps/embed?..." />
           </div>
         );
 
       case 'youtube':
         return (
-          <Input label="YouTube URL" val={(block.data as Record<string, string>).url || ''} onChange={(v) => updateBlock(block.id, { url: v })} ph="https://www.youtube.com/watch?v=..." />
+          <Input label="YouTube URL" val={(block.data as unknown as Record<string, string>).url || ''} onChange={(v) => updateBlock(block.id, { url: v })} ph="https://www.youtube.com/watch?v=..." />
         );
 
       case 'links': {
@@ -790,7 +790,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
       case 'gallery':
         return (
           <div className="space-y-4">
-            <Input label="タイトル（任意）" val={(block.data as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="ギャラリー" />
+            <Input label="タイトル（任意）" val={(block.data as unknown as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="ギャラリー" />
             <p className="text-sm text-gray-500">画像はプレビューから追加・管理できます</p>
           </div>
         );
