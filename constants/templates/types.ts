@@ -81,6 +81,7 @@ export interface SwipeTemplate {
     textOverlay?: {
       title?: string;
       subtitle?: string;
+      backgroundImageUrl?: string;
     };
   }>;
   blocks: Block[];
