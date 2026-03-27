@@ -75,7 +75,7 @@ function createDefaultBlock(type: string): Block {
     case 'pricing':
       return { id, type, data: { plans: [{ id: generateBlockId(), title: 'プラン名', price: '¥0', features: ['特徴1'], isRecommended: false }] } } as Block;
     case 'testimonial':
-      return { id, type, data: { items: [{ id: generateBlockId(), name: '', role: '', text: '', rating: 5 }] } } as Block;
+      return { id, type, data: { items: [{ id: generateBlockId(), name: '', role: '', comment: '' }] } } as Block;
     case 'lead_form':
       return { id, type, data: { title: 'お問い合わせ', description: '', buttonText: '送信', fields: ['name', 'email'] } } as Block;
     case 'line_card':
