@@ -5,7 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Save, ExternalLink, Plus, Settings, ChevronDown, ChevronUp,
   Layers, Type, CreditCard, Eye, Pencil, LayoutTemplate,
-  Image as ImageIcon, Smartphone, Monitor, Trophy,
+  Image as ImageIcon, Smartphone, Monitor, Trophy, Loader2,
+  GripVertical, ArrowUp, ArrowDown, Trash2, HelpCircle,
+  Star, MessageCircle, MapPin, Timer, Youtube, Link as LinkIcon,
+  Images, Layout,
 } from 'lucide-react';
 import { supabase, TABLES } from '@/lib/supabase';
 import type { SwipePage, SwipeCard, SwipeAspectRatio, SwipeSettings, SwipeCarouselSettings, Block } from '@/lib/types';
@@ -15,21 +18,21 @@ import { swipeTemplates } from '@/constants/templates/swipe';
 import { SWIPE_CATEGORIES } from '@/constants/templates/types';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 
-// ブロック型のインポート（BlockRendererで使うブロックの作成用）
-const AVAILABLE_BLOCKS = [
-  { type: 'text_card', label: 'テキストカード', icon: Type },
-  { type: 'image', label: '画像', icon: ImageIcon },
-  { type: 'cta_section', label: 'CTAセクション', icon: ExternalLink },
-  { type: 'faq', label: 'よくある質問', icon: Layers },
-  { type: 'pricing', label: '料金表', icon: CreditCard },
-  { type: 'testimonial', label: 'お客様の声', icon: Type },
-  { type: 'lead_form', label: 'リードフォーム', icon: Type },
-  { type: 'line_card', label: 'LINE誘導', icon: Type },
-  { type: 'countdown', label: 'カウントダウン', icon: Type },
-  { type: 'google_map', label: '地図', icon: Type },
-  { type: 'youtube', label: '動画', icon: Type },
-  { type: 'links', label: 'リンク集', icon: Type },
-  { type: 'gallery', label: 'ギャラリー', icon: ImageIcon },
+// ブロックタイプ定義（ProfileEditor準拠：色・アイコン付き）
+const blockTypes = [
+  { type: 'text_card', label: 'テキスト', icon: Type, color: { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700', icon: 'text-slate-500', hover: 'hover:bg-slate-100' } },
+  { type: 'image', label: '画像', icon: ImageIcon, color: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', icon: 'text-purple-500', hover: 'hover:bg-purple-100' } },
+  { type: 'cta_section', label: 'CTAボタン', icon: ExternalLink, color: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', icon: 'text-blue-500', hover: 'hover:bg-blue-100' } },
+  { type: 'faq', label: 'FAQ', icon: HelpCircle, color: { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700', icon: 'text-slate-500', hover: 'hover:bg-slate-100' } },
+  { type: 'pricing', label: '料金表', icon: CreditCard, color: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-500', hover: 'hover:bg-orange-100' } },
+  { type: 'testimonial', label: 'お客様の声', icon: Star, color: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', icon: 'text-amber-500', hover: 'hover:bg-amber-100' } },
+  { type: 'lead_form', label: 'リードフォーム', icon: Type, color: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-500', hover: 'hover:bg-orange-100' } },
+  { type: 'line_card', label: 'LINE誘導', icon: MessageCircle, color: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', icon: 'text-green-500', hover: 'hover:bg-green-100' } },
+  { type: 'countdown', label: 'カウントダウン', icon: Timer, color: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', icon: 'text-orange-500', hover: 'hover:bg-orange-100' } },
+  { type: 'google_map', label: 'Googleマップ', icon: MapPin, color: { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-700', icon: 'text-teal-500', hover: 'hover:bg-teal-100' } },
+  { type: 'youtube', label: 'YouTube', icon: Youtube, color: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', icon: 'text-purple-500', hover: 'hover:bg-purple-100' } },
+  { type: 'links', label: 'リンク集', icon: LinkIcon, color: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', icon: 'text-green-500', hover: 'hover:bg-green-100' } },
+  { type: 'gallery', label: 'ギャラリー', icon: Images, color: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', icon: 'text-purple-500', hover: 'hover:bg-purple-100' } },
 ];
 
 const DEFAULT_CAROUSEL_SETTINGS: SwipeCarouselSettings = {
@@ -96,6 +99,83 @@ function createDefaultBlock(type: string): Block {
   }
 }
 
+// ==========================================
+// Section コンポーネント（ProfileEditor準拠）
+// ==========================================
+const Section = ({
+  title,
+  icon: Icon,
+  isOpen,
+  onToggle,
+  children,
+  badge,
+  step,
+  stepLabel,
+  headerBgColor = 'bg-gray-50',
+  headerHoverColor = 'hover:bg-gray-100',
+  accentColor = 'bg-emerald-100 text-emerald-600',
+}: {
+  title: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+  badge?: string;
+  step?: number;
+  stepLabel?: string;
+  headerBgColor?: string;
+  headerHoverColor?: string;
+  accentColor?: string;
+}) => (
+  <div className="border border-gray-200 rounded-xl overflow-hidden mb-4 bg-white">
+    {step && stepLabel && (
+      <div className={`px-5 py-2 ${headerBgColor} border-b border-gray-200/50`}>
+        <span className="text-xs font-bold text-gray-600 bg-white/60 px-2 py-0.5 rounded">
+          STEP {step}
+        </span>
+        <span className="text-sm text-gray-700 ml-2">{stepLabel}</span>
+      </div>
+    )}
+    <button
+      onClick={onToggle}
+      className={`w-full px-5 py-4 flex items-center justify-between ${headerBgColor} ${headerHoverColor} transition-colors`}
+    >
+      <div className="flex items-center gap-3">
+        <div className={`p-2 rounded-lg ${isOpen ? accentColor : 'bg-gray-200 text-gray-500'}`}>
+          <Icon size={18} />
+        </div>
+        <span className="font-bold text-gray-900">{title}</span>
+        {badge && (
+          <span className="text-xs bg-white/80 text-gray-700 px-2 py-0.5 rounded-full border border-gray-200">{badge}</span>
+        )}
+      </div>
+      {isOpen ? <ChevronUp size={20} className="text-gray-500" /> : <ChevronDown size={20} className="text-gray-500" />}
+    </button>
+    {isOpen && (
+      <div className="p-5 border-t border-gray-100">
+        {children}
+      </div>
+    )}
+  </div>
+);
+
+// 入力コンポーネント
+const Input = ({ label, val, onChange, ph }: { label: string; val: string; onChange: (v: string) => void; ph?: string }) => (
+  <div>
+    <label className="text-sm font-bold text-gray-900 block mb-2">{label}</label>
+    <input
+      type="text"
+      value={val}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={ph}
+      className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+    />
+  </div>
+);
+
+// ==========================================
+// メインコンポーネント
+// ==========================================
 interface SwipeEditorProps {
   userId?: string;
   isAdmin?: boolean;
@@ -124,6 +204,9 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [savedSlug, setSavedSlug] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [showBlockSelector, setShowBlockSelector] = useState(false);
+  const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
+  const [isUploading, setIsUploading] = useState(false);
 
   // セクション開閉
   const [openSections, setOpenSections] = useState({
@@ -132,8 +215,11 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
     blocks: false,
     carousel: false,
     payment: false,
-    advanced: false,
   });
+
+  const toggleSection = (key: keyof typeof openSections) => {
+    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   // 編集時のデータ取得
   useEffect(() => {
@@ -147,7 +233,9 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
       if (error || !data) return;
       setSwipePage(data as SwipePage);
       setExistingId(data.id);
-      setOpenSections(prev => ({ ...prev, template: false, cards: true }));
+      setSavedSlug(data.slug);
+      setSavedId(data.id);
+      setOpenSections(prev => ({ ...prev, template: false, cards: true, blocks: true }));
     })();
   }, [editId]);
 
@@ -200,6 +288,8 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
       ...prev,
       content: [...(prev.content || []), newBlock],
     }));
+    setExpandedBlocks(prev => new Set(prev).add(newBlock.id));
+    setShowBlockSelector(false);
   }, []);
 
   const removeBlock = useCallback((id: string) => {
@@ -230,6 +320,25 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
       ),
     }));
   }, []);
+
+  // 画像アップロード
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, blockId: string, field: string) => {
+    const file = e.target.files?.[0];
+    if (!file || !supabase) return;
+    setIsUploading(true);
+    try {
+      const ext = file.name.split('.').pop() || 'png';
+      const filePath = `${userId || 'guest'}/${Date.now()}_${blockId}.${ext}`;
+      const { error } = await supabase.storage.from('swipe-images').upload(filePath, file, { contentType: file.type });
+      if (error) throw error;
+      const { data } = supabase.storage.from('swipe-images').getPublicUrl(filePath);
+      updateBlock(blockId, { [field]: data.publicUrl });
+    } catch {
+      alert('アップロードに失敗しました');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // ==========================================
   // テンプレート適用
@@ -269,7 +378,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
       },
     }));
 
-    setOpenSections(prev => ({ ...prev, template: false, cards: true }));
+    setOpenSections(prev => ({ ...prev, template: false, cards: true, blocks: true }));
     alert(`「${template.name}」テンプレートを適用しました`);
   }, [swipePage.cards.length, swipePage.content]);
 
@@ -336,534 +445,955 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
   }, [swipePage, existingId, userId, router]);
 
   // ==========================================
-  // セクション開閉ヘルパー
+  // ブロック編集レンダリング（ProfileEditor準拠）
   // ==========================================
-  const toggleSection = (key: keyof typeof openSections) => {
-    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
-  };
+  const renderBlockEditor = (block: Block) => {
+    switch (block.type) {
+      case 'text_card':
+        return (
+          <div className="space-y-4">
+            <Input label="タイトル（任意）" val={(block.data as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="見出しテキスト" />
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">テキスト</label>
+              <textarea
+                value={(block.data as Record<string, string>).text || ''}
+                onChange={(e) => updateBlock(block.id, { text: e.target.value })}
+                placeholder="テキストを入力してください..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all min-h-[120px] resize-y"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">配置</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => updateBlock(block.id, { align: 'center' })}
+                  className={`px-4 py-2 rounded-lg font-medium ${(block.data as Record<string, string>).align === 'center' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                >
+                  中央
+                </button>
+                <button
+                  onClick={() => updateBlock(block.id, { align: 'left' })}
+                  className={`px-4 py-2 rounded-lg font-medium ${(block.data as Record<string, string>).align === 'left' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                >
+                  左寄せ
+                </button>
+              </div>
+            </div>
+          </div>
+        );
 
-  const SectionHeader = ({ sectionKey, icon: Icon, title, badge, step, bgColor = 'bg-gray-50', hoverColor = 'hover:bg-gray-100', accentColor = 'bg-gray-200 text-gray-600' }: {
-    sectionKey: keyof typeof openSections;
-    icon: React.ElementType;
-    title: string;
-    badge?: string | number;
-    step?: string;
-    bgColor?: string;
-    hoverColor?: string;
-    accentColor?: string;
-  }) => (
-    <button
-      onClick={() => toggleSection(sectionKey)}
-      className={`w-full flex items-center justify-between px-4 py-3 ${bgColor} ${hoverColor} rounded-xl transition-colors`}
-    >
-      <div className="flex items-center gap-2">
-        {step && <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${accentColor}`}>{step}</span>}
-        <Icon className="w-4 h-4 text-gray-500" />
-        <span className="text-sm font-semibold text-gray-700">{title}</span>
-        {badge !== undefined && (
-          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${accentColor}`}>{badge}</span>
-        )}
-      </div>
-      {openSections[sectionKey] ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-    </button>
-  );
+      case 'image':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">画像</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={(block.data as Record<string, string>).url || ''}
+                  onChange={(e) => updateBlock(block.id, { url: e.target.value })}
+                  placeholder="画像URL"
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400"
+                />
+                <label className="px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg font-bold hover:bg-emerald-100 cursor-pointer flex items-center gap-1 text-sm">
+                  {isUploading ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={14} />}
+                  <span className="hidden sm:inline">UP</span>
+                  <input type="file" className="hidden" accept="image/*" onChange={(e) => handleImageUpload(e, block.id, 'url')} disabled={isUploading} />
+                </label>
+              </div>
+              {(block.data as Record<string, string>).url && (
+                <img src={(block.data as Record<string, string>).url} alt="Preview" className="w-full h-32 object-cover rounded-lg mt-2" />
+              )}
+            </div>
+            <Input label="キャプション（任意）" val={(block.data as Record<string, string>).caption || ''} onChange={(v) => updateBlock(block.id, { caption: v })} ph="写真の説明" />
+          </div>
+        );
+
+      case 'cta_section':
+        return (
+          <div className="space-y-4">
+            <Input label="タイトル" val={(block.data as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="今すぐ申し込む" />
+            <Input label="説明文" val={(block.data as Record<string, string>).description || ''} onChange={(v) => updateBlock(block.id, { description: v })} ph="限定特典付き" />
+            <Input label="ボタンテキスト" val={(block.data as Record<string, string>).buttonText || ''} onChange={(v) => updateBlock(block.id, { buttonText: v })} ph="申し込む" />
+            <Input label="ボタンURL" val={(block.data as Record<string, string>).buttonUrl || ''} onChange={(v) => updateBlock(block.id, { buttonUrl: v })} ph="https://..." />
+          </div>
+        );
+
+      case 'faq': {
+        const faqData = block.data as { items: Array<{ id: string; question: string; answer: string }> };
+        return (
+          <div className="space-y-4">
+            {faqData.items?.map((item, i) => (
+              <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
+                <div className="absolute top-2 right-2">
+                  <button
+                    onClick={() => {
+                      const newItems = faqData.items.filter((_, idx) => idx !== i);
+                      updateBlock(block.id, { items: newItems });
+                    }}
+                    className="p-1 text-gray-400 hover:text-red-500"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                <Input label={`質問 ${i + 1}`} val={item.question} onChange={(v) => {
+                  const newItems = [...faqData.items];
+                  newItems[i] = { ...newItems[i], question: v };
+                  updateBlock(block.id, { items: newItems });
+                }} ph="質問を入力" />
+                <div className="mt-2">
+                  <label className="text-sm font-bold text-gray-900 block mb-2">回答</label>
+                  <textarea
+                    value={item.answer}
+                    onChange={(e) => {
+                      const newItems = [...faqData.items];
+                      newItems[i] = { ...newItems[i], answer: e.target.value };
+                      updateBlock(block.id, { items: newItems });
+                    }}
+                    placeholder="回答を入力"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all min-h-[80px] resize-y"
+                  />
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={() => {
+                const newItems = [...(faqData.items || []), { id: generateBlockId(), question: '', answer: '' }];
+                updateBlock(block.id, { items: newItems });
+              }}
+              className="w-full p-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-emerald-500 hover:text-emerald-600 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <Plus size={16} /> 質問を追加
+            </button>
+          </div>
+        );
+      }
+
+      case 'pricing': {
+        const pricingData = block.data as { plans: Array<{ id: string; title: string; price: string; features: string[]; isRecommended: boolean }> };
+        return (
+          <div className="space-y-4">
+            {pricingData.plans?.map((plan, i) => (
+              <div key={plan.id} className="bg-gray-50 p-4 rounded-lg relative">
+                <div className="absolute top-2 right-2">
+                  <button
+                    onClick={() => {
+                      const newPlans = pricingData.plans.filter((_, idx) => idx !== i);
+                      updateBlock(block.id, { plans: newPlans });
+                    }}
+                    className="p-1 text-gray-400 hover:text-red-500"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                <Input label="プラン名" val={plan.title} onChange={(v) => {
+                  const newPlans = [...pricingData.plans];
+                  newPlans[i] = { ...newPlans[i], title: v };
+                  updateBlock(block.id, { plans: newPlans });
+                }} ph="プラン名" />
+                <div className="mt-2">
+                  <Input label="価格" val={plan.price} onChange={(v) => {
+                    const newPlans = [...pricingData.plans];
+                    newPlans[i] = { ...newPlans[i], price: v };
+                    updateBlock(block.id, { plans: newPlans });
+                  }} ph="¥9,800" />
+                </div>
+                <div className="mt-2">
+                  <label className="text-sm font-bold text-gray-900 block mb-2">特徴（1行ずつ）</label>
+                  <textarea
+                    value={plan.features.join('\n')}
+                    onChange={(e) => {
+                      const newPlans = [...pricingData.plans];
+                      newPlans[i] = { ...newPlans[i], features: e.target.value.split('\n') };
+                      updateBlock(block.id, { plans: newPlans });
+                    }}
+                    placeholder="特徴1&#10;特徴2&#10;特徴3"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all min-h-[80px] resize-y"
+                  />
+                </div>
+                <label className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    checked={plan.isRecommended}
+                    onChange={(e) => {
+                      const newPlans = [...pricingData.plans];
+                      newPlans[i] = { ...newPlans[i], isRecommended: e.target.checked };
+                      updateBlock(block.id, { plans: newPlans });
+                    }}
+                    className="w-4 h-4 rounded text-emerald-600"
+                  />
+                  <span className="text-sm text-gray-700">おすすめプラン</span>
+                </label>
+              </div>
+            ))}
+            <button
+              onClick={() => {
+                const newPlans = [...(pricingData.plans || []), { id: generateBlockId(), title: '', price: '', features: [''], isRecommended: false }];
+                updateBlock(block.id, { plans: newPlans });
+              }}
+              className="w-full p-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-emerald-500 hover:text-emerald-600 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <Plus size={16} /> プランを追加
+            </button>
+          </div>
+        );
+      }
+
+      case 'testimonial': {
+        const testData = block.data as { items: Array<{ id: string; name: string; role: string; comment: string }> };
+        return (
+          <div className="space-y-4">
+            {testData.items?.map((item, i) => (
+              <div key={item.id} className="bg-gray-50 p-4 rounded-lg relative">
+                <div className="absolute top-2 right-2">
+                  <button
+                    onClick={() => {
+                      const newItems = testData.items.filter((_, idx) => idx !== i);
+                      updateBlock(block.id, { items: newItems });
+                    }}
+                    className="p-1 text-gray-400 hover:text-red-500"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                <Input label="名前" val={item.name} onChange={(v) => {
+                  const newItems = [...testData.items];
+                  newItems[i] = { ...newItems[i], name: v };
+                  updateBlock(block.id, { items: newItems });
+                }} ph="山田太郎" />
+                <div className="mt-2">
+                  <Input label="肩書き" val={item.role} onChange={(v) => {
+                    const newItems = [...testData.items];
+                    newItems[i] = { ...newItems[i], role: v };
+                    updateBlock(block.id, { items: newItems });
+                  }} ph="会社員" />
+                </div>
+                <div className="mt-2">
+                  <label className="text-sm font-bold text-gray-900 block mb-2">コメント</label>
+                  <textarea
+                    value={item.comment}
+                    onChange={(e) => {
+                      const newItems = [...testData.items];
+                      newItems[i] = { ...newItems[i], comment: e.target.value };
+                      updateBlock(block.id, { items: newItems });
+                    }}
+                    placeholder="お客様の声を入力"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all min-h-[80px] resize-y"
+                  />
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={() => {
+                const newItems = [...(testData.items || []), { id: generateBlockId(), name: '', role: '', comment: '' }];
+                updateBlock(block.id, { items: newItems });
+              }}
+              className="w-full p-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-emerald-500 hover:text-emerald-600 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <Plus size={16} /> お客様の声を追加
+            </button>
+          </div>
+        );
+      }
+
+      case 'lead_form':
+        return (
+          <div className="space-y-4">
+            <Input label="タイトル" val={(block.data as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="お問い合わせ" />
+            <Input label="ボタンテキスト" val={(block.data as Record<string, string>).buttonText || ''} onChange={(v) => updateBlock(block.id, { buttonText: v })} ph="送信" />
+          </div>
+        );
+
+      case 'line_card':
+        return (
+          <div className="space-y-4">
+            <Input label="タイトル" val={(block.data as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="LINE登録" />
+            <Input label="説明" val={(block.data as Record<string, string>).description || ''} onChange={(v) => updateBlock(block.id, { description: v })} ph="お気軽にご連絡ください" />
+            <Input label="LINE URL" val={(block.data as Record<string, string>).url || ''} onChange={(v) => updateBlock(block.id, { url: v })} ph="https://lin.ee/..." />
+            <Input label="ボタンテキスト" val={(block.data as Record<string, string>).buttonText || ''} onChange={(v) => updateBlock(block.id, { buttonText: v })} ph="友だち追加" />
+          </div>
+        );
+
+      case 'countdown':
+        return (
+          <div className="space-y-4">
+            <Input label="タイトル" val={(block.data as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="残り時間" />
+            <div>
+              <label className="text-sm font-bold text-gray-900 block mb-2">終了日時</label>
+              <input
+                type="datetime-local"
+                value={(block.data as Record<string, string>).targetDate?.slice(0, 16) || ''}
+                onChange={(e) => updateBlock(block.id, { targetDate: new Date(e.target.value).toISOString() })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              />
+            </div>
+          </div>
+        );
+
+      case 'google_map':
+        return (
+          <div className="space-y-4">
+            <Input label="住所" val={(block.data as Record<string, string>).address || ''} onChange={(v) => updateBlock(block.id, { address: v })} ph="東京都渋谷区..." />
+            <Input label="埋め込みURL（任意）" val={(block.data as Record<string, string>).embedUrl || ''} onChange={(v) => updateBlock(block.id, { embedUrl: v })} ph="https://www.google.com/maps/embed?..." />
+          </div>
+        );
+
+      case 'youtube':
+        return (
+          <Input label="YouTube URL" val={(block.data as Record<string, string>).url || ''} onChange={(v) => updateBlock(block.id, { url: v })} ph="https://www.youtube.com/watch?v=..." />
+        );
+
+      case 'links': {
+        const linksData = block.data as { links: Array<{ label: string; url: string; style: string }> };
+        return (
+          <div className="space-y-4">
+            {linksData.links?.map((link, i) => (
+              <div key={i} className="bg-gray-50 p-4 rounded-lg relative">
+                <div className="absolute top-2 right-2">
+                  <button
+                    onClick={() => {
+                      const newLinks = linksData.links.filter((_, idx) => idx !== i);
+                      updateBlock(block.id, { links: newLinks });
+                    }}
+                    className="p-1 text-gray-400 hover:text-red-500"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                <Input label="ラベル" val={link.label} onChange={(v) => {
+                  const newLinks = [...linksData.links];
+                  newLinks[i] = { ...newLinks[i], label: v };
+                  updateBlock(block.id, { links: newLinks });
+                }} ph="リンク名" />
+                <div className="mt-2">
+                  <Input label="URL" val={link.url} onChange={(v) => {
+                    const newLinks = [...linksData.links];
+                    newLinks[i] = { ...newLinks[i], url: v };
+                    updateBlock(block.id, { links: newLinks });
+                  }} ph="https://..." />
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={() => {
+                const newLinks = [...(linksData.links || []), { label: '', url: '', style: '' }];
+                updateBlock(block.id, { links: newLinks });
+              }}
+              className="w-full p-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-emerald-500 hover:text-emerald-600 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <Plus size={16} /> リンクを追加
+            </button>
+          </div>
+        );
+      }
+
+      case 'gallery':
+        return (
+          <div className="space-y-4">
+            <Input label="タイトル（任意）" val={(block.data as Record<string, string>).title || ''} onChange={(v) => updateBlock(block.id, { title: v })} ph="ギャラリー" />
+            <p className="text-sm text-gray-500">画像はプレビューから追加・管理できます</p>
+          </div>
+        );
+
+      default:
+        return <p className="text-sm text-gray-500">このブロックの編集機能は準備中です</p>;
+    }
+  };
 
   // ==========================================
   // 公開URL
   // ==========================================
-  const publicUrl = swipePage.slug
-    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/swipe/${swipePage.slug}`
+  const publicUrl = (savedSlug || swipePage.slug)
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/swipe/${savedSlug || swipePage.slug}`
     : null;
 
   // ==========================================
   // レンダリング
   // ==========================================
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <div className="sticky top-16 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
-            <h1 className="text-lg font-bold text-gray-900 truncate">スワイプメーカー</h1>
-            {publicUrl && (
-              <a
-                href={publicUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-green-50 border border-green-200 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100 transition-colors"
-              >
-                <ExternalLink className="w-3.5 h-3.5" /> 公開URL
-              </a>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {savedSlug && (
+    <div className="min-h-screen bg-gray-100 flex flex-col font-sans text-gray-900">
+      {/* 成功モーダル */}
+      <CreationCompleteModal
+        isOpen={showSuccessModal && !!savedSlug}
+        onClose={() => setShowSuccessModal(false)}
+        title="スワイプページ"
+        publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/swipe/${savedSlug}`}
+        contentTitle="スワイプページを作りました！"
+        theme="purple"
+        userId={userId}
+        contentId={savedId || undefined}
+        contentType="swipe"
+      />
+
+      {/* ヘッダー（ProfileEditor準拠） */}
+      <div className="bg-white border-b px-4 md:px-6 py-4 flex items-center justify-between sticky top-16 z-40 shadow-sm">
+        <div className="flex items-center gap-3">
+          <h2 className="font-bold text-lg text-gray-900 line-clamp-1">
+            {existingId ? 'スワイプページ編集' : 'スワイプページ新規作成'}
+          </h2>
+        </div>
+        <div className="flex gap-2">
+          {savedSlug && (
+            <>
               <button
                 onClick={() => setShowSuccessModal(true)}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+                className="hidden sm:flex bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-3 sm:px-4 py-2 rounded-lg font-bold items-center gap-2 hover:from-emerald-700 hover:to-teal-700 whitespace-nowrap transition-all shadow-md text-sm sm:text-base"
               >
-                <Trophy className="w-4 h-4" />
+                <Trophy size={16} className="sm:w-[18px] sm:h-[18px]" />
                 <span className="hidden md:inline">作成完了画面</span>
+                <span className="md:hidden">完了</span>
               </button>
-            )}
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 text-sm"
-            >
-              <Save className="w-4 h-4" />
-              {saving ? '保存中...' : existingId ? '更新して保存' : '保存して公開'}
-            </button>
-          </div>
+              <button
+                onClick={() => {
+                  if (publicUrl) {
+                    navigator.clipboard.writeText(publicUrl);
+                    alert('公開URLをコピーしました！');
+                  }
+                }}
+                className="hidden sm:flex bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 sm:px-4 py-2 rounded-lg font-bold items-center gap-2 text-sm sm:text-base"
+              >
+                <ExternalLink size={16} className="sm:w-[18px] sm:h-[18px]" />
+                <span className="hidden md:inline">公開URL</span>
+                <span className="md:hidden">URL</span>
+              </button>
+            </>
+          )}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="bg-emerald-600 text-white px-4 md:px-6 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-emerald-700 shadow-md transition-all whitespace-nowrap"
+          >
+            {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+            <span className="hidden sm:inline">保存</span>
+          </button>
         </div>
       </div>
 
-      {/* モバイルタブ */}
-      <div className="lg:hidden sticky top-[121px] z-30 bg-white border-b border-gray-200 flex">
-        <button
-          onClick={() => setMobileTab('editor')}
-          className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-1.5 ${
-            mobileTab === 'editor' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'
-          }`}
-        >
-          <Pencil className="w-4 h-4" /> 編集
-        </button>
-        <button
-          onClick={() => setMobileTab('preview')}
-          className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-1.5 ${
-            mobileTab === 'preview' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'
-          }`}
-        >
-          <Eye className="w-4 h-4" /> プレビュー
-        </button>
+      {/* モバイル用タブバー */}
+      <div className="lg:hidden bg-white border-b border-gray-200 sticky top-[121px] z-40">
+        <div className="flex">
+          <button
+            onClick={() => setMobileTab('editor')}
+            className={`flex-1 py-3 px-4 font-bold text-sm flex items-center justify-center gap-2 transition-colors ${
+              mobileTab === 'editor'
+                ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Pencil size={18} /> 編集
+          </button>
+          <button
+            onClick={() => setMobileTab('preview')}
+            className={`flex-1 py-3 px-4 font-bold text-sm flex items-center justify-center gap-2 transition-colors ${
+              mobileTab === 'preview'
+                ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Eye size={18} /> プレビュー
+          </button>
+        </div>
       </div>
 
-      <div className="max-w-7xl mx-auto flex">
+      <div className="max-w-7xl mx-auto flex w-full">
         {/* 左パネル: エディタ */}
-        <div className={`w-full lg:w-1/2 p-4 space-y-4 ${mobileTab !== 'editor' ? 'hidden lg:block' : ''}`}>
+        <div className={`w-full lg:w-1/2 p-4 space-y-0 ${mobileTab !== 'editor' ? 'hidden lg:block' : ''}`}>
+
           {/* タイトル */}
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">ページタイトル</label>
-            <input
-              type="text"
-              value={swipePage.title}
-              onChange={(e) => setSwipePage(prev => ({ ...prev, title: e.target.value }))}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="ページタイトルを入力"
-            />
+          <div className="mb-4">
+            <Input label="ページタイトル" val={swipePage.title} onChange={(v) => setSwipePage(prev => ({ ...prev, title: v }))} ph="ページタイトルを入力" />
           </div>
 
-          {/* テンプレート選択 */}
-          <div>
-            <SectionHeader sectionKey="template" icon={LayoutTemplate} title="テンプレート選択" step="STEP 1" bgColor="bg-purple-50" hoverColor="hover:bg-purple-100" accentColor="bg-purple-100 text-purple-600" />
-            {openSections.template && (
-              <div className="mt-3 grid grid-cols-2 gap-3 max-h-72 overflow-y-auto p-1">
-                {swipeTemplates.map(template => (
-                  <button
-                    key={template.id}
-                    onClick={() => handleSelectTemplate(template.id)}
-                    className="flex flex-col items-start gap-2 p-3 border border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50/50 transition-all text-left"
-                  >
-                    <div className="flex items-center gap-2 w-full">
-                      <div
-                        className="w-8 h-8 rounded-lg flex-shrink-0"
-                        style={{ background: template.theme.gradient }}
-                      />
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-800 truncate">{template.name}</p>
-                        <p className="text-xs text-gray-500">{template.cards.length}枚 / {template.blocks.length}ブロック</p>
-                      </div>
-                      {template.recommended && (
-                        <span className="ml-auto bg-amber-100 text-amber-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">おすすめ</span>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-500 line-clamp-1">{template.description}</p>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* アスペクト比 */}
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-2">カードサイズ（アスペクト比）</label>
-            <div className="grid grid-cols-3 gap-2">
-              {(Object.keys(ASPECT_SIZES) as SwipeAspectRatio[]).map(ratio => (
+          {/* ステップ1: テンプレート選択 */}
+          <Section
+            title="テンプレート選択"
+            icon={LayoutTemplate}
+            isOpen={openSections.template}
+            onToggle={() => toggleSection('template')}
+            step={1}
+            stepLabel="テンプレートから始める"
+            headerBgColor="bg-purple-50"
+            headerHoverColor="hover:bg-purple-100"
+            accentColor="bg-purple-100 text-purple-600"
+          >
+            <div className="grid grid-cols-2 gap-3 max-h-72 overflow-y-auto">
+              {swipeTemplates.map(template => (
                 <button
-                  key={ratio}
-                  onClick={() => setSwipePage(prev => ({ ...prev, aspect_ratio: ratio }))}
-                  className={`p-3 rounded-xl border text-center transition-all ${
-                    swipePage.aspect_ratio === ratio
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                  }`}
+                  key={template.id}
+                  onClick={() => handleSelectTemplate(template.id)}
+                  className="flex flex-col items-start gap-2 p-3 border border-gray-200 rounded-xl hover:border-purple-400 hover:bg-purple-50/50 transition-all text-left"
                 >
-                  <div className="text-sm font-semibold">{ratio}</div>
-                  <div className="text-[10px] mt-0.5">{ASPECT_SIZES[ratio].width}×{ASPECT_SIZES[ratio].height}</div>
+                  <div className="flex items-center gap-2 w-full">
+                    <div
+                      className="w-8 h-8 rounded-lg flex-shrink-0"
+                      style={{ background: template.theme.gradient }}
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{template.name}</p>
+                      <p className="text-xs text-gray-500">{template.cards.length}枚 / {template.blocks.length}ブロック</p>
+                    </div>
+                    {template.recommended && (
+                      <span className="ml-auto bg-amber-100 text-amber-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">おすすめ</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 line-clamp-1">{template.description}</p>
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* カード編集 */}
-          <div>
-            <SectionHeader sectionKey="cards" icon={Layers} title="スワイプカード" badge={swipePage.cards.length} step="STEP 2" bgColor="bg-blue-50" hoverColor="hover:bg-blue-100" accentColor="bg-blue-100 text-blue-600" />
-            {openSections.cards && (
-              <div className="mt-3 space-y-2">
-                {swipePage.cards.map((card, i) => (
-                  <SwipeCardEditor
-                    key={card.id}
-                    card={card}
-                    index={i}
-                    aspectRatio={swipePage.aspect_ratio}
-                    userId={userId}
-                    onUpdate={updateCard}
-                    onRemove={removeCard}
-                    onMoveUp={() => moveCard(i, 'up')}
-                    onMoveDown={() => moveCard(i, 'down')}
-                    isFirst={i === 0}
-                    isLast={i === swipePage.cards.length - 1}
-                  />
+            {/* アスペクト比 */}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <label className="text-sm font-bold text-gray-900 block mb-2">カードサイズ（アスペクト比）</label>
+              <div className="grid grid-cols-3 gap-2">
+                {(Object.keys(ASPECT_SIZES) as SwipeAspectRatio[]).map(ratio => (
+                  <button
+                    key={ratio}
+                    onClick={() => setSwipePage(prev => ({ ...prev, aspect_ratio: ratio }))}
+                    className={`p-3 rounded-xl border text-center transition-all ${
+                      swipePage.aspect_ratio === ratio
+                        ? 'border-purple-500 bg-purple-50 text-purple-700'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-sm font-semibold">{ratio}</div>
+                    <div className="text-[10px] mt-0.5">{ASPECT_SIZES[ratio].width}×{ASPECT_SIZES[ratio].height}</div>
+                  </button>
                 ))}
-                <button
-                  onClick={addCard}
-                  className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50/50 transition-all text-sm font-medium"
-                >
-                  <Plus className="w-4 h-4" /> カードを追加
-                </button>
-                {swipePage.cards.length >= 20 && (
-                  <p className="text-xs text-amber-600 text-center">最大20枚まで追加できます</p>
-                )}
               </div>
-            )}
-          </div>
+            </div>
+          </Section>
 
-          {/* LP部分ブロック */}
-          <div>
-            <SectionHeader sectionKey="blocks" icon={Type} title="LP部分（カード下）" badge={swipePage.content?.length || 0} step="STEP 3" bgColor="bg-green-50" hoverColor="hover:bg-green-100" accentColor="bg-green-100 text-green-600" />
-            {openSections.blocks && (
-              <div className="mt-3 space-y-3">
-                {/* 既存ブロック一覧 */}
-                {swipePage.content?.map((block, i) => (
-                  <div key={block.id} className="bg-white border border-gray-200 rounded-xl p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">
-                        {AVAILABLE_BLOCKS.find(b => b.type === block.type)?.label || block.type}
-                        {(block.data as Record<string, unknown>)?.title && `: ${(block.data as Record<string, unknown>).title}`}
-                      </span>
-                      <div className="flex items-center gap-1">
+          {/* ステップ2: スワイプカード */}
+          <Section
+            title="スワイプカード"
+            icon={Layers}
+            isOpen={openSections.cards}
+            onToggle={() => toggleSection('cards')}
+            step={2}
+            stepLabel="カードを追加・編集する"
+            badge={`${swipePage.cards.length}枚`}
+            headerBgColor="bg-blue-50"
+            headerHoverColor="hover:bg-blue-100"
+            accentColor="bg-blue-100 text-blue-600"
+          >
+            <div className="space-y-2">
+              {swipePage.cards.map((card, i) => (
+                <SwipeCardEditor
+                  key={card.id}
+                  card={card}
+                  index={i}
+                  aspectRatio={swipePage.aspect_ratio}
+                  userId={userId}
+                  onUpdate={updateCard}
+                  onRemove={removeCard}
+                  onMoveUp={() => moveCard(i, 'up')}
+                  onMoveDown={() => moveCard(i, 'down')}
+                  isFirst={i === 0}
+                  isLast={i === swipePage.cards.length - 1}
+                />
+              ))}
+              <button
+                onClick={addCard}
+                className="w-full p-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-emerald-500 hover:text-emerald-600 transition-colors flex items-center justify-center gap-2 font-medium"
+              >
+                <Plus size={20} /> カードを追加
+              </button>
+              {swipePage.cards.length >= 20 && (
+                <p className="text-xs text-amber-600 text-center">最大20枚まで追加できます</p>
+              )}
+            </div>
+          </Section>
+
+          {/* ステップ3: LP部分ブロック */}
+          <Section
+            title="LP部分（カード下）"
+            icon={Layout}
+            isOpen={openSections.blocks}
+            onToggle={() => toggleSection('blocks')}
+            step={3}
+            stepLabel="LP部分のブロックを編集する"
+            badge={`${swipePage.content?.length || 0}個`}
+            headerBgColor="bg-green-50"
+            headerHoverColor="hover:bg-green-100"
+            accentColor="bg-green-100 text-green-600"
+          >
+            {/* ブロック一覧 */}
+            <div className="space-y-3 min-h-[100px]">
+              {(!swipePage.content || swipePage.content.length === 0) && (
+                <div className="text-center py-8 text-gray-400">
+                  <Layout size={32} className="mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">ブロックがありません</p>
+                  <p className="text-xs mt-1">下のボタンからブロックを追加してください</p>
+                </div>
+              )}
+              {swipePage.content?.map((block, index) => {
+                const blockType = blockTypes.find(bt => bt.type === block.type);
+                const BlockIcon = blockType?.icon || Type;
+
+                return (
+                  <div key={block.id} className={`rounded-xl border overflow-hidden ${blockType?.color?.border || 'border-gray-200'} ${blockType?.color?.bg || 'bg-gray-50'}`}>
+                    <div
+                      className={`w-full flex items-center justify-between p-4 cursor-pointer ${blockType?.color?.hover || 'hover:bg-gray-100'}`}
+                      onClick={() => setExpandedBlocks(prev => {
+                        const next = new Set(prev);
+                        if (next.has(block.id)) {
+                          next.delete(block.id);
+                        } else {
+                          next.add(block.id);
+                        }
+                        return next;
+                      })}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <GripVertical size={18} className="text-gray-400" />
+                        <BlockIcon size={18} className={blockType?.color?.icon || 'text-emerald-600'} />
+                        <span className={`font-medium ${blockType?.color?.text || 'text-gray-700'}`}>
+                          {blockType?.label || block.type}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => moveBlock(block.id, 'up')}
-                          disabled={i === 0}
-                          className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 text-xs"
-                        >▲</button>
+                          disabled={index === 0}
+                          className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                        >
+                          <ArrowUp size={16} />
+                        </button>
                         <button
                           onClick={() => moveBlock(block.id, 'down')}
-                          disabled={i === (swipePage.content?.length || 0) - 1}
-                          className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 text-xs"
-                        >▼</button>
+                          disabled={index === (swipePage.content?.length || 0) - 1}
+                          className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                        >
+                          <ArrowDown size={16} />
+                        </button>
                         <button
                           onClick={() => removeBlock(block.id)}
-                          className="p-1 text-red-400 hover:text-red-600 text-xs"
-                        >✕</button>
+                          className="p-1 text-gray-400 hover:text-red-500"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => setExpandedBlocks(prev => {
+                            const next = new Set(prev);
+                            if (next.has(block.id)) {
+                              next.delete(block.id);
+                            } else {
+                              next.add(block.id);
+                            }
+                            return next;
+                          })}
+                          className="p-1 text-gray-400"
+                        >
+                          {expandedBlocks.has(block.id) ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                        </button>
                       </div>
                     </div>
-                  </div>
-                ))}
 
-                {/* ブロック追加ボタン群 */}
-                <div>
-                  <p className="text-xs font-medium text-gray-500 mb-2">ブロックを追加</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {AVAILABLE_BLOCKS.map(block => (
+                    {expandedBlocks.has(block.id) && (
+                      <div className="p-4 border-t border-gray-200 bg-white">
+                        {renderBlockEditor(block)}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* ブロック追加（ProfileEditor準拠：ポップオーバー型） */}
+            <div className="relative mt-4">
+              <button
+                onClick={() => setShowBlockSelector(!showBlockSelector)}
+                className="w-full p-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-emerald-500 hover:text-emerald-600 transition-colors flex items-center justify-center gap-2 font-medium"
+              >
+                <Plus size={20} />
+                ブロックを追加
+              </button>
+
+              {showBlockSelector && (
+                <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl shadow-xl border border-gray-100 p-4 z-50 max-h-80 overflow-y-auto">
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                    {blockTypes.map(bt => (
                       <button
-                        key={block.type}
-                        onClick={() => addBlock(block.type)}
-                        className="flex flex-col items-center gap-1 p-2.5 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/50 transition-all text-xs text-gray-600 hover:text-blue-600"
+                        key={bt.type}
+                        onClick={() => addBlock(bt.type)}
+                        className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-emerald-200"
                       >
-                        <block.icon className="w-4 h-4" />
-                        <span>{block.label}</span>
+                        <bt.icon size={24} className="text-emerald-600" />
+                        <span className="text-sm font-medium text-gray-700">{bt.label}</span>
                       </button>
                     ))}
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          </Section>
 
-          {/* カルーセル設定 */}
-          <div>
-            <SectionHeader sectionKey="carousel" icon={Settings} title="カルーセル設定" bgColor="bg-gray-100" hoverColor="hover:bg-gray-200" accentColor="bg-gray-200 text-gray-600" />
-            {openSections.carousel && (
-              <div className="mt-3 space-y-4 bg-white border border-gray-200 rounded-xl p-4">
-                {/* 自動再生 */}
-                <label className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">自動再生</span>
-                  <input
-                    type="checkbox"
-                    checked={swipePage.settings.carousel.autoPlay}
-                    onChange={(e) => setSwipePage(prev => ({
-                      ...prev,
-                      settings: { ...prev.settings, carousel: { ...prev.settings.carousel, autoPlay: e.target.checked } },
-                    }))}
-                    className="w-5 h-5 rounded text-blue-600"
-                  />
+          {/* ステップ4: カルーセル設定 */}
+          <Section
+            title="カルーセル設定"
+            icon={Settings}
+            isOpen={openSections.carousel}
+            onToggle={() => toggleSection('carousel')}
+            headerBgColor="bg-gray-100"
+            headerHoverColor="hover:bg-gray-200"
+            accentColor="bg-gray-200 text-gray-600"
+          >
+            <div className="space-y-4">
+              {/* 自動再生 */}
+              <label className="flex items-center justify-between">
+                <span className="text-sm font-bold text-gray-900">自動再生</span>
+                <input
+                  type="checkbox"
+                  checked={swipePage.settings.carousel.autoPlay}
+                  onChange={(e) => setSwipePage(prev => ({
+                    ...prev,
+                    settings: { ...prev.settings, carousel: { ...prev.settings.carousel, autoPlay: e.target.checked } },
+                  }))}
+                  className="w-5 h-5 rounded text-emerald-600"
+                />
+              </label>
+
+              {swipePage.settings.carousel.autoPlay && (
+                <div>
+                  <label className="text-sm font-bold text-gray-900 block mb-2">秒数</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[3, 5, 7, 10].map(sec => (
+                      <button
+                        key={sec}
+                        onClick={() => setSwipePage(prev => ({
+                          ...prev,
+                          settings: { ...prev.settings, carousel: { ...prev.settings.carousel, intervalSeconds: sec } },
+                        }))}
+                        className={`py-2 rounded-lg text-sm font-medium transition-all ${
+                          swipePage.settings.carousel.intervalSeconds === sec
+                            ? 'bg-emerald-100 text-emerald-700 border-2 border-emerald-300'
+                            : 'bg-gray-50 text-gray-600 border border-gray-200'
+                        }`}
+                      >
+                        {sec}秒
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <label className="flex items-center justify-between">
+                <span className="text-sm font-bold text-gray-900">ホバーで一時停止</span>
+                <input
+                  type="checkbox"
+                  checked={swipePage.settings.carousel.pauseOnHover}
+                  onChange={(e) => setSwipePage(prev => ({
+                    ...prev,
+                    settings: { ...prev.settings, carousel: { ...prev.settings.carousel, pauseOnHover: e.target.checked } },
+                  }))}
+                  className="w-5 h-5 rounded text-emerald-600"
+                />
+              </label>
+
+              <label className="flex items-center justify-between">
+                <span className="text-sm font-bold text-gray-900">矢印ボタン表示</span>
+                <input
+                  type="checkbox"
+                  checked={swipePage.settings.carousel.showArrows}
+                  onChange={(e) => setSwipePage(prev => ({
+                    ...prev,
+                    settings: { ...prev.settings, carousel: { ...prev.settings.carousel, showArrows: e.target.checked } },
+                  }))}
+                  className="w-5 h-5 rounded text-emerald-600"
+                />
+              </label>
+
+              <label className="flex items-center justify-between">
+                <span className="text-sm font-bold text-gray-900">ページインジケーター</span>
+                <input
+                  type="checkbox"
+                  checked={swipePage.settings.carousel.showIndicator}
+                  onChange={(e) => setSwipePage(prev => ({
+                    ...prev,
+                    settings: { ...prev.settings, carousel: { ...prev.settings.carousel, showIndicator: e.target.checked } },
+                  }))}
+                  className="w-5 h-5 rounded text-emerald-600"
+                />
+              </label>
+
+              {/* モバイル表示モード */}
+              <div>
+                <label className="text-sm font-bold text-gray-900 block mb-2">
+                  <Smartphone className="w-3.5 h-3.5 inline mr-1" />モバイル表示
                 </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setSwipePage(prev => ({
+                      ...prev,
+                      settings: { ...prev.settings, carousel: { ...prev.settings.carousel, mobileDisplay: 'swipe' } },
+                    }))}
+                    className={`py-2 rounded-lg text-sm font-medium transition-all ${
+                      swipePage.settings.carousel.mobileDisplay === 'swipe'
+                        ? 'bg-emerald-100 text-emerald-700 border-2 border-emerald-300'
+                        : 'bg-gray-50 text-gray-600 border border-gray-200'
+                    }`}
+                  >
+                    スワイプ
+                  </button>
+                  <button
+                    onClick={() => setSwipePage(prev => ({
+                      ...prev,
+                      settings: { ...prev.settings, carousel: { ...prev.settings.carousel, mobileDisplay: 'all' } },
+                    }))}
+                    className={`py-2 rounded-lg text-sm font-medium transition-all ${
+                      swipePage.settings.carousel.mobileDisplay === 'all'
+                        ? 'bg-emerald-100 text-emerald-700 border-2 border-emerald-300'
+                        : 'bg-gray-50 text-gray-600 border border-gray-200'
+                    }`}
+                  >
+                    全表示
+                  </button>
+                </div>
+              </div>
+            </div>
+          </Section>
 
-                {swipePage.settings.carousel.autoPlay && (
+          {/* ステップ5: 決済設定 */}
+          <Section
+            title="決済設定"
+            icon={CreditCard}
+            isOpen={openSections.payment}
+            onToggle={() => toggleSection('payment')}
+            headerBgColor="bg-gray-100"
+            headerHoverColor="hover:bg-gray-200"
+            accentColor="bg-gray-200 text-gray-600"
+          >
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-bold text-gray-900 block mb-2">決済タイプ</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setSwipePage(prev => ({
+                      ...prev,
+                      settings: { ...prev.settings, payment: { ...prev.settings.payment, paymentType: 'free' } },
+                    }))}
+                    className={`py-2 rounded-lg text-sm font-medium transition-all ${
+                      swipePage.settings.payment.paymentType === 'free'
+                        ? 'bg-green-100 text-green-700 border-2 border-green-300'
+                        : 'bg-gray-50 text-gray-600 border border-gray-200'
+                    }`}
+                  >
+                    無料
+                  </button>
+                  <button
+                    onClick={() => setSwipePage(prev => ({
+                      ...prev,
+                      settings: { ...prev.settings, payment: { ...prev.settings.payment, paymentType: 'payment' } },
+                    }))}
+                    className={`py-2 rounded-lg text-sm font-medium transition-all ${
+                      swipePage.settings.payment.paymentType === 'payment'
+                        ? 'bg-emerald-100 text-emerald-700 border-2 border-emerald-300'
+                        : 'bg-gray-50 text-gray-600 border border-gray-200'
+                    }`}
+                  >
+                    有料
+                  </button>
+                </div>
+              </div>
+
+              {swipePage.settings.payment.paymentType === 'payment' && (
+                <>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">秒数</label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[3, 5, 7, 10].map(sec => (
-                        <button
-                          key={sec}
-                          onClick={() => setSwipePage(prev => ({
-                            ...prev,
-                            settings: { ...prev.settings, carousel: { ...prev.settings.carousel, intervalSeconds: sec } },
-                          }))}
-                          className={`py-2 rounded-lg text-sm font-medium transition-all ${
-                            swipePage.settings.carousel.intervalSeconds === sec
-                              ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
-                              : 'bg-gray-50 text-gray-600 border border-gray-200'
-                          }`}
-                        >
-                          {sec}秒
-                        </button>
-                      ))}
+                    <label className="text-sm font-bold text-gray-900 block mb-2">決済方法</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setSwipePage(prev => ({
+                          ...prev,
+                          settings: { ...prev.settings, payment: { ...prev.settings.payment, paymentProvider: 'stripe' } },
+                        }))}
+                        className={`py-2 rounded-lg text-sm font-medium transition-all ${
+                          swipePage.settings.payment.paymentProvider === 'stripe'
+                            ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
+                            : 'bg-gray-50 text-gray-600 border border-gray-200'
+                        }`}
+                      >
+                        Stripe決済
+                      </button>
+                      <button
+                        onClick={() => setSwipePage(prev => ({
+                          ...prev,
+                          settings: { ...prev.settings, payment: { ...prev.settings.payment, paymentProvider: 'external' } },
+                        }))}
+                        className={`py-2 rounded-lg text-sm font-medium transition-all ${
+                          swipePage.settings.payment.paymentProvider === 'external'
+                            ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
+                            : 'bg-gray-50 text-gray-600 border border-gray-200'
+                        }`}
+                      >
+                        外部リンク
+                      </button>
                     </div>
                   </div>
-                )}
 
-                {/* ホバー時一時停止 */}
-                <label className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">ホバーで一時停止</span>
-                  <input
-                    type="checkbox"
-                    checked={swipePage.settings.carousel.pauseOnHover}
-                    onChange={(e) => setSwipePage(prev => ({
-                      ...prev,
-                      settings: { ...prev.settings, carousel: { ...prev.settings.carousel, pauseOnHover: e.target.checked } },
-                    }))}
-                    className="w-5 h-5 rounded text-blue-600"
-                  />
-                </label>
-
-                {/* 矢印表示 */}
-                <label className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">矢印ボタン表示</span>
-                  <input
-                    type="checkbox"
-                    checked={swipePage.settings.carousel.showArrows}
-                    onChange={(e) => setSwipePage(prev => ({
-                      ...prev,
-                      settings: { ...prev.settings, carousel: { ...prev.settings.carousel, showArrows: e.target.checked } },
-                    }))}
-                    className="w-5 h-5 rounded text-blue-600"
-                  />
-                </label>
-
-                {/* ページインジケーター */}
-                <label className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">ページインジケーター</span>
-                  <input
-                    type="checkbox"
-                    checked={swipePage.settings.carousel.showIndicator}
-                    onChange={(e) => setSwipePage(prev => ({
-                      ...prev,
-                      settings: { ...prev.settings, carousel: { ...prev.settings.carousel, showIndicator: e.target.checked } },
-                    }))}
-                    className="w-5 h-5 rounded text-blue-600"
-                  />
-                </label>
-
-                {/* モバイル表示モード */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-2">
-                    <Smartphone className="w-3.5 h-3.5 inline mr-1" />モバイル表示
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => setSwipePage(prev => ({
-                        ...prev,
-                        settings: { ...prev.settings, carousel: { ...prev.settings.carousel, mobileDisplay: 'swipe' } },
-                      }))}
-                      className={`py-2 rounded-lg text-sm font-medium transition-all ${
-                        swipePage.settings.carousel.mobileDisplay === 'swipe'
-                          ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
-                          : 'bg-gray-50 text-gray-600 border border-gray-200'
-                      }`}
-                    >
-                      スワイプ
-                    </button>
-                    <button
-                      onClick={() => setSwipePage(prev => ({
-                        ...prev,
-                        settings: { ...prev.settings, carousel: { ...prev.settings.carousel, mobileDisplay: 'all' } },
-                      }))}
-                      className={`py-2 rounded-lg text-sm font-medium transition-all ${
-                        swipePage.settings.carousel.mobileDisplay === 'all'
-                          ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
-                          : 'bg-gray-50 text-gray-600 border border-gray-200'
-                      }`}
-                    >
-                      全表示
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 決済設定 */}
-          <div>
-            <SectionHeader sectionKey="payment" icon={CreditCard} title="決済設定" bgColor="bg-gray-100" hoverColor="hover:bg-gray-200" accentColor="bg-gray-200 text-gray-600" />
-            {openSections.payment && (
-              <div className="mt-3 space-y-4 bg-white border border-gray-200 rounded-xl p-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-2">決済タイプ</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => setSwipePage(prev => ({
-                        ...prev,
-                        settings: { ...prev.settings, payment: { ...prev.settings.payment, paymentType: 'free' } },
-                      }))}
-                      className={`py-2 rounded-lg text-sm font-medium transition-all ${
-                        swipePage.settings.payment.paymentType === 'free'
-                          ? 'bg-green-100 text-green-700 border-2 border-green-300'
-                          : 'bg-gray-50 text-gray-600 border border-gray-200'
-                      }`}
-                    >
-                      無料
-                    </button>
-                    <button
-                      onClick={() => setSwipePage(prev => ({
-                        ...prev,
-                        settings: { ...prev.settings, payment: { ...prev.settings.payment, paymentType: 'payment' } },
-                      }))}
-                      className={`py-2 rounded-lg text-sm font-medium transition-all ${
-                        swipePage.settings.payment.paymentType === 'payment'
-                          ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
-                          : 'bg-gray-50 text-gray-600 border border-gray-200'
-                      }`}
-                    >
-                      有料
-                    </button>
-                  </div>
-                </div>
-
-                {swipePage.settings.payment.paymentType === 'payment' && (
-                  <>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">決済方法</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          onClick={() => setSwipePage(prev => ({
-                            ...prev,
-                            settings: { ...prev.settings, payment: { ...prev.settings.payment, paymentProvider: 'stripe' } },
-                          }))}
-                          className={`py-2 rounded-lg text-sm font-medium transition-all ${
-                            swipePage.settings.payment.paymentProvider === 'stripe'
-                              ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
-                              : 'bg-gray-50 text-gray-600 border border-gray-200'
-                          }`}
-                        >
-                          Stripe決済
-                        </button>
-                        <button
-                          onClick={() => setSwipePage(prev => ({
-                            ...prev,
-                            settings: { ...prev.settings, payment: { ...prev.settings.payment, paymentProvider: 'external' } },
-                          }))}
-                          className={`py-2 rounded-lg text-sm font-medium transition-all ${
-                            swipePage.settings.payment.paymentProvider === 'external'
-                              ? 'bg-purple-100 text-purple-700 border-2 border-purple-300'
-                              : 'bg-gray-50 text-gray-600 border border-gray-200'
-                          }`}
-                        >
-                          外部リンク
-                        </button>
-                      </div>
-                    </div>
-
-                    {swipePage.settings.payment.paymentProvider === 'stripe' && (
-                      <>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">価格（円）</label>
-                          <input
-                            type="number"
-                            value={swipePage.settings.payment.price || ''}
-                            onChange={(e) => setSwipePage(prev => ({
-                              ...prev,
-                              settings: { ...prev.settings, payment: { ...prev.settings.payment, price: parseInt(e.target.value) || 0 } },
-                            }))}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            placeholder="例: 9800"
-                            min={100}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Stripe Price ID（任意）</label>
-                          <input
-                            type="text"
-                            value={swipePage.settings.payment.stripePriceId || ''}
-                            onChange={(e) => setSwipePage(prev => ({
-                              ...prev,
-                              settings: { ...prev.settings, payment: { ...prev.settings.payment, stripePriceId: e.target.value } },
-                            }))}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            placeholder="price_xxxxx（既存のPrice IDを使用する場合）"
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    {swipePage.settings.payment.paymentProvider === 'external' && (
+                  {swipePage.settings.payment.paymentProvider === 'stripe' && (
+                    <>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">決済URL</label>
+                        <label className="text-sm font-bold text-gray-900 block mb-2">価格（円）</label>
                         <input
-                          type="url"
-                          value={swipePage.settings.payment.paymentUrl || ''}
+                          type="number"
+                          value={swipePage.settings.payment.price || ''}
                           onChange={(e) => setSwipePage(prev => ({
                             ...prev,
-                            settings: { ...prev.settings, payment: { ...prev.settings.payment, paymentUrl: e.target.value } },
+                            settings: { ...prev.settings, payment: { ...prev.settings.payment, price: parseInt(e.target.value) || 0 } },
                           }))}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                          placeholder="https://..."
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                          placeholder="例: 9800"
+                          min={100}
                         />
                       </div>
-                    )}
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">購入ボタンテキスト</label>
-                      <input
-                        type="text"
-                        value={swipePage.settings.payment.ctaText || ''}
-                        onChange={(e) => setSwipePage(prev => ({
+                      <Input
+                        label="Stripe Price ID（任意）"
+                        val={swipePage.settings.payment.stripePriceId || ''}
+                        onChange={(v) => setSwipePage(prev => ({
                           ...prev,
-                          settings: { ...prev.settings, payment: { ...prev.settings.payment, ctaText: e.target.value } },
+                          settings: { ...prev.settings, payment: { ...prev.settings.payment, stripePriceId: v } },
                         }))}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        placeholder="購入する"
+                        ph="price_xxxxx"
                       />
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+                    </>
+                  )}
 
-          {/* 保存ボタン（モバイル用sticky） */}
-          <div className="sticky bottom-4 z-20 lg:hidden">
-            <div className="bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-6 -mx-4 px-4">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="w-full flex items-center justify-center gap-2 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-lg transition-all disabled:opacity-50"
-              >
-                <Save className="w-5 h-5" />
-                {saving ? '保存中...' : existingId ? '更新して保存' : '保存して公開'}
-              </button>
+                  {swipePage.settings.payment.paymentProvider === 'external' && (
+                    <Input
+                      label="決済URL"
+                      val={swipePage.settings.payment.paymentUrl || ''}
+                      onChange={(v) => setSwipePage(prev => ({
+                        ...prev,
+                        settings: { ...prev.settings, payment: { ...prev.settings.payment, paymentUrl: v } },
+                      }))}
+                      ph="https://..."
+                    />
+                  )}
+
+                  <Input
+                    label="購入ボタンテキスト"
+                    val={swipePage.settings.payment.ctaText || ''}
+                    onChange={(v) => setSwipePage(prev => ({
+                      ...prev,
+                      settings: { ...prev.settings, payment: { ...prev.settings.payment, ctaText: v } },
+                    }))}
+                    ph="購入する"
+                  />
+                </>
+              )}
             </div>
+          </Section>
+
+          {/* 保存ボタン（下部：ProfileEditor準拠） */}
+          <div className="sticky bottom-4 bg-white p-4 rounded-xl shadow-lg border border-gray-200">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:from-emerald-700 hover:to-teal-700 transition-all shadow-md text-lg"
+            >
+              {saving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
+              {existingId ? '更新して保存' : '保存して公開'}
+            </button>
           </div>
         </div>
 
@@ -892,7 +1422,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
                 {swipePage.content.map(block => (
                   <div key={block.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                     <p className="text-sm font-medium text-gray-700">
-                      {AVAILABLE_BLOCKS.find(b => b.type === block.type)?.label || block.type}
+                      {blockTypes.find(b => b.type === block.type)?.label || block.type}
                     </p>
                     {(block.data as Record<string, unknown>)?.title && (
                       <p className="text-xs text-gray-500 mt-1">{String((block.data as Record<string, unknown>).title)}</p>
@@ -905,7 +1435,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
             {/* 決済ボタンプレビュー */}
             {swipePage.settings.payment.paymentType === 'payment' && (
               <div className="mt-6">
-                <button className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold shadow-lg text-center">
+                <button className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold shadow-lg text-center">
                   {swipePage.settings.payment.ctaText || '購入する'}
                   {swipePage.settings.payment.price ? ` - ¥${swipePage.settings.payment.price.toLocaleString()}` : ''}
                 </button>
@@ -914,19 +1444,6 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
           </div>
         </div>
       </div>
-
-      {/* 完成モーダル */}
-      <CreationCompleteModal
-        isOpen={showSuccessModal && !!savedSlug}
-        onClose={() => setShowSuccessModal(false)}
-        title="スワイプページ"
-        publicUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/swipe/${savedSlug}`}
-        contentTitle={`${swipePage.title}を作りました！`}
-        theme="purple"
-        userId={userId}
-        contentId={savedId || undefined}
-        contentType="swipe"
-      />
     </div>
   );
 }
