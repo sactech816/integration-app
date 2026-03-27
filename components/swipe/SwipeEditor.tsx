@@ -17,6 +17,7 @@ import SwipeCarousel, { ASPECT_SIZES } from './SwipeCarousel';
 import { swipeTemplates } from '@/constants/templates/swipe';
 import { SWIPE_CATEGORIES } from '@/constants/templates/types';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
+import BlockRenderer from '@/components/shared/BlockRenderer';
 
 // ブロックタイプ定義（ProfileEditor準拠：色・アイコン付き）
 const blockTypes = [
@@ -1415,19 +1416,17 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
               isPreview
             />
 
-            {/* LP部分プレビュー */}
+            {/* LP部分プレビュー（BlockRenderer使用） */}
             {swipePage.content && swipePage.content.length > 0 && (
-              <div className="space-y-4 mt-6">
-                <p className="text-xs text-gray-400 font-medium">▼ LP部分</p>
+              <div className="mt-6 space-y-0">
+                <p className="text-xs text-gray-400 font-medium mb-3">▼ LP部分</p>
                 {swipePage.content.map(block => (
-                  <div key={block.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-                    <p className="text-sm font-medium text-gray-700">
-                      {blockTypes.find(b => b.type === block.type)?.label || block.type}
-                    </p>
-                    {(block.data as Record<string, unknown>)?.title && (
-                      <p className="text-xs text-gray-500 mt-1">{String((block.data as Record<string, unknown>).title)}</p>
-                    )}
-                  </div>
+                  <BlockRenderer
+                    key={block.id}
+                    block={block}
+                    variant="profile"
+                    isPreview
+                  />
                 ))}
               </div>
             )}

@@ -49,17 +49,28 @@ export default function SwipeCardEditor({
 
   // サムネイル画像一覧を取得
   const loadThumbnails = async () => {
-    if (!supabase || !userId || thumbnails.length > 0) return;
+    if (!supabase || !userId) return;
+    if (thumbnails.length > 0) return;
     setLoadingThumbnails(true);
     try {
       const { data } = await supabase
         .from(TABLES.THUMBNAILS)
-        .select('id, title, image_url')
+        .select('id, title, image_url, text_overlay')
         .eq('user_id', userId)
-        .not('image_url', 'is', null)
         .order('created_at', { ascending: false })
         .limit(50);
-      if (data) setThumbnails(data as ThumbnailOption[]);
+      if (data) {
+        // image_url がある or text_overlay.backgroundImageUrl があるものをフィルタ
+        const filtered = data
+          .map((t: Record<string, unknown>) => {
+            const imgUrl = t.image_url as string | null;
+            const overlay = t.text_overlay as { backgroundImageUrl?: string } | null;
+            const url = imgUrl || overlay?.backgroundImageUrl || '';
+            return url ? { id: t.id as string, title: (t.title as string) || '無題', image_url: url } : null;
+          })
+          .filter((t): t is ThumbnailOption => t !== null);
+        setThumbnails(filtered);
+      }
     } catch {
       // ignore
     } finally {
@@ -184,7 +195,7 @@ export default function SwipeCardEditor({
           {/* 画像アップロードモード */}
           {card.type === 'image' && (
             <div className="space-y-3">
-              {card.imageUrl ? (
+              {card.imageUrl && (
                 <div className="relative rounded-xl overflow-hidden" style={{ paddingTop: previewPadding }}>
                   <img
                     src={card.imageUrl}
@@ -194,25 +205,27 @@ export default function SwipeCardEditor({
                   <button
                     onClick={() => onUpdate(card.id, { imageUrl: undefined })}
                     className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-full text-white hover:bg-black/70"
+                    title="画像を削除"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-              ) : (
+              )}
+              <div className="flex gap-2">
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="w-full border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 hover:bg-blue-50/50 transition-all"
+                  className={`flex-1 border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-blue-400 hover:bg-blue-50/50 transition-all ${card.imageUrl ? '' : 'py-8'}`}
                 >
-                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <Upload className="w-6 h-6 text-gray-400 mx-auto mb-1" />
                   <p className="text-sm text-gray-600">
-                    {uploading ? 'アップロード中...' : 'クリックして画像を選択'}
+                    {uploading ? 'アップロード中...' : card.imageUrl ? '画像を変更' : '画像を選択'}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {aspect.label}
-                  </p>
+                  {!card.imageUrl && (
+                    <p className="text-xs text-gray-400 mt-1">{aspect.label}</p>
+                  )}
                 </button>
-              )}
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
