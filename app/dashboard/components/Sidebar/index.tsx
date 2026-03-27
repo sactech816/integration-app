@@ -45,6 +45,7 @@ type SidebarProps = {
     concierge: number;
     kindle_cover: number;
     monetize_diagnosis: number;
+    swipe: number;
   };
   totalViews: number;
   onLogout: () => void;

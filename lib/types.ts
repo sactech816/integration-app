@@ -5,7 +5,7 @@
 // -------------------------------------------
 // サービスタイプ
 // -------------------------------------------
-export type ServiceType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail' | 'newsletter' | 'step-email' | 'order-form' | 'funnel' | 'webinar' | 'sns-post' | 'line' | 'site' | 'fortune' | 'subsidy';
+export type ServiceType = 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'salesletter' | 'survey' | 'gamification' | 'attendance' | 'booking' | 'onboarding' | 'thumbnail' | 'newsletter' | 'step-email' | 'order-form' | 'funnel' | 'webinar' | 'sns-post' | 'line' | 'site' | 'fortune' | 'subsidy' | 'swipe';
 
 export const SERVICE_LABELS: Record<ServiceType, string> = {
   quiz: '診断クイズ',
@@ -29,6 +29,7 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
   'site': 'ホームページメーカー',
   fortune: '生年月日占い',
   subsidy: '補助金診断',
+  swipe: 'スワイプメーカー',
 };
 
 export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; text: string }> = {
@@ -53,6 +54,7 @@ export const SERVICE_COLORS: Record<ServiceType, { primary: string; bg: string; 
   'site': { primary: 'cyan', bg: 'bg-cyan-50', text: 'text-cyan-600' },
   fortune: { primary: 'indigo', bg: 'bg-indigo-50', text: 'text-indigo-600' },
   subsidy: { primary: 'teal', bg: 'bg-teal-50', text: 'text-teal-600' },
+  swipe: { primary: 'fuchsia', bg: 'bg-fuchsia-50', text: 'text-fuchsia-600' },
 };
 
 // -------------------------------------------
@@ -1687,6 +1689,78 @@ export interface SitePage {
   is_home: boolean;
   show_in_nav: boolean;
   icon?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// -------------------------------------------
+// スワイプメーカー型定義
+// -------------------------------------------
+export type SwipeAspectRatio = '9:16' | '1:1' | '16:9';
+
+export interface SwipeCard {
+  id: string;
+  type: 'image' | 'template'; // 画像アップロード or テンプレ+テキスト
+  imageUrl?: string;           // アップロード画像URL
+  templateId?: string;         // サムネイルテンプレートID
+  themeId?: string;            // カラーテーマID
+  textOverlay?: {
+    title?: string;
+    subtitle?: string;
+    svgTextElements?: SVGTextElement[];
+    backgroundImageUrl?: string;
+  };
+  sortOrder: number;
+}
+
+export interface SwipeCarouselSettings {
+  autoPlay: boolean;
+  intervalSeconds: number;    // 3, 5, 7, 10
+  pauseOnHover: boolean;
+  showArrows: boolean;
+  showIndicator: boolean;     // ページインジケーター (1/8)
+  mobileDisplay: 'swipe' | 'all'; // モバイル表示: スワイプ or 全表示
+}
+
+export interface SwipePaymentSettings {
+  paymentType: 'free' | 'payment';
+  paymentProvider?: 'stripe' | 'external';
+  price?: number;
+  stripePriceId?: string;
+  paymentUrl?: string;        // 外部決済URL
+  ctaText?: string;           // 購入ボタンテキスト
+}
+
+export interface SwipeSettings {
+  carousel: SwipeCarouselSettings;
+  payment: SwipePaymentSettings;
+  theme?: {
+    gradient?: string;
+    backgroundImage?: string;
+    animated?: boolean;
+  };
+  tracking?: TrackingSettings;
+  hideFooter?: boolean;
+  showInPortal?: boolean;
+}
+
+export interface SwipePage {
+  id: string;
+  slug: string;
+  title: string;
+  description?: string;
+  cards: SwipeCard[];
+  content?: Block[];         // LP部分（BlockRenderer用ブロック配列）
+  settings: SwipeSettings;
+  aspect_ratio: SwipeAspectRatio;
+  payment_type: string;
+  payment_provider?: string;
+  price?: number;
+  stripe_price_id?: string;
+  payment_url?: string;
+  user_id?: string;
+  status?: 'draft' | 'published';
+  views_count?: number;
   created_at?: string;
   updated_at?: string;
 }

@@ -67,6 +67,7 @@ type UseDashboardDataReturn = {
     concierge: number;
     kindle_cover: number;
     monetize_diagnosis: number;
+    swipe: number;
   };
   totalViews: number;
   proAccessMap: Record<string, { hasAccess: boolean; reason?: string }>;
@@ -163,6 +164,7 @@ export function useDashboardData(): UseDashboardDataReturn {
     concierge: 0,
     kindle_cover: 0,
     monetize_diagnosis: 0,
+    swipe: 0,
   });
   const [proAccessMap, setProAccessMap] = useState<Record<string, { hasAccess: boolean; reason?: string }>>({});
   const [purchases, setPurchases] = useState<string[]>([]);
@@ -739,7 +741,7 @@ export function useDashboardData(): UseDashboardDataReturn {
 
     try {
       // 全クエリを並列実行
-      const [quizResult, entertainmentQuizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult, lineResult, siteResult, bigfiveResult, fortuneResult, subsidyResult, conciergeResult, kindleCoverResult] = await Promise.all([
+      const [quizResult, entertainmentQuizResult, profileResult, businessResult, salesletterResult, bookingResult, attendanceResult, surveyResult, gamificationResult, onboardingResult, thumbnailResult, newsletterResult, stepEmailResult, orderFormResult, funnelResult, webinarResult, snsPostResult, lineResult, siteResult, bigfiveResult, fortuneResult, subsidyResult, conciergeResult, kindleCoverResult, swipeResult] = await Promise.all([
         // 診断クイズ数（ビジネス診断のみ）
         isAdmin
           ? supabase.from(TABLES.QUIZZES).select('id', { count: 'exact', head: true }).or('quiz_type.is.null,quiz_type.eq.business')
@@ -820,6 +822,10 @@ export function useDashboardData(): UseDashboardDataReturn {
         isAdmin
           ? supabase.from(TABLES.KINDLE_COVERS).select('id', { count: 'exact', head: true })
           : supabase.from(TABLES.KINDLE_COVERS).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        // スワイプページ数
+        isAdmin
+          ? supabase.from(TABLES.SWIPE_PAGES).select('id', { count: 'exact', head: true })
+          : supabase.from(TABLES.SWIPE_PAGES).select('id', { count: 'exact', head: true }).eq('user_id', user.id),
       ]);
 
       setContentCounts({
@@ -855,6 +861,7 @@ export function useDashboardData(): UseDashboardDataReturn {
         concierge: conciergeResult?.count || 0,
         kindle_cover: kindleCoverResult.count || 0,
         monetize_diagnosis: 0,
+        swipe: swipeResult?.count || 0,
       });
     } catch (error) {
       console.error('Content counts fetch error:', error);

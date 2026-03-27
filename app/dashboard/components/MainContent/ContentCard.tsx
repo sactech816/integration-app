@@ -28,6 +28,7 @@ import {
   Send,
   Globe,
   Star,
+  GalleryHorizontalEnd,
 } from 'lucide-react';
 import { ServiceType, SERVICE_LABELS, Block } from '@/lib/types';
 
@@ -98,6 +99,7 @@ const getServiceIcon = (type: ServiceType) => {
     'site': Globe,
     fortune: Star,
     subsidy: Star,
+    swipe: GalleryHorizontalEnd,
   };
   return icons[type] || Sparkles; // フォールバック
 };
@@ -125,6 +127,7 @@ const getServiceColor = (type: ServiceType) => {
     'site': { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200', gradient: 'from-cyan-400 to-teal-500' },
     fortune: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200', gradient: 'from-indigo-500 to-purple-600' },
     subsidy: { bg: 'bg-teal-50', text: 'text-teal-600', border: 'border-teal-200', gradient: 'from-teal-500 to-cyan-600' },
+    swipe: { bg: 'bg-fuchsia-50', text: 'text-fuchsia-600', border: 'border-fuchsia-200', gradient: 'from-fuchsia-500 to-pink-600' },
   };
   return colors[type] || colors.quiz; // フォールバック
 };

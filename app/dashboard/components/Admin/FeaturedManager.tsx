@@ -163,6 +163,7 @@ export default function FeaturedManager() {
       'site': 'ホームページメーカー',
       fortune: '生年月日占い',
       subsidy: '補助金診断',
+      swipe: 'スワイプメーカー',
     };
     return labels[type] || type;
   };

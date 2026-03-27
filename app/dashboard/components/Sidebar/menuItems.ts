@@ -38,6 +38,7 @@ import {
   TrendingUp,
   LucideIcon,
   FileCheck,
+  GalleryHorizontalEnd,
 } from 'lucide-react';
 
 export type ToolCategory = 'page' | 'quiz' | 'writing' | 'marketing' | 'monetization';
@@ -111,6 +112,15 @@ export const TOOL_ITEMS: ToolItem[] = [
     description: '複数ページサイト作成',
     color: { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200' },
     href: '/site/editor',
+    category: 'page',
+  },
+  {
+    id: 'swipe',
+    label: 'スワイプメーカー',
+    icon: GalleryHorizontalEnd,
+    description: 'スワイプカード型LP',
+    color: { bg: 'bg-fuchsia-50', text: 'text-fuchsia-600', border: 'border-fuchsia-200' },
+    href: '/swipe/editor',
     category: 'page',
   },
 

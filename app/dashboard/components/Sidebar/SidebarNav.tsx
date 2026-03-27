@@ -95,6 +95,7 @@ type SidebarNavProps = {
     concierge: number;
     kindle_cover: number;
     monetize_diagnosis: number;
+    swipe: number;
   };
   onLogout: () => void;
   // KDLサブスクリプション状態
@@ -178,6 +179,7 @@ export default function SidebarNav({
     'concierge': contentCounts.concierge,
     'kindle-cover': contentCounts.kindle_cover,
     'monetize-diagnosis': contentCounts.monetize_diagnosis,
+    'swipe': contentCounts.swipe,
   };
 
   /** ペルソナ未選択時: コンテンツ作成済み or おすすめツールだけを表示 */

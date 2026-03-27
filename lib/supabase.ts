@@ -48,4 +48,5 @@ export const TABLES = {
   MONETIZE_DIAGNOSES: 'monetize_diagnoses',
   SUBSIDY_RESULTS: 'subsidy_results',
   SUBSIDY_MASTER: 'subsidy_master',
+  SWIPE_PAGES: 'swipe_pages',
 } as const;

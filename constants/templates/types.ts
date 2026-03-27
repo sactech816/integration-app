@@ -60,9 +60,44 @@ export const QUIZ_CATEGORIES = [
   { id: 'entertainment', label: 'エンタメ・占い系' },
 ] as const;
 
+// ===========================================
+// スワイプメーカー用テンプレート型
+// ===========================================
+export interface SwipeTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  icon: string;
+  recommended?: boolean;
+  aspectRatio: '9:16' | '1:1' | '16:9';
+  theme: {
+    gradient: string;
+  };
+  cards: Array<{
+    type: 'template' | 'image';
+    templateId?: string;
+    themeId?: string;
+    textOverlay?: {
+      title?: string;
+      subtitle?: string;
+    };
+  }>;
+  blocks: Block[];
+  carouselSettings: {
+    autoPlay: boolean;
+    intervalSeconds: number;
+    mobileDisplay: 'swipe' | 'all';
+  };
+}
 
-
-
+export const SWIPE_CATEGORIES = [
+  { id: 'product', label: '商品紹介' },
+  { id: 'seminar', label: 'セミナー集客' },
+  { id: 'portfolio', label: 'ポートフォリオ' },
+  { id: 'service', label: 'サービス紹介' },
+  { id: 'restaurant', label: '飲食・店舗' },
+] as const;
 
 
 

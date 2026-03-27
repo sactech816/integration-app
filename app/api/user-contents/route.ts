@@ -222,6 +222,16 @@ export async function GET(req: NextRequest) {
         .order('created_at', { ascending: false }),
     };
   }
+  if (targetTypes.includes('swipe')) {
+    queryMap['swipe'] = {
+      type: 'swipe',
+      query: supabaseAdmin
+        .from('swipe_pages')
+        .select('id, slug, title')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false }),
+    };
+  }
 
   // 全クエリを並列実行
   const entries = Object.entries(queryMap);
