@@ -65,33 +65,33 @@ function createDefaultBlock(type: string): Block {
   const id = generateBlockId();
   switch (type) {
     case 'text_card':
-      return { id, type, data: { title: '', text: '', align: 'left' as const } } as Block;
+      return { id, type: 'text_card', data: { title: '', text: '', align: 'left' as const } };
     case 'image':
-      return { id, type, data: { url: '', caption: '' } } as Block;
+      return { id, type: 'image', data: { url: '' } };
     case 'cta_section':
-      return { id, type, data: { title: '今すぐ申し込む', description: '', buttonText: '申し込む', buttonUrl: '#' } } as Block;
+      return { id, type: 'cta_section', data: { title: '今すぐ申し込む', description: '', buttonText: '申し込む', buttonUrl: '#' } };
     case 'faq':
-      return { id, type, data: { items: [{ id: generateBlockId(), question: '', answer: '' }] } } as Block;
+      return { id, type: 'faq', data: { items: [{ id: generateBlockId(), question: '', answer: '' }] } };
     case 'pricing':
-      return { id, type, data: { plans: [{ id: generateBlockId(), title: 'プラン名', price: '¥0', features: ['特徴1'], isRecommended: false }] } } as Block;
+      return { id, type: 'pricing', data: { plans: [{ id: generateBlockId(), title: 'プラン名', price: '¥0', features: ['特徴1'], isRecommended: false }] } };
     case 'testimonial':
-      return { id, type, data: { items: [{ id: generateBlockId(), name: '', role: '', comment: '' }] } } as Block;
+      return { id, type: 'testimonial', data: { items: [{ id: generateBlockId(), name: '', role: '', comment: '' }] } };
     case 'lead_form':
-      return { id, type, data: { title: 'お問い合わせ', description: '', buttonText: '送信', fields: ['name', 'email'] } } as Block;
+      return { id, type: 'lead_form', data: { title: 'お問い合わせ', buttonText: '送信' } };
     case 'line_card':
-      return { id, type, data: { title: 'LINE登録', description: '', lineUrl: '', buttonText: '友だち追加' } } as Block;
+      return { id, type: 'line_card', data: { title: 'LINE登録', description: '', url: '', buttonText: '友だち追加' } };
     case 'countdown':
-      return { id, type, data: { title: '残り時間', targetDate: new Date(Date.now() + 7 * 86400000).toISOString(), expiredText: '終了', backgroundColor: '#3b82f6' } } as Block;
+      return { id, type: 'countdown', data: { targetDate: new Date(Date.now() + 7 * 86400000).toISOString(), title: '残り時間' } };
     case 'google_map':
-      return { id, type, data: { title: 'アクセス', address: '', embedUrl: '' } } as Block;
+      return { id, type: 'google_map', data: { address: '' } };
     case 'youtube':
-      return { id, type, data: { url: '', title: '' } } as Block;
+      return { id, type: 'youtube', data: { url: '' } };
     case 'links':
-      return { id, type, data: { title: 'リンク', links: [{ label: '', url: '', icon: '' }] } } as Block;
+      return { id, type: 'links', data: { links: [{ label: '', url: '', style: '' }] } };
     case 'gallery':
-      return { id, type, data: { title: 'ギャラリー', images: [] } } as Block;
+      return { id, type: 'gallery', data: { items: [], title: 'ギャラリー' } };
     default:
-      return { id, type, data: {} } as Block;
+      return { id, type: 'text_card', data: { title: '', text: '', align: 'left' as const } };
   }
 }
 
