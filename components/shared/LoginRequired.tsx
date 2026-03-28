@@ -13,7 +13,7 @@ interface LoginRequiredProps {
  */
 export default function LoginRequired({ toolName, onLogin }: LoginRequiredProps) {
   return (
-    <div className="min-h-[60vh] flex items-center justify-center px-4">
+    <div className="min-h-[calc(100vh-80px)] bg-gray-50 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl border border-gray-300 shadow-md p-8 max-w-md mx-auto text-center">
         <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
           <LogIn className="w-7 h-7 text-blue-500" />
