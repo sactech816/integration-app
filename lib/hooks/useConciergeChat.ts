@@ -8,6 +8,10 @@ import type {
   ConciergeMessage,
   ConciergeChatResponse,
   ConciergeChatHistoryResponse,
+  PlanCard,
+  PlanExecution,
+  PlanExecutionProgress,
+  PlanExecutionResult,
 } from '@/components/concierge/types';
 
 /** localStorage にビジターIDを保存・取得 */
@@ -36,6 +40,8 @@ interface UseConciergeChat {
   isHumanMode: boolean;
   /** セッションのステータス */
   sessionStatus: SessionStatus;
+  /** プラン実行状態 */
+  planExecution: PlanExecution;
   sendMessage: (text: string) => Promise<void>;
   sendFeedback: (messageId: string, feedback: 1 | -1) => Promise<void>;
   toggleOpen: () => void;
@@ -43,6 +49,8 @@ interface UseConciergeChat {
   loadHistory: () => Promise<void>;
   /** 人間サポートをリクエスト */
   requestHumanSupport: () => Promise<void>;
+  /** プランを実行 */
+  executePlan: (plan: PlanCard) => Promise<void>;
 }
 
 export function useConciergeChat(): UseConciergeChat {
@@ -54,6 +62,11 @@ export function useConciergeChat(): UseConciergeChat {
   const [operatorOnline, setOperatorOnline] = useState(false);
   const [isHumanMode, setIsHumanMode] = useState(false);
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>('active');
+  const [planExecution, setPlanExecution] = useState<PlanExecution>({
+    status: 'idle',
+    progress: [],
+    results: [],
+  });
   const sessionIdRef = useRef<string>(`session_${new Date().toISOString().slice(0, 10)}`);
   const historyLoadedRef = useRef(false);
   const visitorIdRef = useRef<string>('');
@@ -362,12 +375,150 @@ export function useConciergeChat(): UseConciergeChat {
     }
   }, [messages, pathname, operatorOnline]);
 
+  /** 会話履歴からビジネスコンテキストを抽出 */
+  const extractBusinessContext = useCallback(() => {
+    const context: Record<string, string> = { business: '' };
+    // 直近のメッセージからコンテキストを推測
+    for (const msg of messages) {
+      if (msg.role === 'user') {
+        const content = msg.content;
+        // ビジネス名やキーワードを抽出（シンプルなヒューリスティック）
+        if (!context.business && content.length > 2) {
+          context.business = content;
+        }
+      }
+    }
+    return context;
+  }, [messages]);
+
+  /** プランを実行（ストリーミング） */
+  const executePlan = useCallback(async (plan: PlanCard) => {
+    setPlanExecution({ status: 'executing', progress: [], results: [] });
+
+    try {
+      const context = extractBusinessContext();
+
+      const res = await fetch('/api/agent/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan, context }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        setPlanExecution(prev => ({
+          ...prev,
+          status: 'error',
+          errorMessage: err.message || 'プランの実行に失敗しました',
+        }));
+
+        const errorMsg: ConciergeMessage = {
+          id: `err_${Date.now()}`,
+          role: 'assistant',
+          content: err.message || 'プランの実行に失敗しました。ログインしてからお試しください。',
+          created_at: new Date().toISOString(),
+        };
+        setMessages(prev => [...prev, errorMsg]);
+        return;
+      }
+
+      // NDJSONストリームを読み取る
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('ストリームの読み取りに失敗しました');
+      }
+
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const data = JSON.parse(line);
+
+            if (data.type === 'progress') {
+              setPlanExecution(prev => {
+                const progress = [...prev.progress];
+                const existingIdx = progress.findIndex(p => p.stepIndex === data.stepIndex);
+                const progressItem: PlanExecutionProgress = {
+                  stepIndex: data.stepIndex,
+                  toolId: data.toolId,
+                  status: data.status,
+                  message: data.message,
+                };
+                if (existingIdx >= 0) {
+                  progress[existingIdx] = progressItem;
+                } else {
+                  progress.push(progressItem);
+                }
+                return { ...prev, progress };
+              });
+            } else if (data.type === 'result') {
+              setPlanExecution(prev => ({
+                ...prev,
+                results: [...prev.results, {
+                  stepIndex: data.stepIndex,
+                  toolId: data.toolId,
+                  contentId: data.contentId,
+                  url: data.url,
+                  title: data.title,
+                }],
+              }));
+            } else if (data.type === 'complete') {
+              setPlanExecution(prev => ({
+                ...prev,
+                status: 'completed',
+              }));
+
+              // 完了メッセージをチャットに追加
+              const resultCount = data.results?.length || 0;
+              const completeMsg: ConciergeMessage = {
+                id: `agent_complete_${Date.now()}`,
+                role: 'assistant',
+                content: `${resultCount}つのコンテンツを作成しました！\n各コンテンツのリンクから確認・編集できます。\n\n内容を調整したい場合は、ダッシュボードから各コンテンツを開いて編集してください。`,
+                suggestions: ['ダッシュボードを開く', '別の集客プランを相談したい'],
+                created_at: new Date().toISOString(),
+              };
+              setMessages(prev => [...prev, completeMsg]);
+            }
+          } catch {
+            // JSONパースエラーは無視
+          }
+        }
+      }
+    } catch (err: any) {
+      setPlanExecution(prev => ({
+        ...prev,
+        status: 'error',
+        errorMessage: err.message || 'エラーが発生しました',
+      }));
+
+      const errorMsg: ConciergeMessage = {
+        id: `err_${Date.now()}`,
+        role: 'assistant',
+        content: `プランの実行中にエラーが発生しました: ${err.message || '不明なエラー'}`,
+        created_at: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    }
+  }, [extractBusinessContext]);
+
   const clearHistory = useCallback(() => {
     setMessages([]);
     historyLoadedRef.current = false;
     sessionIdRef.current = `session_${Date.now()}`;
     setIsHumanMode(false);
     setSessionStatus('active');
+    setPlanExecution({ status: 'idle', progress: [], results: [] });
   }, []);
 
   return {
@@ -379,11 +530,13 @@ export function useConciergeChat(): UseConciergeChat {
     operatorOnline,
     isHumanMode,
     sessionStatus,
+    planExecution,
     sendMessage,
     sendFeedback,
     toggleOpen,
     clearHistory,
     loadHistory,
     requestHumanSupport,
+    executePlan,
   };
 }

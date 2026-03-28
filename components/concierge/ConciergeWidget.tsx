@@ -23,11 +23,13 @@ export default function ConciergeWidget({ onOpenChange }: ConciergeWidgetProps) 
     operatorOnline,
     isHumanMode,
     sessionStatus,
+    planExecution,
     sendMessage,
     sendFeedback,
     toggleOpen,
     clearHistory,
     requestHumanSupport,
+    executePlan,
   } = useConciergeChat();
 
   // 親コンポーネントに開閉状態を通知
@@ -105,11 +107,13 @@ export default function ConciergeWidget({ onOpenChange }: ConciergeWidgetProps) 
             operatorOnline={operatorOnline}
             isHumanMode={isHumanMode}
             sessionStatus={sessionStatus}
+            planExecution={planExecution}
             onSend={sendMessage}
             onFeedback={sendFeedback}
             onClose={toggleOpen}
             onClear={clearHistory}
             onRequestHumanSupport={requestHumanSupport}
+            onExecutePlan={executePlan}
           />
         </div>
       )}

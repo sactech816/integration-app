@@ -85,6 +85,31 @@ export interface PlanCard {
   steps: PlanStep[];
 }
 
+/** プラン実行の進捗 */
+export interface PlanExecutionProgress {
+  stepIndex: number;
+  toolId: string;
+  status: 'generating' | 'saving' | 'done' | 'error';
+  message: string;
+}
+
+/** プラン実行結果 */
+export interface PlanExecutionResult {
+  stepIndex: number;
+  toolId: string;
+  contentId: string;
+  url: string;
+  title: string;
+}
+
+/** プラン実行状態 */
+export interface PlanExecution {
+  status: 'idle' | 'executing' | 'completed' | 'error';
+  progress: PlanExecutionProgress[];
+  results: PlanExecutionResult[];
+  errorMessage?: string;
+}
+
 export interface ConciergeChatResponse {
   reply: string;
   actions: ToolAction[];

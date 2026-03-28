@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, X, Trash2, User, Headphones } from 'lucide-react';
 import ConciergeAvatar from './ConciergeAvatar';
 import ConciergeBubble from './ConciergeBubble';
-import type { AvatarState, ConciergeMessage } from './types';
+import type { AvatarState, ConciergeMessage, PlanCard, PlanExecution } from './types';
 import type { SessionStatus } from '@/lib/hooks/useConciergeChat';
 
 interface ConciergeChatProps {
@@ -20,12 +20,16 @@ interface ConciergeChatProps {
   isHumanMode?: boolean;
   /** セッション状態 */
   sessionStatus?: SessionStatus;
+  /** プラン実行状態 */
+  planExecution?: PlanExecution;
   onSend: (text: string) => void;
   onFeedback?: (messageId: string, feedback: 1 | -1) => void;
   onClose: () => void;
   onClear: () => void;
   /** 人間サポートリクエスト */
   onRequestHumanSupport?: () => void;
+  /** プラン実行 */
+  onExecutePlan?: (plan: PlanCard) => void;
 }
 
 /** ページ別クイックアクション */
@@ -70,11 +74,13 @@ export default function ConciergeChat({
   operatorOnline = false,
   isHumanMode = false,
   sessionStatus = 'active',
+  planExecution,
   onSend,
   onFeedback,
   onClose,
   onClear,
   onRequestHumanSupport,
+  onExecutePlan,
 }: ConciergeChatProps) {
   const quickActions = getQuickActions(currentPage);
   const [input, setInput] = useState('');
@@ -211,6 +217,8 @@ export default function ConciergeChat({
                 onNavigate={onClose}
                 onSend={onSend}
                 onFeedback={onFeedback}
+                onExecutePlan={onExecutePlan}
+                planExecution={msg.plan ? planExecution : undefined}
               />
             </div>
           );
