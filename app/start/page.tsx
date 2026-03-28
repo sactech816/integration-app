@@ -8,11 +8,6 @@ import {
   Star,
   CalendarCheck,
   ShoppingBag,
-  UserCircle,
-  Building2,
-  Video,
-  Globe,
-  Image,
   BookOpen,
   Crown,
 } from 'lucide-react';
@@ -44,30 +39,21 @@ const GUEST_FEATURES = {
       ],
     },
     {
-      title: 'ページを作る（各1個）',
-      description: 'あなたのビジネスページを作成',
+      title: '見る・参加する',
+      description: '登録なしで使えます',
       items: [
-        { name: 'プロフィールLP', href: '/profile', icon: UserCircle, note: '自己紹介ページ' },
-        { name: 'ビジネスLP', href: '/business', icon: Building2, note: 'サービス紹介ページ' },
-        { name: 'ウェビナーLP', href: '/webinar', icon: Video, note: 'セミナー募集ページ' },
-        { name: 'ホームページ', href: '/site/editor', icon: Globe, note: 'マイサイト作成' },
-        { name: 'サムネイル', href: '/thumbnail/editor', icon: Image, note: 'テンプレートから作成' },
-      ],
-    },
-    {
-      title: 'いつでも無制限',
-      description: '登録なしで何度でも使えます',
-      items: [
-        { name: '出欠メーカー', href: '/attendance', icon: CalendarCheck, note: 'イベント出欠管理' },
-        { name: 'スキルマーケット', href: '/marketplace', icon: ShoppingBag, note: 'スキル出品・閲覧' },
+        { name: '出欠メーカー', href: '/attendance', icon: CalendarCheck, note: 'イベント出欠に参加' },
+        { name: 'スキルマーケット', href: '/marketplace', icon: ShoppingBag, note: 'スキルを閲覧' },
       ],
     },
   ],
   limitations: [
+    'ページやコンテンツの作成（全ツール）',
     '作成したページの編集・更新',
     'AI機能（自動生成）',
-    '診断クイズの作成',
+    'リサーチツール',
     'アクセス解析',
+    'アーケード（ゲーム）',
   ],
 };
 
@@ -399,8 +385,8 @@ export default function StartPage() {
               まずは無料で体験しませんか？
             </h2>
             <p className="text-gray-600 text-sm mb-8">
-              登録なしで診断を受けたり、ページを作ったりできます。<br />
-              気に入ったら、無料登録で全ツールが使えるようになります。
+              登録なしで診断を受けて、あなた自身のことを知ってみませんか？<br />
+              気に入ったら、無料登録で全35ツールが使えるようになります。
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
@@ -411,11 +397,11 @@ export default function StartPage() {
                 性格診断を受けてみる
               </Link>
               <Link
-                href="/profile"
+                href="/fortune"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-white border-2 border-gray-200 text-gray-700 font-bold hover:border-blue-300 hover:-translate-y-0.5 transition-all"
               >
-                <UserCircle size={20} />
-                プロフィールLPを作る
+                <Star size={20} />
+                生年月日占いを試す
               </Link>
             </div>
           </div>
