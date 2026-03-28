@@ -2,6 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import SwipeViewer from '@/components/swipe/SwipeViewer';
+import RelatedContent from '@/components/shared/RelatedContent';
+import { shouldHideFooter } from '@/lib/utils/checkCreatorPlanPermission';
 
 export const revalidate = 300;
 
@@ -78,5 +80,24 @@ export default async function SwipePublicPage({ params }: Props) {
     notFound();
   }
 
-  return <SwipeViewer swipePage={swipePage} />;
+  // フッター・関連コンテンツの非表示権限チェック
+  const canHideFooter = await shouldHideFooter(
+    swipePage.settings?.hideFooter,
+    swipePage.user_id,
+    swipePage.id,
+    'footer_hide'
+  );
+  const canHideRelated = await shouldHideFooter(
+    swipePage.settings?.hideRelatedContent,
+    swipePage.user_id,
+    swipePage.id,
+    'related_content_hide'
+  );
+
+  return (
+    <>
+      <SwipeViewer swipePage={swipePage} hideFooter={canHideFooter} />
+      <RelatedContent contentType="swipe" currentSlug={slug} hide={canHideRelated} />
+    </>
+  );
 }

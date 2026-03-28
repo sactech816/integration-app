@@ -27,7 +27,7 @@ export type RelatedItem = {
  * 同じカテゴリの関連コンテンツを取得（現在のコンテンツを除外）
  */
 export async function getRelatedContents(
-  contentType: 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'survey' | 'salesletter' | 'webinar' | 'site',
+  contentType: 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'survey' | 'salesletter' | 'webinar' | 'site' | 'swipe',
   currentSlug: string,
   limit: number = 4
 ): Promise<{ success: boolean; data?: RelatedItem[]; error?: string }> {
@@ -183,6 +183,25 @@ export async function getRelatedContents(
             type: 'webinar',
           };
         }));
+      }
+    } else if (contentType === 'swipe') {
+      const { data } = await supabase
+        .from('swipe_pages')
+        .select('slug, title, description, settings, views_count')
+        .neq('slug', currentSlug)
+        .not('slug', 'is', null)
+        .eq('status', 'published')
+        .limit(limit + 5);
+
+      if (data) {
+        const filtered = data.filter((s: any) => s.settings?.showInPortal !== false);
+        items.push(...filtered.slice(0, limit).map((s: any) => ({
+          slug: s.slug,
+          title: s.title || 'スワイプページ',
+          description: s.description || '',
+          type: 'swipe',
+          views_count: s.views_count,
+        })));
       }
     }
 

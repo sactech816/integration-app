@@ -5,12 +5,14 @@ import { ShoppingCart, ExternalLink } from 'lucide-react';
 import type { SwipePage } from '@/lib/types';
 import SwipeCarousel from './SwipeCarousel';
 import BlockRenderer from '@/components/shared/BlockRenderer';
+import ContentFooter from '@/components/shared/ContentFooter';
 
 interface SwipeViewerProps {
   swipePage: SwipePage;
+  hideFooter?: boolean;
 }
 
-export default function SwipeViewer({ swipePage }: SwipeViewerProps) {
+export default function SwipeViewer({ swipePage, hideFooter }: SwipeViewerProps) {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const { settings } = swipePage;
 
@@ -110,11 +112,7 @@ export default function SwipeViewer({ swipePage }: SwipeViewerProps) {
         )}
 
         {/* フッター */}
-        {!settings.hideFooter && (
-          <footer className="mt-12 text-center text-xs text-gray-400 pb-8">
-            <p>Powered by 集客メーカー</p>
-          </footer>
-        )}
+        <ContentFooter toolType="swipe" variant="light" hideFooter={hideFooter} />
       </div>
     </div>
   );

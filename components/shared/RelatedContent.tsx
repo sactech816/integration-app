@@ -10,6 +10,7 @@ const TYPE_LABELS: Record<string, string> = {
   business: 'ビジネスLP',
   survey: 'アンケート',
   salesletter: 'セールスレター',
+  swipe: 'スワイプページ',
 };
 
 const TYPE_PATH: Record<string, string> = {
@@ -19,6 +20,7 @@ const TYPE_PATH: Record<string, string> = {
   business: 'business',
   survey: 'survey',
   salesletter: 's',
+  swipe: 'swipe',
 };
 
 const TYPE_COLORS: Record<string, { bg: string; text: string; gradient: string }> = {
@@ -28,10 +30,11 @@ const TYPE_COLORS: Record<string, { bg: string; text: string; gradient: string }
   business: { bg: 'bg-amber-50', text: 'text-amber-600', gradient: 'from-amber-400 to-orange-500' },
   survey: { bg: 'bg-teal-50', text: 'text-teal-600', gradient: 'from-teal-500 to-cyan-500' },
   salesletter: { bg: 'bg-rose-50', text: 'text-rose-600', gradient: 'from-rose-500 to-pink-500' },
+  swipe: { bg: 'bg-fuchsia-50', text: 'text-fuchsia-600', gradient: 'from-fuchsia-500 to-purple-500' },
 };
 
 interface RelatedContentProps {
-  contentType: 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'survey' | 'salesletter' | 'webinar' | 'site';
+  contentType: 'quiz' | 'entertainment_quiz' | 'profile' | 'business' | 'survey' | 'salesletter' | 'webinar' | 'site' | 'swipe';
   currentSlug: string;
   limit?: number;
   hide?: boolean; // Proプラン: 関連コンテンツ非表示

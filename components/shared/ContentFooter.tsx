@@ -13,7 +13,8 @@ export type ContentToolType =
   | 'booking'        // 予約・日程調整
   | 'attendance'     // 出欠表メーカー
   | 'gamification'   // ゲーミフィケーション（ガチャ、スロット、スクラッチ、福引き、スタンプラリー、ログインボーナス、ポイントクイズ）
-  | 'webinar';       // ウェビナーLP
+  | 'webinar'        // ウェビナーLP
+  | 'swipe';         // スワイプメーカー
 
 // ツール名のマッピング
 const TOOL_NAMES: Record<ContentToolType, string> = {
@@ -26,6 +27,7 @@ const TOOL_NAMES: Record<ContentToolType, string> = {
   attendance: '出欠表メーカー',
   gamification: 'ゲーミフィケーションツール',
   webinar: 'ウェビナーLPメーカー',
+  swipe: 'スワイプメーカー',
 };
 
 // バリアント（背景色に応じた色調整）
