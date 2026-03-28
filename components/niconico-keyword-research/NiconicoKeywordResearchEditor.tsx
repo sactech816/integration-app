@@ -485,7 +485,7 @@ export default function NiconicoKeywordResearchEditor({ user }: Props) {
           </div>
         </div>
 
-        <div className={"w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] flex-col bg-gray-800 border-l border-gray-700 " + (mobileTab === 'editor' ? 'hidden lg:flex' : 'flex')}>
+        <div className={"w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] lg:z-10 flex-col bg-gray-800 border-l border-gray-700 " + (mobileTab === 'editor' ? 'hidden lg:flex' : 'flex')}>
           <div className="flex-1 overflow-y-auto p-4 md:p-6">
             {!hasResults && !isLoading && (
               <div className="h-full flex flex-col items-center justify-center text-gray-400">

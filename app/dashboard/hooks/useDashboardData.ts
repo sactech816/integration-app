@@ -652,6 +652,32 @@ export function useDashboardData(): UseDashboardDataReturn {
           }
         }
 
+        // スワイプページ取得
+        if (selectedService === 'swipe') {
+          const query = isAdmin
+            ? supabase.from(TABLES.SWIPE_PAGES).select('*').order('created_at', { ascending: false })
+            : supabase.from(TABLES.SWIPE_PAGES).select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+
+          const { data: swipePages } = await query;
+          if (swipePages) {
+            allContents.push(
+              ...swipePages.map((s: any) => ({
+                id: s.id,
+                slug: s.slug,
+                title: s.title || 'スワイプページ',
+                created_at: s.created_at,
+                updated_at: s.updated_at,
+                type: 'swipe' as ServiceType,
+                user_id: s.user_id,
+                settings: s.settings,
+                views_count: s.views_count || 0,
+                clicks_count: 0,
+                completions_count: 0,
+              }))
+            );
+          }
+        }
+
         // 作成日時でソート
         allContents.sort((a, b) => {
           const dateA = new Date(a.created_at || 0);

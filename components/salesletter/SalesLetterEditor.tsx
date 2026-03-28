@@ -754,7 +754,7 @@ export default function SalesLetterEditor({
           </div>
 
           {/* 右パネル: プレビュー */}
-          <div className={`w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] bg-gray-200 overflow-y-auto ${activeTab === 'edit' ? 'hidden lg:block' : ''}`} id="salesletter-preview-panel">
+          <div className={`w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] lg:z-10 bg-gray-200 overflow-y-auto ${activeTab === 'edit' ? 'hidden lg:block' : ''}`} id="salesletter-preview-panel">
             {/* プレビューヘッダー */}
             <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between sticky top-0 z-10">
               <div className="flex items-center gap-2">

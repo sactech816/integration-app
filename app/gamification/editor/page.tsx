@@ -73,7 +73,7 @@ function EditorContent() {
   };
 
   const handleBack = () => {
-    router.push('/gamification/new');
+    window.history.length > 1 ? window.history.back() : (window.location.href = '/');
   };
 
   if (isLoading) {

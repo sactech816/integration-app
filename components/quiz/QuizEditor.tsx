@@ -1356,7 +1356,7 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
 
                 {/* 右側: リアルタイムプレビュー（モバイルではタブで切り替え） */}
                 {/* PC: position:fixedで右半分に固定（トップヘッダー64px + エディタヘッダー分 = 138px下にオフセット） */}
-                <div className={`w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] flex-col bg-gray-800 border-l border-gray-700 ${mobileTab === 'editor' ? 'hidden lg:flex' : 'flex'}`}>
+                <div className={`w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] lg:z-10 flex-col bg-gray-800 border-l border-gray-700 ${mobileTab === 'editor' ? 'hidden lg:flex' : 'flex'}`}>
                     {/* PC用ヘッダー */}
                     <div className="hidden lg:flex bg-gray-900 px-4 py-3 items-center justify-between border-b border-gray-700">
                         <div className="flex items-center gap-3">

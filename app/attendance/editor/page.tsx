@@ -401,13 +401,13 @@ function AttendanceEditorContent() {
       <main className="flex-1 max-w-5xl mx-auto px-4 py-8 w-full">
         {/* 戻るリンク */}
         <div className="mb-6">
-          <Link
-            href={isEditMode ? "/dashboard?tab=attendance" : "/tools"}
+          <button
+            onClick={() => window.history.length > 1 ? window.history.back() : (window.location.href = '/')}
             className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-semibold text-sm"
           >
             <ArrowLeft size={18} />
-            {isEditMode ? 'ダッシュボードに戻る' : 'ツール一覧に戻る'}
-          </Link>
+            戻る
+          </button>
         </div>
 
         {/* ヘッダー */}

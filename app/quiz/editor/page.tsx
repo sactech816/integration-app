@@ -109,7 +109,7 @@ function QuizEditorContent() {
         isAdmin={isAdmin}
         initialData={editingQuiz}
         setPage={navigateTo}
-        onBack={() => navigateTo('dashboard?view=quiz')}
+        onBack={() => window.history.length > 1 ? window.history.back() : (window.location.href = '/')}
         setShowAuth={setShowAuth}
       />
     </div>

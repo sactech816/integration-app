@@ -464,7 +464,7 @@ export default function SNSPostEditor({ user, editingPost, setShowAuth }: SNSPos
 
         {/* Preview Panel */}
         <div
-          className={`w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] lg:overflow-y-auto bg-gray-100 lg:border-l border-gray-200 p-4 lg:p-6 ${
+          className={`w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] lg:z-10 lg:overflow-y-auto bg-gray-100 lg:border-l border-gray-200 p-4 lg:p-6 ${
             mobileTab !== 'preview' ? 'hidden lg:block' : ''
           }`}
         >

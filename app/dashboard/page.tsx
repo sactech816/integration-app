@@ -368,7 +368,7 @@ function DashboardContent() {
 
     // サービス選択の場合はselectedServiceも更新
     // （fetchContentsはuseEffect[selectedService]で自動実行されるため、ここでは呼ばない）
-    if (['quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'order-form', 'site'].includes(itemId)) {
+    if (['quiz', 'entertainment', 'profile', 'business', 'salesletter', 'onboarding', 'thumbnail', 'webinar', 'sns-post', 'order-form', 'site', 'swipe'].includes(itemId)) {
       setSelectedService(itemId === 'entertainment' ? 'entertainment_quiz' as ServiceType : itemId as ServiceType);
     }
 

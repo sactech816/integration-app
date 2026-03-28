@@ -940,7 +940,7 @@ export default function OnboardingEditor({ user, initialData, setPage, onBack, s
         </div>
 
         {/* 右: プレビュー */}
-        <div className={`lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] bg-gray-800 flex items-center justify-center p-4 md:p-8 overflow-y-auto ${
+        <div className={`lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] lg:z-10 bg-gray-800 flex items-center justify-center p-4 md:p-8 overflow-y-auto ${
           mobileTab === 'editor' ? 'hidden lg:flex' : 'flex w-full'
         }`}>
           {/* ブラウザ風フレーム */}

@@ -106,7 +106,7 @@ function BusinessEditorContent() {
         isAdmin={isAdmin}
         initialData={editingLP}
         setPage={navigateTo}
-        onBack={() => navigateTo('dashboard?view=business')}
+        onBack={() => window.history.length > 1 ? window.history.back() : (window.location.href = '/')}
         setShowAuth={setShowAuth}
       />
     </div>

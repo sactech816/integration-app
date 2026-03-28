@@ -105,7 +105,7 @@ function WebinarEditorContent() {
         isAdmin={isAdmin}
         initialData={editingLP}
         setPage={navigateTo}
-        onBack={() => navigateTo('dashboard?view=webinar')}
+        onBack={() => window.history.length > 1 ? window.history.back() : (window.location.href = '/')}
         setShowAuth={setShowAuth}
       />
     </div>

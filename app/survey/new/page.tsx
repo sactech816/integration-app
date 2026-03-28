@@ -78,7 +78,7 @@ function NewSurveyContent() {
       />
 
       <SurveyEditor
-        onBack={() => router.push("/dashboard?view=survey")}
+        onBack={() => window.history.length > 1 ? window.history.back() : (window.location.href = '/')}
         user={user}
         templateId={templateId as any}
       />

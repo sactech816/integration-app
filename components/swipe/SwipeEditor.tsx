@@ -1520,7 +1520,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
         </div>
 
         {/* 右パネル: プレビュー */}
-        <div className={`lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] overflow-y-auto p-4 ${mobileTab !== 'preview' ? 'hidden lg:block' : ''}`}>
+        <div className={`lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] lg:z-10 overflow-y-auto p-4 ${mobileTab !== 'preview' ? 'hidden lg:block' : ''}`}>
           <div className="max-w-md mx-auto space-y-6">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
               <Eye className="w-3.5 h-3.5" /> プレビュー

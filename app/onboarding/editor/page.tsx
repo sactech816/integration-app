@@ -119,7 +119,7 @@ function OnboardingEditorContent() {
         isAdmin={isAdmin}
         initialData={editingModal}
         setPage={navigateTo}
-        onBack={() => navigateTo('dashboard')}
+        onBack={() => window.history.length > 1 ? window.history.back() : (window.location.href = '/')}
         setShowAuth={setShowAuth}
         isUnlocked={isUnlocked}
       />

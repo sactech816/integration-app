@@ -106,7 +106,7 @@ function SalesLetterEditorContent() {
         isAdmin={isAdmin}
         initialData={editingData}
         setPage={navigateTo}
-        onBack={() => navigateTo('dashboard?view=salesletter')}
+        onBack={() => window.history.length > 1 ? window.history.back() : (window.location.href = '/')}
         setShowAuth={setShowAuth}
       />
     </div>

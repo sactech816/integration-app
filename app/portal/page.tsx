@@ -78,6 +78,7 @@ const TABS: { type: ServiceType | 'all'; label: string; icon: React.ComponentTyp
   { type: 'entertainment_quiz', label: 'エンタメ診断', icon: PartyPopper },
   { type: 'webinar', label: 'ウェビナーLP', icon: Video },
   { type: 'site', label: 'ホームページ', icon: Globe },
+  { type: 'swipe', label: 'スワイプ', icon: LayoutGrid },
 ];
 
 // サービスカラー取得
@@ -579,6 +580,30 @@ function PortalPageContent() {
             created_at: s.created_at,
             type: 'site' as ServiceType,
             views_count: 0
+          })));
+        }
+      }
+
+      // スワイプページ取得（settings.showInPortalがfalseでないもの）
+      if (selectedTab === 'all' || selectedTab === 'swipe') {
+        const { data: swipePages } = await supabase
+          .from(TABLES.SWIPE_PAGES)
+          .select('id, slug, title, description, settings, created_at, views_count')
+          .eq('status', 'published')
+          .order('created_at', { ascending: false })
+          .range(offset, offset + ITEMS_PER_PAGE - 1);
+
+        if (swipePages) {
+          const filteredSwipe = swipePages.filter((s: { settings?: { showInPortal?: boolean } }) => s.settings?.showInPortal !== false);
+          allItems.push(...filteredSwipe.map((s: { id: string; slug: string; title?: string; description?: string; created_at?: string; views_count?: number }) => ({
+            id: s.id,
+            slug: s.slug,
+            title: s.title || 'スワイプページ',
+            description: s.description || '',
+            imageUrl: undefined,
+            created_at: s.created_at,
+            type: 'swipe' as ServiceType,
+            views_count: s.views_count || 0,
           })));
         }
       }

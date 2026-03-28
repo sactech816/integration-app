@@ -1368,7 +1368,7 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
 
         {/* 右側: プレビュー */}
         <div
-          className={`w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] flex-col bg-gray-800 border-l border-gray-700 ${
+          className={`w-full lg:fixed lg:right-0 lg:top-[138px] lg:w-1/2 lg:h-[calc(100vh-138px)] lg:z-10 flex-col bg-gray-800 border-l border-gray-700 ${
             mobileTab === "editor" ? "hidden lg:flex" : "flex"
           }`}
         >

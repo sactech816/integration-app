@@ -134,7 +134,7 @@ function EditorContent() {
       />
 
       <SurveyEditor
-        onBack={() => router.push("/dashboard?view=survey")}
+        onBack={() => window.history.length > 1 ? window.history.back() : (window.location.href = '/')}
         initialData={survey || undefined}
         user={user}
         setShowAuth={setShowAuth}
