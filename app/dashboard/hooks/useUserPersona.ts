@@ -36,6 +36,7 @@ export function useUserPersona(userId?: string): UseUserPersonaReturn {
       return;
     }
 
+    setIsLoading(true);
     try {
       const res = await fetch('/api/user-persona');
       const json = await res.json();
