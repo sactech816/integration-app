@@ -8,7 +8,7 @@ import {
   Image as ImageIcon, Smartphone, Monitor, Trophy, Loader2,
   GripVertical, ArrowUp, ArrowDown, Trash2, HelpCircle,
   Star, MessageCircle, MapPin, Timer, Youtube, Link as LinkIcon,
-  Images, Layout,
+  Images, Layout, Lock,
 } from 'lucide-react';
 import { supabase, TABLES } from '@/lib/supabase';
 import type { SwipePage, SwipeCard, SwipeAspectRatio, SwipeSettings, SwipeCarouselSettings, Block } from '@/lib/types';
@@ -216,6 +216,7 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
     blocks: false,
     carousel: false,
     payment: false,
+    advanced: false,
   });
 
   const toggleSection = (key: keyof typeof openSections) => {
@@ -330,9 +331,9 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
     try {
       const ext = file.name.split('.').pop() || 'png';
       const filePath = `${userId || 'guest'}/${Date.now()}_${blockId}.${ext}`;
-      const { error } = await supabase.storage.from('swipe-images').upload(filePath, file, { contentType: file.type });
+      const { error } = await supabase.storage.from('profile-uploads').upload(filePath, file, { contentType: file.type });
       if (error) throw error;
-      const { data } = supabase.storage.from('swipe-images').getPublicUrl(filePath);
+      const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
       updateBlock(blockId, { [field]: data.publicUrl });
     } catch {
       alert('アップロードに失敗しました');
@@ -1382,6 +1383,126 @@ export default function SwipeEditor({ userId, isAdmin }: SwipeEditorProps) {
                   />
                 </>
               )}
+            </div>
+          </Section>
+
+          {/* 高度な設定 */}
+          <Section
+            title="高度な設定"
+            icon={Settings}
+            isOpen={openSections.advanced}
+            onToggle={() => toggleSection('advanced')}
+            headerBgColor="bg-gray-100"
+            headerHoverColor="hover:bg-gray-200"
+            accentColor="bg-gray-200 text-gray-600"
+          >
+            <div className="space-y-4">
+              {/* ポータル掲載 */}
+              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-bold text-emerald-900 flex items-center gap-2 mb-1">
+                      <Star size={18} className="text-emerald-600" /> ポータルに掲載する
+                    </h4>
+                    <p className="text-xs text-emerald-700">
+                      ポータルに掲載することで、サービスの紹介およびSEO対策、AI対策として効果的となります。より多くの方にあなたのページを見てもらえます。
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer ml-4 flex-shrink-0">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={swipePage.settings?.showInPortal === undefined ? true : swipePage.settings?.showInPortal}
+                      onChange={e => setSwipePage(prev => ({
+                        ...prev,
+                        settings: { ...prev.settings, showInPortal: e.target.checked },
+                      }))}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600" />
+                  </label>
+                </div>
+              </div>
+
+              {/* フッター非表示 */}
+              <div className="p-4 rounded-xl border bg-gray-100 border-gray-200">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-bold flex items-center gap-2 mb-1 text-gray-500">
+                      <Lock size={18} className="text-gray-400" />
+                      フッターを非表示にする
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-400 text-white">有料</span>
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      コンテンツ下部に表示される「スワイプメーカーで作成しました」のフッターを非表示にします。
+                    </p>
+                    <p className="text-xs text-emerald-600 font-medium mt-2">
+                      ※ ビジネスプラン以上で利用可能 / 単品購入 ¥500
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center ml-4 flex-shrink-0 cursor-not-allowed opacity-50">
+                    <input type="checkbox" className="sr-only peer" disabled />
+                    <div className="w-11 h-6 bg-gray-300 rounded-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                  </label>
+                </div>
+              </div>
+
+              {/* 関連コンテンツ非表示 */}
+              <div className="p-4 rounded-xl border bg-gray-100 border-gray-200">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-bold flex items-center gap-2 mb-1 text-gray-500">
+                      <Lock size={18} className="text-gray-400" />
+                      関連コンテンツを非表示にする
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-400 text-white">有料</span>
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      ページ下部の「他のスワイプページもチェック」セクションを非表示にします。
+                    </p>
+                    <p className="text-xs text-emerald-600 font-medium mt-2">
+                      ※ ビジネスプラン以上で利用可能 / 単品購入 ¥500
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center ml-4 flex-shrink-0 cursor-not-allowed opacity-50">
+                    <input type="checkbox" className="sr-only peer" disabled />
+                    <div className="w-11 h-6 bg-gray-300 rounded-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                  </label>
+                </div>
+              </div>
+
+              <hr className="border-gray-200" />
+
+              {/* Google Tag Manager */}
+              <Input
+                label="Google Tag Manager ID"
+                val={swipePage.settings?.tracking?.gtmId || ''}
+                onChange={(v) => setSwipePage(prev => ({
+                  ...prev,
+                  settings: { ...prev.settings, tracking: { ...prev.settings.tracking, gtmId: v } },
+                }))}
+                ph="GTM-XXXXXXX"
+              />
+
+              {/* Facebook Pixel */}
+              <Input
+                label="Facebook Pixel ID"
+                val={swipePage.settings?.tracking?.fbPixelId || ''}
+                onChange={(v) => setSwipePage(prev => ({
+                  ...prev,
+                  settings: { ...prev.settings, tracking: { ...prev.settings.tracking, fbPixelId: v } },
+                }))}
+                ph="1234567890"
+              />
+
+              {/* LINE Tag */}
+              <Input
+                label="LINE Tag ID"
+                val={swipePage.settings?.tracking?.lineTagId || ''}
+                onChange={(v) => setSwipePage(prev => ({
+                  ...prev,
+                  settings: { ...prev.settings, tracking: { ...prev.settings.tracking, lineTagId: v } },
+                }))}
+                ph="xxxxx-xxxxx"
+              />
             </div>
           </Section>
 

@@ -48,19 +48,23 @@ export default function SwipeCardEditor({
   const previewPadding = `${(aspect.height / aspect.width) * 100}%`;
 
   // サムネイル画像一覧を取得
+  const [thumbnailsLoaded, setThumbnailsLoaded] = useState(false);
   const loadThumbnails = async () => {
     if (!supabase || !userId) return;
-    if (thumbnails.length > 0) return;
+    if (thumbnailsLoaded) return;
     setLoadingThumbnails(true);
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from(TABLES.THUMBNAILS)
         .select('id, title, image_url, text_overlay')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(50);
+      if (error) {
+        console.error('サムネイル取得エラー:', error);
+        return;
+      }
       if (data) {
-        // image_url がある or text_overlay.backgroundImageUrl があるものをフィルタ
         const filtered = data
           .map((t: Record<string, unknown>) => {
             const imgUrl = t.image_url as string | null;
@@ -70,9 +74,10 @@ export default function SwipeCardEditor({
           })
           .filter((t): t is ThumbnailOption => t !== null);
         setThumbnails(filtered);
+        setThumbnailsLoaded(true);
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error('サムネイル取得例外:', err);
     } finally {
       setLoadingThumbnails(false);
     }
@@ -88,13 +93,13 @@ export default function SwipeCardEditor({
       const filePath = `${userId || 'guest'}/${Date.now()}_${index}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('swipe-images')
+        .from('profile-uploads')
         .upload(filePath, file, { contentType: file.type });
 
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
-        .from('swipe-images')
+        .from('profile-uploads')
         .getPublicUrl(filePath);
 
       onUpdate(card.id, {
@@ -337,10 +342,10 @@ export default function SwipeCardEditor({
                             const ext = file.name.split('.').pop() || 'png';
                             const filePath = `${userId || 'guest'}/${Date.now()}_bg_${index}.${ext}`;
                             const { error } = await supabase.storage
-                              .from('swipe-images')
+                              .from('profile-uploads')
                               .upload(filePath, file, { contentType: file.type });
                             if (error) throw error;
-                            const { data } = supabase.storage.from('swipe-images').getPublicUrl(filePath);
+                            const { data } = supabase.storage.from('profile-uploads').getPublicUrl(filePath);
                             onUpdate(card.id, {
                               imageUrl: data.publicUrl,
                               textOverlay: { ...card.textOverlay, backgroundImageUrl: data.publicUrl },
