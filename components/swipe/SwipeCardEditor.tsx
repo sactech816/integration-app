@@ -1,16 +1,18 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { Upload, Trash2, GripVertical, Image as ImageIcon, Type, X, ImagePlus, ChevronDown } from 'lucide-react';
 import type { SwipeCard, SwipeAspectRatio } from '@/lib/types';
-import { supabase, TABLES } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { ASPECT_SIZES } from './SwipeCarousel';
+import { thumbnailTemplates, getTemplateImagePath, PLATFORM_CATEGORIES } from '@/constants/templates/thumbnail';
 
-interface ThumbnailOption {
-  id: string;
-  title: string;
-  image_url: string;
-}
+// アスペクト比のマッピング（swipe → サムネイルテンプレート）
+const ASPECT_RATIO_MAP: Record<SwipeAspectRatio, string> = {
+  '9:16': '9:16',
+  '1:1': '1:1',
+  '16:9': '16:9',
+};
 
 interface SwipeCardEditorProps {
   card: SwipeCard;
@@ -40,48 +42,38 @@ export default function SwipeCardEditor({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [thumbnails, setThumbnails] = useState<ThumbnailOption[]>([]);
-  const [showThumbnailPicker, setShowThumbnailPicker] = useState(false);
-  const [loadingThumbnails, setLoadingThumbnails] = useState(false);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
 
   const aspect = ASPECT_SIZES[aspectRatio];
   const previewPadding = `${(aspect.height / aspect.width) * 100}%`;
 
-  // サムネイル画像一覧を取得
-  const [thumbnailsLoaded, setThumbnailsLoaded] = useState(false);
-  const loadThumbnails = async () => {
-    if (!supabase || !userId) return;
-    if (thumbnailsLoaded) return;
-    setLoadingThumbnails(true);
-    try {
-      const { data, error } = await supabase
-        .from(TABLES.THUMBNAILS)
-        .select('id, title, image_url, text_overlay')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(50);
-      if (error) {
-        console.error('サムネイル取得エラー:', error);
-        return;
+  // 現在のアスペクト比に合うテンプレート画像一覧を生成
+  const templateImages = useMemo(() => {
+    const targetRatio = ASPECT_RATIO_MAP[aspectRatio];
+    const matching = thumbnailTemplates.filter(t => t.aspectRatio === targetRatio);
+
+    // プラットフォーム別にグループ化
+    const grouped: { platform: string; label: string; items: { url: string; name: string }[] }[] = [];
+
+    const platformsInRatio = PLATFORM_CATEGORIES.filter(p => p.aspectRatio === targetRatio);
+
+    for (const platform of platformsInRatio) {
+      const temps = matching.filter(t => t.platformCategory === platform.id);
+      const items: { url: string; name: string }[] = [];
+      for (const t of temps) {
+        for (const theme of t.colorThemes) {
+          items.push({
+            url: getTemplateImagePath(t.id, theme.id),
+            name: `${t.name} - ${theme.name}`,
+          });
+        }
       }
-      if (data) {
-        const filtered = data
-          .map((t: Record<string, unknown>) => {
-            const imgUrl = t.image_url as string | null;
-            const overlay = t.text_overlay as { backgroundImageUrl?: string } | null;
-            const url = imgUrl || overlay?.backgroundImageUrl || '';
-            return url ? { id: t.id as string, title: (t.title as string) || '無題', image_url: url } : null;
-          })
-          .filter((t): t is ThumbnailOption => t !== null);
-        setThumbnails(filtered);
-        setThumbnailsLoaded(true);
+      if (items.length > 0) {
+        grouped.push({ platform: platform.id, label: platform.label, items });
       }
-    } catch (err) {
-      console.error('サムネイル取得例外:', err);
-    } finally {
-      setLoadingThumbnails(false);
     }
-  };
+    return grouped;
+  }, [aspectRatio]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -114,12 +106,18 @@ export default function SwipeCardEditor({
     }
   };
 
-  const handleSelectThumbnail = (thumb: ThumbnailOption) => {
-    onUpdate(card.id, {
-      type: 'image',
-      imageUrl: thumb.image_url,
-    });
-    setShowThumbnailPicker(false);
+  const handleSelectTemplateImage = (url: string) => {
+    if (card.type === 'template') {
+      onUpdate(card.id, {
+        imageUrl: url,
+        textOverlay: { ...card.textOverlay, backgroundImageUrl: url },
+      });
+    } else {
+      onUpdate(card.id, {
+        imageUrl: url,
+      });
+    }
+    setShowTemplatePicker(false);
   };
 
   return (
@@ -239,40 +237,18 @@ export default function SwipeCardEditor({
                 className="hidden"
               />
 
-              {/* サムネイルメーカーから選択 */}
-              {userId && (
-                <div>
-                  <button
-                    onClick={() => { setShowThumbnailPicker(!showThumbnailPicker); loadThumbnails(); }}
-                    className="w-full flex items-center justify-center gap-1.5 py-2.5 border border-pink-300 rounded-xl text-pink-600 hover:bg-pink-50 transition-all text-sm font-medium"
-                  >
-                    <ImagePlus className="w-4 h-4" />
-                    サムネイルメーカーから選択
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showThumbnailPicker ? 'rotate-180' : ''}`} />
-                  </button>
+              {/* テンプレート画像から選択 */}
+              <button
+                onClick={() => setShowTemplatePicker(!showTemplatePicker)}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 border border-pink-300 rounded-xl text-pink-600 hover:bg-pink-50 transition-all text-sm font-medium"
+              >
+                <ImagePlus className="w-4 h-4" />
+                テンプレート画像から選択
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showTemplatePicker ? 'rotate-180' : ''}`} />
+              </button>
 
-                  {showThumbnailPicker && (
-                    <div className="mt-2 max-h-48 overflow-y-auto border border-gray-200 rounded-xl p-2">
-                      {loadingThumbnails ? (
-                        <p className="text-xs text-gray-400 text-center py-4">読み込み中...</p>
-                      ) : thumbnails.length === 0 ? (
-                        <p className="text-xs text-gray-400 text-center py-4">サムネイルがありません</p>
-                      ) : (
-                        <div className="grid grid-cols-3 gap-2">
-                          {thumbnails.map(thumb => (
-                            <button
-                              key={thumb.id}
-                              onClick={() => handleSelectThumbnail(thumb)}
-                              className="relative rounded-lg overflow-hidden border-2 border-transparent hover:border-pink-400 transition-all aspect-video"
-                            >
-                              <img src={thumb.image_url} alt={thumb.title} className="w-full h-full object-cover" />
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+              {showTemplatePicker && (
+                <TemplatePicker groups={templateImages} onSelect={handleSelectTemplateImage} />
               )}
             </div>
           )}
@@ -311,20 +287,29 @@ export default function SwipeCardEditor({
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">背景画像</label>
                 {card.textOverlay?.backgroundImageUrl || card.imageUrl ? (
-                  <div className="relative rounded-lg overflow-hidden" style={{ paddingTop: '30%' }}>
-                    <img
-                      src={card.textOverlay?.backgroundImageUrl || card.imageUrl}
-                      alt="背景"
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
+                  <div className="space-y-2">
+                    <div className="relative rounded-lg overflow-hidden" style={{ paddingTop: '30%' }}>
+                      <img
+                        src={card.textOverlay?.backgroundImageUrl || card.imageUrl}
+                        alt="背景"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <button
+                        onClick={() => onUpdate(card.id, {
+                          imageUrl: undefined,
+                          textOverlay: { ...card.textOverlay, backgroundImageUrl: undefined },
+                        })}
+                        className="absolute top-1 right-1 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
                     <button
-                      onClick={() => onUpdate(card.id, {
-                        imageUrl: undefined,
-                        textOverlay: { ...card.textOverlay, backgroundImageUrl: undefined },
-                      })}
-                      className="absolute top-1 right-1 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
+                      onClick={() => setShowTemplatePicker(!showTemplatePicker)}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 border border-pink-300 rounded-lg text-pink-600 hover:bg-pink-50 transition-all text-xs font-medium"
                     >
-                      <X className="w-3 h-3" />
+                      <ImagePlus className="w-3.5 h-3.5" />
+                      背景画像を変更
                     </button>
                   </div>
                 ) : (
@@ -363,43 +348,18 @@ export default function SwipeCardEditor({
                     >
                       {uploading ? 'アップロード中...' : 'アップロード'}
                     </button>
-                    {userId && (
-                      <button
-                        onClick={() => { setShowThumbnailPicker(!showThumbnailPicker); loadThumbnails(); }}
-                        className="flex-1 border border-pink-300 rounded-lg p-3 text-center hover:bg-pink-50 transition-all text-xs text-pink-600 font-medium"
-                      >
-                        サムネイルから選択
-                      </button>
-                    )}
+                    <button
+                      onClick={() => setShowTemplatePicker(!showTemplatePicker)}
+                      className="flex-1 border border-pink-300 rounded-lg p-3 text-center hover:bg-pink-50 transition-all text-xs text-pink-600 font-medium"
+                    >
+                      テンプレートから選択
+                    </button>
                   </div>
                 )}
 
-                {/* テンプレートモード用サムネイルピッカー */}
-                {showThumbnailPicker && card.type === 'template' && (
-                  <div className="mt-2 max-h-48 overflow-y-auto border border-gray-200 rounded-xl p-2">
-                    {loadingThumbnails ? (
-                      <p className="text-xs text-gray-400 text-center py-4">読み込み中...</p>
-                    ) : thumbnails.length === 0 ? (
-                      <p className="text-xs text-gray-400 text-center py-4">サムネイルがありません</p>
-                    ) : (
-                      <div className="grid grid-cols-3 gap-2">
-                        {thumbnails.map(thumb => (
-                          <button
-                            key={thumb.id}
-                            onClick={() => {
-                              onUpdate(card.id, {
-                                imageUrl: thumb.image_url,
-                                textOverlay: { ...card.textOverlay, backgroundImageUrl: thumb.image_url },
-                              });
-                              setShowThumbnailPicker(false);
-                            }}
-                            className="relative rounded-lg overflow-hidden border-2 border-transparent hover:border-pink-400 transition-all aspect-video"
-                          >
-                            <img src={thumb.image_url} alt={thumb.title} className="w-full h-full object-cover" />
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                {showTemplatePicker && (
+                  <div className="mt-2">
+                    <TemplatePicker groups={templateImages} onSelect={handleSelectTemplateImage} />
                   </div>
                 )}
               </div>
@@ -430,6 +390,70 @@ export default function SwipeCardEditor({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// テンプレート画像ピッカーコンポーネント
+function TemplatePicker({
+  groups,
+  onSelect,
+}: {
+  groups: { platform: string; label: string; items: { url: string; name: string }[] }[];
+  onSelect: (url: string) => void;
+}) {
+  const [activeTab, setActiveTab] = useState(groups[0]?.platform || '');
+
+  if (groups.length === 0) {
+    return (
+      <div className="border border-gray-200 rounded-xl p-4 text-center">
+        <p className="text-xs text-gray-400">このアスペクト比に対応するテンプレートがありません</p>
+      </div>
+    );
+  }
+
+  const activeGroup = groups.find(g => g.platform === activeTab) || groups[0];
+
+  return (
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
+      {/* タブ */}
+      <div className="flex overflow-x-auto bg-gray-50 border-b border-gray-200">
+        {groups.map(g => (
+          <button
+            key={g.platform}
+            onClick={() => setActiveTab(g.platform)}
+            className={`px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors ${
+              activeTab === g.platform
+                ? 'text-pink-600 border-b-2 border-pink-500 bg-white'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {g.label}
+            <span className="ml-1 text-[10px] text-gray-400">({g.items.length})</span>
+          </button>
+        ))}
+      </div>
+      {/* 画像グリッド */}
+      <div className="max-h-56 overflow-y-auto p-2">
+        <div className="grid grid-cols-3 gap-2">
+          {activeGroup.items.map((item, i) => (
+            <button
+              key={i}
+              onClick={() => onSelect(item.url)}
+              className="relative rounded-lg overflow-hidden border-2 border-transparent hover:border-pink-400 transition-all group"
+              title={item.name}
+            >
+              <img
+                src={item.url}
+                alt={item.name}
+                className="w-full aspect-video object-cover"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
