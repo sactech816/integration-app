@@ -39,6 +39,7 @@ import MainContent, { ActiveView } from './components/MainContent';
 import { UserManager, AnnouncementManager, UserExport, CleanupManager } from './components/Admin';
 import OwnershipTransfer from './components/Admin/OwnershipTransfer';
 import AdminOverview from './components/Admin/AdminOverview';
+import LoginRequired from '@/components/shared/LoginRequired';
 
 // カスタムフック
 import { useDashboardData } from './hooks/useDashboardData';
@@ -492,23 +493,11 @@ function DashboardContent() {
   // 未ログイン時
   if (!user && !isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <>
         <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">マイページ</h1>
-            <p className="text-gray-600 mb-6">ログインしてコンテンツを管理しましょう</p>
-            <button
-              onClick={() => setShowAuth(true)}
-              className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 transition-colors"
-            >
-              ログイン / 新規登録
-            </button>
-          </div>
-        </div>
-        <Footer />
+        <LoginRequired toolName="マイページ" onLogin={() => setShowAuth(true)} />
         <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
-      </div>
+      </>
     );
   }
 
