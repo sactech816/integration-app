@@ -375,33 +375,21 @@ export function useConciergeChat(): UseConciergeChat {
     }
   }, [messages, pathname, operatorOnline]);
 
-  /** 会話履歴からビジネスコンテキストを抽出 */
-  const extractBusinessContext = useCallback(() => {
-    const context: Record<string, string> = { business: '' };
-    // 直近のメッセージからコンテキストを推測
-    for (const msg of messages) {
-      if (msg.role === 'user') {
-        const content = msg.content;
-        // ビジネス名やキーワードを抽出（シンプルなヒューリスティック）
-        if (!context.business && content.length > 2) {
-          context.business = content;
-        }
-      }
-    }
-    return context;
-  }, [messages]);
-
   /** プランを実行（ストリーミング） */
   const executePlan = useCallback(async (plan: PlanCard) => {
     setPlanExecution({ status: 'executing', progress: [], results: [] });
 
     try {
-      const context = extractBusinessContext();
+      // 会話履歴をAPI側に送信してAIでコンテキスト抽出
+      const conversationHistory = messages
+        .filter(m => m.role === 'user' || m.role === 'assistant')
+        .slice(-20) // 直近20メッセージ
+        .map(m => ({ role: m.role, content: m.content }));
 
       const res = await fetch('/api/agent/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, context }),
+        body: JSON.stringify({ plan, conversationHistory }),
       });
 
       if (!res.ok) {
@@ -510,7 +498,7 @@ export function useConciergeChat(): UseConciergeChat {
       };
       setMessages(prev => [...prev, errorMsg]);
     }
-  }, [extractBusinessContext]);
+  }, [messages]);
 
   const clearHistory = useCallback(() => {
     setMessages([]);

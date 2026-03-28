@@ -59,7 +59,7 @@ function getQuickActions(page?: string): string[] {
   if (page.startsWith('/survey'))
     return ['アンケートの作り方', '回答を集めるコツ', '結果の分析方法'];
   if (page.startsWith('/dashboard'))
-    return ['集客の相談をしたい', '何ができる？', 'おすすめのツールは？'];
+    return ['集客の相談をしたい', 'コンテンツを改善したい', 'おすすめのツールは？'];
 
   return ['集客の相談をしたい', '何ができる？', 'LPを作りたい'];
 }

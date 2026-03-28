@@ -7,7 +7,8 @@
  *
  * Body: {
  *   plan: { name: string, steps: { toolId: string, description: string }[] },
- *   context: { business: string, target?: string, strength?: string, goal?: string, name?: string }
+ *   context?: { business: string, target?: string, strength?: string, goal?: string, name?: string },
+ *   conversationHistory?: { role: string, content: string }[]
  * }
  *
  * Response (streaming NDJSON):
@@ -21,8 +22,18 @@ import { NextRequest } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { createAIProvider } from '@/lib/ai-provider';
 import { logAIUsage } from '@/lib/ai-usage';
+import { getMakersSubscriptionStatus } from '@/lib/subscription';
 import { createClient } from '@supabase/supabase-js';
 import type { AIMessage } from '@/lib/ai-provider';
+
+/** プラン別のエージェント実行月間制限 */
+const AGENT_MONTHLY_LIMITS: Record<string, number> = {
+  guest: 0,
+  free: 1,      // 初回1回無料体験
+  standard: 5,
+  business: 20,
+  premium: 100,
+};
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -46,6 +57,61 @@ interface AgentContext {
   strength?: string;
   goal?: string;
   name?: string;
+}
+
+/**
+ * 会話履歴からビジネスコンテキストをAIで抽出する
+ * Haikuを使ってコスト最小限
+ */
+async function extractContextFromConversation(
+  conversationHistory: { role: string; content: string }[],
+): Promise<AgentContext> {
+  const provider = createAIProvider({
+    preferProvider: 'anthropic',
+    model: 'claude-haiku-4-5-20251001',
+  });
+
+  const conversationText = conversationHistory
+    .map(m => `${m.role === 'user' ? 'ユーザー' : 'AI'}: ${m.content}`)
+    .join('\n');
+
+  const messages: AIMessage[] = [
+    {
+      role: 'system',
+      content: `会話履歴からビジネス情報を抽出し、以下のJSON形式で返してください。余分なテキストは含めないでください。
+推測で補完してOKですが、会話に明示された情報を優先してください。
+
+{
+  "business": "業種・サービス内容（必須）",
+  "name": "ビジネス名・屋号（わかれば）",
+  "target": "ターゲット顧客（わかれば）",
+  "strength": "強み・特徴（わかれば）",
+  "goal": "集客の目的（わかれば）"
+}`,
+    },
+    { role: 'user', content: conversationText },
+  ];
+
+  try {
+    const response = await provider.generate({
+      messages,
+      temperature: 0.3,
+      maxTokens: 512,
+      responseFormat: 'text',
+    });
+
+    const jsonMatch = response.content.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(jsonMatch?.[0] || '{}');
+    return {
+      business: parsed.business || '未設定',
+      name: parsed.name || undefined,
+      target: parsed.target || undefined,
+      strength: parsed.strength || undefined,
+      goal: parsed.goal || undefined,
+    };
+  } catch {
+    return { business: '未設定' };
+  }
 }
 
 interface StepResult {
@@ -584,10 +650,68 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { plan, context } = await request.json();
+    const body = await request.json();
+    const { plan, context: providedContext, conversationHistory } = body;
 
-    if (!plan?.steps?.length || !context?.business) {
-      return new Response(JSON.stringify({ type: 'error', message: 'プランとビジネス情報が必要です' }), {
+    // プランチェック・エージェント使用回数チェック
+    const subscription = await getMakersSubscriptionStatus(user.id);
+    const planTier = subscription.planTier || 'free';
+    const monthlyLimit = AGENT_MONTHLY_LIMITS[planTier] ?? AGENT_MONTHLY_LIMITS.free;
+
+    // 今月のエージェント使用回数を取得
+    const serviceClient0 = getServiceClient();
+    if (serviceClient0) {
+      const monthStart = new Date();
+      monthStart.setDate(1);
+      monthStart.setHours(0, 0, 0, 0);
+
+      const { count } = await serviceClient0
+        .from('ai_usage')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .like('action_type', 'agent_%')
+        .gte('created_at', monthStart.toISOString());
+
+      const usedCount = Math.floor((count || 0) / 3); // 1実行あたり平均3ステップ = 3レコード
+      if (usedCount >= monthlyLimit) {
+        const tierNames: Record<string, string> = {
+          free: 'フリー',
+          standard: 'スタンダード',
+          business: 'ビジネス',
+          premium: 'プレミアム',
+        };
+        return new Response(JSON.stringify({
+          type: 'error',
+          message: `今月のAI自動生成の上限（${monthlyLimit}回）に達しました。${
+            planTier === 'free' || planTier === 'standard'
+              ? `上位プランにアップグレードすると、より多くの自動生成が利用できます。`
+              : `上限は毎月1日にリセットされます。`
+          }`,
+          limitReached: true,
+          currentPlan: tierNames[planTier] || planTier,
+          monthlyLimit,
+        }), {
+          status: 429,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    if (!plan?.steps?.length) {
+      return new Response(JSON.stringify({ type: 'error', message: 'プラン情報が必要です' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // コンテキスト: 明示的に渡された場合はそれを使い、なければ会話履歴からAIで抽出
+    let context: AgentContext;
+    if (providedContext?.business) {
+      context = providedContext;
+    } else if (conversationHistory?.length) {
+      context = await extractContextFromConversation(conversationHistory);
+    } else {
+      return new Response(JSON.stringify({ type: 'error', message: 'ビジネス情報または会話履歴が必要です' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -614,6 +738,12 @@ export async function POST(request: NextRequest) {
         const send = (data: any) => {
           controller.enqueue(encoder.encode(JSON.stringify(data) + '\n'));
         };
+
+        // 抽出されたコンテキストを送信（デバッグ・確認用）
+        send({
+          type: 'context',
+          context,
+        });
 
         const results: StepResult[] = [];
 
