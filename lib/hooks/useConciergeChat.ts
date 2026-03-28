@@ -256,7 +256,7 @@ export function useConciergeChat(): UseConciergeChat {
         throw new Error(err.error || 'エラーが発生しました');
       }
 
-      const data: ConciergeChatResponse & { humanMode?: boolean } = await res.json();
+      const data: ConciergeChatResponse & { humanMode?: boolean; plan?: any } = await res.json();
 
       // humanModeの場合はAI応答なし（オペレーターからRealtimeで受信）
       if (data.humanMode) {
@@ -272,6 +272,7 @@ export function useConciergeChat(): UseConciergeChat {
         actions: data.actions,
         suggestions: data.suggestions,
         contactInfo: data.contactInfo,
+        plan: data.plan || undefined,
         created_at: new Date().toISOString(),
       };
 

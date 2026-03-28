@@ -131,6 +131,7 @@ export async function GET(request: NextRequest) {
         actions: m.metadata?.actions || [],
         suggestions: m.metadata?.suggestions || [],
         contactInfo: m.metadata?.contactInfo || undefined,
+        plan: m.metadata?.plan || undefined,
       })),
       sessionId: sessionId || latestSessionId,
     });
@@ -387,7 +388,7 @@ export async function POST(request: NextRequest) {
     });
 
     // ツールアクション抽出
-    const { text: replyText, actions, suggestions, showContact } = parseToolActions(aiResponse.content);
+    const { text: replyText, actions, suggestions, showContact, plan } = parseToolActions(aiResponse.content);
 
     // お問い合わせ先情報の構築
     let contactInfo = undefined;
@@ -435,7 +436,7 @@ export async function POST(request: NextRequest) {
         ...commonFields,
         role: 'assistant',
         content: replyText,
-        metadata: { actions, suggestions, contactInfo },
+        metadata: { actions, suggestions, contactInfo, plan },
         input_tokens: inputTokens,
         output_tokens: outputTokens,
       },
@@ -462,6 +463,7 @@ export async function POST(request: NextRequest) {
       actions,
       suggestions,
       contactInfo,
+      plan,
       remainingMessages: dailyLimit - dailyUsage - 1,
       sessionId,
     });

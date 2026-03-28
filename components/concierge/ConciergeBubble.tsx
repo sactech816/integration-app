@@ -1,8 +1,8 @@
 'use client';
 
-import { ThumbsUp, ThumbsDown, Phone, Mail, ExternalLink, Clock } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Phone, Mail, ExternalLink, Clock, Sparkles, ChevronRight } from 'lucide-react';
 import ConciergeToolButton from './ConciergeToolButton';
-import type { ConciergeMessage, ContactInfo } from './types';
+import type { ConciergeMessage, ContactInfo, PlanCard } from './types';
 
 interface ConciergeBubbleProps {
   message: ConciergeMessage;
@@ -25,6 +25,84 @@ function stripMarkdown(text: string): string {
     .replace(/`([^`]+)`/g, '$1')       // `code`
     .replace(/```[\s\S]*?```/g, '')    // ```code blocks```
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'); // [link](url)
+}
+
+/** ツールIDからラベルとURLのマッピング */
+const TOOL_MAP: Record<string, { label: string; url: string; emoji: string }> = {
+  profile: { label: 'プロフィールLP', url: '/profile', emoji: '👤' },
+  business: { label: 'ビジネスLP', url: '/business', emoji: '💼' },
+  quiz: { label: '診断クイズ', url: '/quiz', emoji: '🧩' },
+  entertainment: { label: 'エンタメ診断', url: '/entertainment', emoji: '🎮' },
+  newsletter: { label: 'メルマガ', url: '/newsletter', emoji: '📧' },
+  'step-email': { label: 'ステップメール', url: '/step-email', emoji: '📨' },
+  funnel: { label: 'ファネル', url: '/funnel', emoji: '🔄' },
+  booking: { label: '予約', url: '/booking', emoji: '📅' },
+  survey: { label: 'アンケート', url: '/survey', emoji: '📋' },
+  gamification: { label: 'ゲーミフィケーション', url: '/gamification', emoji: '🎰' },
+  salesletter: { label: 'セールスレター', url: '/salesletter', emoji: '✍️' },
+  'sns-post': { label: 'SNS投稿', url: '/sns-post', emoji: '📱' },
+  webinar: { label: 'ウェビナーLP', url: '/webinar', emoji: '🎥' },
+  'order-form': { label: '申し込みフォーム', url: '/order-form', emoji: '📝' },
+  site: { label: 'ホームページ', url: '/site', emoji: '🌐' },
+  thumbnail: { label: 'サムネイル', url: '/thumbnail', emoji: '🖼️' },
+};
+
+/** 集客プランカード */
+function PlanCardView({ plan, onSend }: { plan: PlanCard; onSend?: (text: string) => void }) {
+  return (
+    <div className="mt-3 bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200 rounded-xl p-3.5 space-y-2.5">
+      <div className="flex items-center gap-2">
+        <span className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
+          <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+        </span>
+        <p className="text-xs font-bold text-indigo-800">{plan.name}</p>
+      </div>
+
+      <div className="space-y-1.5">
+        {plan.steps.map((step, idx) => {
+          const tool = TOOL_MAP[step.toolId];
+          return (
+            <div
+              key={idx}
+              className="flex items-start gap-2.5 px-3 py-2 bg-white border border-indigo-100 rounded-lg"
+            >
+              <span className="shrink-0 w-5 h-5 rounded-full bg-indigo-500 text-white text-[10px] font-bold flex items-center justify-center mt-0.5">
+                {idx + 1}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  {tool && <span className="text-xs">{tool.emoji}</span>}
+                  <span className="text-xs font-semibold text-gray-800">
+                    {tool?.label || step.toolId}
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-600 mt-0.5 leading-relaxed">{step.description}</p>
+              </div>
+              {tool && (
+                <a
+                  href={tool.url}
+                  className="shrink-0 p-1 rounded-md text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                  title={`${tool.label}を開く`}
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </a>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {onSend && (
+        <button
+          onClick={() => onSend('このプランで作成したい')}
+          className="w-full px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold rounded-lg shadow-md transition-all duration-200 flex items-center justify-center gap-1.5"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          このプランで作成する
+        </button>
+      )}
+    </div>
+  );
 }
 
 /** お問い合わせカード */
@@ -122,6 +200,11 @@ export default function ConciergeBubble({ message, isLast, onNavigate, onSend, o
               />
             ))}
           </div>
+        )}
+
+        {/* 集客プランカード */}
+        {!isUser && message.plan && (
+          <PlanCardView plan={message.plan} onSend={onSend} />
         )}
 
         {/* お問い合わせカード */}

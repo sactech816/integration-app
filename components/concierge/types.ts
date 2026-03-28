@@ -50,6 +50,7 @@ export interface ConciergeMessage {
   actions?: ToolAction[];
   suggestions?: string[];
   contactInfo?: ContactInfo;
+  plan?: PlanCard;
   feedback?: 1 | -1 | null;
   created_at: string;
   /** メッセージの送信者種別（Phase 2: 人間チャット対応） */
@@ -62,6 +63,7 @@ export interface ConciergeMessage {
     actions?: ToolAction[];
     suggestions?: string[];
     contactInfo?: ContactInfo;
+    plan?: PlanCard;
   };
 }
 
@@ -69,6 +71,18 @@ export interface ToolAction {
   id: string;
   label: string;
   url: string;
+}
+
+/** 集客プランのステップ */
+export interface PlanStep {
+  toolId: string;
+  description: string;
+}
+
+/** 集客プランカード */
+export interface PlanCard {
+  name: string;
+  steps: PlanStep[];
 }
 
 export interface ConciergeChatResponse {

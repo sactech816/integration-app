@@ -30,7 +30,7 @@ interface ConciergeChatProps {
 
 /** ページ別クイックアクション */
 function getQuickActions(page?: string): string[] {
-  if (!page) return ['何ができる？', 'LPを作りたい', '集客したい'];
+  if (!page) return ['集客の相談をしたい', '何ができる？', 'LPを作りたい'];
 
   if (page.startsWith('/kindle'))
     return ['本の構成を考えたい', '表紙を作りたい', 'キーワード分析したい'];
@@ -55,9 +55,9 @@ function getQuickActions(page?: string): string[] {
   if (page.startsWith('/survey'))
     return ['アンケートの作り方', '回答を集めるコツ', '結果の分析方法'];
   if (page.startsWith('/dashboard'))
-    return ['何ができる？', 'おすすめのツールは？', '集客したい'];
+    return ['集客の相談をしたい', '何ができる？', 'おすすめのツールは？'];
 
-  return ['何ができる？', 'LPを作りたい', '集客したい'];
+  return ['集客の相談をしたい', '何ができる？', 'LPを作りたい'];
 }
 
 export default function ConciergeChat({
