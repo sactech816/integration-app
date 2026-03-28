@@ -15,6 +15,7 @@ import IndustryNavSection from '@/components/home/IndustryNavSection';
 import PopularToolsGrid from '@/components/home/PopularToolsGrid';
 import FunnelStageShowcase from '@/components/home/FunnelStageShowcase';
 import UseCaseMiniCards from '@/components/home/UseCaseMiniCards';
+import GuestTrialSection from '@/components/home/GuestTrialSection';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://makers.tokyo';
 
@@ -169,6 +170,9 @@ export default function HomePage() {
 
         {/* ========== 2. 人気ツール クイックスタート ========== */}
         <PopularToolsGrid />
+
+        {/* ========== 2.5 ゲスト体験セクション ========== */}
+        <GuestTrialSection />
 
         {/* ========== 3. 共感セクション — 課題の言語化 ========== */}
         <section className="py-16 bg-white border-b" style={{ borderColor: '#ffedd5' }}>
