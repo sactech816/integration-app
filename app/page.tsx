@@ -168,10 +168,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ========== 2. 人気ツール クイックスタート ========== */}
-        <PopularToolsGrid />
-
-        {/* ========== 2.5 ゲスト体験セクション ========== */}
+        {/* ========== 2. ゲスト体験セクション ========== */}
         <GuestTrialSection />
 
         {/* ========== 3. 共感セクション — 課題の言語化 ========== */}
@@ -263,6 +260,9 @@ export default function HomePage() {
 
         {/* ========== 8. ファネル別ツール紹介 ========== */}
         <FunnelStageShowcase />
+
+        {/* ========== 8.5 人気ツール クイックスタート ========== */}
+        <PopularToolsGrid />
 
         {/* ========== 7. Pricing ========== */}
         <PricingSection />
