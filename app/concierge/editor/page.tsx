@@ -10,6 +10,7 @@ import ConciergePreview from '@/components/concierge/editor/ConciergePreview';
 import ConciergeTemplateSelector from '@/components/concierge/editor/ConciergeTemplateSelector';
 import ConciergeAISetupPanel from '@/components/concierge/editor/ConciergeAISetupPanel';
 import { Loader2, Save, BarChart3 } from 'lucide-react';
+import LoginRequired from '@/components/shared/LoginRequired';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import type { ConciergeTemplate } from '@/lib/concierge/templates';
 
@@ -199,22 +200,9 @@ function ConciergeEditorContent() {
   if (!user) {
     return (
       <>
-        <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
-        <div className="min-h-screen flex items-center justify-center flex-col gap-4">
-          <p className="text-gray-600">ログインが必要です</p>
-          <button
-            onClick={() => setShowAuth(true)}
-            className="px-6 py-3 bg-teal-500 text-white rounded-xl shadow-md hover:bg-teal-600 transition-all font-semibold"
-          >
-            ログイン
-          </button>
-        </div>
-        <AuthModal
-          isOpen={showAuth}
-          onClose={() => setShowAuth(false)}
-          setUser={setUser}
-          defaultTab="login"
-        />
+        <Header user={null} onLogout={handleLogout} setShowAuth={setShowAuth} />
+        <LoginRequired toolName="コンシェルジュ" onLogin={() => setShowAuth(true)} />
+        <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
       </>
     );
   }

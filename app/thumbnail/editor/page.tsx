@@ -7,6 +7,7 @@ import { getAdminEmails } from '@/lib/constants';
 import Header from '@/components/shared/Header';
 import AuthModal from '@/components/shared/AuthModal';
 import ThumbnailEditor from '@/components/thumbnail/ThumbnailEditor';
+import LoginRequired from '@/components/shared/LoginRequired';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Thumbnail } from '@/lib/types';
@@ -72,6 +73,16 @@ function ThumbnailEditorContent() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="w-8 h-8 animate-spin text-pink-500" />
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <Header user={null} onLogout={async () => { await supabase?.auth.signOut(); router.push('/'); }} setShowAuth={setShowAuth} currentService="thumbnail" />
+        <LoginRequired toolName="サムネイルメーカー" onLogin={() => setShowAuth(true)} />
+        <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={(u: { id: string; email?: string }) => { setUser(u); setShowAuth(false); }} />
+      </>
     );
   }
 

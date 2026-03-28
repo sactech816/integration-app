@@ -7,6 +7,7 @@ import { Survey } from "@/lib/types";
 import SurveyEditor from "@/components/survey/SurveyEditor";
 import Header from "@/components/shared/Header";
 import AuthModal from "@/components/shared/AuthModal";
+import LoginRequired from "@/components/shared/LoginRequired";
 import { Loader2 } from "lucide-react";
 
 function EditorContent() {
@@ -90,6 +91,16 @@ function EditorContent() {
           <Loader2 className="animate-spin text-teal-600" size={48} />
         </div>
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <Header setPage={navigateTo} user={null} onLogout={handleLogout} setShowAuth={setShowAuth} />
+        <LoginRequired toolName="アンケートメーカー" onLogin={() => setShowAuth(true)} />
+        <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} onNavigate={navigateTo} />
+      </>
     );
   }
 

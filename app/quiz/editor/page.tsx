@@ -7,6 +7,7 @@ import { getAdminEmails } from '@/lib/constants';
 import Header from '@/components/shared/Header';
 import AuthModal from '@/components/shared/AuthModal';
 import QuizEditor from '@/components/quiz/QuizEditor';
+import LoginRequired from '@/components/shared/LoginRequired';
 import { Loader2 } from 'lucide-react';
 
 function QuizEditorContent() {
@@ -84,6 +85,16 @@ function QuizEditorContent() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="animate-spin text-indigo-600" size={48} />
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <Header setPage={navigateTo} user={null} onLogout={handleLogout} setShowAuth={setShowAuth} currentService="quiz" />
+        <LoginRequired toolName="診断クイズメーカー" onLogin={() => setShowAuth(true)} />
+        <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} onNavigate={navigateTo} />
+      </>
     );
   }
 

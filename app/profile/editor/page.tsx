@@ -7,6 +7,7 @@ import { getAdminEmails } from '@/lib/constants';
 import Header from '@/components/shared/Header';
 import AuthModal from '@/components/shared/AuthModal';
 import ProfileEditor from '@/components/profile/ProfileEditor';
+import LoginRequired from '@/components/shared/LoginRequired';
 import { Loader2 } from 'lucide-react';
 
 function ProfileEditorContent() {
@@ -81,6 +82,16 @@ function ProfileEditorContent() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="animate-spin text-emerald-600" size={48} />
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <Header setPage={navigateTo} user={null} onLogout={handleLogout} setShowAuth={setShowAuth} currentService="profile" />
+        <LoginRequired toolName="プロフィールLPメーカー" onLogin={() => setShowAuth(true)} />
+        <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} onNavigate={navigateTo} />
+      </>
     );
   }
 

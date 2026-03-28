@@ -62,8 +62,9 @@ function NewCampaignContent() {
   if (!user) {
     return (
       <>
+        <Header setPage={navigateTo} user={null} onLogout={handleLogout} setShowAuth={setShowAuth} currentService="newsletter" />
         <LoginRequired toolName="メルマガメーカー" onLogin={() => setShowAuth(true)} />
-        {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
+        <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
       </>
     );
   }

@@ -6,6 +6,7 @@ import { type EntertainmentForm, defaultEntertainmentForm } from '@/lib/entertai
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/shared/Header';
 import AuthModal from '@/components/shared/AuthModal';
+import LoginRequired from '@/components/shared/LoginRequired';
 import { Loader2 } from 'lucide-react';
 
 function EntertainmentCreateContent() {
@@ -59,6 +60,16 @@ function EntertainmentCreateContent() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="animate-spin text-pink-600" size={48} />
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <Header setPage={navigateTo} user={null} onLogout={handleLogout} setShowAuth={setShowAuth} currentService="entertainment_quiz" />
+        <LoginRequired toolName="エンタメ診断メーカー" onLogin={() => setShowAuth(true)} />
+        <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} onNavigate={navigateTo} />
+      </>
     );
   }
 

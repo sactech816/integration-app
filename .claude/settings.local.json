@@ -77,7 +77,8 @@
       "Bash(wc -l d:obsidianbigfive-appcomponents/* d:obsidianbigfive-appapp/*)",
       "Bash(xargs wc:*)",
       "Bash(python scripts/generate_proofreading_doc.py)",
-      "Bash(xargs head:*)"
+      "Bash(xargs head:*)",
+      "Bash(if grep:*)"
     ],
     "deny": [
       "Bash(sudo:*)",

@@ -87,8 +87,9 @@ function EditorContent() {
   if (!user) {
     return (
       <>
+        <Header user={null} onLogout={handleLogout} setShowAuth={setShowAuth} />
         <LoginRequired toolName="ゲーミフィケーション" onLogin={() => setShowAuth(true)} />
-        {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
+        <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />
       </>
     );
   }
