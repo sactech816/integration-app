@@ -26,6 +26,7 @@ import PostPreview from './PostPreview';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
 import CreationLimitModal from '@/components/shared/CreationLimitModal';
+import LoginRequired from '@/components/shared/LoginRequired';
 
 type SNSPostEditorProps = {
   user: { id: string; email?: string } | null;
@@ -262,6 +263,10 @@ export default function SNSPostEditor({ user, editingPost, setShowAuth }: SNSPos
       )}
     </button>
   );
+
+  if (!user) {
+    return <LoginRequired toolName="SNS投稿メーカー" onLogin={() => setShowAuth(true)} />;
+  }
 
   return (
     <>

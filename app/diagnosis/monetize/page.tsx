@@ -4,8 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/shared/Header';
 import { MonetizeDiagnosis } from '@/components/diagnosis/monetize/MonetizeDiagnosis';
-import { Sparkles, LogIn } from 'lucide-react';
-import Link from 'next/link';
+import { Sparkles } from 'lucide-react';
 
 export default function MonetizeDiagnosisPage() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
@@ -44,34 +43,10 @@ export default function MonetizeDiagnosisPage() {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-indigo-50">
-        <Header user={null} onLogout={handleLogout} setShowAuth={setShowAuth} />
-        <div className="max-w-lg mx-auto px-4 pt-32 text-center">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-            <Sparkles className="w-12 h-12 text-violet-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">才能マネタイズ診断</h2>
-            <p className="text-gray-600 mb-6">
-              あなたの才能を分析し、Kindle出版・オンライン講座・コンサルなど最適な収益化ルートを提案します。
-            </p>
-            <Link
-              href="/auth"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-violet-600 text-white font-semibold rounded-xl shadow-md hover:bg-violet-700 transition-all duration-200"
-            >
-              <LogIn className="w-5 h-5" />
-              ログインして診断を始める
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-indigo-50">
       <Header user={user} onLogout={handleLogout} setShowAuth={setShowAuth} />
-      <MonetizeDiagnosis userId={user.id} />
+      <MonetizeDiagnosis userId={user?.id || null} />
     </div>
   );
 }

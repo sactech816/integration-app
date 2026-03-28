@@ -47,6 +47,7 @@ import OnboardingModal from "@/components/shared/OnboardingModal";
 import { useOnboarding } from "@/lib/hooks/useOnboarding";
 import { SURVEY_THEMES, SURVEY_THEME_IDS, getSurveyTheme } from "@/constants/surveyThemes";
 import FeaturePurchaseButton from '@/components/shared/FeaturePurchaseButton';
+import LoginRequired from '@/components/shared/LoginRequired';
 
 // セクションコンポーネント
 const Section = ({
@@ -609,6 +610,10 @@ export default function SurveyEditor({ onBack, initialData, user, templateId, se
     slug: savedSlug || "preview",
     ...form,
   } as Survey;
+
+  if (!user) {
+    return <LoginRequired toolName="アンケートメーカー" onLogin={() => setShowAuth?.(true)} />;
+  }
 
   return (
     <div className="bg-gray-100 flex flex-col font-sans text-gray-900" style={{ minHeight: 'calc(100vh - 64px)' }}>

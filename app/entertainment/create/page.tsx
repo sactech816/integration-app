@@ -82,6 +82,7 @@ function EntertainmentCreateContent() {
         form={form}
         setForm={setForm}
         user={user}
+        setShowAuth={setShowAuth}
       />
     </div>
   );

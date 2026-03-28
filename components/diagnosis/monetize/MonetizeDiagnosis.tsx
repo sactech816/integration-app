@@ -16,7 +16,7 @@ import { MonetizeResultTabs } from './results/MonetizeResultTabs';
 import { ShareButtons } from './results/ShareButtons';
 
 interface MonetizeDiagnosisProps {
-  userId: string;
+  userId?: string | null;
 }
 
 const STEP_ICONS = [Clock, Star, Rocket, User, Calendar];

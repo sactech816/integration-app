@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import Header from '@/components/shared/Header';
 import AuthModal from '@/components/shared/AuthModal';
 import CampaignEditor from '@/components/newsletter/CampaignEditor';
+import LoginRequired from '@/components/shared/LoginRequired';
 import { Loader2 } from 'lucide-react';
 
 function NewCampaignContent() {
@@ -55,6 +56,15 @@ function NewCampaignContent() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="animate-spin text-violet-600" size={48} />
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <LoginRequired toolName="メルマガメーカー" onLogin={() => setShowAuth(true)} />
+        {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
+      </>
     );
   }
 

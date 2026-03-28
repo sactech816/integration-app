@@ -48,6 +48,7 @@ import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
 import CreationLimitModal from '@/components/shared/CreationLimitModal';
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import FeaturePurchaseButton from '@/components/shared/FeaturePurchaseButton';
+import LoginRequired from '@/components/shared/LoginRequired';
 
 interface WebinarEditorProps {
   user: { id: string; email?: string } | null;
@@ -1637,16 +1638,7 @@ const WebinarEditor: React.FC<WebinarEditorProps> = ({
   );
 
   if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">ログインが必要です</h2>
-          <button onClick={() => setShowAuth(true)} className="px-6 py-3 bg-violet-600 text-white rounded-xl font-semibold hover:bg-violet-700 shadow-md">
-            ログイン / 新規登録
-          </button>
-        </div>
-      </div>
-    );
+    return <LoginRequired toolName="ウェビナーLPメーカー" onLogin={() => setShowAuth(true)} />;
   }
 
   return (

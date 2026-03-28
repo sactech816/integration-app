@@ -17,7 +17,7 @@ import { useFeaturePurchase } from '@/lib/hooks/useFeaturePurchase';
 
 interface MonetizeResultTabsProps {
   result: MonetizeDiagnosisResult;
-  userId: string;
+  userId?: string | null;
 }
 
 const TAB_ICONS: Record<MonetizeField, React.ElementType> = {

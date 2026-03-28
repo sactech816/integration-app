@@ -29,6 +29,7 @@ import {
   applyGeneratedData,
   createDefaultForm,
 } from '@/lib/entertainment/defaults';
+import LoginRequired from '@/components/shared/LoginRequired';
 
 // --- Input / Textarea ---
 const Input = ({ label, val, onChange, ph }: { label: string; val: string; onChange: (v: string) => void; ph?: string }) => (
@@ -134,9 +135,10 @@ interface EntertainmentEditorProps {
   onSwitchMode?: () => void;
   onBack?: () => void;
   user?: { id: string; email?: string } | null;
+  setShowAuth?: (show: boolean) => void;
 }
 
-export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBack, user }: EntertainmentEditorProps) {
+export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBack, user, setShowAuth }: EntertainmentEditorProps) {
   const { consumeAndExecute, limitModalProps } = usePointsWithLimitModal({ userId: user?.id, isPro: false });
 
   // 左パネルタブ: wizard（AI一括生成） or editor（手動編集）
@@ -634,6 +636,10 @@ export default function EntertainmentEditor({ form, setForm, onSwitchMode, onBac
   };
 
   const previewQuizData = quizFromForm(form);
+
+  if (!user) {
+    return <LoginRequired toolName="エンタメ診断メーカー" onLogin={() => setShowAuth?.(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col font-sans text-gray-900">

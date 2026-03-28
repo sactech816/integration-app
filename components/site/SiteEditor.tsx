@@ -53,6 +53,7 @@ import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import FeaturePurchaseButton from '@/components/shared/FeaturePurchaseButton';
+import LoginRequired from '@/components/shared/LoginRequired';
 
 interface SiteEditorProps {
   user: { id: string; email?: string } | null;
@@ -1429,6 +1430,10 @@ export default function SiteEditor({ user, isAdmin, initialData, setPage, onBack
       </div>
     </div>
   );
+
+  if (!user) {
+    return <LoginRequired toolName="ホームページメーカー" onLogin={() => setShowAuth(true)} />;
+  }
 
   // プレビューレンダリング
   const renderPreview = () => {

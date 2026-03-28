@@ -71,6 +71,7 @@ import FeaturePurchaseButton from '@/components/shared/FeaturePurchaseButton';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { trackGenerateComplete, trackGenerateError } from '@/lib/gtag';
+import LoginRequired from '@/components/shared/LoginRequired';
 
 interface BusinessEditorProps {
   user: { id: string; email?: string } | null;
@@ -2840,6 +2841,10 @@ const BusinessEditor: React.FC<BusinessEditorProps> = ({
       <BusinessPreview lp={previewLP} />
     </div>
   );
+
+  if (!user) {
+    return <LoginRequired toolName="ビジネスLPメーカー" onLogin={() => setShowAuth(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col font-sans text-gray-900">

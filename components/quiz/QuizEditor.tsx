@@ -23,6 +23,7 @@ import { useUserContents } from '@/lib/hooks/useUserContents';
 import ContentLinker from '@/components/shared/ContentLinker';
 import { getContentUrl, type ContentRef, type LinkableContentType } from '@/lib/content-links';
 import { quizTemplates } from '@/constants/templates/quiz';
+import LoginRequired from '@/components/shared/LoginRequired';
 
 // --- 用途別テンプレート（プリセットデータ）---
 const USE_CASE_PRESETS = {
@@ -700,6 +701,10 @@ const Editor = ({ onBack, initialData, setPage, user, setShowAuth, isAdmin }: Ed
         slug: savedSlug || 'preview',
         id: savedId || 0
     };
+
+    if (!user) {
+        return <LoginRequired toolName="診断クイズメーカー" onLogin={() => setShowAuth?.(true)} />;
+    }
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col font-sans text-gray-900">

@@ -9,6 +9,7 @@ import {
   Sparkles,
   BookOpen,
   Eye,
+  Play,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -17,7 +18,11 @@ const GUEST_DIAGNOSES = [
   { name: '生年月日占い', href: '/fortune', icon: Star, color: 'bg-amber-50 text-amber-600', desc: '九星気学・数秘術・四柱推命で総合鑑定' },
   { name: '才能マネタイズ診断', href: '/diagnosis/monetize', icon: Sparkles, color: 'bg-pink-50 text-pink-600', desc: 'あなたの才能を活かした収益化の方法' },
   { name: '補助金診断', href: '/subsidy', icon: ShoppingBag, color: 'bg-emerald-50 text-emerald-600', desc: '使える補助金・助成金をチェック' },
-  { name: 'ネタ発掘診断', href: '/kindle/discovery', icon: BookOpen, color: 'bg-orange-50 text-orange-600', desc: 'コンテンツのテーマを発見' },
+];
+
+const GUEST_DEMOS = [
+  { name: 'ネタ発掘デモ', href: '/kindle/discovery/demo', icon: BookOpen, color: 'bg-orange-50 text-orange-600', desc: 'コンテンツのテーマを発見' },
+  { name: 'Kindle執筆デモ', href: '/kindle/demo', icon: Play, color: 'bg-indigo-50 text-indigo-600', desc: 'AI執筆を体験' },
 ];
 
 const GUEST_SERVICES = [
@@ -81,6 +86,34 @@ export default function GuestTrialSection() {
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {GUEST_SERVICES.map((item) => {
+              const Icon = item.icon;
+              return (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="group flex items-start gap-3 p-4 rounded-xl bg-white border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all duration-200"
+                >
+                  <div className={`w-10 h-10 rounded-lg ${item.color} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}>
+                    <Icon size={20} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-bold text-sm text-gray-900">{item.name}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{item.desc}</div>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* デモ体験 */}
+        <div className="mb-10">
+          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <span className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-black">3</span>
+            デモを体験する
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {GUEST_DEMOS.map((item) => {
               const Icon = item.icon;
               return (
                 <a

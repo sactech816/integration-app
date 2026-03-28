@@ -35,7 +35,14 @@ const GUEST_FEATURES = {
         { name: '生年月日占い', href: '/fortune', icon: Star, note: '九星気学・数秘術・四柱推命' },
         { name: '才能マネタイズ診断', href: '/diagnosis/monetize', icon: Sparkles, note: '才能を活かした収益化' },
         { name: '補助金診断', href: '/subsidy', icon: ShoppingBag, note: '使える補助金をチェック' },
-        { name: 'ネタ発掘診断', href: '/kindle/discovery', icon: BookOpen, note: 'コンテンツのテーマ発見' },
+      ],
+    },
+    {
+      title: 'デモを体験する',
+      description: '実際のツールを体験できます',
+      items: [
+        { name: 'ネタ発掘デモ', href: '/kindle/discovery/demo', icon: BookOpen, note: 'コンテンツのテーマ発見' },
+        { name: 'Kindle執筆デモ', href: '/kindle/demo', icon: BookOpen, note: 'AI執筆を体験' },
       ],
     },
     {

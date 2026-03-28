@@ -50,6 +50,7 @@ import AIGenerateModal, { AIGenerateInput } from './AIGenerateModal';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import FeaturePurchaseButton from '@/components/shared/FeaturePurchaseButton';
+import LoginRequired from '@/components/shared/LoginRequired';
 
 // セールスレター用ブロックタイプ
 const blockTypes = [
@@ -562,6 +563,10 @@ export default function SalesLetterEditor({
 
     return { backgroundColor: '#ffffff' };
   };
+
+  if (!user) {
+    return <LoginRequired toolName="セールスライター" onLogin={() => setShowAuth(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">

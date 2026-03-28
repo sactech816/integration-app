@@ -62,6 +62,7 @@ import FeaturePurchaseButton from '@/components/shared/FeaturePurchaseButton';
 import OnboardingModal from '@/components/shared/OnboardingModal';
 import { useOnboarding } from '@/lib/hooks/useOnboarding';
 import { trackGenerateComplete, trackGenerateError } from '@/lib/gtag';
+import LoginRequired from '@/components/shared/LoginRequired';
 import dynamic from 'next/dynamic';
 
 const SalesTextEditor = dynamic(() => import('@/components/salesletter/SalesTextEditor'), {
@@ -2804,6 +2805,10 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       <ProfilePreview profile={previewProfile} />
     </div>
   );
+
+  if (!user) {
+    return <LoginRequired toolName="プロフィールLPメーカー" onLogin={() => setShowAuth(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col font-sans text-gray-900">

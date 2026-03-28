@@ -14,6 +14,7 @@ import BookingEditor from '@/components/booking/BookingEditor';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import AuthModal from '@/components/shared/AuthModal';
+import LoginRequired from '@/components/shared/LoginRequired';
 
 export default function NewBookingMenuPage() {
   const router = useRouter();
@@ -140,7 +141,7 @@ export default function NewBookingMenuPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header 
+        <Header
           setPage={navigateTo}
           user={user}
           onLogout={handleLogout}
@@ -149,6 +150,26 @@ export default function NewBookingMenuPage() {
         <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 64px)' }}>
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Header
+          setPage={navigateTo}
+          user={user}
+          onLogout={handleLogout}
+          setShowAuth={setShowAuth}
+        />
+        <LoginRequired toolName="予約メーカー" onLogin={() => setShowAuth(true)} />
+        <AuthModal
+          isOpen={showAuth}
+          onClose={() => setShowAuth(false)}
+          setUser={setUser}
+          onNavigate={navigateTo}
+        />
       </div>
     );
   }

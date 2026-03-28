@@ -7,6 +7,7 @@ import { getAdminEmails } from '@/lib/constants';
 import Header from '@/components/shared/Header';
 import AuthModal from '@/components/shared/AuthModal';
 import KindleCoverEditor from '@/components/kindle/cover/KindleCoverEditor';
+import LoginRequired from '@/components/shared/LoginRequired';
 import { Loader2 } from 'lucide-react';
 
 function KindleCoverEditorContent() {
@@ -56,6 +57,15 @@ function KindleCoverEditorContent() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <LoginRequired toolName="Kindle表紙メーカー" onLogin={() => setShowAuth(true)} />
+        {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={(u: { id: string; email?: string }) => { setUser(u); setShowAuth(false); }} />}
+      </>
     );
   }
 

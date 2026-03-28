@@ -9,6 +9,7 @@ import AuthModal from '@/components/shared/AuthModal';
 import GachaEditor from '@/components/gamification/editors/GachaEditor';
 import StampRallyEditor from '@/components/gamification/editors/StampRallyEditor';
 import LoginBonusEditor from '@/components/gamification/editors/LoginBonusEditor';
+import LoginRequired from '@/components/shared/LoginRequired';
 import { Loader2 } from 'lucide-react';
 
 // ガチャ系のゲームタイプ（同じエディタを使用）
@@ -80,6 +81,15 @@ function EditorContent() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="animate-spin text-indigo-600" size={48} />
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <LoginRequired toolName="ゲーミフィケーション" onLogin={() => setShowAuth(true)} />
+        {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
+      </>
     );
   }
 

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import Header from '@/components/shared/Header';
 import AuthModal from '@/components/shared/AuthModal';
 import OrderFormEditor from '@/components/order-form/OrderFormEditor';
+import LoginRequired from '@/components/shared/LoginRequired';
 import { Loader2 } from 'lucide-react';
 
 function EditOrderFormContent({ formId }: { formId: string }) {
@@ -51,6 +52,15 @@ function EditOrderFormContent({ formId }: { formId: string }) {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="animate-spin text-emerald-600" size={48} />
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <LoginRequired toolName="フォームメーカー" onLogin={() => setShowAuth(true)} />
+        {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
+      </>
     );
   }
 

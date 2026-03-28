@@ -6,6 +6,7 @@ import { getAdminEmails } from '@/lib/constants';
 import Header from '@/components/shared/Header';
 import AuthModal from '@/components/shared/AuthModal';
 import KindleKeywordResearchEditor from '@/components/kindle-keywords/KindleKeywordResearchEditor';
+import LoginRequired from '@/components/shared/LoginRequired';
 import { Loader2 } from 'lucide-react';
 
 function KindleKeywordEditorContent() {
@@ -60,6 +61,15 @@ function KindleKeywordEditorContent() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="animate-spin text-orange-500" size={48} />
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <LoginRequired toolName="Kindleキーワードリサーチ" onLogin={() => setShowAuth(true)} />
+        {showAuth && <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} setUser={setUser} />}
+      </>
     );
   }
 

@@ -7,6 +7,7 @@ import { getAdminEmails } from '@/lib/constants';
 import Header from '@/components/shared/Header';
 import AuthModal from '@/components/shared/AuthModal';
 import SwipeEditor from '@/components/swipe/SwipeEditor';
+import LoginRequired from '@/components/shared/LoginRequired';
 import { Loader2 } from 'lucide-react';
 
 function SwipeEditorContent() {
@@ -41,6 +42,31 @@ function SwipeEditorContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="w-8 h-8 animate-spin text-fuchsia-500" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header
+          user={user}
+          onLogout={async () => {
+            await supabase?.auth.signOut();
+            router.push('/');
+          }}
+          setShowAuth={setShowAuth}
+          currentService="swipe"
+        />
+        <LoginRequired toolName="スワイプメーカー" onLogin={() => setShowAuth(true)} />
+        <AuthModal
+          isOpen={showAuth}
+          onClose={() => setShowAuth(false)}
+          setUser={(u: { id: string; email?: string }) => {
+            setUser(u);
+            setShowAuth(false);
+          }}
+        />
       </div>
     );
   }

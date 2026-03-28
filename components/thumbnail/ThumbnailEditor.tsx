@@ -26,6 +26,7 @@ import { downloadSVG, downloadPNG, exportAsPNG } from '@/lib/thumbnail/exportSvg
 import CreationCompleteModal from '@/components/shared/CreationCompleteModal';
 import { usePointsWithLimitModal } from '@/lib/hooks/usePointsWithLimitModal';
 import CreationLimitModal from '@/components/shared/CreationLimitModal';
+import LoginRequired from '@/components/shared/LoginRequired';
 
 interface ThumbnailEditorProps {
   user: { id: string; email?: string } | null;
@@ -480,6 +481,10 @@ export default function ThumbnailEditor({ user, editingThumbnail, setShowAuth, i
 
   // 選択中の情報サマリー
   const selectedPlatformLabel = PLATFORM_CATEGORIES.find(p => p.id === selectedPlatform)?.label || '';
+
+  if (!user) {
+    return <LoginRequired toolName="サムネイルメーカー" onLogin={() => setShowAuth(true)} />;
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
