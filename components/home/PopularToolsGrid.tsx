@@ -9,7 +9,7 @@ export default function PopularToolsGrid() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-10">
           <h2 className="text-2xl sm:text-3xl font-black mb-3" style={{ color: '#5d4037' }}>
-            人気のツールをすぐに使う
+            ログインして、人気のツールをすぐに使う
           </h2>
           <p className="text-gray-600 text-sm">
             登録不要・無料で今すぐ作成できます

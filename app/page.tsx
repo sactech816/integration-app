@@ -171,6 +171,9 @@ export default function HomePage() {
         {/* ========== 2. ゲスト体験セクション ========== */}
         <GuestTrialSection />
 
+        {/* ========== 2.5 人気ツール クイックスタート ========== */}
+        <PopularToolsGrid />
+
         {/* ========== 3. 共感セクション — 課題の言語化 ========== */}
         <section className="py-16 bg-white border-b" style={{ borderColor: '#ffedd5' }}>
           <div className="max-w-4xl mx-auto px-4 text-center">
@@ -261,8 +264,7 @@ export default function HomePage() {
         {/* ========== 8. ファネル別ツール紹介 ========== */}
         <FunnelStageShowcase />
 
-        {/* ========== 8.5 人気ツール クイックスタート ========== */}
-        <PopularToolsGrid />
+        {/* ========== 8.5 人気ツール クイックスタート（GuestTrialSection下へ移動済み） ========== */}
 
         {/* ========== 7. Pricing ========== */}
         <PricingSection />
